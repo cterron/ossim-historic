@@ -76,7 +76,7 @@ case "$1" in
                     change_rsyslog_default_file
                     change_rsyslog_conf
                     change_rsyslog_alienvault_conf
-                    /etc/init.d/rsyslog force-reload || true
+                    /etc/init.d/rsyslog restart || true
                     update-rc.d rsyslog defaults
                 ;;
                 *)

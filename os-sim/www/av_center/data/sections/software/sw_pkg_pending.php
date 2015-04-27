@@ -54,13 +54,11 @@ try
         $packages_info = Av_center::get_packages_pending($system_id, TRUE);
         $release_info  = Av_center::get_release_info($system_id);
     }
-    
 }
 catch (\Exception $e)
 {
     $error_msg = $e->getMessage();
 }
-
 ?>
 
 <div id='cont_sw_av'>
@@ -74,7 +72,7 @@ catch (\Exception $e)
                 <div id='r_title'>
                     <?php echo "v".$release_info['version'].' '._('available').'!'?><span id='r_type' class='<?php echo $r_class?>'><?php echo $release_info['type']?>
                 </div>
-                <div id='r_desc'><?php echo implode('<br/>', $release_info['description'])?></div>
+                <div id='r_desc'><?php echo $release_info['description']?></div>
             </div>
         </div>
         <?php
@@ -247,7 +245,7 @@ catch (\Exception $e)
             "aoColumns": [
                 { "bSortable": true },
                 { "bSortable": true },
-                { "bSortable": true }
+                { "bSortable": true, "sType":"file-size" }
             ],
             "oLanguage" : {
                 "sProcessing": "<?php echo _('Processing') ?>...",
@@ -282,7 +280,6 @@ catch (\Exception $e)
                 $('div.dt_header').prepend(title);
             }
         });
-
         <?php
     }
     ?>

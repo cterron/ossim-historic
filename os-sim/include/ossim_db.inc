@@ -51,7 +51,7 @@
 * @package    ossim-framework\Database
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Ossim_db
 {    
@@ -346,7 +346,7 @@ class Ossim_db
 
     
     /**
-    * This function establishes a persistent connection with database (Alienvault) and returns the connection object
+    * This function establishes a persistent connection with database (AlienVault) and returns the connection object
     *
     * @throws Exception  If a connection error occurred
     * 
@@ -442,7 +442,7 @@ class Ossim_db
           
     
     /**
-    * This function establishes a persistent customized connection with database (Alienvault) and returns the connection object
+    * This function establishes a persistent customized connection with database (AlienVault) and returns the connection object
     *
     * @param string $host  Database server
     * @param string $user  Database user
@@ -504,7 +504,7 @@ class Ossim_db
     
     
     /**
-    * This function returns a connection object for database Alienvault_siem
+    * This function returns a connection object for database AlienVault_siem
     *
     * @throws Exception  If a connection error occurred
     * 

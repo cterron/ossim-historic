@@ -16,7 +16,7 @@ advice=Ntop cannot parse spaces in the INTERFACES init.cfg file. Please remove i
 
 [Network interfaces]
 pattern=^INTERFACES\=\"(.*)"$
-conditions=@set@:@issubsetof@@network_interfaces@
+conditions=@set@:@issubsetof@@configured_network_interfaces@
 split_by_comma=True
 fail_if_empty=True
 severity=Medium

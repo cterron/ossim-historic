@@ -969,16 +969,14 @@ function validate_form_fields($type, $validate)
 
 			if (!is_array($_GET[$name]))
 			{
-				$str_2 = Util::utf8entities($_GET[$name]);
-
-				$values[$k]= (mb_detect_encoding($v.' ','UTF-8,ISO-8859-1') == 'UTF-8') ? Util::utf8entities(GET($name)) : GET($name);
+                $values[$k]= (mb_detect_encoding(GET($name).' ','UTF-8,ISO-8859-1') == 'UTF-8') ? Util::utf8entities(GET($name)) : GET($name);
 			}
 			else
 			{
 				$aux = array();
 				foreach ($_GET[$name] as $i => $j)
 				{
-					$aux[$i] = (mb_detect_encoding($v.' ','UTF-8,ISO-8859-1') == 'UTF-8')  ? Util::utf8entities($j) : $j;
+					$aux[$i] = (mb_detect_encoding($j.' ','UTF-8,ISO-8859-1') == 'UTF-8')  ? Util::utf8entities($j) : $j;
 				}
 
 				$values[$k] = $aux;
@@ -1001,7 +999,7 @@ function validate_form_fields($type, $validate)
 		}
 		else
 		{
-			$value = $values[$k];
+			$value = is_string($values[$k]) ? trim($values[$k]) : $values[$k];
 		}
 
 		eval("ossim_valid(\$value, ".$validate_rules[$k]['validation'].", '".$validate_rules[$k]['e_message']."');");
@@ -1770,7 +1768,7 @@ function valid_smtp_server_address($value)
 function validate_sensor_perms($conn, $sensor_ip, $args = '')
 {
     $allowed = explode(',', Session::allowedSensors());
-	$query   = ossim_query("SELECT sensor.*, HEX(sensor.id) as id, INET6_NTOP(ip) AS ip FROM sensor $args");
+	$query   = ossim_query("SELECT sensor.*, HEX(sensor.id) as id, INET6_NTOA(ip) AS ip FROM sensor $args");
 
 	$rs = $conn->Execute($query);
 

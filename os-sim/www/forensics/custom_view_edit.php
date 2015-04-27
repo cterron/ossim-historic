@@ -50,7 +50,7 @@ function get_tags($idm = FALSE)
         'PLUGIN_SID_CATEGORY'    => _('Event Type category'),
         'PLUGIN_SID_SUBCATEGORY' => _('Event Type subcategory'),
         'SIGNATURE'              => _('Signature name'),
-    	'DEVICE'                 => _('Device'),
+    	'DEVICE'                 => _('Device IP'),
         'FILENAME'               => _('ExtraData Filename'),
         'USERNAME'               => _('ExtraData Username'),
         'PASSWORD'               => _('ExtraData Password'),
@@ -161,7 +161,7 @@ if ($save == 'insert')
 	{		
 		$login = Session::get_session_user();
 		
-		$db   = new ossim_db();
+		$db   = new ossim_db(true);
 		$conn = $db->connect();
 		
 		$config = new User_config($conn);
@@ -207,7 +207,7 @@ elseif ($save == 'modify')
 	else 
 	{		
 		$login = Session::get_session_user();
-		$db = new ossim_db();
+		$db = new ossim_db(true);
 		$conn = $db->connect();
 		$config = new User_config($conn);
 		if ($name != $oldname) 
@@ -248,7 +248,7 @@ elseif ($save == _('Default view'))
 {  
     $login = Session::get_session_user();
     
-    $db   = new ossim_db();
+    $db   = new ossim_db(true);
     $conn = $db->connect();
     $config = new User_config($conn);
 
@@ -271,7 +271,7 @@ elseif ($save == 'delete')
 	{		
 		$login = Session::get_session_user();
 		
-		$db   = new ossim_db();
+		$db   = new ossim_db(true);
 		$conn = $db->connect();
 		
 		$config = new User_config($conn);
@@ -292,7 +292,7 @@ elseif ($save == 'report' && Session::am_i_admin())
     If another admin has the same view name
     there can be a collision if both of them create modules
     */
-    $db = new ossim_db();
+    $db = new ossim_db(true);
     $conn = $db->connect();
     
     $others_where  = "WHERE login != '".Session::get_session_user()."' 
@@ -336,7 +336,7 @@ elseif ($save == 'report' && Session::am_i_admin())
         	
         	if ($query1 != '' && $query2 != '' && $columns != '') 
         	{
-        	    $db = new ossim_db();
+        	    $db = new ossim_db(true);
         	    $conn = $db->connect();
         	    
         		$curid = 0;

@@ -550,7 +550,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SysInterna
 #alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"OLEDB"; fast_pattern; content:"|20|SQL Server"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020519; rev:2;)
 
 #
-#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"SQL Server"; fast_pattern; content:"Driver"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020520; rev:2;)
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"[Microsoft]"; content:"[ODBC SQL Server Driver]"; fast_pattern; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020520; rev:3;)
 
 #
 #alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"mssql_"; fast_pattern; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020521; rev:3;)

@@ -48,7 +48,6 @@ $title      = _('AlienVault '.($opensource ? 'OSSIM' : 'USM'));
 <html>
 <head>
 	<title><?php echo $title;?></title>
-	<link rel="Shortcut Icon" type="image/x-icon" href="favicon.ico">
 	<link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
 		
 	<style type='text/css'>

@@ -50,7 +50,7 @@
 * @package    ossim-framework\Alarms
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Alarm {
@@ -196,7 +196,7 @@ class Alarm {
     private $sid_priority;
 
     /**
-    * Alarm tag list (Hex format)
+    * Alarm tag list (Tag array: array(tag_id -> tag_object, ...))
     * @var array
     *
     */
@@ -289,7 +289,7 @@ class Alarm {
         // Private calls
         list ($this->sid_name, $this->sid_priority) = $this->__get_sidname($conn, $this->plugin_id, $this->plugin_sid, $cache);
         $this->taxonomy["name"]                     = $this->sid_name;
-        $this->tags                                 = Tags::get_tags_from_alarm($conn, $this->backlog_id);
+        $this->tags                                 = Tag::get_tags_by_component($conn, $this->backlog_id);
         $this->event_info                           = (!empty($data['event_info']) && is_array($data['event_info'])) ? $data['event_info'] : $this->get_event($conn, $this->event_id);
         if (!empty($data['sensors']) && is_array($data['sensors']))
         {
@@ -1299,8 +1299,8 @@ class Alarm {
         // Tag filter
         if ($tag != "") {
             $tag_left_join = "";
-            $tag_join = ",alarm_tags tg";
-            $sql_where .= " AND a.backlog_id=tg.id_alarm AND tg.id_tag=$tag";
+            $tag_join = ",component_tags tg";
+            $sql_where .= " AND a.backlog_id=tg.id_component AND tg.id_tag=UNHEX('$tag')";
         }
 
         // Number of events threshold filter
@@ -1321,7 +1321,10 @@ class Alarm {
         $_SESSION["_alarm_perms_from"]  = "FROM alarm a $tax_left_join $ctx_join $tag_left_join $event_join $sensor_join $directive_join $tag_join";
         $_SESSION["_alarm_perms_where"] = "$sql_where";
 
-        //echo $sql; //var_export($_SESSION["_user_vision"]);
+        if (file_exists("/tmp/debug_alarm"))
+        {
+            error_log("ALARM:$query\n",3,"/tmp/alarms");
+        }
 
         $num_rows = 0;
         if ($cache)
@@ -1382,12 +1385,12 @@ class Alarm {
                 "similar"      => $rs->fields["similar"],
                 "csimilar"     => $rs->fields["csimilar"],
                 "removable"    => $rs->fields["removable"],
-                "taxonomy"     => array (
-					                "id"           => $rs->fields["kid"],
-					                "kingdom"      => $rs->fields["kingdom"],
-					                "category"     => $rs->fields["category"],
-					                "subcategory"  => $rs->fields["subcategory"]
-					              )
+                "taxonomy"     => ($rs->fields["plugin_id"] != 1505) ? array() : array (
+                                    "id"           => $rs->fields["kid"],
+                                    "kingdom"      => $rs->fields["kingdom"],
+                                    "category"     => $rs->fields["category"],
+                                    "subcategory"  => $rs->fields["subcategory"]
+                                  )
             );
 
             $list[] = new Alarm($conn, $cache, $new);
@@ -2473,7 +2476,7 @@ class Alarm {
 
         if ($exec)
         {
-            $conn->Execute("DELETE tg FROM alarm_tags tg LEFT JOIN alarm a ON tg.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL");
+            $conn->Execute("DELETE tg FROM component_tags tg LEFT JOIN alarm a ON tg.id_component = a.backlog_id, tag ta WHERE ta.id=tg.id_tag AND ta.type='alarm' AND a.backlog_id IS NULL");
             $conn->Execute("DELETE ac FROM alarm_ctxs ac LEFT JOIN alarm a ON ac.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL");
             $conn->Execute("DELETE ah FROM alarm_hosts ah LEFT JOIN alarm a ON ah.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL");
             $conn->Execute("DELETE an FROM alarm_nets an LEFT JOIN alarm a ON an.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL");
@@ -2486,7 +2489,7 @@ class Alarm {
         else
         {
             $query  = "\n";
-            $query .= "DELETE tg FROM alarm_tags tg LEFT JOIN alarm a ON tg.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL; \n";
+            $query .= "DELETE tg FROM component_tags tg LEFT JOIN alarm a ON tg.id_component = a.backlog_id, tag ta WHERE ta.id=tg.id_tag AND ta.type='alarm' AND a.backlog_id IS NULL; \n";
             $query .= "DELETE ac FROM alarm_ctxs ac LEFT JOIN alarm a ON ac.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL; \n";
             $query .= "DELETE ah FROM alarm_hosts ah LEFT JOIN alarm a ON ah.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL; \n";
             $query .= "DELETE an FROM alarm_nets an LEFT JOIN alarm a ON an.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL; \n";
@@ -2661,7 +2664,7 @@ class Alarm {
                 "similar"      => $rs->fields["similar"],
                 "csimilar"     => 0,
                 "removable"    => $rs->fields["removable"],
-                "taxonomy"     => array (
+                "taxonomy"     => ($rs->fields["plugin_id"] != 1505) ? array() : array (
 					                "id"           => $rs->fields["kid"],
 					                "kingdom"      => $rs->fields["kingdom"],
 					                "category"     => $rs->fields["category"],
@@ -2899,6 +2902,125 @@ class Alarm {
         }
         
         return TRUE;
+    }
+    
+    
+    public static function get_counts_by_intent($conn, $params)
+    {
+        Ossim_db::check_connection($conn);
+        
+        $hide_closed = isset($params['hide_closed']) ? intval($params['hide_closed']) : 1;
+        $host        = $params['host'];
+        $net         = $params['net'];
+        $host_group  = $params['host_group'];
+        $ctx         = $params['ctx'];
+        
+        /*
+            1 --> Delivery & Attack
+            2 --> Environmental Awareness
+            3 --> Exploitation & Installation
+            4 --> Reconnaissance & Probing
+            5 --> System Compromise
+        */
+        $counts = array('1' => 0, '2' => 0, '3' => 0, '4' => 0, '5' => 0);
+        $where  = array();
+        
+        /* hide closed */
+        if ($hide_closed == 1)
+        {
+            $where[] = "a.status = 'open' ";
+        }
+        elseif ($hide_closed == -1)
+        {
+            $where[] = "a.status = 'closed' ";
+        }
+        
+        // Assets
+        list($ctx_join,$perms_where) = self::make_perms_where($ctx, $host, $net);
+        if (!empty($perms_where))
+        {
+            $where[] = $perms_where;
+        }
+        
+        // Asset group filter
+        if ($host_group != "" && valid_hex32($host_group))
+        {
+            $where[] = " ah.id_host in (SELECT host_id FROM host_group_reference WHERE host_group_id=UNHEX('$host_group'))";
+            if (!preg_match("/alarm_hosts/", $ctx_join))
+            {
+                $ctx_join = " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm $ctx_join";
+            }
+        }
+        
+        $sql_where = count($where) ? "WHERE " . implode(" AND ", $where) : "WHERE 1=1";
+        
+        // taxonomy left join
+        $tax_left_join = "LEFT JOIN (alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id) ON a.plugin_sid=ta.sid AND a.corr_engine_ctx=ta.engine_id";
+        $sql           = "SELECT ki.id AS kid, count(ki.id) AS kcount FROM alarm a $tax_left_join $ctx_join $sql_where GROUP BY ki.id";
+        
+        $rs = $conn->Execute($sql);
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $counts[$rs->fields['kid']] = $rs->fields['kcount'];
+            $rs->MoveNext();
+        }
+        
+        return $counts;
+    }
+    
+    
+    public static function get_highest_risk_by_asset($conn, $params)
+    {
+        Ossim_db::check_connection($conn);
+        
+        $hide_closed = isset($params['hide_closed']) ? intval($params['hide_closed']) : 1;
+        $host        = $params['host'];
+        $net         = $params['net'];
+        $host_group  = $params['host_group'];
+        $ctx         = $params['ctx'];
+        
+        $where  = array();
+        
+        /* hide closed */
+        if ($hide_closed == 1)
+        {
+            $where[] = "a.status = 'open' ";
+        }
+        
+        list($ctx_join, $perms_where) = self::make_perms_where($ctx, $host, $net);
+        
+        if (!empty($perms_where))
+        {
+            $where[] = $perms_where;
+        }
+        
+        // Asset group filter
+        if ($host_group != "")
+        {
+            $where[] = " ah.id_host in (SELECT host_id FROM host_group_reference WHERE host_group_id=UNHEX('$host_group'))";
+            if (!preg_match("/alarm_hosts/", $ctx_join))
+            {
+                $ctx_join = " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm $ctx_join";
+            }
+        }
+        
+        $sql_where = count($where) ? "WHERE " . implode(" AND ", $where) : "WHERE 1=1";
+        
+        $sql = "SELECT max(risk) as max_risk FROM alarm a $ctx_join $sql_where";
+        
+        $rs  = $conn->Execute($sql);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        return intval ($rs->fields['max_risk']);
     }
 
 }

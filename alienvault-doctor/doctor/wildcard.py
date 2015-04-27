@@ -31,9 +31,8 @@
 import re
 
 from netaddr import IPNetwork
-
-from output import Output
 from sysinfo import Sysinfo
+
 
 class Wildcard:
 
@@ -43,7 +42,7 @@ class Wildcard:
     #   * '@dbpass@'
     #   * ...
     @staticmethod
-    def av_config (string, encapsulate_str = False, escape = False):
+    def av_config(string, encapsulate_str=False, escape=False):
         sysinfo = Sysinfo()
         new_string = string
 
@@ -78,15 +77,15 @@ class Wildcard:
     #   * '@cores@'
     #   * '@mem@'
     @staticmethod
-    def hw_config (string):
+    def hw_config(string):
         sysinfo = Sysinfo()
-        translate = {'is_vm': 'A Virtual Machine is required', \
-                     'cores': 'Number of CPU cores required is not met', \
+        translate = {'is_vm': 'A Virtual Machine is required',
+                     'cores': 'Number of CPU cores required is not met',
                      'mem': 'Memory size required is not met'}
         new_string = ''
 
         try:
-            match = re.findall (r'^@([_a-zA-Z]*)@(.*)', string)[0]
+            match = re.findall(r'^@([_a-zA-Z]*)@(.*)', string)[0]
             hardware_config = sysinfo.get_hardware_config()
             new_string = str(hardware_config[match[0]]) + match[1]
         except:
@@ -100,7 +99,7 @@ class Wildcard:
     #   * '@is@' returns returns actually the subset of all elements that are either in 'a' or 'b', but not both.
     #   * '@isdisjoint@' returns actually the subset of all elements that are in both sets.
     @staticmethod
-    def set_operation (string):
+    def set_operation(string):
         ops = {'@issubsetof@': ('Is subset of', '__sub__'),
                '@issupersetof@': ('Is superset of', '__rsub__'),
                '@isequalto@': ('Is equal to', 'symmetric_difference'),
@@ -119,7 +118,7 @@ class Wildcard:
 
     # Wildcards for ipaddr operations.
     @staticmethod
-    def ipaddr_operation (string):
+    def ipaddr_operation(string):
         ops = {'@in@': ('Is in', ' in '),
                '@notin@': ('Is not in', ' not in ')}
         pattern = r'(%s)((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:8|16|24|32))?)' % '|'.join(ops.iterkeys())
@@ -128,8 +127,8 @@ class Wildcard:
         try:
             matches = re.findall(pattern, new_string)
             for match in matches:
-                new_string = re.sub (match[0], ops[match[0]][1], new_string)
-                new_string = re.sub (match[1], repr(IPNetwork(match[1])), new_string)
+                new_string = re.sub(match[0], ops[match[0]][1], new_string)
+                new_string = re.sub(match[1], repr(IPNetwork(match[1])), new_string)
         except:
             return (new_string)
 

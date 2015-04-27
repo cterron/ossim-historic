@@ -3,7 +3,7 @@
 * avc_tree.inc
 *
 * File avc_tree.inc is used to:
-*   - To manage Alienvault Components using Alienvault Center
+*   - To manage AlienVault Components using AlienVault Center
 *
 *
 *
@@ -54,12 +54,12 @@
 /**
 * Avc_tree Class
 *
-* Class for managing Alienvault Components Tree
+* Class for managing AlienVault Components Tree
 *
 * @package    ossim-framework\Alienvaut_Center
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Avc_tree 
@@ -207,7 +207,7 @@ class Avc_tree
         	return $json;
         }
 		
-		//No Alienvault componentes found
+		//No AlienVault componentes found
 		if (!is_array($this->avc_list['data']))
 		{
 			$json['data'] = $this->show_empty_tree();
@@ -215,7 +215,7 @@ class Avc_tree
         	return $json;
 		}		
 				
-		//Alienvault Components
+		//AlienVault Components
 		
 		$tree  = '{"title" : "<span>'.$t_av_componets.'</span>", "icon" : "'.DYNATREE_PIXMAPS_DIR.'/theme/any.png", "addClass" : "size12", "key" : "", "isFolder" : true, "expand" : true, "noLink" : true, "profiles" : "", "children" : ['; 
 		if ($this->current_order == 'hostname') //Order by hostname

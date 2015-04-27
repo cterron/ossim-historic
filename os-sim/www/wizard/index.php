@@ -79,7 +79,6 @@ else //If we cannot, we start the wizard
 <html>
     <head>
         <title> <?php echo _('AlienVault ' . (Session::is_pro() ? 'USM' : 'OSSIM')); ?> </title>
-        <link rel="Shortcut Icon" type="image/x-icon" href="/ossim/favicon.ico">
         <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
         <meta http-equiv="Pragma" content="no-cache"/>
         
@@ -92,7 +91,6 @@ else //If we cannot, we start the wizard
                 array('src' => 'jquery-ui.css',                         'def_path' => TRUE),
                 array('src' => 'tipTip.css',                            'def_path' => TRUE),
                 array('src' => 'lightbox.css',                          'def_path' => TRUE),
-                array('src' => 'flipswitch.css',                        'def_path' => TRUE),
                 array('src' => 'jquery.dataTables.css',                 'def_path' => TRUE),
                 array('src' => 'tree.css',                              'def_path' => TRUE),
                 array('src' => 'jquery.select.css',                     'def_path' => TRUE),

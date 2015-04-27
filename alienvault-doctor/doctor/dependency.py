@@ -36,8 +36,8 @@ options = {
   'properties' : {
     'type' : {
         'file' : {'properties' : ['filename', '!command']},
-      'command' : {'properties' : ['command']},
-      'db' : {'properties' : ['host', 'user', 'password', 'database']}
+        'command' : {'properties' : ['command']},
+        'db' : {'properties' : ['host', 'user', 'password', 'database']}
       }
     }
   }

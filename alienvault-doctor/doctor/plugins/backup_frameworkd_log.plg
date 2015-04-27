@@ -2,6 +2,7 @@
 name=Backup Manager errors in frameworkd_error.log
 description=Parses the frameworkd error log searching for Backup Manager errors
 category=alienvault,platform
+profiles=Server:>4.0
 type=file
 filename=/var/log/ossim/frameworkd_error.log
 raw_limit=2000

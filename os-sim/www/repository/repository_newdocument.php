@@ -327,7 +327,7 @@ if ((isset($title) || isset($doctext)) && $error == false)
 
 if ($error == TRUE) 
 { 
-	$error_msg = "<div class='error_item' style='padding-left: 5px;'>"._("We found the following errors").":</div>
+	$error_msg = "<div class='error_item' style='padding-left: 5px;'>"._("The following errors occurred").":</div>
 			  <div class='error_item'>".implode($info_error, "</div><div class='error_item'>")."</div>";
 	?>
 	<div style='width:50%;margin:0 auto;'>

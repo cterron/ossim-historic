@@ -74,11 +74,14 @@ class AVConfigParserErrors():
     FILE_IS_DIRTY = 2003
 
     # Non ossim_setup.conf related
-    UNKNOWN_SYSCONFIG_ERROR = 3000
-    CANNOT_SAVE_SYSCONFIG = 3001
+    UNKNOWN_AVSYSCONFIG_ERROR = 3000
+    CANNOT_SAVE_AVSYSCONFIG = 3001
     INVALID_NETWORK_INTERFACE = 3002
     NETWORK_INTERFACE_DOWN = 3003
     HOSTS_ENTRY_NOT_FOUND = 3004
+    INCOMPLETE_AVVPN_ENTRY = 3005
+    INVALID_AVVPN_ENTRY_FIELD = 3006
+    CANNOT_LAUNCH_TRIGGERS = 3007
 
     # setup fields errors:
     VALUE_NOT_VALID_IP = 5000
@@ -150,6 +153,9 @@ class AVConfigParserErrors():
                       3002: "Invalid network interface",
                       3003: "Network interface is down",
                       3004: "Invalid entry in /etc/hosts",
+                      3005: "Incomplete entry in /etc/alienvault/network/vpn.conf",
+                      3006: "Invalid field value for entry in /etc/alienvault/network/vpn.conf",
+                      3007: "Cannot launch configuration triggers",
                       5000: "Please enter a valid IP address"
                       }
 

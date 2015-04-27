@@ -146,7 +146,11 @@ def get_network_status(av_conf):
     """
     result = {}
     result['firewall_active'] = av_conf.get_firewall_active()
-    result['vpn_access'] = av_conf.get_vpn_vpn_infraestructure()
+    result['vpn_access'] = av_conf.get_avvpn_config_enabled()
+    try:
+        result['vpn_access'] = av_conf.get_avvpn_config_enabled()
+    except:
+        result['vpn_access'] = av_conf.get_vpn_vpn_infraestructure()
     result['dns_servers'] = av_conf.get_general_admin_dns()
     result['interfaces'] = {}
     result['gateway'] = av_conf.get_general_admin_gateway()

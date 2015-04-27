@@ -129,7 +129,8 @@ def get_plugin_get_request_from_yml(yml_data, device_id=None):
 @blueprint.route('/<sensor_id>/plugins', methods=['GET'])
 @document_using('static/apidocs/sensor/plugins.html')
 @admin_permission.require(http_exception=403)
-@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}, 'device_id': UUID})
+@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
+               'device_id': {'type': UUID, 'optional': True}})
 def get_sensor_detector_by_device(sensor_id):
     """
     Return the [sensor]/plugin list for a given sensor
@@ -183,7 +184,7 @@ def put_sensor_detector_by_device(sensor_id):
             if len(ips) > 0:
                 plugins_hash[device_id] = {"device_ip": ips[0],  # A device  should never have more than one IP
                                            "plugins": plugins}
-    except Exception, e:
+    except Exception:
         return make_bad_request("Invalid JSON: %s , p=%s" % ("", str(plugins)))
     try:
         (success, data) = set_sensor_detectors_from_yaml(sensor_ip, str(plugins_hash))
@@ -202,19 +203,16 @@ def put_sensor_detector_by_device(sensor_id):
 @blueprint.route('/<sensor_id>/detector/all', methods=['GET'])
 @document_using('static/apidocs/sensor/all.html')
 @admin_permission.require(http_exception=403)
-@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}, 'device_id': UUID})
+@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}})
 def get_available_plugins(sensor_id):
     """
     Return the [sensor]/plugin list for a given sensor
     :param sensor_id: The sensor which we want to get the data
-    :param device_id: Filter by device (canonical uuid)
     """
     (success, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id)
     if not success:
         current_app.logger.error("detector: get_sensor_detector: Bad 'sensor_id'")
         return make_bad_request("Bad sensor_id")
-
-    device_id = request.args.get('device_id', None)
 
     # Now call the ansible module to obtain the [sensor]/iface
     (success, data) = get_all_available_plugins(sensor_ip, only_detectors=True)

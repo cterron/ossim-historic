@@ -33,14 +33,7 @@ global $colored_alerts, $debug_mode;
 					    <?php echo _("SHOW TREND GRAPH") ?>
 					</td>
 					<td>
-					    <!-- Plot ON/OFF FlipSwitch -->
-					    <div class="onoffswitch">
-                            <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" onchange="trendgraph()">
-                            <label class="onoffswitch-label" for="myonoffswitch">
-                                <div class="onoffswitch-inner"></div>
-                                <div class="onoffswitch-switch"></div>
-                            </label>
-                        </div>
+                        <div id="trend_checkbox"></div>
 					</td>
 				</tr>
 			</table>
@@ -65,7 +58,7 @@ global $colored_alerts, $debug_mode;
 <?php
 
 $page = "base_qry_main.php";
-$cnt_sql = "SELECT COUNT(acid_event.id) FROM acid_event " . $join_sql . $where_sql . $criteria_sql;
+//$cnt_sql = "SELECT COUNT(acid_event.id) FROM acid_event " . $join_sql . $where_sql . $criteria_sql;
 $tmp_page_get = "";
 
 // Timezone
@@ -170,9 +163,11 @@ else {
     } elseif ($sort_order == "oprio_d") {
         $sort_sql = " ORDER BY ossim_priority DESC,timestamp DESC";
     } elseif ($sort_order == "oriska_a") {
-        $sort_sql = " ORDER BY GREATEST(ossim_risk_c,ossim_risk_a) ASC,timestamp DESC";
+        //$sort_sql = " ORDER BY GREATEST(ossim_risk_c,ossim_risk_a) ASC,timestamp DESC";
+        $sort_sql = " ORDER BY ossim_risk_a ASC,timestamp DESC";
     } elseif ($sort_order == "oriska_d") {
-        $sort_sql = " ORDER BY GREATEST(ossim_risk_c,ossim_risk_a) DESC,timestamp DESC";
+        //$sort_sql = " ORDER BY GREATEST(ossim_risk_c,ossim_risk_a) DESC,timestamp DESC";
+        $sort_sql = " ORDER BY ossim_risk_a DESC,timestamp DESC";
     } elseif ($sort_order == "oriskd_a") {
         $sort_sql = " ORDER BY ossim_risk_a ASC,timestamp DESC";
     } elseif ($sort_order == "oriskd_d") {
@@ -190,56 +185,55 @@ else {
     }
     ExportHTTPVar("prev_sort_order", $sort_order);
 }
-// Choose the correct INDEX for select (timestamp force index DISABLED at 31/01/2012)
-//if (preg_match("/^time/", $sort_order)) $sql.= " FORCE INDEX (timestamp)";
-//elseif (preg_match("/^sip/", $sort_order)) $sql.= " FORCE INDEX (ip_src)";
-//elseif (preg_match("/^dip/", $sort_order)) $sql.= " FORCE INDEX (ip_dst)";
-//elseif (preg_match("/^sig/", $sort_order)) $sql.= " FORCE INDEX (sig_name)";
-//elseif (preg_match("/^oasset/", $sort_order)) $sql.= " FORCE INDEX (ossim_asset_dst)";
-//elseif (preg_match("/^oprio/", $sort_order)) $sql.= " FORCE INDEX (acid_event_ossim_priority)";
-//elseif (preg_match("/^oriska/", $sort_order)) $sql.= " FORCE INDEX (acid_event_ossim_risk_a)";
-//elseif (preg_match("/^oriskd/", $sort_order)) $sql.= " FORCE INDEX (acid_event_ossim_risk_c)";
-//elseif (preg_match("/^oreli/", $sort_order)) $sql.= " FORCE INDEX (acid_event_ossim_reliability)";
-//elseif (preg_match("/^proto/", $sort_order)) $sql.= " FORCE INDEX (ip_proto)";
+
+$criteria_sql_orig = $criteria_sql;
+
+// Special case filter by plugin_id/sid
+// Query first to acc tables to limit time-range
+
+$use_ac     = $criteria_clauses[3];
+$sig_type   = $criteria_clauses[6];
+$src_dst    = $criteria_clauses[7];
+$assets     = $criteria_clauses[8];
+$pre_filter = $sig_type || $src_dst || $assets;
+
+if ($use_ac && $pre_filter)
+{
+    if ($sig_type || $assets)
+    {
+        $acc   = (preg_match("/ip_src|ip_dst/",$criteria_sql)) ? "po_acid_event" : "ac_acid_event";
+        $sqlac = "SELECT min(timestamp) as mindate,max(timestamp) as maxdate FROM $acc acid_event WHERE $criteria_sql HAVING mindate is not null AND maxdate is not null";
+    }
+    elseif ($src_dst)
+    {
+        $sqlac = "SELECT min(timestamp) as mindate,max(timestamp) as maxdate FROM po_acid_event acid_event WHERE $criteria_sql HAVING mindate is not null AND maxdate is not null";
+    }
+
+    if (file_exists('/tmp/debug_siem'))
+    {
+        error_log("CRITERIA:$sqlac\n", 3, "/tmp/siem");
+    }
+
+    $resultac = $qs->ExecuteOutputQueryNoCanned($sqlac, $db);
+    if ($myrowac = $resultac->baseFetchRow())
+    {
+        $min_date     = $myrowac[0];
+        $criteria_sql = preg_replace("/ >='\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d'/", " >='$min_date'", $criteria_sql, 1);
+
+        $max_date     = preg_replace('/00:00$/','59:59', $myrowac[1]);
+        $criteria_sql = preg_replace("/ <='\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d'/", " <='$max_date'", $criteria_sql, 1);
+    }
+    else
+    {
+        // Empty so force finish
+        $criteria_sql      = preg_replace("/ 1 /", " 1=0 ", $criteria_sql, 1);
+        $criteria_sql_orig = preg_replace("/ 1 /", " 1=0 ", $criteria_sql_orig, 1);
+    }
+    $resultac->baseFreeRows();
+}
+
 // Make SQL string with criterias
 $sql = $sql . $join_sql . $where_sql . $criteria_sql . $sort_sql;
-// if ($debug_mode > 0) {
-    // echo "<P>SUBMIT: ".$submit;
-    // echo "<P>sort_order: ".$sort_order;
-    // echo "<P>SQL (save_sql): ".$sql;
-    // echo "<P>SQL (sort_sql): ".$sort_sql;
-// }
-/* Run the Query again for the actual data (with the LIMIT) */
-if (file_exists('/tmp/debug_siem'))
-{
-    error_log("QUERY:$sql\n", 3, "/tmp/siem");
-}
-
-$_SESSION['siem_current_query'] = $sql;
-
-$result = $qs->ExecuteOutputQuery($sql, $db);
-//echo "FR:".$result->baseRecordCount()."<br>"; print_r($criteria_clauses);
-$et->Mark("Retrieve Query Data");
-$qs->GetCalcRows($criteria_clauses[2], $result->baseRecordCount(), $db);
-//$qs->GetCalcFoundRows($cnt_sql, $db);
-/* Run the query to determine the number of rows (No LIMIT)*/
-//$qs->GetNumResultRows($cnt_sql, $db);
-
-// if ($debug_mode > 0) {
-    // $qs->PrintCannedQueryList();
-    // $qs->DumpState();
-    // echo "$sql<BR>";
-// }
-
-/* Clear the old checked positions */
-for ($i = 0; $i < $show_rows; $i++) {
-    $action_lst[$i] = "";
-    $action_chk_lst[$i] = "";
-}
-
-// time variables for hostreportmenu
-$date_from_aux = $_SESSION["time"][0][4].'-'.$_SESSION["time"][0][2].'-'.$_SESSION["time"][0][3].' 00:00:00';
-$date_to_aux = ($_SESSION["time"][1][4] != "") ? $_SESSION["time"][1][4].'-'.($_SESSION["time"][1][2]-1).'-'.$_SESSION["time"][1][3].' 23:59:59' : gmdate("Y",$timetz).'-'.gmdate("m",$timetz).'-'.gmdate("d",$timetz).' 23:59:59';
 
 // time selection for graph x
 $tr = ($_SESSION["time_range"] != "") ? $_SESSION["time_range"] : "all";
@@ -256,7 +250,8 @@ if ($tr == "range")
 }
 $tzc = Util::get_tzc($tz);
 
-switch ($tr) {
+switch ($tr)
+{
     case "today":
         $interval = "hour(convert_tz(timestamp,'+00:00','$tzc')) as intervalo, 'h' as suf";
         $grpby = " GROUP BY intervalo,suf";
@@ -283,12 +278,50 @@ switch ($tr) {
         $interval = "monthname(convert_tz(timestamp,'+00:00','$tzc')) as intervalo, year(convert_tz(timestamp,'+00:00','$tzc')) as suf";
         $grpby = " GROUP BY intervalo,suf ORDER BY suf,intervalo";
 }
-//$sqlgraph = "SELECT COUNT(acid_event.cid) as num_events, $interval FROM acid_event " . $join_sql . $where_sql . $criteria_sql . $grpby;
-$sqlgraph = "SELECT COUNT(acid_event.id) as num_events, $interval FROM acid_event " . $join_sql . $where_sql . $criteria_sql . $grpby;
-//echo $sqlgraph."<br>";
+
+if ($use_ac)
+{
+    $acc      = (preg_match("/ip_src|ip_dst/",$criteria_sql_orig)) ? "po_acid_event" : "ac_acid_event";
+    $sqlgraph = "SELECT SUM(acid_event.cnt) as num_events, $interval FROM $acc acid_event " . $join_sql . $where_sql . $criteria_sql_orig . $grpby;
+}
+else
+{
+    $sqlgraph = "SELECT COUNT(acid_event.id) as num_events, $interval FROM acid_event " . $join_sql . $where_sql . $criteria_sql_orig . $grpby;
+}
 /* Print the current view number and # of rows */
 
 $_SESSION['siem_current_query_graph'] = $sqlgraph;
+$_SESSION['siem_current_query']       = $sql;
+
+/* Run the Query again for the actual data (with the LIMIT) */
+if (file_exists('/tmp/debug_siem'))
+{
+    error_log("QUERY:$sql\nGRAPH:$sqlgraph\n", 3, "/tmp/siem");
+}
+
+session_write_close();
+$result = $qs->ExecuteOutputQuery($sql, $db);
+//echo "FR:".$result->baseRecordCount()."<br>"; print_r($criteria_clauses);
+$et->Mark("Retrieve Query Data");
+$qs->GetCalcRows($criteria_clauses[2], $result->baseRecordCount(), $db);
+//$qs->GetCalcFoundRows($cnt_sql, $db);
+/* Run the query to determine the number of rows (No LIMIT)*/
+//$qs->GetNumResultRows($cnt_sql, $db);
+// if ($debug_mode > 0) {
+    // $qs->PrintCannedQueryList();
+    // $qs->DumpState();
+    // echo "$sql<BR>";
+// }
+
+/* Clear the old checked positions */
+for ($i = 0; $i < $show_rows; $i++) {
+    $action_lst[$i] = "";
+    $action_chk_lst[$i] = "";
+}
+
+// time variables for hostreportmenu
+$date_from_aux = $_SESSION["time"][0][4].'-'.$_SESSION["time"][0][2].'-'.$_SESSION["time"][0][3].' 00:00:00';
+$date_to_aux = ($_SESSION["time"][1][4] != "") ? $_SESSION["time"][1][4].'-'.($_SESSION["time"][1][2]-1).'-'.$_SESSION["time"][1][3].' 23:59:59' : gmdate("Y",$timetz).'-'.gmdate("m",$timetz).'-'.gmdate("d",$timetz).' 23:59:59';
 
 // do we need load extradata?
 $need_extradata = 0;
@@ -374,7 +407,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $cell_data['ID'] = $eid;
     $cell_align['ID'] = "center";
 
-    $sensor_name = GetSensorName($myrow["device_id"], $db);
+    $sensor_name = GetSensorName($myrow["device_id"], $db, false);
     if ($sensor_name == 'Unknown' || $sensor_name == 'N/A')
     {
         $sensor_msg             = _("Directive events are generated in servers, not in sensors");
@@ -586,7 +619,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
 
                 $f_url = Menu::get_menu_url('base_qry_main.php?new=2&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr_cnt=1&sort_order=time_d&search_str='.urlencode($src_name).'&submit=Src+Host', 'analysis', 'security_events', 'security_events');
 
-                $sip_lnk = '<a class="trlnk" '.$style_aux.' alt="'.$current_sip.'" title="'.$current_sip.'" href="'.$f_url.'">'.$src_name.'</a>' . $bold_aux1 . $current_sport . $bold_aux2;
+                $sip_lnk = '<a class="trlnk qlink" '.$style_aux.' alt="'.$current_sip.'" title="'.$current_sip.'" href="'.$f_url.'">'.$src_name.'</a>' . $bold_aux1 . $current_sport . $bold_aux2;
             }
             else
             {
@@ -594,14 +627,15 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
                 $f_url = Menu::get_menu_url('base_qry_main.php?new=2&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr_cnt=1&sort_order=time_d&ip_addr%5B0%5D%5B0%5D=+&ip_addr%5B0%5D%5B1%5D=ip_src&ip_addr%5B0%5D%5B2%5D=%3D&ip_addr%5B0%5D%5B3%5D='.$current_sip.'&ip_addr%5B0%5D%5B8%5D=+', 'analysis', 'security_events', 'security_events');
 
 
-                $sip_lnk = '<a class="trlnk" '.$style_aux.' alt="'.$current_sip.'" title="'.$current_sip.'" href="'.$f_url.'">'.$src_name.'</a>' . $bold_aux1 . $current_sport . $bold_aux2;
+                $sip_lnk = '<a class="trlnk qlink" '.$style_aux.' alt="'.$current_sip.'" title="'.$current_sip.'" href="'.$f_url.'">'.$src_name.'</a>' . $bold_aux1 . $current_sport . $bold_aux2;
             }
         }
 
         $cell_data['IP_PORTSRC']    = $div . $src_img . " " . $sip_lnk . " " . $rep_src_icon . $bdiv;
         $cell_pdfdata['IP_PORTSRC'] = $src_name.$current_sport;
         $cell_more['IP_PORTSRC']    = (preg_match("/\d+\.\d+\.\d+\.\d+/",$cell_data['IP_PORTSRC'])) ? "nowrap" : "";
-        $cell_data['IP_SRC']        = $src_img . " " . (($homelan_src) ? "<b>$current_sip</b>" : $current_sip) . " " . $rep_src_icon;
+        $cell_data['IP_SRC']        = $src_img . " <a class='trlnk qlink' href='$f_url'>" . (($homelan_src) ? "<b>$current_sip</b>" : $current_sip) . "</a> " . $rep_src_icon;
+        $cell_more['IP_SRC']        = "nowrap";
         $cell_pdfdata['IP_SRC']     = $current_sip;
         $cell_data['PORT_SRC']      = str_replace(":","",$current_sport);
     }
@@ -698,20 +732,21 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
             {
                 $f_url = Menu::get_menu_url('base_qry_main.php?new=2&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr_cnt=1&sort_order=time_d&search_str='.urlencode($dst_name).'&submit=Dst+Host', 'analysis', 'security_events', 'security_events');
 
-                $dip_lnk = '<a class="trlnk" '.$style_aux.' alt="'.$current_dip.'" title="'.$current_dip.'" href="'.$f_url.'">'.$dst_name.'</a>' . $bold_aux1 . $current_dport . $bold_aux2;
+                $dip_lnk = '<a class="trlnk qlink" '.$style_aux.' alt="'.$current_dip.'" title="'.$current_dip.'" href="'.$f_url.'">'.$dst_name.'</a>' . $bold_aux1 . $current_dport . $bold_aux2;
             }
             else
             {
                 $f_url = Menu::get_menu_url('base_qry_main.php?new=2&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr_cnt=1&sort_order=time_d&ip_addr%5B0%5D%5B0%5D=+&ip_addr%5B0%5D%5B1%5D=ip_dst&ip_addr%5B0%5D%5B2%5D=%3D&ip_addr%5B0%5D%5B3%5D='.$current_dip.'&ip_addr%5B0%5D%5B8%5D=+', 'analysis', 'security_events', 'security_events');
 
-                $dip_lnk = '<a class="trlnk" '.$style_aux.' alt="'.$current_dip.'" title="'.$current_dip.'" href="'.$f_url.'">'.$dst_name.'</a>' . $bold_aux1 . $current_dport . $bold_aux2;
+                $dip_lnk = '<a class="trlnk qlink" '.$style_aux.' alt="'.$current_dip.'" title="'.$current_dip.'" href="'.$f_url.'">'.$dst_name.'</a>' . $bold_aux1 . $current_dport . $bold_aux2;
             }
         }
 
         $cell_data['IP_PORTDST']    = $div . $dst_img . " " . $dip_lnk . " " . $rep_dst_icon . $bdiv;
         $cell_pdfdata['IP_PORTDST'] = $dst_name.$current_dport;
         $cell_more['IP_PORTDST']    = (preg_match("/\d+\.\d+\.\d+\.\d+/",$cell_data['IP_PORTSRC'])) ? "nowrap" : "";
-        $cell_data['IP_DST']        = $dst_img . " " . (($homelan_dst) ? "<b>$current_dip</b>" : $current_dip) . " " . $rep_dst_icon;
+        $cell_data['IP_DST']        = $dst_img . " <a class='trlnk qlink' href='$f_url'>" . (($homelan_dst) ? "<b>$current_dip</b>" : $current_dip) . "</a> " . $rep_dst_icon;
+        $cell_more['IP_DST']        = "nowrap";
         $cell_pdfdata['IP_DST']     = $current_dip;
         $cell_data['PORT_DST']      = str_replace(":","",$current_dport);
     }
@@ -770,7 +805,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     //qroPrintEntry("<img src=\"bar2.php?value=" . $current_oriskc . "&value2=" . $current_oriska . "&max=9&range=1\" border='0' align='absmiddle' title='$current_oriskc -> $current_oriska'>&nbsp;");
 
     $current_maxrisk = ($current_oriska > $current_oriskc) ? $current_oriska : $current_oriskc;
-    $risk_detail = str_replace("10mm","14mm","<div style='text-align:right'>Asset S->D: ".$cell_pdfdata['ASSET']."<br>Priority: ".$cell_pdfdata['PRIORITY']."<br>Reliability: ".$cell_pdfdata['RELIABILITY']."<br>Risk A->C: <img src='".$current_url."/forensics/bar2.php?value=" . $current_oriskc . "&value2=" . $current_oriska . "&max=9&range=1' border='0' align='absmiddle' style='width:10mm'></div>");
+    $risk_detail = "<div style='text-align:right'>Asset S->D: <img src='bar2.php?value=" . $current_oasset_s . "&value2=" . $current_oasset_d . "&max=5' border='0' align='absmiddle' style='width:14mm'><br>Priority: <img src='bar2.php?value=" . $current_oprio . "&max=5' border='0' align='absmiddle' style='width:14mm'><br>Reliability: <img src='bar2.php?value=" . $current_oreli . "&max=9' border='0' align='absmiddle' style='width:14mm'><br>Risk A->C: <img src='bar2.php?value=" . $current_oriskc . "&value2=" . $current_oriska . "&max=9&range=1' border='0' align='absmiddle' style='width:14mm'></div>";
     $cell_data['RISK'] = "<a href='javascript:;' class='riskinfo' style='text-decoration:none' txt='".Util::htmlentities($risk_detail,ENT_QUOTES)."'><img src=\"bar2.php?value=" . $current_maxrisk . "&max=9&range=1\" border='0' align='absmiddle'></a>";
     $cell_pdfdata['RISK'] = "<img src='".$current_url."/forensics/bar2.php?value=" . $current_maxrisk . "&max=9&range=1' border='0' align='absmiddle' style='width:10mm'>";
 

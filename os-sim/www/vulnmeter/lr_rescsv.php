@@ -87,21 +87,6 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
 
 $conf = $GLOBALS["CONF"];
 
-//php4 version of htmlspecialchars_decode which is only available in php5 upwards
-if (!function_exists('htmlspecialchars_decode'))
-{
-     function htmlspecialchars_decode($str)
-     {
-          $str = preg_replace("/&gt;/",">",$str);
-          $str = preg_replace("/&lt;/","<",$str);
-          $str = preg_replace("/&quot;/","\"",$str);
-          $str = preg_replace("/&#039;/","'",$str);
-          $str = preg_replace("/&amp;/","&",$str);
-
-          return $str;
-     }
-}
-
 $dbconn->disconnect();
 $dbconn = $db->connect();
 
@@ -517,15 +502,19 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
                 $pfamily    = $plugin_info->fields['family'];
                 $pcategory  = $plugin_info->fields['category'];
                 $pcopyright = $plugin_info->fields['copyright'];
-                $psummary   = $plugin_info->fields['summary'];
-                $pversion   = $plugin_info->fields['version'];                
+                $pversion   = $plugin_info->fields['version'];
+                
+                $msg = htmlspecialchars_decode($msg, ENT_QUOTES);
+             
+                $dfields = extract_fields($msg);              
 
                 $pinfo = array();
-                if ($pfamily!="")    { $pinfo[] = 'Family name: '.trim(strip_tags($pfamily));} 
-                if ($pcategory!="")  { $pinfo[] = 'Category: '.trim(strip_tags($pcategory)); }
-                if ($pcopyright!="") { $pinfo[] = 'Copyright: '.trim(strip_tags($pcopyright)); }
-                if ($psummary!="")   { $pinfo[] = 'Summary: '.trim(strip_tags($psummary)); }
-                if ($pversion!="")   { $pinfo[] = 'Version: '.trim(strip_tags($pversion)); }
+                
+                if ($dfields['Summary']!="") { $pinfo[] = 'Summary: '.$dfields['Summary']; }
+                if ($pfamily!="")            { $pinfo[] = 'Family name: '.trim(strip_tags($pfamily));} 
+                if ($pcategory!="")          { $pinfo[] = 'Category: '.trim(strip_tags($pcategory)); }
+                if ($pcopyright!="")         { $pinfo[] = 'Copyright: '.trim(strip_tags($pcopyright)); }
+                if ($pversion!="")           { $pinfo[] = 'Version: '.htmlspecialchars_decode(trim(strip_tags($pversion)), ENT_QUOTES); }
              
                 if(count($pinfo)==0) {
                     $row[] =  "n/a";
@@ -533,8 +522,6 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
                 else {
                     $row[] =  $pname . "\n" . implode("\n", $pinfo);
                 }
-             
-                $dfields = extract_fields($msg);
                 
                 $row[] = (empty($dfields['Overview'])) ? 'n/a' : $dfields['Overview'];
              

@@ -131,7 +131,7 @@ $layout = load_layout($name_layout, $category);
                         session.redirect();
                         return;
                     }
-                    var _msg = "<?php echo _('Sorry, operation was not completed due to an unknown error')?>";
+                    var _msg = "<?php echo _('Unknown error - Operation cannot be completed')?>";
 
 					show_notification('av_ng_notif', _msg, 'nf_error', 7500, true, notif_style);
 				},
@@ -265,7 +265,7 @@ $layout = load_layout($name_layout, $category);
 			elseif (GET('msg') == 'unknown_error')
 			{
 				?>
-				notify('<?php echo _("Sorry, operation was not completed due to an unknown error")?>', 'nf_error');
+				notify('<?php echo _("Unknown error - Operation cannot be completed")?>', 'nf_error');
 				<?php
 			}
 			?>
@@ -289,24 +289,10 @@ $layout = load_layout($name_layout, $category);
     						'false',
     						'left',
     						FALSE
-    					) ,
-    					'threshold_c' => array(
-    						_('Thr_C'),
-    						45,
-    						'true',
-    						'center',
-    						FALSE
-    					) ,
-    					'threshold_a' => array(
-    						_('Thr_A'),
-    						45,
-    						'true',
-    						'center',
-    						FALSE
     					),
     					'desc' => array(
     						_('Description'),
-    						310,
+    						416,
     						'false',
     						'left',
     						FALSE

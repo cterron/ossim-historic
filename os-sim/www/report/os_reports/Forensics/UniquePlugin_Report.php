@@ -75,11 +75,10 @@ if ( Session::menu_perms("analysis-menu", "EventsForensics") )
 										
         $th_style = 'font-size: 10px;';
 						
-        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:50mm;'>"._("Data Source")."</th>\n
-						 <th align='center' valign='middle' style='".$th_style." width:17mm;'>"._("Events")." #</th>\n
-						 <th align='center' valign='middle' style='".$th_style." width:35mm;'>"._($var_field)."</th>\n
-						 <th align='center' valign='middle' style='".$th_style." width:55mm;'>"._("Last Events")."</th>\n
-						 <th align='center' valign='middle' style='".$th_style." width:20mm;'>"._("Date")." ".$text_tz."</th>\n";						      		       
+        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:55mm;'>"._("Data Source")."</th>\n
+						 <th align='center' valign='middle' style='".$th_style." width:25mm;'>"._("Events")." #</th>\n
+						 <th align='center' valign='middle' style='".$th_style." width:50mm;'>"._($var_field)."</th>\n
+						 <th align='center' valign='middle' style='".$th_style." width:50mm;'>"._("Product Type")." #</th>\n";						      		       
                    
 				
 		$htmlPdfReport->set("<tr>\n".$html_headers."</tr>\n");
@@ -88,7 +87,7 @@ if ( Session::menu_perms("analysis-menu", "EventsForensics") )
 		if ( $rs->RecordCount() == 0 )
 		{
 			$htmlPdfReport->set("<tr>
-									<td colspan='5' style='text-align:center; padding: 15px 0px;' class='w100' valign='middle'>"._("No plugins found for this search criteria")."</td>
+									<td colspan='4' style='text-align:center; padding: 15px 0px;' class='w100' valign='middle'>"._("No plugins found for this search criteria")."</td>
 								</tr>\n");
 		}
 		else
@@ -99,11 +98,10 @@ if ( Session::menu_perms("analysis-menu", "EventsForensics") )
 			{
 				$td_style = 'font-size: 10px; text-align:center;';
 												
-				$html_fields = "<td valign='middle' style='".$td_style." width:50mm; text-align: left;'>".Util::wordwrap($rs->fields['dataV1'], 48, "<br/>", true)."</td>\n
-								<td valign='middle' style='".$td_style." width:17mm;'>".$rs->fields['dataI1']."</td>\n
-								<td valign='middle' style='".$td_style." width:35mm;'>".$rs->fields['dataV11']."</td>\n
-								<td valign='middle' style='".$td_style." width:55mm; text-align: left;'>".Util::wordwrap($rs->fields['dataV2'], 42, "<br/>", true)."</td>\n
-					 		    <td valign='middle' style='".$td_style." width:20mm;'>".$rs->fields['dataV7']."</td>\n";                   
+				$html_fields = "<td valign='middle' style='".$td_style." width:55mm; text-align: left;'>".Util::wordwrap($rs->fields['dataV1'], 48, "<br/>", true)."</td>\n
+								<td valign='middle' style='".$td_style." width:25mm;'>".$rs->fields['dataI1']."</td>\n
+								<td valign='middle' style='".$td_style." width:50mm;'>".$rs->fields['dataV11']."</td>\n
+								<td valign='middle' style='".$td_style." width:50mm;'>".$rs->fields['dataV2']."</td>\n";                   
 					
 				$bc = ( $i++%2!=0 ) ? "class='par'" : "";           
 				$htmlPdfReport->set("<tr style='width: 193mm;' $bc>\n".$html_fields."</tr>\n");

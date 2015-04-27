@@ -589,7 +589,7 @@ sub config_profile_sensor() {
             );
             verbose_log("Sensor Profile: Update sensor and system tables");
             my $command
-                = "echo \"UPDATE alienvault.sensor SET ip = inet6_pton(\'$config{'admin_ip'}\') WHERE inet6_ntop(ip) = \'$config_last{'admin_ip'}\'\" | ossim-db   $stdout $stderr ";
+                = "echo \"UPDATE alienvault.sensor SET ip = inet6_aton(\'$config{'admin_ip'}\') WHERE inet6_ntoa(ip) = \'$config_last{'admin_ip'}\'\" | ossim-db   $stdout $stderr ";
             debug_log($command);
             system($command);
 
@@ -598,7 +598,7 @@ sub config_profile_sensor() {
             {
                 my $sip = $config{'ha_local_node_ip'};
                 my $command
-                    = "echo \"UPDATE alienvault.system SET sensor_id=(SELECT sensor.id FROM sensor WHERE sensor.ip=inet6_pton(\'$sip\') OR sensor.ip=inet6_pton(\'$config{'admin_ip'}\') LIMIT 1) WHERE sensor_id is null AND inet6_ntop(admin_ip) = \'$config_last{'admin_ip'}\'\" | ossim-db   $stdout $stderr ";
+                    = "echo \"UPDATE alienvault.system SET sensor_id=(SELECT sensor.id FROM sensor WHERE sensor.ip=inet6_aton(\'$sip\') OR sensor.ip=inet6_aton(\'$config{'admin_ip'}\') LIMIT 1) WHERE sensor_id is null AND inet6_ntoa(admin_ip) = \'$config_last{'admin_ip'}\'\" | ossim-db   $stdout $stderr ";
                 debug_log($command);
                 system($command);
 
@@ -639,7 +639,7 @@ sub config_profile_sensor() {
 
             # -- alienvault.sensor, alienvault.sensor_properties, alienvault.sensor_stats, alienvault.net_sensor_reference, alienvault.sensor_interfaces, alienvault.task_inventory, alienvault.acl_sensors
             my $ldsname
-                = `echo "SELECT count(id) FROM sensor WHERE ip = inet6_pton('$admin_ip') OR id in (SELECT sensor_id FROM system WHERE admin_ip=inet6_pton('$admin_ip'));" | ossim-db | grep -vw count $stdout $stderr`;
+                = `echo "SELECT count(id) FROM sensor WHERE ip = inet6_aton('$admin_ip') OR id in (SELECT sensor_id FROM system WHERE admin_ip=inet6_aton('$admin_ip'));" | ossim-db | grep -vw count $stdout $stderr`;
             $ldsname =~ s/\n//g;
             debug_log("local (default) sensor name count: $ldsname");
 
@@ -671,7 +671,7 @@ sub config_profile_sensor() {
             }
 
             my $ldshexid
-                = `echo "SELECT HEX(id) FROM sensor WHERE ip = inet6_pton('$admin_ip') LIMIT 1;" | ossim-db | grep -vw HEX $stdout $stderr`;
+                = `echo "SELECT HEX(id) FROM sensor WHERE ip = inet6_aton('$admin_ip') LIMIT 1;" | ossim-db | grep -vw HEX $stdout $stderr`;
             $ldshexid =~ s/\s+//g; chomp($ldshexid);
             debug_log("local (default) sensor hex(id): $ldshexid");
 

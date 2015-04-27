@@ -100,6 +100,7 @@ else
 	$action = 'newnetgroup.php';
 }
 
+$paths = Asset::get_path_url(FALSE);
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -196,7 +197,7 @@ else
 
 		function GB_notes(id) 
 		{
-			url = '../asset_details/ajax/view_notes.php?type=net_group&id=' + id;
+			url = '../av_asset/common/views/notes.php?asset_type=net_group&asset_id=' + id;
 			GB_show("<?php echo _("Asset Notes")?>", url, "460", "700");
 			return false;
 		}
@@ -430,10 +431,6 @@ else
         {
         	    text-transform: uppercase;
         }
-		.advanced 
-		{ 
-		    display: none;    		
-		}
         
         .filterdiv
         {
@@ -503,8 +500,9 @@ else
              <?php echo _('Values marked with (*) are mandatory');?>
         </div>
 
-    	<form name='ng_form' id='ng_form' method="POST" action="<?php echo $action;?>">         
-    			
+    	<form name='ng_form' id='ng_form' method="POST" action="<?php echo $action;?>">
+        	<input type="hidden" name="threshold_a" id='threshold_a' class='vfield' value="<?php echo $threshold_a?>"/>
+            <input type="hidden" name="threshold_c" id='threshold_c' class='vfield' value="<?php echo $threshold_c?>"/>
     		<input type="hidden" name="id" id="id" class='vfield' value="<?php echo $id ?>"/>
     		<input type="hidden" name="insert" value="insert"/>
     		<input type="hidden" name="rrd_profile" value=""/>
@@ -521,7 +519,9 @@ else
 				<tr>
 					<th rowspan="2"> 
 						<?php
-						$n_url = Menu::get_menu_url('../net/net_form.php', 'environment', 'assets_groups', 'networks');
+                        $n_url = $paths['network']['views'] . 'net_form.php';
+						$n_url = Menu::get_menu_url($n_url, 'environment', 'assets', 'networks');
+						
 						?>
 						<label for='nets'><?php echo _('Networks of this group') . required();?></label><br/>
 						<span><a href="<?php echo $n_url?>"><?php echo _('Insert new network');?>?</a></span>
@@ -600,26 +600,6 @@ else
 				<tr>
 					<th><label for='descr'><?php echo _('Description');?></label><br/>
 					<td class="left"><textarea name="descr" id='descr' class='vfield'><?php echo $descr;?></textarea></td>
-				</tr>
-				
-				<tr>
-					<td colspan="2" style="text-align: left; border:none; padding-top:3px;">
-						<a class="section"><img border="0" align="absmiddle" id='advanced_arrow' src="../pixmaps/arrow_green.gif"/><?php echo _('Advanced');?></a>
-					</td>
-				</tr>
-
-				<tr class="advanced">
-					<th><label for='threshold_c'><?php echo _('Threshold C') . required();?></label></th>
-					<td class="left">
-						<input type="text" name="threshold_c" id='threshold_c' class='vfield' value="<?php echo $threshold_c?>"/>
-					</td>
-				</tr>
-
-				<tr class="advanced">
-					<th><label for='threshold_a'><?php echo _('Threshold A') . required();?></label></th>
-					<td class="left">
-						<input type="text" name="threshold_a" id='threshold_a' class='vfield' value="<?php echo $threshold_a?>"/>
-					</td>
 				</tr>			
 
 				<tr>

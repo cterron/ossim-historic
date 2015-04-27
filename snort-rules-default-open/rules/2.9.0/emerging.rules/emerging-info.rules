@@ -191,7 +191,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request 
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a 3322.org.cn Domain"; flow:to_server,established; content:"Host|3a| "; http_header; content:".3322.org.cn|0D 0A|"; within:50; http_header; classtype:bad-unknown; sid:2014289; rev:2;)
 
 #
- alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.sytes.net Domain"; flow:established,to_server; content:".sytes.net|0D 0A|";  http_header; classtype:bad-unknown; sid:2018219; rev:4;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.sytes.net Domain"; flow:established,to_server; content:".sytes.net|0D 0A|";  http_header; classtype:bad-unknown; sid:2018219; rev:5;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO JAVA - Java Archive Download"; flow:from_server,established; flowbits:isnotset,ET.http.javaclient.vulnerable; flowbits:isset,ET.http.javaclient; content:"|0D 0A 0D 0A|PK";  file_data; content:"PK"; within:2;  classtype:trojan-activity; sid:2014472; rev:4;)
@@ -1023,4 +1023,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO WinHttpReques
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Microsoft Compact Office Document Format File Download"; flow:established,from_server; file_data; content:"|D0 CF 11 E0 A1 B1 1A E1|"; within:8; flowbits:set,et.MCOFF; flowbits:noalert; classtype:misc-activity; sid:2019834; rev:1;)
+
+#
+alert tcp $HOME_NET any -> 195.22.26.192/26 443 (msg:"ET INFO invalid.cab domain in SNI"; flow:established,to_server; content:"|0b|invalid.cab"; fast_pattern:only; flowbits:set,ET.invalid.cab; flowbits:noalert; classtype:misc-activity; sid:2020888; rev:1;)
 

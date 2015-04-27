@@ -30,21 +30,32 @@
 from celery.utils.log import get_logger
 from celerymethods.tasks import celery_instance
 
-from api.lib.monitors.sensor import MonitorSensorLocation,\
-                                    MonitorSensorIDS,\
-                                    MonitorVulnerabilityScans,\
-                                    MonitorSensorDroppedPackages,\
-                                    MonitorPluginsVersion, \
-                                    MonitorPluginIntegrity
-                                    
+from api.lib.monitors.sensor import (MonitorSensorLocation,
+                                     MonitorSensorIDS,
+                                     MonitorVulnerabilityScans,
+                                     MonitorSensorDroppedPackages,
+                                     MonitorPluginsVersion,
+                                     MonitorPluginIntegrity)
+
 from api.lib.monitors.assets import MonitorSensorAssetLogActivity
 
-from api.lib.monitors.server import MonitorServerSensorActivity ,\
-                                    MonitorServerServerActivity
+from api.lib.monitors.server import (MonitorServerSensorActivity,
+                                     MonitorServerServerActivity,
+                                     MonitorServerEPSStats)
 
-from api.lib.monitors.system import MonitorSystemCPULoad,MonitorDiskUsage,MonitorSystemDNS,MonitorRemoteCertificates,\
-    MonitorRetrievesRemoteInfo, MonitorPendingUpdates
+from api.lib.monitors.system import (MonitorSystemCPULoad,
+                                     MonitorDiskUsage,
+                                     MonitorSystemDNS,
+                                     MonitorRemoteCertificates,
+                                     MonitorRetrievesRemoteInfo,
+                                     MonitorPendingUpdates,
+                                     MonitorDownloadMessageCenterMessages,
+                                     MonitorSystemCheckDB,
+                                     MonitorWebUIData,
+                                     MonitorSupportTunnel,
+                                     MonitorSystemRebootNeeded)
 
+from api.lib.monitors.doctor import MonitorPlatformTelemetryData
 
 
 logger = get_logger("celery")
@@ -61,6 +72,7 @@ def get_sensor_without_location():
     logger.info("Monitor get_sensor_without_location... finished")
     return rt
 
+
 @celery_instance.task
 def monitor_sensor_ids():
     """Monitors sensor IDS
@@ -74,6 +86,7 @@ def monitor_sensor_ids():
         rt = True
     logger.info("Monitor sensor services finished")
     return rt
+
 
 @celery_instance.task
 def monitor_sensor_vulnerability_scan_scheduled():
@@ -89,8 +102,9 @@ def monitor_sensor_vulnerability_scan_scheduled():
     logger.info("Monitor sensor Sensor Vulnerability... finished")
     return rt
 
+
 @celery_instance.task
-def monitor_server_sensor_activity ():
+def monitor_server_sensor_activity():
     """Monitor the activity between a sensor and a server.
 
     :return: True on successful, False otherwise
@@ -103,8 +117,9 @@ def monitor_server_sensor_activity ():
     logger.info("Monitor Server-Sensor activity stopped")
     return rt
 
+
 @celery_instance.task
-def monitor_server_server_activity ():
+def monitor_server_server_activity():
     """Monitor the activity between two servers.
 
     :return: True on successful, False otherwise
@@ -116,6 +131,7 @@ def monitor_server_server_activity ():
         rt = True
     logger.info("Monitor Server-Server activity stopped")
     return rt
+
 
 @celery_instance.task
 def monitor_system_disk_usage():
@@ -135,7 +151,7 @@ def monitor_system_disk_usage():
 @celery_instance.task
 def monitor_system_cpu_load():
     """
-        Monitor de CPU load 
+        Monitor de CPU load
     :return: True on successful, False otherwise
     """
     logger.info("Monitor System CPU Load started")
@@ -145,6 +161,7 @@ def monitor_system_cpu_load():
         rt = True
     logger.info("Monitor System CPU Load stopped")
     return rt
+
 
 @celery_instance.task
 def monitor_sensor_dropped_packages():
@@ -159,6 +176,7 @@ def monitor_sensor_dropped_packages():
     logger.info("Monitor Sensor Dropped Packages stopped")
     return rt
 
+
 @celery_instance.task
 def monitor_asset_log_activity():
     """Monitor de CPU load
@@ -172,6 +190,7 @@ def monitor_asset_log_activity():
     logger.info("Monitor MonitorSensorAssetLogActivity stopped")
     return rt
 
+
 @celery_instance.task
 def monitor_system_dns():
     """Monitor de DNS configuration
@@ -184,6 +203,7 @@ def monitor_system_dns():
         rt = True
     logger.info("Monitor MonitorSystemDNS stopped")
     return rt
+
 
 @celery_instance.task
 def monitor_remote_certificates():
@@ -230,6 +250,7 @@ def monitor_check_pending_updates():
     logger.info("Monitor MonitorPendingUpdates stopped")
     return rt
 
+
 @celery_instance.task
 def monitor_plugins_version():
     """Monitor to check the plugin versions
@@ -246,24 +267,130 @@ def monitor_plugins_version():
 
     logger.info("Monitor MonitorPluginVersions stopped")
     return rt
-    
 
- 
 
 @celery_instance.task
 def monitor_check_plugin_integrity():
     """Monitor to check plugin integrity (if installed agent plugins and agent rsyslog files have been modified or removed locally)
- 
     Returns:
         True if successful, False otherwise
     """
     logger.info("Monitor MonitorPluginIntegrity started")
     monitor = MonitorPluginIntegrity()
     rt = False
- 
+
     if monitor.start():
         rt = True
- 
+
     logger.info("Monitor MonitorPluginIntegrity stopped")
-    
+
+    return rt
+
+
+@celery_instance.task
+def monitor_check_platform_telemetry_data():
+    """
+    Uses the AV Doctor to get data from the deployed systems, and returns telemetry data.
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorPlatformTelemetryData started")
+    monitor = MonitorPlatformTelemetryData()
+    rt = False
+    if monitor.start():
+        rt = True
+    logger.info("Monitor MonitorPlatformTelemetryData stopped")
+
+    return rt
+
+
+@celery_instance.task
+def monitor_download_mcserver_messages():
+    """Task to run periodically."""
+    logger.info("Monitor monitor_download_mcserver_messages... started")
+    rt = False
+    monitor = MonitorDownloadMessageCenterMessages()
+    if monitor.start():
+        rt = True
+    logger.info("Monitor monitor_download_mcserver_messages... finished")
+
+    return rt
+
+
+@celery_instance.task
+def monitor_system_check_db_is_innodb():
+    """
+        Task to run periodically
+    """
+    logger.info("Monitor monitor_system_check_db... started")
+    rt = False
+    monitor = MonitorSystemCheckDB()
+    if monitor.start():
+        rt = True
+    logger.info("Monitor monitor_system_check_db... finished")
+
+    return rt
+
+
+@celery_instance.task
+def monitor_server_eps_stats():
+    """
+    Task to run periodically
+    """
+    logger.info("Monitor monitor_server_eps_stats... started")
+    rt = False
+    monitor = MonitorServerEPSStats()
+    if monitor.start():
+        rt = True
+    logger.info("Monitor monitor_server_eps_stats... finished")
+
+    return rt
+
+
+@celery_instance.task
+def monitor_web_ui_data():
+    """Monitor to check all the web data
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorWebUIData started")
+    monitor = MonitorWebUIData()
+    rt = False
+
+    if monitor.start():
+        rt = True
+    logger.info("Monitor MonitorWebUIData stopped")
+    return rt
+
+
+@celery_instance.task
+def monitor_support_tunnels():
+    """
+        Clean keys / users if ssh tunnels is down
+        Returns:
+            Trus if successful false otherwise
+    """
+    logger.info("Monitor MonitorSupportTunnel started")
+    monitor = MonitorSupportTunnel()
+    rt = False
+    if monitor.start():
+        rt = True
+    logger.info("Monitor MonitorSupportTunnel stopped")
+    return rt
+
+@celery_instance.task
+def monitor_system_reboot_needed():
+    """Monitor to check if a system reboot is needed.
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorSystemRebootNeeded started")
+    monitor = MonitorSystemRebootNeeded()
+    rt = False
+
+    if monitor.start():
+        rt = True
+    logger.info("Monitor MonitorSystemRebootNeeded stopped")
     return rt

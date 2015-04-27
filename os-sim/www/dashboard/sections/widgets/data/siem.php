@@ -154,7 +154,7 @@ switch($type){
 		Session::logcheck("analysis-menu", "EventsForensics");
 		
 		//Date range.
-		$range          = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range          = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 
 		$query_where    = Security_report::make_where($conn, '','', array(), $assets_filters, '', '', false);
 		
@@ -166,7 +166,7 @@ switch($type){
 		
 		$forensic_link = Menu::get_menu_url($link, 'analysis', 'security_events');
 		//Sql Query
-		$sqlgraph      = "SELECT sum( acid_event.cnt ) as num_events,c.id,c.name FROM alienvault_siem.ac_acid_event as acid_event, alienvault.plugin p, alienvault.product_type c WHERE c.id=p.product_type AND p.id=acid_event.plugin_id $query_where AND acid_event.day BETWEEN '".gmdate("Y-m-d",gmdate("U")-$range)."' AND '".gmdate("Y-m-d")."' group by c.id having num_events > 0 order by num_events desc LIMIT $limit";
+		$sqlgraph      = "SELECT sum( acid_event.cnt ) as num_events,c.id,c.name FROM alienvault_siem.ac_acid_event as acid_event, alienvault.plugin p, alienvault.product_type c WHERE c.id=p.product_type AND p.id=acid_event.plugin_id $query_where AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:59:59")."' group by c.id having num_events > 0 order by num_events desc LIMIT $limit";
 
 		$ac = $txt_pt = array();
 	   
@@ -206,7 +206,7 @@ switch($type){
 	   	
 		Session::logcheck("analysis-menu", "EventsForensics");
 		//Date range.
-		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 		
 		$query_where   = Security_report::make_where($conn, '', '', array(), $assets_filters, "", "", false);
 		
@@ -219,7 +219,7 @@ switch($type){
 
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sqlgraph     = "SELECT sum( acid_event.cnt ) as num_events,p.category_id,c.name FROM alienvault_siem.ac_acid_event as acid_event, alienvault.plugin_sid p, alienvault.category c WHERE c.id=p.category_id AND p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND acid_event.day BETWEEN '".gmdate("Y-m-d",$timeutc-$range)."' AND '".gmdate("Y-m-d")."' $query_where group by p.category_id having num_events > 0 order by num_events desc LIMIT $limit";
+		$sqlgraph     = "SELECT sum( acid_event.cnt ) as num_events,p.category_id FROM alienvault_siem.ac_acid_event as acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:00:00",$timeutc-$range)."' AND '".gmdate("Y-m-d H:59:59")."' $query_where group by p.category_id having num_events > 0 and p.category_id is not null order by num_events desc LIMIT $limit";
 			
 		$rg = $conn->CacheExecute($sqlgraph);	
 			
@@ -231,16 +231,12 @@ switch($type){
 		{
 		    while (!$rg->EOF) 
 		    {
-                if ($rg->fields["name"]=="")
-                {
-					$rg->fields["name"] = _("Unknown category");
-				}
-				
-		        $data[]  = $rg->fields["num_events"];
-				$label[] = $rg->fields["name"];
+                $name    = Category::get_name_by_id($conn, $rg->fields["category_id"]);
+                $data[]  = $rg->fields["num_events"];
+                $label[] = $name;
                 $links[] = "'$forensic_link&category%5B1%5D=&category%5B0%5D=".$rg->fields["category_id"]."'";
-
-				$rg->MoveNext();
+                
+                $rg->MoveNext();
 		    }
 		}
 		

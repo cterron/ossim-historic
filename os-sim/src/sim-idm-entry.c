@@ -37,8 +37,7 @@
 #include <json-glib/json-glib.h>
 #include <libgda/libgda.h>
 
-#include "os-sim.h"
-#include "sim-log.h"
+#include "sim-container.h"
 #include "sim-object.h"
 #include "sim-inet.h"
 #include "sim-command.h"
@@ -47,6 +46,8 @@
 #include "sim-uuid.h"
 #include "sim-idm-anomalies.h"
 #include "sim-util.h"
+#include "sim-log.h"
+#include "os-sim.h"
 
 SimMain ossim;
 
@@ -125,8 +126,6 @@ static gchar *sim_idm_entry_get_command_string (SimIdmEntry *entry);
 static gchar *sim_idm_entry_to_json (GHashTable *hash_table, GHFunc json_serialize_func);
 static void sim_idm_entry_username_to_json (gpointer key, gpointer value, gpointer user_data);
 static void sim_idm_entry_software_to_json (gpointer key, gpointer value, gpointer user_data);
-static gchar *sim_idm_entry_property_from_json (const gchar *property_json);
-static gchar *sim_idm_entry_username_from_json (const gchar *username_json);
 static void sim_idm_entry_load_host_source_reference (SimDatabase *database);
 static gint sim_idm_entry_get_relevance (gint source_id);
 static void sim_idm_service_entry_free (SimIdmServiceEntry *entry);
@@ -367,7 +366,6 @@ sim_idm_entry_add_properties_from_dm (GHashTable *entry_table, GdaDataModel *dm_
   SimUuid *host_id;
   gint property_ref, source_id;
   const gchar *property_value;
-  gchar *property_value_json;
 
   // host_properties
   rows = gda_data_model_get_n_rows (dm_host_properties);
@@ -403,47 +401,44 @@ sim_idm_entry_add_properties_from_dm (GHashTable *entry_table, GdaDataModel *dm_
         g_message ("Bad encoded host property '%d' with NULL value for host id %s", property_ref, sim_uuid_get_string (sim_idm_entry_get_host_id (entry)));
         continue;
       }
-
-      if (property_ref == SIM_HOST_PROP_USERNAME)
-        property_value_json = sim_idm_entry_username_from_json (property_value);
-      else
-        property_value_json = sim_idm_entry_property_from_json (property_value);
-      if (!property_value_json)
-      {
-        g_message ("Bad encoded host property '%d' with value '%s' in host id %s", property_ref, property_value, sim_uuid_get_string (sim_idm_entry_get_host_id (entry)));
-        continue;
-      }
-
       switch (property_ref)
       {
         case SIM_HOST_PROP_CPU:
-          entry->_priv->cpu = property_value_json;
+          if (entry->_priv->cpu != NULL)
+            g_free (entry->_priv->cpu);
+          entry->_priv->cpu = g_strdup(property_value);
           entry->_priv->relevance_cpu = sim_idm_entry_get_relevance (source_id);
           break;
         case SIM_HOST_PROP_MEMORY:
-          entry->_priv->memory = g_ascii_strtoull (property_value_json, NULL, 10);
+          entry->_priv->memory = g_ascii_strtoull (property_value, NULL, 10);
           entry->_priv->relevance_memory = sim_idm_entry_get_relevance (source_id);
-          g_free (property_value_json);
           break;
         case SIM_HOST_PROP_USERNAME:
-          sim_idm_entry_username_merge (entry, property_value_json, TRUE);
+          sim_idm_entry_username_merge (entry, property_value, TRUE);
+          /* XXX Keep an eye here*/
+          if (entry->_priv->username_raw)
+            g_free (entry->_priv->username_raw);
           entry->_priv->username_raw = sim_idm_entry_username_get_string (entry);
-          g_free (property_value_json);
           break;
         case SIM_HOST_PROP_OS:
-          entry->_priv->os = property_value_json;
+          if (entry->_priv->os != NULL)
+            g_free (entry->_priv->os);
+          entry->_priv->os = g_strdup(property_value);
           entry->_priv->relevance_os = sim_idm_entry_get_relevance (source_id);
           break;
         case SIM_HOST_PROP_STATE:
-          entry->_priv->state = property_value_json;
+          if (entry->_priv->state)
+            g_free (entry->_priv->state);
+          entry->_priv->state = g_strdup(property_value);
           break;
         case SIM_HOST_PROP_VIDEO:
-          entry->_priv->video = property_value_json;
+          if (entry->_priv->video)
+            g_free (entry->_priv->video);
+          entry->_priv->video = g_strdup (property_value);
           entry->_priv->relevance_video = sim_idm_entry_get_relevance (source_id);
           break;
         default:
           g_message ("%s: unknown property reference %d", __func__, property_ref);
-          g_free (property_value_json);
           break;
       }
     }
@@ -1593,7 +1588,8 @@ sim_idm_entry_software_merge (SimIdmEntry *entry, const gchar *software, gboolea
   gchar **split_list, **split;
   gchar **i;
   gchar *cpe, *cpe_banner;
-  gchar *banner_new, *banner_old;
+  gchar *banner_old;
+  const gchar *banner_new;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (software, FALSE);
@@ -1605,6 +1601,9 @@ sim_idm_entry_software_merge (SimIdmEntry *entry, const gchar *software, gboolea
 
     cpe = *split;
     banner_new = *(split + 1);
+
+    if (!banner_new || ! strcmp (banner_new, ""))
+      banner_new = sim_container_get_banner_by_cpe (ossim.container, cpe);
 
     if (is_install)
     {
@@ -1868,88 +1867,9 @@ sim_idm_entry_software_to_json (gpointer key, gpointer value, gpointer user_data
   g_free (str);
 }
 
-static gchar *
-sim_idm_entry_property_from_json (const gchar *property_json)
-{
-  JsonParser *parser;
-  JsonNode *root, *node;
-  JsonArray *array;
-  gchar *ret = NULL;
-  GError *error = NULL;
 
-  g_return_val_if_fail (property_json, NULL);
 
-  parser = json_parser_new ();
 
-  if (!json_parser_load_from_data (parser, property_json, strlen (property_json), &error))
-  {
-    g_message ("%s: cannot parse property from json: %s", __func__, error ? error->message : "");
-    if (error)
-      g_error_free (error);
-  }
-  else
-  {
-    root = json_parser_get_root (parser);
-    array = json_node_get_array (root);
-    node = json_array_get_element (array, 0);
-    ret = g_strdup (json_node_get_string (node));
-  }
-
-  g_object_unref (parser);
-
-  return ret;
-}
-
-static gchar *
-sim_idm_entry_username_from_json (const gchar *username_json)
-{
-  JsonParser *parser;
-  JsonNode *root, *node;
-  JsonArray *array;
-  guint array_size, i;
-  const gchar *username;
-  GString *gstr;
-  gchar *ret = NULL;
-  GError *error = NULL;
-
-  g_return_val_if_fail (username_json, NULL);
-
-  parser = json_parser_new ();
-
-  if (!json_parser_load_from_data (parser, username_json, strlen(username_json), &error))
-  {
-    g_message ("%s: cannot parse username from json: %s", __func__, error ? error->message : "");
-    if (error)
-      g_error_free (error);
-  }
-  else
-  {
-    gstr = g_string_new ("");
-
-    root = json_parser_get_root (parser);
-
-    array = json_node_get_array (root);
-    array_size = json_array_get_length (array);
-
-    // Each entry will have the format "manolo|WORKGROUP", if the domain is empty it will be "pepe|"
-    for (i = 0; i < array_size; i++)
-    {
-      node = json_array_get_element (array, i);
-      username = json_node_get_string (node);
-
-      g_string_append_printf (gstr, "%s,", username);
-    }
-
-    /* remove last ',' */
-    g_string_truncate (gstr, gstr->len - 1);
-
-    ret = g_string_free (gstr, FALSE);
-  }
-
-  g_object_unref (parser);
-
-  return ret;
-}
 
 static void
 sim_idm_entry_load_host_source_reference (SimDatabase *database)

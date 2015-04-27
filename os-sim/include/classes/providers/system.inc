@@ -491,6 +491,18 @@ class System_provider extends Provider
 
         return $response;
     }
+    
+    /**
+     * This function get pending jobs
+     *
+     * @return object
+     */
+    public function get_pending_jobs()
+    {
+        $response = $this->conn->do_request($this->common_url . '/jobs', array());
+    
+        return $response;
+    }
 
     /*****************************************************************
      ************************ SUPPORT ********************************
@@ -498,7 +510,7 @@ class System_provider extends Provider
 
 
     /**
-     * This method launches the AlienVault Support Tool
+     * This method launches the AlienVault Diagnostic Tool
      *
      * @param string $system_id     Component UUID
      * @param string $ticket_number Number of ticket
@@ -517,6 +529,76 @@ class System_provider extends Provider
         return $response;
     }
 
+
+    /**
+     * This method get active tunnels
+     *
+     * @param string $system_id     Component UUID
+     *
+     * @return string in JSON format
+     */
+    public function get_tunnel($system_id)
+    {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+
+/*if ($system_id=='c4339d09-12cb-323c-8d26-0174442a2172') return '{
+  "data": {
+    "pids": [
+      {
+        "channel": "ssh",
+        "pid": "6103",
+        "remote_port": "5001"
+      },
+      {
+        "channel": "http",
+        "pid": "6150",
+        "remote_port": "5000"
+      }
+    ]
+  },
+  "status": "success"
+}';
+else return '{
+  "data": null,
+  "status": "success"
+}';*/
+        $response = $this->conn->do_request('/system/'.$system_id.'/support/tunnel', array());
+
+        return $response;
+    }
+
+
+    /**
+     * This method get active tunnels
+     *
+     * @param string  $system_id     Component UUID
+     * @param string  $ticket_number Number of ticket
+     * @param boolean $connect       true => Connect, false => Disconnect
+     *
+     * @return string in JSON format
+     */
+    public function set_tunnel($system_id, $ticket_number, $connect)
+    {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+
+        /*return '{
+  "data": null,
+  "status": "success"
+}';*/
+        if ($connect)
+        {
+            $params = array('ticket' => $ticket_number);
+            $response = $this->conn->do_request('/system/'.$system_id.'/support/tunnel', $params, 'POST');
+        }
+        else
+        {
+            $response = $this->conn->do_request('/system/'.$system_id.'/support/tunnel', array(), 'DELETE');
+        }
+
+        return $response;
+    }
 
     /*****************************************************************
      ************************ MODIFY SYSTEM  *************************
@@ -612,6 +694,115 @@ class System_provider extends Provider
     {
         $response = $this->conn->do_request($this->common_url . '/tasks', array(), 'GET');
 
+        return $response;
+    }
+
+
+    /**
+     * This method get telemetry collection
+     *
+     * @return object
+     */
+    public function get_telemetry()
+    {
+        $response = $this->conn->do_request('/system/telemetry', array(), 'GET');
+
+        return $response;
+    }
+
+
+    /**
+     * This method set telemetry collection true/false
+     *
+     * @return object
+     */
+    public function set_telemetry($enabled = FALSE)
+    {
+        $params = array("enabled" => ($enabled) ? 1 : 0);
+
+        $response = $this->conn->do_request('/system/telemetry', $params, 'PUT');
+
+        return $response;
+    }
+    
+    /*****************************************************************
+     ********************** CONFIGURATION BACKUP *********************
+    *****************************************************************/
+    
+    /**
+     * This method gets the backup list
+     *
+     * @param string   $system_id    System ID
+     * @param string   $type         Backup Type
+     *
+     * @return object
+     */
+    public function get_backup_list($system_id, $type)
+    {
+        $params = array('type' => $type);
+    
+        $response = $this->conn->do_request('/system/'.$system_id.'/backup', $params, 'GET');
+    
+        return $response;
+    }
+    
+    /**
+     * This method runs a backup
+     *
+     * @param string   $system_id    System ID
+     * @param string   $type         Backup Type
+     *
+     * @return object
+     */
+    public function run_backup($system_id, $type)
+    {
+        $params = array('type' => $type);
+    
+        $response = $this->conn->do_request('/system/'.$system_id.'/backup', $params, 'POST');
+    
+        return $response;
+    }
+    
+    /**
+     * This method deletes some backups by file
+     *
+     * @param string   $system_id     System ID
+     * @param string   $type          Backup Type
+     * @param array    $backup_files  Backup Files
+     *
+     * @return object
+     */
+    public function delete_backup($system_id, $type, $backup_files)
+    {
+        $files_string = @json_encode($backup_files);
+        
+        $params = array(
+                'type'    => $type,
+                'backups' => $files_string
+        );
+    
+        $response = $this->conn->do_request('/system/'.$system_id.'/backup', $params, 'DELETE');
+    
+        return $response;
+    }
+    
+    /**
+     * This method download a backup by file
+     *
+     * @param string   $system_id     System ID
+     * @param string   $type          Backup Type
+     * @param array    $backup_file   Backup File
+     *
+     * @return object
+     */
+    public function download_backup($system_id, $type, $backup_file)
+    {
+        $params = array(
+                'type'    => $type
+        );
+    
+        $response = $this->conn->do_request('/system/'.$system_id.'/backup/'. $backup_file, $params, 'GET');
+    
         return $response;
     }
 }

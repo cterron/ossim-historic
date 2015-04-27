@@ -429,7 +429,7 @@ EOT;
          {
              $query_risk = "SELECT count(lr.risk) as count, lr.risk, lr.hostIP, lr.ctx
                             FROM vuln_nessus_results lr, host, host_ip hi
-                            WHERE host.id=hi.host_id AND inet6_ntop(hi.ip)=lr.hostIP $perms_where AND report_id in (?) AND falsepositive='N'
+                            WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where AND report_id in (?) AND falsepositive='N'
                             GROUP BY lr.risk, lr.hostIP, lr.ctx";
          }
          else
@@ -468,7 +468,7 @@ EOT;
         $data['clink'] = "respdfc.php?scantime=".$data['scantime']."&scantype=".$data['scantype']."&key=".$data['report_key'].$more;
         $data['plink'] = "respdf.php?scantime=".$data['scantime']."&scantype=".$data['scantype']."&key=".$data['report_key'].$more;
         $data['hlink'] = "reshtml.php?disp=html&amp;output=full&scantime=".$data['scantime']."&scantype=".$data['scantype'].$more;
-        $data['rerun'] = "sched.php?disp=rerun&job_id=".$data['jobid'].$more;
+        $data['rerun'] = "sched.php?action=rerun_scan&job_id=".$data['jobid'].$more;
         $data['xlink'] = "rescsv.php?scantime=".$data['scantime']."&scantype=".$data['scantype']."&key=".$data['report_key'].$more;
         $data['xbase'] = "restextsummary.php?scantime=".$data['scantime']."&scantype=".$data['scantype'].$more."&key=".$data['report_key'];
         $list = array();
@@ -478,7 +478,7 @@ EOT;
 		    $perms_where = Asset_host::get_perms_where('host.', TRUE);
 		
             $dbconn->execute("CREATE TEMPORARY TABLE tmph (id binary(16) NOT NULL,ip varchar(64) NOT NULL,ctx binary(16) NOT NULL, PRIMARY KEY ( id, ip ));");
-            $dbconn->execute("REPLACE INTO tmph SELECT id, inet6_ntop(ip), ctx FROM host, host_ip WHERE host.id=host_ip.host_id $perms_where;");
+            $dbconn->execute("REPLACE INTO tmph SELECT id, inet6_ntoa(ip), ctx FROM host, host_ip WHERE host.id=host_ip.host_id $perms_where;");
             
             $result_import = $dbconn->execute("SELECT DISTINCT hostIP, HEX(vuln_nessus_results.ctx) as ctx, hex(id) as host_id FROM vuln_nessus_results LEFT JOIN tmph ON tmph.ctx=vuln_nessus_results.ctx AND hostIP=tmph.ip WHERE report_id = " . $data['report_id']);
             
@@ -997,7 +997,7 @@ echo "<tr><td style='padding:12px 0px 0px 0px;' class='transparent'>";
 
 ?>
     <div id='cvleftdiv'>
-        <a id="new_scan_button" class="button" href="<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?smethod=schedule&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities','scan_jobs'); ?>" style="text-decoration:none;">
+        <a id="new_scan_button" class="button" href="<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?action=create_scan&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities','scan_jobs'); ?>" style="text-decoration:none;">
         <?php echo _("New Scan Job"); ?>
         </a>
     </div>
@@ -1070,7 +1070,7 @@ EOT;
        {
            $queryt = "SELECT count(lr.result_id) AS total, lr.risk, lr.hostIP, HEX(lr.ctx) AS ctx
                         FROM vuln_nessus_latest_results lr, host, host_ip hi
-                        WHERE host.id=hi.host_id AND inet6_ntop(hi.ip)=lr.hostIP $perms_where AND falsepositive='N'
+                        WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where AND falsepositive='N'
                         GROUP BY risk, hostIP, ctx";
        }
        else 
@@ -1241,7 +1241,7 @@ EOT;
             drawTableLatest($fieldMap, $tdata, "Hosts");
         }
       elseif (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) {
-      	echo "<br><span class='gray'>"._("No results found: ")."</span><a href='" . Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?smethod=schedule&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities','scan_jobs') . "'>"._("Click here to run a Vulnerability Scan now")."</a><br><br>";
+      	echo "<br><span class='gray'>"._("No results found: ")."</span><a href='" . Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?action=create_scan&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities','scan_jobs') . "'>"._("Click here to run a Vulnerability Scan now")."</a><br><br>";
       }
 
    }

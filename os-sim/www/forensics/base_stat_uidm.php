@@ -42,7 +42,7 @@ $et = new EventTiming($debug_time_mode);
 // The below three lines were moved from line 87 because of the odd errors some users were having
 /* Connect to the Alert database */
 $db = NewBASEDBConnection($DBlib_path, $DBtype);
-$db->baseDBConnect($db_connect_method, $alert_dbname, $alert_host, $alert_port, $alert_user, $alert_password);
+$db->baseDBConnect($db_connect_method, $alert_dbname, $alert_host, $alert_port, $alert_user, $alert_password, 0, 1);
 
 $cs = new CriteriaState("base_stat_uidm.php", "&amp;addr_type=$addr_type");
 $cs->ReadState();
@@ -106,10 +106,13 @@ $et->Mark("Counting Result size");
 /* Setup the Query Results Table */
 $qro = new QueryResultsOutput("base_stat_uidm.php?caller=" . $caller . "&amp;addr_type=" . $addr_type);
 
-if ($addr_type=="userdomain") {
+if ($addr_type=="userdomain")
+{
     $src_field = "CONCAT(idm_data.username,'@',idm_data.domain)";
     $dst_field = "CONCAT(idm_data.username,'@',idm_data.domain)";
-} else {
+}
+else
+{
     $src_field = "src_".$addr_type;
     $dst_field = "dst_".$addr_type;
 }
@@ -117,7 +120,8 @@ if ($addr_type=="userdomain") {
 //$qro->AddTitle(" ");
 $qro->AddTitle($type_name, "addr_a", " ", " ORDER BY ip ASC", "addr_d", " ", " ORDER BY ip DESC");
 $qro->AddTitle((Session::show_entities()) ? gettext("Context") : gettext("Sensor"));
-$qro->AddTitle(gettext("Total") . "&nbsp;#", "occur_a", " ", " ORDER BY num_events ASC", "occur_d", " ", " ORDER BY num_events DESC");
+$events_title = _("Events"). "&nbsp;# <span class='idminfo' txt='".Util::timezone(Util::get_timezone())."'>(*)</span>";
+$qro->AddTitle($events_title, "occur_a", " ", " ORDER BY num_events ASC", "occur_d", " ", " ORDER BY num_events DESC");
 $qro->AddTitle(_("Unique Events Src"), "sigsrc_a", " ", " ORDER BY num_sig_src ASC", "sigsrc_d", " ", " ORDER BY num_sig_src DESC");
 $qro->AddTitle(_("Unique Events Dst"), "sigdst_a", " ", " ORDER BY num_sig_dst ASC", "sigdst_d", " ", " ORDER BY num_sig_dst DESC");
 $qro->AddTitle(_("Unique Src."), "saddr_a", " ", " ORDER BY num_sip ASC", "saddr_d", " ", " ORDER BY num_sip DESC");
@@ -132,7 +136,6 @@ if (Session::show_entities())
 
     $sql = "SELECT SQL_CALC_FOUND_ROWS ip,ctx as context,sum(num_events) as num_events,sum(num_sig_src) as num_sig_src, sum(num_sig_dst) as num_sig_dst, sum(num_sip) as num_sip,sum(num_dip) as num_dip
             FROM (($src_sql) UNION ($dst_sql)) as u WHERE ip is not NULL GROUP BY ip,context " . $sort_sql[1];
-     
 } 
 else 
 {
@@ -142,11 +145,14 @@ else
 
     $sql = "SELECT SQL_CALC_FOUND_ROWS ip,HEX(sensor_id) as context,sum(num_events) as num_events,sum(num_sig_src) as num_sig_src, sum(num_sig_dst) as num_sig_dst, sum(num_sip) as num_sip,sum(num_dip) as num_dip
             FROM (($src_sql) UNION ($dst_sql)) as u WHERE ip is not NULL GROUP BY ip,sensor_id " . $sort_sql[1];
-        
 }
 
-//print_r($sql);
+if (file_exists('/tmp/debug_siem'))
+{
+    error_log("STATS IDM:$sql\n$cnt_sql\n", 3, "/tmp/siem");
+}
 /* Run the Query again for the actual data (with the LIMIT) */
+session_write_close();
 $result = $qs->ExecuteOutputQuery($sql, $db);
 $qs->GetCalcFoundRows("", $result->baseRecordCount(), $db);
 
@@ -193,12 +199,12 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $url_criteria_src = BuildIDMVars($currentIP, $addr_type, "src");
     $url_criteria_dst = BuildIDMVars($currentIP, $addr_type, "dst");
     
-    qroPrintEntry((Session::show_entities() && !empty($entities[$ctx])) ? $entities[$ctx] : ((Session::show_entities()) ? _("Unknown") : GetSensorName($ctx, $db)));
-    qroPrintEntry('<A HREF="' . $tmp_iplookup . $url_criteria . '">' . $num_events . '</A>');
-    qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria_src . '">' . $num_sig_src . '</A>');
-    qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria_dst . '">' . $num_sig_dst . '</A>');
-    qroPrintEntry($num_sip);
-    qroPrintEntry($num_dip);
+    qroPrintEntry((Session::show_entities() && !empty($entities[$ctx])) ? $entities[$ctx] : ((Session::show_entities()) ? _("Unknown") : GetSensorName($ctx, $db)),'center','middle');
+    qroPrintEntry('<A HREF="' . $tmp_iplookup . $url_criteria . '">' . Util::number_format_locale($num_events,0) . '</A>','center','middle');
+    qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria_src . '">' . Util::number_format_locale($num_sig_src,0) . '</A>','center','middle');
+    qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria_dst . '">' . Util::number_format_locale($num_sig_dst,0) . '</A>','center','middle');
+    qroPrintEntry(Util::number_format_locale($num_sip,0),'center','middle');
+    qroPrintEntry(Util::number_format_locale($num_dip,0),'center','middle');
     qroPrintEntryFooter();
     ++$i;
     

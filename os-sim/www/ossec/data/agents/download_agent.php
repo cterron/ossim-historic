@@ -182,7 +182,7 @@ else
     ?>
     <script type='text/javascript'>
 
-        var content = "<div style='text-align: left; padding-left:5px;'><?php echo _('We found the following errors')?>:</div>" +
+        var content = "<div style='text-align: left; padding-left:5px;'><?php echo _('The following errors occurred')?>:</div>" +
                       "<div style='padding-left:15px; text-align: left;'><?php echo $errors?></div>";
 
         parent.hide_loading_box();

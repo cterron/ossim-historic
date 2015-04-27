@@ -387,7 +387,7 @@ class Plugin
 
         // get plugin sids
         $list = array();
-        $query  = ossim_query("select max(acid_event.timestamp) as event_date, sensor.ip, sensor.name as sensor_name, plugin_sid.name as sig_name from alienvault_siem.acid_event left join alienvault.plugin_sid on plugin_sid.plugin_id=acid_event.plugin_id and plugin_sid.sid=acid_event.plugin_sid, alienvault_siem.device, alienvault.sensor WHERE device.id=acid_event.device_id AND device.sensor_id=sensor.id AND acid_event.plugin_id=? AND sensor.ip=inet6_pton(?) group by plugin_sid.name order by event_date desc limit 5");
+        $query  = ossim_query("select max(acid_event.timestamp) as event_date, sensor.ip, sensor.name as sensor_name, plugin_sid.name as sig_name from alienvault_siem.acid_event left join alienvault.plugin_sid on plugin_sid.plugin_id=acid_event.plugin_id and plugin_sid.sid=acid_event.plugin_sid, alienvault_siem.device, alienvault.sensor WHERE device.id=acid_event.device_id AND device.sensor_id=sensor.id AND acid_event.plugin_id=? AND sensor.ip=inet6_aton(?) group by plugin_sid.name order by event_date desc limit 5");
 
         $rs = $conn->Execute($query, array($id,$ip));
         

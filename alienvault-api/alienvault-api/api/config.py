@@ -76,6 +76,9 @@ class Config(object):
                         }
     # Folder where we will store the SQLAlchemy-migrate data files
     SQLALCHEMY_MIGRATE_REPO = os.path.join(DIR, 'db_repository')
+    MESSAGE_CENTER_SERVER = "messages.alienvault.com" 
+    MESSAGE_CENTER_PORT = 443
+    MESSAGE_CENTER_PUBLIC_KEY = "/etc/alienvault/api/alienvault-message-center-public.pem"
 
 class ProductionConfig(Config):
     pass

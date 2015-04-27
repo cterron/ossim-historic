@@ -45,7 +45,31 @@ require_once 'av_init.php';
 
 function Av_map(map_id)
 {
+    <?php
+    /****************************************************
+     **************** Configuration Data ****************
+     ****************************************************/
+     
+    $conf = $GLOBALS['CONF'];
+                    									
+    if (!$conf)
+    {
+        $conf = new Ossim_conf();
+        $GLOBALS['CONF'] = $conf;
+    }
+    
+    //Google Maps Key
+    $map_key = $conf->get_conf('google_maps_key');
+    
+    if ($map_key == '') 
+    {
+        $map_key = 'ABQIAAAAbnvDoAoYOSW2iqoXiGTpYBTIx7cuHpcaq3fYV4NM0BaZl8OxDxS9pQpgJkMv0RxjVl6cDGhDNERjaQ';
+    }
+    ?>
+    
     var _map_id    = '#' + map_id;    
+    var _map_key   = '<?php echo $map_key?>';
+    
     var _lat       = null;
     var _lng       = null;
     var _address   = ''; 
@@ -117,6 +141,13 @@ function Av_map(map_id)
         return _map_id;
     };
     
+    
+    // Get Map Key
+    this.get_map_key = function()
+    {
+        return _map_key;
+    };
+        
     
     // Get Latitude
     this.get_lat = function()
@@ -212,13 +243,15 @@ function Av_map(map_id)
         nt = new Notification(nt_id, config_nt);
                 
         $(this.get_map_id()).html(nt.show());
+        
+        this.hide_loading();
     };
     
     // Draw Map
     this.draw_map = function()
     {
         var that = this;
-        
+                
         var map_obj = document.getElementById(this.get_map_id().replace('#', ''));        
                                            
         if(typeof(map_obj) == 'undefined' || map_obj == null)
@@ -256,6 +289,8 @@ function Av_map(map_id)
             $(zoom_id).val(that.get_zoom());
         });
         
+        that.hide_loading();
+        
         google.maps.event.trigger(this.map, 'resize');
     };
     
@@ -270,7 +305,7 @@ function Av_map(map_id)
         
         var marker = new google.maps.Marker({
             position: new google.maps.LatLng(lat, lng),
-            draggable:true,
+            draggable: true,
             animation: google.maps.Animation.DROP,
             map: this.map, 
             title: "<?php echo _('Host Location')?>"
@@ -295,8 +330,7 @@ function Av_map(map_id)
         google.maps.event.addListener(this.markers[m_index], 'dragend', function(){                    
                         
             var lat = this.getPosition().lat();
-            var lng = this.getPosition().lng();
-            
+            var lng = this.getPosition().lng();            
                        
             //Only update address, latitude and longitude with one marker
             if (Object.keys(that.markers).length <= 1)
@@ -561,6 +595,33 @@ function Av_map(map_id)
     };
     
     
+    this.show_loading = function()
+    {
+        var $map    = $(_map_id);
+        var pos     = $map.css('position');
+        
+        if (pos != 'absolute')
+        {
+            $map.css('position', 'relative');
+        }
+        
+        var loading = '<img style="height:14px;" src="<?php echo AV_PIXMAPS_DIR ?>/loading.gif"/>';
+        var style   = "position:absolute;top:50%;margin-top:-14px;left:0;right:0;text-align:center;"
+        
+        $('<div></div>',
+        {
+           "html" : "<?php echo _('Loading Map') ?> " + loading,
+           "id"   : "loading_map",
+           "style": style
+        }).appendTo($map);
+        
+    }
+    
+    this.hide_loading = function()
+    {
+        $(_map_id).find('#loading_map').remove();
+    }
+    
     // Clear coordenates and address (Javascript object and inputs)
     this.reset_data = function()
     {        
@@ -579,6 +640,9 @@ function Av_map(map_id)
         this.set_address('');
         this.remove_all_markers();
     };
+    
+    
+    this.show_loading();
 }
 
 /****************************************************

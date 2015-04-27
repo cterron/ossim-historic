@@ -179,45 +179,44 @@ if (GET('modo') == "responder")
     
     if ($from_snort) 
     {
+        session_write_close();
+        
     	include_once 'sensor_filter.php';
 
         $query_where = Security_report::make_where($conn, '', '', array(), $assets_filters);
 		$query_where = preg_replace('/AND \(timestamp.*/', '', $query_where);
 
         // Read from acid_event
-        $query_where .= ( $plugins  != "") ? " AND $acid_table.plugin_id in ($plugins) AND timestamp>".strtotime("-1 days") : "";
-        $query_where .= ( GET('f_src_ip') != '' && $src_ip != ''  )  ? " AND $acid_table.ip_src=unhex('$src_ip')" : "";
-        $query_where .= ( GET('f_dst_ip') != '' && $dst_ip != ''  )  ? " AND $acid_table.ip_dst=unhex('$dst_ip')" : "";
-        $query_where .= ( $src_port != 0 )  ? " AND $acid_table.layer4_sport=$src_port" : "";
-        $query_where .= ( $dst_port != 0 )  ? " AND $acid_table.layer4_dport=$dst_port" : "";
-        $query_where .= ( $protocol != 0 )  ? " AND $acid_table.ip_proto=$protocol" : "";
+        $where .= ($plugins != '')                          ? " AND plugin.id in ($plugins)" : "";
+        $where .= (GET('f_src_ip') != '' && $src_ip != '' ) ? " AND $acid_table.ip_src=unhex('$src_ip')" : '';
+        $where .= (GET('f_dst_ip') != '' && $dst_ip != '' ) ? " AND $acid_table.ip_dst=unhex('$dst_ip')" : '';
+        $where .= ($src_port != 0)                          ? " AND $acid_table.layer4_sport=$src_port"  : '';
+        $where .= ($dst_port != 0)                          ? " AND $acid_table.layer4_dport=$dst_port"  : '';
+        $where .= ($protocol != 0)                          ? " AND $acid_table.ip_proto=$protocol"      : '';
         
         // Limit in second select when sensor is specified (OJO)
-        $key_index  = ($plugins != "") ? "" : str_replace("IND","timestamp",$key_index);
+        $key_index  = ($plugins != '') ? '' : str_replace("IND", "timestamp", $key_index);
 
         $sql = "select $acid_table.plugin_id, $acid_table.plugin_sid, 
         TO_SECONDS(timestamp)-62167219200+TO_SECONDS(UTC_TIMESTAMP())-TO_SECONDS(NOW()) as id, 
         hex($acid_table.id) as event_id, 
-        device_id,
         plugin_sid.name as plugin_sid_name, 
         ip_src, ip_dst, 
         HEX(src_host) AS src_host, HEX(dst_host) AS dst_host, HEX(src_net) AS src_net, HEX(dst_net) AS dst_net,
-        HEX(ctx) AS ctx,
+        HEX($acid_table.ctx) AS ctx,
         convert_tz(timestamp,'+00:00','$tzc') as timestamp1, 
         ossim_risk_a as risk_a, ossim_risk_c as risk_c, 
-        sensor.ip as sensor, 
-        sensor.name as sensor_name, 
         layer4_sport as src_port, layer4_dport as dst_port, 
         ossim_priority as priority, ossim_reliability as reliability, 
         ossim_asset_src as asset_src, ossim_asset_dst as asset_dst, 
-        ip_proto as protocol, device.interface 
-        FROM alienvault_siem.device, sensor, $acid_table $key_index LEFT JOIN alienvault.plugin_sid ON plugin_sid.plugin_id=$acid_table.plugin_id AND plugin_sid.sid=$acid_table.plugin_sid WHERE sensor.id=device.sensor_id AND device.id = $acid_table.device_id " . $query_where . " order by timestamp desc limit $max_rows";
-		
-		// QUERY DEBUG:
-		
-		$rs = $conn->Execute($sql);
-		
-		if (!$rs) 
+        ip_proto as protocol, device.interface, device.id as device_id
+        FROM alienvault_siem.device, $acid_table $key_index LEFT JOIN alienvault.plugin_sid ON plugin_sid.plugin_id=$acid_table.plugin_id AND plugin_sid.sid=$acid_table.plugin_sid LEFT JOIN alienvault.plugin ON plugin.id=$acid_table.plugin_id WHERE device.id = $acid_table.device_id " . $where . " order by timestamp desc limit $max_rows";
+        		
+        // QUERY DEBUG:
+        
+        $rs = $conn->Execute($sql);
+        
+        if (!$rs) 
         {
             echo "// Query error: $sql\n// " . $conn->ErrorMsg() . "\n";
             return;
@@ -259,7 +258,7 @@ if (GET('modo') == "responder")
         echo "var pid = '" . $rs->fields["plugin_id"] . "';\n";
         echo "edata[$i][4]  = pid;\n";
         echo "edata[$i][5]  = '" . $rs->fields["plugin_sid"] . "';\n";
-        echo "edata[$i][6]  = '" . inet_ntop($rs->fields["sensor"]) . "';\n";
+        echo "edata[$i][6]  = devices['ip_" . $rs->fields["device_id"] . "'];\n";
         
         // Assets
         $src_output = Asset_host::get_extended_name($conn, $geoloc, inet_ntop($rs->fields["ip_src"]), $rs->fields["ctx"], $rs->fields["src_host"], $rs->fields["src_net"]);
@@ -299,8 +298,7 @@ if (GET('modo') == "responder")
         }
         
         // Resolve auxiliaries
-        $sensor_name = $rs->fields['sensor_name'];
-        echo "edata[$i][24] = '$sensor_name';\n";
+        echo "edata[$i][24] = devices['name_" . $rs->fields["device_id"] . "'];\n";
         echo "edata[$i][25] = '".(($src_output['name'] != inet_ntop($rs->fields["ip_src"])) ? inet_ntop($rs->fields["ip_src"]) : '')."';\n";
         echo "edata[$i][26] = '".(($dst_output['name'] != inet_ntop($rs->fields["ip_dst"])) ? inet_ntop($rs->fields["ip_dst"]) : '')."';\n";
            
@@ -585,7 +583,7 @@ else
                         $('#footer').html('<?php echo _("Stopped.")?>');
                     }
                     else {
-                        $('#footer').html('<?php echo _("Continue... waiting next refresh")?>');
+                        $('#footer').html('<?php echo _("Continue... Awaiting next refresh")?>');
                     }
                         
                     pause = false;
@@ -739,6 +737,32 @@ else
                 }
             }
             
+            // Device list
+            $devices = array();
+
+            $query = "SELECT name,inet6_ntoa(ip) as ip,device.id FROM sensor,alienvault_siem.device WHERE device.sensor_id=sensor.id";
+            
+            $rs = $conn->Execute($query); 
+                
+            while (!$rs->EOF) 
+            {
+                $devices[] = $rs->fields;
+                $rs->MoveNext();
+            }
+
+            if (!empty($devices)) 
+            {
+                echo "var devices = new Array(" . count($devices) . ")\n";
+                echo "devices['name_0'] = 'N/A';\n";
+                echo "devices['ip_0'] = 'N/A';\n";
+                
+                foreach ($devices as $device)
+                {
+                    echo "devices['name_" . $device['id'] . "'] = '" . $device['name'] . "';\n";
+                    echo "devices['ip_" . $device['id'] . "'] = '" . $device['ip'] . "';\n";
+                }
+                
+            }
             ?>
             
            

@@ -16,7 +16,7 @@ FETCH net_list INTO nid, cidr, mask;
 set @ips = CONCAT(cidr,"/",mask);
 SELECT inet_aton(cidr) INTO @begin;
 SELECT inet_aton(cidr) + (pow(2, (32-mask))-1) INTO @end;
-REPLACE INTO net_cidrs(net_id,cidr,begin,end) VALUES (UNHEX(nid),@ips,inet6_pton(inet_ntoa(@begin)),inet6_pton(inet_ntoa(@end)));
+REPLACE INTO net_cidrs(net_id,cidr,begin,end) VALUES (UNHEX(nid),@ips,inet6_aton(inet_ntoa(@begin)),inet6_aton(inet_ntoa(@end)));
 UNTIL done END REPEAT;
 CLOSE net_list;
 END ;;

@@ -104,7 +104,7 @@ sub parse_argv() {
 
             my $_uuid = $parms[1]; $_uuid =~ s/-//g;
             my $query
-                = "select inet6_ntop(admin_ip) as admin_ip from alienvault.system where id = unhex(\"$_uuid\");";
+                = "select inet6_ntoa(admin_ip) as admin_ip from alienvault.system where id = unhex(\"$_uuid\");";
             debug_log("SQL COMMAND : $query");
             my $sth = $conn->prepare($query);
             $sth->execute();
@@ -291,7 +291,7 @@ sub backup() {
     $conn = get_database();
 
     my $query
-        = "select profile from alienvault.system where admin_ip = inet6_pton('$remote_system') LIMIT 1;";
+        = "select profile from alienvault.system where admin_ip = inet6_aton('$remote_system') LIMIT 1;";
     debug_log("SQL COMMAND : $query");
     my $sth = $conn->prepare($query);
     $sth->execute();

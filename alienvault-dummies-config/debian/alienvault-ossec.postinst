@@ -39,6 +39,7 @@ case "$1" in
         OSSEC_DECODERS_FILE="/var/ossec/etc/decoder.xml"
         OSSIM_SETUP_CONF="/etc/ossim/ossim_setup.conf"
         OSSEC_RULES_FILE="/var/ossec/rules/ossec_rules.xml"
+        SYSLOG_RULES_FILE="/var/ossec/rules/syslog_rules.xml"
         AV_DS_RULES_FILE="/var/ossec/rules/alienvault-directory-service_rules.xml"
 
         configure_ossec_tzone
@@ -94,6 +95,12 @@ case "$1" in
         if [ -f "$OSSEC_RULES_FILE" ]; then
             sed -i "$OSSEC_RULES_FILE" \
                 -e 's/<rule id="554" level="0">/<rule id="554" level="7">/' 
+        fi
+
+        # Fix syslog restart rule
+        if [ -f "$SYSLOG_RULES_FILE" ]; then
+            sed -i "$SYSLOG_RULES_FILE" \
+                -e 's/<match>\^exiting on signal/<match>exiting on signal/' 
         fi
 
         if [ -f "$AV_DS_RULES_FILE" ]; then

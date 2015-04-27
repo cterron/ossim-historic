@@ -50,7 +50,7 @@ class AdminPermission:
         if func is not None:
             def permission_func(func):
                 func._permission = 'admin'
-                req = admin_perm.require(http_exception=403)
+                req = admin_perm.require(http_exception=http_exception)
                 func = req.__call__(func)
                 return func
             return permission_func(func)
@@ -69,7 +69,7 @@ class LoggedPermission:
         if func is not None:
             def permission_func(func):
                 func._permission = 'logged'
-                req = logged_perm.require(http_exception=403)
+                req = logged_perm.require(http_exception=http_exception)
                 func = req.__call__(func)
                 return func
             return permission_func(func)

@@ -307,7 +307,7 @@ class Nmap_parser
                 $max_osmatch_accuracy = 0;
                 $hardware_cpe         = FALSE;
                 
-                $this->result['scanned_ips'][$asset_key]['os']            = 'unknown';
+                $this->result['scanned_ips'][$asset_key]['os']            = '';
                 $this->result['scanned_ips'][$asset_key]['hardware_cpes'] = array();
                 $this->result['scanned_ips'][$asset_key]['device_types']  = array();
                 
@@ -340,7 +340,7 @@ class Nmap_parser
                                     }
                                     
                                     //Setting Operating System -> Add first valid
-                                    if ($this->result['scanned_ips'][$asset_key]['os'] == '' || $this->result['scanned_ips'][$asset_key]['os'] == 'unknown')
+                                    if ($this->result['scanned_ips'][$asset_key]['os'] == '')
                                     {
                                         $this->result['scanned_ips'][$asset_key]['os'] = $os;
                                     }

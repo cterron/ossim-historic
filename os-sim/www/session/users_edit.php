@@ -429,7 +429,7 @@ if (POST('ajax_validation_all') == TRUE)
     {
         if ($data['status'] == 'error')
         {
-            $txt_error = "<div>"._('We Found the following errors').":</div>
+            $txt_error = "<div>"._('The following errors occurred').":</div>
                           <div style='padding:10px;'>".implode('<br/>', $validation_errors).'</div>';
 
             $config_nt = array(
@@ -641,7 +641,7 @@ if (POST('ajax_validation_all') == TRUE)
         if ($greybox)
         {
             $config_nt = array(
-                'content' => _('Sorry, operation was not completed due to an unknown error'),
+                'content' => _('Unknown error - Operation cannot be completed'),
                 'options' => array (
                     'type'          => 'nf_error',
                     'cancel_button' => FALSE

@@ -41,7 +41,7 @@ if ( !Session::am_i_admin() )
 }
 
 /* connect to db */
-$db   = new ossim_db();
+$db   = new ossim_db(true);
 $conn = $db->connect();
 
 $plugin_id   = GET('id');

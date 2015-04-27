@@ -449,10 +449,7 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
                 $('.c_back_button').show();
             }
 
-            $('a.new_comment').on('click', function(e)
-            {
-                go_to(this, e);
-            });
+            $('a.new_comment').on('click', anchor_link);
             
             $('.ticket_body img').on('click', function()
             {

@@ -31,19 +31,16 @@ import threading
 import time
 import datetime
 import pickle
-import celery.app
+import celery
 import celery.events
 import celery.states
 import celery.utils.log
 from celery.signals import task_postrun
 
-import logging
+logger = celery.utils.log.get_logger("celery")
 
 import apimethods.utils
 from db.methods.job import get_job_status,cleanup_jobs,update_job_data
-
-logger = celery.utils.log.get_logger("celery")
-logger.setLevel(logging.INFO)
 
 @task_postrun.connect
 def close_session(*args, **kwargs):
@@ -66,7 +63,7 @@ class CeleryManager(threading.Thread):
         """Constructor"""
         threading.Thread.__init__(self)
         self.daemon = True
-        self.celery_connection = celery.app.app_or_default(None).connection()
+        self.celery_connection = celery.current_app.connection()
 
     def run(self):
         while True:

@@ -137,15 +137,16 @@ switch($type)
 {
 
 	case "tcp":
+	
 		//Filters of assets.
-		$query_where = Security_report::make_where($conn, '', '', array(), $assets_filters, '', '', false);
+		$query_where = Security_report::make_where($conn, gmdate("Y-m-d 00:00:00",gmdate("U")-7200), gmdate("Y-m-d 23:59:59"), array(), $assets_filters);
 		
 		//Max number of attacks to show in the widget.
 		$limit = ($chart_info['top'] != '')? $chart_info['top'] : 30;
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sql   = "select layer4_dport as port, count(*) as num from alienvault_siem.acid_event where layer4_dport != 0  and ip_proto=6 $query_where group by port order by num desc limit $limit";
-		
+		$sql   = "select layer4_dport as port, count(id) as num from alienvault_siem.acid_event where layer4_dport != 0 and ip_proto=6 $query_where group by port order by num desc limit $limit";
+		//echo $sql;
 		$rs = $conn->CacheExecute($sql);
 		
 		if (!$rs)
@@ -179,14 +180,14 @@ switch($type)
 	case "udp":
 	
 		//Filters of assets.
-		$query_where = Security_report::make_where($conn, '', '', array(), $assets_filters, '', '', false);
+		$query_where = Security_report::make_where($conn, gmdate("Y-m-d 00:00:00",gmdate("U")-7200), gmdate("Y-m-d 23:59:59"), array(), $assets_filters);
 		
 		//Max number of attacks to show in the widget.
 		$limit = ($chart_info['top'] != '')? $chart_info['top'] : 30;
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sql   = "select layer4_dport as port, count(*) as num from alienvault_siem.acid_event where layer4_dport != 0  and ip_proto=17 $query_where group by port order by num desc limit $limit;";
-		
+		$sql   = "select layer4_dport as port, count(id) as num from alienvault_siem.acid_event where layer4_dport != 0 and ip_proto=17 $query_where group by port order by num desc limit $limit";
+		//echo $sql;
 		$rs = $conn->CacheExecute($sql);
 		
 		if (!$rs)
@@ -223,7 +224,7 @@ switch($type)
 	case "promiscuous":
 		    	
 		//Date range.
-		$range          = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range          = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 		
 		//Filters of assets.
 		$query_where    = Security_report::make_where($conn, gmdate("Y-m-d 00:00:00",gmdate("U")-$range), gmdate("Y-m-d 23:59:59"), array(), $assets_filters);
@@ -236,7 +237,7 @@ switch($type)
 
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sqlgraph       = "select count(distinct(ip_dst)) as num_events,ip_src as name from alienvault_siem.acid_event  WHERE 1=1 $query_where group by ip_src having ip_src<>0x0 order by num_events desc limit $limit";
+		$sqlgraph       = "select count(distinct(ip_dst)) as num_events,ip_src as name from alienvault_siem.po_acid_event AS acid_event WHERE 1=1 $query_where group by ip_src having ip_src>0x00000000000000000000000000000000 order by num_events desc limit $limit";
 
         $rg = $conn->CacheExecute($sqlgraph);
 
@@ -265,7 +266,7 @@ switch($type)
 	case "unique":
 		
 		//Date range.
-		$range          = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range          = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 		
 		//Filters of assets.
 		$query_where    = Security_report::make_where($conn, gmdate("Y-m-d 00:00:00",gmdate("U")-$range), gmdate("Y-m-d 23:59:59"), array(), $assets_filters);
@@ -276,7 +277,8 @@ switch($type)
 		$forensic_link  = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timetz-$range)."&time[0][3]=".gmdate("d",$timetz-$range)."&time[0][4]=".gmdate("y",$timetz-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timetz)."&time[1][3]=".gmdate("d",$timetz)."&time[1][4]=".gmdate("y",$timetz)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics", 'analysis', 'security_events');
 		
 		//Sql Query
-		$sqlgraph       = "select count(distinct plugin_id,plugin_sid) as num_events,ip_src as name from alienvault_siem.acid_event WHERE 1=1 $query_where group by ip_src having ip_src<>0x0 order by num_events desc limit $limit";
+		//$sqlgraph       = "select count(distinct plugin_id,plugin_sid) as num_events,ip_src as name from alienvault_siem.acid_event WHERE 1=1 $query_where group by ip_src having ip_src>0x00000000000000000000000000000000 order by num_events desc limit $limit";
+		$sqlgraph       = "select count(distinct plugin_id, plugin_sid) as num_events,ip_src as name from alienvault_siem.po_acid_event AS acid_event WHERE 1=1 $query_where group by ip_src having ip_src>0x00000000000000000000000000000000 order by num_events desc limit $limit";
 		
 		$rg = $conn->CacheExecute($sqlgraph);
 		

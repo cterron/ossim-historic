@@ -4,10 +4,16 @@ set -e
 
 UPDATE_LOG_DIR=/var/log/alienvault/update
 ANSIBLE_LOG_DIR=/var/log/alienvault/ansible
+DOWNLOADED_BACKUP_DIR=/var/alienvault/backup/downloaded
 
 prepare_dir(){
-    [ -d "$1" ] || mkdir -p -m 0750 "$1"
-    chmod 750 "$1"
+    if [ ! -z "$2" ]; then
+        MODE=$2
+    else
+        MODE="0750"
+    fi
+    [ -d "$1" ] || mkdir -p -m "$MODE" "$1"
+    chmod "$MODE" "$1"
     chown avapi:alienvault "$1"
 }
 
@@ -36,6 +42,7 @@ case "$1" in
     configure)
         prepare_dir "$UPDATE_LOG_DIR"
         prepare_dir "$ANSIBLE_LOG_DIR"
+        prepare_dir "$DOWNLOADED_BACKUP_DIR" "0770"
     ;;
 esac
 

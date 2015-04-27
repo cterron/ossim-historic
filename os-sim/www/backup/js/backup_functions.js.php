@@ -62,11 +62,15 @@ function show_backup_status()
     });
 }
 
+/*
+Note: 'delete' mode is not available anymore due to a performance problem
+      'Purge' button as been removed from UI
+*/
 function launch_backup(mode)
 {
     var combo_source = (mode == 'insert') ? 'insert_combo' : 'delete_combo';
     var dates_list   = getselectedcombovalue(combo_source);
-    var token        = $('#token').val();
+    var token        = Token.get_token(mode + "_events");
     var filter_by    = '';
     if ($('#entity').val() != '')
     {
@@ -181,7 +185,7 @@ function finished()
 
 function show_notification (msg, container, nf_type, style)
 {
-    var nt_error_msg = (msg == '')   ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : msg;
+    var nt_error_msg = (msg == '')   ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : msg;
     var style        = (style == '' ) ? 'width: 80%; text-align:center; padding: 5px 5px 5px 22px; margin: 20px auto;' : style;
 
     var config_nt = { content: nt_error_msg,

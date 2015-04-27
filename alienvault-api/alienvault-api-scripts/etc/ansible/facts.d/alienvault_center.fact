@@ -48,7 +48,7 @@ def get_network_status():
     """
     result = {}
     result['firewall'] = CONF.get_firewall_active()
-    result['vpn_access'] = CONF.get_vpn_vpn_infraestructure()
+    result['vpn_access'] = CONF.get_avvpn_config_enabled()
     result['interfaces'] = {}
     firstnet = psutil.net_io_counters(pernic=True)
     time.sleep(0.2)

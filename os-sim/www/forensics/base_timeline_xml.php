@@ -39,7 +39,7 @@ require_once 'vars_session.php';
 require_once 'ossim_db.inc';
 require_once 'classes/Util.inc';
 
-$db   = new ossim_db();
+$db   = new ossim_db(true);
 $conn = $db->connect();
 $xml  = "";
 

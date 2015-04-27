@@ -33,6 +33,7 @@ import urllib2
 from json import loads
 
 from apimethods.system.proxy import AVProxy
+from db.methods.system import  get_system_ip_from_system_id, get_config_otx_enabled
 
 
 def apimethod_get_otx_username(token):
@@ -60,7 +61,14 @@ def apimethod_get_otx_username(token):
         return False, "ERROR_NOT_REGISTERED_TOKEN"
 
     return True, otx_response
-    
 
-
+def is_otx_enabled():
+    """Retrieves whether a system has OTX enabled or not
+    Args:
+        system_id (str) : The system_id of the system which you want to get the information
+    Returns:
+        success (bool)     : True if successful, False elsewhere
+        otx_enabled(bool)  : True if OTX is enabled, otherwise False
+    """
+    return get_config_otx_enabled()
 

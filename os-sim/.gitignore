@@ -55,6 +55,8 @@ include/classes/Logger.inc
 include/classes/logger.inc
 include/classes/Process.inc
 include/classes/process.inc
+include/classes/providers/asec.inc
+include/classes/av_license.inc
 include/geoip.inc
 include/geoipcity.inc
 include/geoipregionvars.php

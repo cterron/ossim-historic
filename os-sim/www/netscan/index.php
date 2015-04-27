@@ -212,7 +212,7 @@ $db->close();
 
         function show_notification (msg, container, nf_type, style)
         {
-            var nt_error_msg = (msg == '')   ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : msg;
+            var nt_error_msg = (msg == '')   ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : msg;
             var style        = (style == '') ? 'width: 80%; text-align:center; padding: 5px 5px 5px 22px; margin: 20px auto;' : style;
 
             var config_nt = { content: nt_error_msg,
@@ -419,7 +419,7 @@ $db->close();
             selectall("assets");
 
             $.ajax({
-                type: "GET",
+                type: "POST",
                 url: 'do_scan.php',
                 data: $('#assets_form').serialize(),
                 dataType: 'json',
@@ -472,7 +472,7 @@ $db->close();
         function stop_nmap()
         {
             $.ajax({
-                type: "GET",
+                type: "POST",
                 url: "do_scan.php?only_stop=1",
                 dataType: 'json',
                 error: function(bc_data){
@@ -486,7 +486,7 @@ $db->close();
                         return;
                     }
 
-                    var error_msg = '<?php _('Sorry, operation was not completed due to an unknown error')?>';
+                    var error_msg = '<?php _('Unknown error - Operation cannot be completed')?>';
 
                     show_notification(error_msg, 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
                 },
@@ -559,38 +559,110 @@ $db->close();
                         var match    = Regexp.exec(dtnode.data.key);
                         var asset_id = match[1];
 
-                        // Split for multiple IP/CIDR
-                        var keys = dtnode.data.val.split(",");
-
-                        for (var i = 0; i < keys.length; i++)
+                        // Click on Asset Group
+                        if (dtnode.data.key.match(/hostgroup_/))
                         {
-                            var item = keys[i];
+                            $.ajax({
+                                type: 'GET',
+                                url: "../tree.php",
+                                data: 'key=' + dtnode.data.key,
+                                dataType: 'json',
+                                success: function(data)
+                                {
+                                    if (data.length < 1)
+                                    {
+                                        show_notification('<?php echo _('Unable to fetch the asset group members')?>', 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: center;');
+                                    }
+                                    else
+                                    {
+                                        // Group reached the 200 top of page: show warning
+                                        var last_element = data[data.length - 1].key;
 
-                            var asset_text  = ''
-                            var asset_value = '';
+                                        if (last_element.match(/hostgroup_/))
+                                        {
+                                            show_notification('<?php echo _('This asset group has more than 200 assets, please try again with a smaller group')?>', 'c_info', 'nf_warning', 'padding: 3px; width: 90%; margin: auto; text-align: center;');
+                                        }
+                                        else
+                                        {
+                                            jQuery.each(data, function(i, group_member)
+                                            {
+                                                // Split for multiple IP
+                                                var member_keys = group_member.val.split(",");
+                                                var member_id   = group_member.key.replace("host_","");
+                                                
+                                                for (k = 0; k < member_keys.length; k++)
+                                                {
+                                                    var item = member_keys[k];
+    
+                                                    var asset_text  = ''
+                                                    var asset_value = '';
+                                                    
+                                                    if (item.match(/\d+\.\d+\.\d+\.\d+/) !== null)
+                                                    {
+                                                        //IP
+                                                        Regexp = /(\d+\.\d+\.\d+\.\d+)/;
+                                                        match  = Regexp.exec(item);
+    
+                                                        if (group_member.val.match(/,/) !== null)
+                                                        {
+                                                            Regexp_name = /\((.+)\)/;
+                                                            name_match  = Regexp_name.exec(group_member.tooltip);
+                                                            asset_text  = match[1] + ' (' + name_match[1] + ')';
+                                                        }
+                                                        else
+                                                        {
+                                                            asset_text  = group_member.tooltip;
+                                                        }
+                                                        asset_value = member_id + '#' + match[1] + '/32';
+                                                    }
+                                                    
+                                                    if(asset_value != '' && asset_text != '')
+                                                    {
+                                                        addto ("assets", asset_text, asset_value);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        // Click on Host or Network
+                        else
+                        {
+                            // Split for multiple IP/CIDR
+                            var keys = dtnode.data.val.split(",");
 
-                            if (item.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null)
+                            for (var i = 0; i < keys.length; i++)
                             {
-                                //CIDR
-                                Regexp = /(\d+\.\d+\.\d+\.\d+\/\d+)/;
-                                match  = Regexp.exec(item);
-
-                                asset_text  = dtnode.data.val;
-                                asset_value = asset_id + '#' + match[1];
-                            }
-                            else if (item.match(/\d+\.\d+\.\d+\.\d+/) !== null)
-                            {
-                                //IP
-                                Regexp = /(\d+\.\d+\.\d+\.\d+)/;
-                                match  = Regexp.exec(item);
-
-                                asset_text  = dtnode.data.tooltip;
-                                asset_value = asset_id + '#' + match[1] + '/32';
-                            }
-
-                            if(asset_value != '' && asset_text != '')
-                            {
-                                addto ("assets", asset_text, asset_value);
+                                var item = keys[i];
+    
+                                var asset_text  = ''
+                                var asset_value = '';
+    
+                                if (item.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null)
+                                {
+                                    //CIDR
+                                    Regexp = /(\d+\.\d+\.\d+\.\d+\/\d+)/;
+                                    match  = Regexp.exec(item);
+    
+                                    asset_text  = dtnode.data.val;
+                                    asset_value = asset_id + '#' + match[1];
+                                }
+                                else if (item.match(/\d+\.\d+\.\d+\.\d+/) !== null)
+                                {
+                                    //IP
+                                    Regexp = /(\d+\.\d+\.\d+\.\d+)/;
+                                    match  = Regexp.exec(item);
+    
+                                    asset_text  = dtnode.data.tooltip;
+                                    asset_value = asset_id + '#' + match[1] + '/32';
+                                }
+    
+                                if(asset_value != '' && asset_text != '')
+                                {
+                                    addto ("assets", asset_text, asset_value);
+                                }
                             }
                         }
                     }
@@ -661,6 +733,7 @@ $db->close();
                 max: 100,
                 matchContains: true,
                 autoFill: false,
+                selectFirst: false,
                 formatItem: function(row, i, max) {
                     return row.txt;
                 }
@@ -768,260 +841,6 @@ $db->close();
         });
     </script>
 
-    <style type='text/css'>
-        .box_title
-        {
-            padding: 15px 0 5px 0;
-            font-size: 17px;
-            line-heigh: 18px;
-        }
-
-        .box_subtitle
-        {
-            font-size: 13px;
-            padding:0 0 5px 0;
-            line-height: 17px;
-        }
-
-        #progressbar, #activitybar
-        {
-            width: 400px;
-            margin: 40px auto 35px auto;
-        }
-
-        .bar-label
-        {
-            position: absolute;
-            right:0;
-            left:0;
-            top:3px;
-            font-size: 14px;
-            text-align: center;
-            color: rgba(0,0,0,0.6);
-            text-shadow: rgba(255,255,255, 0.45) 0 1px 0px;
-            white-space: nowrap;
-        }
-
-        #progress_legend
-        {
-            position: absolute;
-            right: 0;
-            left: 0;
-            top: 27px;
-            font-size: 11px;
-            color: #A8A8A8;
-            text-align: center;
-        }
-
-        .box_single_button
-        {
-            text-align: center;
-            position: absolute;
-            bottom:10px;
-            left:0;
-            right:0;
-        }
-
-        a:hover
-        {
-            text-decoration: none !important;
-        }
-
-        .greyfont
-        {
-            color: #666666;
-        }
-
-        .small
-        {
-            color: grey;
-            font-size: 9px;
-        }
-
-        #fancybox-wrap
-        {
-          top: 60px !important;
-        }
-
-        #c_asset_discovery
-        {
-            position: relative;
-            margin: 20px auto 5px auto;
-            width: 98%;
-        }
-
-        #c_info
-        {
-            width: 750px;
-            margin: 10px auto;
-        }
-
-        .error_item
-        {
-            padding-left: 25px;
-            text-align: left;
-        }
-
-        #t_ad
-        {
-            width: 650px;
-            margin:0px auto
-        }
-
-        th
-        {
-            padding: 3px 0px;
-        }
-
-        .container
-        {
-            margin:auto;
-            padding: 10px 10px;
-        }
-
-        .loading_nmap
-        {
-            padding: 2px;
-        }
-
-        #searchbox
-        {
-            width:260px;
-            margin-left:3px;
-        }
-
-        #tree
-        {
-            margin-top: 15px;
-            text-align: left;
-        }
-
-        .atree
-        {
-            text-align:left;
-            width:100%;
-            margin-left:2px;
-        }
-
-        .cidr_info
-        {
-            cursor:pointer;
-            text-decoration: none;
-            outline: none;
-        }
-
-        .cidr_info div
-        {
-            text-decoration: none;
-            outline: none;
-        }
-
-        #td_sensor
-        {
-            display: none;
-        }
-
-        #assets
-        {
-            width:270px;
-            height:180px;
-        }
-
-        #t_adv_options
-        {
-            width: 100%;
-            background: none;
-            border: none;
-        }
-
-        #t_adv_options td
-        {
-            text-align: left;
-            border: none;
-        }
-
-        #t_adv_options .td_label
-        {
-            text-align: left;
-            white-space: nowrap;
-            width: 100px;
-        }
-
-        #t_adv_options .nmap_select
-        {
-            width: 90px;
-        }
-
-        #t_adv_options #custom_ports
-        {
-            width: 90px;
-        }
-
-        #t_adv_options img
-        {
-          display: none;
-          cursor: pointer;
-        }
-
-        .more_info img
-        {
-            cursor: pointer;
-        }
-
-        #scan_result
-        {
-            width: 100%;
-            margin: auto;
-        }
-
-        #t_sresults img
-        {
-           vertical-align: middle;
-        }
-
-        #t_sresults .td_chk_hosts, #t_sresults .th_chk_hosts
-        {
-           width: 20px !important;
-        }
-
-        #t_sresults .td_ip, #t_sresults .th_ip
-        {
-           width: 130px !important;
-        }
-
-        #t_sresults .td_hostname, #t_sresults .td_fqdn, #t_sresults .td_device_types
-        {
-           width: 120px !important;
-        }
-
-        #t_sresults .th_hostname, #t_sresults .th_fqdn, #t_sresults .th_device_types
-        {
-           width: 120px !important;
-        }
-
-        #t_sresults .td_mac, #t_sresults .td_os, #t_sresults .th_mac, #t_sresults .th_os
-        {
-           width: 120px !important;
-        }
-
-        #t_sresults .td_services, #t_sresults .th_services
-        {
-           width: 180px !important;
-
-        }
-
-        #t_sresults .td_services
-        {
-           white-space: normal !important;
-        }
-
-        #t_sresults .td_chk_fqdns, #t_sresults .th_chk_fqdns
-        {
-           width: 100px;
-        }
-
-    </style>
-
 </head>
 
 <body>
@@ -1040,7 +859,7 @@ $db->close();
 
     if (is_array($validation_errors) && !empty($validation_errors))
     {
-        $txt_error = '<div>'._('We Found the following errors').":</div>
+        $txt_error = '<div>'._('The following errors occurred').":</div>
                       <div style='padding: 10px;'>".implode('<br/>', $validation_errors).'</div>';
 
         $config_nt = array(

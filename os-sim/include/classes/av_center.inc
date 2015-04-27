@@ -3,7 +3,7 @@
  * av_center.inc
  *
  * File av_center.inc is used to:
- *   - To manage Alienvault Systems using Alienvault API
+ *   - To manage AlienVault Systems using AlienVault API
  *
  *
  *
@@ -62,6 +62,7 @@
  *   - get_system_info_by_ip($conn, $admin_ip)
  *   - get_system_info_by_id($conn, $system_id)
  *   - get_avc_list($conn)
+ *   - get_avc_list_from_api()
  *   - get_system_status($system_id, $status_type, $no_cache = FALSE)
  *   - get_config_data(system_id, $type, $cache)
  *   - set_config_data(system_id, $data, $type)
@@ -90,12 +91,12 @@
 /**
  * Av_center Class
  *
- * Class for managing Alienvault Components using Alienvault Center
+ * Class for managing AlienVault Components using AlienVault Center
  *
  * @package     ossim-framework\Alienvaut_Center
  * @author      AlienVault INC
  * @copyright   2007-2014 AlienVault
- * @link        https://www.alienvault.com/ Alienvault web page
+ * @link        https://www.alienvault.com/ AlienVault web page
  */
 class Av_center
 {
@@ -525,36 +526,60 @@ class Av_center
      */
     public static function get_release_info($system_id)
     {
-        $res = NULL;
+        $release_info = NULL;
 
-        $path = self::$base_path."/release_info";
-
-        if (file_exists($path))
+        try
         {
-            $info = file($path);
+            $filters = array(
+                'component_id'   => Util::uuid_format_nc($system_id),
+                'component_type' => 'external',
+                'message_type'   => 'update',
+                'order_by'       => 'creation_time',
+                'order_desc'     => 'true'
+            );
 
-            if (count($info) > 3)
+            $pagination = array(
+                'page'      => 1,
+                'page_rows' => 1
+            );
+
+            $status = new System_notifications();
+            list($nt_list, $total) = $status->get_status_messages($filters, $pagination);
+
+            if ($total > 0)
             {
-                //Current version
+                $msg = array_shift($nt_list);
+
+                // Wiki Parser
+                $wiki = new Wikiparser();
+
+                $desc            = $wiki->parse($msg['message_description']);
+                $additional_info = $msg['additional_info'];
+
+
+                //Information is successfully retrieved
+                $cnd_1 = (!empty($desc) && !empty($additional_info) && is_array($additional_info));
+
+                //Only show release information if new version is higher than previous one.
                 $c_version = self::get_current_version($system_id);
+                $cnd_2     = ($c_version != '' && Util::compare_av_version($c_version, $additional_info['version']) == -1);
 
-                //New version
-                $new_version = array_shift($info);
-                $new_version = preg_replace('/version:\s*/i', '', $new_version);
-                $new_version = trim($new_version);
-
-                // Test if current version will be upgraded
-                if ($c_version != '' && $new_version != '' && Util::compare_av_version($c_version, $new_version) == -1)
+                if ($cnd_1 && $cnd_2)
                 {
-                    $res['version']     = $new_version;
-                    $res['type']        = array_shift($info);
-                    $res['type']        = (preg_match('/minor/i', $res['type'])) ? _('Patch') : _('Upgrade');
-                    $res['description'] = $info;
+                    $release_info = array(
+                        'version'      => $additional_info['version'],
+                        'type'         => (preg_match('/minor/i', $additional_info['release_type'])) ? _('Patch') : _('Upgrade'),
+                        'description'  => $desc
+                    );
                 }
             }
         }
+        catch(Exception $e)
+        {
+            Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+        }
 
-        return $res;
+        return $release_info;
     }
 
 
@@ -576,7 +601,7 @@ class Av_center
         $res['data']   = '';
 
         $query = "SELECT HEX(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id, get_ip_by_system_id(HEX(id)) AS current_ip,
-            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOP(ha_ip), '') AS ha_ip, name, profile
+            INET6_NTOA(admin_ip) AS admin_ip, ifnull(INET6_NTOA(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOA(ha_ip), '') AS ha_ip, name, profile
             FROM alienvault.system
             WHERE id = UNHEX(?)";
 
@@ -621,9 +646,9 @@ class Av_center
         $res['data']   = FALSE;
 
         $query = "SELECT HEX(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id, get_ip_by_system_id(HEX(id)) AS current_ip,
-            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOP(ha_ip), '') AS ha_ip, name, profile
+            INET6_NTOA(admin_ip) AS admin_ip, ifnull(INET6_NTOA(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOA(ha_ip), '') AS ha_ip, name, profile
             FROM alienvault.system
-            WHERE admin_ip = INET6_PTON(?) OR vpn_ip = INET6_PTON(?) OR ha_ip = INET6_PTON(?)";
+            WHERE admin_ip = INET6_ATON(?) OR vpn_ip = INET6_ATON(?) OR ha_ip = INET6_ATON(?)";
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
 
@@ -649,7 +674,7 @@ class Av_center
 
 
     /**
-     * This method returns the avc list
+     * This method returns the system list stored in database
      *
      * @param object $conn  Database access object
      *
@@ -665,7 +690,7 @@ class Av_center
         $res['data']   = NULL;
 
         $query = "SELECT HEX(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id, get_ip_by_system_id(HEX(id)) AS current_ip,
-            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOP(ha_ip), '') AS ha_ip, name, profile
+            INET6_NTOA(admin_ip) AS admin_ip, ifnull(INET6_NTOA(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOA(ha_ip), '') AS ha_ip, name, profile
             FROM alienvault.system
             ORDER BY name";
 
@@ -696,17 +721,56 @@ class Av_center
 
 
     /**
-     * This method returns a JSON object with setup data from a given system (Alienvault Component)
+     * This method returns the system list stored in AlienVault API
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return array
+     */
+    public static function get_avc_list_from_api()
+    {
+        $client = new Alienvault_client();
+
+        $response = $client->system()->get_components();
+
+        $response = @json_decode($response, TRUE);
+
+        if (!$response || $response['status'] == 'error')
+        {
+            $res['status'] = 'error';
+            $res['data']   = $client->get_error_message($response);
+        }
+        else
+        {
+            $res['status'] = 'success';
+            $res['data']   = array();
+
+            foreach ($response['data']['systems'] as $system_id => $s_data)
+            {
+                $res['data'][$system_id] = array(
+                    "admin_ip"  => $s_data['admin_ip'],
+                    "hostname"  => $s_data['hostname'],
+                    "full_name" => $s_data['hostname'].' ['.$s_data['admin_ip'].']',
+                    "profile"   => $s_data['profile']
+                );
+            }
+        }
+
+        return $res;
+    }
+
+
+    /**
+     * This method returns a JSON object with setup data from a given system (AlienVault Component)
      *
      * @param string  $system_id  System UUID
      * @param string  $type       [Optional] Configuration Type (general or alienvault)
-     * @param boolean $cache      [Optional] Use cached information
      *
      * @throws Exception  If an error occurred
      *
      * @return array
      */
-    public static function get_config_data($system_id, $type = 'general', $cache = TRUE)
+    public static function get_config_data($system_id, $type = 'general')
     {
         if ($type != 'general' && $type != 'alienvault')
         {
@@ -745,7 +809,7 @@ class Av_center
 
 
     /**
-     * This method sets with setup data from a given system (Alienvault Component)
+     * This method sets with setup data from a given system (AlienVault Component)
      *
      * @param string $system_id  System ID
      * @param array  $data       Data to set
@@ -1156,7 +1220,7 @@ class Av_center
             {
                 $client   = new Alienvault_client();
 
-                $response = $client->system($system_id)->update_av_system($data);
+                $response = $client->system($system_id)->update_av_system();
                 $response = @json_decode($response, TRUE);
 
                 if (!$response || $response['status'] == 'error')
@@ -1182,7 +1246,7 @@ class Av_center
 
 
     /**
-     * This method upgrades the Alienvault Feed
+     * This method upgrades the AlienVault Feed
      *
      * @param string $system_id  System ID
      *
@@ -1203,7 +1267,7 @@ class Av_center
             {
                 $client   = new Alienvault_client();
 
-                $response = $client->system($system_id)->update_av_feed($data);
+                $response = $client->system($system_id)->update_av_feed();
                 $response = @json_decode($response, TRUE);
 
                 if (!$response || $response['status'] == 'error')

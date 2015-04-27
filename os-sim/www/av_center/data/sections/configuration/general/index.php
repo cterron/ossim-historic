@@ -270,7 +270,7 @@ else
         ajax_validator = new Ajax_validator(config);
 
         // Some help to fill smtp server
-        var config_t = { content: '<?php echo _('You can type one IP address or server name or one IP list separated by comma. <br/>For example: 173.194.66.108, smtp.gmail.com, 173.194.66.109')?>'};
+        var config_t = { content: '<?php echo _('You can type one unique IP Address or a Server Name or an IP list separated by commas. <br/>For example: 173.194.66.108, smtp.gmail.com, 173.194.66.109')?>'};
 
 
         Js_tooltip.show('#<?php echo $cnf_data['mailserver_relay']['id'] ?>', config_t);
@@ -279,7 +279,7 @@ else
         // Some help to fill ntp server
 
         //One IP address or server name is allowed (Patch temporary)
-        var config_t = { content: '<?php echo _('You can type one IP address or server name. <br/>For example: 0.es.pool.ntp.org or 173.194.66.108')?>'};
+        var config_t = { content: '<?php echo _('You can type one unique IP Address or a Server Name. <br/>For example: 0.es.pool.ntp.org or 173.194.66.108')?>'};
 
         Js_tooltip.show('#<?php echo $cnf_data['ntp_server']['id'] ?>', config_t);
 

@@ -54,7 +54,7 @@ require_once 'av_init.php';
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 abstract class Asset_filter
 {            
@@ -322,7 +322,7 @@ abstract class Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_asset_created extends Asset_filter
 {
@@ -519,7 +519,7 @@ class Filter_asset_created extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_asset_updated extends Asset_filter
 {
@@ -719,7 +719,7 @@ class Filter_asset_updated extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_alarms extends Asset_filter
 {
@@ -821,7 +821,7 @@ class Filter_alarms extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_events extends Asset_filter
 {
@@ -925,7 +925,7 @@ class Filter_events extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_vulnerabilities extends Asset_filter
 {
@@ -1062,7 +1062,7 @@ class Filter_vulnerabilities extends Asset_filter
     */
     public function get_tag_params($conn)
     {
-        include AV_MAIN_ROOT_PATH . '/assets/asset_conf.php';
+        $__vuln_opts = Filter_list::get_filter_legends('vulns'); 
         
         $tags  = array();
         
@@ -1088,7 +1088,7 @@ class Filter_vulnerabilities extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_asset_value extends Asset_filter
 {   
@@ -1244,7 +1244,7 @@ class Filter_asset_value extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_network extends Asset_filter
 {
@@ -1311,7 +1311,7 @@ class Filter_network extends Asset_filter
 
         if (!$load_default && $this->is_active())
         {
-            //Now we format the networks spliting by comas and adding the 0x
+            //Now we format the networks spliting by commas and adding the 0x
             $r_value = '0x' . implode(', 0x', $this->_values);
         }
         
@@ -1373,7 +1373,7 @@ class Filter_network extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_software extends Asset_filter
 {
@@ -1440,7 +1440,7 @@ class Filter_software extends Asset_filter
         
         if (!$load_default && $this->is_active())
         {
-            //We put all the cpe's values separated by comas
+            //We put all the cpe's values separated by commas
             $r_value = implode(',', $this->_values);
         }
         
@@ -1502,7 +1502,7 @@ class Filter_software extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_fqdn extends Asset_filter
 {
@@ -1563,7 +1563,7 @@ class Filter_fqdn extends Asset_filter
     {
        /*
         This filter type is list so we need the field "value".
-        Value example: free string (% is allowed) separated by comas
+        Value example: free string (% is allowed) separated by commas
         The default value is empty.
         */
         $r_value = '';
@@ -1571,7 +1571,7 @@ class Filter_fqdn extends Asset_filter
 
         if (!$load_default && $this->is_active())
         {
-            //Now we format the networks spliting by comas and adding the 0x
+            //Now we format the networks spliting by commas and adding the 0x
             $r_value = implode(';', $this->_values);
         }
 
@@ -1622,7 +1622,7 @@ class Filter_fqdn extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_location extends Asset_filter
 {
@@ -1688,7 +1688,7 @@ class Filter_location extends Asset_filter
         
         if (!$load_default && $this->is_active())
         {
-            //Now we format the networks spliting by comas and adding the 0x
+            //Now we format the networks spliting by commas and adding the 0x
             $r_value = '0x' . implode(', 0x', $this->_values);
         }
         
@@ -1751,7 +1751,7 @@ class Filter_location extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_sensor extends Asset_filter
 {
@@ -1817,7 +1817,7 @@ class Filter_sensor extends Asset_filter
         
         if (!$load_default && $this->is_active())
         {
-            //Now we format the networks spliting by comas and adding the 0x
+            //Now we format the networks spliting by commas and adding the 0x
             $r_value = '0x' . implode(', 0x', $this->_values);
         }
         
@@ -1879,7 +1879,7 @@ class Filter_sensor extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_ip extends Asset_filter
 {
@@ -1958,7 +1958,7 @@ class Filter_ip extends Asset_filter
         {
             $r_value = array();
             
-            //We need to go throught all the values and put the from and to separated by coma
+            //We need to go throught all the values and put the from and to separated by commas
             foreach ($this->_values as $_val)
             {
                 $r_value[] = $_val['from'] . ',' . $_val['to'];
@@ -2015,7 +2015,7 @@ class Filter_ip extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_device_type extends Asset_filter
 {
@@ -2093,7 +2093,7 @@ class Filter_device_type extends Asset_filter
         {
             $r_value = array();
             
-            //We need to go throught all the values and put the from and to separated by coma
+            //We need to go throught all the values and put the from and to separated by commas
             foreach ($this->_values as $_val)
             {
                 $r_value[] = $_val['from'] . ',' . $_val['to'];
@@ -2168,7 +2168,7 @@ class Filter_device_type extends Asset_filter
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Filter_port_service extends Asset_filter
 {
@@ -2249,7 +2249,7 @@ class Filter_port_service extends Asset_filter
         {
             $r_value = array();
             
-            //We need to go throught all the values and put the from and to separated by coma
+            //We need to go throught all the values and put the from and to separated by commas
             foreach ($this->_values as $_val)
             {
                 $r_value[] = $_val['value'] . ',' . $_val['from'] . ",'" . $_val['to'] ."'";
@@ -2302,3 +2302,963 @@ class Filter_port_service extends Asset_filter
         return $tags;
     }
 }
+
+/**
+* Filter_os Class
+*
+* Class for managing an asset filter of operating system
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_os extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = array();
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */
+    protected function _set_value($value, $delete = FALSE)
+    {
+        ossim_valid($value,     OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT,      'illegal:' . _('Filter Value'));             
+        
+        if (ossim_error())
+    	{
+    		$exp_msg = _('Error').': '.ossim_get_error();
+            ossim_clean_error();
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    	}
+
+        $id = md5($value);
+
+        if ($delete)
+        {
+            unset($this->_values[$id]);
+
+        }
+        else
+        {
+            $this->_values[$id] = $value;
+        }
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+        /*
+        This filter type is list so we need the field "value".
+        Value example: 'Linux/2.6X, Windows Vista'.
+        The default value is empty.
+        */
+        $r_value = '';
+        
+        if (!$load_default && $this->is_active())
+        {
+            //We put all the cpe's values separated by commas
+            $r_value = implode(',', $this->_values);
+        }
+        
+        return $r_value;
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return (count($this->_values) > 0);
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $tags  = array();
+        
+        foreach ($this->_values as $val)
+        {
+            $id        = $this->_id . '###' . md5($val);
+            $tags[$id] = $value;
+        }
+        
+        return $tags;
+    }
+}
+
+/**
+* Filter_model Class
+*
+* Class for managing an asset filter of model
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_model extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = array();
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */
+    protected function _set_value($value, $delete = FALSE)
+    {
+        ossim_valid($value,     OSS_INPUT, OSS_NULLABLE,      'illegal:' . _('Filter Value'));             
+        
+        if (ossim_error())
+    	{
+    		$exp_msg = _('Error').': '.ossim_get_error();
+            ossim_clean_error();
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    	}
+
+        $id = md5($value);
+
+        if ($delete)
+        {
+            unset($this->_values[$id]);
+
+        }
+        else
+        {
+            $this->_values[$id] = $value;
+        }
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+        /*
+        This filter type is list so we need the field "value".
+        Value example: 'Linux/2.6X, Windows Vista'.
+        The default value is empty.
+        */
+        $r_value = '';
+        
+        if (!$load_default && $this->is_active())
+        {
+            //We put all the cpe's values separated by commas
+            $r_value = implode(',', $this->_values);
+        }
+        
+        return $r_value;
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return (count($this->_values) > 0);
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $tags  = array();
+        
+        foreach ($this->_values as $val)
+        {
+            $id        = $this->_id . '###' . md5($val);
+            $tags[$id] = $value;
+        }
+        
+        return $tags;
+    }
+}
+
+
+/**
+* Filter_availability Class
+*
+* Class for managing an asset filter of type availability (Nagios)
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_availability extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = '';
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */ 
+    protected function _set_value($value, $delete = FALSE)
+    {
+        if ($delete)
+        {
+            $this->_values = '';
+        }
+        else
+        {            
+            ossim_valid($value,     '0-2', OSS_NULLABLE,    'illegal:' . _('Availability Status'));         
+            
+            if (ossim_error())
+        	{
+        		$exp_msg = _('Error').': '.ossim_get_error();
+                ossim_clean_error();
+
+                Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+        	}    
+            
+            $this->_values = $value;
+        }
+        
+        $this->_force_reload = TRUE;
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+        /*
+        This filter type is value so we need the field value.
+        Value example: '', 0, 1, 2.
+        The default value is ''.
+        */
+        $r_value = '';
+        
+
+        if (!$load_default && $this->is_active())
+        {
+            $r_value = $this->_values;
+        }
+        
+        return $r_value;
+
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return ($this->_values != '');
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $__availability_status = Filter_list::get_filter_legends('availability');
+
+        $tags  = array();
+        
+        $id    = $this->_id . '###' . $this->_values;
+        $label = _('Availability Status:') . ' ' . $__availability_status[$this->_values]; 
+        
+        $tags[$id] = $label;
+        
+        return $tags; 
+    }
+}
+
+/**
+* Filter_groups Class
+*
+* Class for managing an asset filter of type group
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_groups extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = array();
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */
+    protected function _set_value($value, $delete = FALSE)
+    {
+        ossim_valid($value,     OSS_HEX, OSS_NULLABLE,      'illegal:' . _('Filter Value'));
+        
+        if (ossim_error())
+    	{
+    		$exp_msg = _('Error').': '.ossim_get_error();
+            ossim_clean_error();
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    	}
+
+        if ($delete)
+        {
+            unset($this->_values[$value]);
+        }
+        else
+        {
+            $this->_values[$value] = $value;
+        }
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+        /*
+        This filter type is list so we need the field "value".
+        Value example: '0xF8EF2A7B9AC2B876C95FC12914BB3754,0x4531A9B0B300105D7DEDC6FC9330E24D'.
+        The default value is empty.
+        */
+        $r_value = '';
+        
+
+        if (!$load_default && $this->is_active())
+        {
+            //Now we format the networks spliting by commas and adding the 0x
+            $r_value = '0x' . implode(', 0x', $this->_values);
+        }
+        
+        return $r_value; 
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return (count($this->_values) > 0);
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $tags  = array();
+        
+        foreach ($this->_values as $val)
+        {
+            $id = $this->_id . '###' . $val;
+            
+            try
+            {
+                $name = Asset_group::get_name_by_id($conn, $val);
+            }
+            catch(Exception $e)
+            {
+                $name = '';
+            }
+            
+            $name  = ($name == '') ? _('Unknown') : $name;
+            
+            $label = _('Group:') . ' ' . $name; 
+        
+            $tags[$id] = $label;
+        }
+        
+        return $tags;
+    }
+}
+
+
+/**
+* Filter_labels Class
+*
+* Class for managing an asset filter of type labels
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_labels extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = array();
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */
+    protected function _set_value($value, $delete = FALSE)
+    {
+        ossim_valid($value,     OSS_HEX, OSS_NULLABLE,      'illegal:' . _('Filter Value'));
+        
+        if (ossim_error())
+    	{
+    		$exp_msg = _('Error').': '.ossim_get_error();
+            ossim_clean_error();
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    	}
+
+        if ($delete)
+        {
+            unset($this->_values[$value]);
+        }
+        else
+        {
+            $this->_values[$value] = $value;
+        }
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+        /*
+        This filter type is list so we need the field "value".
+        Value example: '0xF8EF2A7B9AC2B876C95FC12914BB3754,0x4531A9B0B300105D7DEDC6FC9330E24D'.
+        The default value is empty.
+        */
+        $r_value = '';
+        
+
+        if (!$load_default && $this->is_active())
+        {
+            //Now we format the networks spliting by commas and adding the 0x
+            $r_value = '0x' . implode(', 0x', $this->_values);
+        }
+        
+        return $r_value; 
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return (count($this->_values) > 0);
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $tags  = array();
+        
+        foreach ($this->_values as $val)
+        {
+            $id = $this->_id . '###' . $val;
+            
+            try
+            {
+                $name = Tag::get_name_by_id($conn, $val);
+            }
+            catch(Exception $e)
+            {
+                $name = '';
+            }
+            
+            $name  = ($name == '') ? _('Unknown') : $name;
+            
+            $label = _('Label:') . ' ' . $name; 
+        
+            $tags[$id] = $label;
+        }
+        
+        return $tags;
+    }
+}
+
+
+/**
+* Filter_group_name Class
+*
+* Class for managing an asset filter of type group name
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_group_name extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = array();
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */
+    protected function _set_value($value, $delete = FALSE)
+    {
+        ossim_valid($value,     OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,      'illegal:' . _('Filter Value'));             
+        
+        if (ossim_error())
+    	{
+    		$exp_msg = _('Error').': '.ossim_get_error();
+            ossim_clean_error();
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    	}
+
+        if ($delete)
+        {
+            unset($this->_values[$value]);
+        }
+        else
+        {
+            $this->_values[$value] = $value;
+        }
+        
+        $this->_force_reload = TRUE;
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+       /*
+        This filter type is list so we need the field "value".
+        Value example: free string (% is allowed) separated by commas
+        The default value is empty.
+        */
+        $r_value = '';
+        
+
+        if (!$load_default && $this->is_active())
+        {
+            //Now we format the networks spliting by commas and adding the 0x
+            $r_value = implode(';', $this->_values);
+        }
+
+        return $r_value; 
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return (count($this->_values) > 0);
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $tags  = array();
+        
+        foreach ($this->_values as $val)
+        {
+            $id    = $this->_id . '###' . $val;
+
+            $label = _('Group Name:') . ' ' . $val; 
+        
+            $tags[$id] = $label;
+        }
+        
+        return $tags; 
+    }
+}
+
+
+/**
+* Filter_network_name Class
+*
+* Class for managing an asset filter of type network name
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_network_name extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = array();
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */
+    protected function _set_value($value, $delete = FALSE)
+    {
+        ossim_valid($value,     OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,      'illegal:' . _('Filter Value'));             
+        
+        if (ossim_error())
+    	{
+    		$exp_msg = _('Error').': '.ossim_get_error();
+            ossim_clean_error();
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    	}
+
+        if ($delete)
+        {
+            unset($this->_values[$value]);
+        }
+        else
+        {
+            $this->_values[$value] = $value;
+        }
+        
+        $this->_force_reload = TRUE;
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+       /*
+        This filter type is list so we need the field "value".
+        Value example: free string (% is allowed) separated by commas
+        The default value is empty.
+        */
+        $r_value = '';
+        
+
+        if (!$load_default && $this->is_active())
+        {
+            //Now we format the networks spliting by commas and adding the 0x
+            $r_value = implode(';', $this->_values);
+        }
+
+        return $r_value; 
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return (count($this->_values) > 0);
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $tags  = array();
+        
+        foreach ($this->_values as $val)
+        {
+            $id    = $this->_id . '###' . $val;
+
+            $label = _('Network Name:') . ' ' . $val; 
+        
+            $tags[$id] = $label;
+        }
+        
+        return $tags; 
+    }
+}
+
+
+/**
+* Filter_network_cidr Class
+*
+* Class for managing an asset filter of type network name
+*
+* @package    ossim-framework\Various
+* @autor      AlienVault INC
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/ AlienVault web page
+*/
+class Filter_network_cidr extends Asset_filter
+{
+    /**
+    * This function set the default value of the filter
+    *
+    * @return void
+    */
+    protected function _set_default_value()
+    {
+        $this->_values = array();
+    }
+    
+    
+    /**
+    * This function sets a single filter value
+    *
+    * @param  $value   Filter Value
+    * @param  $delete  Delete Filter Flag
+    *
+    * @throws Exception  If the validation of the value to modify is incorrect
+    *
+    * @return void
+    */
+    protected function _set_value($value, $delete = FALSE)
+    {
+        ossim_valid($value,     OSS_IP_CIDR, OSS_NULLABLE,      'illegal:' . _('Filter Value'));             
+        
+        if (ossim_error())
+    	{
+    		$exp_msg = _('Error').': '.ossim_get_error();
+            ossim_clean_error();
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    	}
+
+        if ($delete)
+        {
+            unset($this->_values[$value]);
+        }
+        else
+        {
+            $this->_values[$value] = $value;
+        }
+        
+        $this->_force_reload = TRUE;
+    }
+    
+    
+    /**
+    * This function gets the sql value of a filter
+    *
+    * @param  boolean  $reload  Flag to force non-default value
+    *
+    * @return string
+    */
+    protected function _get_sql_value($load_default)
+    {
+       /*
+        This filter type is list so we need the field "value".
+        Value example: free string (% is allowed) separated by commas
+        The default value is empty.
+        */
+        $r_value = '';
+        
+
+        if (!$load_default && $this->is_active())
+        {
+            //Now we format the networks spliting by commas and adding the 0x
+            $r_value = implode(';', $this->_values);
+        }
+
+        return $r_value; 
+    }
+    
+    
+    /**
+    * This function check if the filter is active
+    *
+    * @return boolean
+    */ 
+    public function is_active()
+    {
+        return (count($this->_values) > 0);
+    }
+    
+    
+    /**
+    * This function get the tag of the filter
+    *
+    * @return array
+    */
+    public function get_tag_params($conn)
+    {
+        $tags  = array();
+        
+        foreach ($this->_values as $val)
+        {
+            $id    = $this->_id . '###' . $val;
+
+            $label = _('Network CIDR:') . ' ' . $val; 
+        
+            $tags[$id] = $label;
+        }
+        
+        return $tags; 
+    }
+}
+

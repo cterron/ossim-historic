@@ -3,7 +3,7 @@
 * provider.inc
 *
 * File provider.inc is used to:
-*   - manage the Alienvault REST API providers
+*   - manage the AlienVault REST API providers
 *
 * License:
 *

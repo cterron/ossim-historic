@@ -21,6 +21,9 @@ configure_openvas_feed(){
 
     set +e
 
+    # Make sure than openvas-manager init script has execution permissions
+    chmod +x /etc/init.d/openvas-manager
+
     # These init.d script calls don't work on ISO installation but it is ok because they are already stopped
     /etc/init.d/monit stop
     /etc/init.d/openvas-manager stop

@@ -139,8 +139,6 @@ input[type="checkbox"][disabled="disabled"], input[type="radio"][disabled="disab
     opacity: 0.5;
 }
 
-
-
 /* 
  *   Input - image
  */
@@ -354,7 +352,7 @@ button.av_b_transparent:hover, input[type='button'].av_b_transparent:hover, inpu
 
 /* Small button */
 
-button.small, input[type='button'].small, input[type='submit'].small, input[type='reset'].small
+button.small, input[type='button'].small, input[type='submit'].small, input[type='reset'].small, a.button.small
 {
     padding: 3px 5px !important;     
 }
@@ -415,4 +413,17 @@ input[type="text"][disabled="disabled"], input[type="password"][disabled="disabl
     -webkit-opacity: 0.5;
     -khtml-opacity: 0.5;
     opacity: 0.5;
+}
+
+/* 
+ *   Input - Search
+ */
+ 
+input[type="search"]
+{
+	-webkit-appearance: none;
+    padding: 8px 4px;
+    background: rgba(150, 150, 150, 0.1);
+    border: none;
+    border-radius: 2px;
 }

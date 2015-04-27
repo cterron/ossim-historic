@@ -2,6 +2,7 @@
 name=Agent Cache Files
 description=Check the integrity of the agent cache
 category=alienvault,platform
+profiles=Sensor:>4.0
 type=command
 command=ls /var/ossim/agent_events | perl -pe "s/\.\d+\.\d+\.db//" | uniq -c
 

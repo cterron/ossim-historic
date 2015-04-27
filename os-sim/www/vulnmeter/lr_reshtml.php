@@ -309,10 +309,7 @@ if (ossim_error())
             }
         });
 
-        $('a.anchor_link').on('click', function(e)
-        {
-            go_to(this, e);
-        });
+        $('a.anchor_link').on('click', anchor_link);
     });
 
     

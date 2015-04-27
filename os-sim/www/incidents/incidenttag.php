@@ -39,7 +39,7 @@ Session::logcheck("analysis-menu", "IncidentsTags");
 function display_errors($info_error)
 {
 	$errors       = implode ("</div><div style='padding-top: 3px;'>", $info_error);
-	$error_msg    = "<div>"._("We found the following errors:")."</div><div style='padding-left: 15px;'><div>$errors</div></div>";
+	$error_msg    = "<div>"._("The following errors occurred:")."</div><div style='padding-left: 15px;'><div>$errors</div></div>";
 	
 	$config_nt = array(
 		'content' => $error_msg,

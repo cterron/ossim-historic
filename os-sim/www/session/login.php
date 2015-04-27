@@ -157,23 +157,26 @@ if ($fullname == '')
     $fullname = 'AlienVault admin';
 }
 
-$company   = REQUEST('company');
-$location  = REQUEST('search_location');
-$lat       = REQUEST('latitude');
-$lng       = REQUEST('longitude');
-$country   = REQUEST('country');
+$company                 = REQUEST('company');
+$location                = REQUEST('search_location');
+$lat                     = REQUEST('latitude');
+$lng                     = REQUEST('longitude');
+$country                 = REQUEST('country');
+$track_usage_information = intval(REQUEST('track_usage_information'));
 
-ossim_valid($embed, 'true', OSS_NULLABLE,                         'illegal:' . _('Embed'));
-ossim_valid($user, OSS_USER, OSS_NULLABLE,                        'illegal:' . _('User name'));
-ossim_valid($mobile, OSS_LETTER, OSS_NULLABLE,                    'illegal:' . _('Mobile'));
-ossim_valid($accepted, OSS_NULLABLE, 'yes', 'no',                 'illegal:' . _('First login'));
-ossim_valid($email, OSS_MAIL_ADDR, OSS_NULLABLE,                  'illegal:' . _('E-mail'));
-ossim_valid($fullname, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_NULLABLE, 'illegal:' . _('Full Name'));
-ossim_valid($company, OSS_ALPHA, OSS_PUNC_EXT, OSS_NULLABLE,      'illegal:' . _('Company Name'));
-ossim_valid($location, OSS_ALPHA, OSS_PUNC_EXT, OSS_NULLABLE,     'illegal:' . _('Location'));
-ossim_valid($lat, OSS_DIGIT, OSS_DOT, OSS_SCORE, OSS_NULLABLE,    'illegal:' . _('Latitude'));
-ossim_valid($lng, OSS_DIGIT, OSS_DOT, OSS_SCORE, OSS_NULLABLE,    'illegal:' . _('Longitude'));
-ossim_valid($country, OSS_LETTER, OSS_NULLABLE,                   'illegal:' . _('Country'));
+
+ossim_valid($embed,                   'true', OSS_NULLABLE,                                'illegal:' . _('Embed'));
+ossim_valid($user,                    OSS_USER, OSS_NULLABLE,                              'illegal:' . _('User name'));
+ossim_valid($mobile,                  OSS_LETTER, OSS_NULLABLE,                            'illegal:' . _('Mobile'));
+ossim_valid($accepted,                OSS_NULLABLE, 'yes', 'no',                           'illegal:' . _('First login'));
+ossim_valid($email,                   OSS_MAIL_ADDR, OSS_NULLABLE,                         'illegal:' . _('E-mail'));
+ossim_valid($fullname,                OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_NULLABLE,           'illegal:' . _('Full Name'));
+ossim_valid($company,                 OSS_ALPHA, OSS_PUNC_EXT, OSS_NULLABLE,               'illegal:' . _('Company Name'));
+ossim_valid($location,                OSS_ALPHA, OSS_PUNC_EXT, OSS_NULLABLE,               'illegal:' . _('Location'));
+ossim_valid($lat,                     OSS_DIGIT, OSS_DOT, OSS_SCORE, OSS_NULLABLE,         'illegal:' . _('Latitude'));
+ossim_valid($lng,                     OSS_DIGIT, OSS_DOT, OSS_SCORE, OSS_NULLABLE,         'illegal:' . _('Longitude'));
+ossim_valid($country,                 OSS_LETTER, OSS_NULLABLE,                            'illegal:' . _('Country'));
+ossim_valid($track_usage_information, OSS_BINARY,                                          'illegal:' . _('Track Usage Information'));
 
 
 if (ossim_error())
@@ -185,15 +188,10 @@ if (ossim_error())
 
 /* Version */
 
-$version     = $conf->get_conf('ossim_server_version');
-
-$opensource  = (!preg_match("/pro|demo/i",$version))  ? TRUE : FALSE;
-$demo        = (preg_match("/.*demo.*/i",$version))   ? TRUE : FALSE;
-$pro         = (preg_match("/.*pro.*/i",$version))    ? TRUE : FALSE;
+$pro = Session::is_pro();
 
 
 /*  System Name  */
-
 try
 {
     list($system_name, $system_ip) = Session::get_local_sysyem_info();
@@ -201,10 +199,13 @@ try
 catch (Exception $e){}
 
 
+/* Application Name */
+
+$app_name = ($pro == TRUE) ? 'USM' : 'OSSIM';
+
 /* Title */
 
-$title = _('AlienVault '.($opensource ? 'OSSIM' : 'USM'));
-
+$title = sprintf(_('AlienVault %s'), $app_name);
 
 /* Logo */
 
@@ -214,10 +215,7 @@ if ($pro)
 {
     $logo_type .= '_siem';
 }
-elseif ($demo)
-{
-    $logo_type .= '_siemdemo';
-}
+
 
 $logo   = 'logo'.$logo_type.'.png';
 $b_logo = 'ossim'.$logo_type.'.png';
@@ -244,11 +242,11 @@ $failed       = TRUE;
 $default_user = '';
 $first_login  = $conf->get_conf('first_login');
 
-if(Session::is_pro())
+if($pro == TRUE)
 {
     $trial_days = Session::trial_days_to_expire();
 
-    if($trial_days <= 0)
+    if($trial_days == 0)
     {
         if(file_exists('/usr/share/ossim/www/session/trial/index.php'))
         {
@@ -256,8 +254,8 @@ if(Session::is_pro())
             exit();
         }
     }
-
 }
+
 
 // FIRST LOGIN
 
@@ -278,8 +276,6 @@ if ($cnd_1 && $cnd_2 && $cnd_3)
 
     $config      = new Config();
     $first_login = 'no';
-
-    $config->update('first_login', 'no');
 
     //Update admin info
     list($db, $conn) = Ossim_db::get_conn_db();
@@ -315,6 +311,22 @@ if ($cnd_1 && $cnd_2 && $cnd_3)
         }
     }
 
+    // Save Track Usage Information
+    if ($track_usage_information == 1)
+    {
+        $tui_status = ($track_usage_information > 0) ? 1 : 0;
+
+        $config = new Config();
+        $config->update('track_usage_information', $tui_status);
+
+        $client = new Alienvault_client();
+
+        $tui_status = ($track_usage_information > 0) ? TRUE : FALSE;
+        $client->system()->set_telemetry($tui_status);
+    }
+
+    $config->update('first_login', 'no');
+
     $db->close();
 
     $default_user = AV_DEFAULT_ADMIN;
@@ -338,7 +350,6 @@ if ($cnd_1 && $cnd_2)
     }
 
     $is_disabled = $session->is_user_disabled();
-
 
     if ($is_disabled == FALSE)
     {
@@ -433,7 +444,7 @@ if ($cnd_1 && $cnd_2)
                                 unset($_SESSION['_welcome_wizard_bar']);
                             }
                         }
-                        
+
                         header("Location: /ossim/$bookmark");
                     }
                 }
@@ -459,9 +470,8 @@ if ($system_name != '')
     <meta http-equiv="Pragma" content="no-cache"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="Shortcut Icon" type="image/x-icon" href="/ossim/favicon.ico"/>
-    
-    
+
+
     <?php
     //CSS Files
     $_css_files = array(
@@ -477,12 +487,12 @@ if ($system_name != '')
         array('src' => '/fancybox/jquery.fancybox-1.3.4.pack.js',       'def_path' => TRUE),
         array('src' => 'jquery.tipTip.js',                              'def_path' => TRUE)
     );
-    
+
     if ($first_login == 'yes')
     {
         $_css_files[] = array('src' => '/session/login_welcome.css',    'def_path' => TRUE);
         $_css_files[] = array('src' => 'jquery.autocomplete.css',       'def_path' => TRUE);
-        
+
         $_js_files[]  = array('src' => 'av_internet_check.js.php',      'def_path' => TRUE);
         $_js_files[]  = array('src' => 'utils.js',                      'def_path' => TRUE);
         $_js_files[]  = array('src' => 'jquery.pstrength.js',           'def_path' => TRUE);
@@ -493,26 +503,26 @@ if ($system_name != '')
     }
     else
     {
-        $_css_files[] = array('src' => '/session/login.css',    'def_path' => TRUE);
-        
+        $_css_files[] = array('src' => '/session/login.css',            'def_path' => TRUE);
+
     }
-    
+
     if (Mobile::is_mobile_device())
     {
-        $_css_files[] = array('src' => '/session/login_mobile.css',     'def_path' => TRUE);    
+        $_css_files[] = array('src' => '/session/login_mobile.css',     'def_path' => TRUE);
     }
-    
-    
+
+
     Util::print_include_files($_css_files, 'css');
     Util::print_include_files($_js_files, 'js');
-    
-    ?>   
-       
+
+    ?>
+
     <?php
     if (!Mobile::is_mobile_device() && $embed == 'true')
     {
     ?>
-        <style type="text/css"> 
+        <style type="text/css">
             #c_login
             {
                 margin: auto;
@@ -606,16 +616,16 @@ if ($system_name != '')
             <?php
         }
         ?>
-        
+
         function save_hash()
         {
             var av_hash = location.hash;
-            
+
             $('#bookmark_string').val(av_hash);
         }
-        
+
         $(document).ready(function()
-        {            
+        {
             if (typeof(document.f_login) != 'undefined')
             {
                  document.f_login.user.focus();
@@ -648,7 +658,7 @@ if ($system_name != '')
             {
                 ?>
                 __internet = new Av_internet_check();
-                
+
                 // Scroll down to view de submit button (small screens)
                 document.getElementById('down_button').scrollIntoView();
 
@@ -662,7 +672,7 @@ if ($system_name != '')
                     if (conn)
                     {
                         av_map.draw_map();
-    
+
                         $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
         					mapkey: '<?php echo $map_key?>',
         					selectFirst: true,
@@ -678,62 +688,62 @@ if ($system_name != '')
         						{
         						    toggle_map();
         						}
-    
+
         						//Set map coordenate
                                 av_map.map.fitBounds(_data.geometry.viewport);
-    
+
                                 var aux_lat = _data.geometry.location.lat();
                                 var aux_lng = _data.geometry.location.lng();
-    
+
                                 //console.log(aux_lat);
                                 //console.log(aux_lng);
-    
+
                                 av_map.set_location(aux_lat, aux_lng);
-    
+
                                 $('#latitude').val(av_map.get_lat());
                                 $('#longitude').val(av_map.get_lng());
-    
+
                                 //Save address
-    
+
                                 av_map.set_address(_data.formatted_address);
-    
+
                                 // Marker (Add or update)
-    
+
                                 av_map.remove_all_markers();
                                 av_map.add_marker(av_map.get_lat(), av_map.get_lng());
                                 av_map.markers[0].setTitle('<?php echo _('Company location')?>');
                                 av_map.markers[0].setMap(av_map.map);
-    
+
                                 av_map.map.setZoom(8);
-    
+
                                 //Get country
-    
+
         						var country = '';
                                 var i       = _data.address_components.length-1;
-    
+
                                 for(i; i >= 0; i--)
                                 {
                                     var item = _data.address_components[i];
-    
+
                                     if(item.types[0] == 'country')
                                     {
                                         country = item.short_name;
-    
+
                                         break;
                                     }
                                 }
-    
+
                                 $('#country').val(country);
         					}
         				});
-    
-    
+
+
         				$('#view_map').click(function(event){
-    
+
                             event.preventDefault();
                             toggle_map();
                         });
-    
+
         				//Search box (Handler Keyup and Blur)
         				av_map.bind_sl_actions();
                     }
@@ -756,22 +766,22 @@ if ($system_name != '')
             else
             {
                 ?>
-                
+
                 if (av_bookmark != '' && location.hash == '')
                 {
                     location.hash = av_bookmark;
                 }
-    
+
                 save_hash();
-                
+
                 $(window).on('hashchange', save_hash);
-                
+
                 $('#f_login').submit(function()
                 {
                     $('#submit_button').addClass('av_b_processing');
                     $('#pass').val($.base64.encode($('#passu').val()));
                 });
-                
+
                 <?php
             }
             ?>
@@ -913,14 +923,14 @@ if ($system_name != '')
                                             ?>
                                         </td>
                                     </tr>
-                                    
-                                    <?php 
+
+                                    <?php
                                     if ($system_name != '')
                                     {
                                     ?>
                                     <tr>
                                         <td class="noborder" id='system_info'>
-                                        <?php                                                                                           
+                                        <?php
                                             echo $system_name . '  ' . $system_ip;
                                         ?>
                                         </td>
@@ -1038,12 +1048,12 @@ if ($system_name != '')
         {
             $longitude = 0;
             $latitude  = 0;
-            
+
             // Overwrite logo, welcome uses the same as in home
             $b_logo = ($pro) ? 'av_contrast_logo.png' : 'ossim_contrast_logo.png';
-            
+
             ?>
-            
+
             <div id='c_login'>
 
                 <form <?php if( $embed== 'true'){ ?>target="_top" <?php } ?>name="f_login" id="f_login" method="POST" action="login.php">
@@ -1054,7 +1064,7 @@ if ($system_name != '')
                 <div class='header_welcome'>
                     <div class='header_welcome_logo'><img src="/ossim/pixmaps/logo/<?php echo $b_logo?>"/></div>
                 </div>
-                
+
                 <table align="center" class='transparent' cellspacing='0' cellpadding='0'>
                     <tr>
                         <td class="noborder">
@@ -1081,7 +1091,7 @@ if ($system_name != '')
                                                         </tr>
 
                                                         <tr><td class='left welcome_required'>* <?php echo _('Asterisks indicate required fields') ?></td></tr>
-                                                        
+
                                                         <tr>
                                                             <td class="left noborder welcome_form_table">
                                                                 <table width="100%" cellspacing="0" cellpadding="3" class="transparent">
@@ -1161,14 +1171,24 @@ if ($system_name != '')
                                                                             <div id='c_map'></div>
                                                                         </td>
                                                                     </tr>
-                                                                    
+
+                                                                    <tr>
+                                                                        <td id='td_track_usage_info' colspan="2">
+                                                                            <input type="checkbox" name="track_usage_information" value="1" id="track_usage_information" checked="checked"/>
+
+                                                                            <span><?php echo _('Share anonymous usage statistics and system information with AlienVault to help us make USM better')?>.</span>
+                                                                            <a href="/ossim/av_routing.php?action_type=EXT_TRACK_USAGE_INFORMATION" target="_blank"><?php echo _('Learn More')?></a>
+
+                                                                        </td>
+                                                                    </tr>
+
                                                                     <tr>
                                                                         <td></td>
                                                                         <td class="left welcome_start">
                                                                             <input id="down_button" type="submit" class="button big" value="<?php echo _('Start using AlienVault'); ?>" />
                                                                         </td>
                                                                     </tr>
-                                                                    
+
                                                                 </table>
                                                             </td>
                                                         </tr>
@@ -1187,7 +1207,6 @@ if ($system_name != '')
             </div>
             <?php
         }
-
     }
     ?>
 

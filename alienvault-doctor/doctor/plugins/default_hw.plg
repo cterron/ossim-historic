@@ -2,6 +2,7 @@
 name=Default hardware
 description=Check the standard hardware.
 category=alienvault,hardware
+strike_zone=True
 type=command
 requires=@files:/usr/bin/lshw
 command=lshw

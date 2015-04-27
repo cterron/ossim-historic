@@ -110,6 +110,86 @@ else
 $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['dst']['ip']), $_home_src['is_internal'], $_home_dst['is_internal']));
 ?>
 
+<script language="javascript">
+
+    // Remove tag
+    function remove_tag(status, data)
+    {
+        $('#delete_data').html('');
+        $('#info_delete').hide();
+
+        if ('OK' == status)
+        {
+            display_datatables_column(true);
+
+            var row = $('#<?php echo $backlog_id ?>');
+            var cell = $('.a_label_container', row);
+
+            console.log(row);
+
+            if ($('div.tag_' + data.id, cell).length != 0)
+            {
+                $('div.tag_' + data.id, cell).remove();
+            }
+
+            var show_label = false;
+
+            check_label_column()
+        }
+        else
+        {
+            alarm_notification(data.msg, 'nf_error');
+        }
+    }
+
+    // Add tag
+    function add_tag(status, data)
+    {
+        $('#delete_data').html('');
+        $('#info_delete').hide();
+
+        if ('OK' == status)
+        {
+            display_datatables_column(true);
+
+            var component_id = '<?php echo $backlog_id ?>';
+            var row = $('#'+component_id);
+            var cell = $('.a_label_container', row);
+
+            if ($('div.tag_' + data.id, cell).length == 0)
+            {
+                var $tag = draw_tag(data, component_id, check_label_column);
+                $(cell).append($tag);
+            }
+        }
+        else
+        {
+            alarm_notification(data, 'nf_error');
+        }
+    }
+
+    $(document).ready(function(){
+        var i_am_admin = true;
+
+        <?php if (!Session::am_i_admin()){
+            echo 'i_am_admin = false';
+        }?>
+
+        var o = {
+            'load_tags_url': '<?php echo AV_MAIN_PATH?>/tags/providers/get_dropdown_tags.php',
+            'manage_components_url': '<?php echo AV_MAIN_PATH?>/tags/controllers/tag_components_actions.php',
+            'allow_edit': i_am_admin,
+            'tag_type': 'alarm',
+            'select_component_mode': 'single',
+            'component_id': '<?php echo $backlog_id ?>',
+            'on_save': add_tag,
+            'on_delete': remove_tag
+        };
+
+        $('#apply_label_<?php echo $backlog_id ?>').av_dropdown_tag(o);
+    });
+</script>
+
 <div id="tray_container">
     <div class="tray_triangle"></div>
     
@@ -238,7 +318,7 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
                     <button class="av_b_secondary" onclick="<?php echo $alarm_delete_url ?>"><?php echo _("Delete")?></button>
                 </div>
                 <div class="padding-right padding-top" style="position:relative">
-                    <button class="button_labels av_b_secondary" data-backlog="<?php echo $backlog_id ?>" data-dropdown="#dropdown-2">
+                    <button id="apply_label_<?php echo $backlog_id ?>" class="button_labels av_b_secondary" data-backlog="<?php echo $backlog_id ?>">
                         <?php echo _("Apply Label") ?>
                     </button>
                 </div> 

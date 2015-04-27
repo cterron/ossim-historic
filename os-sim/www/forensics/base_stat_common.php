@@ -601,6 +601,8 @@ function get_graph_url($index)
 	//$url = "new=1&submit=Query+DB&num_result_rows=-1";
 	$url = "";
 
+	$tz = Util::get_timezone();
+	
 	//Today (8h)
 	if (preg_match("/^(\d+) h/",$index,$found)) {
 		$url .= "&time_range=".Util::htmlentities($_SESSION['time_range'])."&time[0][1]=".urlencode(">=");
@@ -620,7 +622,7 @@ function get_graph_url($index)
 	// Last 24 Hours (21 8 -> 21h 8Sep)
 	elseif (preg_match("/^(\d+) (\d+)/",$index,$found)) {
 		$desde= strtotime($found[2]."-".date("m")."-".date("Y")." ".$found[1].":00:00");
-		$fecha_actual = strtotime(date("d-m-Y H:i:00",time()));
+		$fecha_actual = strtotime(gmdate("d-m-Y H:i:00",time() + 3600 * $tz));
 		if($fecha_actual<$desde) { $anio = strval((int)date("Y")-1);}
 		else $anio = date("Y");
 
@@ -641,7 +643,7 @@ function get_graph_url($index)
 	//Last Week, Last two Weeks, Last Month (5 September)
 	elseif (preg_match("/^(\d+) ([A-Z].+)/",$index,$found)) {
 		$desde= strtotime($found[1]."-".$months[$found[2]]."-".date("Y")." 00:00:00");
-		$fecha_actual = strtotime(date("d-m-Y H:i:00",time()));
+		$fecha_actual = strtotime(gmdate("d-m-Y H:i:00",time()+ 3600 * $tz));
 		if($fecha_actual<$desde) { $anio = strval((int)date("Y")-1);}
 		else $anio = date("Y");
 
@@ -881,13 +883,12 @@ function range_graphic($trdata)
     $d = $desde;
     $xx = 0;
     while ($d <= $hasta) {
-        $now = trim(gmdate($key, $d + (3600*$tz)) . " " . $suf);
+        $now = trim(gmdate($key, $d) . " " . $suf);
         $x["$now"] = $ticks["$now"] = $xx++;
         $y["$now"] = 0; // default value 0
-        $labels["$now"] = ($xx % $noprint == 0) ? gmdate($interval, $d + (3600*$tz)) . $suf : "";
-        if ($jump == 0) $d+= (date("t", $d) * 86400); // case year
-        else $d+= $jump; // next date
-
+        $labels["$now"] = ($xx % $noprint == 0) ? gmdate($interval, $d) . $suf : "";
+        if ($jump == 0) $d += (date("t", $d) * 86400); // case year
+        else $d += $jump; // next date
     }
     //var_dump($x);
     //var_dump($labels);

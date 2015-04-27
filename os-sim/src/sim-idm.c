@@ -315,6 +315,11 @@ sim_idm_process (SimSensor *sensor, SimCommand *command)
     sim_db_update_host_properties (ossim.dbossim, sim_context_get_id (context_info_store->context), sim_sensor_get_id (sensor), entry_old, &changes, delete_old_ip);
   }
 
+  // Notify the update of vulnerability scan property related to new hosts,
+  // the scheduler will update it in at most one minute
+  if (create_host)
+    g_atomic_int_set (&ossim.is_update_vuln_asset_pending, 1);
+
 exit:
 
   g_static_rec_mutex_unlock (&context_info_store->context_mutex);
@@ -440,4 +445,20 @@ void
 sim_idm_context_reload (void)
 {
   sim_idm_context_info_reload ();
+}
+void
+sim_idm_context_free (void)
+{
+  g_message("Clearing IDM info");
+  g_static_rec_mutex_lock (&context_info_store->context_mutex);
+  if (context_info_store->index_host_id)
+    g_hash_table_unref (context_info_store->index_host_id);
+  context_info_store->index_host_id = NULL;
+  if (context_info_store->index_mac)
+    g_hash_table_unref (context_info_store->index_mac);
+  context_info_store->index_mac = NULL;
+  if (context_info_store->index_ip)
+    g_hash_table_unref (context_info_store->index_ip);
+  context_info_store->index_ip = NULL;
+  g_static_rec_mutex_unlock (&context_info_store->context_mutex);
 }

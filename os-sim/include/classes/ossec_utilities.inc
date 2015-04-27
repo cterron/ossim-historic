@@ -638,6 +638,8 @@ class Ossec_utilities
     {
         include_once 'panel/sensor_filter.php';
 
+        $tzc  = Util::get_tzc(Util::get_timezone());
+        
         $data = array();
 
         $agent_where  = make_sid_filter($conn , $agent_ip);
@@ -651,12 +653,11 @@ class Ossec_utilities
             // Fix filter tablename alias
             $sensor_where = str_replace('acid_event.', 'a.', $sensor_where);
             
-            $query = "SELECT SUM(a.cnt) AS num_events, day(`day`) AS intervalo, monthname(`day`) AS suf
+            $query = "SELECT SUM(a.cnt) AS num_events, day(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, monthname(convert_tz(timestamp,'+00:00','$tzc')) AS suf
                 FROM alienvault_siem.ac_acid_event a WHERE a.device_id IN ($agent_where) $sensor_where
-                AND day BETWEEN '".gmdate("Y-m-d",gmdate("U")-604800)."' AND '".gmdate("Y-m-d")."'
+                AND timestamp BETWEEN '".gmdate("Y-m-d H:00:00",gmdate("U")-604800)."' AND '".gmdate("Y-m-d H:59:59")."'
                 AND a.plugin_id between 7000 and 7999
-                GROUP BY day
-                ORDER BY day";
+                GROUP BY timestamp ORDER BY timestamp";
 
             $rs = $conn->Execute($query);
 
@@ -666,7 +667,7 @@ class Ossec_utilities
                 {
                     $hours = $rs->fields['intervalo'].' '.substr($rs->fields['suf'], 0, 3);
 
-                    $data[$hours] = $rs->fields['num_events'];
+                    $data[$hours] += $rs->fields['num_events'];
 
                     $rs->MoveNext();
                 }

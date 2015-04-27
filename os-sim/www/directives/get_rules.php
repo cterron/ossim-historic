@@ -138,7 +138,24 @@ $rules = $directive_editor->get_rules($directive_id, $file);
 
 ?>
 <table width="100%" cellspacing="0">
-	<tr><td><table class="transparent" cellpadding="0" cellspacing="0"><tr><td style="padding:3px;text-align:left"><a href="" onclick="toggle_directive_rulelist(<?php echo $directive_id ?>);return false" class='uppercase'><img id="rulelist_arrow_<?php echo $directive_id ?>" src="../pixmaps/arrow_green_down.gif" align="absmiddle" border="0"/> <b><?php echo _("Rules") ?></b></a></td><?php if ($file == "user.xml") { ?><td class="jeditable_msg" style="padding-left:10px;display:none"><i><?php echo "<b>"._("Left-Click")."</b> "._("to edit this field") ?></i></td><td class="jeditable_msg" style="padding-left:5px"><img src="../pixmaps/pencil.png"/></td><?php } ?></tr></table></td></tr>
+	<tr>
+	    <td>
+	        <table class="transparent" cellpadding="0" cellspacing="0">
+	            <tr>
+	                <td style="padding:6px;text-align:left">
+	                    <a href="" onclick="toggle_directive_rulelist(<?php echo $directive_id ?>);return false" class='uppercase'>
+	                    <img id="rulelist_arrow_<?php echo $directive_id ?>" src="../pixmaps/arrow_green_down.gif" align="absmiddle" border="0"/> <b><?php echo _("Rules") ?></b></a>
+	                </td>
+	                
+	                <?php if ($file == "user.xml") { ?>
+	                <td class="jeditable_msg" style="padding-left:10px;display:none">
+	                    <i><?php echo "<b>"._("Left-Click")."</b> "._("to edit this field") ?></i>
+	                </td>
+	                <td class="jeditable_msg" style="padding-left:5px;display:none"><img src="../pixmaps/pencil.png"/></td>
+	                <?php } ?>
+	            </tr>
+	        </table>
+	    </td></tr>
 	<tr>
 		<td id="rulelist_<?php echo $directive_id ?>" style="padding:4px">
 			<?php if (count($rules) > 0) { ?>

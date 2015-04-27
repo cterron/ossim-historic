@@ -1,6 +1,6 @@
 Source: alienvault-dummy-sensor
 Section: net
-Priority: optional
+Priority: standard
 Maintainer: AlienVault package developers <debian-devel@alienvault.com>
 Origin: AlienVault
 Build-Depends: debhelper (>= 7)

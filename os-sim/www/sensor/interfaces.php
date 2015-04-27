@@ -630,7 +630,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
         function nfsen_config()
         {            
             var msg_confirm  = '<?php echo Util::js_entities(_('Sensor will be configured as a flow collector.'))?>' + "<br/><br/>";
-                msg_confirm += '<?php echo Util::js_entities(_('In order to apply the changes, NfSen reconfig is needed. Do you want to achieve this action?'))?>';                            
+                msg_confirm += '<?php echo Util::js_entities(_('In order to apply these settings, we will need to reconfigure the NFSen service. Do you want to continue?'))?>';                            
             
             var keys         = {"yes": "<?php echo _('Yes') ?>", "no": "<?php echo _('No') ?>"};
 
@@ -692,7 +692,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                         
                         if (cnd_1 || cnd_2)
                         {                        
-                            var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : data.data
+                            var error_msg = (cnd_1 == true) ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : data.data
                             
                             netflow_notification(error_msg, 'nf_error', 10000, true);
                             
@@ -717,7 +717,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
             var status_info = $('#netflow_hdr').html();
             
             var msg_confirm  = '<?php echo Util::js_entities(_('Sensor will be removed as a flow collector.'))?>' + "<br/><br/>";
-                msg_confirm += '<?php echo Util::js_entities(_('In order to apply the changes, NfSen reconfig is needed. Do you want to achieve this action?'))?>';                            
+                msg_confirm += '<?php echo Util::js_entities(_('In order to apply these settings, we will need to reconfigure the NFSen service. Do you want to continue?'))?>';                            
             
             var keys         = {"yes": "<?php echo _('Yes') ?>", "no": "<?php echo _('No') ?>"};
                   
@@ -773,7 +773,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                             
                             hide_loading_box();
                                                         
-                            var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : data.data
+                            var error_msg = (cnd_1 == true) ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : data.data
                             netflow_notification(error_msg, 'nf_error', 10000, true);
                         }
                         else
@@ -831,7 +831,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                     
                     if (cnd_1 || cnd_2)
                     {                        
-                        var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : data.data
+                        var error_msg = (cnd_1 == true) ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : data.data
                         
                         netflow_notification(error_msg, 'nf_error', 10000, true);
                     }

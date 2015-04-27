@@ -2119,7 +2119,7 @@ General_cnf.apply_sc = function(msg, time, url){
     {
         var content =   "<table id='t_apply_sc'>\n" +
                             "<tr>\n" +
-                                "<td style='width: 30px;'><img src='"+AVC_PIXMAPS_DIR+"/reconfig_loader.gif'/></td>\n" +
+                                "<td><img src='"+AVC_PIXMAPS_DIR+"/reconfig_loader.gif'/></td>\n" +
                                 "<td style='text-align: left;'>"+msg+"</td>\n" +
                             "</tr>\n" +
                         "</table>";
@@ -2130,7 +2130,7 @@ General_cnf.apply_sc = function(msg, time, url){
                 type: 'nf_warning',
                 cancel_button: false
             },
-            style: 'display:none; width: 95%; margin: auto; padding-left: 5px;'
+            style: 'display:none; width: 98%; margin: auto;'
         };
 
         nt = new Notification('nt_ch_ip',config_nt);
@@ -2186,7 +2186,6 @@ General_cnf.save_cnf = function(form_id){
     $(".w_overlay").before('<div class="l_box" style="display:none;">'+loading_box+'</div>');
     $('.l_box').show();
 
-
     //Saving data
     action_in_progress = true;
 
@@ -2215,9 +2214,12 @@ General_cnf.save_cnf = function(form_id){
             var url = $('#server_url').val();
                 url = url.replace('SERVER_IP', new_ip);
 
-            General_cnf.apply_sc(labels['special_changes'], 45, url);
+            var special_msg = (condition_2) ? labels['sc_reboot_system'] : labels['special_changes'];
+
+            General_cnf.apply_sc(special_msg, 45, url);
         }
     }
+
 
     $.ajax({
         type: "POST",
@@ -2259,28 +2261,36 @@ General_cnf.save_cnf = function(form_id){
 
             action_in_progress = false;
 
-            //Special Case: Framework hostname or Framesork IP has changed
+            $('.l_box').remove();
+
+            //if Framework hostname or Framework IP change, we don't show messages
             if (!condition_1 && !condition_2)
             {
                 var nf_class = '';
                 var nf_id    = '';
+                var nf_msg   = '';
 
                 switch (data.status)
                 {
                     case 'error':
                         nf_class = 'nf_error';
                         nf_id    = 'nt_1';
+                        nf_msg   = data.data;
+
                     break;
 
                     case 'warning':
                     case 'executing_reconfig':
                         nf_class = 'nf_warning';
                         nf_id    = 'nt_rc';
+                        nf_msg   = data.data;
+
                     break;
 
                     case 'success':
                         nf_class = 'nf_success';
                         nf_id    = 'nt_1';
+                        nf_msg   = data.data;
 
                         //Set new values to check changes again
                         change_control.reset();
@@ -2296,11 +2306,19 @@ General_cnf.save_cnf = function(form_id){
                         section.host = $('#hostname').val()+ " ["+$('#admin_ip').val()+"]";
                         $('#avc_home').text(section.host);
 
+                        //Hostname for non-local system has changed, we show a special message
+                        if (new_hostname != '' && old_hostname != new_hostname && old_ip != $('#server_addr').val())
+                        {
+                            nf_class = 'nf_warning';
+                            nf_id    = 'nt_1';
+                            nf_msg   = labels['reboot_system'];
+                        }
+
                     break;
                 }
 
                 var config_nt = {
-                    content: data.data,
+                    content: nf_msg,
                     options: {
                         type: nf_class,
                         cancel_button: true
@@ -2317,7 +2335,6 @@ General_cnf.save_cnf = function(form_id){
 
                 setTimeout("$('#nt_1').remove()", 5000);
 
-                $('.l_box').remove();
                 $(".w_overlay").remove();
 
                 if (data.status == 'success')
@@ -2381,17 +2398,16 @@ General_cnf.save_cnf_sync = function(form_id){
     var query_string = $('#'+form_id).serialize();
 
     $.ajax({
-            url: "data/sections/configuration/general/save_changes.php",
-            global: false,
-            type: "POST",
-            data: query_string + "&action=save_changes&system_id=" + section.system_id,
-            dataType: "json",
-            async:false,
-            success: function(data){
-                ret = data;
-            }
+        url: "data/sections/configuration/general/save_changes.php",
+        global: false,
+        type: "POST",
+        data: query_string + "&action=save_changes&system_id=" + section.system_id,
+        dataType: "json",
+        async:false,
+        success: function(data){
+            ret = data;
         }
-   );
+    });
 
     if (ret == false)
     {
@@ -2441,13 +2457,13 @@ General_cnf.save_cnf_sync = function(form_id){
         }
 
         var config_nt = {
-                content: ret.data,
-                options: {
-                    type: nf_class,
-                    cancel_button: true
-                },
-                style: 'width: 95%; margin: auto; padding-left: 5px;'
-            };
+            content: ret.data,
+            options: {
+                type: nf_class,
+                cancel_button: true
+            },
+            style: 'width: 95%; margin: auto; padding-left: 5px;'
+        };
 
 
         var nt = new Notification(nf_id, config_nt);
@@ -2488,7 +2504,7 @@ Network_cnf.apply_sc = function(msg, time, url){
     {
         var content =   "<table id='t_apply_sc'>\n" +
                             "<tr>\n" +
-                                "<td style='width: 30px;'><img src='"+AVC_PIXMAPS_DIR+"/reconfig_loader.gif'/></td>\n" +
+                                "<td><img src='"+AVC_PIXMAPS_DIR+"/reconfig_loader.gif'/></td>\n" +
                                 "<td style='text-align: left;'>"+msg+"</td>\n" +
                             "</tr>\n" +
                         "</table>";
@@ -2499,7 +2515,7 @@ Network_cnf.apply_sc = function(msg, time, url){
                 type: 'nf_warning',
                 cancel_button: false
             },
-            style: 'display:none; width: 95%; margin: auto; padding-left: 5px;'
+            style: 'display:none; width: 98%; margin: auto;'
         };
 
         var nt = new Notification('nt_ch_ip',config_nt);
@@ -2516,13 +2532,14 @@ Network_cnf.apply_sc = function(msg, time, url){
 
     var t = time - 1;
 
-    if (t > 0){
-
-        if (t == 3){
+    if (t > 0)
+    {
+        if (t == 3)
+        {
             $('#c_new_ip').show();
         }
 
-        timer = setTimeout(function(){General_cnf.apply_sc(msg, t, url)}, 1000);
+        timer = setTimeout(function(){Network_cnf.apply_sc(msg, t, url)}, 1000);
     }
     else
     {
@@ -2541,7 +2558,6 @@ Network_cnf.apply_sc = function(msg, time, url){
 Network_cnf.save_cnf = function(form_id){
 
     //Before sending
-
     $('#'+form_id).before('<div class="w_overlay opacity_7" style="height:100%;"></div>');
 
     var config  = {
@@ -2622,6 +2638,8 @@ Network_cnf.save_cnf = function(form_id){
 
             action_in_progress = false;
 
+            $('.l_box').remove();
+
             if (!condition_1)
             {
                 var nf_class = '';
@@ -2662,13 +2680,13 @@ Network_cnf.save_cnf = function(form_id){
                 }
 
                 var config_nt = {
-                        content: data.data,
-                        options: {
-                            type: nf_class,
-                            cancel_button: true
-                        },
-                        style: 'display:none; width: 95%; margin: auto; padding-left: 5px;'
-                    };
+                    content: data.data,
+                    options: {
+                        type: nf_class,
+                        cancel_button: true
+                    },
+                    style: 'display:none; width: 95%; margin: auto; padding-left: 5px;'
+                };
 
                 var nt = new Notification(nf_id, config_nt);
                 var notification = nt.show();
@@ -2678,7 +2696,6 @@ Network_cnf.save_cnf = function(form_id){
                 $('#'+nf_id).fadeIn(1000);
                 setTimeout("$('#nt_1').remove()", 5000);
 
-                $('.l_box').remove();
                 $(".w_overlay").remove();
 
                 if (data.status == 'success')

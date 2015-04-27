@@ -2,6 +2,7 @@
 name=Celery worker log
 description=Parses the Celery w1.log file for errors.
 category=alienvault,platform
+profiles=Server:>4.0
 type=file
 filename=/var/log/alienvault/api/w1.log
 raw_limit=1000

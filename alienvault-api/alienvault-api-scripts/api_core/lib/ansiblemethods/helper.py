@@ -30,7 +30,8 @@
 
 import api_log
 from ansiblemethods.ansiblemanager import Ansible
-
+import re
+import os.path
 ansible = Ansible()
 
 
@@ -87,6 +88,7 @@ def copy_file(host_list=[], args={}):
             return (False, "system.copy_file : " + response['dark'][host]['msg'])
     return (True, '')
 
+
 def remove_file(host_list=[], file_name=None):
     """
     Remove a file from one or more remote systems.
@@ -96,6 +98,7 @@ def remove_file(host_list=[], file_name=None):
         if host in response['dark']:
             return (False, "remove_file : " + response['dark'][host]['msg'])
     return (True, '')
+
 
 def gunzip_file(system_ip, gzip_file=None, gunzipped_file=None):
     """
@@ -136,19 +139,19 @@ def ansible_is_valid_playbook_response(system_ip, response):
         # {'192.168.5.122': {'unreachable': 0, 'skipped': 0, 'ok': 6, 'changed': 5, 'failures': 1}}
         if system_ip not in response:
             return False, "Something wrong happened while running ansible command %s" % str(response)
-        if response[system_ip]['unreachable'] > 0 or response[system_ip]['failures']> 0:
+        if response[system_ip]['unreachable'] > 0 or response[system_ip]['failures'] > 0:
             return False, "Something wrong happened while running ansible command %s" % str(response)
     except Exception as err:
         api_log.error(str(err))
         return False, "Something wrong happened while running ansible command %s" % str(response)
-    return True,""
+    return True, ""
 
 
 def local_copy_file(system_ip, src_file, dst_file):
     """
     Make a local copy of a file using the command module.
     Workaround for ansible "copy" module bug with permissions other=0.
-    Change permissions to 777 after copying so we can use "copy" module 
+    Change permissions to 777 after copying so we can use "copy" module
     with the resulting copies.
 
     Args:
@@ -161,9 +164,25 @@ def local_copy_file(system_ip, src_file, dst_file):
     chmod_command = "chmod %s %s" % ("777", dst_file)
     response = ansible.run_module([system_ip], module='command', args=cp_command, use_sudo=True)
     if system_ip in response['dark']:
-        return (False, "system.local_copy_file : " + response['dark'][host]['msg'])
+        return (False, "system.local_copy_file : " + response['dark'][system_ip]['msg'])
     response = ansible.run_module([system_ip], module='command', args=chmod_command, use_sudo=True)
     if system_ip in response['dark']:
-        return (False, "system.local_copy_file : " + response['dark'][host]['msg'])
+        return (False, "system.local_copy_file : " + response['dark'][system_ip]['msg'])
     return (True, '')
 
+
+def get_files_in_path(system_ip, path):
+    """
+    Get the list of files in $path of $system_ip
+    """
+    response = ansible.run_module([system_ip], module='shell', args='ls --time-style=long-iso -l %s|grep -v "^total"' % path)
+    success, msg = ansible_is_valid_response(system_ip, response)
+    if not success:
+        return False, msg
+    lines = response['contacted'][system_ip]['stdout'].splitlines()
+    result = {}
+    pattern = r'(?P<mode>.*?)\s+(?P<hl>\d+)\s+(?P<user>.*?)\s+(?P<group>.*?)\s+(?P<size>\d+)\s+(?P<date>(.*?\s+.*?))\s+(?P<filename>.*)'
+    for line in lines:
+        m = re.match(pattern, line)
+        result[os.path.join(path, m.group('filename'))] = m.groupdict()
+    return True, result

@@ -10,7 +10,7 @@
  * License:
  *
  * Copyright (c) 2003-2006 ossim.net
- * Copyright (c) 2007-2013 AlienVault
+ * Copyright (c) 2007-2015 AlienVault
  * All rights reserved.
  *
  * This package is free software; you can redistribute it and/or modify
@@ -39,7 +39,7 @@
  * @autor      AlienVault INC
  * @license    http://www.gnu.org/licenses/gpl-2.0.txt
  * @copyright  2003-2006 ossim.net
- * @copyright  2007-2013 AlienVault
+ * @copyright  2007-2015 AlienVault
  * @link       https://www.alienvault.com/
  */
 class Util
@@ -598,12 +598,9 @@ class Util
             $ip
         ) . "&what=$what&start=$start&end=$end&type=$type&zoom=$zoom";
     }
-    
+
     /**
-     * Function number_format_locale
-     *
-     * @param int|string $number
-     * @param int        $decimals
+     * Function get_number_mark
      *
      * @return string
      */
@@ -612,14 +609,14 @@ class Util
         $locale = (isset($_COOKIE['locale']) ? $_COOKIE['locale'] : $_SERVER['HTTP_ACCEPT_LANGUAGE']);
         $lang   = explode(",", $locale);
         $lang   = strtolower(substr($lang[0], 0, 2));
-        
+
         $set_lang = array(
             'en' => 1,
             'ja' => 1,
             'zh' => 1,
             'ko' => 1
         );
-        
+
         if ($set_lang[$lang])
         {
             $decimal   = '.';
@@ -630,19 +627,19 @@ class Util
             $decimal   = ',';
             $thousands = '.';
         }
-                
+
         return array(
             $decimal,
-            $thousands    
+            $thousands
         );
-        
+
         /*
             Another options to get the locale:
             setlocale(LC_NUMERIC, 0); //Get the server locale
             localeconv(); //Get the default numeric settings for the current locale
         */
     }
-    
+
     /**
      * Function number_format_locale
      *
@@ -652,7 +649,7 @@ class Util
      * @return string
      */
     public static function number_format_locale($number, $decimals = 0)
-    { 
+    {
         list($decimal, $thousands) = self::get_number_mark();
 
         return number_format($number, $decimals, $decimal, $thousands);
@@ -677,6 +674,30 @@ class Util
         return @floor(
                 $number / pow($power, ($i = floor(log($number, $power))))
             ) . $unit[$i];
+    }
+    
+    /**
+     * Function bytes_to_size
+     *
+     * Returns human readable format number of bytes
+     *
+     * @param float|string $bytes
+     *
+     * @return string
+     */
+    public static function bytes_to_size($bytes, $precision = 2)
+    {
+        if (0 == $bytes)
+        {
+            return '0 B';
+        }
+    
+        $sizes = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+    
+        $k = 1024;
+        $i = floor(log($bytes) / log($k));
+    
+        return number_format(($bytes / pow($k, $i)), $precision).' '.$sizes[$i];
     }
 
     /**
@@ -1141,7 +1162,7 @@ class Util
         if (method_exists($conn, 'baseExecute'))
         {
             // Called from forensics
-            $rs = $conn->baseExecute("SELECT CONVERT_TZ('$date','$tz','+00:00')");
+            $rs = $conn->baseExecute("SELECT CONVERT_TZ('$date','$tz','+00:00') AS utc");
 
             if (!$rs)
             {
@@ -1151,14 +1172,14 @@ class Util
             {
                 if ($row = $rs->baseFetchRow())
                 {
-                    $utc = $row[0];
+                    $utc = $row['utc'];
                 }
             }
         }
         else
         {
             // Called from other interface section
-            $rs = $conn->Execute("SELECT CONVERT_TZ('$date','$tz','+00:00')");
+            $rs = $conn->Execute("SELECT CONVERT_TZ('$date','$tz','+00:00') AS utc");
 
             if (!$rs)
             {
@@ -1168,10 +1189,9 @@ class Util
             {
                 if (!$rs->EOF)
                 {
-                    $utc = $rs->fields[0];
+                    $utc = $rs->fields['utc'];
                 }
             }
-
         }
 
         $time   = preg_split("/[\s\-\:]/", $utc);
@@ -1318,18 +1338,23 @@ class Util
         return $uuid;
     }
 
-
+    
     public static function uuid($format = 'int')
     {
         $chars = md5(uniqid(mt_rand(), TRUE));
-
-        $uuid = ($format == "dashes")
-            ? substr($chars, 0, 8) . '-' . substr($chars, 8, 4) . '-' . substr(
-                $chars, 12, 4) . '-' . substr($chars, 16, 4) . '-' . substr($chars, 20, 12)
-            : "$chars";
+        
+        if ($format == "dashes")
+        {
+            $uuid = substr($chars, 0, 8) . '-' . substr($chars, 8, 4) . '-' . substr($chars, 12, 4) . '-' . substr($chars, 16, 4) . '-' . substr($chars, 20,12);
+        }
+        else
+        {
+            $uuid = strtoupper($chars);
+        }
 
         return $uuid;
     }
+
 
     /**
      * Function uuid_format
@@ -1471,10 +1496,10 @@ class Util
      * Function get_mail_params
      *
      * This function gets mail parameters (by default or mailserver relay if it was configured)
-     * from Alienvault Component
+     * from AlienVault Component
      *
      * @param object $conn Database access object
-     * @param string $uuid [Optional] Alienvault Component UUID
+     * @param string $uuid [Optional] AlienVault Component UUID
      *
      * @return array
      */
@@ -1483,7 +1508,7 @@ class Util
         //Getting user and email params
 
         $from_user      = 'no-reply@alienvault.com';
-        $from_user_name = 'Alienvault';
+        $from_user_name = 'AlienVault';
 
         $user_info = Session::get_user_info($conn);
 
@@ -2385,7 +2410,28 @@ class Util
     {
         return self::get_system_uuid();
     }
-    
+
+
+    /**
+     * Function get_default_ctx
+     *
+     * This function returns the system default context
+     *
+     * @return string
+     */
+    public static function get_default_ctx()
+    {
+        $conf = $GLOBALS['CONF'];
+
+        if (!$conf)
+        {
+            $conf            = new Ossim_conf();
+            $GLOBALS['CONF'] = $conf;
+        }
+
+        return str_replace('-', '', strtoupper($conf->get_conf('default_context_id')));
+    }
+
 
     /**
      * Function clean_wiki_tags
@@ -2646,43 +2692,43 @@ class Util
 
         $response = $client->system()->get_otx_user($token);
         $response = @json_decode($response, TRUE);
-        
+
         if (!$response || $response['status'] == 'error')
         {
             $exp_msg = $client->get_error_message($response);
-    
+
             switch ($exp_msg)
             {
                 case 'ERROR_CONNECTION':
                     $error_msg = _('Limited or no connectivity: Make sure your network connection is active and try again.');
                     break;
-                
+
                 case 'ERROR_NOT_REGISTERED_TOKEN':
                     $error_msg = _('The OTX token you have entered is not valid.');
                     break;
-                
+
                 default:
                     $error_msg = _('Unexpected Error Found') . " [$exp_msg]." . _('Please Try Again Later.');
-                
+
             }
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $error_msg);
         }
-        
+
         $username = $response['data']['username'];
-        
+
         if (empty($username))
         {
             Av_exception::throw_error(Av_exception::USER_ERROR, _('The OTX token you have entered is not valid.'));
         }
-        
+
         // Set token & username
         $config = new Config();
         $config->update("open_threat_exchange", "yes");
         $config->update("open_threat_exchange_username", $username);
         $config->update("open_threat_exchange_key", $token);
-        $config->update("open_threat_exchange_last", '');
-        
+        $config->update("open_threat_exchange_last", "1969-01-01 00:00:00");
+
         return $username;
     }
 
@@ -2714,9 +2760,41 @@ class Util
         return $enable;
 
     }
+    
+    
+    /**
+     * This function response a bad request for AJAX requestes.
+     *
+     * @param string   $msg     Error message
+     * @param integer  $code    Error HTTP code
+     *
+     * @return void
+     */
+    public static function response_bad_request($msg, $code=400)
+    {
+        header("HTTP/1.0 $code Bad Request");
+        echo $msg;
+        
+        die();
 
+    }
+
+
+    /**
+     * Function calculate_pagination_page
+     *
+     * Returns page number to paginate
+     *
+     * @param integer  $from   Start registry
+     * @param integer  $limit  Limit of registers
+     *
+     * @return integer  Page number
+     */
+    public static function calculate_pagination_page($from, $limit)
+    {
+        return floor($from / $limit) + 1;
+    }
 }
-
 
 /* End of file Util.inc */
 /* Location: ../include/classes/Util.inc */

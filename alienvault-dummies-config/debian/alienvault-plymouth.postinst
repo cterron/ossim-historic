@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for alienvault-apache2
+# postinst script for alienvault-plymouth
 #
 # see: dh_installdeb(1)
 
@@ -25,10 +25,32 @@ case "$1" in
         plymouth-set-default-theme alienvault --rebuild-initrd
 
         if [ -f "$DEFAULT_GRUB_FILE" ] && [ -x "$UPDATE_GRUB2_BIN" ]; then
-           sed -i "$DEFAULT_GRUB_FILE" -e "s/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash vga=792\"/"
-           $UPDATE_GRUB2_BIN
-        fi
+            CONFIG_VAR="PLYMOUTH_CONFIG"
+            CONFIG_PARAMS="loglevel=2 splash vga=784"
+            CONFIG_LINE=$(grep "^$CONFIG_VAR=\"$CONFIG_PARAMS\"" "$DEFAULT_GRUB_FILE" || true)
+            CONFIG_INCLUDED=$(grep "^GRUB_CMDLINE_LINUX_DEFAULT.*\$$CONFIG_VAR" "$DEFAULT_GRUB_FILE" || true)
+            CHANGED=0
 
+            if [ -z "$CONFIG_LINE" ]; then
+                sed -i "$DEFAULT_GRUB_FILE" \
+                    -e "/^$CONFIG_VAR/d" \
+                    -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/$CONFIG_VAR=\"$CONFIG_PARAMS\"\n&/"
+                CHANGED=1
+            fi
+
+            if [ -z "$CONFIG_INCLUDED" ]; then
+                sed -i "$DEFAULT_GRUB_FILE" \
+                    -e "s/GRUB_GFXMODE=.*/GRUB_GFXMODE=640x480x15/" \
+                    -e "s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/" \
+                    -e "/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/s/quiet//" \
+                    -e "/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/s/\"$/ \$$CONFIG_VAR\"/"
+                CHANGED=1
+            fi
+
+            if [ $CHANGED -ne 0 ]; then
+                $UPDATE_GRUB2_BIN
+            fi
+        fi
         ;;
 
     abort-upgrade|abort-deconfigure|abort-remove)

@@ -2,11 +2,13 @@
 name=Agent plugins integrity
 description=Check the integrity of the default Agent plugins.
 category=alienvault
+profiles=Sensor:>4.0
+strike_zone=True
 type=command
-command=diff -burq -x suricata.cfg -X ossec*.cfg /etc/ossim/agent/plugins/ /usr/share/alienvault-plugins/d_clean/plugins/; for plugin in ossec-single-line.cfg ossec-idm-single-line.cfg; do diff -q -I "process=" /etc/ossim/agent/plugins/$plugin /usr/share/alienvault-plugins/d_clean/plugins/$plugin; done; diff -q -I "interface=.*" /etc/ossim/agent/plugins/suricata.cfg /usr/share/alienvault-plugins/d_clean/plugins/suricata.cfg
+command=diff -burq -x suricata.cfg -x ossec-single-line.cfg -x ossec-idm-single-line.cfg /usr/share/alienvault-plugins/d_clean/plugins/ /etc/ossim/agent/plugins/; for plugin in ossec-single-line.cfg ossec-idm-single-line.cfg; do diff -q -I "process=" /usr/share/alienvault-plugins/d_clean/plugins/$plugin /etc/ossim/agent/plugins/$plugin; done; diff -q -I "interface=.*" /usr/share/alienvault-plugins/d_clean/plugins/suricata.cfg /etc/ossim/agent/plugins/suricata.cfg
 
 [Default agent plugins integrity]
-pattern=\/\/((\S+\.cfg))\s+differ$
+pattern=\/((\S+\.cfg))\s+differ$
 conditions=@info@;@string@:==""
 fail_if_empty=False
 warning=Some of the default Agent plugins have been modified

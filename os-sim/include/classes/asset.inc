@@ -51,7 +51,7 @@
 * @package    ossim-framework\Asset
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 abstract class Asset
@@ -235,7 +235,7 @@ abstract class Asset
                 
         if ($this->get_icon() != '')
         {
-            $html_icon = "<img id='asset_icon' src='data:image/png;base64,".base64_encode($this->get_icon())."' border='0' align='absbottom'/>";
+            $html_icon = "<img class='asset_icon w16' src='data:image/png;base64,".base64_encode($this->get_icon())."'/>";
         }
               
         return $html_icon;   
@@ -519,6 +519,10 @@ abstract class Asset
         Util::memcacheFlush();
         Util::resend_asset_dump($asset_type);
         
+        if ($asset_type == 'hosts')
+        {
+            Vulnerabilities::update_vuln_job_assets($conn, 'insert', 0, 0);
+        }
                         
         $conf = $GLOBALS['CONF'];
         
@@ -782,6 +786,42 @@ abstract class Asset
     {
         return trim(preg_replace('/\s*,\s*/', ', ', $elems));
     }
+    
+    
+    /**
+    * Function get_path_url
+    *
+    * This function returns the urls to the main sections of the group
+    *
+    * @access public
+    *
+    * @param boolean  $json     [Optional] Whether or not return the response in JSON. Default YES
+    *
+    * @return array  List of all the urls
+    */
+    public static function get_path_url($json = TRUE)
+    {
+        $secs = array('asset', 'group', 'network', 'common');
+        
+        $url  = array(
+            'ossim'     => AV_MAIN_PATH . '/',
+            'av_assets' => AV_MAIN_PATH . '/av_asset/' 
+        );
+        
+        foreach ($secs as $sec)
+        {
+            $url[$sec] = array(
+                'controllers' => AV_MAIN_PATH . "/av_asset/$sec/controllers/",
+                'providers'   => AV_MAIN_PATH . "/av_asset/$sec/providers/",
+                'views'       => AV_MAIN_PATH . "/av_asset/$sec/views/",
+                'templates'   => AV_MAIN_PATH . "/av_asset/$sec/templates/",
+                'detail'      => AV_MAIN_PATH . "/av_asset/common/views/detail.php"
+            );
+        }
+        
+        return ($json) ? json_encode($url) : $url;
+    }
+    
 }
 
 /* End of file asset.inc */

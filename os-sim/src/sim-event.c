@@ -619,8 +619,8 @@ sim_event_get_text_escape_fields_values (SimEvent *event)
 gchar *
 sim_event_get_insert_clause_values (SimEvent   *event)
 {
-  gchar  time[TIMEBUF_SIZE];
-	gchar *timestamp = time;
+  gchar  timebuff[TIMEBUF_SIZE];
+	gchar *timestamp = timebuff;
   GString *query;
 	gchar *values;
   gchar *e_rep_act_src = NULL;
@@ -640,7 +640,7 @@ sim_event_get_insert_clause_values (SimEvent   *event)
   if(event->time_str)
     timestamp = event->time_str;
 	else
-    strftime (timestamp, TIMEBUF_SIZE, "%F %T", gmtime ((time_t *) &event->time));
+    sim_time_t_to_str (timestamp, event->time);
 
   if (event->str_rep_act_src)
     e_rep_act_src = sim_str_escape (event->str_rep_act_src, conn, 0);
@@ -892,8 +892,8 @@ sim_event_get_alarm_insert_clause (SimDatabase *db_ossim,
                                    SimEvent   *event,
                                    gboolean    removable)
 {
-  gchar    time[TIMEBUF_SIZE];
-  gchar   *timestamp=time;
+  gchar    timebuff[TIMEBUF_SIZE];
+  gchar   *timestamp = timebuff;
   GString *query;
   GdaConnection *conn;
   gchar   *e_alarm_stats = NULL;
@@ -903,9 +903,9 @@ sim_event_get_alarm_insert_clause (SimDatabase *db_ossim,
   conn = sim_database_get_conn (db_ossim);
 
   if(event->time_str)
-    timestamp=event->time_str;
+    timestamp = event->time_str;
   else
-    strftime (timestamp, TIMEBUF_SIZE, "%F %T", gmtime ((time_t *) &event->time));
+    sim_time_t_to_str (timestamp, event->time);
 
   guint efr =  event->priority * event->reliability * 2; //this is used for compliance. The "*2" is to take a percentage
 

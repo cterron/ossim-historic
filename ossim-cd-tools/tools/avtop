@@ -55,7 +55,7 @@ sub main() {
             my $conn = get_database();
 
             my $query
-                = "select name as hostname,inet6_ntop(admin_ip) as admin_ip,hex(id) as uuid from alienvault.system order by name;";
+                = "select name as hostname,inet6_ntoa(admin_ip) as admin_ip,hex(id) as uuid from alienvault.system order by name;";
 
             my $sth = $conn->prepare($query);
             $sth->execute();
@@ -338,7 +338,7 @@ sub statistic_remote() {
     my $conn = get_database();
 
     my $query
-        = q{select name as hostname,inet6_ntop(admin_ip) as admin_ip,hex(id) as uuid,profile from alienvault.system where inet6_ntop(admin_ip) = "$remote_server"};
+        = q{select name as hostname,inet6_ntoa(admin_ip) as admin_ip,hex(id) as uuid,profile from alienvault.system where inet6_ntoa(admin_ip) = "$remote_server"};
 
     my $sth = $conn->prepare($query);
     $sth->execute();

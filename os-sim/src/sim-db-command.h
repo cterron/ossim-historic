@@ -45,6 +45,7 @@ G_BEGIN_DECLS
 /* Prototypes */
 
 // Loaders
+GHashTable *    sim_db_load_software_cpe                    (SimDatabase *database);
 GList *         sim_db_load_common_plugins                  (SimDatabase  *database);
 GList *         sim_db_load_engines                         (SimDatabase  *database,
                                                              SimUuid      *server_id);

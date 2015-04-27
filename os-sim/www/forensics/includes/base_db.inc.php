@@ -68,7 +68,7 @@ class baseCon {
     function baseCon($type) {
         $this->DB_type = $type;
     }
-    function baseDBConnect($method, $database, $host, $port, $username, $password, $force = 0) {
+    function baseDBConnect($method, $database, $host, $port, $username, $password, $force = 0, $saveid = 0) {
         GLOBAL $archive_dbname, $archive_host, $archive_port, $archive_user;
         // Check archive cookie to see if they want to be using the archive tables
         // and check - do we force to use specified database even if archive cookie is set
@@ -80,6 +80,15 @@ class baseCon {
             if ($method == DB_CONNECT) $this->baseConnect($database, $host, $port, $username, $password, $force);
             else $this->basePConnect($database, $host, $port, $username, $password, $force);
         }
+        if ($saveid)
+        {
+            $sql = "SELECT connection_id()";
+            $result = $this->DB->Execute($sql);
+            $myrow = $result->fields;
+            $_SESSION['_connection_id'] = $myrow[0];
+            //error_log($myrow[0]);
+            $result->Close();
+        }
     }
     function baseConnect($database, $host, $port, $username, $password, $force = 0) {
         GLOBAL $sql_trace_mode, $sql_trace_file, $db_memcache;
@@ -90,7 +99,7 @@ class baseCon {
         $this->DB_port = $port;
         $this->DB_username = $username;
         $this->DB_password = $password;
-        $this->DB_memcache = ( $force == 1 ) ? 0 : $db_memcache;         
+        $this->DB_memcache = ( $force == 1 ) ? 0 : $db_memcache;
         if ($sql_trace_mode > 0)
         {
         	// Open '/var/tmp/debug_sql' static, instead GLOBAL variable.
@@ -136,17 +145,6 @@ class baseCon {
             echo $this->baseErrorMessage();
             die();
         }
-        /* Set the database schema version number
-        $sql = "SELECT vseq FROM schema";
-        if ($this->DB_type == "mysql") $sql = "SELECT vseq FROM `schema`";
-        if ($this->DB_type == "mssql") $sql = "SELECT vseq FROM [schema]";
-        $result = $this->DB->Execute($sql);
-        if ($this->baseErrorMessage() != "") $this->version = 0;
-        else {
-            $myrow = $result->fields;
-            $this->version = $myrow[0];
-            $result->Close();
-        } */
         $this->version = 400;
         if ($sql_trace_mode > 0)
         {
@@ -311,11 +309,12 @@ class baseCon {
             fflush($this->sql_trace);
         }
         if ((!$rs || $this->baseErrorMessage() != "") && $die_on_error) {
-        	// Enable this to debug baseErrorMessage
-            //echo '</TABLE></TABLE></TABLE>
-               //<FONT COLOR="#FF0000"><B>' . gettext("Database ERROR:") . '</B>' . ($this->baseErrorMessage()) . "</FONT>";
-            echo '</TABLE></TABLE></TABLE>
-               <FONT COLOR="#FF0000"><B>' . gettext("Database ERROR") . '</B>' . "</FONT>";
+            if (file_exists('/tmp/debug_siem'))
+            {
+                error_log("DB ERROR:".$this->DB->ErrorMsg()."\n", 3, "/tmp/siem");
+            }
+            //echo '</TABLE></TABLE></TABLE><FONT COLOR="#FF0000"><B>' . gettext("Database ERROR:") . '</B>' . ($this->baseErrorMessage()) . "</FONT>";
+            echo '</TABLE></TABLE></TABLE><FONT COLOR="#FF0000"><B>' . gettext("Database ERROR") . '</B>' . "</FONT>";
             die();
         } else {
             return $rs;

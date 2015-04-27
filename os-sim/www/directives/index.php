@@ -142,7 +142,7 @@ $disabled_directives = $directive_editor->get_disabled_directives();
 // Get toggled category if there is a directive parameter
 if ($toggled_dir != "") {
 	foreach ($categories as $category) {
-		foreach ($category['directives'] as $directive_id => $directive_name) {
+		foreach ($category['directives'] as $directive_id => $directive_data) {
 			if ($directive_id == $toggled_dir) {
 				$toggled = $category['xml_file'];
 			}
@@ -234,7 +234,7 @@ $(document).ready(function(){
     });
     
     $('.edit_directive').on('click', function() {
-        GB_show('<?php _('Edit Directive') ?>', '/ossim/directives/wizard_directive.php?engine_id=' + $(this).data('engine_id') + '&directive_id=' + $(this).data('directive_id'), 500, 400);
+        GB_show('<?php _('Edit Directive') ?>', '/ossim/directives/wizard_directive.php?engine_id=' + $(this).data('engine_id') + '&directive_id=' + $(this).data('directive_id'), 700, 400);
     });
 
 	<?php if ($msg_success != "") { ?>
@@ -651,7 +651,11 @@ function rules_postload(dir_id, file, reset) {
 						</table>
 						<div id="<?php echo $category['name']; ?>" <?php if (($query == "" && $category['xml_file'] != $toggled) || count($category['directives']) < 1) { ?>style="display:none"<?php } ?>>
 						<table class="transparent" width="100%" cellspacing="0">
-							<?php foreach ($category['directives'] as $directive_id => $directive_name) { ?>
+							<?php foreach ($category['directives'] as $directive_id => $directive_data)
+							{
+							    $directive_name = $directive_data['name'];
+							    $directive_prio = $directive_data['priority'];
+							    ?>
 							<tr>
 								<td style="border:0px;padding-left:20px" width="20">
 									 <img id="dir_arrow_<?php echo $directive_id ?>" align="left" border="0" src="../pixmaps/flechedf<?php if (!$category['active'] || count($category['directives']) < 1) echo "_gray" ?>.gif" onclick="toggle_directive(<?php echo $directive_id ?>, '<?php echo $category['xml_file'] ?>')" style="cursor:pointer"/>
@@ -707,7 +711,7 @@ function rules_postload(dir_id, file, reset) {
 								</td>
 								<td style="text-align:left;padding:5px;font-size:13px;border-bottom:0px" class="directive_header_<?php echo $directive_id ?>">
 									<a href='javascript:;' class='directive_link' name='dir_head_<?php echo $directive_id ?>'><?php echo $directive_name; ?></a>
-									<br/><font style="font-size:10px"><?php echo $directive_editor->get_directive_intent($directive_id) ?></font>
+									<br/><font style="font-size:10px"><?php echo $directive_editor->get_directive_intent($directive_id) ?> - <?php echo _('Priority').' '.$directive_prio ?></font>
 								</td>
 							</tr>
 							<tr><td colspan="3" style="padding-left:40px;padding-right:0px;padding-top:0px;padding-bottom:3px" align="left"><div id="rules_<?php echo $directive_id ?>"></div></td></tr>

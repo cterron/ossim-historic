@@ -933,8 +933,10 @@ function is_internet_available()
 /**
  * This function simulates the behaviour of an anchor tag
  */
-function go_to(that, event)
+function anchor_link(event)
 {
+    var that = this;
+
     try
     {
         if(navigator.userAgent.indexOf("Firefox") != -1)
@@ -956,7 +958,7 @@ function go_to(that, event)
 
             $('html, body', window.parent.document).animate(
             {
-              scrollTop: offset.top + p_height
+                scrollTop: offset.top + p_height                
             }, 1000);
         }
     }
@@ -964,4 +966,120 @@ function go_to(that, event)
     {
         return true;
     }
+}
+
+
+function scroll_to(elem, speed)
+{
+    if (typeof speed == 'undefined' || speed == '')
+    {
+        speed = 750;
+    }
+    
+    try
+    {
+        var offset = elem.offset();
+        
+        try
+        {
+            var p_height  = $('#content', window.parent.document).position().top
+                p_height += 20
+        }
+        catch(Err)
+        {
+            var p_height = 0;
+
+        }
+
+        $('html, body', window.parent.document).animate(
+        {
+            scrollTop: offset.top + p_height      
+        }, speed);
+        
+    }
+    catch(Err)
+    {
+        return true;
+    }
+}
+
+
+
+/********************************************************
+******************** Notifications **********************
+*********************************************************/
+
+function notify_error(txt)
+{						
+	var config_nt = { content: txt, 
+					  options: {
+						type:'nf_error',
+						cancel_button: true
+					  },
+					  style: 'width: 80%; margin: auto; text-align:left; padding-left: 5px;'
+					};
+	
+	var newDate = new Date;
+	var id      = 'nt_' + newDate.getTime();
+		
+	var nt = new Notification(id, config_nt);
+	
+	return nt.show();
+}
+
+
+function notify_success(txt)
+{							
+	var config_nt = { content: txt, 
+					  options: {
+						type:'nf_success',
+						cancel_button: true
+					  },
+					  style: 'width: 80%; margin: auto; text-align:center;'
+					};
+	
+	var newDate = new Date;
+	var id      = 'nt_' + newDate.getTime();
+		
+	var nt = new Notification(id, config_nt);
+		
+	return nt.show();
+}
+
+
+function notify_info(txt)
+{							
+	var config_nt = { content: txt, 
+					  options: {
+						type:'nf_info',
+						cancel_button: true
+					  },
+					  style: 'width: 80%; margin: auto; text-align:center;'
+					};
+	
+	var newDate = new Date;
+	var id      = 'nt_' + newDate.getTime();
+		
+	var nt = new Notification(id, config_nt);
+		
+	return nt.show();
+}
+
+
+function notify_warning(txt)
+{							
+	var config_nt = { content: txt, 
+					  options: {
+						type:'nf_warning',
+						cancel_button: true
+					  },
+					  style: 'width: 80%; margin: auto; text-align:center;'
+					};
+	
+	var newDate = new Date;
+	var id      = 'nt_' + newDate.getTime();
+		
+	var nt = new Notification(id, config_nt);
+	
+	return nt.show();
 }

@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 #
 #  License:
 #
-#  Copyright (c) 2013 AlienVault
+#  Copyright (c) 2015 AlienVault
 #  All rights reserved.
 #
 #  This package is free software; you can redistribute it and/or modify
@@ -27,54 +28,135 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
-from api import db
-from apimethods.utils import get_uuid_string_from_bytes, get_ip_str_from_bytes, get_bytes_from_uuid
-
-from ansiblemethods.system.system import get_doctor_data
-
 import time
-import subprocess
+import json
+import urllib2
+import requests
+import celery.utils.log
 
-#class MonitorDiskUsage(Monitor):
-#    """
-#    Monitor disk usage in the local server.
-#    """
-#
-#    def __init__(self):
-#        Monitor.__init__(self, MonitorTypes.SYSTEM_DISK_USAGE)
-#        self.message = 'Disk Usage Monitor Enabled'
-#
-#    def start(self):
-#        """
-#        Starts the monitor activity
-#
-#        :return: True on success, False otherwise
-#        """
-#
-#        # Find the local server.
-#        system_list = []
-#        try:
-#            system_list = Avcenter_Current_Local.query.all()
-#        except Exception, msg:
-#            db.session.rollback()
-#            return False
-#
-#        args = {}
-#        args['plugin_list'] = 'disk_usage.plg'
-#        args['output_type'] = 'ansible'
-#        for system in system_list:
-#            system_ip = system.vpn_ip
-#            if system_ip == "":
-#                system_ip = system.admin_ip
-#            ansible_output = get_doctor_data([system_ip], args)
-#            print ansible_output
-#        if ansible_output['dark'] != {}:
-#            return False
-#        try:
-#            disk_usage_results = ansible_output['contacted'][system_ip]['data'][0]['checks']
-#        except Exception, msg:
-#            return False
-#
-#        return True
+from api.lib.monitors.monitor import (Monitor,
+                                      MonitorTypes,
+                                      ComponentTypes)
+from ansiblemethods.system.system import get_doctor_data
+from db.methods.system import get_systems, get_system_id_from_local, get_system_ip_from_system_id
+from apimethods.system.proxy import AVProxy
 
+logger = celery.utils.log.get_logger("celery")
+
+PROXY = AVProxy()
+if PROXY is None:
+    logger.error("Connection error with AVProxy")
+
+
+class MonitorPlatformTelemetryData(Monitor):
+    """
+    Get platform telemetry data using the AV Doctor.
+    This basically runs the Doctor on all suitable systems, and delivers the
+    output data to a server.
+    """
+
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_PLATFORM_TELEMETRY_DATA)
+        self.message = 'Platform Telemetry Data Monitor Enabled'
+        self.__strike_zone_plugins = ['agent_plugins_exist.plg', 'agent_plugins_integrity.plg', 'agent_rsyslog_conf_integrity.plg',
+                                      'alienvault_ami_aio_6x1gb_disk_size.plg', 'alienvault_ami_logger_standard_disk_size.plg',
+                                      'alienvault_ami_sensor_remote_disk_size.plg', 'alienvault_ami_sensor_standard_6x1gb_disk_size.plg',
+                                      'alienvault_ami_usm_standard_disk_size.plg', 'alienvault_dummies.plg', 'alienvault_hw_aio_6x1gb_disk_size.plg',
+                                      'alienvault_hw_logger_enterprise_disk_size.plg', 'alienvault_hw_logger_standard_disk_size.plg',
+                                      'alienvault_hw_sensor_enterprise_ids_2x10gb_disk_size.plg', 'alienvault_hw_sensor_enterprise_ids_6x1gb_disk_size.plg',
+                                      'alienvault_hw_sensor_remote_disk_size.plg', 'alienvault_hw_sensor_standard_2x10gb_disk_size.plg',
+                                      'alienvault_hw_sensor_standard_6x1gb_disk_size.plg', 'alienvault_hw_usm_database_disk_size.plg',
+                                      'alienvault_hw_usm_enterprise_disk_size.plg', 'alienvault_hw_usm_standard_disk_size.plg',
+                                      'alienvault_vmware_aio_6x1gb_disk_size.plg', 'alienvault_vmware_logger_standard_disk_size.plg',
+                                      'alienvault_vmware_sensor_remote_disk_size.plg', 'alienvault_vmware_sensor_remote_lite_disk_size.plg',
+                                      'alienvault_vmware_sensor_standard_6x1gb_disk_size.plg', 'alienvault_vmware_usm_standard_disk_size.plg',
+                                      'bash_history.plg', 'current_network_config.plg', 'default_fs.plg', 'default_hw.plg', 'default_server_packages.plg',
+                                      'hosts_file.plg', 'kernel_configuration.plg', 'mysql_history.plg', 'netlink_status.plg', 'network_routing.plg',
+                                      'packages_installed.plg', 'percona_logrotate.plg', 'pkg_checksum.plg', 'resolv_file.plg', 'schema_version.plg',
+                                      'unsupported_installation.plg', 'vm_requirements.plg']
+
+    def __check_internet_connection__(self, url='https://telemetry.alienvault.com:443'):
+        """
+        Checks there is connection with the telemetry server
+        """
+        try:
+            request = urllib2.Request(url)
+            request.add_header('pragma', 'no-cache')
+            response = PROXY.open(request, timeout=30, retries=1)
+        except Exception as e:
+            # 404 means there is connection with the server
+            if str(e) == "HTTP Error 404: NOT FOUND":
+                pass
+            else:
+                return False
+        return True
+
+    def __send_data__(self, system_id, data, url='https://telemetry.alienvault.com:443'):
+        """
+        Sends the collected data.
+        """
+        try:
+            payload = json.dumps({'data': data})
+            url = url + '/%s/%s/%s' % ('platform_report', system_id, int(time.time()))
+            request = urllib2.Request(url)
+            request.add_data(payload)
+            request.add_header('Content-Type', 'application/json')
+            response = PROXY.open(request, timeout=10)
+
+        except Exception as e:
+            logger.error('Error sending telemetry data: %s' % str(e))
+            return False
+        return True
+
+    def start(self):
+        """
+        Starts the monitor activity
+
+        :return: True on success, False otherwise
+        """
+        self.remove_monitor_data()
+        monitor_data = {}
+
+        success, system_id = get_system_id_from_local()
+        if not success:
+            return False
+
+        # Just return if there is no internet connection.
+        if not self.__check_internet_connection__():
+            logger.error("Cannot connect to the Telemetry Server")
+            monitor_data['telemetry_server_connectivity'] = False
+            self.save_data(system_id,
+                           ComponentTypes.SYSTEM,
+                           self.get_json_message(monitor_data))
+            return True
+
+        # Find the list of connected systems.
+        (result, sensor_dict) = get_systems('Sensor', convert_to_dict=True, exclusive=True)
+        if not result:
+            logger.error("Cannot retrieve connected sensors")
+            return False
+        (result, database_dict) = get_systems('Database', convert_to_dict=True, exclusive=True)
+        if not result:
+            logger.error("Cannot retrieve connected databases")
+            return False
+        system_dict = dict(sensor_dict, **database_dict)
+
+        result, local_system_id = get_system_id_from_local()
+        if not result:
+            logger.error("Cannot retrieve the local id")
+            return False
+        result, local_system_ip = get_system_ip_from_system_id(local_system_id)
+        if not result:
+            logger.error("Cannot retrieve the local IP address")
+            return False
+        system_dict = dict({local_system_id: local_system_ip}, **system_dict)
+
+        args = {'output_type': 'ansible',
+                'plugin_list': ','.join(self.__strike_zone_plugins),
+                'verbose': 2}
+        ansible_output = get_doctor_data(system_dict.values(), args)
+        if ansible_output.get('dark'):
+            logger.error('Cannot collect telemetry data: %s' % str(ansible_output.get('dark')))
+            return False
+
+        return self.__send_data__(local_system_id, ansible_output)

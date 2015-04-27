@@ -1086,11 +1086,12 @@ sim_policy_match (SimPolicy       * policy,
 
   // Date.
   time_t cur_epoch_time = time (NULL);
+  struct tm cur_time;
   cur_epoch_time += sim_timezone_get_offset (policy->_priv->timezone, cur_epoch_time);
-  struct tm * cur_time = gmtime (&cur_epoch_time);
-  gint wday = cur_time->tm_wday == 0 ? 7 : cur_time->tm_wday;
-  gint month = cur_time->tm_mon + 1;
-  gint mday = cur_time->tm_mday;
+  gmtime_r (&cur_epoch_time, &cur_time);
+  gint wday = cur_time.tm_wday == 0 ? 7 : cur_time.tm_wday;
+  gint month = cur_time.tm_mon + 1;
+  gint mday = cur_time.tm_mday;
 
   // Compare week days.
   if ((policy->_priv->week_day_start != TIME_WILDCARD) && (policy->_priv->week_day_end != TIME_WILDCARD))
@@ -1138,8 +1139,8 @@ sim_policy_match (SimPolicy       * policy,
   // Compare month days.
   if ((policy->_priv->month_day_start != TIME_WILDCARD) && (policy->_priv->month_day_end != TIME_WILDCARD))
   {
-    guint month_day_start = sim_parse_month_day (policy->_priv->month_day_start, month_start, cur_time->tm_year + 1900);
-    guint month_day_end = sim_parse_month_day (policy->_priv->month_day_end, month_end, cur_time->tm_year + 1900);
+    guint month_day_start = sim_parse_month_day (policy->_priv->month_day_start, month_start, cur_time.tm_year + 1900);
+    guint month_day_end = sim_parse_month_day (policy->_priv->month_day_end, month_end, cur_time.tm_year + 1900);
 
     // If day_start is ahead of day_end...
     if (month_day_start > month_day_end)
@@ -1160,7 +1161,7 @@ sim_policy_match (SimPolicy       * policy,
       }
   }
 
-  guint cur_min = (cur_time->tm_hour * 60) + cur_time->tm_min;
+  guint cur_min = (cur_time.tm_hour * 60) + cur_time.tm_min;
 
   // If day_start is ahead of day_end...
   if (policy->_priv->minute_start > policy->_priv->minute_end)

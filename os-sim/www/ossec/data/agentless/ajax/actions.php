@@ -163,7 +163,7 @@ elseif ($action != 'get_agentless_status' )
 
 if (is_array($validation_errors) && !empty($validation_errors))
 {
-    $validation_errors['html_errors'] = "<div>"._('We found the following errors').":</div><div style='padding:5px;'>".implode("<br/>", $validation_errors)."</div>";
+    $validation_errors['html_errors'] = "<div>"._('The following errors occurred').":</div><div style='padding:5px;'>".implode("<br/>", $validation_errors)."</div>";
 
     $data['status'] = 'error';
     $data['data']   = $validation_errors;

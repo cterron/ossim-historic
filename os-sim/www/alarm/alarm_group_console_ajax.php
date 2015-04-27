@@ -53,6 +53,7 @@ $sensor_query  = POST('sensor_query');
 $alarm_name    = (POST('alarm_name') != "") ? POST('alarm_name') : "";
 $src_ip		   = POST('src_ip');
 $dst_ip 	   = POST('dst_ip');
+$asset_group   = POST('asset_group');
 $date_from 	   = POST('date_from');
 $date_to 	   = POST('date_to');
 $intent 	   = intval(POST('intent'));
@@ -70,13 +71,14 @@ ossim_valid($sensor_query,    OSS_HEX, OSS_NULLABLE,                            
 ossim_valid($alarm_name,      OSS_ALPHA, OSS_PUNC_EXT, OSS_SPACE, OSS_NULLABLE, 	   'illegal:' . _("Alarm Name"));
 ossim_valid($src_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE, 				           'illegal:' . _("Src IP"));
 ossim_valid($dst_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE, 				           'illegal:' . _("Dst IP"));
+ossim_valid($asset_group,     OSS_HEX, OSS_NULLABLE,                                    'illegal:' . _("Asset Group"));
 ossim_valid($date_from,       OSS_DIGIT, OSS_SCORE, OSS_NULLABLE, 		               'illegal:' . _("Date From "));
 ossim_valid($date_to,         OSS_DIGIT, OSS_SCORE, OSS_NULLABLE, 			           'illegal:' . _("Date To"));
 ossim_valid($intent,          OSS_DIGIT, OSS_NULLABLE, 							       'illegal:' . _("Intent"));
 ossim_valid($directive_id,    OSS_DIGIT, OSS_NULLABLE, 							       'illegal:' . _("Directive ID"));
 ossim_valid($num_events,      OSS_DIGIT, OSS_NULLABLE, 								   'illegal:' . _("Num Events"));
 ossim_valid($num_events_op,   OSS_ALPHA, OSS_NULLABLE, 							       'illegal:' . _("Num Events Operator"));
-ossim_valid($tag,             OSS_DIGIT, OSS_NULLABLE, 								   'illegal:' . _("Tag"));
+ossim_valid($tag,             OSS_HEX, OSS_NULLABLE, 								   'illegal:' . _("Tag"));
 ossim_valid($no_resolv,       OSS_DIGIT, OSS_NULLABLE, 								   'illegal:' . _("No Resolv"));
 ossim_valid($hide_closed,     OSS_DIGIT, OSS_NULLABLE, 					               'illegal:' . _("Hide Closed"));
 ossim_valid($show_options,    OSS_DIGIT, OSS_NULLABLE, 							       'illegal:' . _("Show Options"));
@@ -109,8 +111,26 @@ $conn = $db->connect();
 
 $db_groups = Alarm_groups::get_dbgroups($conn);
 
+$criteria = array(
+    'group_type'    => $group_type,
+    'show_options'  => $show_options,
+    'hide_closed'   => $hide_closed,
+    'from_date'     => $date_from,
+    'to_date'       => $date_to,
+    'ip_src'        => $src_ip,
+    'ip_dst'        => $dst_ip,
+    'asset_group'   => $asset_group,
+    'sensor'        => $sensor_query,
+    'query'         => $alarm_name,
+    'directive_id'  => $directive_id,
+    'intent'        => $intent,
+    'num_events'    => $num_events,
+    'num_events_op' => $num_events_op,
+    'tag'           => $tag,
+    'limit'         => "LIMIT $offset, $limit"
+);
 
-list($alarm_group, $total) = Alarm_groups::get_grouped_alarms($conn, $group_type, $show_options, $hide_closed, $date_from, $date_to, $src_ip, $dst_ip, $sensor_query, $alarm_name, $directive_id, $intent, $num_events, $num_events_op, $tag, "LIMIT $offset, $limit", TRUE);
+list($alarm_group, $total) = Alarm_groups::get_grouped_alarms($conn, $criteria, TRUE);
 
 $results = array();
 
@@ -258,11 +278,16 @@ foreach($alarm_group as $group)
 	
 	
 	$g_name = "<table class='transparent'><tr>";
-	
-	if ($tags_html[$id_tag] != "")
+
+	if ($id_tag != '')
 	{
+        $group_tag = Tag::get_object($conn, $id_tag);
+
+        $tag_name = $group_tag->get_name();
+        $tag_class = $group_tag->get_class();
+
     	$g_name .= "<td class='transparent'>";
-		$g_name .= preg_replace("/ <a(.*)<\/a>/", "", $tags_html[$id_tag]);
+		$g_name .= "<span class='$tag_class in_line_av_tag'>$tag_name</span>";
 		$g_name .= "</td>";
     }
 				

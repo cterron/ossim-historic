@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 #  License:
 #
@@ -30,10 +31,13 @@ from flask import Blueprint, request
 from uuid import UUID
 from api.lib.common import make_ok, make_error, document_using
 from api.lib.auth import admin_permission
-from api.lib.utils import accepted_url
+from api.lib.utils import accepted_url, first_init_admin_access
+from apimethods.utils import is_json_true
+from apimethods.utils import BOOL_VALUES
 from apimethods.system.config import (get_system_config_general,
                                       get_system_config_alienvault)
 from apimethods.system.config import set_system_config
+from apimethods.system.config import set_system_config_telemetry_collection, get_system_config_telemetry_collection
 
 
 blueprint = Blueprint(__name__, __name__)
@@ -69,17 +73,17 @@ def get_config_alienvault(system_id):
 @document_using('static/apidocs/config.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-               'general_admin_dns': str,
-               'general_admin_gateway': str,
-               'general_admin_ip': str,
-               'general_admin_netmask': str,
-               'general_hostname': str,
-               'general_mailserver_relay': str,
-               'general_mailserver_relay_passwd': str,
-               'general_mailserver_relay_port': str,
-               'general_mailserver_relay_user': str,
-               'general_ntp_server': str,
-               'firewall_active': str})
+               'general_admin_dns': {'type': str, 'optional': True},
+               'general_admin_gateway': {'type': str, 'optional': True},
+               'general_admin_ip': {'type': str, 'optional': True},
+               'general_admin_netmask': {'type': str, 'optional': True},
+               'general_hostname': {'type': str, 'optional': True},
+               'general_mailserver_relay': {'type': str, 'optional': True},
+               'general_mailserver_relay_passwd': {'type': str, 'optional': True},
+               'general_mailserver_relay_port': {'type': str, 'optional': True},
+               'general_mailserver_relay_user': {'type': str, 'optional': True},
+               'general_ntp_server': {'type': str, 'optional': True},
+               'firewall_active': {'type': str, 'optional': True}})
 def set_config_general(system_id):
 
     param_names = ['general_admin_dns',
@@ -138,3 +142,29 @@ def set_config_alienvault(system_id):
         return make_error("Cannot set AlienVault configuration info %s" % str(job_id), 500)
 
     return make_ok(job_id=job_id)
+
+
+@blueprint.route('/telemetry', methods=['PUT'])
+@accepted_url({'enabled': {'type': str, 'values': BOOL_VALUES}})
+def set_telemetry_collection_config():
+    if not first_init_admin_access():
+        return make_error ('Request forbidden -- authorization will not help', 403)
+
+    enabled = is_json_true(request.args.get('enabled'))
+    (success, msg) = set_system_config_telemetry_collection(enabled=enabled)
+    if not success:
+        return make_error(msg, 400)
+
+    return make_ok()
+
+
+@blueprint.route('/telemetry', methods=['GET'])
+def get_telemetry_collection_config():
+    if not first_init_admin_access():
+        return make_error ('Request forbidden -- authorization will not help', 403)
+
+    (success, enabled) = get_system_config_telemetry_collection()
+    if not success:
+        return make_error(enabled, 400)
+
+    return make_ok(enabled=enabled)

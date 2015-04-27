@@ -33,7 +33,7 @@ from apimethods.system.av_license import (register_appliance_trial,
                                           get_current_version)
 from apimethods.system.system import asynchronous_update
 from api.lib.common import make_ok, make_error, document_using
-from api.lib.utils import accepted_url
+from api.lib.utils import accepted_url, first_init_admin_access
 
 from uuid import UUID
 
@@ -47,6 +47,9 @@ blueprint = Blueprint(__name__, __name__)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
                'email': str})
 def get_license_trial(system_id):
+    if not first_init_admin_access():
+        return make_error ('Request forbidden -- authorization will not help', 403)
+
     # Retrieve URL parameters.
     email = request.args.get('email')
     if email is None:
@@ -65,6 +68,9 @@ def get_license_trial(system_id):
 @document_using('static/apidocs/license.html')
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}, 'key': str})
 def get_license_pro(system_id):
+    if not first_init_admin_access():
+        return make_error ('Request forbidden -- authorization will not help', 403)
+
     # Retrieve URL parameters.
     key = request.args.get('key')
     if key is None:
@@ -86,6 +92,8 @@ def get_license_version(system_id):
     """
     Get the current versions
     """
+    if not first_init_admin_access():
+        return make_error ('Request forbidden -- authorization will not help', 403)
 
     (success, msg) = get_current_version(system_id)
     if not success:

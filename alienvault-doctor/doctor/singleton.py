@@ -28,18 +28,19 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-'''
-Class Singleton.
-No need to explain, credits entirely to:
-http://natefactorial.com/2009/11/19/python-singletons-a-cool-way/
-'''
+
 class Singleton(type):
-  def __init__(self, name, bases, dict):
-    super(Singleton, self).__init__(name, bases, dict)
-    self.instance = None
+    '''
+    Class Singleton.
+    No need to explain, credits entirely to:
+    http://natefactorial.com/2009/11/19/python-singletons-a-cool-way/
+    '''
+    def __init__(self, name, bases, dict):
+        super(Singleton, self).__init__(name, bases, dict)
+        self.instance = None
 
-  def __call__(self, *args, **kw):
-    if self.instance is None:
-      self.instance = super(Singleton, self).__call__(*args, **kw)
+    def __call__(self, *args, **kw):
+        if self.instance is None:
+            self.instance = super(Singleton, self).__call__(*args, **kw)
 
-    return self.instance
+        return self.instance

@@ -28,35 +28,38 @@
 #
 
 
-'''
-Class DoctorError.
-General exception for the Doctor
-'''
 class DoctorError (Exception):
-  def __init__(self, msg, plugin):
-    self.msg = msg
-    self.plugin = plugin
-  def __repr__ (self):
-    return self.msg
+    '''
+    Class DoctorError.
+    General exception for the Doctor
+    '''
+    def __init__(self, msg, plugin):
+        self.msg = msg
+        self.plugin = plugin
 
-'''
-Class PluginConfigParserError.
-Exceptions for dependencies.
-'''
+    def __repr__(self):
+        return self.msg
+
+
 class PluginConfigParserError (DoctorError):
+    '''
+    Class PluginConfigParserError.
+    Exceptions for dependencies.
+    '''
     pass
 
 
-'''
-PluginError class.
-Define an error exception for the Plugin class.
-'''
 class PluginError (DoctorError):
+    '''
+    PluginError class.
+    Define an error exception for the Plugin class.
+    '''
     pass
 
-'''
-Class CheckError.
-Exceptions for the Check class
-'''
+
 class CheckError (DoctorError):
+    '''
+    Class CheckError.
+    Exceptions for the Check class
+    '''
     pass

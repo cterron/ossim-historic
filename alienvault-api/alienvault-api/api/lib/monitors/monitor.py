@@ -33,12 +33,16 @@ import celery.utils.log
 
 
 from apimethods.utils import get_bytes_from_uuid
-from db.methods.api import remove_monitor_data_by_id, save_monitor_data, \
-    add_monitor_data_objects, save_current_status_message
+
+from db.methods.api import (remove_monitor_data_by_id,
+                            save_monitor_data,
+                            add_monitor_data_objects,
+                            save_current_status_message)
+
 from db.models.alienvault_api import Monitor_Data
 
 
-#from api.lib.log_action import log_action
+# from api.lib.log_action import log_action
 
 
 logger = celery.utils.log.get_logger("celery")
@@ -68,6 +72,13 @@ class MonitorTypes(object):
     MONITOR_PENDING_UPDATES = 11
     MONITOR_PLUGINS_VERSION = 12
     MONITOR_PLUGINS_CHECK_INTEGRITY = 13
+    MONITOR_PLATFORM_TELEMETRY_DATA = 14
+    MONITOR_PLATFORM_MESSAGE_CENTER_DATA = 15
+    MONITOR_SYSTEM_CHECK_DB = 16
+    SERVER_EPS_STATS = 17
+    MONITOR_WEBUI_DATA = 18
+    MONITOR_SUPPORT_TUNNELS = 19
+    MONITOR_SYSTEM_REBOOT_NEEDED = 20
     CHECK_TRIGGERS = 1500
 
 
@@ -85,7 +96,7 @@ class Monitor(object):
         self.monitor_objects = []
 
     def start(self):
-        #do the job. Overwrite in the child
+        # do the job. Overwrite in the child
         pass
 
     def remove_monitor_data(self):
@@ -118,7 +129,7 @@ class Monitor(object):
             monitor_data.monitor_id = self.monitor_id
             monitor_data.data = data
             monitor_data.component_type = component_type
-            #db.session.add(monitor_data)
+            # db.session.add(monitor_data)
             self.monitor_objects.append(monitor_data)
         except Exception:
             return_value = False

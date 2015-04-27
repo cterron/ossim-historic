@@ -126,7 +126,7 @@ class Databases
                 
         if ($this->get_icon() != '')
         {
-            $html_icon = "<img id='asset_icon' src='data:image/png;base64,".base64_encode($this->get_icon())."' border='0' align='absbottom'/>";
+            $html_icon = "<img class='asset_icon w32' src='data:image/png;base64,".base64_encode($this->get_icon())."'/>";
         }
         
         return $html_icon;
@@ -205,7 +205,7 @@ class Databases
             $icon
         );
 		
-		$query = "INSERT INTO `databases` (name, ip, port, user, pass, icon) VALUES (?, inet6_pton(?), ?, ?, ".$q_pass.", ?)";
+		$query = "INSERT INTO `databases` (name, ip, port, user, pass, icon) VALUES (?, inet6_aton(?), ?, ?, ".$q_pass.", ?)";
 		
         if (!$conn->Execute($query, $params)) 
         {
@@ -228,7 +228,7 @@ class Databases
 				$user			
 			);
 			
-			$query = "UPDATE `databases` SET ip = INET6_PTON(?), port = ?, user = ?";
+			$query = "UPDATE `databases` SET ip = INET6_ATON(?), port = ?, user = ?";
 			
 		}
 		else
@@ -243,7 +243,7 @@ class Databases
                 $pass              
             );
 			
-			$query = "UPDATE `databases` SET ip = INET6_PTON(?), port = ?, user = ?, pass = ".$q_pass;						
+			$query = "UPDATE `databases` SET ip = INET6_ATON(?), port = ?, user = ?, pass = ".$q_pass;						
 		}
 		
 		

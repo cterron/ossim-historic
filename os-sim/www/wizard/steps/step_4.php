@@ -73,7 +73,7 @@ $admin_ip    = @$system_list['data'][strtolower(Util::get_system_uuid())]['admin
 $table       = ', host_types ht, host_ip hip';
 $f           = array();
 
-$f['where']  = " host.id=ht.host_id AND ht.type=4 AND hip.host_id=host.id AND hip.ip!=inet6_pton('$admin_ip')";
+$f['where']  = " host.id=ht.host_id AND ht.type=4 AND hip.host_id=host.id AND hip.ip!=inet6_aton('$admin_ip')";
 
 
 try

@@ -58,7 +58,7 @@ if (!is_dir($backup_dir)) {
 }
 $dir = dir($backup_dir);
 
-$query = ossim_query("SELECT DISTINCT DATE_FORMAT(day, '%Y%m%d') as day FROM ac_acid_event WHERE cnt > 0 ORDER BY day DESC");
+$query = ossim_query("SELECT DISTINCT DATE_FORMAT(timestamp, '%Y%m%d') as day FROM ac_acid_event ORDER BY day DESC");
 if (!$rs = $conn->Execute($query)) {
     print 'error: ' . $conn->ErrorMsg() . '<BR>';
     exit;
@@ -152,7 +152,7 @@ if (GET('cleardatatables') != '' && Session::am_i_admin()) {
         $conn->Execute("BEGIN");
     	$conn->Execute("TRUNCATE acid_event");
     	$conn->Execute("TRUNCATE ac_acid_event");
-    	$conn->Execute("TRUNCATE ah_acid_event");
+    	$conn->Execute("TRUNCATE po_acid_event");
     	$conn->Execute("TRUNCATE device");
     	$conn->Execute("REPLACE INTO device (id, device_ip, interface, sensor_id) VALUES (999999, 0x0, '', 0x0)");
     	$conn->Execute("UPDATE device SET id = 0 WHERE id = 999999");
@@ -216,15 +216,19 @@ $db->close($conn_ossim);
                 $('#button_restore').click(function(){
                     launch_backup('insert');
                 });
-                $('#button_purge').click(function(){
-                    launch_backup('delete');
-                });
 
                 show_backup_status();
 			});
   		</script>
   	</head>
   	<body>
+  	
+  	<?php 
+        //Local menu             
+        include_once '../local_menu.php';
+        session_write_close();
+    ?>
+  	
 		<div id='backup_info'></div>
 		</br>
 		<table id='t_backup' cellpadding='0' cellspacing='0' class="noborder">   <!-- table for center -->
@@ -325,13 +329,10 @@ $db->close($conn_ossim);
 						</tr>
 						
 						<tr>
-							<td class="nobborder" style="text-align:center">
+							<td class="nobborder backup_restore_button">
 								<input type="button" id="button_restore" value="<?php echo gettext("Restore"); ?>" />
 							</td>
-							
-							<td class="nobborder" style="text-align:center">
-								<input type="button" id="button_purge" value="<?php echo gettext("Purge"); ?>" />
-							</td>
+							<td></td>
 						</tr>
 				
 						<?php if ($pro && 1 == 2) { // Temporary disabled, merge as default ?>
@@ -359,165 +360,89 @@ $db->close($conn_ossim);
 					</form>
 					<?php } ?>
 			
-			        <div class='sec_title'><?php echo gettext("Latest Backup Events"); ?></div>
-					<table class='table_module'>
-						<tr>
-							<th><?php echo gettext("User"); ?></th>
-							<th><?php echo gettext("Date"); ?></th>
-							<th><?php echo gettext("Action"); ?></th>
-							<th><?php echo gettext("Status"); ?></th>
-							<th><?php echo gettext("Percent"); ?></th>
-						</tr>
-						
-						<?php
-						$db1    = new ossim_db();
-						$conn1  = $db1->connect();
-						if ($run==0) { // Set as finished
-							$conn1->Execute("UPDATE restoredb_log SET status=2 WHERE status=1");
-						} elseif ($run<0) {
-							$conn1->Execute("UPDATE restoredb_log SET status=-1 WHERE status=1");
-						}
-
-						$query = ossim_query("SELECT * FROM restoredb_log ORDER BY id DESC LIMIT 10");
-						if (!$rs1 = $conn1->Execute($query)) {
-							print 'error: ' . $conn1->ErrorMsg() . '<BR>';
-							exit;
-						}
-						$results = array();
-
-						while (!$rs1->EOF) {
-							$results[] = $rs1->fields;
-							$rs1->MoveNext();
-						}
-
-						$db1->close($conn1);
-
-						if (count($results) < 1) 
-						{ 
-							?>
-							<tr>
-								<td colspan="6"><?=_("No Events found")?></td>
-							</tr>
-							<?php 
-						} 
-						else 
-						{
-							foreach ($results as $rs1) 
-							{
-								?>
-									<tr>
-										<td><?php echo $rs1["users"] ?></td>
-										<td nowrap='nowrap'><?php echo gmdate("Y-m-d H:i:s",strtotime($rs1["date"])+(3600*$tz)) ?></td>
-										<td><?php echo str_replace(",",", ",$rs1["data"]) ?></td>
-										<?php
-										if ($rs1["status"] == 1) 
-										{ 
-											?>
-											<td><font color="orange"><b><?php echo gettext("Running"); ?></b></font></td>
-											<?php
-										} 
-										elseif ($rs1['status'] == -1) 
-										{ 
-											?>
-											<td><font color="red"><b><?php  echo gettext("Failed"); ?></b></font></td>
-										<?php
-										} 
-										else 
-										{ 
-											?>
-											<td><font color="green"><b><?php echo gettext("Done"); ?></b></font></td>
-											<?php
-										} 
-										?>
-									<td><?php echo $rs1["percent"] ?>%</td>
-								</tr>
-								<?php
-							}
-						}
-						?>
-					</table>
 				</td>
 				
 				<td class="noborder" style="width:40px">&nbsp;</td>
 				
 				<td class="noborder">
 			
-				<?php
-				
-				$array_result = array();
-				$file_log     = "/var/log/alienvault/api/backup-notifications.log";
-				$number_log   = 500;
-				
-				$status_flag   = ( !empty($_GET['status_log']) ) ? $_GET['status_log'] : "0";
-				switch($status_flag)
-				{
-					case 1:
-						$status_log = " -- INFO --";
-						break;
-					case 2:
-						$status_log = " -- WARNING --";
-						break;
-					case 3:
-						$status_log = " -- ERROR --";
-						break;
-					default:
-						$status_log = " -- ";
-						$status_flag = 0;
-						break;
-				}
-				
-				exec("cat ".$file_log." | grep '".$status_log."' | tail -n ".$number_log, $array_result, $flag_error);
-				$array_result = array_reverse($array_result);
-				?>
-				<div class='sec_title'><?php echo _("Backup System Logs")?></div>
-				
-							<div style="height:500px;overflow:auto">
-								<table class='table_module'> 
-										<tr>
-											<th><?php echo _("Date") ?></th>
-											<th><?php echo _("Status") ?>
-												
-												<select name="status_log" id="status_log" onchange="switch_status();return false;" style="font-size:9px; width: 90px;">
-													<option value="0" <?php echo ( $status_flag == 0) ? "selected='selected'" : "" ?> ><?php echo _("ALL") ?></option>
-													<option value="1" <?php echo ( $status_flag == 1) ? "selected='selected'" : "" ?> ><?php echo _("INFO") ?></option>
-													<option value="2" <?php echo ( $status_flag == 2) ? "selected='selected'" : "" ?> ><?php echo _("WARNING") ?></option>
-													<option value="3" <?php echo ( $status_flag == 3) ? "selected='selected'" : "" ?> ><?php echo _("ERROR") ?></option>
-												</select> 
-											</th>
-											<th><?php echo _("Message") ?></th>
-										</tr>
-										<?php
-										
-										if ( $flag_error <> 0 || empty($array_result) ){
-											echo "<tr><td colspan='3'>" . _("No notifications found") . "</td></tr>";
-										}
-										else
-										{
-											foreach($array_result as $contents ) 
-											{
-												//2011-07-01 13:41:58.859468 [FRAMEWORKD] -- INFO -- backup file already created (/var/lib/ossim/backup/phpgacl-backup_2011-07-01.sql) 
-												if (preg_match("/(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\.\d+\s+\[[A-Za-z]+\]\s--\s([A-Za-z]+)\s--\s(.*)/", $contents, $result)) {
-													//IF INFO -> COLOR = DFF7FF
-													//ELSE (WARNING) --> COLOR = FFFFDF
-													$background_color = ( $result[2]=="INFO" ) ? "DFF7FF" : "FFFFDF" ;
-													if ($tz!=0) {
-														$date = gmdate("Y-m-d H:i:s",strtotime($result[1])+(3600*$tz));
-													} else {
-														$date = $result[1];
-													}
-													echo '
-														<tr style="background-color: #'.$background_color.';">
-															<td nowrap="nowrap">'.$date.'</td>
-															<td>'.$result[2].'</td>
-															<td style="text-align:left">'. preg_replace('/error/i','<strong>ERROR</strong>', $result[3]) .'</td>
-														</tr>
-													';
-												}
-											}
-										}
-										?>
-								</table>
-							</div>
+        				<div class='sec_title'><?php echo gettext("Latest Backup Events"); ?></div>
+        					<table class='table_module'>
+        						<tr>
+        							<th><?php echo gettext("User"); ?></th>
+        							<th><?php echo gettext("Date"); ?></th>
+        							<th><?php echo gettext("Action"); ?></th>
+        							<th><?php echo gettext("Status"); ?></th>
+        							<th><?php echo gettext("Percent"); ?></th>
+        						</tr>
+        						
+        						<?php
+        						$db1    = new ossim_db();
+        						$conn1  = $db1->connect();
+        						if ($run==0) { // Set as finished
+        							$conn1->Execute("UPDATE restoredb_log SET status=2 WHERE status=1");
+        						} elseif ($run<0) {
+        							$conn1->Execute("UPDATE restoredb_log SET status=-1 WHERE status=1");
+        						}
+        
+        						$query = ossim_query("SELECT * FROM restoredb_log ORDER BY id DESC LIMIT 10");
+        						if (!$rs1 = $conn1->Execute($query)) {
+        							print 'error: ' . $conn1->ErrorMsg() . '<BR>';
+        							exit;
+        						}
+        						$results = array();
+        
+        						while (!$rs1->EOF) {
+        							$results[] = $rs1->fields;
+        							$rs1->MoveNext();
+        						}
+        
+        						$db1->close($conn1);
+        
+        						if (count($results) < 1) 
+        						{ 
+        							?>
+        							<tr>
+        								<td colspan="6"><?=_("No Events found")?></td>
+        							</tr>
+        							<?php 
+        						} 
+        						else 
+        						{
+        							foreach ($results as $rs1) 
+        							{
+        								?>
+        									<tr>
+        										<td><?php echo $rs1["users"] ?></td>
+        										<td nowrap='nowrap'><?php echo gmdate("Y-m-d H:i:s",strtotime($rs1["date"])+(3600*$tz)) ?></td>
+        										<td><?php echo str_replace(",",", ",$rs1["data"]) ?></td>
+        										<?php
+        										if ($rs1["status"] == 1) 
+        										{ 
+        											?>
+        											<td><font color="orange"><b><?php echo gettext("Running"); ?></b></font></td>
+        											<?php
+        										} 
+        										elseif ($rs1['status'] == -1) 
+        										{ 
+        											?>
+        											<td><font color="red"><b><?php  echo gettext("Failed"); ?></b></font></td>
+        										<?php
+        										} 
+        										else 
+        										{ 
+        											?>
+        											<td><font color="green"><b><?php echo gettext("Done"); ?></b></font></td>
+        											<?php
+        										} 
+        										?>
+        									<td><?php echo $rs1["percent"] ?>%</td>
+        								</tr>
+        								<?php
+        							}
+        						}
+        						?>
+        					</table>
 						
 			</td>
 		</tr>

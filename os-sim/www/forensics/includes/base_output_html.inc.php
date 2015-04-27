@@ -52,7 +52,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             <link rel="stylesheet" type="text/css" href="/ossim/style/jquery.autocomplete.css"/>
             <link rel="stylesheet" type="text/css" href="/ossim/style/tipTip.css"/>
             <link rel="stylesheet" type="text/css" href="/ossim/style/jslider.css"/>
-            <link rel="stylesheet" type="text/css" href="/ossim/style/flipswitch.css"/>
+            <link rel="stylesheet" type="text/css" href="/ossim/style/jquery.switch.css"/>
             <link rel="stylesheet" type="text/css" href="/ossim/style/datepicker.css"/>
             
             <!-- Manual Styles -->
@@ -245,6 +245,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             <script type="text/javascript" src="../js/jslider/jquery.slider.js"></script>
             <script type="text/javascript" src="../js/jquery.tag-it.js"></script>
             <script type="text/javascript" src="../js/jquery.placeholder.js"></script>
+            <script type="text/javascript" src="../js/jquery.switch.js"></script>
             
             
             <? $ipsearch=1; include ("../host_report_menu.php") ?>
@@ -377,19 +378,6 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                     else{ myframe.setAttribute('src', url); }
                 }	
             }
-
-            	// Used in top plot toggle
-            	function trendgraph() {
-                if ($("#iplot").is(":visible") == false) {
-                    $('#graph_arrow').attr("src", "../pixmaps/arrow_green_down.png");
-                    $('#iplot').toggle();
-                    $('#loadingTrend').show();
-                    SetIFrameSource('processframe','base_plot.php')
-                } else {
-                	$('#graph_arrow').attr("src", "../pixmaps/arrow_green.png");
-                    $('#iplot').toggle();
-                }
-            }
             
             function show_search_tooltip()
             {
@@ -520,7 +508,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
 
                 function load_link(url)
                 {
-                    if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner();
+                    if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner(true);
                     document.location.href=url;
                 }
             	// Custom Views
@@ -606,7 +594,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             //function GB_onclose() { nogb=false; }
             function GB_onclose()
             {
-                if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner();
+                if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner(true);
                 document.location.reload();
             }
 
@@ -662,7 +650,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             // Top refresh link
             function re_load()
             {
-                if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner();                
+                if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner(true);
                 if (typeof(pag_reload)=='function') pag_reload();
             }
 
@@ -858,8 +846,18 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             	       parent.hide_overlay_spinner();                
                    }
                    // Show spinner on form submit
-                   $('#go_button,#bsf').on('click',function(){
-                        if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner(); 
+                   $('#bsf, a.qlink').on('click',function(){
+                        if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner(true); 
+                   });
+                   $('#go_button').on('click',function()
+                   {
+                        if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner(true); 
+                        var sstr   = $("#search_str").val();
+                        var scombo = $("#search_type_combo").val();
+                        if (sstr.match(/\!?\d+\.\d+\.\d+\.\d+/) && scombo == 'Signature')
+                        {
+                             $("#search_type_combo").val('Src or Dst IP');
+                        }
                    });
                    
             		// CAPTURE ENTER KEY
@@ -874,6 +872,34 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             				return true;
             			}
             		});
+
+                // Top Graph Trend SWITCH
+            		$('#trend_checkbox').toggles({
+        	            "text" : {
+        	                "on"  : '<?php echo _('On')?>',
+        	                "off" : '<?php echo _('Off')?>'
+        	            },
+        	            "on" : false,
+        	            "width" : 50,
+        	            "height" : 18,
+        	        });
+        	    
+        	        $('#trend_checkbox').on('toggle', function (e, status) {
+        	    
+        	            if (status == true)
+        	            {
+        	                // Display trend
+    	                    $('#iplot').toggle();
+    	                    $('#loadingTrend').show();
+    	                    SetIFrameSource('processframe','base_plot.php')
+        	            }
+        	            else
+        	            {
+        	                // Hide trend
+                        $('#iplot').toggle();
+        	            }
+        	        });
+            		
             		// TOOLTIPS
             		$('.scriptinfo').tipTip({
             			defaultPosition: "right",
@@ -946,44 +972,48 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                     $('#views').hide();
                 });
             	    
-            		// AUTOCOMPLETE SEARCH FACILITY FOR SENSOR
-            	    <?php
-				$snortsensors = GetSensorSids($db);
-				$sns = array();
-				$sensor_keys = array();
-				if (Session::allowedSensors() != "") {
-					$user_sensors = explode(",",Session::allowedSensors());
-					foreach ($user_sensors as $user_sensor)
-						$sensor_keys[$user_sensor]++;
-				}
-				else $sensor_keys['all'] = 1;
-				foreach($snortsensors as $ip => $sids) {
-					//$ip = preg_replace ("/^\[.+\]\s*/","",$ip);
-					$sid = implode(",", $sids);
-					$sname = ($sensors[$ip] != "") ? $sensors[$ip] : $ip;
-					$sns[$sname] = array($ip,$sid);
-				}
-				// sort by sensor name
-				$sensor = ($_GET["sensor"] != "") ? $_GET["sensor"] : $_SESSION["sensor"];
-				ksort($sns);
-				$str = $notstr = $ipsel = $ents = "";
-				foreach ($sns as $sname => $ip) {
-					if ($sensor_keys['all'] || $sensor_keys[$ip[0]]) {
-						$ip[0] = ($sname != "" && $sname != $ip[0]) ? "$sname [" . $ip[0] . "]" : $ip[0];
-						$ip[0] = preg_replace ("/^\[(.+)\]\s*(.+)/","\\1 [\\2]",$ip[0]);
-						if ($ipsel=="") {
-							if     ($ip[1] != "" && $sensor == "!".$ip[1]) $ipsel = "$('#sip').val('!".$ip[0]."');";
-							elseif ($ip[1] != "" && $sensor == $ip[1])     $ipsel = "$('#sip').val('".$ip[0]."');";
-						}	
-						$notstr .= '{ txt:"!'.$ip[0].'", id: "!'.$ip[1].'" },';
-						$str .= '{ txt:"'.$ip[0].'", id: "'.$ip[1].'" },';
-					}
-				}
+                // AUTOCOMPLETE SEARCH FACILITY FOR SENSOR
+                <?php
+                $snortsensors = GetSensorSids($db);
+                $sensor_keys  = array();
+                if (Session::allowedSensors() != "")
+                {
+                    $user_sensors = explode(",",Session::allowedSensors());
+                    foreach ($user_sensors as $user_sensor)
+                    {
+                        $sensor_keys[$user_sensor]++;
+                    }
+                }
+                else
+                {
+                    $sensor_keys['all'] = 1;
+                }
+                // sort by sensor name
+                $sensor = ($_GET["sensor"] != "") ? $_GET["sensor"] : $_SESSION["sensor"];
+                $str = $notstr = $ipsel = $ents = "";
+
+                //var_dump($snortsensors);
+                //var_dump($sensor);
+
+                foreach ($sensors as $sid => $sdata)
+                {
+                    if ( $snortsensors[$sid] != '' && ($sensor_keys['all'] || $sensor_keys[$sdata['ip']]) )
+                    {
+                        $txt = Util::htmlentities($sdata['name'])." [" . $sdata['ip'] . "]";
+                        if ($ipsel=="")
+                        {
+                            if     ($sid != "" && $sensor == "!".$snortsensors[$sid]) $ipsel = "$('#sip').val('!".$txt."');";
+                            elseif ($sid != "" && $sensor == $snortsensors[$sid])     $ipsel = "$('#sip').val('".$txt."');";
+                        }	
+                        $notstr .= '{ txt:"!'.$txt.'", id: "!'.$sid.'" },';
+                        $str .= '{ txt:"'.$txt.'", id: "'.$sid.'" },';
+                    }
+                }
 				
 				// IP Selected
 				echo $ipsel;
 				
-				$db_aux = new ossim_db();
+				$db_aux = new ossim_db(true);
 				$conn_aux = $db_aux->connect();
 				
 				
@@ -995,7 +1025,6 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                 show_backup_status();
                 <?php
                 }
-				
 				
 				if (Session::is_pro())
                 {
@@ -1021,7 +1050,8 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             				return row.txt;
             			}
             		}).result(function(event, item) {
-            			mix_sensors(item.id);
+            			//mix_sensors(item.id);
+            			$("#sensor").val(item.id);
             			$("#bsf").click();
             		});
             		
@@ -1054,7 +1084,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             		});
             		<?php } ?>
     
-            		var dayswithevents = [ <?php echo GetDatesWithEvents($db) ?> ];
+            		var dayswithevents = [ <?php //echo GetDatesWithEvents($db) ?> ];
 
             		/*  CALENDAR PLUGIN  */
             	    $('.date_filter').datepicker(
@@ -1068,9 +1098,9 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                     beforeShowDay: function ( date )
                     {
                         var classname = '';
-                        
+                        var withevents = '';
                         // With-Events color
-                        var withevents = (dayswithevents.in_array(date.getTime())) ? ' evented-date' : ''
+                        //var withevents = (dayswithevents.in_array(date.getTime())) ? ' evented-date' : ''
                         
                         return [true, classname + withevents];
                     },
@@ -1236,7 +1266,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                     {
                         if (typeof(data) != 'undefined' && typeof(data.message) != 'undefined' && data.message != '')
                         {
-                            var url         = "<?php echo Menu::get_menu_url(AV_MAIN_PATH.'/backup/index.php', 'configuration', 'administration', 'backup'); ?>";
+                            var url         = "<?php echo Menu::get_menu_url(AV_MAIN_PATH.'/backup/index.php', 'configuration', 'administration', 'backups', 'backups_events'); ?>";
                             var backup_link = '<a href="' + url + '">' + data.message + '</a>';
                             var msg         = 'A background task could be affecting to the performance<br/>' + backup_link;
 
@@ -1252,7 +1282,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             }
             function show_notification (msg, container, nf_type, style)
             {
-                var nt_error_msg = (msg == '')   ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : msg;
+                var nt_error_msg = (msg == '')   ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : msg;
                 var style        = (style == '' ) ? 'width: 80%; text-align:center; padding: 5px 5px 5px 22px; margin: 20px auto;' : style;
 
                 var config_nt = { content: nt_error_msg,
@@ -1270,7 +1300,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             }
             
             	function report_launcher(data,type) {
-            		var url = '<?=urlencode((preg_match("/\?/",$_SERVER["REQUEST_URI"]) ? $_SERVER["REQUEST_URI"] : $_SERVER["REQUEST_URI"]."?".$_SERVER["QUERY_STRING"])."&complete=1")?>';
+            		var url = '<?=urlencode((preg_match("/\?/",$_SERVER["REQUEST_URI"]) ? $_SERVER["REQUEST_URI"] : $_SERVER["REQUEST_URI"]."?".$_SERVER["QUERY_STRING"])."&export=1")?>';
             		var dates = '<?=($y1!="") ? "&date_from=".urlencode("$y1-$m11-$d1") : "&date_from="?><?=($y2!="") ? "&date_to=".urlencode("$y2-$m21-$d2") : "&date_to="?>';
             		GB_show("<?=_("Report options")?>",'/forensics/report_launcher.php?url='+url+'&data='+data+'&type='+type+dates,200,'40%');
             		return false;
@@ -1377,7 +1407,7 @@ function PrintPredefinedViews()
 	$conf = $GLOBALS["CONF"];
 	$idm_enabled    = ($conf->get_conf("enable_idm") == 1 && Session::is_pro()) ? true : false;
 	$login        = Session::get_session_user();
-	$db_aux       = new ossim_db();
+	$db_aux       = new ossim_db(true);
 	$conn_aux     = $db_aux->connect();
 	$config       = new User_config($conn_aux);
 	$default_view = ($config->get($login, 'custom_view_default', 'php', "siem") != "") ? $config->get($login, 'custom_view_default', 'php', "siem") : (($idm_enabled) ? 'IDM' : 'default');

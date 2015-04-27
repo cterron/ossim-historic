@@ -100,6 +100,7 @@ function get_msg($dbconn, $query_msg)
     <link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
     <script type="text/javascript" src="../js/jquery.min.js"></script>
     <script type="text/javascript" src="../js/greybox.js"></script>
+    <script type="text/javascript" src="../js/utils.js"></script>
     <script src="/ossim/js/jquery.tipTip-ajax.js" type="text/javascript"></script>
     <script type="text/javascript" src="../js/jquery.simpletip.js"></script>
     <link rel="stylesheet" type="text/css" href="/ossim/style/tipTip.css"/>
@@ -299,39 +300,7 @@ if (ossim_error())
             }
         });
         
-        $('a.anchor_link').on('click', function(e)
-        {
-            try
-            {
-                if(navigator.userAgent.indexOf("Firefox") != -1)
-                {
-                    e.preventDefault();
-                    
-                    var name   = $(this).attr('href').replace(/^#/, '');
-                    var offset = $("a[name='"+name+"']").offset();
-                                        
-                    try
-                    {
-                        var p_height = $('#content', window.parent.document).position().top
-                            p_height += 20
-                    }
-                    catch(Err)
-                    {
-                        var p_height = 0;
-                        
-                    }
-                    
-                    $('html, body', window.parent.document).animate(
-                    {
-                      scrollTop: offset.top + p_height
-                    }, 1000);
-                }
-            }
-            catch(Err)
-            {
-                return true;
-            }
-        });
+        $('a.anchor_link').on('click', anchor_link);
         
     });
     

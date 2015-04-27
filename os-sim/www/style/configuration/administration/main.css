@@ -102,8 +102,8 @@ if (!headers_sent())
 
 .header_found
 {
-    background-color: #F28020 !important;
-    color: #FFF !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
 }
 
 #basic-accordian td 
@@ -166,4 +166,10 @@ if (!headers_sent())
 #otx_token
 {
 	width: 250px;
+}
+
+a.terms 
+{ 
+    text-decoration: underline !important;
+    font-style: italic;
 }

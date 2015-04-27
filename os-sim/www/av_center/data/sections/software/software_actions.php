@@ -35,13 +35,6 @@
 //Config File
 require_once (dirname(__FILE__) . '/../../../config.inc');
 
-
-if ($_SERVER['SCRIPT_NAME'] != '/ossim/av_center/data/sections/software/software_actions.php')
-{
-    exit();
-}
-
-
 $system_id = POST('system_id');
 $action    = POST('action');
 
@@ -60,42 +53,26 @@ if (ossim_error())
 
 if ($action == 'update_system' || $action == 'update_system_feed')
 {
-
     //Check system status
     $res = Av_center::get_task_status($system_id, 'alienvault-update');
 
     if ($res['status'] == 'running')
     {
        $data['status']  = 'warning';
-       $data['data']    = _('Update process was launched previously');
+       $data['data']    = _('Update process can not be launched at this time. Please, try again later.');
     }
     else
     {
-        //Check system status
-        $res = Av_center::get_task_status($system_id, 'alienvault-update');
-
-        if ($res['status'] == 'done')
+        if ($action == 'update_system')
         {
-            if ($action == 'update_system')
-            {
-                $data = Av_center::update_av_system($system_id);
-            }
-            else
-            {
-                $data = Av_center::update_av_feed($system_id);
-            }
-        }
-        elseif ($res['status'] == 'running')
-        {
-           $data['status']  = 'warning';
-           $data['data']    = _('Update process was launched previously');
+            $data = Av_center::update_av_system($system_id);
         }
         else
         {
-            $data['status']  = 'warning';
-            $data['data']    = _('Update process can not be launched at this time.  Please, try again later');
+            $data = Av_center::update_av_feed($system_id);
         }
     }
+
 }
 elseif ($action == 'check_update_status')
 {
@@ -118,4 +95,3 @@ elseif ($action == 'check_update_status')
 
 echo json_encode($data);
 exit();
-?>

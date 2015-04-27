@@ -1,0 +1,23 @@
+[properties]
+name=Disk size
+description=Check the disk size
+category=system
+type=command
+strike_zone=True
+command=echo $(COLUMNS=200 dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw)' | awk '{ print $2 }'):$(fdisk -l /dev/sda | grep sda1  | awk '{ print $5 }')
+raw_limit=100
+profiles=alienvault-vmware-usm-standard:>4.0
+
+[Standard size]
+pattern=^(\S*)\s+$
+conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/disks_sizes.list
+warning=The disk size doesn't match the standard ones
+advice=Appliances are designed to work nicely with the standar sizes
+
+# checks with +- 50GB (13107200 blocks)
+[Check for wrong disk size]
+pattern=^alienvault\-vmware\-usm\-standard:(\S+)\s+$
+conditions=@int@:>1218680832@and@<1244895232
+warning=The disk size seems wrong
+advice=Appliances are designed to work nicely with the standar disk sizes
+

@@ -32,10 +32,20 @@ from uuid import UUID
 
 from sqlalchemy import text as sqltext
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 import db
-from db.models.alienvault import Server, Sensor, Config, System, Server_Hierarchy, Server_Forward_Role
+from db.models.alienvault import (
+    Server,
+    Sensor,
+    Config,
+    System,
+    Server_Hierarchy,
+    Server_Forward_Role,
+    Restoredb_Log,
+    Acl_Sensors,
+    Acl_Entities
+)
 
 import api_log
 from apimethods.decorators import accepted_values, accepted_types, require_db
@@ -45,28 +55,32 @@ ossim_setup = AVOssimSetupConfigHandler()
 
 DEFAULT_BACKUP_DAYS = 30
 
+
 @require_db
 def db_get_hostname(system_id):
     try:
-        system_id_bin = get_bytes_from_uuid (system_id)
+        system_id_bin = get_bytes_from_uuid(system_id)
         system = db.session.query(System).filter(System.id == system_id_bin).one()
     except Exception, msg:
         db.session.rollback()
         return (False, "Error while querying for system with id '%s'" % system_id)
     return (True, system.name)
 
+
 @require_db
 #@accepted_values(['Server', 'Sensor', 'Database'])
-def get_systems(system_type='', convert_to_dict=False, exclusive=False):
+def get_systems(system_type='', convert_to_dict=False, exclusive=False, directly_connected=True):
     """
     Return a list of id/admin ip address pairs for systems in the system table.
-    If the 'convert_to_dict' parameter is True, return a dict instead of a list of pairs.
+    :param convert_to_dict(boolean) parameter is True, return a dict instead of a list of pairs.
     :param exclusive(boolean) Means that system should have only the given system_type
                             For example an AIO has the profiles [Sensor, Server,Database,Framework]
                             if the function recieves system_type = Sensor it won't return this system.
+    :param directly_connected(boolean) Whether it returns systems that are directly connected to this one or not.
     """
-    if system_type.lower() not in ['sensor', 'server', 'database', '']:
+    if type(system_type) != str or system_type.lower() not in ['sensor', 'server', 'database', '']:
         return False, "Invalid system type <%s>. Allowed values are ['sensor','server','database']" % system_type
+
     try:
         if exclusive:
             system_list = db.session.query(System).filter(System.profile.ilike(system_type)).all()
@@ -76,10 +90,47 @@ def get_systems(system_type='', convert_to_dict=False, exclusive=False):
         db.session.rollback()
         return (False, "Error while querying for '%s' systems: %s" % (system_type if system_type != '' else 'all', str(msg)))
 
+    if directly_connected:
+        try:
+            server_ip = get_ip_bin_from_str(db.session.query(Config).filter(Config.conf == 'server_address').one().value)
+            server_id = get_bytes_from_uuid(db.session.query(Config).filter(Config.conf == 'server_id').one().value)
+            connected_servers = [x.child_id for x in db.session.query(Server_Hierarchy).filter(Server_Hierarchy.parent_id == server_id).all()]
+            connected_servers.append(server_id)
+        except Exception, msg:
+            db.session.rollback()
+            return (False, "Error while querying for server: '%s'" % str(msg))
+
+        if not system_type or system_type.lower() == 'server':
+            system_list = filter(lambda x: x.server_id in connected_servers or 'server' not in x.profile.lower(), system_list)
+
+        if not system_type or system_type.lower() == 'sensor':
+            try:
+                context_ids = [x.id for x in db.session.query(Acl_Entities).filter(and_(Acl_Entities.server_id == server_id, Acl_Entities.entity_type == 'context')).all()]
+                connected_sensors = [x.sensor_id for x in db.session.query(Acl_Sensors).filter(Acl_Sensors.entity_id.in_(context_ids)).all()]
+            except Exception, msg:
+                db.session.rollback()
+                return (False, "Error while querying for connected sensors: '%s'" % str(msg))
+
+            system_list = filter(lambda x: x.sensor_id in connected_sensors or
+                                 ('server' in x.profile.lower() and x.server_id in connected_servers and not system_type),
+                                 system_list)
+
+        if not system_type or system_type.lower() == 'database':
+            try:
+                database_ip = get_ip_bin_from_str(db.session.query(Config).filter(and_(Config.conf == 'snort_host', Config.value != '127.0.0.1')).one().value)
+            except NoResultFound, msg:
+                pass
+            except Exception, msg:
+                db.session.rollback()
+                return (False, "Error while querying for connected databases: '%s'" % str(msg))
+            else:
+                system_list = filter(lambda x: (x.admin_ip == database_ip or x.vpn_ip == database_ip) or 'database' not in x.profile.lower(), system_list)
+
     if convert_to_dict:
         return (True, dict([(get_uuid_string_from_bytes(x.id), get_ip_str_from_bytes(x.vpn_ip) if x.vpn_ip else get_ip_str_from_bytes(x.admin_ip)) for x in system_list]))
 
     return (True, [(get_uuid_string_from_bytes(x.id), get_ip_str_from_bytes(x.vpn_ip) if x.vpn_ip else get_ip_str_from_bytes(x.admin_ip)) for x in system_list])
+
 
 @require_db
 def get_all_ip_systems():
@@ -408,6 +459,7 @@ def db_add_system(system_id, name, admin_ip, vpn_ip=None, profile='', server_id=
 
     return (True, '')
 
+
 @require_db
 def db_system_update_admin_ip(system_id, admin_ip):
 
@@ -432,6 +484,7 @@ def db_system_update_admin_ip(system_id, admin_ip):
 
     return (True, '')
 
+
 @require_db
 def db_system_update_hostname(system_id, hostname):
 
@@ -451,6 +504,7 @@ def db_system_update_hostname(system_id, hostname):
         return (False, 'Something wrong happened while updating system info in the database')
 
     return (True, '')
+
 
 def set_system_value(system_id, property_name, value):
     result = True
@@ -526,32 +580,34 @@ def has_forward_role(server_id):
 
     return is_forwarder
 
+
 @require_db
 def get_database_size(databases=[]):
     """
     Return the system id of an appliance using its ip.
     """
     accepted = ['alienvault', 'alienvault_siem', 'alienvault_api', 'alienvault_asec', 'datawarehouse', 'ocsweb', 'ISO27001An', 'PCI']
-    
+
     validation = set(databases) - set(accepted)
     if len(validation) > 0:
-        return False, "Invalid database(s) %s. Accepted values are: %s" % (str(list(validation)), str(accepted))   
-        
+        return False, "Invalid database(s) %s. Accepted values are: %s" % (str(list(validation)), str(accepted))
+
     where = ''
     if len(databases) > 0:
-        where = "WHERE table_schema IN ('%s')" % "','".join(databases)    
-    
+        where = "WHERE table_schema IN ('%s')" % "','".join(databases)
+
     query = "SELECT table_schema as db, sum( data_length + index_length ) as size FROM information_schema.TABLES %s GROUP BY table_schema" % where
-    
+
     try:
         av_db = db.session.connection(mapper=System).execute(query)
     except Exception, e:
         msg = "An error occurred getting the size of the system databases: %s" % str(e)
         return False, msg
-    
+
     db_sizes = dict((_db.db, float(_db.size)) for _db in av_db)
-    
+
     return True, db_sizes
+
 
 @require_db
 def fix_system_references():
@@ -559,7 +615,10 @@ def fix_system_references():
     Fix sensor_id and server_id columns from system table with HA environments
     """
 
-    queries = ["update system set sensor_id=(select id from sensor where ip=admin_ip or ip=ha_ip) where ha_ip is not NULL and profile like 'sensor' and sensor_id is NULL","update system s1,system s2 set s1.sensor_id=s2.sensor_id where s1.id!=s2.id and s1.ha_ip=s2.ha_ip and s2.profile like 'sensor' and s1.sensor_id is NULL","update system set server_id=(select id from server where ip=ha_ip) where ha_ip is not NULL and server_id is NULL","update system s1,system s2 set s1.server_id=s2.server_id where s1.id!=s2.id and s1.ha_ip=s2.ha_ip and s2.profile like '%%server%%' and s1.server_id is NULL"]
+    queries = ["update system set sensor_id=(select id from sensor where ip=admin_ip or ip=ha_ip) where ha_ip is not NULL and profile like 'sensor' and sensor_id is NULL",
+               "update system s1,system s2 set s1.sensor_id=s2.sensor_id where s1.id!=s2.id and s1.ha_ip=s2.ha_ip and s2.profile like 'sensor' and s1.sensor_id is NULL",
+               "update system set server_id=(select id from server where ip=ha_ip) where ha_ip is not NULL and server_id is NULL",
+               "update system s1,system s2 set s1.server_id=s2.server_id where s1.id!=s2.id and s1.ha_ip=s2.ha_ip and s2.profile like '%%server%%' and s1.server_id is NULL"]
 
     try:
         db.session.begin()
@@ -571,3 +630,159 @@ def fix_system_references():
         return (False, str(msg))
 
     return True, ''
+
+
+@require_db
+def get_config_otx_enabled():
+    """Returns when the user has OTX enabled.
+    Args:
+        None
+    Returns:
+        True when OTX is enable, False otherwise
+    """
+    # If there is no entry in the config table for open_threat_exchange, that means
+    # that OTX is not enableda
+    # When OTX is enabled the value is:
+    # mysql> select * from config where conf like 'open_threat_exchange';
+    # +----------------------+-------+
+    # | conf                 | value |
+    # +----------------------+-------+
+    # | open_threat_exchange | yes   |
+    # +----------------------+-------+
+    otx_enabled = False
+    try:
+        result = db.session.query(Config).filter(Config.conf == 'open_threat_exchange').one()
+        otx_enabled = True if result.value is not None and result.value == "yes" else False
+    except NoResultFound, MultipleResultsFound:
+        # MultipleResultsFound: It should not happen, by the way if it happens, it should means that OTX is enabled
+        pass
+    except Exception as err:
+        api_log.error("[get_config_otx_enabled] %s" % str(err))
+        print "Error %s" % str(err)
+    return otx_enabled
+
+
+@require_db
+def check_any_innodb_tables():
+    """
+        Check if any Alienvault system database is ussing an innodb engine
+        Return  a tuple (success, result), where success signals that there
+        ins't any error and result, True or False. Return the list
+        of databases with innodb tables
+    """
+    tables = ['datawarehouse.incidents_ssi',
+              'datawarehouse.ip2country',
+              'datawarehouse.report_data',
+              'datawarehouse.ssi',
+              'alienvault.sem_stats_events',
+              'alienvault.event',
+              'alienvault.extra_data',
+              'alienvault.idm_data',
+              'alienvault_siem.acid_event',
+              'alienvault_siem.extra_data',
+              'alienvault_siem.idm_data',
+              'alienvault_siem.reputation_data',
+              'alienvault_siem.po_acid_event',
+             ]
+    result = []
+    for table in tables:
+        try:
+            (schema,t) = table.split(".")
+            query = """SELECT  table_schema,table_name FROM INFORMATION_SCHEMA.TABLES""" \
+                    """ WHERE engine = 'innodb' AND """ \
+                    """ table_schema = '%s' AND table_name = '%s'""" % (schema,t)
+            databases = db.session.connection(mapper=System).execute(query)
+            result = result + [(row[0],row[1]) for row in databases.fetchall()]
+        except NoResultFound:
+            pass
+        except Exception, msg:
+            db.session.rollback()
+            return (False, str(msg))
+    return True, result
+
+
+@require_db
+def get_wizard_data():
+    """
+        Returns all the wizard data
+    """
+    success = True
+    start_welcome_wizard = 0
+    welcome_wizard_date = 0
+    try:
+        try:
+            result = db.session.query(Config).filter(Config.conf == 'start_welcome_wizard').one()
+            start_welcome_wizard = int(result.value)
+        except NoResultFound as e:
+            start_welcome_wizard = 0
+
+        try:
+            result = db.session.query(Config).filter(Config.conf == 'welcome_wizard_date').one()
+            welcome_wizard_date = int(result.value)
+        except NoResultFound as e:
+            welcome_wizard_date = 0
+
+    except Exception as e:
+        db.session.rollback()
+        welcome_wizard_date = 0
+        start_welcome_wizard = 0
+        success = False
+    return (success, start_welcome_wizard, welcome_wizard_date)
+
+
+@require_db
+def get_trial_expiration_date():
+    """
+        Checks if a Trial version has expired, based on the license stored in the database
+    """
+    # mysql> select * from config where conf='license'\G;
+
+    #     *************************** 1. row ***************************
+    #      conf: license
+    #     value: [sign]
+    #     sign=MC0CFQDX91hNahI2ZpRuxvJ7R0ht6A5+3gIUA4XYcYqdYZt/j0kOzc9yPWIPSlw=
+    #     [appliance]
+    #     key=av_devel_test_pro_key
+    #     system_id=564d3bf3-e1ae-e32b-4dc0-83e45a48d02d
+    #     expire=9999-12-31
+
+    #     1 row in set (0.00 sec)
+    success = True
+    try:
+        result = db.session.query(Config).filter(Config.conf == 'license').one()
+        expires = str(result.value).split()[-1]
+        message = ""
+    except NoResultFound:
+        success = False
+        expires = ""
+        message = "There is no license parameter stored in the database"
+    except Exception as e:
+        success = False
+        expires = ""
+        message = "There has been an error checking the license parameter in the database: %s" % str(e)
+
+    return success, expires, message
+
+
+@require_db
+def check_backup_process_running():
+    """
+    Checks if a backup purge/restore process is running
+    """
+    running = False
+    success = False
+    try:
+        result = db.session.query(Restoredb_Log).filter(Restoredb_Log.status == 1).one()
+        running = True
+        success = True
+        message = ""
+    except NoResultFound:
+        running = False
+        success = True
+        message = ""
+    except Exception as e:
+        success = False
+        running = False
+        message = "There has been an error checking if there is a backup process running: %s" % str(e)
+
+    return success, running, message

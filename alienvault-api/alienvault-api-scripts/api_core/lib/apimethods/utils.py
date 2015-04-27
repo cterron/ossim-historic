@@ -36,12 +36,13 @@ import pwd
 import grp
 import stat
 import api_log
-from subprocess import check_call,CalledProcessError
+from subprocess import check_call, CalledProcessError
 
 valid_ip4_cidr_regex = re.compile('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))?$')
 valid_ossec_agent_id_regex = re.compile('^[0-9]{1,4}$')
 
 BASE_PATH = "/var/alienvault/%s"
+BOOL_VALUES = ['0', '1', 'false', 'FALSE', 'False', 'true', 'True', 'TRUE']
 
 
 def get_float_value_from_string(value):
@@ -97,7 +98,7 @@ def get_bytes_from_uuid(uuid_str):
         id = UUID(uuid_str)
         id_str = str(id.bytes)
     except Exception, e:
-        print "Invalid uuid %s" % str(e)
+        print "Invalid uuid %s" % str(uuid_str)
     return id_str
 
 
@@ -194,19 +195,20 @@ def set_owner_and_group(user, group, filename):
     try:
         uid = pwd.getpwnam(user).pw_uid
         gid = grp.getgrnam(group).gr_gid
-        os.chown(filename,int(uid),int(gid))
+        os.chown(filename,int(uid), int(gid))
     except Exception as err:
-        api_log.error("Error setting the owner/group to the file %s <%s>" % (filename,str(err)))
-        return  False, "Error setting the owner/group to the file %s <%s>" % (filename,str(err))
-    return  True, ""
+        api_log.error("Error setting the owner/group to the file %s <%s>" % (filename, str(err)))
+        return False, "Error setting the owner/group to the file %s <%s>" % (filename, str(err))
+    return True, ""
+
 
 def set_file_permissions(filename, mode):
     try:
-        os.chmod(filename,mode)
+        os.chmod(filename, mode)
     except Exception as err:
-        api_log.error("Error setting the permissions to the file %s <%s>" % (filename,str(err)))
-        return  False, "Error setting the permissions to the file %s <%s>" % (filename,str(err))
-    return  True, ""
+        api_log.error("Error setting the permissions to the file %s <%s>" % (filename, str(err)))
+        return False, "Error setting the permissions to the file %s <%s>" % (filename, str(err))
+    return True, ""
 
 
 def set_ossec_file_permissions(filename):
@@ -219,6 +221,7 @@ def set_ossec_file_permissions(filename):
         return success,result
     return True, ""
 
+
 def touch_file(path):
     try:
         with open(path, 'a'):
@@ -227,6 +230,7 @@ def touch_file(path):
         return False
     return True
 
+
 def is_valid_integer(value):
     try:
         value = int(value)
@@ -234,20 +238,35 @@ def is_valid_integer(value):
         return False
     return True
 
-def compare_dpkg_version(v1,v2):
+
+def compare_dpkg_version(v1, v2):
     """
         Compare two dpkg version v1 and v2
         Execute on LOCAL!!!!
     """
     try:
-        check_call(["dpkg","--compare-versions",v1,"eq",v2])
+        check_call(["dpkg", "--compare-versions", v1, "eq", v2])
         return "equal"
     except CalledProcessError:
-        pass 
+        pass
     try:
-        check_call(["dpkg","--compare-versions",v1,"gt",v2])
+        check_call(["dpkg", "--compare-versions", v1, "gt", v2])
         return "greater"
     except CalledProcessError:
         pass
     return "less"
 
+
+def secure_path_join(base_path, *args):
+    """ Avoid directory traversal attacks
+    """
+    try:
+        absolute_path = os.path.join(base_path, *args)
+        normalized_path = os.path.normpath(absolute_path)
+
+        if not normalized_path.startswith(base_path):
+            return False, "Invalid path"
+    except Exception as e:
+        return False, "Error building path: %s" % str(e)
+
+    return True, normalized_path

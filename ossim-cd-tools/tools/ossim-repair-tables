@@ -9,6 +9,7 @@
 
 if [ "$1" == '--orphans' ]; then
 
+    dpkg --status alienvault-professional > /dev/null 2>&1 && is_pro=1 || is_pro=0
     PRE="/usr/share/doc/ossim-mysql/contrib/misc/alienvault_siem_pre_rebuild.sql"
     POST="/usr/share/doc/ossim-mysql/contrib/misc/alienvault_siem_post_rebuild.sql"
     alias df='df'
@@ -24,6 +25,14 @@ if [ "$1" == '--orphans' ]; then
         if [ -f "$PRE" ] && [ -f "$POST" ]; then
             echo -n "Preparing tables..."
             cat "$PRE" | ossim-db alienvault_siem
+            if [ $is_pro -eq 1 ]; then
+                echo "alter table acid_event engine=tokudb;" | ossim-db alienvault_siem
+                echo "alter table extra_data engine=tokudb;" | ossim-db alienvault_siem
+                echo "alter table idm_data engine=tokudb;" | ossim-db alienvault_siem
+                echo "alter table reputation_data engine=tokudb;" | ossim-db alienvault_siem
+                echo "alter table po_acid_event engine=tokudb;" | ossim-db alienvault_siem
+                echo "DROP TRIGGER IF EXISTS count_acid_event;" | ossim-db alienvault_siem
+            fi
             echo "done."
             echo -n "Fix orphans devices, this may take a while."
             echo "CALL _clean_devices();" | ossim-db alienvault_siem | perl -npe 'BEGIN{$|=1} s/\n//'
@@ -51,19 +60,10 @@ if [ "$1" == '--orphans' ]; then
 
 else
     
-    QUERY="SELECT CONCAT(table_schema,'.',table_name) AS table_list FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND engine = 'MyISAM'"
-    if [ -z $1 ]; then
-      echo Repairing all databases
-      echo "-----------------------"
-    else
-      QUERY="$QUERY AND table_schema = '$1'"
-      echo $QUERY
-      echo -e "\n[-] Checking $1 database";
-    fi
-    
-    for i in `echo $QUERY | ossim-db | grep -v table_list`; do
-        echo -e "\t[+] Repairing $i";
-        echo "REPAIR TABLE $i;" | ossim-db
-    done
+    OSSIM_SETUP_CONF_FILE="/etc/ossim/ossim_setup.conf"
+    DBPASS=$(grep ^pass= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
+    DBHOST=$(grep ^db_ip= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
+    DBUSER=$(grep ^user= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
+    mysqlcheck -h $DBHOST -u $DBUSER -p$DBPASS --auto-repair --all-databases
 
 fi

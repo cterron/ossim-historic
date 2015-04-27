@@ -14,7 +14,7 @@
 
 if (count($argv)==0) 
 {
-    ini_set('memory_limit', '2048M');
+    ini_set('memory_limit', '4096M');
     require_once 'av_init.php';
     Session::logcheck("analysis-menu", "EventsForensics");
 }
@@ -153,7 +153,7 @@ $chart_bar_color_default = array(
 /* Maximum number of rows per criteria element */
 $MAX_ROWS = 10;
 /* Number of rows to display for any query results */
-$show_rows = 50;
+$show_rows = (preg_match('/base_stat_.*/', $_SERVER['SCRIPT_NAME'])) ? 25 : 50;
 /* Number of items to return during a snapshot
 *  Last _X_ # of alerts/unique alerts/ports/IP
 */

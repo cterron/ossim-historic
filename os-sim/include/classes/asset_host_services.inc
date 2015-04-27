@@ -51,7 +51,7 @@
 * @package    ossim-framework\Asset
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Asset_host_services
@@ -181,7 +181,7 @@ class Asset_host_services
         }
         else
         {
-            $exp_msg = _('Error! Host ID is not valid');
+            $exp_msg = _('Error! Asset ID is not valid');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -223,7 +223,7 @@ class Asset_host_services
     {
         Ossim_db::check_connection($conn);
 
-        $query = 'SELECT host_services.*, inet6_ntop(host_services.host_ip) AS ip, host_source_reference.name as source_name,
+        $query = 'SELECT host_services.*, inet6_ntoa(host_services.host_ip) AS ip, host_source_reference.name as source_name,
             HEX(host_services.host_id) AS host_id FROM host_services
             LEFT JOIN host_source_reference ON host_services.source_id = host_source_reference.id
             WHERE host_id = UNHEX(?) ORDER BY last_modified DESC';
@@ -291,7 +291,7 @@ class Asset_host_services
                 'id'   => $s_data['source_id'],
                 'name' => $s_data['source_name'],
             ),
-            'date'          => $s_data['date']
+            'date' => $s_data['date']
         );
 
         return TRUE;
@@ -375,7 +375,7 @@ class Asset_host_services
                 foreach($_aux_2 as $s_protocol => $s_data)
                 {
                     $query = 'REPLACE INTO host_services (host_id, host_ip, port, protocol, service, version, last_modified, source_id, nagios)
-                        VALUES (UNHEX(?), INET6_PTON(?), ?, ?, ?, ?, ?, ?, ?)';
+                        VALUES (UNHEX(?), INET6_ATON(?), ?, ?, ?, ?, ?, ?, ?)';
 
                     $params = array(
                         $this->host_id,
@@ -397,7 +397,7 @@ class Asset_host_services
         //Finish transaction
         if (!$conn->CompleteTrans())
         {
-            $exp_msg = _('Error! Host services could not be saved');
+            $exp_msg = _('Error! Asset services could not be saved');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -450,7 +450,7 @@ class Asset_host_services
         //Check if we can add/update the services
         if (Asset_host::is_allowed($conn, $host_id) != TRUE)
         {
-            $exp_msg = _("Error! Host does not exists or you don't have permissions");
+            $exp_msg = _("Error! Asset does not exists or you do not have the correct permissions");
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -471,7 +471,7 @@ class Asset_host_services
                         last_modified,
                         source_id,
                         nagios)
-                      VALUES (UNHEX(?), INET6_PTON(?), ?, ?, ?, ?, ?, ?, ?)';
+                      VALUES (UNHEX(?), INET6_ATON(?), ?, ?, ?, ?, ?, ?, ?)';
 
             $params = array(
                 $host_id,
@@ -522,14 +522,14 @@ class Asset_host_services
     *
     * @return boolean
     */
-    public static function delete_service_from_db($conn, $host_id, $ip, $port, $protocol, $report_changes = FALSE)
+    public static function delete_service_from_db($conn, $host_id, $ip = '', $port = '', $protocol = '', $report_changes = FALSE)
     {
         Ossim_db::check_connection($conn);
 
         //Check if we can delete the sensor
         if (Asset_host::is_allowed($conn, $host_id) != TRUE)
         {
-            $exp_msg = _("Error! Host does not exists or you don't have permissions");
+            $exp_msg = _("Error! Asset does not exists or you do not have the correct permissions");
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -540,7 +540,7 @@ class Asset_host_services
 
         if ($ip != '')
         {
-            $query   .= ' AND host_ip = INET6_PTON(?)';
+            $query   .= ' AND host_ip = INET6_ATON(?)';
             $params[] = $ip;
         }
 
@@ -597,7 +597,7 @@ class Asset_host_services
         //Check if we can delete the sensor
         if (Asset_host::is_allowed($conn, $host_id) != TRUE)
         {
-            $exp_msg = _("Error! Host does not exists or you don't have permissions");
+            $exp_msg = _("Error! Asset does not exists or you do not have the correct permissions");
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -813,7 +813,7 @@ class Asset_host_services
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
 
-        $query = "SELECT $q_select host_services.*, HEX(h.id) AS h_id, inet6_ntop(host_services.host_ip) AS ip,
+        $query = "SELECT $q_select host_services.*, HEX(h.id) AS h_id, inet6_ntoa(host_services.host_ip) AS ip,
             host_source_reference.name AS source_name, host_source_reference.relevance AS source_relevance, software_cpe.line AS cpe
             FROM host h, host_services
             LEFT JOIN host_source_reference ON host_services.source_id = host_source_reference.id
@@ -953,6 +953,105 @@ class Asset_host_services
         }
 
         return array($services, $total);
+    }
+
+
+    /**
+    * This function enable/disable Nagios by service
+    *
+    * @param object   $conn            Database access object
+    * @param string   $host_id         Host ID
+    * @param integer  $nagios          Enable/disable Nagios (0 or 1)
+    * @param string   $ip              [Optional] Host IP
+    * @param integer  $port            [Optional] Port service
+    * @param boolean  $report_changes  [Optional] Report changes to other components
+    *
+    * @throws Exception  If an error occurred
+    *
+    * @return boolean
+    */
+    public static function toggle_nagios($conn, $host_id, $nagios, $ip = '', $port = '', $protocol = '', $report_changes = FALSE)
+    {
+        Ossim_db::check_connection($conn);
+
+        //Check if we can delete the sensor
+        if (Asset_host::is_allowed($conn, $host_id) != TRUE)
+        {
+            $exp_msg = _("Error! Asset does not exists or you do not have the correct permissions");
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+        }
+
+        $query = 'UPDATE host_services SET nagios = ? WHERE host_id = UNHEX(?)';
+
+        $params = array(intval($nagios), $host_id);
+
+        if ($ip != '')
+        {
+            $query   .= ' AND host_ip = INET6_ATON(?)';
+            $params[] = $ip;
+        }
+
+        if ($port != '')
+        {
+            $query   .= ' AND port = ?';
+            $params[] = $port;
+        }
+
+        if ($protocol != '')
+        {
+            $query   .= ' AND protocol = ?';
+            $params[] = $protocol;
+        }
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if ($report_changes == TRUE)
+        {
+            try
+            {
+                Asset_host::report_changes($conn, 'hosts');
+            }
+            catch(Exception $e)
+            {
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+            }
+        }
+
+        return TRUE;
+    }
+
+
+    /**
+    * This function translates Nagios code to text
+    *
+    * @param integer  $nagios_code  Nagios Code
+    *
+    * @return string
+    */
+    public static function get_nagios_status_by_code($nagios_code)
+    {
+        $nagios_code = intval($nagios_code);
+
+        $nagios_codes = array(
+            '0' => _('OK'),
+            '1' => _('WARNING'),
+            '2' => _('CRITICAL')
+        );
+
+        $nagios_status = '-';
+
+        if (array_key_exists($nagios_code, $nagios_codes))
+        {
+            $nagios_status = $nagios_codes[$nagios_code];
+        }
+
+        return $nagios_status;
     }
 }
 

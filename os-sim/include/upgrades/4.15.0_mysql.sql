@@ -46,11 +46,11 @@ SENSOR:BEGIN
     DECLARE y INT;
     
     -- needed params
-    IF INET6_PTON(ip) IS NOT NULL AND NOT user = '' THEN
+    IF INET6_ATON(ip) IS NOT NULL AND NOT user = '' THEN
     
         -- check params
         SELECT IF (uuid='',UPPER(REPLACE(UUID(), '-', '')),UPPER(uuid)) into @uuid;
-        SET @ip = HEX(INET6_PTON(ip));
+        SET @ip = HEX(INET6_ATON(ip));
         SELECT IF (name='','(null)',name) into @name;
         SELECT IF (prio<1 OR prio>10,5,prio) into @prio;
         SELECT IF (port<1 OR port>65535,40001,port) into @port;
@@ -140,7 +140,7 @@ SENSOR:BEGIN
 
         -- Default nessus host
         IF @nessus_host = '' THEN
-            REPLACE INTO alienvault.config VALUES ('nessus_host',INET6_NTOP(UNHEX(@ip)));
+            REPLACE INTO alienvault.config VALUES ('nessus_host',INET6_NTOA(UNHEX(@ip)));
             REPLACE INTO alienvault.config VALUES ('nessus_pass',AES_ENCRYPT('ossim',@system_uuid));
         END IF;
 
@@ -203,7 +203,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM sensor WHERE id=UNHEX(@uuid)) THEN
         SELECT IFNULL(vpn_ip,IFNULL(ha_ip,IFNULL(admin_ip,ip))) FROM sensor LEFT JOIN system ON sensor.id=system.sensor_id WHERE sensor.id=UNHEX(@uuid) into @ip;
     END IF;
-    RETURN INET6_NTOP(@ip);
+    RETURN INET6_NTOA(@ip);
 END$$
 
 DROP FUNCTION IF EXISTS get_ip_by_server_id$$
@@ -215,7 +215,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM server WHERE id=UNHEX(@uuid)) THEN
         SELECT IFNULL(vpn_ip,IFNULL(ha_ip,IFNULL(admin_ip,ip))) FROM server LEFT JOIN system ON server.id=system.server_id WHERE server.id=UNHEX(@uuid) into @ip;
     END IF;
-    RETURN INET6_NTOP(@ip);
+    RETURN INET6_NTOA(@ip);
 END$$
 
 DROP FUNCTION IF EXISTS get_ip_by_system_id$$
@@ -227,7 +227,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM system WHERE id=UNHEX(@uuid)) THEN
         SELECT IFNULL(vpn_ip,IFNULL(ha_ip,admin_ip)) FROM system WHERE id=UNHEX(@uuid) into @ip;
     END IF;
-    RETURN INET6_NTOP(@ip);
+    RETURN INET6_NTOA(@ip);
 END$$
 
 DROP PROCEDURE IF EXISTS _acl_fill_subnets$$
@@ -269,7 +269,7 @@ UPDATE_SYSTEM:BEGIN
 
             SELECT IF (_sensor_id='',NULL,REPLACE(_sensor_id,'-','')) into @sensor_id;
             SELECT IF (_server_id='',NULL,REPLACE(_server_id,'-','')) into @server_id;
-            REPLACE INTO `system` (id,name,admin_ip,vpn_ip,profile,ha_ip,ha_name,ha_role,sensor_id,server_id) VALUES (UNHEX(@system_id), _name, inet6_pton(_admin_ip), inet6_pton(_vpn_ip), _profile, inet6_pton(_ha_ip), _ha_name, _ha_role, UNHEX(@sensor_id), UNHEX(@server_id));
+            REPLACE INTO `system` (id,name,admin_ip,vpn_ip,profile,ha_ip,ha_name,ha_role,sensor_id,server_id) VALUES (UNHEX(@system_id), _name, inet6_aton(_admin_ip), inet6_aton(_vpn_ip), _profile, inet6_aton(_ha_ip), _ha_name, _ha_role, UNHEX(@sensor_id), UNHEX(@server_id));
             
         ELSE
         
@@ -309,29 +309,29 @@ UPDATE_SYSTEM:BEGIN
         END IF;
 
         IF (_ha_ip != '' AND _ha_name != '' AND _ha_role != '') THEN
-            UPDATE alienvault.system SET ha_ip=inet6_pton(_ha_ip), ha_name=_ha_name, ha_role=_ha_role WHERE id=UNHEX(@system_id);    
+            UPDATE alienvault.system SET ha_ip=inet6_aton(_ha_ip), ha_name=_ha_name, ha_role=_ha_role WHERE id=UNHEX(@system_id);    
         END IF;
         
         IF (_admin_ip != '' OR _vpn_ip != '') THEN
 
             -- admin_ip or vpn_ip populate in server/sensor
             IF (_admin_ip != '') THEN
-                UPDATE alienvault.system SET admin_ip=inet6_pton(_admin_ip) WHERE id=UNHEX(@system_id);    
+                UPDATE alienvault.system SET admin_ip=inet6_aton(_admin_ip) WHERE id=UNHEX(@system_id);    
             END IF;
 
             IF (_vpn_ip != '') THEN
-                UPDATE alienvault.system SET vpn_ip=inet6_pton(_vpn_ip) WHERE id=UNHEX(@system_id);    
+                UPDATE alienvault.system SET vpn_ip=inet6_aton(_vpn_ip) WHERE id=UNHEX(@system_id);    
             END IF;
 
             -- Populate admin_ip if the system is not HA
-            SELECT inet6_ntop(ha_ip) FROM alienvault.system WHERE id=UNHEX(@system_id) into @ha_ip;
+            SELECT inet6_ntoa(ha_ip) FROM alienvault.system WHERE id=UNHEX(@system_id) into @ha_ip;
 
             IF @ha_ip IS NULL OR @ha_ip = '' THEN
-                SELECT HEX(sensor_id),HEX(server_id),inet6_ntop(admin_ip),inet6_ntop(vpn_ip) FROM alienvault.system WHERE id=UNHEX(@system_id) into @sensor_id, @server_id, @admin_ip, @vpn_ip;
+                SELECT HEX(sensor_id),HEX(server_id),inet6_ntoa(admin_ip),inet6_ntoa(vpn_ip) FROM alienvault.system WHERE id=UNHEX(@system_id) into @sensor_id, @server_id, @admin_ip, @vpn_ip;
                 
-                UPDATE server SET ip=inet6_pton(@admin_ip) WHERE id=UNHEX(@server_id);
+                UPDATE server SET ip=inet6_aton(@admin_ip) WHERE id=UNHEX(@server_id);
                 
-                UPDATE sensor SET ip=IFNULL(inet6_pton(@vpn_ip),inet6_pton(@admin_ip)) WHERE id=UNHEX(@sensor_id);
+                UPDATE sensor SET ip=IFNULL(inet6_aton(@vpn_ip),inet6_aton(@admin_ip)) WHERE id=UNHEX(@sensor_id);
             END IF;
 
         END IF;

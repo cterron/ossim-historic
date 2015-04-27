@@ -125,17 +125,27 @@ foreach($_POST as $key => $value)
         {
 			Alarm::close($conn, $found[1]);
 		}
-		elseif ($move_tag != "") 
-		{
+        elseif ($move_tag != "")
+        {
+            $tag = Tag::get_object($conn, $move_tag);
+
             if ($move_tag > 0)
             {
-                Tags::set_alarm_tag($conn,$found[1],$move_tag);
+                $tag->add_component($conn, $found[1]);
             }
-            else 
+            else if ($move_tag == 0)
             {
-                Tags::del_alarm_tag($conn,$found[1],$move_tag); # $move_tag=0 delete all, $move_tag<0 delete only a tag
+                $component_tags = Tag::get_tags_by_component($conn, $found[1]);
+                foreach ($component_tags as $tag)
+                {
+                    $tag->remove_component($conn, $found[1]);
+                }
             }
-		}
+            else
+            {
+                $tag->remove_component($conn, $found[1]);
+            }
+        }
         else 
         {
            $result = Alarm::delete_backlog($conn, $found[1]);

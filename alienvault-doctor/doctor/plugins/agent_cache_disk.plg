@@ -2,6 +2,7 @@
 name=Agent Cache Disk
 description=Check the disk space used by the agent cache
 category=alienvault,platform
+profiles=Sensor:>4.0
 type=command
 command=echo $(du -b /var/ossim/agent_events | cut -f1)*100/$(df -B1 | grep sda1 | awk '{ print $3 }') | bc
 requires=@dpkg:alienvault-professional

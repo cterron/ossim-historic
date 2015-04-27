@@ -2,6 +2,7 @@
 name=Packages installed
 description=Check if the packages are properly installed
 category=system
+strike_zone=True
 type=command
 command=dpkg -l
 raw_limit=100

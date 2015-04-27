@@ -162,11 +162,12 @@ function showLayer(theSel, number) {
 	}
 	
 	// Show selected form
-	
-	if ( number != 0 ) {
+	if ( number != undefined && number != 0 ) 
+	{
 		document.getElementById(theSel + number).style.display = 'block';
 	}
-	if ( theSel == 'idSched' && number > 2 ) {	
+	if ( theSel == 'idSched' && number != undefined && number > 2 ) 
+	{	
 		document.getElementById('idSched2').style.display = 'block';
 	}
     

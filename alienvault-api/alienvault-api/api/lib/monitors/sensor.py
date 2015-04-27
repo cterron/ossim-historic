@@ -266,7 +266,7 @@ class MonitorSensorLocation(Monitor):
 
 class MonitorSensorDroppedPackages(Monitor):
     """Class to monitor dropped packets on every sensor in the system"""
-    def __init__ (self):
+    def __init__(self):
         Monitor.__init__(self, MonitorTypes.MONITOR_DROPPED_PACKAGES)
         self.message = 'Sensor Dropped Packets monitor started'
 
@@ -282,7 +282,7 @@ class MonitorSensorDroppedPackages(Monitor):
             if not rc:
                 logger.error("Can't retrieve sensor list: %s" % str(sensor_list))
                 return False
-            for (sensor_id,sensor_ip) in sensor_list:
+            for (sensor_id, sensor_ip) in sensor_list:
                 if sensor_id == '':
                     logger.warning("Sensor (%s) ID not found" % sensor_ip)
                     continue
@@ -291,8 +291,8 @@ class MonitorSensorDroppedPackages(Monitor):
                 # print sensor_stats
                 try:
                     packet_lost_average = sensor_stats["contacted"][sensor_ip]["stats"]["packet_lost_average"]
-                    monitor_data = {'packet_loss':packet_lost_average}
-                    logger.info("Lost packet average for sensor: %s =  %s" %(sensor_ip,packet_lost_average))
+                    monitor_data = {'packet_loss': packet_lost_average}
+                    logger.info("Lost packet average for sensor: %s =  %s" % (sensor_ip, packet_lost_average))
                     #Save data component_id = canonical uuid
                     if not self.save_data(sensor_id, ComponentTypes.SENSOR, self.get_json_message(monitor_data)):
                         logger.error("Can't save monitor info")
@@ -301,10 +301,11 @@ class MonitorSensorDroppedPackages(Monitor):
 
         except Exception, e:
             logger.error("Something wrong happen while running the monitor..%s, %s" % (self.get_monitor_id(),
-                str(e)))
+                                                                                       str(e)))
             rt = False
 
         return rt
+
 
 class MonitorPluginsVersion(Monitor):
     """
@@ -312,10 +313,11 @@ class MonitorPluginsVersion(Monitor):
         version with the local alienvault-plugins-sid package and store data in
         monitor data
     """
-    def __init__ (self):
+
+    def __init__(self):
         Monitor.__init__(self, MonitorTypes.MONITOR_PLUGINS_VERSION)
         self.message = 'Sensor Plugin Monitor info started'
-        
+
     def start(self):
         """
             Start monitor
@@ -338,27 +340,30 @@ class MonitorPluginsVersion(Monitor):
                         continue
                     (success, info) = get_plugin_package_info_from_sensor_id(sensor_id)
                     if success:
-                        if  info['version'] != '':
-                            data_sensor = {'version': info['version'], 'md5': info['md5'], 'comparison':compare_dpkg_version(info['version'], local_version['version'])}
+                        if info['version'] != '':
+                            data_sensor = {'version': info['version'],
+                                           'md5': info['md5'],
+                                           'comparison': compare_dpkg_version(info['version'], local_version['version'])}
                         else:
-                            data_sensor = {'version': info['version'], 'md5': info['md5'], 'comparison':''}
-                        if not self.save_data(sensor_id,  ComponentTypes.SENSOR, self.get_json_message(data_sensor)):
+                            data_sensor = {'version': info['version'],
+                                           'md5': info['md5'],
+                                           'comparison': ''}
+                        if not self.save_data(sensor_id, ComponentTypes.SENSOR, self.get_json_message(data_sensor)):
                             logger.error("Can't save monitor info for sensor '%s'" % sensor_id)
                     else:
-                        logger.warning ("Can't obtain plugin version for sensor '%s'", sensor_id)
+                        logger.warning("Can't obtain plugin version for sensor '%s'", sensor_id)
                 else:
-                        logger.warning ("Can't obtain sensor_id for system_id '%s'", system_id)
-                
+                        logger.warning("Can't obtain sensor_id for system_id '%s'", system_id)
+
         except Exception, e:
             logger.error("Something wrong happen while running the monitor..%s, %s" % (self.get_monitor_id(),
-                    str(e)))
+                         str(e)))
             rt = False
         return rt
 
 
-
 class MonitorPluginIntegrity(Monitor):
-    """ 
+    """
         Check if installed sensor plugins and sensor rsyslog files have been modified or removed locally
     """
     def __init__(self):
@@ -391,6 +396,6 @@ class MonitorPluginIntegrity(Monitor):
                 except Exception as e:
                     logger.error("[MonitorPluginIntegrity] Error: %s" % str(e))
             else:
-                logger.error ("Can't obtain integrity plugin information for system '%s'", system_id)
+                logger.error("Can't obtain integrity plugin information for system '%s'", system_id)
 
         return True

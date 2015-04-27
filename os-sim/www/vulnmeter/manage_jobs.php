@@ -193,7 +193,7 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
 				url: "manage_jobs.php",
 				data: { disp: "kill", sid: id },
 				success: function(msg) {
-					alert("<?php echo Util::js_entities(_("Cancelling job, please wait a few seconds. Server will stop current scan as soon as possible."))?>");
+					alert("<?php echo Util::js_entities(_("Cancelling job, please wait a few seconds. Sensor will stop current scan as soon as possible."))?>");
 					document.location.reload();
 				}
 			});
@@ -209,7 +209,7 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
         				$.ajax({
         					type: "GET",
         					url: "sched.php",
-        					data: { disp: 'delete_scan', job_id: id },
+        					data: { action: 'delete_scan', job_id: id },
         					success: function(msg) {
             					document.location.reload();
         					}
@@ -478,6 +478,8 @@ function delete_sched( $schedid ) {
     if ( $jid > 0 ) {
        $query = "DELETE FROM vuln_job_schedule WHERE id = '$schedid' $sql_require";
        $result=$dbconn->Execute($query);
+       
+        Vulnerabilities::update_vuln_job_assets($dbconn, 'delete', $schedid, 0);
 
         $infolog = array($nname);
         Log_action::log(68, $infolog);
@@ -504,6 +506,11 @@ function set_status ( $schedid, $enabled ) {
     list( $jid, $nname ) = $result->fields;
 
     if ( $jid > 0 ) {
+        
+       $action = (intval($enabled) == 1) ? 'insert' : 'delete';
+        
+       Vulnerabilities::update_vuln_job_assets($dbconn, $action, $schedid, 0);
+        
        $query = "UPDATE vuln_job_schedule SET enabled ='$enabled' WHERE id = '$schedid' $sql_require";
        $result=$dbconn->Execute($query);
 
@@ -537,7 +544,7 @@ function main_page ( $viewall, $sortby, $sortdir )
 
 			<div style="width:100%; position: absolute; top: -41px;left:0px;">
     			<div style="float:left; height:28px; margin:5px 5px 0px 0px;">
-    				<a class="button" href="<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?smethod=schedule&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities', 'scan_jobs');?>">
+    				<a class="button" href="<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?action=create_scan&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities', 'scan_jobs');?>">
                             <?php echo _("New Scan Job");?>
     				</a>
     			</div>
@@ -626,17 +633,26 @@ else {
 
         $name    = Av_sensor::get_name_by_id($dbconn, $servers);
 
-        $servers = ( $name != '' ) ? $name : "unknown";
+        $servers = ( $name != '' ) ? $name : _('First Available Sensor');
 
         $targets_to_resolve = explode("\n", $targets);
         $ttargets           = array();
 
-        foreach($targets_to_resolve as $id_ip) {
+        foreach($targets_to_resolve as $id_ip)
+        {            
             if( preg_match("/^([a-f\d]{32})#\d+\.\d+\.\d+\.\d+\/\d{1,2}/i", $id_ip, $found) && Asset_net::is_in_db($dbconn, $found[1])) {
                 $ttargets[] = preg_replace("/^([a-f\d]{32})#/i", "", $id_ip)." (".Asset_net::get_name_by_id($dbconn, $found[1]).")";
             }
             else if( preg_match("/^([a-f\d]{32})#\d+\.\d+\.\d+\.\d+/i", $id_ip, $found) &&  Asset_host::is_in_db($dbconn, $found[1])) {
                 $ttargets[] = preg_replace("/^([a-f\d]{32})#/i", "", $id_ip)." (".Asset_host::get_name_by_id($dbconn, $found[1]).")";
+            }
+            else if( preg_match("/^([a-f\d]{32})#hostgroup/i", $id_ip, $found)) {
+                $hostgroup_name = Asset_group::get_name_by_id($dbconn, $found[1]);
+                $ttargets[] = ($hostgroup_name == _('Unknown')) ? _('Unknown hostgroup') : $hostgroup_name;
+            }
+            else if( preg_match("/^([a-f\d]{32})#netgroup/i", $id_ip, $found)) {
+                $netgroup_name  = Net_group::get_name_by_id($dbconn, $found[1]);
+                $ttargets[] = ($netgroup_name == _('Unknown')) ? _('Unknown netgroup') : $netgroup_name;
             }
             else {
                 $ttargets[] = preg_replace("/[a-f\d]{32}/i","",$id_ip);
@@ -713,7 +729,7 @@ else {
 
        echo "<tr bgcolor=\"".$colors[$color%2]."\">";
     if ($profile=="") $profile=_("Default");
-    echo "<td><span class=\"tip\" title=\"<b>"._("Owner").":</b> $user<br><b>"._("Server").":</b> $servers<br /><b>"._("Scheduled Job ID").":</b> $schedid<br><b>"._("Profile").":</b> $profile<br><b>"._("Targets").":</b><br>".$targets."\">$schedname</span></td>";
+    echo "<td><span class=\"tip\" title=\"<b>"._("Owner").":</b> $user<br><b>"._("Sensor").":</b> $servers<br /><b>"._("Scheduled Job ID").":</b> $schedid<br><b>"._("Profile").":</b> $profile<br><b>"._("Targets").":</b><br>".$targets."\">$schedname</span></td>";
 ?>
     <td><?php echo $stt ?></td>
     <td><?php echo $time ?></td>
@@ -724,7 +740,7 @@ else {
     <td style="padding-top:2px;"><a href="$ilink"><img alt="$itext" src="$isrc" border=0 title="$itext"></a>&nbsp;
 EOT;
     if (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) {
-    echo "<a href='".Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?disp=edit_sched&sched_id='.$schedid.'&status='.intval($schedstatus), 'environment', 'vulnerabilities', 'scan_jobs')."'><img src='images/pencil.png' title='"._("Edit Scheduled")."'></a>&nbsp;";
+    echo "<a href='".Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?action=edit_sched&sched_id='.$schedid.'&status='.intval($schedstatus), 'environment', 'vulnerabilities', 'scan_jobs')."'><img src='images/pencil.png' title='"._("Edit Scheduled")."'></a>&nbsp;";
     echo "<a href='manage_jobs.php?disp=delete&amp;schedid=$schedid' onclick='return confirmDelete();'><img src='images/delete.gif' title='".gettext("Delete Scheduled")."'></a>";
     }
     echo "</td>";

@@ -109,12 +109,12 @@ class BPMember:
 
     def get_net_availability(self, net_id):
         #query = "select hex(id) from host;"
-        query = "select hex(host.id) as id , inet6_ntop(host_ip.ip) as ip from host, host_ip where host.id = host_ip.host_id;"
+        query = "select hex(host.id) as id , inet6_ntoa(host_ip.ip) as ip from host, host_ip where host.id = host_ip.host_id;"
         host_list = _DB.exec_query(query)
         tmp_availability = 0
         for host in host_list:
             #look for the host inside the network.
-            query = "select c.cidr from net_cidrs c,net n where n.id=c.net_id and c.begin<=inet6_pton('%s') and c.end>=inet6_pton('%s') and hex(n.id)='%s' order by hex(c.end)-hex(c.begin) asc;" % (host['ip'], host['ip'], net_id)
+            query = "select c.cidr from net_cidrs c,net n where n.id=c.net_id and c.begin<=inet6_aton('%s') and c.end>=inet6_aton('%s') and hex(n.id)='%s' order by hex(c.end)-hex(c.begin) asc;" % (host['ip'], host['ip'], net_id)
             result = _DB.exec_query(query)
             if result != []:
                 query = "select severity as ha from bp_member_status where member_id=unhex('%s') and measure_type='host_availability';" % host['id']
@@ -386,7 +386,7 @@ class MeasureList:
                     request="""
                     select e.userdata1 as host_availability 
                         FROM alienvault_siem.acid_event a, alienvault_siem.extra_data e 
-                        WHERE a.id = e.event_id and a.ip_src = inet6_pton("%s") and 
+                        WHERE a.id = e.event_id and a.ip_src = inet6_aton("%s") and 
                         a.plugin_id = 1525 order by a.timestamp desc limit 1;
                     """ % (self.ip),
                     severity_max=70,
@@ -703,7 +703,7 @@ class BusinessProcesses(threading.Thread):
                     continue
 
                 if m['member_type'] == 'host':
-                    query = "select hex(host.id) as id, inet6_ntop(host_ip.ip) as ip from host,host_ip where id =unhex('%s') and host.id = host_ip.host_id union select hex(id) as id, inet6_ntop(ip) from sensor where hex(id)='%s';" % (m['member'], m['member'])
+                    query = "select hex(host.id) as id, inet6_ntoa(host_ip.ip) as ip from host,host_ip where id =unhex('%s') and host.id = host_ip.host_id union select hex(id) as id, inet6_ntoa(ip) from sensor where hex(id)='%s';" % (m['member'], m['member'])
                     result = _DB.exec_query(query)
                     for row in result:#Must by only one row.
                         member = BPMemberHost(m['member'],row['ip'])
@@ -713,7 +713,7 @@ class BusinessProcesses(threading.Thread):
                     member = BPMemberNet(m['member'])
 
                 elif m['member_type'] == 'host_group':
-                    query = """SELECT hex(host_group_reference.host_id) as host_id, inet6_ntop(host_ip.ip) as ip FROM host_ip,host_group_reference where host_group_id = unhex('%s' and host_group_id=host_ip.host_id;""" % (m['member'])
+                    query = """SELECT hex(host_group_reference.host_id) as host_id, inet6_ntoa(host_ip.ip) as ip FROM host_ip,host_group_reference where host_group_id = unhex('%s' and host_group_id=host_ip.host_id;""" % (m['member'])
                     #host_group_reference
                     result = _DB.exec_query(query)
                     for row in result:

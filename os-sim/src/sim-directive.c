@@ -36,6 +36,7 @@
 #include <time.h>
 #include <uuid/uuid.h>
 
+#include "sim-util.h"
 #include "sim-rule.h"
 #include "sim-inet.h"
 #include "sim-xml-directive.h"
@@ -1506,16 +1507,15 @@ sim_directive_backlog_get_values_clause (SimDirective *directive)
 
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
 
-  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", gmtime (&directive->_priv->first_event));
-  strftime (last, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", gmtime (&directive->_priv->last_event));
+  sim_time_t_to_str (timestamp, directive->_priv->first_event);
+  sim_time_t_to_str (last, directive->_priv->last_event);
   engine_id = sim_engine_get_id (directive->_priv->engine);
 
   query = g_strdup_printf ("(%s, %s, %d, '%s', '%s', %d)",
                            sim_uuid_get_db_string (directive->_priv->backlog_id),
                            sim_uuid_get_db_string (engine_id),
                            directive->_priv->id,
-                           timestamp,
-                           last,
+                           timestamp, last,
                            directive->_priv->matched);
 
   return query;
@@ -1533,8 +1533,8 @@ sim_directive_backlog_get_update_clause (SimDirective *directive)
 
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
 
-  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", gmtime (&directive->_priv->first_event));
-  strftime (last, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", gmtime (&directive->_priv->last_event));
+  sim_time_t_to_str (timestamp, directive->_priv->first_event);
+  sim_time_t_to_str (last, directive->_priv->last_event);
   query = g_strdup_printf ("UPDATE backlog SET matched = %d, timestamp = '%s', last = '%s' WHERE backlog.id = %s",
                            directive->_priv->matched,
                            timestamp, last,
@@ -1722,14 +1722,14 @@ gboolean
 sim_directive_check_timetable_restriction(SimDirective *directive, SimEvent *event){
 	g_return_val_if_fail (SIM_IS_DIRECTIVE(directive),FALSE);
 	gboolean ok = FALSE;
-	struct tm *t;
+	struct tm t;
 
 	if (directive->_priv->timetable!=NULL){
 		ossim_debug("Checking timetable in directive %s", directive->_priv->name);
 		/* Local time*/
 		//t = localtime(&epoch);
-		t = gmtime (&event->time);
-		ok = !sim_timetable_check_timetable (directive->_priv->timetable, t, event);
+		gmtime_r (&event->time, &t);
+		ok = !sim_timetable_check_timetable (directive->_priv->timetable, &t, event);
 	}
 	return ok;
 }
@@ -2269,8 +2269,8 @@ sim_directive_dummy_backlog_get_values_clause (SimEvent *event)
 
   engine_id = sim_engine_get_id (event->engine);
 
-  if (!(event->time_str))
-    strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", gmtime (&event->time));
+  if (! event->time_str)
+    sim_time_t_to_str (timestamp, event->time);
 
   query = g_strdup_printf ("(%s, %s, 0, '%s', '%s', 0)",
                            sim_uuid_get_db_string (event->backlog_id),

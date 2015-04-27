@@ -54,7 +54,7 @@ require_once 'av_init.php';
 * @package    ossim-framework\Alienvault_Components
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Av_sensor extends Av_component
@@ -423,7 +423,7 @@ class Av_sensor extends Av_component
 
         //Getting host information
 
-        $query = 'SELECT HEX(s.id) AS id, INET6_NTOP(s.ip) AS sensor_ip, s.*, sp.*
+        $query = 'SELECT HEX(s.id) AS id, INET6_NTOA(s.ip) AS sensor_ip, s.*, sp.*
             FROM sensor s, sensor_properties sp
             WHERE s.id = sp.sensor_id
             AND s.id = UNHEX(?)';
@@ -1080,7 +1080,7 @@ class Av_sensor extends Av_component
         $sources = get_nfsen_sensors();
 
 
-        // Alienvault Center UUID is used by default
+        // AlienVault Center UUID is used by default
         if (!empty($avc_id) && (array_key_exists($avc_id, $sources) || empty($sources)))
         {
            $source = $avc_id;
@@ -1837,7 +1837,8 @@ class Av_sensor extends Av_component
     */
     public static function get_interfaces($sensor, $discard_disabled = TRUE)
     {
-        $interfaces = array();
+        $data       = array();
+
         $system_id  = '';
 
         // Getting Sensor UUID by IP
@@ -1883,8 +1884,6 @@ class Av_sensor extends Av_component
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
-
-        $data = array();
 
         if (is_array($response['data']['interfaces']))
         {
@@ -1995,7 +1994,7 @@ class Av_sensor extends Av_component
         $params = array($id);
 
         //Get sensor name
-        $_query = 'SELECT INET6_NTOP(ip) AS sensor_ip, name FROM sensor WHERE id = UNHEX(?)';
+        $_query = 'SELECT INET6_NTOA(ip) AS sensor_ip, name FROM sensor WHERE id = UNHEX(?)';
 
         $rs = $conn->Execute($_query, $params);
 
@@ -2062,7 +2061,7 @@ class Av_sensor extends Av_component
             Policy::activate($conn, $ps_data->get_policy_id(), '0');
         }
 
-        //Delete sensor in Alienvault Center
+        //Delete sensor in AlienVault Center
         Av_center::delete_component($conn, $id);
 
         //Finish transaction
@@ -2259,11 +2258,11 @@ class Av_sensor extends Av_component
         {
             $query = "SELECT s.name FROM sensor s, acl_sensors acl_s
                 WHERE s.id = acl_s.sensor_id AND acl_s.entity_id IN ($ctx_where)
-                AND s.ip = inet6_pton(?)";
+                AND s.ip = inet6_aton(?)";
         }
         else
         {
-            $query = 'SELECT name FROM sensor WHERE ip = inet6_pton(?)';
+            $query = 'SELECT name FROM sensor WHERE ip = inet6_aton(?)';
         }
 
         $params = array($ip);
@@ -2305,13 +2304,13 @@ class Av_sensor extends Av_component
 
         if (!empty($ctx_where))
         {
-            $query = "SELECT HEX(s.id) AS id, INET6_NTOP(s.ip) AS ip FROM sensor s, acl_sensors acl_s
+            $query = "SELECT HEX(s.id) AS id, INET6_NTOA(s.ip) AS ip FROM sensor s, acl_sensors acl_s
                 WHERE s.id = acl_s.sensor_id AND acl_s.entity_id IN ($ctx_where)
                 AND s.name = ?";
         }
         else
         {
-            $query  = 'SELECT HEX(id) AS id, INET6_NTOP(ip) AS ip FROM sensor WHERE name = ?';
+            $query  = 'SELECT HEX(id) AS id, INET6_NTOA(ip) AS ip FROM sensor WHERE name = ?';
         }
 
         $params = array($name);
@@ -2356,7 +2355,7 @@ class Av_sensor extends Av_component
 
 
         $query = 'SELECT HEX(s.id) AS s_id FROM sensor s, acl_sensors acl_s
-               WHERE s.id = acl_s.sensor_id AND s.ip = INET6_PTON(?)';
+               WHERE s.id = acl_s.sensor_id AND s.ip = INET6_ATON(?)';
 
         if (!empty($ctx_where))
         {
@@ -2401,7 +2400,7 @@ class Av_sensor extends Av_component
 
         $ip = '';
 
-        $query  = "SELECT INET6_NTOP(ip) AS sensor_ip FROM sensor WHERE id = UNHEX(?)";
+        $query  = "SELECT INET6_NTOA(ip) AS sensor_ip FROM sensor WHERE id = UNHEX(?)";
 
         $params = array($id);
 
@@ -2525,7 +2524,7 @@ class Av_sensor extends Av_component
         }
 
 
-        $query = "SELECT HEX(sensor.id) AS s_id, INET6_NTOP(sensor.ip) AS sensor_ip, sensor.*
+        $query = "SELECT HEX(sensor.id) AS s_id, INET6_NTOA(sensor.ip) AS sensor_ip, sensor.*
             FROM $q_from
             $q_where";
 
@@ -2582,7 +2581,7 @@ class Av_sensor extends Av_component
             $q_from .= ', acl_sensors';
         }
 
-        $query = "SELECT HEX(sensor.id) AS s_id, INET6_NTOP(sensor.ip) AS sensor_ip, sensor.*, sensor_properties.*
+        $query = "SELECT HEX(sensor.id) AS s_id, INET6_NTOA(sensor.ip) AS sensor_ip, sensor.*, sensor_properties.*
             FROM $q_from
             WHERE sensor.id = sensor_properties.sensor_id AND sensor.name = '(null)'";
 
@@ -2643,7 +2642,7 @@ class Av_sensor extends Av_component
 
         $sensors  = array();
 
-        $query = "SELECT HEX(sensor.id) AS s_id, INET6_NTOP(sensor.ip) AS sensor_ip, sensor.*, sensor_properties.*
+        $query = "SELECT HEX(sensor.id) AS s_id, INET6_NTOA(sensor.ip) AS sensor_ip, sensor.*, sensor_properties.*
             FROM sensor, sensor_properties
             WHERE sensor.id = sensor_properties.sensor_id AND sensor.name != '(null)'";
 
@@ -2743,7 +2742,7 @@ class Av_sensor extends Av_component
         }
 
 
-        $query = "SELECT $q_select, HEX(sensor.id) AS s_id, INET6_NTOP(sensor.ip) AS sensor_ip, sensor_properties.*
+        $query = "SELECT $q_select, HEX(sensor.id) AS s_id, INET6_NTOA(sensor.ip) AS sensor_ip, sensor_properties.*
             FROM $q_from
             WHERE sensor.id = sensor_properties.sensor_id
             AND sensor.name != '(null)' $q_where";        

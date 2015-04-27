@@ -72,12 +72,10 @@ if (Session::menu_perms("analysis-menu", "EventsForensics"))
 
         $th_style = 'font-size: 10px;';
 
-        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:30mm;'>"._("Sensor")."</th>\n
-                         <th align='center' valign='middle' style='".$th_style." width:63mm;'>"._("Name")."</th>\n
-                         <th align='center' valign='middle' style='".$th_style." width:20mm;'>"._("Total events")." #</th>\n
-                         <th align='center' valign='middle' style='".$th_style." width:24mm;'>"._("Unique events")." #</th>\n
-                         <th align='center' valign='middle' style='".$th_style." width:18mm;'>"._("Unique Src")." #</th>\n
-                         <th align='center' valign='middle' style='".$th_style." width:18mm;'>"._("Unique Dst")." #</th>\n";
+        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:39mm;'>"._("Sensor")."</th>\n
+                         <th align='center' valign='middle' style='".$th_style." width:68mm;'>"._("Name")."</th>\n
+                         <th align='center' valign='middle' style='".$th_style." width:45mm;'>"._("Device IP")."</th>\n
+                         <th align='center' valign='middle' style='".$th_style." width:25mm;'>"._("Total events")." #</th>\n";
 
 
 
@@ -87,7 +85,7 @@ if (Session::menu_perms("analysis-menu", "EventsForensics"))
         if ($rs->RecordCount() == 0)
         {
             $htmlPdfReport->set("<tr>
-                                    <td colspan='6' style='text-align:center; padding: 15px 0px;' class='w100' valign='middle'>"._("No sensors found for this search criteria")."</td>
+                                    <td colspan='4' style='text-align:center; padding: 15px 0px;' class='w100' valign='middle'>"._("No sensors found for this search criteria")."</td>
                                 </tr>\n");
         }
         else
@@ -98,18 +96,16 @@ if (Session::menu_perms("analysis-menu", "EventsForensics"))
             {
                 $td_style = 'font-size: 10px; text-align:center;';
 
-                $html_fields = "<td valign='middle' style='".$td_style." width:30mm; text-align: left;'>".$rs->fields['dataV7']."</td>\n
-                                <td valign='middle' style='".$td_style." width:63mm; text-align: left;'>".Util::wordwrap($rs->fields['dataV1'], 50, "<br/>", true);
+                $html_fields = "<td valign='middle' style='".$td_style." width:39mm; text-align: left;'>".$rs->fields['dataV7']."</td>\n
+                                <td valign='middle' style='".$td_style." width:68mm; text-align: left;'>".Util::wordwrap($rs->fields['dataV1'], 50, "<br/>", true);
 
                                 if ( $rs->fields['dataV2'] != '' ){
                                     $html_fields .= "<br/><img border='0' style='margin-left: 2mm;' align='absmiddle' align='center' src='".$rs->fields['dataV2']."'/>";
                                 }
 
                 $html_fields .= "</td>\n
-                                <td valign='middle' style='".$td_style." width:20mm;'>".$rs->fields['dataI2']."</td>\n
-                                <td valign='middle' style='".$td_style." width:24mm;'>".$rs->fields['dataI3']."</td>\n
-                                <td valign='middle' style='".$td_style." width:18mm;'>".$rs->fields['dataV3']."</td>\n
-                                <td valign='middle' style='".$td_style." width:18mm;'>".$rs->fields['dataV4']."</td>\n";
+                                <td valign='middle' style='".$td_style." width:45mm;'>".$rs->fields['dataV8']."</td>\n
+                                <td valign='middle' style='".$td_style." width:25mm;'>".$rs->fields['dataI2']."</td>\n";
 
 
                 $bc = ( $i++%2!=0 ) ? "class='par'" : "";

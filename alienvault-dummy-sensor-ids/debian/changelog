@@ -1,16 +1,16 @@
-alienvault-dummy-sensor-ids (4.15.2-0) stable; urgency=low
+alienvault-dummy-sensor-ids (5.0.0-0) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Thu, 05 Feb 2015 06:14:46 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:53:59 -0400
 
-alienvault-dummy-sensor-ids (4.15.1-0) stable; urgency=low
+alienvault-dummy-sensor-ids (5.0-0) unstable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:23:28 -0500
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:19:41 -0500
 
-alienvault-dummy-sensor-ids (4.15.0-0) unstable; urgency=low
+alienvault-dummy-sensor-ids (4.16-0) unstable; urgency=low
 
   * New release
 

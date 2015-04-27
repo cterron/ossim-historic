@@ -3,6 +3,7 @@ name=Database log file rotation
 description=This plugin checks for misconfiguration of the logrotate daemon for database log files.
 category=system
 type=file
+strike_zone=True
 filename=/etc/logrotate.d/percona-server-server-5.5
 profiles=Database:>4.0
 

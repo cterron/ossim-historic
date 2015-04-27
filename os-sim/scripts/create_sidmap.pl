@@ -361,6 +361,9 @@ sub update_ossim_db()
         $ossim_conf::ossim_data->{"ossim_pass"})
         or die "Can't connect to Database\n";
 
+    my $stm1 = $conn->prepare("SET unique_checks = 0;");
+    $stm1->execute();
+    
     #
     # Rel/Prio rules
     #

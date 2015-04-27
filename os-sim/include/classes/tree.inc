@@ -226,7 +226,7 @@ class Tree
             elseif ($key == "entitiesassetsusers") { // With Assets and Users
                 $this->draw_entities(TRUE, TRUE);
             } 
-            elseif ($key == "alienvaultcomponents") { // Alienvault Components
+            elseif ($key == "alienvaultcomponents") { // AlienVault Components
                 $this->draw_alienvault_components();
             } 
             elseif ($key == "host") { // HOSTS
@@ -319,6 +319,7 @@ class Tree
                 $found        = explode(';', $found[1]);
                 $hostgroup_id = $found[0];
                 $entity_id    = $found[1];
+                $max_nodes    = (preg_match('/^\d+$/', $found[2])) ? $found[2] : MAX_RESULTS;
 
                 ossim_valid($hostgroup_id,  OSS_HEX,                'illegal:' . _("Hostgroup ID"));
                 ossim_valid($entity_id,     OSS_HEX, OSS_NULLABLE,  'illegal:' . _("Entity ID"));
@@ -327,7 +328,7 @@ class Tree
                     die(ossim_error());
                 }
                 
-                $this->toggle_hostgroup($hostgroup_id, $entity_id);
+                $this->toggle_hostgroup($hostgroup_id, $entity_id, $max_nodes);
 
             }
             elseif ($key == "netgroup") { //All netgroups
@@ -833,7 +834,7 @@ class Tree
                     
                     $tooltip    = ($host_name == '') ? $ip : $ip." (".Util::utf8_encode2($host_name).")";
                     
-                    $_url       = "/ossim/asset_details/index.php?id=$id";
+                    $_url       = "/ossim/av_asset/common/views/detail.php?asset_id=$id";
                     $url_link   = Menu::get_menu_url($_url,"environment", "assets", "assets");
                     
                                                     
@@ -1172,8 +1173,8 @@ class Tree
                                 
                         if($urltype == 0)
                         {
-                            $_url = "/ossim/asset_details/index.php?id=$net_id";
-                            $url  = Menu::get_menu_url($_url,"environment", "assets_groups", "networks");
+                            $_url = "/ossim/av_asset/common/views/detail.php?asset_id=$net_id";
+                            $url  = Menu::get_menu_url($_url,"environment", "assets", "networks");
                         }
                         else if ($urltype == 1)
                         {
@@ -1263,7 +1264,7 @@ class Tree
                                     
                 $h          = '580';   
                 
-                $_url       = "/ossim/asset_details/index.php?id=$id";
+                $_url       = "/ossim/av_asset/common/views/detail.php?asset_id=$id";
                 $url_link   = Menu::get_menu_url($_url,"environment", "assets", "assets");      
                 
                 $html      .= '{ "key" : "host_'.$id.'", "val" : "'.$host_name.' ('.$ip.')", "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host.png", "title" : "'. $title.'", "tooltip" : "'.$tooltip.'" },'."\n";
@@ -1371,8 +1372,8 @@ class Tree
                     
                     $h        = '585';
                     
-                    $_url     = "/ossim/asset_details/index.php?id=". $hg_id;
-                    $url_link = Menu::get_menu_url($_url,"environment", "assets_groups", "host_groups");
+                    $_url     = "/ossim/av_asset/common/views/detail.php?asset_id=". $hg_id;
+                    $url_link = Menu::get_menu_url($_url,'environment', 'assets', 'asset_groups');
                 
                     $li       = '"key" : "'.$hg_key.'", "val" : "'.Util::js_entities($hg_name).'", "isLazy" : true, "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host_group.png", "title" : "'.$title.'", "tooltip" : "'.$tooltip.'"'."\n";
     
@@ -1399,13 +1400,13 @@ class Tree
      * Parameters:
      * - hostgroup_id: Host Group ID
      */
-    public function toggle_hostgroup($hostgroup_id, $entity_id='')
+    public function toggle_hostgroup($hostgroup_id, $entity_id='', $max = MAX_RESULTS)
     {
         $conn = $this->conn;
         $page = $this->page;
         
-        $to         = $page * MAX_RESULTS;
-        $from       = $to - MAX_RESULTS;
+        $to         = $page * $max;
+        $from       = $to - $max;
         $nextpage   = $page + 1;
         
         if($entity_id != '' && Session::is_pro())
@@ -1452,7 +1453,7 @@ class Tree
                     $title      = ($host_name == '') ? $ip : "$ip <span style='font-size:80%'>(".Util::utf8_encode2($aux_hname).")</span>";
                     $tooltip    = ($host_name == '') ? $ip : $ip." (".Util::utf8_encode2($hname).")";
                     
-                    $_url       = "/ossim/asset_details/index.php?id=$id";
+                    $_url       = "/ossim/av_asset/common/views/detail.php?asset_id=$id";
                     $url_link   = Menu::get_menu_url($_url,"environment", "assets", "assets");
                                 
                     $html   .= '{ "key" : "host_'.$id.'", "val" : "'.$host_name.' ('.$ip.')", "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host.png", "title" : "'. $title.'", "tooltip" : "'.$tooltip.'" },'."\n";
@@ -1465,7 +1466,7 @@ class Tree
             
             if ($k>$to) 
             {
-                $li      = '"key" : "hostgroup_'.$hostgroup_id.'", "page" :"'.$nextpage.'", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host_group.png", "title" : "'._("Next").' '.MAX_RESULTS.' '._("Hosts").'"';
+                $li      = '"key" : "hostgroup_'.$hostgroup_id.'", "page" :"'.$nextpage.'", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host_group.png", "title" : "'._("Next").' '.$max.' '._("Hosts").'"';
                 $buffer .= ",{ $li }\n";
             }
         }
@@ -1558,7 +1559,7 @@ class Tree
                     $tooltip  = $ng_title;
                     
                     $_url     = "/ossim/netgroup/netgroup_form.php?id=". $net_group->get_id();
-                    $url_link = Menu::get_menu_url($_url,"environment", "assets_groups", "network_groups");
+                    $url_link = Menu::get_menu_url($_url,"environment", "assets", "network_groups");
                                     
                     $li      = '"key" : "'.$ng_key.'", "val" : "'.$ng_name.'", "isLazy" : true, "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host.png", "title" : "'. $title.'", "tooltip" : "'.$tooltip.'" '."\n";
                     $buffer .= (($j > $from) ? "," : '') . "{ $li }\n";
@@ -1639,8 +1640,8 @@ class Tree
             
             $tooltip   = $net_title." (".$ips_data.")";
             
-            $_url       = "/ossim/asset_details/index.php?id=$net_id";
-            $url_link   = Menu::get_menu_url($_url,"environment", "assets_groups", "networks");
+            $_url       = "/ossim/av_asset/common/views/detail.php?asset_id=$net_id";
+            $url_link   = Menu::get_menu_url($_url,"environment", "assets", "networks");
 
             if ($j>=$from && $j<$to) 
             {
@@ -1802,6 +1803,7 @@ class Tree
         $q_where = '';
 
         // Entity list
+        $from_others_ctx = ($entity_id != '') ? TRUE : FALSE;
         if (preg_match("/\,/", $entity_id))
         {
             $q_where = "sensor.id = acl_sensors.sensor_id AND acl_sensors.entity_id IN (UNHEX('".str_replace(",", "'), UNHEX('", $entity_id)."'))";
@@ -1821,7 +1823,7 @@ class Tree
             'order_by' => 'name'
         );
 
-        list($sensors, $s_total) = Av_sensor::get_list($conn, $q_filters, TRUE);
+        list($sensors, $s_total) = Av_sensor::get_list($conn, $q_filters, TRUE, $from_others_ctx);
 
         if ($s_total == 0)
         {

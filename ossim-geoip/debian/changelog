@@ -1,16 +1,16 @@
-ossim-geoip (4.15.2-0) stable; urgency=low
+ossim-geoip (5.0.0-0) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Thu, 05 Feb 2015 06:14:45 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:53:58 -0400
 
-ossim-geoip (4.15.1-0) stable; urgency=low
+ossim-geoip (5.0-0) unstable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:23:27 -0500
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:19:40 -0500
 
-ossim-geoip (4.15.0-0) unstable; urgency=low
+ossim-geoip (4.16-0) unstable; urgency=low
 
   * New release
 

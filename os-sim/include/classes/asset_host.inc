@@ -54,7 +54,7 @@ require_once 'av_config.php';
  * @package    ossim-framework\Asset
  * @autor      AlienVault INC
  * @copyright  2007-2014 AlienVault
- * @link       https://www.alienvault.com/ Alienvault web page
+ * @link       https://www.alienvault.com/ AlienVault web page
  */
 class Asset_host extends Asset
 {
@@ -66,6 +66,23 @@ class Asset_host extends Asset
      */
     protected $fqdns;
 
+
+    /**
+     * Host operating system
+     *
+     * @var    string $os
+     * @access protected
+     */
+    protected $os;
+
+
+    /**
+     * Host model
+     *
+     * @var    string $model
+     * @access protected
+     */
+    protected $model;
 
     /**
      * Host location (Latitude, longitude and zoom)
@@ -131,11 +148,13 @@ class Asset_host extends Asset
         $this->location    = array(
             'lat'  => NULL,
             'lon'  => NULL,
-            'zoom' => 0
+            'zoom' => 4
         );
         $this->asset_value = $asset_value;
         $this->threshold_c = $threshold;
         $this->threshold_a = $threshold;
+        $this->os          = '';
+        $this->model       = '';
         $this->devices     = new Asset_host_devices($conn, $id);
         $this->sensors     = new Asset_host_sensors($id);
     }
@@ -180,6 +199,34 @@ class Asset_host extends Asset
     public function get_location()
     {
         return $this->location;
+    }
+
+
+    /**
+     * Function get_os
+     *
+     * This function returns host Operating System (Property with ID = 3)
+     *
+     * @access public
+     * @return string
+     */
+    public function get_os()
+    {
+        return $this->os;
+    }
+
+
+    /**
+     * Function get_model
+     *
+     * This function returns host model
+     *
+     * @access public
+     * @return string
+     */
+    public function get_model()
+    {
+        return $this->model;
     }
 
 
@@ -344,7 +391,7 @@ class Asset_host extends Asset
         $query = "SELECT COUNT(lr.hostIP) AS counter
            FROM alienvault.host h, alienvault.host_ip hi, alienvault.vuln_nessus_latest_results lr
            WHERE hi.host_id = h.id AND h.id = UNHEX(?)
-           AND h.ctx = lr.ctx AND lr.hostIP = INET6_NTOP(hi.ip)";
+           AND h.ctx = lr.ctx AND lr.hostIP = INET6_NTOA(hi.ip)";
 
         $params = array($id);
 
@@ -364,20 +411,33 @@ class Asset_host extends Asset
 
 
     /**
-     * Function get_os
+     * Function get_vulnerabilities
      *
-     * This function returns the operating system property (ID = 3)
+     * This function returns the host vulnerabilities
      *
-     * @param object $conn Database access object
+     * @param object   $conn     Database access object
+     * @param string   $tables   [Optional] Database tables separated by comma (Join with main table)
+     * @param array    $filters  [Optional] SQL statements (WHERE, LIMIT, ORDER BY ...)
+     * @param boolean  $cache    [Optional] Use cached information
      *
      * @access public
-     * @return string The operating systems names in text
+     * @return array          List of vulnerabilities
+     * @throws Av_exception If a connection error occurred
      */
-    public function get_os($conn)
+    public function get_vulnerabilities($conn, $tables = '', $filters = array(), $cache = FALSE)
     {
-        $_os_list = Asset_host_properties::get_property_from_db($conn, $this->get_id(), 3);
+        $where = " host.id = UNHEX('" . $this->id . "')";
 
-        return (count($_os_list) > 0) ? implode(", ", $_os_list) : _('Unknown');
+        if (!empty($filters['where']))
+        {
+            $filters['where'] = $where . ' AND ' . $filters['where'];
+        }
+        else
+        {
+            $filters['where'] = $where;
+        }
+
+        return Vulnerabilities::get_vulnerabilities($conn, $tables, $filters, $cache);
     }
 
 
@@ -481,6 +541,22 @@ class Asset_host extends Asset
         return Alarm::has_alarms($conn, 'host', $id);
     }
 
+    /**
+     * Function get_highest_risk_alarms
+     *
+     * This function returns the highest alarm risk from the given asset
+     *
+     * @param object $conn Database access object
+     * @param string $id   Asset ID
+     *
+     * @return Hash
+     */
+    public static function get_highest_risk_alarms($conn, $id)
+    {
+        $criteria = array('host' => $id);
+
+        return Alarm::get_highest_risk_by_asset($conn, $criteria);
+    }
 
     /**
      * Function has_events
@@ -517,14 +593,14 @@ class Asset_host extends Asset
     {
         if (empty($filters['where']))
         {
-            $filters['where'] = "h.id = UNHEX('" . $this->id . "')";
+            $filters['where'] = "h_id = UNHEX('" . $this->id . "')";
         }
         else
         {
-            $filters['where'] .= " AND h.id = UNHEX('" . $this->id . "')";
+            $filters['where'] .= " AND h_id = UNHEX('" . $this->id . "')";
         }
 
-        $properties = Asset_host_properties::get_list($conn, $filters);
+        $properties = Asset_host_properties::get_all($conn, $filters);
 
         return $properties;
     }
@@ -535,19 +611,24 @@ class Asset_host extends Asset
      *
      * This function returns the software related to host
      *
-     * @param object $conn Database access object
+     * @param object  $conn     Database access object
+     * @param array   $filters  [Optional] SQL statements (WHERE, LIMIT, ORDER BY ...)
      *
      * @access public
      * @return array  List of software
      */
-    public function get_software($conn)
+    public function get_software($conn, $filters = array())
     {
-        $filters = array(
-            'where' => "h.id = UNHEX('" . $this->id . "')"
-        );
+        if (empty($filters['where']))
+        {
+            $filters['where']  = "h.id = UNHEX('".$this->id."')";
+        }
+        else
+        {
+            $filters['where'] .= " AND h.id = UNHEX('".$this->id."')";
+        }
 
-        $aux_software = Asset_host_software::get_list($conn, $filters);
-        $software     = $aux_software[0];
+        $software = Asset_host_software::get_list($conn, $filters);
 
         return $software;
     }
@@ -598,6 +679,161 @@ class Asset_host extends Asset
         $ips      = array_keys($host_ips->get_ips());
 
         return Asset_host_services::get_vulns_by_service($conn, $ips, $this->ctx, $service, $port);
+    }
+
+
+    /**
+     * Function get_plugins
+     *
+     * This function returns the plugins related to asset
+     *
+     * @param object   $conn       Database access object
+     * @param bool     $edit_mode  [Optional] Flag to know if return empty assets as well
+     * @param string   $sensor     [Optional] Show only the plugins from this sensor
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return array List of plugins
+     */
+    public function get_plugins($conn, $edit_mode = FALSE, $sensor_id = '')
+    {
+        $sensors = $this->get_sensors()->get_sensors();
+
+        // Get only plugins from one specified sensor
+        if (valid_hex32($sensor_id))
+        {
+            $_sensor_aux = $sensors[$sensor_id];
+            $sensors     = array($sensor_id => $_sensor_aux);
+        }
+
+        $assets = array($this->id => array('name' => $this->name));
+
+        return self::get_plugins_by_sensor($conn, $sensors, $assets, $edit_mode);
+    }
+
+
+    /**
+     * Function get_events
+     *
+     * This function returns the events related to asset
+     *
+     * @param object $conn Database access object
+     * @param number $from       [Optional]
+     * @param number $maxrows    [Optional]
+     * @param string $order      [Optional]
+     * @param string $torder     [Optional]
+     * @param string $search_str [Optional]
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return array List of events
+     */
+    public function get_events($conn, $from = 0, $maxrows = 50, $order = 'timestamp', $torder = 'DESC', $search_str = '')
+    {
+        $siem  = new Siem(TRUE);
+
+        if ($search_str != '')
+        {
+            $search_str = escape_sql($search_str, $conn);
+        }
+
+        return $siem->get_events_sp($this->id, 'host', $from, $maxrows, "$order $torder", $search_str);
+    }
+
+
+    /**
+     * Function get_events_status
+     *
+     * This function returns the event count and level related to asset
+     *
+     *
+     * @param object $conn Database access object [Necessary only in asset_net]
+     *
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return array Event Count and Event Level values to details info
+     */
+    public function get_events_status($conn)
+    {
+        $siem = new Siem(TRUE); // Perms byPass TRUE
+
+        // Get Total
+        $siem->add_criteria('src_host', $this->id);
+        $event_count_src = $siem->get_events_total();
+
+        $siem->clear_criteria();
+        $siem->add_criteria('dst_host', $this->id);
+        $event_count_dst = $siem->get_events_total();
+
+        $siem->clear_criteria();
+        $siem->add_criteria('src_host', $this->id);
+        $siem->add_criteria('dst_host', $this->id);
+        $event_count = $event_count_src + $event_count_dst - $siem->get_events_total();
+
+        $event_level = ($event_count > 0) ? 1 : 0;
+
+        // Total with risk = 1
+        $siem->clear_criteria();
+        $siem->add_criteria(array('src_host', 'dst_host'), $this->id);
+        $siem->add_criteria('ossim_risk_a', 1);
+
+        $event_count_medium = $siem->get_events_total();
+
+        // Total with risk > 1
+        $siem->clear_criteria();
+        $siem->add_criteria(array('src_host', 'dst_host'), $this->id);
+        $siem->add_criteria('ossim_risk_a', 1, '>');
+
+        $event_count_high = $siem->get_events_total();
+
+        // Calculate level
+        if ($event_count_high > 0)
+        {
+            $event_level = 3;
+        }
+        elseif ($event_count_medium > 0)
+        {
+            $event_level = 2;
+        }
+
+        return array($event_count, $event_level);
+    }
+
+
+    /**
+     * Function get_suggestions
+     *
+     * This function returns the suggestions messages related to the asset
+     *
+     * @param array   $filters   Filters to get the messages from the API
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return array List of messages and total
+     */
+    public function get_suggestions($filters = array(), $pagination = array())
+    {
+        $status = new System_notifications();
+
+        $filters['component_id'] = Util::uuid_format($this->id);
+
+        if (empty($filters['level']))
+        {
+            $filters['level'] = 'info,warning,error';
+        }
+
+        if (empty($filters['order_by']))
+        {
+            $filters['order_by'] = 'creation_time';
+        }
+
+        if (empty($filters['order_desc']))
+        {
+            $filters['order_desc'] = 'false';
+        }
+
+        return $status->get_status_messages($filters, $pagination);
     }
 
 
@@ -692,12 +928,12 @@ class Asset_host extends Asset
             $this->location = array(
                 'lat'  => NULL,
                 'lon'  => NULL,
-                'zoom' => NULL
+                'zoom' => 4
             );
         }
         elseif (is_numeric($latitude) && is_numeric($longitude))
         {
-            $zoom = ($zoom != '') ? intval($zoom) : NULL;
+            $zoom = ($zoom != '') ? intval($zoom) : 4;
 
             $this->location = array(
                 'lat'  => $latitude,
@@ -711,6 +947,38 @@ class Asset_host extends Asset
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
+    }
+
+
+    /**
+     * Function set_os
+     *
+     * This function sets host Operating System
+     *
+     * @param string $os  Host Operating System
+     *
+     * @access public
+     * @return void
+     */
+    public function set_os($os)
+    {
+        $this->os = $os;
+    }
+
+
+    /**
+     * Function set_model
+     *
+     * This function sets host model
+     *
+     * @param string $model  Host model
+     *
+     * @access public
+     * @return void
+     */
+    public function set_model($model)
+    {
+        $this->model = $model;
     }
 
 
@@ -754,7 +1022,7 @@ class Asset_host extends Asset
 
         if (empty($rs->fields['id']))
         {
-            $exp_msg = _('Error! Host not found');
+            $exp_msg = _('Error! Asset not found');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -776,12 +1044,12 @@ class Asset_host extends Asset
         if (is_array($lon) && !empty($lon[0]))
         {
             $longitude = $lon[0];
-            $zoom      = (empty($lon[1])) ? NULL : $lon[1];
+            $zoom      = (empty($lon[1])) ? 4 : $lon[1];
         }
         else
         {
             $longitude = NULL;
-            $zoom      = NULL;
+            $zoom      = 4;
         }
 
         $this->location = array(
@@ -793,6 +1061,19 @@ class Asset_host extends Asset
         $this->asset_value = $rs->fields['asset'];
         $this->threshold_c = $rs->fields['threshold_c'];
         $this->threshold_a = $rs->fields['threshold_a'];
+
+
+        $filters = array(
+            'where'    => "h.id = UNHEX('".$this->get_id()."') AND host_properties.property_ref IN (3, 14)",
+            'order_by' => 'hsr.relevance DESC'
+        );
+
+        list($properties ,) = Asset_host_properties::get_list($conn, $filters);
+        $properties = array_pop($properties);
+
+        $this->os    = $properties[3][0]['value'];
+        $this->model = $properties[14][0]['value'];
+
 
         $this->devices->load_from_db($conn, $cache);
         $this->sensors->load_from_db($conn, $cache);
@@ -854,6 +1135,8 @@ class Asset_host extends Asset
 
         Util::disable_perm_triggers($conn, TRUE);
 
+        self::disable_host_update($conn, TRUE);
+
         //Begin transaction
         $conn->StartTrans();
 
@@ -882,7 +1165,7 @@ class Asset_host extends Asset
 
         $latitude  = $location['lat'];
         $longitude = $location['lon'];
-        $longitude .= (!empty($location['zoom'])) ? ';' . $location['zoom'] : NULL;
+        $longitude .= (!empty($location['zoom'])) ? ';' . $location['zoom'] : 4;
 
         $country = ';';
 
@@ -931,6 +1214,24 @@ class Asset_host extends Asset
         //Host-Network reference
         self::set_host_net_reference($conn, $id);
 
+
+        //Save Operating System and Model
+        $os    = $this->get_os();
+        $model = $this->get_model();
+
+        Asset_host_properties::delete_property_from_db($conn, $id, 3);
+        if (!empty($os))
+        {
+            Asset_host_properties::save_property_in_db($conn, $id, 3, $os, 1);
+        }
+
+        Asset_host_properties::delete_property_from_db($conn, $id, 14);
+        if (!empty($model))
+        {
+            Asset_host_properties::save_property_in_db($conn, $id, 14, $model, 1);
+        }
+
+
         //Save devices
         $this->devices->save_all_in_db($conn);
 
@@ -967,7 +1268,7 @@ class Asset_host extends Asset
                 $queries = array();
 
                 //Plugin Host
-                $ip_where  = "INET6_PTON('" . implode("'), INET6_PTON('", $ips) . "')";
+                $ip_where  = "INET6_ATON('" . implode("'), INET6_ATON('", $ips) . "')";
                 $queries[] = "UPDATE host_plugin_sid SET ctx = UNHEX(?) WHERE host_ip IN ($ip_where) AND ctx = UNHEX(?)";
 
                 //Vulnerability Reports
@@ -992,7 +1293,8 @@ class Asset_host extends Asset
         //Finish transaction
         if ($conn->CompleteTrans())
         {
-            Util::disable_perm_triggers($conn, FALSE);
+
+            self::disable_host_update($conn, FALSE);
 
             $infolog = array($name, '[' . $ips_string . ']');
 
@@ -1007,6 +1309,9 @@ class Asset_host extends Asset
 
             if ($report_changes == TRUE)
             {
+
+                Util::disable_perm_triggers($conn, FALSE);
+
                 try
                 {
                     self::report_changes($conn, 'hosts');
@@ -1019,7 +1324,136 @@ class Asset_host extends Asset
         }
         else
         {
-            $exp_msg = _('Error! Host could not be saved');
+            $exp_msg = _('Error! Asset could not be saved');
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+        }
+
+        return TRUE;
+    }
+
+
+    /**
+    * This function save all host data which match with current filter database
+    *
+    * @param object   $conn            Database access object
+    * @param array    $asset_data      Bulk form data
+    * @param bool     $report_changes  [Optional] Report changes to other components
+    *
+    * @throws Exception  If an error occurred
+    *
+    * @return boolean
+    */
+    public static function bulk_save_in_db($conn, $asset_data, $report_changes = TRUE)
+    {
+        Ossim_db::check_connection($conn);
+
+        //Form field => Table field
+
+        $host_fields = array(
+            'asset_value' => 'asset',
+            'descr'       => 'descr',
+            'external'    => 'external_host',
+            'icon'        => 'icon',
+            'latitude'    => 'lat',
+            'longitude'   => 'lon'
+        );
+
+        $query_data = array();
+
+        foreach ($host_fields as $form_field => $table_field)
+        {
+            if (!empty($asset_data[$form_field]))
+            {
+                $query_data_key = $table_field . ' = ?';
+
+                if ($form_field == 'longitude')
+                {
+                    $asset_data[$form_field] .= (!empty($asset_data['zoom'])) ? ';' . $asset_data['zoom'] : 4;
+                }
+
+                $query_data[$query_data_key] = $asset_data[$form_field];
+            }
+        }
+
+        if (!empty($asset_data['latitude']) && !empty($asset_data['longitude']))
+        {
+            $geoloc = new Geolocation();
+
+            list ($country_code, $country_name) = $geoloc->get_country_by_coordinates($location['lat'], $location['lon']);
+            $geoloc->close();
+
+            $country = $country_code . ';' . $country_name;
+
+            $query_data['country = ?'] = $country;
+        }
+
+        Util::disable_perm_triggers($conn, TRUE);
+
+        //Begin transaction
+        $conn->StartTrans();
+
+        $host_perms_where = self::get_perms_where('h.', TRUE);
+
+        if (!empty($query_data))
+        {
+            // host table update
+
+            $query = "UPDATE host h, user_component_filter uf SET " . implode(', ', array_keys($query_data)) .
+                     " WHERE uf.login=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
+
+            $query_data[] = Session::get_session_user();
+
+            $rs = $conn->Execute($query, array_values($query_data));
+
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+        }
+
+        if (!empty($asset_data['devices']))
+        {
+            Asset_host_devices::bulk_save_devices_in_db($conn, $asset_data['devices']);
+        }
+
+        if (!empty($asset_data['sensors']))
+        {
+            Asset_host_sensors::bulk_save_sensors_in_db($conn, $asset_data['sensors']);
+        }
+
+        if (!empty($asset_data['os']))
+        {
+            Asset_host_properties::bulk_delete_property_from_db($conn, 3);
+            Asset_host_properties::bulk_save_property_in_db($conn, 3, $asset_data['os'], 1);
+        }
+
+        if (!empty($asset_data['model']))
+        {
+            Asset_host_properties::bulk_delete_property_from_db($conn, 14);
+            Asset_host_properties::bulk_save_property_in_db($conn, 14, $asset_data['model'], 1);
+        }
+
+        //Finish transaction
+        if ($conn->CompleteTrans())
+        {
+            if ($report_changes == TRUE)
+            {
+                Util::disable_perm_triggers($conn, FALSE);
+
+                try
+                {
+                    self::report_changes($conn, 'hosts');
+                }
+                catch (Exception $e)
+                {
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+                }
+            }
+        }
+        else
+        {
+            $exp_msg = _('Error! Asset data could not be saved');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -1081,6 +1515,8 @@ class Asset_host extends Asset
     }
 
 
+
+
     /**
      * Function is_nagios_enabled
      *
@@ -1096,6 +1532,61 @@ class Asset_host extends Asset
         return Asset_host_scan::is_plugin_in_host($conn, $this->get_id(), 2007);
     }
 
+    /**
+     * Function get_availability
+     *
+     * This function returns the Nagios status of the host (Up, Down, ...)
+     *
+     * @param object $conn Database access object
+     *
+     * @return Array
+     */
+    public function get_availability($conn)
+    {
+        $nagios_status = '';
+
+        $sql = "SELECT ha.status FROM alienvault.host h
+                LEFT JOIN alienvault.host_scan ha ON ha.host_id=h.id AND ha.plugin_id=2007 and ha.plugin_sid=0
+                WHERE h.id = UNHEX(?)";
+
+        $rs = $conn->Execute($sql, array($this->get_id()));
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        else
+        {
+            $nagios_status = $rs->fields['status'];
+        }
+
+        if ($nagios_status == '2')
+        {
+            // Up -> Green
+            $availability_value = _('UP');
+            $availability_level = 1;
+        }
+        elseif ($nagios_status == '1')
+        {
+            // Down -> Red
+            $availability_value = _('DOWN');
+            $availability_level = 3;
+        }
+        elseif ($nagios_status == '0')
+        {
+            // Down -> Red
+            $availability_value = _('Pending');
+            $availability_level = 0;
+        }
+        else
+        {
+            // Not Enabled -> Gray
+            $availability_value = _('N/A');
+            $availability_level = 0;
+        }
+
+        return array($availability_value, $availability_level);
+    }
 
     /**
      * Function is_autodetected
@@ -1195,6 +1686,134 @@ class Asset_host extends Asset
 
         return 0; // RED
     }
+
+
+    /**
+    * Function get_num_group
+    *
+    * This function gets the num of groupd from the host
+    *
+    * @param object  $conn  DB connection object
+    *
+    * @access public
+    *
+    * @throws Av_exception If a connection error occurred
+    *
+    * @return integer  Number of group from the host
+    */
+    public function get_num_group($conn)
+    {
+        Ossim_db::check_connection($conn);
+
+        $query = "SELECT count(hr.host_group_id) as num
+                  FROM host_group_reference hr
+                  WHERE hr.host_id= UNHEX(?)";
+
+        $params = array($this->id);
+
+        if (!$rs = $conn->Execute($query, $params))
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        return $rs->fields['num'];
+    }
+
+
+    /**
+     * Function get_related_group
+     *
+     * This function gets the groups related to the host
+     *
+     * @param object  $conn  DB connection object
+     *
+     * @access public
+     *
+     * @throws Av_exception If a connection error occurred
+     *
+     * @return array  Groups for the host and total
+     */
+    public function get_related_groups($conn, $tables = ', host_group_reference hr', $filters = array('where' => 'hr.host_group_id = g.id'))
+    {
+        Ossim_db::check_connection($conn);
+
+        $filters['where'] .= ' AND hr.host_id = UNHEX("'.$this->id.'")';
+
+        return Asset_group::get_list($conn, $tables, $filters);
+    }
+
+
+    /**
+    * Function add_to_groups
+    *
+    * This function adds the asset to selected groups (saved in db)
+    *
+    * @param object $conn Database access object
+    *
+    * @access public
+    *
+    * @throws Av_exception If a connection error occurred
+    *
+    * @return void
+    */
+    public function add_to_groups($conn)
+    {
+        Ossim_db::check_connection($conn);
+
+        $query = "REPLACE INTO host_group_reference (
+                    SELECT f.asset_id, UNHEX(?)
+                        FROM user_component_filter f, host h
+                        WHERE f.login=? AND f.asset_type='group')";
+
+        $params = array(
+            $this->id,
+            Session::get_session_user()
+        );
+
+        Util::memcacheFlush();
+
+        if ($conn->Execute($query, $params) === FALSE)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+    }
+
+
+    /**
+    * Function delete_from_groups
+    *
+    * This function deletes the asset from selected groups (saved in db)
+    *
+    * @param object $conn Database access object
+    *
+    * @access public
+    *
+    * @throws Av_exception If a connection error occurred
+    *
+    * @return void
+    */
+    public function delete_from_groups($conn)
+    {
+        Ossim_db::check_connection($conn);
+
+        $query = "DELETE hgr FROM host_group_reference hgr, user_component_filter f, host h
+            WHERE hgr.host_id = UNHEX(?) AND hgr.host_group_id=f.asset_id AND f.login=? AND f.asset_type='group'";
+
+        $params = array(
+            $this->id,
+            Session::get_session_user()
+        );
+
+        Util::memcacheFlush();
+
+        $rs = $conn->Execute($query, $params);
+
+        if ($rs === FALSE)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+    }
+
 
 
     /*************************************************
@@ -1447,6 +2066,50 @@ class Asset_host extends Asset
 
 
     /**
+     * Function get_asset_by_system
+     *
+     * This function returns the assets that represents a system.
+     *
+     * @param object $conn        Database access object
+     * @param string $system_id   System ID
+     *
+     * @access public
+     * @return Array of Asset IDs
+     * @throws Av_exception If a connection error occurred
+     */
+    public static function get_asset_by_system($conn, $system_id)
+    {
+        Ossim_db::check_connection($conn);
+
+
+        $host_ids = array();
+
+        $query  = 'SELECT DISTINCT HEX(hi.host_id) AS system_host
+                    FROM system s, host_sensor_reference hs, host_ip hi
+                    WHERE hs.host_id=hi.host_id AND hs.sensor_id=s.sensor_id
+                    AND (hi.ip=s.vpn_ip OR hi.ip=s.ha_ip OR hi.ip=s.admin_ip) AND s.id=UNHEX(?)';
+
+        $params = array(Util::uuid_format_nc($system_id));
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        while (!$rs->EOF)
+        {
+            $host_ids[$rs->fields['system_host']] = $rs->fields['system_host'];
+
+            $rs->MoveNext();
+        }
+
+        return $host_ids;
+    }
+
+
+    /**
      * Function delete_from_db
      *
      * This function deletes the host from database
@@ -1465,7 +2128,7 @@ class Asset_host extends Asset
 
         if (!self::can_delete($conn, $id))
         {
-            $exp_msg = _('This host can not be deleted because it belongs to a policy');
+            $exp_msg = _('Error! Asset belongs to one or more policies');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -1511,7 +2174,7 @@ class Asset_host extends Asset
             $params  = array($ctx);
 
             //Plugin Host
-            $ip_where = "INET6_PTON('" . implode("'), INET6_PTON('", $ips) . "')";
+            $ip_where = "INET6_ATON('" . implode("'), INET6_ATON('", $ips) . "')";
 
             $queries[] = "DELETE FROM host_plugin_sid WHERE host_ip IN ($ip_where) AND ctx = UNHEX(?)";
 
@@ -1589,12 +2252,42 @@ class Asset_host extends Asset
         }
         else
         {
-            $exp_msg = _('Error! Host could not be deleted');
+            $exp_msg = _('Error! Asset could not be deleted');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
 
         return TRUE;
+    }
+
+
+    /**
+     * Function get_all_locations
+     *
+     * This function returns the location of all the members
+     *
+     * @param object $conn    Database access object
+     *
+     * @access public
+     * @return array
+     */
+    public function get_all_locations($conn)
+    {
+	    Ossim_db::check_connection($conn);
+
+        $locations = array();
+
+        if ($this->location['lat'] != '' && $this->location['lon'] != '')
+        {
+            $locations[$this->id] = array(
+                'name' => $this->name,
+                'lat'  => $this->location['lat'],
+                'lon'  => $this->location['lon'],
+                'zoom' => $this->location['zoom']
+            );
+        }
+
+        return $locations;
     }
 
 
@@ -1609,38 +2302,33 @@ class Asset_host extends Asset
     * This function deletes all hosts which match with current filter database
     *
     * @param object   $conn            Database access object
-    * @param object   $filter          Filter object
     * @param boolean  $report_changes  [Optional] Report changes to other components
     *
     * @throws Exception  If an error occurred
     *
     * @return boolean
     */
-    public static function delete_all_by_filter_from_db($conn, $filter, $report_changes = TRUE)
+    public static function bulk_delete($conn, $report_changes = TRUE)
     {
 
         Ossim_db::check_connection($conn);
 
         Util::disable_perm_triggers($conn, TRUE);
-        
+
         //Create tmp table
 
-        $tmp_table = Util::create_tmp_table($conn,"host_id binary(16) NOT NULL, ctx binary(16) NOT NULL, PRIMARY KEY (host_id)");
-
+        $tmp_table = Util::create_tmp_table($conn, "host_id binary(16) NOT NULL, ctx binary(16) NOT NULL, PRIMARY KEY (host_id)");
+        $user      = Session::get_session_user();
 
         //Populate tmp table adding filtered hosts which are not included in policies
-
         $join    = 'LEFT JOIN policy_host_reference phr ON phr.host_id=h.id';
         $q_where = 'phr.host_id IS NULL';
 
-        $user    = Session::get_session_user();
+        //Asset Selected
+        $join    .= ', user_component_filter uc';
+        $q_where .= " AND uc.asset_id = h.id AND uc.asset_type='asset' AND uc.login = '$user'";
 
-        if ($filter->get_num_filter_added() > 0)
-        {
-            $join    .= ', user_host_filter hf';
-            $q_where .= " AND hf.asset_id = h.id AND hf.login = '$user'";
-        }
-
+        //Adding Permissions
         $perms_where = self::get_perms_where('h.', TRUE);
 
         if(!empty($perms_where))
@@ -1670,11 +2358,9 @@ class Asset_host extends Asset
             'limit' => 1
         );
 
-        if ($filter->get_num_filter_added() > 0)
-        {
-            $tables           .= ', user_host_filter hf';
-            $filters['where'] .= " AND hf.asset_id = host.id AND hf.login = '$user'";
-        }
+
+        $tables           .= ', user_component_filter hc';
+        $filters['where'] .= " AND hc.asset_id = host.id AND hc.asset_type='asset'  AND hc.login = '$user'";
 
         $_host_list            = self::get_list($conn, $tables, $filters);
 
@@ -1705,7 +2391,7 @@ class Asset_host extends Asset
         $queries[] = "DELETE h.* FROM host_plugin_sid h
             LEFT JOIN (SELECT ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.host_ip = f.ip AND f.ctx = h.ctx";
         $queries[] = "DELETE h.* FROM vuln_nessus_latest_reports h
-            LEFT JOIN (SELECT INET6_NTOP(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
+            LEFT JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
 
         foreach ($queries as $query)
         {
@@ -1721,13 +2407,15 @@ class Asset_host extends Asset
         if ($conn->CompleteTrans())
         {
             //Log action
-            $infolog = array(_('Policy - Hosts deleted massively'));
+            $infolog = array(_('Policy - Asset deleted massively'));
             Log_action::log(92, $infolog);
 
-            Util::disable_perm_triggers($conn, FALSE);
-            
+            Filter_list::clean_selection($conn, 'asset');
+
             if ($report_changes == TRUE)
             {
+                Util::disable_perm_triggers($conn, FALSE);
+
                 // Clean Suggestions
                 $client = new Alienvault_client();
                 $client->data('')->clean_orphans('host');
@@ -1745,11 +2433,11 @@ class Asset_host extends Asset
             // Hosts belong a policy
             if ($hosts_belong_policies == TRUE)
             {
-                $exp_msg = _('Some of the hosts could not be deleted because they belong to a policy');
+                $exp_msg = _('Some assets belongs to one or more policies');
 
                 Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
             }
-            
+
         }
         else
         {
@@ -1912,6 +2600,41 @@ class Asset_host extends Asset
 
 
     /**
+    * This function returns the common context for all hosts which match with current filter database
+    *
+    * @param object  $conn   Database access object
+    *
+    * @throws Exception      If a connection error occurred
+    *
+    * @return mixed          Valid values are NULL or the common context
+    */
+    public static function get_common_ctx($conn)
+    {
+        Ossim_db::check_connection($conn);
+
+        $host_perms_where = self::get_perms_where('h.', TRUE);
+
+        $params = array(Session::get_session_user(), 'asset');
+
+        $query  = "SELECT DISTINCT SQL_CALC_FOUND_ROWS HEX(h.ctx) AS ctx FROM user_component_filter uf, host h
+                        WHERE uf.login = ? AND uf.asset_type = ? AND h.id=uf.asset_id $host_perms_where LIMIT 2";
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        $total  = Ossim_db::get_found_rows($conn, $query);
+
+        $result = ($total == 1) ? $rs->fields['ctx'] : NULL;
+
+        return $result;
+    }
+
+
+    /**
     * This function returns the Host IDs from IP list and context
     *
     * @param object  $conn   Database access object
@@ -1937,7 +2660,7 @@ class Asset_host extends Asset
         {
             $query = "SELECT HEX(id) AS id, HEX(ctx) AS ctx FROM host, host_ip
                 WHERE host.id = host_ip.host_id
-                AND host_ip.ip = INET6_PTON(?) $perms_where";
+                AND host_ip.ip = INET6_ATON(?) $perms_where";
 
             $params = array(trim($ip));
 
@@ -2094,7 +2817,7 @@ class Asset_host extends Asset
         $query = "SELECT hex(net.ctx) AS ctx, net.ips FROM host_ip, host_net_reference, net
             WHERE host_ip.host_id = host_net_reference.host_id
             AND net.id = host_net_reference.net_id $perms_where
-            AND host_ip.ip = inet6_pton(?)";
+            AND host_ip.ip = inet6_aton(?)";
 
         $params = array($ip);
 
@@ -2504,7 +3227,7 @@ class Asset_host extends Asset
             for ($i=0; $i<=$total; $i+=$block)
             {
                 //By blocks
-                $query = "SELECT HEX(h.id) AS id, inet6_ntop(hi.ip) AS ip,
+                $query = "SELECT HEX(h.id) AS id, inet6_ntoa(hi.ip) AS ip,
                     HEX(h.ctx) AS ctx, h.hostname, h.external_host
                     FROM host h $q_join, host_ip hi
                     WHERE h.id = hi.host_id
@@ -2686,7 +3409,7 @@ class Asset_host extends Asset
 
         for ($i=0; $i<=$foundrows; $i+=$block)
         {
-            $query = ossim_query("SELECT DISTINCT host.hostname, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, INET6_NTOP(hi.ip) AS ip
+            $query = ossim_query("SELECT DISTINCT host.hostname, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, INET6_NTOA(hi.ip) AS ip
                 FROM host $tables, host_ip hi
                 WHERE hi.host_id = host.id
                 AND hi.ip > 0x0
@@ -2787,7 +3510,6 @@ class Asset_host extends Asset
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
 
-
         // Has LIMIT
         if (!empty($filters['limit']))
         {
@@ -2814,12 +3536,12 @@ class Asset_host extends Asset
                 if (is_array($lon) && !empty($lon[0]))
                 {
                     $longitude = $lon[0];
-                    $zoom      = (empty($lon[1])) ? 0 : $lon[1];
+                    $zoom      = (empty($lon[1])) ? 4 : $lon[1];
                 }
                 else
                 {
                     $longitude = 0;
-                    $zoom      = 0;
+                    $zoom      = 4;
                 }
 
                 $location = array(
@@ -2892,12 +3614,12 @@ class Asset_host extends Asset
                     if (is_array($lon) && !empty($lon[0]))
                     {
                         $longitude = $lon[0];
-                        $zoom      = (empty($lon[1])) ? 0 : $lon[1];
+                        $zoom      = (empty($lon[1])) ? 4 : $lon[1];
                     }
                     else
                     {
                         $longitude = 0;
-                        $zoom      = 0;
+                        $zoom      = 4;
                     }
 
                     $location = array(
@@ -2936,6 +3658,321 @@ class Asset_host extends Asset
         return array($hosts, $total);
     }
 
+
+    /**
+    * This function returns a filtered host list with all needed fields for asset list
+    *
+    * @param object   $conn     Database access object
+    * @param string   $tables   [Optional] Database tables separated by comma (Join with main table)
+    * @param array    $filters  [Optional] SQL statements (WHERE, LIMIT, ORDER BY ...)
+    * @param boolean  $cache    [Optional] Use cached information
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return array
+    */
+    public static function get_full_list($conn, $tables = '', $filters = array(), $cache = FALSE)
+    {
+        Ossim_db::check_connection($conn);
+
+        $hosts = array();
+
+        $total = 0;
+
+        //Build SQL
+
+        $perms_where = self::get_perms_where('host.', TRUE);
+
+        $q_select  = 'host.*';
+        $q_where   = 'WHERE 1=1 '.$perms_where;
+        $leftjoins = 'LEFT JOIN host_properties hp ON hp.host_id=host.id AND hp.property_ref=3 LEFT JOIN vuln_job_assets vj ON vj.asset_id=host.id LEFT JOIN host_scan hs ON hs.host_id=host.id AND hs.plugin_id=2007 AND hs.plugin_sid=0';
+
+        if (!empty($filters['where']))
+        {
+            $q_where  .= ' AND '.$filters['where'];
+        }
+
+        if (!empty($filters['order_by']))
+        {
+            $q_where  .= ' ORDER BY '.$filters['order_by'];
+
+            if (preg_match("/ip/",$filters['order_by']))
+            {
+                $leftjoins .= ' LEFT JOIN host_ip hi ON hi.host_id=host.id';
+            }
+        }
+
+        if (!empty($filters['limit']))
+        {
+            $q_select  = 'SQL_CALC_FOUND_ROWS host.*';
+            $q_where  .= ' LIMIT '.$filters['limit'];
+        }
+
+        $conn->SetFetchMode(ADODB_FETCH_ASSOC);
+
+
+        // Has LIMIT
+        if (!empty($filters['limit']))
+        {
+            $query = "SELECT DISTINCT $q_select, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, hp.value as os, if(vj.job_id is not null,'Yes','No') as vuln, if(hs.host_id is not null,'Yes','No') as avail
+                FROM host $leftjoins $tables $q_where";
+
+            $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+
+            $total = Ossim_db::get_found_rows($conn, $query, $cache);
+
+            while (!$rs->EOF)
+            {
+                //Location
+
+                $latitude = ($rs->fields['lat'] == '') ? 0 : $rs->fields['lat'];
+
+                $lon = explode(';', $rs->fields['lon']);
+
+                if (is_array($lon) && !empty($lon[0]))
+                {
+                    $longitude = $lon[0];
+                    $zoom      = (empty($lon[1])) ? 4 : $lon[1];
+                }
+                else
+                {
+                    $longitude = 0;
+                    $zoom      = 4;
+                }
+
+                $location = array(
+                    'lat'  => $latitude,
+                    'lon'  => $longitude,
+                    'zoom' => $zoom
+                );
+
+                $id = $rs->fields['h_id'];
+
+                //Ips
+                $ips = Asset_host_ips::get_ips_to_string($conn, $id);
+
+                $hosts[$id] = array(
+                    'id'           => $id,
+                    'ctx'          => $rs->fields['h_ctx'],
+                    'name'         => $rs->fields['hostname'],
+                    'ips'          => $ips,
+                    'descr'        => $rs->fields['descr'],
+                    'icon'         => $rs->fields['icon'],
+                    'fqdns'        => $rs->fields['fqdns'],
+                    'external'     => $rs->fields['external_host'],
+                    'location'     => $location,
+                    'asset_value'  => $rs->fields['asset'],
+                    'threshold_c'  => $rs->fields['threshold_c'],
+                    'threshold_a'  => $rs->fields['threshold_a'],
+                    'os'           => $rs->fields['os'],
+                    'vuln_scan'    => $rs->fields['vuln'],
+                    'availability' => $rs->fields['avail']
+                );
+
+                $rs->MoveNext();
+            }
+        }
+        else
+        {
+            $counter_name = ($cache) ? 'total_'.md5($query) : 'total';
+
+            // First count to do block requests
+            $query = ossim_query("SELECT count(DISTINCT host.id) AS $counter_name FROM host $leftjoins $tables $q_where");
+
+            $rf    = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+
+            if (!$rf)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+
+            $total = $rf->fields[$counter_name];
+
+            $block = 2000;
+            $rf->Free();
+
+            for ($i = 0; $i <= $total; $i += $block)
+            {
+                $query = ossim_query("SELECT DISTINCT $q_select, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, hp.value as os, if(vj.job_id is not null,'Yes','No') as vuln, if(hs.host_id is not null,'Yes','No') as avail
+                    FROM host $leftjoins $tables $q_where LIMIT $i, $block");
+
+                $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+
+                if (!$rs)
+                {
+                    Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                }
+
+                while (!$rs->EOF)
+                {
+                    //Location
+                    $latitude = ($rs->fields['lat'] == '') ? 0 : $rs->fields['lat'];
+
+                    $lon = explode(';', $rs->fields['lon']);
+
+                    if (is_array($lon) && !empty($lon[0]))
+                    {
+                        $longitude = $lon[0];
+                        $zoom      = (empty($lon[1])) ? 4 : $lon[1];
+                    }
+                    else
+                    {
+                        $longitude = 0;
+                        $zoom      = 4;
+                    }
+
+                    $location = array(
+                        'lat'  => $latitude,
+                        'lon'  => $longitude,
+                        'zoom' => $zoom
+                    );
+
+                    $id = $rs->fields['h_id'];
+
+                    //Ips
+                    $ips = Asset_host_ips::get_ips_to_string($conn, $id);
+
+                    $hosts[$id] = array(
+                        'id'           => $id,
+                        'ctx'          => $rs->fields['h_ctx'],
+                        'name'         => $rs->fields['hostname'],
+                        'ips'          => $ips,
+                        'descr'        => $rs->fields['descr'],
+                        'icon'         => $rs->fields['icon'],
+                        'fqdns'        => $rs->fields['fqdns'],
+                        'external'     => $rs->fields['external_host'],
+                        'location'     => $location,
+                        'asset_value'  => $rs->fields['asset'],
+                        'threshold_c'  => $rs->fields['threshold_c'],
+                        'threshold_a'  => $rs->fields['threshold_a'],
+                        'os'           => $rs->fields['os'],
+                        'vuln_scan'    => $rs->fields['vuln'],
+                        'availability' => $rs->fields['avail']
+                    );
+
+                    $rs->MoveNext();
+                }
+
+                $rs->Free();
+            }
+        }
+
+        return array($hosts, $total);
+    }
+
+
+    /**
+     * Function get_plugins_by_sensor
+     *
+     * This function gets the plugins related to a collection of sensors and assets
+     *
+     * @param object   $conn       Database access object
+     * @param hash     $sensors    Sensors to get the related plugins
+     * @param hash     $assets     Assets to match with the provided plugins by sensor
+     * @param bool     $edit_mode  Flag to know if return empty assets as well
+     *
+     * @return array   List of plugins
+     */
+    public static function get_plugins_by_sensor($conn, $sensors, $assets, $edit_mode = FALSE)
+    {
+        $plugin_data = array();
+
+        $client      = new Alienvault_client();
+
+        // Get system_ip
+        $system_list = Av_center::get_avc_list($conn);
+        $system_ip   = @$system_list['data'][strtolower(Util::get_system_uuid())]['admin_ip'];
+
+        foreach ($sensors as $sensor_id => $s_data)
+        {
+            // Get all plugins related to the sensor (Skip the local host)
+            $plugins  = $client->sensor(Util::uuid_format($sensor_id))->get_plugins_by_assets();
+            $plugins  = @json_decode($plugins, TRUE);
+
+            if ($plugins['status'] == 'success')
+            {
+                // Match with the provided assets
+                foreach ($assets as $asset_id => $asset_data)
+                {
+                    // Warning: 'name'/'hostname' [Incongruent output from Asset_net::get_hosts and Asset_group::get_hosts]
+                    $_asset_name = ($asset_data['hostname'] != '') ? $asset_data['hostname'] : $asset_data['name'];
+                    $_asset_ips  = explode(',', $asset_data['ips']);
+
+                    if (in_array($system_ip, $_asset_ips))
+                    {
+                        continue;
+                    }
+
+                    if (array_key_exists($asset_id, $plugins['data']['plugins']))
+                    {
+                        $asset_plugins = $plugins['data']['plugins'][$asset_id];
+
+                        foreach ($asset_plugins as $plugin_name => $pdata)
+                        {
+                            $vmv    = Software::get_vmv_by_cpe($conn, $pdata['cpe']);
+                            $active = Asset_host_devices::check_device_connectivity($conn, $asset_id, $pdata['plugin_id'], $sensor_id, TRUE);
+
+                            $aux_data = array(
+                                    'asset'          => $_asset_name,
+                                    'asset_id'       => $asset_id,
+                                    'vendor'         => $vmv['vendor'],
+                                    'model'          => $vmv['name'],
+                                    'version'        => $vmv['version'],
+                                    'plugin'         => $plugin_name,
+                                    'sensor'         => $s_data['name'].' ['.$s_data['ip'].']',
+                                    'sensor_id'      => $sensor_id,
+                                    'cpe'            => $pdata['cpe'],
+                                    'receiving_data' => $active
+                            );
+
+                            if ($edit_mode)
+                            {
+                                $plugin_data[$asset_id][] = $aux_data;
+                            }
+                            else
+                            {
+                                $plugin_data[] = $aux_data;
+                            }
+                        }
+                    }
+                    elseif ($edit_mode)
+                    {
+                        $plugin_data[$asset_id][] = array('asset' => $_asset_name);
+                    }
+                }
+            }
+        }
+
+        return $plugin_data;
+    }
+
+    /**
+     * This function set @disable_host_update variable to enable/disable trigger calc
+     *
+     * @param object   $conn            Database access object
+     * @param boolean  $enable          TRUE|FALSE
+     *
+     * @return boolean
+     */
+    public function disable_host_update($conn, $enable=TRUE)
+    {
+        if ($enable)
+        {
+            $conn->Execute("SET @disable_host_update=1");
+        }
+        else
+        {
+            $conn->Execute("SET @disable_host_update=NULL");
+            $conn->Execute("UPDATE host SET updated=utc_timestamp() WHERE id=UNHEX(?)", array($this->get_id()));
+        }
+
+        return $enable;
+    }
 }
 
 /* End of file asset_host.inc */

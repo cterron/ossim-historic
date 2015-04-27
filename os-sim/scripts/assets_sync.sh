@@ -24,11 +24,12 @@ if [ "${RESTART}" = "restart" ]; then
 fi
 
 echo "SET AUTOCOMMIT=0;" >> $TMPFILE
+echo "SET UNIQUE_CHECKS=0;" >> $TMPFILE
 echo "SET @disable_calc_perms=1;" >> $TMPFILE
 
 # 
 # System ID
-SYSID=`echo "select concat('0x',hex(id)) as id from alienvault.system where admin_ip=inet6_pton('$ADMIN_IP')"|ossim-db|sed -e '1,${ /^id/d }'`
+SYSID=`echo "select concat('0x',hex(id)) as id from alienvault.system where admin_ip=inet6_aton('$ADMIN_IP')"|ossim-db|sed -e '1,${ /^id/d }'`
 mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "id not in  ($SYSID)" alienvault system >> $TMPFILE
 #
 # ENTITIES
@@ -76,12 +77,12 @@ BEGIN
 		SET @engine = unhex(engine_uuid);
 		select s.name into @server from acl_entities a,server s where a.server_id=s.id and hex(a.id)=engine_uuid;
 		IF NOT EXISTS
-		  (SELECT id FROM tags_alarm WHERE hex(ctx)=engine_uuid)
+		  (SELECT id FROM tag WHERE hex(ctx)=engine_uuid)
 		THEN
-		    INSERT INTO tags_alarm (ctx,name,bgcolor,fgcolor,italic,bold) VALUES (@engine,@server,'dee5f2','5a6986',0,0);
+		    INSERT INTO tag (ctx,name,type,class) VALUES (@engine,@server,'alarm','av_tag_1');
 		ELSE
-			SELECT id into @tag FROM tags_alarm WHERE hex(ctx)=engine_uuid;
-			UPDATE tags_alarm SET name=@server WHERE id=@tag;
+			SELECT HEX(id) into @tag FROM tag WHERE hex(ctx)=engine_uuid;
+			UPDATE tag SET name=@server WHERE id=UNHEX(@tag);
 		END IF;
     END IF;
   UNTIL done END REPEAT;
@@ -121,7 +122,7 @@ BEGIN
   DECLARE _admin_ip  VARCHAR(64);
   DECLARE _vpn_ip    VARCHAR(64);
 
-  DECLARE cur1 CURSOR FOR select hex(id), inet6_ntop(admin_ip), inet6_ntop(vpn_ip) from alienvault.system where sensor_id is null;
+  DECLARE cur1 CURSOR FOR select hex(id), inet6_ntoa(admin_ip), inet6_ntoa(vpn_ip) from alienvault.system where sensor_id is null;
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
   OPEN cur1;
@@ -129,7 +130,7 @@ BEGIN
   REPEAT
     FETCH cur1 INTO _system_id, _admin_ip, _vpn_ip;
     IF NOT done THEN
-		UPDATE alienvault.system SET sensor_id=(SELECT sensor.id FROM sensor WHERE sensor.ip=inet6_pton(_admin_ip) OR sensor.ip=inet6_pton(_vpn_ip) LIMIT 1) WHERE id=UNHEX(_system_id);
+		UPDATE alienvault.system SET sensor_id=(SELECT sensor.id FROM sensor WHERE sensor.ip=inet6_aton(_admin_ip) OR sensor.ip=inet6_aton(_vpn_ip) LIMIT 1) WHERE id=UNHEX(_system_id);
     END IF;
   UNTIL done END REPEAT;
 

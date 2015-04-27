@@ -26,15 +26,17 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
-from __future__ import print_function
 
+from __future__ import print_function
+import uuid
 import yaml
 import json
 import re
 from datetime import datetime
 import celery.utils.log
-
+from apimethods.utils import get_uuid_string_from_bytes
 from api.lib.monitors.monitor import Monitor, MonitorTypes
+from api.lib.monitors.messages import MessageReader
 from db.methods.api import (save_current_status_message,
                             purge_current_status_message,
                             add_current_status_messages,
@@ -57,7 +59,12 @@ class TriggerCondition(object):
         "MONITOR_REMOTE_CERTIFICATES": 9,
         "MONITOR_PENDING_UPDATES": 11,
         "MONITOR_PLUGINS_VERSION": 12,
-        "MONITOR_PLUGINS_CHECK_INTEGRITY" : 13,
+        "MONITOR_PLUGINS_CHECK_INTEGRITY": 13,
+        "MONITOR_PLATFORM_TELEMETRY_DATA": 14,
+        "MONITOR_PLATFORM_MESSAGE_CENTER_DATA": 15,
+        "MONITOR_SYSTEM_CHECK_DB": 16,
+        "MONITOR_WEBUI_DATA": 18,
+        "MONITOR_SYSTEM_REBOOT_NEEDED": 20,
         "CHECK_TRIGGERS": 1500,
     }
 
@@ -99,124 +106,185 @@ class TriggerCondition(object):
     def trigger_message(self, component_id, component_type, message_code, data=""):
         """
         Creates a current status message and saves it in the database
-        :param component_id: The component id - uuid canonical string
-        :param message_code: Message type
+        :param component_id: The component id - uuid cannonical string
+        :param message_code: The message id - uuid cannonical string
         :param data: Current Status Message Additional Info
         :return: True is successful, False otherwise
         """
         rt = True
         try:
             rt = save_current_status_message(component_id, component_type, message_code, data)
-        except Exception as e:
+        except Exception as error:
+            logger.error("[trigger_message] %s" % str(error))
             rt = False
         return rt
-
-    def append_trigger_message(self, component_id, component_type, message_code, data=""):
-        """
-        Creates a current status message and saves it in the database
-        :param component_id: The component id - uuid canonical string
-        :param message_code: Message type
-        :param data: Current Status Message Additional Info
-        :return: True is successful, False otherwise
-        """
-        rt = True
-        try:
-            message_data = Current_Status()
-            message_data.component_id = component_id
-            message_data.component_type = component_type
-            message_data.creation_time = datetime.now()
-            message_data.message_id = message_code
-            message_data.additional_info = data
-            message_data.supressed = 0
-            message_data.viewed = 'false'
-            self.__trigger_messages.append(message_data)
-        except Exception, e:
-            rt = False
-        return rt
-
-    def commit_data(self):
-        """Commit data"""
-        return_value = True
-        try:
-            logger.info("There are %s triggers data objects ...saving them" % len(self.__trigger_messages))
-            return_value = add_current_status_messages(self.__trigger_messages)
-            del self.__trigger_messages[:]
-            self.__trigger_messages = []
-
-        except Exception, e:
-            logger.error("Error while committing the info %s" % str(e))
-            return_value = False
-        return return_value
 
     def purge_messages(self):
-        """Deletes all the messages for this condition"""
-        return purge_current_status_message(self.message_id)
+        """Deletes all the messages for this condition
+        """
+        return purge_current_status_message(self.message_id, self.__trigger_messages)
+
+    def get_monitor_and_parameters_to_be_evaluated(self):
+        """Returns a hash table where the keys are the monitor_id and the value
+        is a list of parameters name to be evaluated and the total number of parameters
+        to be replaced
+
+        Example:
+        {
+            '1': {'name':"monitorname1", 'parameters':['param1',param2]},
+            '2': {'name':"monitor_name2", 'parameters':['param1',param2]},
+        }, 4"""
+        # Parses the when clause to to retrieve the monitor and the parameter
+        # Example when clause
+        # $MONITOR_ASSET_EVENTS.last_event_arrival > 84600 and $MONITOR_ASSET_EVENTS.has_events == True
+        aux_regex_expr = "\$(\S+)"
+        aux_search = re.compile(aux_regex_expr).findall(self.when)
+
+        final_search = []
+        for token in aux_search:
+            final_search.append(tuple(token.split('.')))
+
+        # search_results = self.__regex_monitor.findall(self.when)
+        # logger.error("%s" % search_results)
+        # We could use several parameters within a monitor to test a condition.
+        # Hash table monitor_id:[param_name]
+        # Each search tuple will be (monitor_name,parameter_name)
+        monitor_parameters = {}
+        total_parameters_in_condition = 0
+        # for search_tuple in search_results:
+        for search_tuple in final_search:
+            if len(search_tuple) == 2:
+                monitor_name = search_tuple[0]
+                monitor_param = search_tuple[1]
+                if monitor_name in self.__AVAILABLE_MONITORS:
+                    monitor_id = self.__AVAILABLE_MONITORS[monitor_name]
+                    try:
+                        monitor_parameters[monitor_id]['parameters'].append(monitor_param)
+                    except KeyError:
+                        monitor_parameters[monitor_id] = {'name': monitor_name,
+                                                          'parameters': []}
+                        monitor_parameters[monitor_id]['parameters'].append(monitor_param)
+                    finally:
+                        total_parameters_in_condition += 1
+            elif len(search_tuple) == 3:
+                monitor_name = search_tuple[0]
+                monitor_param = search_tuple[1]
+                monitor_subparam = search_tuple[2]
+                if monitor_name in self.__AVAILABLE_MONITORS:
+                    monitor_id = self.__AVAILABLE_MONITORS[monitor_name]
+                    try:
+                        if monitor_param not in monitor_parameters[monitor_id]['parameters']:
+                            monitor_parameters[monitor_id]['parameters'].append(monitor_param)
+                        if monitor_subparam not in monitor_parameters[monitor_id]['subparameters'][monitor_param]:
+                            monitor_parameters[monitor_id]['subparameters'][monitor_param].append(monitor_subparam)
+                    except KeyError:
+                        monitor_parameters[monitor_id] = {'name': monitor_name,
+                                                          'parameters': [],
+                                                          'subparameters': {monitor_param: []}}
+                        monitor_parameters[monitor_id]['parameters'].append(monitor_param)
+                        monitor_parameters[monitor_id]['subparameters'][monitor_param].append(monitor_subparam)
+                    finally:
+                        total_parameters_in_condition += 1
+
+            else:
+                logger.error("[get_monitor_and_parameters_to_be_evaluated] Invalid monitor name <%s>" % monitor_name)
+
+        return monitor_parameters, total_parameters_in_condition
 
     def evaluate(self):
         """Evaluates the condition
         :returns True on success, False otherwise
         """
-        # get values to retrieve:
-        # $monitor.variable
+        # Get the list of parameters to be evaluate for each monitor on the condition
+        monitor_parameters, total_parameters_in_condition = self.get_monitor_and_parameters_to_be_evaluated()
+        """
+        {
+          "1": {
+            "name": "MONITOR_DROPPED_PACKAGES",
+            "parameters": [
+              "packet_loss"
+            ]
+          },
+          "2": {
+            "name": "MONITOR_CPU_LOAD",
+            "parameters": [
+              "cpu_load"
+            ]
+          }
+        }
+        """
+        logger.info("Running trigger condition... %s" % self.name)
 
-        search = self.__regex_monitor.findall(self.when)
-
-        logger.info("Running condition... %s" % self.name)
-        self.purge_messages()
-
-        result_set = get_all_monitor_data()
+        # Retrieve the information from the monitors that the condition are related with.
+        result_set = get_all_monitor_data(monitor_parameters.keys())
+        if len(result_set) == 0:
+            self.purge_messages()
+            return True
+        if total_parameters_in_condition == 0:
+            self.purge_messages()
+            return True
+        # Group by component
         component_monitors = {}
-
-        for monitor_data in result_set:
-            if monitor_data.component_id not in component_monitors:
-                component_monitors[monitor_data.component_id] = {}
-
-            if monitor_data.monitor_id not in component_monitors[monitor_data.component_id]:
-                component_monitors[monitor_data.component_id][monitor_data.monitor_id] = {
-                    'data': json.loads(monitor_data.data),
-                    'type': monitor_data.component_type}
-
-        logger.info("Let's start working... %s" % self.name)
-        # For each component evaluates the condition
-        for component_id, monitors in component_monitors.iteritems():
+        for monitor in result_set:
+            monitor_id = monitor.monitor_id
+            # Check whether the monitor id is on the monitor to be evaluete for this condition
+            if monitor_id not in monitor_parameters.keys():
+                continue
+            monitor_name = monitor_parameters[monitor_id]['name']
+            monitor_data = json.loads(monitor.data)
+            monitor_component_type = monitor.component_type
+            component_id = get_uuid_string_from_bytes(monitor.component_id)
+            if component_id not in component_monitors:
+                component_monitors[component_id] = []
+            monitor_hash = {"monitor_id": monitor_id,
+                            "monitor_name": monitor_name,
+                            "monitor_data": monitor_data,
+                            "monitor_component_type": monitor_component_type}
+            component_monitors[component_id].append(monitor_hash)
+        #print (json.dumps(component_monitors))
+        for component, component_monitors in component_monitors.iteritems():
             replacements = {}
-            for m in search:
-                if len(m) < 2:
-                    continue
-                # m[0] = monitor name
-                # m[1] = param_name
-                monitor_name = m[0]
-                param_name = m[1]
-                if monitor_name in self.__AVAILABLE_MONITORS.keys():
-                    monitor_id = self.__AVAILABLE_MONITORS[monitor_name]
-                    monitor_data = None
-                    try:
-                        monitor_data = monitors[monitor_id]['data']
-                        #logger.info(monitor_data)
-                    except KeyError:
-                        monitor_data = None
-                    if not monitor_data:
-                        continue
+            for monitor_info in component_monitors:
+                monitor_id = monitor_info["monitor_id"]
+                monitor_name = monitor_info["monitor_name"]
+                monitor_data = monitor_info["monitor_data"]
+                monitor_component_type = monitor_info["monitor_component_type"]
+                parameters_to_be_evaluated = monitor_parameters[monitor_id]['parameters']
+                for parameter in parameters_to_be_evaluated:
+                    # print ("Para %s" % parameter)
+                    #print (monitor_data)
+                    if parameter in monitor_data:
+                        # logger.info("*****\n%s\n%s\n*****\n" % (parameter, monitor_data))
+                        if not isinstance(monitor_data[parameter], dict):
+                            replace_string = "$%s.%s" % (monitor_name, parameter)
+                        #print (replace_string)
+                            replace_value = monitor_data[parameter]
+                            replacements[replace_string] = replace_value
+                        else:
+                            if 'subparameters' in monitor_parameters[monitor_id].keys():
+                                for subparameter in monitor_parameters[monitor_id]['subparameters'][parameter]:
+                                    replace_string = "$%s.%s.%s" % (monitor_name, parameter, subparameter)
+                                    replace_value = monitor_data[parameter][subparameter]
+                                    replacements[replace_string] = replace_value
 
-                    if param_name in monitor_data:
-                        replacements["$%s.%s" % (monitor_name, param_name)] = monitor_data[param_name]
-
-            if len(replacements) == len(search):
+            #print ("Total %s " % total_parameters_in_condition)
+            #print ("R: %s" % replacements)
+            if total_parameters_in_condition == len(replacements.keys()):  # We can evaluate the condition
                 condition = self.when
                 for replacement, new_value in replacements.iteritems():
                     if isinstance(new_value, unicode) or isinstance(new_value, str):
                         new_value = '\"' + new_value + '\"'
                     condition = condition.replace(replacement, str(new_value))
+                #print (condition)
                 if eval(condition):
-                    # logger.info("Condition (%s) evaluated to TRUE -> Send message" % self.when)
-                    # TODO: Modify yaml syntax to specify the component type
-                    self.append_trigger_message(component_id,
-                                                monitors[monitor_id]['type'],
-                                                self.message_id,
-                                                json.dumps({"condition": condition}))
+                    self.__trigger_messages.append(component)
+                    if not self.trigger_message(component, monitor_component_type, self.message_id, json.dumps(monitor_data)):
+                        logger.error("Cannot insert the new notification")
+                        print("Cannot insert the new notification")
 
+        self.purge_messages()
         logger.info("Condition has been evaluated.... Saving data..")
-        self.commit_data()
+        return True
 
 
 class Trigger(object):
@@ -262,25 +330,8 @@ class Trigger(object):
 class TriggerReader(object):
     """Loads the triggers file"""
     # Defined at #10062
-    MESSAGE = {
-        "$MESSAGE_INFO_ASSET_NOT_SENDING_LOGS": 1,
-        "$MESSAGE_INFO_LOGS_BUT_NOT_PLUGIN_ENABLED": 2,
-        "$MESSAGE_WARNING_24_HOURS_WITHOUT_EVENTS": 3,
-        "$MESSAGE_WARNING_SATURATION": 4,
-        "$MESSAGE_WARNING_DROPPED_PACKAGES": 5,
-        "$MESSAGE_WARNING_DISK_SPACE": 6,
-        "$MESSAGE_ERROR_DISK_SPACE": 7,
-        "$MESSAGE_EXTERNAL_DNS_CONFIGURED": 8,
-        "$MESSAGE_SYSTEM_UNREACHEABLE_OR_UNAVAILABLE": 9,
-        "$MESSAGE_PENDING_UPDATES": 10,
-        "$MESSAGE_SENSOR_UNREACHEABLE_OR_UNAVAILABLE": 11,
-        "$MESSAGE_PLUGINS_VERSION": 12,
-        "$MESSAGE_PLUGINS_CHECK_INTEGRITY" : 13,
-        "$MESSAGE_PLUGINS_CHECK_INSTALLED" : 14,
-        "$MESSAGE_PLUGINS_RSYSLOG_CHECK_INTEGRITY" : 15,
-        "$MESSAGE_PLUGINS_RSYSLOG_CHECK_INSTALLED" : 16
-
-    }
+    reader = MessageReader()
+    MESSAGE = reader.message_ids
 
     def __init__(self, triggers_file):
         self.__trigger_file = triggers_file
@@ -324,8 +375,10 @@ class TriggerReader(object):
                     message_id = 0
                     if condition['trigger_message_id'] in TriggerReader.MESSAGE:
                         message_id = TriggerReader.MESSAGE[condition['trigger_message_id']]
-                    c.message_id = message_id
-                    trigger.append_condition(c)
+                        c.message_id = message_id
+                        trigger.append_condition(c)
+                    else:
+                        logger.warning("Trigger message id not valid: %s" % condition['trigger_message_id'])
             else:
                 logger.warning("Trigger without conditions")
 
@@ -379,8 +432,8 @@ class CheckTriggers(Monitor):
                 logger.warning("TriggerReader load_trigger fails")
 
         except Exception, e:
-            logger.error("Something wrong happen while running the monitor..%s, %s" % (self.get_monitor_id(),
-                                                                                       str(e)))
+            logger.error("Something wrong happen while running the monitor..%s, %s"
+                         % (self.get_monitor_id(), str(e)))
             rt = False
 
         return rt

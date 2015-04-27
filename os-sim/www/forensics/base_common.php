@@ -49,6 +49,26 @@ require_once 'av_init.php';
 
 Session::logcheck($ossim_acid_aco_section, $ossim_acid_aco, $ossim_login_path);
 
+function GetPerms($alias = "acid_event") {
+    $perms_sql = ""; 
+    $domain = Session::get_ctx_where();
+    if ($domain != "") {
+        $perms_sql .= " AND $alias.ctx in ($domain)";
+    }
+    // Asset filter
+    $host_perms = Session::get_host_where();
+    $net_perms = Session::get_net_where();
+    
+    if ($host_perms != "") {
+        $perms_sql .= " AND ($alias.src_host in ($host_perms) OR $alias.dst_host in ($host_perms)";
+        if ($net_perms != "") $perms_sql .= " OR $alias.src_net in ($net_perms) OR $alias.dst_net in ($net_perms))";
+        else                  $perms_sql .= ")";
+    }
+    elseif ($net_perms != "") {
+        $perms_sql .= " AND ($alias.src_net in ($net_perms) OR $alias.dst_net in ($net_perms))";
+    }
+    return $perms_sql;
+}
 function GetEntityName($ctx) {
     GLOBAL $entities;
     return (!empty($entities[$ctx])) ? $entities[$ctx] : _("Unknown");
@@ -61,26 +81,30 @@ function GetSensorIDs($db) {
     $result->baseFreeRows();
     return $sensor_ids;
 }
-function GetSensorName($sid, $db) {
+function GetSensorName($sid, $db, $withip=true) {
     $name = "Unknown";
     $multiple = (preg_match("/\,/", $sid)) ? true : false;
     if ($multiple) $sid = preg_replace("/\s*\,.*/", "", $sid);
-    $tmp_sql = (is_numeric($sid)) ? "SELECT ase.name FROM alienvault_siem.device avs LEFT JOIN alienvault.sensor ase ON avs.sensor_id=ase.id WHERE avs.id=$sid" : "SELECT name FROM alienvault.sensor WHERE id=UNHEX('$sid')";
+    $tmp_sql = (is_numeric($sid)) ? "SELECT ase.name,ifnull(inet6_ntoa(avs.device_ip),inet6_ntoa(ase.ip)) as ip,avs.interface FROM alienvault_siem.device avs LEFT JOIN alienvault.sensor ase ON avs.sensor_id=ase.id WHERE avs.id=$sid" : "SELECT name,inet6_ntoa(ip) as ip,'' as interface FROM alienvault.sensor WHERE id=UNHEX('$sid')";
     $tmp_result = $db->baseExecute($tmp_sql);
     if ($tmp_result) {
 		$myrow = $tmp_result->baseFetchRow();
-        $name = ($myrow["name"]!="") ? $myrow["name"] : "N/A";
+        $name = ($myrow["name"]!="") ? $myrow["name"].($withip ? ' - '.$myrow["ip"] : '') : "N/A";
     }
     $tmp_result->baseFreeRows();
     return $name;
 }
 function GetSensorSids($db) {
     $sensors = array();
-    $temp_sql = "SELECT d.id,s.ip as sensor_ip FROM alienvault_siem.device d, alienvault.sensor s WHERE d.sensor_id=s.id";
+    $temp_sql = "SELECT GROUP_CONCAT(d.id SEPARATOR ',') as id,INET6_NTOA(s.ip) as sensor_ip,hex(s.id) as sensor_id 
+                 FROM alienvault_siem.device d, alienvault.sensor s 
+                 WHERE d.sensor_id=s.id GROUP BY sensor_id ORDER BY d.id";
     //echo $temp_sql;
     $tmp_result = $db->baseExecute($temp_sql);
-    while ($myrow = $tmp_result->baseFetchRow()) {
-    	$sensors[@inet_ntop($myrow["sensor_ip"])][] = $myrow["id"];
+    while ($myrow = $tmp_result->baseFetchRow())
+    {
+        $sensors[$myrow["sensor_ip"]] = $myrow["id"];
+        $sensors[$myrow["sensor_id"]] = $myrow["id"];
     }
     $tmp_result->baseFreeRows();
     return $sensors;
@@ -247,14 +271,13 @@ function GetActivityName($aid, $db) {
 }
 function GetPlugins($db) {
 	$plugins  = array();
-
-	$temp_sql = "SELECT distinct plugin_id,name FROM ac_acid_event LEFT JOIN alienvault.plugin ON ac_acid_event.plugin_id=plugin.id WHERE cnt>0";
-	if (Session::get_ctx_where()!=""){
-		$temp_sql .= " AND ac_acid_event.ctx in (".Session::get_ctx_where().")";
-	}
+    #$temp_sql = "SELECT distinct plugin_id,name FROM ac_acid_event LEFT JOIN alienvault.plugin ON ac_acid_event.plugin_id=plugin.id WHERE 1 ".GetPerms('ac_acid_event');
+    $temp_sql = "SELECT distinct plugin_id FROM ac_acid_event WHERE 1 ".GetPerms('ac_acid_event');
     $tmp_result = $db->baseExecute($temp_sql);
-    while ($myrow = $tmp_result->baseFetchRow()) {
-        $plg = ($myrow[1]=="") ? $myrow[0] : $myrow[1];
+    while ($myrow = $tmp_result->baseFetchRow())
+    {
+        $plg = GetPluginName($myrow[0], $db);
+        $plg = ($plg=="") ? $myrow[0] : $plg;
         $plg = preg_replace("/(ossec)-.*/","\\1",$plg);
         $plugins[$plg][] = $myrow[0];
     }
@@ -294,12 +317,12 @@ function GetVendor($mac) {
 }
 function GetOssimNetworkGroups() 
 {
-	$db     = new ossim_db();
+	$db     = new ossim_db(true);
 	$conn   = $db->connect();
 	
     $pg     = array();
     
-    $groups = Net_group::get_list($conn, "", " ORDER BY name");
+    $groups = Net_group::get_list($conn, "", " ORDER BY name", TRUE);
     
     foreach ($groups as $ng) 
     {
@@ -328,7 +351,7 @@ function GetNetworkGroupName($id,$db)
 
 function GetOssimHostGroups() 
 {
-	$db     = new ossim_db();
+	$db     = new ossim_db(true);
 	$conn   = $db->connect();
 	
     $pg     = array();
@@ -356,7 +379,7 @@ function GetOssimHostGroups()
 
 function GetOssimHostsFromHostGroups($hostgroup) 
 {
-	$db   = new ossim_db();
+	$db   = new ossim_db(true);
 	$conn = $db->connect();
 	
     $pg   = array();
@@ -366,7 +389,7 @@ function GetOssimHostsFromHostGroups($hostgroup)
         $asset_group = new Asset_group($hostgroup);
         $asset_group->load_from_db($conn);
         
-        $_hosts = $asset_group->get_hosts($conn, array(), TRUE);
+        $_hosts = $asset_group->get_hosts($conn, '', array(), TRUE);
         $hosts  = $_hosts[0];
     }
     catch (Exception $e)
@@ -389,7 +412,7 @@ function GetOssimHostsFromHostGroups($hostgroup)
 
 function GetDatesWithEvents($db) {
     $dates = array();
-    $temp_sql = "SELECT distinct(day) FROM ac_acid_event WHERE cnt>0";
+    $temp_sql = "SELECT distinct(date(timestamp)) FROM ac_acid_event WHERE 1";
 	//$temp_sql = "SELECT distinct(DATE_FORMAT(timestamp, '%Y-%m-%d')) FROM acid_event";
     $tmp_result = $db->baseExecute($temp_sql);
     while ($myrow = $tmp_result->baseFetchRow()) {
@@ -523,8 +546,8 @@ function BuildDstIPFormVars($ipaddr) {
 	//}
 	return $url;
 }
-function BuildUniqueAddressLink($addr_type, $raw = "", $style = "") {
-    return '<A HREF="base_stat_uaddr.php?sort_order=occur_d&addr_type=' . $addr_type . $raw . '" style="'.$style.'">';
+function BuildUniqueAddressLink($addr_type, $raw = "", $style = "", $class = "") {
+    return '<A HREF="base_stat_uaddr.php?sort_order=occur_d&addr_type=' . $addr_type . $raw . '" style="'.$style.'" class="'.$class.'">';
 }
 function BuildUniqueAlertLink($raw) {
     return '<A HREF="base_stat_alerts.php' . $raw . '">';
@@ -1251,7 +1274,7 @@ function get_plugin_list($conn) {
     $query = "SELECT id,name FROM plugin";
     $list = array();
     
-    $rs = $conn->Execute($query);
+    $rs = $conn->CacheExecute($query);
     
     if (!$rs) {
         print $conn->ErrorMsg();

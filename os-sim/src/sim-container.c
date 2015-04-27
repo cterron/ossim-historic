@@ -113,6 +113,9 @@ struct _SimContainerPrivate
   GHashTable *taxonomy_products;
   GHashTable       *proto_by_name; /* Use to resolve protocols by name to number */
   GHashTable       *proto_by_number; /* Use to resolve number to protocol */
+
+  // Hash table to lookup the name associated to a CPE
+  GHashTable       *cpe_name;
 };
 
 typedef
@@ -180,6 +183,8 @@ sim_container_impl_finalize (GObject  *gobject)
     g_hash_table_destroy (container->_priv->proto_by_name);
   if (container->_priv->proto_by_number)
     g_hash_table_destroy (container->_priv->proto_by_number);
+  if (container->_priv->cpe_name)
+    g_hash_table_destroy (container->_priv->cpe_name);
   
   g_free (container->_priv);
 
@@ -281,6 +286,14 @@ const gchar *  sim_container_get_proto_by_number (SimContainer *container, gint 
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
   g_hash_table_lookup_extended (container->_priv->proto_by_number, GINT_TO_POINTER(number), (gpointer*)&key, (gpointer *)&result);
   return result;
+}
+
+const gchar *
+sim_container_get_banner_by_cpe (SimContainer *container, const gchar *cpe)
+{
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+
+  return g_hash_table_lookup (container->_priv->cpe_name, cpe);
 }
 
 guint
@@ -385,6 +398,9 @@ sim_container_init (SimContainer *container,
   sim_db_update_server_version (database, ossim.version);
 
 
+
+  g_message ("Loading CPE");
+  container->_priv->cpe_name = sim_db_load_software_cpe (database);
 
   g_message ("Loading common plugins");
   container->_priv->common_plugins = sim_db_load_common_plugins (database);

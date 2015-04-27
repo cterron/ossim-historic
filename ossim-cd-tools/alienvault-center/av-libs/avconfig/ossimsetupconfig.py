@@ -46,7 +46,6 @@ class AVOssimSetupConfigHandler():
     SERVER_SECTION_NAME = "server"
     SNMP_SECTION_NAME = "snmp"
     UPDATE_SECTION_NAME = "update"
-    VPN_SECTION_NAME = "vpn"
     HA_SECTION_NAME = "ha"
 
 
@@ -126,12 +125,6 @@ class AVOssimSetupConfigHandler():
     SECTION_UPDATE_PROXY_USER = "update_proxy_user"
 
 
-    # VPN SECTION OPTIONS
-    SECTION_VNP_INFRAESTRUCTURE = "vpn_infraestructure" 
-    SECTION_VNP_NET = "vpn_net"
-    SECTION_VNP_NETMASK = "vpn_netmask" 
-    SECTION_VNP_PORT = "vpn_port"
-
     #HA SECTION OPTIONS
     """
     ha_autofailback=no
@@ -192,12 +185,6 @@ class AVOssimSetupConfigHandler():
                                            SECTION_UPDATE_PROXY_PASSWORD:"disabled",
                                            SECTION_UPDATE_PROXY_PORT:"disabled",
                                            SECTION_UPDATE_PROXY_USER:"disabled"},
-                      VPN_SECTION_NAME:{
-                                        SECTION_VNP_INFRAESTRUCTURE:"no",
-                                        SECTION_VNP_NET:"10.67.68",
-                                        SECTION_VNP_NETMASK:"255.255.255.0",
-                                        SECTION_VNP_PORT:"33800"
-                                        },
                       HA_SECTION_NAME:{
                                         SECTION_HA_HA_VIRTUAL_IP:"unconfigured",
                                         }
@@ -478,14 +465,7 @@ class AVOssimSetupConfigHandler():
         and self.PROFILE_NAME_FRAMEWORK in profiles and self.PROFILE_NAME_SERVER:
             return True
         return False
-    
-    def __can_change_vpn_settings(self):
-        """Only the profile server could change this settings.
-        """
-        profiles = self.get_general_profile_list()
-        if self.PROFILE_NAME_SERVER in profiles:
-            return True
-        return False
+
     def __get_list_value(self,value):
         """Returns the list value in the correct format.
         @param value: list of comma separated values.
@@ -859,31 +839,6 @@ class AVOssimSetupConfigHandler():
         """
         return self.__get_variable_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_USER)
 
-
-    def get_vpn_vpn_infraestructure(self):
-        """Returns the '[vpn]->vpn_infraestructure' field
-        """
-        return self.__get_variable_value(self.VPN_SECTION_NAME, self.SECTION_VNP_INFRAESTRUCTURE)
-
-
-    def get_vpn_vpn_net(self):
-        """Returns the '[vpn]->vpn_net' field
-        """
-        return self.__get_variable_value(self.VPN_SECTION_NAME, self.SECTION_VNP_NET)
-
-
-    def get_vpn_vpn_netmask(self):
-        """Returns the '[vpn]->vpn_netmask' field
-        """
-        return self.__get_variable_value(self.VPN_SECTION_NAME, self.SECTION_VNP_NETMASK)
-
-
-    def get_vpn_vpn_port(self):
-        """Returns the '[vpn]->vpn_port' field
-        """
-        return self.__get_variable_value(self.VPN_SECTION_NAME, self.SECTION_VNP_PORT)
-
-
     def get_ha_ha_autofailback(self):
         """Returns the '[ha]->ha_autofailback' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_AUTOFAILBACK)
@@ -1012,6 +967,9 @@ class AVOssimSetupConfigHandler():
     ####################################
     # Non ossim_setup.conf related stuff
     ####################################
+
+    ### /etc/network/interfaces configuration
+
     def get_net_iface_config_all (self):
         """
         Return a dict with all network interface configurations, in the form {'iface name': 'configuration parameters'}
@@ -1048,6 +1006,8 @@ class AVOssimSetupConfigHandler():
         """
         return self.__sysconfig.get_net_iface_config(modifier)[modifier].get('gateway')
 
+    ### /etc/hosts configuration
+
     def get_hosts_config_all (self):
         """
         Return a dict with all entries in /etc/hosts, in the form {'entry': 'configuration parameters'}
@@ -1079,6 +1039,8 @@ class AVOssimSetupConfigHandler():
         """
         return self.__sysconfig.get_hosts_config().keys()[2]
 
+    ### Registered systems configuration
+
     def get_registered_system (self):
         """
         Return the first registered system in our database.
@@ -1098,6 +1060,82 @@ class AVOssimSetupConfigHandler():
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
 
         return registered_systems
+
+    ### /etc/alienvault/network/vpn.conf
+
+    def get_avvpn_config_all (self):
+        """
+        Return a dict with all VPN configurations, in the form {'iface name': 'configuration parameters'}
+        """
+        return self.__sysconfig.get_avvpn_config_all ()
+
+    def get_avvpn_config (self, iface):
+        """
+        Return a dict with the VPN network interface name 'iface' as key, and its configuration attributes as values.
+        """
+        return self.__sysconfig.get_avvpn_config (iface = iface)
+
+    def get_avvpn_config_role (self, modifier='tun0'):
+        """
+        Return the role in a VPN configuration (either 'client' or 'server')
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('role', '')
+
+    def get_avvpn_config_config_file (self, modifier='tun0'):
+        """
+        Return the configuration file path for a VPN.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('config_file', '')
+
+    def get_avvpn_config_network (self, modifier='tun0'):
+        """
+        Return the network of a VPN.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('network', '')
+
+    def get_avvpn_config_netmask (self, modifier='tun0'):
+        """
+        Return the netmask in a VPN configuration.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('netmask', '')
+
+    def get_avvpn_config_port (self, modifier='tun0'):
+        """
+        Return the port of a VPN configuration.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('port', '')
+
+    def get_avvpn_config_ca (self, modifier='tun0'):
+        """
+        Return the CA file path of a VPN.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('ca', '')
+
+    def get_avvpn_config_cert (self, modifier='tun0'):
+        """
+        Return the certificate file path of a VPN.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('cert', '')
+
+    def get_avvpn_config_key (self, modifier='tun0'):
+        """
+        Return the key file path of a VPN.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('key', '')
+
+    def get_avvpn_config_dh (self, modifier='tun0'):
+        """
+        Return the DH file path of a VPN.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('dh', '')
+
+    def get_avvpn_config_enabled (self, modifier='tun0'):
+        """
+        Return if the VPN is enabled or not.
+        """
+        return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('enabled', 'no')
+
+
 
 ###############################################################################
 #           MUTATORS
@@ -1164,10 +1202,6 @@ class AVOssimSetupConfigHandler():
             self.check_update_update_proxy_pass(self.get_update_update_proxy_pass())
             self.check_update_update_proxy_port(self.get_update_update_proxy_port())
             self.check_update_update_proxy_user(self.get_update_update_proxy_user())
-            self.check_vpn_vpn_infraestructure(self.get_vpn_vpn_infraestructure())
-            self.check_vpn_vpn_net(self.get_vpn_vpn_net())
-            self.check_vpn_vpn_netmask(self.get_vpn_vpn_netmask())
-            self.check_vpn_vpn_port(self.get_vpn_vpn_port())
         except Exception, e:
             traceback.print_exc()
             print str(e)
@@ -1831,73 +1865,6 @@ class AVOssimSetupConfigHandler():
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.UPDATE_PROXY_USER_NOT_VALID, value)
             self.__add_error(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_USER, result)
         return result
-
-    def check_vpn_vpn_infraestructure(self, value):
-        """Check whether the [vpn]->vpn_infraestructure is valid
-        """
-        if not self.__can_change_vpn_settings():
-            logger.warning("VPN Settings can't be changed. Profile server is not present!")
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER)
-        result = AVConfigParserErrors.ALL_OK
-        error = False
-        try:
-            value = value.lower()
-            if value =="":
-                value = self.get_default_value(self.VPN_SECTION_NAME, self.SECTION_VNP_INFRAESTRUCTURE)
-            if value not in self.YES_NO_CHOICES:
-                logger.warning("Invalid vpn_infraestructure value %s" % value)
-                error = True
-        except AttributeError:#not a string
-            error = True
-        if error:
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_BOOLEAN_VALUE, value)
-            self.__add_error(self.VPN_SECTION_NAME, self.SECTION_VNP_INFRAESTRUCTURE, result)
-        return result
-
-
-    def check_vpn_vpn_net(self, value):
-        """Check whether the [vpn]->vpn_net is valid
-        The vpn net should be xxx.xxx.xxx like an ip but
-        with 3 octets only (this is a little weird)
-        """
-        result = AVConfigParserErrors.ALL_OK
-        if not is_valid_vpn_net(value):
-            logger.warning("Invalid vpn_net value %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_VPN_NET, value)
-            self.__add_error(self.VPN_SECTION_NAME, self.SECTION_VNP_NET, result)
-        return result
-
-
-    def check_vpn_vpn_netmask(self, value):
-        """Check whether the [vpn]->vpn_netmask is valid
-        """
-        if not self.__can_change_vpn_settings():
-            logger.warning("VPN Settings can't be changed. Profile server is not present!")
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER)
-        result = AVConfigParserErrors.ALL_OK
-        if not is_net_mask(value):
-            logger.warning("Invalid vpn_netmask value %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_NETMASK, value)
-            self.__add_error(self.VPN_SECTION_NAME,self.SECTION_VNP_NETMASK , result)
-        return result
-
-
-
-    def check_vpn_vpn_port(self, value):
-        """Check whether the [vpn]->vpn_port is valid
-        """
-        if not self.__can_change_vpn_settings():
-            logger.warning("VPN Settings can't be changed. Profile server is not present!")
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER)
-        result = AVConfigParserErrors.ALL_OK
-        is_default = self.__is_default(self.VPN_SECTION_NAME, self.SECTION_VNP_PORT, value)
-        if not is_default and  not is_valid_port(value):
-            logger.warning("Invalid vpn_port value %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_VPN_PORT, value)
-            self.__add_error(self.VPN_SECTION_NAME, self.SECTION_VNP_PORT, result)
-        return result
-
-
 
     def set_general_admin_dns(self, value):
         """Sets the value for 'admin_dns'
@@ -2664,65 +2631,13 @@ class AVOssimSetupConfigHandler():
         return result
 
 
-    def set_vpn_vpn_infraestructure(self, value):
-        """Sets the [vpn]->vpn_infraestructure value
-        """
-        if not self.__avconfig_loaded_ok:
-            logger.error("set_vpn_vpn_infraestructure -> File not loaded!")
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        if not self.__can_change_vpn_settings():
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER)
-        value = self.__set_default_value_if_needed(self.VPN_SECTION_NAME, self.SECTION_VNP_INFRAESTRUCTURE, value)
-        result = self.check_vpn_vpn_infraestructure(value)
-        if result == AVConfigParserErrors.ALL_OK:
-            self.__set_option(self.VPN_SECTION_NAME, self.SECTION_VNP_INFRAESTRUCTURE, value)
-        return result
-
-    def set_vpn_vpn_net(self, value):
-        """Sets the [vpn]->vpn_net value
-        """
-        if not self.__avconfig_loaded_ok:
-            logger.error("set_vpn_vpn_net -> File not loaded!")
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        if not self.__can_change_vpn_settings():
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER)
-        value = self.__set_default_value_if_needed(self.VPN_SECTION_NAME, self.SECTION_VNP_NET, value)
-        result = self.check_vpn_vpn_net(value)
-        if result == AVConfigParserErrors.ALL_OK:
-            self.__set_option(self.VPN_SECTION_NAME, self.SECTION_VNP_NET, value)
-        return result
-
-    def set_vpn_vpn_netmask(self, value):
-        """Sets the [vpn]->vpn_netmask value
-        """
-        if not self.__avconfig_loaded_ok:
-            logger.error("set_vpn_vpn_netmask -> File not loaded!")
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        if not self.__can_change_vpn_settings():
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER)
-        value = self.__set_default_value_if_needed(self.VPN_SECTION_NAME, self.SECTION_VNP_NETMASK, value)
-        result = self.check_vpn_vpn_netmask(value)
-        if result == AVConfigParserErrors.ALL_OK:
-            self.__set_option(self.VPN_SECTION_NAME, self.SECTION_VNP_NETMASK, value)
-        return result
-
-    def set_vpn_vpn_port(self, value):
-        """Sets the [vpn]->vpn_port value
-        """
-        if not self.__avconfig_loaded_ok:
-            logger.error("set_vpn_vpn_port -> File not loaded!")
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        if not self.__can_change_vpn_settings():
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER)
-        value = self.__set_default_value_if_needed(self.VPN_SECTION_NAME, self.SECTION_VNP_PORT, value)
-        result = self.check_vpn_vpn_port(value)
-        if result == AVConfigParserErrors.ALL_OK:
-            self.__set_option(self.VPN_SECTION_NAME, self.SECTION_VNP_PORT, value)
-        return result
 
     ####################################
     # Non ossim_setup.conf related stuff
     ####################################
+
+    ### /etc/network/interfaces configuration
+
     def set_net_iface_config (self, iface, address = None, netmask = None, gateway = None, dns_search= None, dns_nameservers = None, broadcast = None, network = None):
         """
         Set the network configuration for the interface 'iface'.
@@ -2760,6 +2675,8 @@ class AVOssimSetupConfigHandler():
     def set_net_iface_gateway (self, value, modifier='eth0'):
         return self.set_net_iface_config (modifier, gateway = value)
 
+    ### /etc/hosts configuration
+
     def set_hosts_config (self, entry, ipaddr = None, canonical = None, aliases = []):
         """
         Set the configuration values for host entry 'entry'
@@ -2778,6 +2695,7 @@ class AVOssimSetupConfigHandler():
     def set_hosts_aliases (self, value, modifier='2'):
         return self.set_hosts_config (modifier, aliases = value)
 
+    ### Registered systems configuration
 
     def set_registered_system (self, value):
         """
@@ -2790,6 +2708,54 @@ class AVOssimSetupConfigHandler():
         Dumb method.
         """
         return AVConfigParserErrors.ALL_OK
+
+    ### /etc/alienvault/network/vpn.conf configuration
+
+    def set_avvpn_config (self, iface,
+                          role = None, config_file = None,
+                          network = None, netmask = None, port = None,
+                          ca = None, cert = None, key = None, dh = None,
+                          enabled = None):
+        """
+        Set the VPN configuration for the interface 'iface'.
+        """
+        result = self.__sysconfig.set_avvpn_config (iface, role = role, config_file = config_file,
+                                                    network = network, netmask = netmask, port = port,
+                                                    ca = ca, cert = cert, key = key, dh = dh,
+                                                    enabled = enabled)
+        if result == AVConfigParserErrors.ALL_OK:
+            self.__file_dirty = True
+        return result
+
+    def set_avvpn_config_role (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, role = value)
+
+    def set_avvpn_config_config_file (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, config_file = value)
+
+    def set_avvpn_config_network (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, network = value)
+
+    def set_avvpn_config_netmask (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, netmask = value)
+
+    def set_avvpn_config_port (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, port = value)
+
+    def set_avvpn_config_ca (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, ca = value)
+
+    def set_avvpn_config_cert (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, cert = value)
+
+    def set_avvpn_config_key (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, key = value)
+
+    def set_avvpn_config_dh (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, dh = value)
+
+    def set_avvpn_config_enabled (self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, enabled = value)
 
 
 ###############################################################################
@@ -3124,31 +3090,13 @@ class AVOssimSetupConfigHandler():
         """
         return self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_USER, value)
 
+    ####################################
+    # Non ossim_setup.conf related stuff
+    # Mostly dumb methods to interact with ossimsetup
+    ####################################
 
-    def is_default_vpn_vpn_infraestructure(self, value):
-        """Returns whether the value is a default value
-        """
-        return self.__is_default(self.VPN_SECTION_NAME, self.SECTION_VNP_INFRAESTRUCTURE, value)
+    ### /etc/network/interfaces configuration
 
-
-    def is_default_vpn_vpn_net(self, value):
-        """Returns whether the value is a default value
-        """
-        return self.__is_default(self.VPN_SECTION_NAME, self.SECTION_VNP_NET, value)
-
-
-    def is_default_vpn_vpn_netmask(self, value):
-        """Returns whether the value is a default value
-        """
-        return self.__is_default(self.VPN_SECTION_NAME, self.SECTION_VNP_NETMASK, value)
-
-
-    def is_default_vpn_vpn_port(self, value):
-        """Returns whether the value is a default value
-        """
-        return self.__is_default(self.VPN_SECTION_NAME, self.SECTION_VNP_PORT, value)
-
-    # Dumb methods to interact with ossimsetup
     def is_default_net_iface_ip (self, value):
         return
 
@@ -3156,6 +3104,20 @@ class AVOssimSetupConfigHandler():
         return
 
     def is_default_net_iface_gateway (self, value):
+        return
+
+    ### /etc/alienvault/network/vpn.conf
+
+    def is_default_avvpn_config_network (self, value):
+        return
+
+    def is_default_avvpn_config_netmask (self, value):
+        return
+
+    def is_default_avvpn_config_port (self, value):
+        return
+
+    def is_default_avvpn_config_enabled (self, value):
         return
 
     def has_errors(self):
@@ -3273,11 +3235,6 @@ class AVOssimSetupConfigHandler():
             return self.PROXY_VALUES_NO_PRO
 
 
-    def get_allowed_values_for_vpn_vpn_infraestructure(self):
-        """Returns the allowed values for the proxy values
-        """
-        return self.YES_NO_CHOICES
-
     ####################################
     # Non ossim_setup.conf related stuff
     ####################################
@@ -3297,7 +3254,6 @@ class AVOssimSetupConfigHandler():
 
         return registered_systems
 
-
     def get_allowed_values_for_registered_systems_without_vpn(self):
         proc = subprocess.Popen(['/usr/share/alienvault/api_core/bin/alienvault/virtual_env_run', 'get_registered_systems','-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
@@ -3306,6 +3262,10 @@ class AVOssimSetupConfigHandler():
 
         return registered_systems
 
+    def get_allowed_values_for_avvpn_config_enabled(self):
+        """Returns the allowed values for the proxy values
+        """
+        return self.YES_NO_CHOICES
 
 
 

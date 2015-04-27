@@ -8,6 +8,7 @@ Standards-Version: 3.8.4
 Package: alienvault-api-scripts
 Architecture: all
 Depends: sshpass,
+ pigz,
  ossim-utils (>= 1:${source:Upstream-Version}),
  alienvault-api-core (>= ${source:Upstream-Version})
 Provides: alienvault-api-scripts

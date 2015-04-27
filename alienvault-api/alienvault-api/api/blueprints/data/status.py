@@ -27,15 +27,15 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 from flask import Blueprint, request
+from flask.ext.login import current_user
 from uuid import UUID
 
 from api.lib.auth import admin_permission, logged_permission
 from api.lib.utils import accepted_url, is_admin_user
-from api.lib.common import (make_ok, make_error, document_using,make_bad_request)
-from apimethods.data.status import get_status_messages, put_status_message, get_status_message_by_id
-from apimethods.utils import is_valid_integer
+from api.lib.common import (make_ok, make_error, document_using, make_bad_request)
+from apimethods.data.status import get_status_messages, set_status_message_as_viewed, set_status_message_as_suppressed, get_status_message_by_id, get_status_messages_stats
+from apimethods.utils import is_valid_integer, is_json_true
 import api_log
-import re
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -50,74 +50,111 @@ blueprint = Blueprint(__name__, __name__)
                'page': {'type': int, 'optional': True},
                'page_rows': {'type': int, 'optional': True},
                'order_desc': {'type': bool, 'optional': True},
-               'message_id':{'type':int, 'optional':True}})
+               'message_id': {'type': UUID, 'optional': True},
+               'message_type': {'type': str, 'optional': True},
+               'search': {'type': str, 'optional': True},
+               'only_unread': {'type': bool, 'optional': True}})
 def get_data_status_messages():
-
+    """Retrieves a list of current_status messages matching the given criteria"""
     component_id = request.args.get('component_id')
     component_type = request.args.get('component_type')
-    message_id = request.args.get('message_id',None)
+    message_id = request.args.get('message_id', None)
+    search = request.args.get('search', None)
+    order_desc = is_json_true(request.args.get('order_desc'))
+    only_unread = is_json_true(request.args.get('only_unread'))
 
     level = request.args.get('level')
     if level is not None:
         level = level.split(',')
-    order_desc = request.args.get('order_desc')
+        valid_levels = ["info","warning","error"]
+        if not set(level).issubset(valid_levels):
+            return make_bad_request("Invalid parameter level. Allowed valeus are %s" % str(valid_levels))
 
     page = request.args.get('page', 1)
     if page is not None:
         if not is_valid_integer(page):
-            return make_error("The parameter page (%s) is not a valid integer value" % str(page),500)
+            return make_bad_request("The parameter page (%s) is not a valid integer value" % str(page))
         page = int(page)
-
-    if message_id is not None:
-        if not is_valid_integer(message_id):
-            return make_error("The parameter message_id (%s) is not a valid integer value" % str(message_id),500)
-        message_id = int(message_id)
 
     page_row = request.args.get('page_rows', 50)
     if page_row is not None:
         page_row = int(page_row)
 
+    message_type = request.args.get('message_type', None)
+    if message_type is not None:
+        message_type = message_type.split(',')
+
     orderby = request.args.get('order_by')
+    if orderby not in ['creation_time', 'component_type', 'message_level', 'message_type', 'message_title', '', None]:
+        return make_bad_request("Invalid parameter order by. Allowed values are ('creation_time','component_type','"
+                                "message_level','message_type','message_title','')")
 
-    if orderby not in ['creation_time','component_type','level','', None]:
-        return make_bad_request("Invalid parameter order by. Allowed values are ('creation_time','component_type','level','')")
+    (success, data) = get_status_messages(component_id=component_id, message_level=level, order_by=orderby,
+                                          page=page, page_row=page_row, order_desc=order_desc,
+                                          component_type=component_type, message_id=message_id,
+                                          message_type=message_type, search=search, only_unread=only_unread,
+                                          login_user=current_user.login,
+                                          is_admin=current_user.is_admin)
 
-    (success, data) = get_status_messages(component_id=component_id, level=level, orderby=orderby,
-                                              page=page, page_row=page_row, order_desc=order_desc,
-                                              component_type=component_type, message_id=message_id)
     if not success:
         return make_error(data, 500)
-
     return make_ok(**data)
 
 
-@blueprint.route('/<int:message_id>', methods=['PUT'])
-@document_using('static/apidcos/status.html')
-@admin_permission.require(http_exception=403)
-@accepted_url({'message_id': {'type': int, 'optional': False},
-               'component_id': {'type': UUID, 'optional': False},
-               'viewed': {'type': str, 'optional': False, 'values': ['true', 'false']}})
-def put_data_status_message(message_id):
+@blueprint.route('/stats', methods=['GET'])
+@document_using('static/apidocs/status.html')
+@logged_permission.require(http_exception=401)
+@accepted_url({'search': {'type': str, 'optional': True},
+               'only_unread': {'type': bool, 'optional': True}})
+def get_data_status_messages_stats():
+    """ Retrieves a list of current status messages stats """
+    search = request.args.get('search', None)
+    only_unread = is_json_true(request.args.get('only_unread'))
 
-    component_id = request.args.get('component_id')
-    viewed = request.args.get('viewed')
-
-    (success, data) = put_status_message(message_id, component_id, viewed)
+    (success, data) = get_status_messages_stats(search=search, only_unread=only_unread, login_user=current_user.login, is_admin=current_user.is_admin)
 
     if not success:
         return make_error(data, 500)
+    return make_ok(**data)
 
+
+@blueprint.route('/<status_message_id>', methods=['PUT'])
+@document_using('static/apidcos/status.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'status_message_id': {'type': UUID, 'optional': False},
+               'viewed': {'type': str, 'optional': True, 'values': ['true', 'false']},
+               'suppressed': {'type': str, 'optional': True, 'values': ['true', 'false']}})
+def set_data_status_message(status_message_id):
+    """Sets the status message as viewed/suppressed"""
+    viewed = request.args.get('viewed', None)
+    suppressed = request.args.get('suppressed', None)
+    if viewed is None and suppressed is None:
+        return make_bad_request("Missing parameter. viewed or suppressed are required")
+    if viewed not in ['true', 'false', None]:
+        return make_bad_request("Invalid value for parameter viewed")
+    if suppressed not in ['true', 'false', None]:
+        return make_bad_request("Invalid value for parameter suppressed")
+
+    if viewed is not None:
+        viewed = True if viewed == 'true' else False
+        (success, data) = set_status_message_as_viewed(status_message_id, viewed)
+        if not success:
+            return make_error(data, 500)
+    if suppressed is not None:
+        suppressed = True if suppressed == 'true' else False
+        (success, data) = set_status_message_as_suppressed(status_message_id, suppressed)
+        if not success:
+            return make_error(data, 500)
     return make_ok()
 
 
-@blueprint.route('/<int:message_id>', methods=['GET'])
+@blueprint.route('/<message_id>', methods=['GET'])
 @document_using('static/apidocs/status.html')
 @logged_permission.require(http_exception=401)
-@accepted_url({'message_id': {'type': int, 'optional': False}})
+@accepted_url({'message_id': {'type': UUID, 'optional': False}})
 def get_data_status_message_by_id(message_id):
-
+    """Retrieves the given message id"""
     (success, data) = get_status_message_by_id(message_id, is_admin_user())
     if not success:
         return make_error(data, 500)
-
     return make_ok(**data)

@@ -31,7 +31,7 @@
 from flask.ext.login import UserMixin
 
 from sqlalchemy import Column, ForeignKey
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, object_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql import BIGINT, BINARY, BIT, BLOB, BOOLEAN, CHAR, \
     DATE, DATETIME, DECIMAL, DECIMAL, DOUBLE, ENUM, FLOAT, INTEGER, LONGBLOB, \
@@ -4498,6 +4498,21 @@ class Users (UserMixin, Base):
 
     def get_id (self):
         return unicode(self.login)
+
+    def is_allowed (self, element_id, kind = 'host_id'):
+        procedures = {'host_id': 'acl_get_allowed_hosts', 'host_group_id': 'acl_get_allowed_host_groups'}
+        allowed = False
+
+        if kind not in procedures:
+            return False
+
+        try:
+            result = object_session(self).connection(mapper=Users).execute("call %s('%s','%s')" % (procedures.get(kind), self.login, element_id))
+            allowed = result.first() != None
+        except Exception, e:
+            return False
+
+        return allowed
 
     #
     # Relations:

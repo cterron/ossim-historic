@@ -42,6 +42,7 @@
 #include <glib/gstdio.h>
 
 #include "sim-log.h"
+#include "sim-util.h"
 #include "os-sim.h"
 
 // Global variables
@@ -218,7 +219,8 @@ void sim_debug_print_backlogs_data (GPtrArray * backlogs, GIOChannel *channel)
 {
   guint i;
   SimDirective *backlog;
-  gchar * timestamp, *buff;
+  gchar timestamp[TIMEBUF_SIZE];
+  gchar *buff;
   SimRule *rule;
 
   for (i = 0; i < backlogs->len; i++)
@@ -250,22 +252,18 @@ void sim_debug_print_backlogs_data (GPtrArray * backlogs, GIOChannel *channel)
     g_io_channel_write_chars(channel,buff,-1,NULL,NULL);
     g_free(buff);
 
-    timestamp = g_new0 (gchar, 26);
     time_t backlog_timelast = sim_directive_get_time_last(backlog);
-    strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t*)&backlog_timelast));
+    sim_time_t_to_str (timestamp, backlog_timelast);
 
     buff = g_strdup_printf("time_last=%s\n", timestamp);
     g_io_channel_write_chars(channel,buff,-1,NULL,NULL);
-    g_free(timestamp);
     g_free(buff);
 
-    timestamp = g_new0 (gchar, 26);
     time_t backlog_timeout = backlog_timelast + sim_directive_get_time_out(backlog);
-    strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t*)&backlog_timeout));
+    sim_time_t_to_str (timestamp, backlog_timeout);
 
     buff = g_strdup_printf("time_out=%s\n", timestamp);
     g_io_channel_write_chars(channel,buff,-1,NULL,NULL);
-    g_free(timestamp);
     g_free(buff);
 
     rule = sim_directive_get_root_rule (backlog);
@@ -284,18 +282,15 @@ void sim_debug_print_backlogs_data (GPtrArray * backlogs, GIOChannel *channel)
       g_io_channel_write_chars(channel,buff,-1,NULL,NULL);
       g_free(buff);
 
-      timestamp = g_new0 (gchar, 26);
       time_t rule_timelast = sim_rule_get_time_last(rule);
-      strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t*)&rule_timelast));
+      sim_time_t_to_str (timestamp, rule_timelast);
 
       buff = g_strdup_printf("\ttime_last=%s\n", timestamp);
       g_io_channel_write_chars(channel,buff,-1,NULL,NULL);
-      g_free(timestamp);
       g_free(buff);
 
-      timestamp = g_new0 (gchar, 26);
       time_t rule_timeout = rule_timelast + sim_rule_get_time_out(rule);
-      strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t*)&rule_timeout));
+      sim_time_t_to_str (timestamp, rule_timeout);
 
       buff = g_strdup_printf("\ttime_out=%s\n", timestamp);
       g_io_channel_write_chars(channel,buff,-1,NULL,NULL);

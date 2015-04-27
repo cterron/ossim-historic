@@ -80,7 +80,7 @@ def get_server_id():
     return server_id.replace("\n", "")
 
 def get_sensor_id(admin_ip, vpn_ip):
-    cmd = "echo \"select lower(CONCAT(LEFT(HEX(id), 8),'-',MID(HEX(id), 10, 4),'-', MID(HEX(id), 15, 4),'-', MID(HEX(id), 20, 4),'-',RIGHT(HEX(id), 12))) as id from alienvault.sensor where inet6_ntop(ip)='%s' or inet6_ntop(ip)='%s'\" | ossim-db | tail -1" % (vpn_ip, admin_ip)
+    cmd = "echo \"select lower(CONCAT(LEFT(HEX(id), 8),'-',MID(HEX(id), 10, 4),'-', MID(HEX(id), 15, 4),'-', MID(HEX(id), 20, 4),'-',RIGHT(HEX(id), 12))) as id from alienvault.sensor where inet6_ntoa(ip)='%s' or inet6_ntoa(ip)='%s'\" | ossim-db | tail -1" % (vpn_ip, admin_ip)
     return_code, sensor_id, error_str = _run_command(cmd)
     return sensor_id.replace("\n", "")
 

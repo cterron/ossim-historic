@@ -36,7 +36,6 @@ my $profesional_version4 = 0;
 my $free_version = 0;
 my $free_version3 = 0;
 my $free_version4 = 0;
-my $prokey = 0;
 my $percent = 0;
 my $dialog_active = 1;
 my $upgrade = 0;
@@ -119,95 +118,6 @@ sub main() {
 #	$vpre = get_current_oct_version();
 
 	system("mkdir $tmppath") if (! -d "$tmppath");
-
-
-    if ( $upgrade == 2 ) {
-        console_log("Upgrade in progress");
-        verbose_log("Download release notes");
-
-        my @script_mix = ("alienvault4_release-notes",
-                          "alienvault4_upgrade-script",
-                          "alienvault4_upgrade-pro-script",
-                          "alienvault4_update-script",
-                          "alienvault3_update-script",
-                          "alienvault3_upgrade-pro-script",
-                          "alienvault4_upgrade_demo-script");
-
-        foreach (@script_mix){
-            verbose_log("Downloading $_"); say("Checking AlienVault Server info\nPlease be patient...");
-            system("rm -rf $tmppath/$_") if ( -f "$tmppath/$_" );
-            system("rm -rf $tmppath/$_.sig") if ( -f "$tmppath/$_.sig" );
-            #system("wget -U $wget_useragent -O $tmppath/$_ $dataserver/RELEASES/$_");
-            system("wget -U $wget_useragent -O $tmppath/$_ $dataserver/$REL3/$_");
-            if ( -s "$tmppath/$_ $dataserver/$REL3/$_" ){
-                system("wget -U $wget_useragent -O $tmppath/$_.sig $dataserver/$REL3/$_.sig");
-		if ( -s "$tmppath/$_.sig"){
-                    my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$_.sig");
-                    if ($valid_sig != 0) {
-                      say("Invalid signature for upgrade file $_");
-                      exit $ERROR_INVALID_SIGNATURE3;
-                    }
-                } else {
-                    say("Signature not available for upgrade file $_");
-                    exit $ERROR_UNAVAILABLE_SIGNATURE3;
-		}
-            }
-        }
-        if ((  -s "$tmppath/alienvault4_release-notes")  &&
-            ( -s "$tmppath/alienvault4_upgrade-script" ) &&
-            ( -s "$tmppath/alienvault4_upgrade-pro-script" ) &&
-            ( -s "$tmppath/alienvault4_update-script" ) &&
-            ( -s "$tmppath/alienvault3_update-script" ) &&
-            ( -s "$tmppath/alienvault4_upgrade_demo-script") &&
-            ( -s "$tmppath/alienvault3_upgrade-pro-script" )) {
-            
-                $code = $prokey;
-                if ( $code ne ""){
-                    my $pro_repo = "$dataserver/${code}/binary/Packages";
-                    my $pro_repo_source_line = "deb $dataserver/${code}/ binary/";
-                    my $pro_repo_feed_source_line = "deb $dataserver/feed_${code}/ binary/";
-                    my $pro_repo_feed_etpro_source_line = "deb $dataserver/feed_etpro_${code}/ binary/";
-                    system("rm -rf $tmppath/package-code") if ( -f "$tmppath/package-code");
-                    system("wget -U $wget_useragent -O $tmppath/package-code $pro_repo");
-                    if ( -f "$tmppath/package-code" ){
-                        verbose_log("Check key");
-                        my $valid=`cat $tmppath/package-code | grep -v "ossim-server-dbg" | grep -A2 "Package: ossim-server" | grep "^Version:" |awk -F: '{print \$2}'`;
-                        my $valid4=`cat $tmppath/package-code | grep -v "ossim-server-dbg" | grep -A2 "Package: ossim-server" | grep "^Version:"|awk -F'10:' '{print \$2}' | awk -F'.' '{print \$1}'`;
-                        $valid =~ s/ //g;
-                        $valid =~ s/\n//g;
-
-                        if ( $valid >= 10 ) {
-                            if ( $valid4 >= 4) {
-                                $flag = "-v" if ($VERBOSELOG == 1);
-                                system("echo \"deb http://data.alienvault.com/alienvault4/ binary/\" > /etc/apt/sources.list.d/alienvault4-pro.list");
-                                system("echo \"$pro_repo_source_line\" >> /etc/apt/sources.list.d/alienvault4-pro.list");
-                                system("echo \"$pro_repo_feed_source_line\" >> /etc/apt/sources.list.d/alienvault4-pro.list");
-                                system("echo \"$pro_repo_feed_etpro_source_line\" >> /etc/apt/sources.list.d/alienvault4-pro-etpro.list");
-                                system("/bin/bash $tmppath/alienvault4_upgrade-pro-script $flag");
-                                my $info_version_file="/etc/alienvault-center/alienvault-info-version";
-                                system("echo \"Product: alienvault4-pro\" > $info_version_file");
-                                system("echo \"Version: 4\" >> $info_version_file");
-                                system("echo \"Subversion: 1\" >> $info_version_file");
-                                system("echo \"Subsubversion: 0\" >> $info_version_file");
-
-                                }else{
-                                    say("Invalid key. Are you trying to use an AV3 key?");
-                                    exit $ERROR_INVALID_KEY;
-                                }
-
-                            }else{
-                                say ("Please enter a valid AlienVault key");
-                                exit $ERROR_INVALID_KEY_ALT;
-                            }
-
-                        }
-
-                    }else{say("Please enter a valid AlienVault key");exit $ERROR_INVALID_KEY_ALT;}
-                }
-#            $vpost = get_current_oct_version();
-            console_log("Finished");
-            exit 0;
-    }
 
     if ( $feed == 1 ) {
         feed_update();
@@ -337,11 +247,13 @@ sub parse_argv() {
                         $config{'add_vpnnode'} = "$parms[1]";
                         $dialog_active = 0;
                         }
+		elsif ($parms[0] eq "--upgrade") {
+			say 'This tool is no longer supported. Please go to the AlienVault documentation portal for instructions on how to migrate OSSIM to USM or contact sales@alienvault.com for more information';
+                        exit 1;
+		}
                 elsif ($parms[0] eq "-uc" ) {
-                        if ($parms[1] eq "") { say "Professional key needed. Aborting process"; exit 1;}
-                        $prokey=$parms[1];
-                        $dialog_active = 0;
-                        $upgrade = 2;
+			say 'This tool is no longer supported. Please go to the AlienVault documentation portal for instructions on how to migrate OSSIM to USM or contact sales@alienvault.com for more information';
+                        exit 1;
                         }
                 elsif (($parms[0] eq "--release") || ($parms[0] eq "-r")) {
                         if ($parms[1] eq "") { error("branch needed (example: --release=rc4.2.2");}
@@ -406,9 +318,6 @@ Command line options:
 		--encoded (or -e)
 		  Install alienvault-server especial version for encoding.
 		
-		--saqqara (or -s)
-		  Install saqqara post correlation module in alienvault system.
-
 		--feed
 		  Update packages from feed.
 

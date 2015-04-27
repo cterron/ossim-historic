@@ -134,7 +134,7 @@ ntop_apache_config() {
             rm -f "$CONF_PATH"/ntop-*.conf
         fi
 
-        SENSOR_QUERY="select inet6_ntop(sensor.ip) from sensor join sensor_properties where sensor.id = sensor_properties.sensor_id and sensor_properties.has_ntop=1;"
+        SENSOR_QUERY="select inet6_ntoa(sensor.ip) from sensor join sensor_properties where sensor.id = sensor_properties.sensor_id and sensor_properties.has_ntop=1;"
         SENSOR_ADDRESSES=$(echo "$SENSOR_QUERY" | ossim-db | tail -n +2 | tr '\n' ' ')
 
         for ADDRESS in $SENSOR_ADDRESSES

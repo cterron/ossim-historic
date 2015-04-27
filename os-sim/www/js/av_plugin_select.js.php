@@ -36,7 +36,7 @@ header("Content-type: text/javascript");
 require_once 'av_init.php';
 ?>
 
-var __av_plugin_ajax_url = "/ossim/asset_details/ajax/plugin_ajax.php";
+var __av_plugin_ajax_url = "/ossim/av_asset/common/controllers/plugin_ajax.php";
 
 (function($) 
 {                     
@@ -387,7 +387,15 @@ function av_apply_plugin(plugin_callback, url)
     {
         var ajax_url = __av_plugin_ajax_url;
     }
-    var plugin_list = _get_selected_plugins();
+    
+    if (typeof get_saved_plugins === 'function')
+    {
+        var plugin_list = get_saved_plugins();
+    }
+    else
+    {
+        var plugin_list = _get_selected_plugins();
+    }
     
     var ctoken = Token.get_token("plugin_select");    
     

@@ -350,3 +350,6 @@ alert udp $HOME_NET 1434 -> $EXTERNAL_NET any (msg:"ET DOS MC-SQLR Response Outb
 #
 alert udp $EXTERNAL_NET 1434 -> $HOME_NET any (msg:"ET DOS MC-SQLR Response Inbound Possible DDoS Target"; content:"|05|"; depth:1; content:"ServerName|3b|"; nocase; content:"InstanceName|3b|"; distance:0; content:"IsClustered|3b|"; distance:0; content:"Version|3b|"; distance:0; threshold:type both,track by_dst,count 30,seconds 60; reference:url,kurtaubuchon.blogspot.com.es/2015/01/mc-sqlr-amplification-ms-sql-server.html; classtype:attempted-dos; sid:2020306; rev:3;)
 
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DOS Bittorrent User-Agent inbound - possible DDOS"; flow:established,to_server; content:"User-Agent|3a| Bittorrent"; http_header; threshold: type both, count 1, seconds 60, track by_src; reference:url,torrentfreak.com/zombie-pirate-bay-tracker-fuels-chinese-ddos-attacks-150124/; classtype:attempted-dos; sid:2020702; rev:1;)
+

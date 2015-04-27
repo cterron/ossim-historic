@@ -60,7 +60,7 @@ class Vulnerabilities
                 {
                     $users           = array();
                     $users_to_assign = Session::get_users_to_assign($dbconn);
-    
+
                     foreach ($users_to_assign as $user)
                     {
                         $users[] = $user->get_login();
@@ -85,6 +85,30 @@ class Vulnerabilities
         $query_filter = (count($items)>0) ? "'".implode("', '",$items)."'" : '';
 
         return array($items, $query_filter);
+    }
+
+    public static function update_vuln_job_assets($dbconn, $action, $job_id, $job_type)
+    {
+        $params = array(
+            $job_id,
+            $job_type
+        );
+
+        $dbconn->Execute('DELETE FROM vuln_job_assets WHERE job_id=? AND job_type=?', $params);
+
+        if ($action == 'insert')
+        {
+            $id     = ($job_type == 0) ? 0 : $job_id;
+
+            $params = array($id);
+
+            $rs     = $dbconn->Execute("CALL _update_vuln_assets(?)", $params);
+            
+            if (method_exists($rs, 'free'))
+            {
+                $rs->free();    
+            }
+        }
     }
 
 
@@ -250,6 +274,18 @@ class Vulnerabilities
                     // check smb credential with user/login
 
                     $hfile = fopen($pass_file, 'w');
+                    
+                    // domain\user
+                    
+                    $login_data = preg_split('/[\\\\]{1}/', $cdata["login"]);
+
+                    if (count($login_data) == 2)
+                    {
+                        $cdata["login"] = $login_data[1];
+                        
+                        fwrite($hfile, 'domain=' . $login_data[0] . "\n");
+                    }
+                    
                     fwrite($hfile, 'username=' . $cdata["login"] . "\n");
                     fwrite($hfile, 'password=' . $cdata["password"] . "\n");
                     fclose($hfile);
@@ -526,6 +562,8 @@ class Vulnerabilities
                 list ($failed_attempts, $meth_Wcheck, $profile, $scan_next, $meth_TARGET,
                     $scan_PID, $nid, $nname, $nusername, $start_date, $end_date, $submit_date, $nstatus,
                     $nnotify, $shostname, $credentials) = $result->fields;
+                    
+                $meth_Wcheck = preg_replace('/Scan Server/', 'Scan Sensor', $meth_Wcheck);
 
                 $omp = new Omp();
                 $task_detail = $omp->get_task_detail_by_id("Running|Paused|Pause Requested|Requested", $nid);
@@ -568,6 +606,16 @@ class Vulnerabilities
                         {
                             $ttargets[] = preg_replace("/^([a-f\d]{32})#/i", '', $id_ip);
                         }
+                    }
+                    else if( preg_match("/^([a-f\d]{32})#hostgroup/i", $id_ip, $found))
+                    {
+                        $hostgroup_name = Asset_group::get_name_by_id($dbconn, $found[1]);
+                        $ttargets[] = ($hostgroup_name == _('Unknown')) ? _('Unknown hostgroup') : $hostgroup_name;
+                    }
+                    else if( preg_match("/^([a-f\d]{32})#netgroup/i", $id_ip, $found))
+                    {
+                        $netgroup_name  = Net_group::get_name_by_id($dbconn, $found[1]);
+                        $ttargets[] = ($netgroup_name == _('Unknown')) ? _('Unknown netgroup') : $netgroup_name;
                     }
                     else
                     {
@@ -702,13 +750,14 @@ class Vulnerabilities
                     }
                 }
 
-                $tooltip_message = "<strong>"._("Server").":</strong> $shostname
+                $tooltip_message = "<strong>"._("Sensor").":</strong> $shostname
                                     <br>$job_status<strong>"._("Job ID").":</strong> $nid
                                     <br><strong>"._("Profile").":</strong> $profile
                                     <br>".((count($credentialm)>0) ? implode("<br/>", $credentialm)."<br/>" : '')."
                                     <strong>"._("Failed attempts").":</strong> $failed_attempts
                                     <br><strong>"._("Targets").":</strong>
-                                    <br>".$meth_TARGET.(($meth_Wcheck != '')? "<strong>"._("Messages").":</strong>
+                                    <br>$meth_TARGET
+                                    <br>".(($meth_Wcheck != '')? "<strong>"._("Messages").":</strong>
                                     <br>".nl2br(trim($meth_Wcheck)) : '');
 
                 $sInfo .= "<td style='text-align:left;width:15%;padding:3px 0px 3px 3px;'>$image&nbsp;<span class='tip' title='$tooltip_message'>".html_entity_decode($nname)."</span></td>";
@@ -1177,7 +1226,7 @@ class Vulnerabilities
                     {
                         $query = "Update vuln_nessus_settings_plugins set enabled = ? where id = ? and sid = ?";
                         $params = array('N', $rs->fields['id'], $sid);
-                        
+
                         $rspd = $dbconn->Execute($query, $params);
                         if (!$rspd)
                         {
@@ -1196,7 +1245,7 @@ class Vulnerabilities
                         {
                             $query = "Update vuln_nessus_settings_plugins set enabled = ? where ID = ? and sid = ?";
                             $params = array('Y', trim($plugin), $sid);
-                            
+
                             $rspe = $dbconn->Execute($query, $params);
                             if (!$rspe)
                             {
@@ -1244,7 +1293,7 @@ class Vulnerabilities
 
             $query = "SELECT id FROM vuln_nessus_category WHERE name IN ('denial', 'flood', 'destructive_attack','kill_host')";
             $rs = $dbconn->Execute($query);
-            
+
             if (!$rs)
             {
                 $result["status"]  = "error";
@@ -1260,9 +1309,9 @@ class Vulnerabilities
                     $params = array('N', $sid, $rs->fields['id']);
 
                     $rsnondos = $dbconn->Execute($query, $params);
-                    
+
                     if (!$rsnondos)
-                    {   
+                    {
                         $result["status"]  = "error";
                         $result["message"] = $dbconn->ErrorMsg();
 
@@ -1280,7 +1329,7 @@ class Vulnerabilities
         {
             $query = "Update vuln_nessus_settings_plugins set enabled = ? where sid = ?";
             $params = array('N', $sid);
-            
+
             if (!$dbconn->Execute($query, $params))
             {
                 $result["status"]  = "error";
@@ -1380,9 +1429,9 @@ class Vulnerabilities
         }
 
         $query = "SELECT count(*) FROM vuln_nessus_settings_preferences WHERE sid = ? AND nessus_id = ?";
-        
+
         $params = array($sid, $nessus_id);
-        
+
         $result = $dbconn->execute($query, $params);
 
         if($result === FALSE)
@@ -1399,7 +1448,7 @@ class Vulnerabilities
             if ( $type == "P" && !empty($fieldvalue))
             {
                 $query  = "INSERT vuln_nessus_settings_preferences SET nessus_id = ?, value = AES_ENCRYPT(? , ?), type = ?, category = ?, sid = ? ";
-                $params = array($nessus_id, $fieldvalue, $uuid, $type, $category, $sid);   
+                $params = array($nessus_id, $fieldvalue, $uuid, $type, $category, $sid);
             }
             else
             {
@@ -1547,7 +1596,7 @@ class Vulnerabilities
                 $key     = substr($key, 2);
                 $query   = "update vuln_nessus_settings_category set status = ? where sid = ? and cid = ?";
                 $params = array($value, $sid, $key);
-                
+
                 $results = $dbconn->Execute($query, $params);
             }
         }
@@ -1740,7 +1789,7 @@ class Vulnerabilities
 
                             $query   = "insert into vuln_nessus_settings_family values(?, ?, ?)";
                             $params  = array($sid, $key, $value);
-                            
+
                             $results = $dbconn->Execute($query, $params);
                             if($result === FALSE)
                             {
@@ -1754,7 +1803,7 @@ class Vulnerabilities
 
                             $query   = "insert into vuln_nessus_settings_category values(?, ?, ?)";
                             $params  = array($sid, $key, $value);
-                            
+
                             $results = $dbconn->Execute($query, $params);
                             if($result === FALSE)
                             {
@@ -2121,6 +2170,267 @@ class Vulnerabilities
         }
 
         return array("message" => '', "status" => "OK");
+    }
+
+    /**
+     * Function get_vulnerabilities
+     *
+     * This function returns the asset vulnerabilities
+     *
+     * @param object $conn Database access object
+     * @param string $id   Host ID
+     *
+     * @access public
+     * @return array          List of vulnerabilities
+     * @throws Av_exception   If a connection error occurred
+     */
+    public static function get_vulnerabilities($conn, $tables = '', $filters = array(), $cache = FALSE)
+    {
+        Ossim_db::check_connection($conn);
+
+        $vulnerabilities = array();
+
+        $total = 0;
+
+        //Build SQL
+
+        $perms_where = Asset_host::get_perms_where('host.', TRUE);
+
+        $q_select = 'lr.hostIP, lr.app, lr.service, lr.port, lr.protocol, lr.scriptid, lr.risk, lr.msg, p.name, HEX(lr.ctx) as ctx';
+
+        $q_tables = 'host, host_ip, vuln_nessus_latest_results lr LEFT JOIN vuln_nessus_plugins p ON p.id=lr.scriptid';
+
+        $q_where  = 'WHERE host_ip.host_id = host.id
+                     AND host.ctx = lr.ctx
+                     AND lr.hostIP = INET6_NTOA(host_ip.ip) ' . $perms_where;
+
+        if (!empty($tables))
+        {
+            $q_tables .= $tables;
+        }
+
+        if (!empty($filters['where']))
+        {
+            $q_where  .= ' AND ' . $filters['where'];
+        }
+
+        $q_where  .= (!empty($filters['order_by'])) ? ' ORDER BY ' . $filters['order_by'] : ' ORDER BY lr.risk ASC';
+
+
+        if (!empty($filters['limit']))
+        {
+            $q_select  = ' SQL_CALC_FOUND_ROWS ' . $q_select;
+            $q_where  .= ' LIMIT ' . $filters['limit'];
+        }
+
+        $conn->SetFetchMode(ADODB_FETCH_ASSOC);
+
+        // Has LIMIT
+        if (!empty($filters['limit']))
+        {
+            $query = "SELECT DISTINCT $q_select, HEX(host.id) AS h_id
+                FROM $q_tables $q_where";
+
+            $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+
+            $total = Ossim_db::get_found_rows($conn, $query, $cache);
+
+            while (!$rs->EOF)
+            {
+                $id          = $rs->fields['h_id'];
+                $ip          = $rs->fields['hostIP'];
+                $ctx         = $rs->fields['ctx'];
+                $app         = $rs->fields['app'];
+                $service     = $rs->fields['service'];
+                $port        = $rs->fields['port'];
+                $protocol    = $rs->fields['protocol'];
+                $plugin_id   = $rs->fields['scriptid'];
+                $plugin_name = ($rs->fields['scriptid'] == 0) ? _('Open port') : $rs->fields['name'];
+                $risk        = $rs->fields['risk'];
+                $msg         = $rs->fields['msg'];
+
+                $vulnerabilities[$id][] = array(
+                    'ip'        => $ip,
+                    'app'       => $app,
+                    'service'   => $service,
+                    'port'      => $port,
+                    'protocol'  => $protocol,
+                    'plugin_id' => $plugin_id,
+                    'plugin'    => $plugin_name,
+                    'risk'      => $risk,
+                    'msg'       => $msg,
+                    'date'      => self::get_latest_timestamp($conn, $ip, $ctx, $service, $port, $protocol, $plugin_id)
+                );
+
+                $rs->MoveNext();
+            }
+        }
+        else
+        {
+            $counter_name = ($cache) ? 'total_'.md5($query) : 'total';
+
+            // First count to do block requests
+            $query = ossim_query("SELECT COUNT(*) AS $counter_name FROM (SELECT DISTINCT $q_select, HEX(host.id) AS h_id FROM $q_tables $q_where) as vulns_list");
+
+            $rf    = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+
+            if (!$rf)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+
+            $total = intval($rf->fields[$counter_name]);
+
+            $block = 2000;
+            $rf->Free();
+
+            for ($i = 0; $i <= $total; $i += $block)
+            {
+                $query = ossim_query("SELECT DISTINCT $q_select, HEX(host.id) AS h_id
+                    FROM $q_tables $q_where LIMIT $i, $block");
+
+                $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+
+                if (!$rs)
+                {
+                    Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                }
+
+                while (!$rs->EOF)
+                {
+                    $id          = $rs->fields['h_id'];
+                    $ip          = $rs->fields['hostIP'];
+                    $app         = $rs->fields['app'];
+                    $service     = $rs->fields['service'];
+                    $port        = $rs->fields['port'];
+                    $protocol    = $rs->fields['protocol'];
+                    $plugin_id   = $rs->fields['scriptid'];
+                    $plugin_name = ($rs->fields['scriptid'] == 0) ? _('Open port') : $rs->fields['name'];
+                    $risk        = $rs->fields['risk'];
+                    $msg         = $rs->fields['msg'];
+    
+                    $vulnerabilities[$id][] = array(
+                        'ip'        => $ip,
+                        'app'       => $app,
+                        'service'   => $service,
+                        'port'      => $port,
+                        'protocol'  => $protocol,
+                        'plugin_id' => $plugin_id,
+                        'plugin'    => $plugin_name,
+                        'risk'      => $risk,
+                        'msg'       => $msg,
+                        'date'      => self::get_latest_timestamp($conn, $ip, $ctx, $service, $port, $protocol, $plugin_id)
+                    );
+
+                    $rs->MoveNext();
+                }
+
+                $rs->Free();
+            }
+        }
+
+        return array($vulnerabilities, $total);
+    }
+    
+    
+    /**
+    * This function returns the latest timestap of a vulnerability
+    *
+    * @param object   $conn       Database access object
+    * @param string   $ip         Asset IP
+    * @param array    $ctx        Asset Context
+    * @param string   $service    Service
+    * @param integer  $port       Port
+    * @param integer  $protocol   Protocol
+    * @param integer  $plugin_id  Plugin ID
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return string
+    */
+    public static function get_latest_timestamp($conn, $ip, $ctx, $service, $port, $protocol, $plugin_id)
+    {
+        Ossim_db::check_connection($conn);
+
+        $query = 'SELECT MAX(scantime) AS scantime FROM vuln_nessus_latest_results
+            WHERE hostIP = ?
+            AND ctx = UNHEX(?)
+            AND service = ?
+            AND port = ?
+            AND protocol = ?
+            AND scriptid = ?';
+
+        $params = array($ip, $ctx, $service, $port, $protocol, $plugin_id);
+
+        $conn->SetFetchMode(ADODB_FETCH_ASSOC);
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        $scantime = $rs->fields['scantime'];;
+
+        return $scantime;
+    }
+
+
+    public static function get_severity_by_risk($risk)
+    {
+        if ($risk == 1)
+        {
+            return _('Serious');
+        }
+        elseif ($risk == 2)
+        {
+            return _('High');
+        }
+        elseif ($risk == 3)
+        {
+            return _('Medium');
+        }
+        elseif ($risk <= 6)
+        {
+            return _('Low');
+        }
+        elseif ($risk > 6)
+        {
+            return _('Info');
+        }
+        else
+        {
+            return _('Unknown');
+        }
+    }
+
+
+    public static function is_scheduled($conn, $id)
+    {
+        Ossim_db::check_connection($conn);
+
+        $params = array($id);
+        $query  = "SELECT job_id FROM vuln_job_assets WHERE asset_id = UNHEX(?)";
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if (!$rs->EOF)
+        {
+            return TRUE;
+        }
+
+        return FALSE;
     }
 }
 

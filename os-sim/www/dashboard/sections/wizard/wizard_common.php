@@ -765,7 +765,7 @@ function display_errors($info_error)
 
     $errors    = implode ("</div><div style='padding-top: 3px;'>", $info_error);
             
-    $error_msg = "<div style='padding-bottom: 3px;'>"._("We found the following errors:")."</div>
+    $error_msg = "<div style='padding-bottom: 3px;'>"._("The following errors occurred:")."</div>
                     <div style='margin-left: 15px;'><div>$errors</div></div>";
     
 	$style     = (empty($style)) ? 'margin: 20px auto; width: 60%; text-align:left' : $style;

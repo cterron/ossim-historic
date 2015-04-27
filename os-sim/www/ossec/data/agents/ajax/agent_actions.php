@@ -154,7 +154,7 @@ else
 
 if (is_array($validation_errors) && !empty($validation_errors))
 {
-    $validation_errors['html_errors'] = "<div style='text-align: left;'>"._('We found the following errors').":</div>
+    $validation_errors['html_errors'] = "<div style='text-align: left;'>"._('The following errors occurred').":</div>
                                          <div style='padding-left:15px; text-align: left;'>".implode('<br/>', $validation_errors)."</div>";
 
     $data['status'] = 'error';

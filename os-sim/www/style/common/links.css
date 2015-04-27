@@ -40,7 +40,7 @@ if (!headers_sent())
 
 /* Default link */
 
-a, .av_link
+a, a.av_link, .av_link
 {
     color: #16A7C9;
     font-size: inherit;

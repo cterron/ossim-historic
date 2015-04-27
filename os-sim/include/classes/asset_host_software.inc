@@ -115,7 +115,7 @@ class Asset_host_software
         }
         else
         {
-            $exp_msg = _('Error! Host ID is not valid');
+            $exp_msg = _('Error! Asset ID is not valid');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -288,7 +288,7 @@ class Asset_host_software
         //Finish transaction
         if (!$conn->CompleteTrans())
         {
-            $exp_msg = _('Error! Host software could not be saved');
+            $exp_msg = _('Error! Asset software could not be saved');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -343,7 +343,7 @@ class Asset_host_software
         //Check if we can delete the software
         if (Asset_host::is_allowed($conn, $host_id) != TRUE)
         {
-            $exp_msg = _("Error! Host does not exists or you don't have permissions");
+            $exp_msg = _("Error! Asset does not exists or you do not have the correct permissions");
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -393,6 +393,74 @@ class Asset_host_software
         return TRUE;
     }
 
+    /**
+    * This function saves one software into database for the bulk edition
+    *
+    * @param object  $conn            Database access object
+    * @param array   $s_data          Software data
+    * @param boolean $report_changes  [Optional] Report changes to other components
+    *
+    * @throws Exception  If an error occurred
+    *
+    * @return boolean
+    */
+    public static function bulk_save_software_in_db($conn, $s_data, $report_changes = FALSE)
+    {
+        Ossim_db::check_connection($conn);
+
+        $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
+
+        $tmptable = Util::create_tmp_table($conn, 'host_id binary(16) NOT NULL, last_modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, cpe varchar(255) NOT NULL, banner text, source_id int(11) DEFAULT NULL, extra text, PRIMARY KEY (host_id, cpe)');
+
+        $query = "REPLACE INTO $tmptable (host_id, cpe, banner, last_modified, source_id, extra)
+                        SELECT uf.asset_id, ?, ?, ?, ?, ? FROM user_component_filter uf, host h
+                        WHERE uf.login=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
+
+        $extra = (is_array($s_data['extra'])) ? json_encode($s_data['extra']) : '';
+
+        $params = array(
+            $s_data['cpe'],
+            $s_data['banner'],
+            gmdate('Y-m-d H:i:s'),
+            $s_data['source_id'],
+            $extra,
+            Session::get_session_user()
+        );
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        $query = "REPLACE INTO host_software (host_id, cpe, banner, last_modified, source_id, extra)
+                  SELECT host_id, cpe, banner, last_modified, source_id, extra FROM $tmptable";
+
+        $rs = $conn->Execute($query);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+
+        if ($report_changes == TRUE)
+        {
+            try
+            {
+                //For now, it is only necessary to refresh cache
+                Util::memcacheFlush();
+            }
+            catch(Exception $e)
+            {
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+            }
+        }
+
+        return TRUE;
+    }
+
 
     /**
     * This function deletes one software from database
@@ -413,7 +481,7 @@ class Asset_host_software
         //Check if we can delete the software
         if (Asset_host::is_allowed($conn, $host_id) != TRUE)
         {
-            $exp_msg = _("Error! Host does not exists or you don't have permissions");
+            $exp_msg = _("Error! Asset does not exists or you do not have the correct permissions");
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -422,6 +490,58 @@ class Asset_host_software
         $params = array ($host_id, $cpe);
 
         $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if ($report_changes == TRUE)
+        {
+            try
+            {
+                //For now, it is only necessary to refresh cache
+                Util::memcacheFlush();
+            }
+            catch(Exception $e)
+            {
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+            }
+        }
+
+        return TRUE;
+    }
+
+
+    /**
+    * This function deletes one software from database for the bulk edition
+    *
+    * @param object  $conn             Database access object
+    * @param string  $cpe              Common Platform Enumeration
+    * @param boolean $report_changes   [Optional] Report changes to other components
+    *
+    * @throws Exception  If an error occurred
+    *
+    * @return boolean
+    */
+    public static function bulk_delete_software_from_db($conn, $cpe, $report_changes = FALSE)
+    {
+        Ossim_db::check_connection($conn);
+
+        $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
+
+        $params = array(
+            $cpe,
+            Session::get_session_user()
+        );
+
+        $tmptable = Util::create_tmp_table($conn, 'id binary(16) NOT NULL, cpe varchar(255) NOT NULL, PRIMARY KEY ( id, cpe )');
+
+        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id, hs.cpe FROM user_component_filter uf, host h, host_software hs WHERE h.id=hs.host_id AND hs.cpe = ? AND uf.login=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
+
+        $query  = "DELETE hs FROM host_software hs, $tmptable tmp WHERE hs.host_id=tmp.id AND hs.cpe=tmp.cpe";
+
+        $rs = $conn->Execute($query);
 
         if (!$rs)
         {
@@ -462,7 +582,7 @@ class Asset_host_software
         //Check if we can delete the software
         if (Asset_host::is_allowed($conn, $host_id) != TRUE)
         {
-            $exp_msg = _("Error! Host does not exists or you don't have permissions");
+            $exp_msg = _("Error! Asset does not exists or you do not have the correct permissions");
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -471,6 +591,42 @@ class Asset_host_software
         $params = array ($host_id);
 
         $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        return TRUE;
+    }
+
+
+    /**
+    * This function deletes all software from database for the bulk edition
+    *
+    * @param object  $conn     Database access object
+    *
+    * @throws Exception  If an error occurred
+    *
+    * @return boolean
+    */
+    public static function bulk_delete_all_from_db($conn)
+    {
+        Ossim_db::check_connection($conn);
+
+        $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
+
+        $params = array(
+            Session::get_session_user()
+        );
+
+        $tmptable = Util::create_tmp_table($conn, 'id binary(16) NOT NULL, PRIMARY KEY ( id )');
+
+        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id FROM user_component_filter uf, host h WHERE uf.login=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
+
+        $query  = "DELETE hs FROM host_software hs, $tmptable tmp WHERE hs.host_id=tmp.id";
+
+        $rs = $conn->Execute($query);
 
         if (!$rs)
         {
@@ -598,7 +754,6 @@ class Asset_host_software
         $total    = 0;
 
         $q_select = 'HEX(h.id) AS h_id, host_software.*,
-            software_cpe.name, software_cpe.version, software_cpe.line, software_cpe.vendor, software_cpe.plugin,
             host_source_reference.id AS source_id, host_source_reference.name AS source_name, host_source_reference.relevance AS source_relevance';
 
         //Build SQL
@@ -628,7 +783,6 @@ class Asset_host_software
 
         $query = ossim_query("SELECT $q_select
             FROM host h, host_source_reference, host_software
-            LEFT JOIN software_cpe ON software_cpe.cpe LIKE CONCAT(host_software.cpe,'%')
             WHERE host_software.host_id = h.id AND host_source_reference.id = host_software.source_id $q_where");
 
 
@@ -650,45 +804,17 @@ class Asset_host_software
 
         while (!$rs->EOF)
         {
-            // If exists change "line" depends on partial cpe
-            if (is_array($software[$rs->fields['h_id']][$rs->fields['cpe']]))
-            {
-                if (substr_count($rs->fields['cpe'], ':') == 3) // vendor y model
-                {
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['line']    = $rs->fields['vendor'] . ' ' . $rs->fields['name'];
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['name']    = $rs->fields['name'];
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['version'] = '';
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['plugin']  = $rs->fields['plugin'];
-                }
-                elseif (substr_count($rs->fields['cpe'], ':') == 2) // only vendor
-                {
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['line']    = $rs->fields['vendor'];
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['name']    = '';
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['version'] = '';
-                    $software[$rs->fields['h_id']][$rs->fields['cpe']]['plugin']  = $rs->fields['plugin'];
-                }
-            }
-            else
-            {
-                $_name    = (substr_count($rs->fields['cpe'], ':') < 3) ? '' : $rs->fields['name'];
-                $_version = (substr_count($rs->fields['cpe'], ':') < 4) ? '' : $rs->fields['version'];
-
-                $software[$rs->fields['h_id']][$rs->fields['cpe']] = array(
-                    'cpe'     => $rs->fields['cpe'],
-                    'banner'  => $rs->fields['banner'],
-                    'name'    => $_name,
-                    'line'    => $rs->fields['line'],
-                    'vendor'  => $rs->fields['vendor'],
-                    'version' => $_version,
-                    'plugin'  => $rs->fields['plugin'],
-                    'extra'   => self::decode_extra($rs->fields['extra']),
-                    'source'  => array(
-                        'id'   => $rs->fields['source_id'],
-                        'name' => $rs->fields['source_name'],
-                    ),
-                    'date' => $rs->fields['last_modified']
-                );
-            }
+            $software[$rs->fields['h_id']][$rs->fields['cpe']] = array(
+                'cpe'     => $rs->fields['cpe'],
+                'name'    => $rs->fields['banner'],
+                'banner'  => $rs->fields['banner'],
+                'extra'   => self::decode_extra($rs->fields['extra']),
+                'source'  => array(
+                    'id'   => $rs->fields['source_id'],
+                    'name' => $rs->fields['source_name'],
+                ),
+                'date' => $rs->fields['last_modified']
+            );
 
             $rs->MoveNext();
         }
@@ -696,6 +822,150 @@ class Asset_host_software
         return array($software, $total);
     }
 
+
+    /**
+    * This function returns the common software for all hosts which match with current filter database grouped by cpe
+    *
+    * @param object   $conn     Database access object
+    * @param array    $filters  [Optional] SQL statements (WHERE, LIMIT, ORDER BY ...)
+    * @param boolean  $cache    [Optional] Use cached information
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return array
+    */
+    public static function bulk_get_list($conn, $filters = array(), $cache = FALSE)
+    {
+        Ossim_db::check_connection($conn);
+
+        $total_selection = Filter_list::get_total_selection($conn, 'asset');
+        $software        = array();
+        $total           = 0;
+
+        //Build SQL
+        $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
+
+        $params = array(
+            Session::get_session_user(),
+            $total_selection
+        );
+
+        $cnt      = '';
+        $q_where  = $host_perms_where;
+        $q_order  = '';
+        $q_limit  = '';
+
+        if (!empty($filters['where']))
+        {
+            $q_where .= ' AND '.$filters['where'];
+        }
+
+        if (!empty($filters['order_by']))
+        {
+            $q_order .= ' ORDER BY '.$filters['order_by'];
+        }
+
+        if (!empty($filters['limit']))
+        {
+            $cnt      = 'SQL_CALC_FOUND_ROWS ';
+            $q_limit .= ' LIMIT '.$filters['limit'];
+        }
+
+        $conn->SetFetchMode(ADODB_FETCH_ASSOC);
+
+        $query = ossim_query("SELECT $cnt hs.cpe, hs.banner, hs.extra, count(distinct hs.host_id) as total, hsf.id AS source_id, hsf.name AS source_name
+                              FROM host_software hs, user_component_filter uf, host h, host_source_reference hsf
+                              WHERE h.id=uf.asset_id AND uf.login=? AND hs.host_id=uf.asset_id AND hsf.id=hs.source_id AND uf.asset_type='asset' $q_where
+                              GROUP BY hs.cpe
+                              HAVING total = ?
+                              $q_order
+                              $q_limit");
+
+        $rs = ($cache) ? $conn->CacheExecute($query, $params) : $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if (!empty($filters['limit']))
+        {
+            $total = Ossim_db::get_found_rows($conn, $query, $cache);
+        }
+        else
+        {
+            $total = $rs->RecordCount();
+        }
+
+        while (!$rs->EOF)
+        {
+            $software[$rs->fields['cpe']] = array(
+                'cpe'     => $rs->fields['cpe'],
+                'banner'  => $rs->fields['banner'],
+                'extra'   => self::decode_extra($rs->fields['extra']),
+                'source'  => array(
+                    'id'   => $rs->fields['source_id'],
+                    'name' => $rs->fields['source_name'],
+                )
+            );
+
+            $rs->MoveNext();
+        }
+
+        return array($software, $total);
+    }
+
+
+    /**
+     * This function gets the software readable name by CPE
+     *
+     * @param object   $conn     Database access object
+     * @param string   $cpe      CPE String
+     * @param boolean  $cache    [Optional] Use cached information
+     *
+     * @return string
+     */
+    public static function get_software_name_by_cpe($conn, $cpe, $cache = TRUE)
+    {
+        $software_name = '';
+
+        $query  = "SELECT name, line, vendor FROM software_cpe WHERE cpe LIKE ? LIMIT 1";
+        $params = array($cpe.'%');
+
+        $rs = ($cache) ? $conn->CacheExecute($query, $params) : $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if (!$rs->EOF)
+        {
+            if (substr_count($cpe, ':') == 3) // vendor y model
+            {
+                $software_name = $rs->fields['vendor'] . ' ' . $rs->fields['name'];
+            }
+            elseif (substr_count($cpe, ':') == 2) // only vendor
+            {
+                $software_name = $rs->fields['vendor'];
+            }
+            else
+            {
+                $software_name = $rs->fields['line'];
+            }
+        }
+        else
+        {
+            $_cpe             = explode(':', $cpe);
+            $_vendor          = urldecode($_cpe[2]);
+            $_model           = str_replace('_', ' ', urldecode($_cpe[3]));
+            $_version         = urldecode($_cpe[4]);
+
+            $software_name    = trim(ucwords($_vendor) . ' ' . ucwords($_model) . ' ' . $_version);
+        }
+
+        return $software_name;
+    }
 }
 
 /* End of file asset_host_software.inc */

@@ -2007,12 +2007,12 @@ gint
 sim_get_current_date (void)
 {
   gint date = 0;
-  struct tm *loctime;
+  struct tm loctime;
   time_t curtime;
 
   curtime = time (NULL);
-  loctime = gmtime (&curtime);
-  date = (loctime->tm_wday - 1 * 24) + loctime->tm_hour;
+  gmtime_r (&curtime, &loctime);
+  date = (loctime.tm_wday - 1 * 24) + loctime.tm_hour;
 
   return date;
 }
@@ -2057,6 +2057,15 @@ sim_util_substite_problematic_chars (const gchar *p_in, gsize len)
       }
 
   return ret;
+}
+
+void
+sim_time_t_to_str (gchar outstr[TIMEBUF_SIZE], const time_t time)
+{
+	struct tm gmtime_ret;
+
+	gmtime_r (&time, &gmtime_ret);
+	strftime (outstr, TIMEBUF_SIZE, "%F %T", &gmtime_ret);
 }
 
 /**

@@ -191,7 +191,7 @@ class Backup
     {
         $total     = 0;
         $dates_str = '"'.implode('", "', $dates).'"';
-        $sql       = 'SELECT sum(cnt) as total FROM alienvault_siem.ac_acid_event WHERE day IN ('.$dates_str.')';
+        $sql       = 'SELECT sum(cnt) as total FROM alienvault_siem.ac_acid_event WHERE DATE(timestamp) IN ('.$dates_str.')';
         $rs        = $conn->Execute($sql);
         
         if (!$rs)

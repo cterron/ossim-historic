@@ -189,15 +189,30 @@ class Notes
      * 
      * @return multitype:Notes
      */
-    public static function get_list($conn, $where)
+    public static function get_list($conn, $filters)
     {
         Ossim_db::check_connection($conn);
 
-        $list = array();
+        $list   = array();
 
-        $tz   = Util::get_timezone();
+        $tz     = Util::get_timezone();
+        
+        if (!empty($filters['where']))
+        {
+            $q_where  .= ' AND '.$filters['where'];
+        }
 
-        $query = ossim_query("SELECT *, HEX(asset_id) AS asset_id FROM notes WHERE 1=1 $where");
+        if (!empty($filters['order_by']))
+        {
+            $q_where  .= ' ORDER BY '.$filters['order_by'];
+        }
+
+        if (!empty($filters['limit']))
+        {
+            $q_where  .= ' LIMIT '.$filters['limit'];
+        }
+
+        $query = ossim_query("SELECT SQL_CALC_FOUND_ROWS notes.*, id, date, user, note, HEX(asset_id) AS asset_id FROM notes WHERE 1=1 $q_where");
 
         $rs = $conn->Execute($query);
 
@@ -218,7 +233,9 @@ class Notes
             }
         }
 
-        return $list;
+        $total = intval(Ossim_db::get_found_rows($conn, $query));
+
+        return array($list, $total);
     }
 
     
@@ -252,12 +269,57 @@ class Notes
         {
             Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
 
-            return FALSE;
+            return 0;
         }
 
-        return TRUE;
+        // get lastid
+        $res = $conn->query('SELECT LAST_INSERT_ID() as lastid');
+        
+        if ($rw = $res->fetchRow())
+        {
+            $note_id = intval($rw['lastid']);
+        }
+        
+        return $note_id;
     }
 
+    /**
+     * This function inserts a note into database
+     * 
+     * @param object $conn
+     * @param string $type
+     * @param string $date
+     * @param string $user
+     * @param string $asset_id
+     * @param string $txt
+     * 
+     * @return boolean
+     */
+    public static function bulk_insert($conn, $type, $date, $user, $txt) 
+    {
+        Ossim_db::check_connection($conn);
+        
+        $ntype = ($type == 'asset') ? 'host' : (($type == 'group') ? 'host_group' : (($type == 'network') ? 'net' : $type));
+
+        $params = array(
+            $ntype,
+            $date,
+            $user,
+            strip_tags($txt),
+            $type,
+            $user
+        );
+        
+        $query = "INSERT INTO notes (type, date, user, asset_id, note) SELECT ?, ?, ?, asset_id, ? FROM user_component_filter WHERE asset_type=? AND login=?";
+
+        if (!$rs = $conn->Execute($query, $params))
+        {
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+            return FALSE;
+        }
+        return TRUE;
+    }
 
     /**
      * This function updates a note in database
@@ -305,7 +367,7 @@ class Notes
     public static function delete($conn, $id)
     {
         Ossim_db::check_connection($conn);
-
+        
         if (self::allowed($conn, $id))
         {
             $params = array($id);
@@ -359,10 +421,14 @@ class Notes
     {
         Ossim_db::check_connection($conn);
         
-        // Allowed to view/edit user note
-        list($note) = self::get_list($conn, " AND id = ".intval($id));
+        $filters  = array();
+
+        $filters['where'] = "id = ".intval($id);
         
-        if (!is_object($note))
+        // Allowed to view/edit user note
+        list($notes, $total) = self::get_list($conn, $filters);
+        
+        if ($total != 1)
         {
             return FALSE;
         }
@@ -371,7 +437,7 @@ class Notes
 
         foreach ($users as $user)
         {
-            if ($user->get_login() == $note->get_user())
+            if ($user->get_login() == $notes[0]->get_user())
             {
                 return TRUE;
             }

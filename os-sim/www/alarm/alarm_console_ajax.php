@@ -70,6 +70,7 @@ $open            = GET('open');
 $delete_day      = GET('delete_day');
 $src_ip          = GET('src_ip');
 $dst_ip          = GET('dst_ip');
+$asset_group     = GET('asset_group');
 $hide_closed     = GET('hide_closed');
 $no_resolv       = intval(GET('no_resolv'));
 
@@ -103,13 +104,14 @@ ossim_valid($directive_id,    OSS_DIGIT, OSS_NULLABLE,                          
 ossim_valid($intent,          OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Intent"));
 ossim_valid($src_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                              'illegal:' . _("Src_ip"));
 ossim_valid($dst_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                              'illegal:' . _("Dst_ip"));
+ossim_valid($asset_group,     OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Asset Group"));
 ossim_valid($inf,             OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Inf"));
 ossim_valid($hide_closed,     OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Hide_closed"));
 ossim_valid($date_from,       OSS_DATETIME_DATE, OSS_NULLABLE,                              'illegal:' . _("From date"));
 ossim_valid($date_to,         OSS_DATETIME_DATE, OSS_NULLABLE,                              'illegal:' . _("To date"));
 ossim_valid($num_alarms_page, OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Field number of alarms per page"));
 ossim_valid($sensor_query,    OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Sensor_query"));
-ossim_valid($tag,             OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Tag"));
+ossim_valid($tag,             OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Tag"));
 ossim_valid($num_events,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Num_events"));
 ossim_valid($num_events_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Num_events_op"));
 ossim_valid($ds_id,           OSS_DIGIT, "-", OSS_NULLABLE,                                 'illegal:' . _("Datasource"));
@@ -157,6 +159,7 @@ $parameters['hide_closed']            = "hide_closed="    .$hide_closed;
 $parameters['order']                  = "order="          .$order;
 $parameters['src_ip']                 = "src_ip="         .$src_ip;
 $parameters['dst_ip']                 = "dst_ip="         .$dst_ip;
+$parameters['asset_group']            = "asset_group="    .$asset_group;
 $parameters['date_from']              = "date_from="      .urlencode($date_from);
 $parameters['date_to']                = "date_to="        .urlencode($date_to);
 $parameters['sensor_query']           = "sensor_query="   .$sensor_query;
@@ -180,9 +183,6 @@ if (!empty($_SESSION["_delete_msg"]))
 
 $_SESSION["_no_resolv"]      = $no_resolv;
 $_SESSION["_alarm_criteria"] = implode("&", $parameters);
-
-
-$tags_html = Tags::get_list_html($conn);
 
 
 // Order by
@@ -272,9 +272,11 @@ $criteria = array(
     "ctx"           => "",
     "host"          => $host_id,
     "net"           => $net_id,
-    "host_group"    => ''
+    "host_group"    => $asset_group
 );
+
 list($alarm_list, $count) = Alarm::get_list($conn, $criteria, true);
+
 
 /*
 * Pagination
@@ -432,19 +434,25 @@ if ($count > 0)
         //$res["status_border_color"]     = ($alarm->get_status() == "open") ? "#E6D8D2" : "#D6E6D2";
         
         // TAGS
-        $tgs = "<div class='a_label_container'>";
+        $tgs = "<div class='a_label_container'></div>";
+        $tgs_array = array();
+
         if (count($tags) > 0) 
         {
-            foreach ($tags as $id_tag) 
+            foreach ($tags as $id_tag => $tag)
             {
-                $tgs .= $tags_html[$id_tag]." ";
+                $tgs_array[] = array(
+                    'id' => $tag->get_id(),
+                    'class' => $tag->get_class(),
+                    'name' => $tag->get_name()
+                );
             }
             
             $show_label = TRUE;
         }
-        $tgs .= "</div>";
         
         $res[]     = $tgs;
+        $res['tags'] = $tgs_array;
         
         // kingdom, category and subcategory
         list($alarm_ik,$alarm_sc) = Alarm::get_alarm_name($alarm->get_taxonomy());

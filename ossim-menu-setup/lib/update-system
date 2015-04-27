@@ -45,9 +45,10 @@ ALIENVAULT_UPDATE_ERROR_STRING=( "Error: There is an update instance running. Ab
 "Error: Signature unavailable for upgrade file (feed)"
 "Error: System running in HA Mode. Aborting update")
 
-function update_system() {
+REBOOT_NEEDED_FILE="/tmp/.reboot_needed"
 
-    dpkg -l | grep alienvault-dummy-framework | grep ^i > /dev/null
+function update_system() {
+    dpkg -l alienvault-dummy-framework | grep ^i > /dev/null
     if [ $? -eq 0 ]; then
         invoke-rc.d apache2 stop
         [ -d /var/lib/php5 ] && find /var/lib/php5/ -type f -delete
@@ -60,6 +61,17 @@ function update_system() {
     fi
 
     alienvault-update
+
+    # Check new kernel version (if available)
+    RUNNING_KERNEL_VERSION=$(grep -Eo "^Linux\sversion\s\S+\s\(Debian\s[0-9]+\.[0-9]+\.[0-9]+\-[0-9]+[a-z]+[0-9]+" /proc/version | awk '{ print $5 }')
+    INSTALLED_KERNEL_VERSION=$(dpkg-query -l 'linux-image-*-amd64' | grep -E "^(ii|hi)" | grep -vE "(metapackage|meta-package)" | awk '{print $3}')
+
+    if [ "$RUNNING_KERNEL_VERSION" != "$INSTALLED_KERNEL_VERSION" ]; then
+        touch $REBOOT_NEEDED_FILE
+        chown www-data:alienvault $REBOOT_NEEDED_FILE
+        chmod 0660 $REBOOT_NEEDED_FILE
+    fi
+
     code=$?
     case "$code" in
         50|51|52|53|54|55|56|57|58|59)
@@ -75,10 +87,12 @@ function update_system() {
             ;;
     esac
 
-    dpkg -l |grep alienvault-dummy-framework|grep ^i > /dev/null
+    dpkg -l alienvault-dummy-framework|grep ^i > /dev/null
     if [ $? -eq 0 ]; then
         invoke-rc.d apache2 start
     fi
+
+    
 }
 
 function analyze_update() {

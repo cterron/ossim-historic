@@ -2,6 +2,8 @@
 name=Agent rsyslog configuration files integrity
 description=Check the integrity of the default Agent rsyslog configuration files.
 category=alienvault
+profiles=Sensor:>4.0
+strike_zone=True
 type=command
 command=diff -burq /etc/rsyslog.d/ /usr/share/alienvault-plugins/d_clean/rsyslog/
 

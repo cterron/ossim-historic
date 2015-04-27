@@ -91,8 +91,8 @@ function SIEM_trends_week($param = '', $d = 7, $assets_filters = '')
 	$query_where = Security_report::make_where($dbconn, gmdate("Y-m-d 00:00:00",gmdate("U")-86400*$d), gmdate("Y-m-d 23:59:59"), array(), $assets_filters);
 	
 	
-	$sqlgraph = "SELECT COUNT(acid_event.id) AS num_events, day(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, monthname(convert_tz(timestamp,'+00:00','$tzc')) AS suf 
-        FROM $tax_join alienvault_siem.acid_event 
+	$sqlgraph = "SELECT SUM(acid_event.cnt) AS num_events, day(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, monthname(convert_tz(timestamp,'+00:00','$tzc')) AS suf 
+        FROM $tax_join alienvault_siem.ac_acid_event as acid_event
         WHERE 1=1 $plugins_sql $query_where $tax_where 
         GROUP BY suf, intervalo 
         ORDER BY suf, intervalo";
@@ -160,15 +160,15 @@ function SIEM_trends($h = 24, $assets_filters = '', $first_date = '')
         $assets_filters['ctxs']   = array();
     }
 
-    $query_where  = Security_report::make_where($dbconn, gmdate("Y-m-d H:i:s",gmdate("U")-(3600*$h)), gmdate("Y-m-d H:i:s"), array(), $assets_filters);
+    $query_where  = Security_report::make_where($dbconn, gmdate("Y-m-d H:00:00",gmdate("U")-(3600*$h)), gmdate("Y-m-d H:59:59"), array(), $assets_filters);
     
     $sqlgraph     = "SELECT SUM(cnt) AS num_events, hour(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, day(convert_tz(timestamp,'+00:00','$tzc')) AS suf 
-        FROM alienvault_siem.ah_acid_event as acid_event WHERE 1=1 $query_where GROUP BY suf,intervalo";
-    
+        FROM alienvault_siem.ac_acid_event as acid_event WHERE 1=1 $query_where GROUP BY suf,intervalo";
+
     if ($first_date)
     {
-        // Test if we have enough data in ah_acid_event
-        $query = "select cnt from alienvault_siem.ah_acid_event where timestamp between '$first_date:00:00' and '$first_date:59:59' limit 1";
+        // Test if we have enough data in ac_acid_event
+        $query = "select cnt from alienvault_siem.ac_acid_event where timestamp between '$first_date:00:00' and '$first_date:59:59' limit 1";
         $rg = $dbconn->CacheExecute($query);
         if (!$rg)
         {
@@ -176,8 +176,18 @@ function SIEM_trends($h = 24, $assets_filters = '', $first_date = '')
         }
         if ($rg->EOF)
         {
-            $sqlgraph = "SELECT COUNT(acid_event.id) AS num_events, hour(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, day(convert_tz(timestamp,'+00:00','$tzc')) AS suf 
-                FROM alienvault_siem.acid_event WHERE 1=1 $query_where GROUP BY suf,intervalo";
+            // Test if we have enough data in acid_event
+            $query = "select hex(id) from alienvault_siem.acid_event where timestamp between '$first_date:00:00' and '$first_date:59:59' limit 1";
+            $rg = $dbconn->CacheExecute($query);
+            if (!$rg)
+            {
+                print $dbconn->ErrorMsg();
+            }
+            if (!$rg->EOF)
+            {
+                $sqlgraph = "SELECT COUNT(acid_event.id) AS num_events, hour(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, day(convert_tz(timestamp,'+00:00','$tzc')) AS suf 
+                    FROM alienvault_siem.acid_event WHERE 1=1 $query_where GROUP BY suf,intervalo";
+            }
         }
     }
 

@@ -146,3 +146,11 @@ div.btnseparator
 {
     color:#DD0D0D;
 }
+
+#error_info
+{
+    position:absolute;
+    margin-top:10px;
+    width: 100%;
+    z-index:99;
+}

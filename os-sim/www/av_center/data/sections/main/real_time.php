@@ -87,7 +87,7 @@ try
         $release_type    = $release_info['type'];
         $release_version = $release_info['version'];
     }
-    
+
     $local_id       = strtolower(Util::get_system_uuid());
     $can_be_removed = ($system_id != $local_id && $s_data['ha_status'] == NULL) ? TRUE : FALSE;
 

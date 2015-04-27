@@ -71,6 +71,7 @@ static gpointer parent_class = NULL;
 static time_t last  = 0;
 static time_t timer = 0;
 
+static time_t       update_vuln_assets_last_sec = 0;
 static time_t       unconfigured_sensors_last_sec = 0;
 
 /* Reload host_plugin_sids hash table every 5 minutes. Needed for cross-correlation. */
@@ -84,6 +85,8 @@ static guint  sim_before = 0; //store how many events had the sem queue last tim
 
 // Static prototypes.
 static void       sim_scheduler_task_remove_backlogs            (SimScheduler * scheduler,
+                                                                 GTimeVal curr_time);
+static void       sim_scheduler_task_update_vuln_assets         (SimScheduler * scheduler,
                                                                  GTimeVal curr_time);
 static void       sim_scheduler_task_calculate                  (SimScheduler  *scheduler,
                                                                  gpointer       data);
@@ -296,6 +299,7 @@ sim_scheduler_run (SimScheduler *scheduler)
     g_get_current_time (&curr_time);
 
     sim_scheduler_task_remove_backlogs (scheduler, curr_time); //removes backlog entries when needed
+    sim_scheduler_task_update_vuln_assets (scheduler, curr_time);
     sim_scheduler_task_insert_host_plugin_sids (scheduler, curr_time); // Needed for cross correlation.
     sim_scheduler_clean_group_alarm (scheduler); // Activate the clean of group alarms
     sim_scheduler_show_stats (scheduler, curr_time); //NOTE: comment or uncomment this if you want to see statistics
@@ -366,6 +370,23 @@ sim_scheduler_show_stats (SimScheduler *scheduler,
 
   events_before = events_now;
   sim_before = sim_organizer_get_total_events (ossim.organizer);
+}
+
+static void
+sim_scheduler_task_update_vuln_assets (SimScheduler * scheduler,
+                                       GTimeVal       curr_time)
+{
+  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
+
+  if (curr_time.tv_sec < (update_vuln_assets_last_sec + UPDATE_VULN_ASSETS_TIME_LAPSE))
+    return;
+
+  update_vuln_assets_last_sec = curr_time.tv_sec;
+
+  if (! g_atomic_int_compare_and_exchange (&ossim.is_update_vuln_asset_pending, 1, 0))
+    return;
+
+  sim_database_execute_no_query (ossim.dbossim, "CALL _update_vuln_assets(0)");
 }
 
 static void

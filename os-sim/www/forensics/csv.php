@@ -124,14 +124,14 @@ $current_cols_titles = array(
     'REP_REL_DST'            => _("Rep Dst IP Rel"),
     'REP_ACT_SRC'            => _("Rep Src IP Act"),
     'REP_ACT_DST'            => _("Rep Dst IP Act"),
-    "DEVICE"                 => _("Device")
+    'DEVICE'                 => _("Device IP")
 );
 
 $user      = $_SESSION["_user"];
 $path_conf = $GLOBALS["CONF"];
 
 /* database connect */
-$db   = new ossim_db();
+$db   = new ossim_db(true);
 $conn = $db->connect();
 //$conn = $db->custom_connect('localhost',$path_conf->get_conf("ossim_user"),$path_conf->get_conf("ossim_pass"));
 
@@ -169,9 +169,9 @@ if($type[$rtype]=="Events")
 }
 else if($type[$rtype]=="Sensors")
 {
-    $csv_header .= "Sensor;Name;Total Events #;Unique Events #;Unique Src #;Unique Dst #\n";
+    $csv_header .= "Sensor;Name;Device IP;Total Events #\n";
 
-    $sql = "SELECT dataV7, dataV1, dataI2, dataI3, dataV3, dataV4
+    $sql = "SELECT dataV7, dataV8, dataV1, dataI2
             FROM datawarehouse.report_data WHERE id_report_data_type=$rtype and user='$user'";
 }
 else if($type[$rtype]=="Unique_Events")
@@ -184,9 +184,9 @@ else if($type[$rtype]=="Unique_Events")
 }
 else if($type[$rtype]=="Unique_Plugins")
 {
-   $csv_header .= "Plugin;Events #;$var_data;Last Event;Date\n";
+   $csv_header .= "Plugin;Events #;$var_data;Product Type\n";
 
-   $sql = "SELECT dataV1, dataI1, dataV11, dataV2, dataV7
+   $sql = "SELECT dataV1, dataI1, dataV11, dataV2
             FROM datawarehouse.report_data WHERE id_report_data_type=$rtype and user='$user'";
 }
 else if($type[$rtype]=="Unique_Addresses")
@@ -206,21 +206,21 @@ else if($type[$rtype]=="Unique_Addresses")
 }
 else if($type[$rtype]=="Source_Port" || $type[$rtype]=="Destination_Port")
 {
-    $csv_header .= "Port;$var_data;Occurrences #;Unique Events #;Unique Src #; Unique Dst #\n";
+    $csv_header .= "Port;$var_data;Occurrences #;Unique Events #\n";
 
-    $sql = "SELECT dataV1, dataV11, dataI3, dataV2, dataV3, dataV4
+    $sql = "SELECT dataV1, dataV11, dataI3, dataV2
             FROM datawarehouse.report_data WHERE id_report_data_type=$rtype and user='$user'";
 }
 else if($type[$rtype]=="Unique_IP_links")
 {
-    $csv_header .= "Source IP;Destination IP;Protocol;Unique Dst Ports #;Unique Events #;Total Events #\n";
+    $csv_header .= "Source IP;Destination IP;Protocol;Unique Dst Ports #\n";
 
     $sql = "SELECT dataV1, dataV3, dataV5, dataI1, dataI2, dataI3
             FROM datawarehouse.report_data WHERE id_report_data_type=$rtype and user='$user'";
 }
 else if($type[$rtype]=="Unique_Country_Events")
 {
-   $csv_header .= "Country;Total #;Unique Src #;Unique Dst #;Events\n";
+   $csv_header .= "Country;Events #;Unique Src #;Unique Dst #\n";
 
    $sql = "SELECT dataV1, dataI1, dataI2, dataI3
            FROM datawarehouse.report_data WHERE id_report_data_type=$rtype and user='$user'";
@@ -279,9 +279,9 @@ while (!$result->EOF)
     }
     if($type[$rtype]=="Sensors")
     {
-        list ($dataV7, $dataV1, $dataI2, $dataI3, $dataV3, $dataV4) = $result->fields;
+        list ($dataV7, $dataV8, $dataV1, $dataI2) = $result->fields;
 
-        $csv_body .= "$dataV7;$dataV1;$dataI2;$dataI3;$dataV3;$dataV4\n";
+        $csv_body .= "$dataV7;$dataV1;$dataV8;$dataI2\n";
     }
     else if ($type[$rtype]=="Unique_Events")
     {
@@ -291,9 +291,9 @@ while (!$result->EOF)
     }
     else if($type[$rtype]=="Unique_Plugins")
     {
-        list ($dataV1, $dataI1, $dataV11, $dataV2, $dataV7) = $result->fields;
+        list ($dataV1, $dataI1, $dataV11, $dataV2) = $result->fields;
 
-        $csv_body .= "$dataV1;$dataI1;$dataV11;$dataV2;$dataV7\n";
+        $csv_body .= "$dataV1;$dataI1;$dataV11;$dataV2\n";
     }
     else if($type[$rtype]=="Unique_Addresses")
     {
@@ -303,9 +303,9 @@ while (!$result->EOF)
     }
     else if($type[$rtype]=="Source_Port" || $type[$rtype]=="Destination_Port")
     {
-        list ($dataV1, $dataV11, $dataI3, $dataV2, $dataV3, $dataV4) = $result->fields;
+        list ($dataV1, $dataV11, $dataI3, $dataV2) = $result->fields;
 
-        $csv_body .= "$dataV1;$dataV11;$dataI3;$dataV2;$dataV3;$dataV4;\n";
+        $csv_body .= "$dataV1;$dataV11;$dataI3;$dataV2\n";
     }
     else if($type[$rtype]=="Unique_IP_links")
     {

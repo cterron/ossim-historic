@@ -28,16 +28,74 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-from api.lib.monitors.monitor import Monitor, MonitorTypes
-from apimethods.utils import get_uuid_string_from_bytes, get_ip_str_from_bytes, get_bytes_from_uuid
-from ansiblemethods.server.server import get_server_stats
 import time
+import os
+import json
+
+from api.lib.monitors.monitor import Monitor, MonitorTypes
+from ansiblemethods.server.server import get_server_stats
 
 import celery.utils.log
 logger = celery.utils.log.get_logger("celery")
 
-SERVER_IP = '127.0.0.1'
-SERVER_PORT = '40009'
+class MonitorServerEPSStats(Monitor):
+    """
+    Monitor correlation EPS in the current server.
+    """
+
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.SERVER_EPS_STATS)
+        self.message = 'Server EPS stats Monitor Enabled'
+
+        self.__server_ip = '127.0.0.1'
+        self.__server_port = '40009'
+        self.__stats_dir = '/var/alienvault/server/stats'
+        self.__eps_log_file = '%s/%s' % (self.__stats_dir, 'eps.log')
+        self.__max_samples = 168
+
+    def start(self):
+        """
+        Starts the monitor activity
+
+        :return: True on success, False otherwise
+        """
+        eps_data = []
+
+        if not os.path.isdir(self.__stats_dir):
+            os.mkdir(self.__stats_dir, 0770)
+        if os.path.isfile(self.__eps_log_file):
+            with open(self.__eps_log_file, 'r') as f:
+                try:
+                    eps_data = json.loads(f.read())
+                    eps_data = filter(lambda x: type(x) == int, eps_data[-self.__max_samples:])
+                except:
+                    eps_data = []
+
+        args = {'server_ip': self.__server_ip, 'server_port': self.__server_port, 'server_stats': 'yes'}
+        ansible_output = get_server_stats (self.__server_ip, args)
+        if ansible_output['dark'] != {}:
+            logger.error("Error querying server EPS stats: %s" % ansible_output['dark'])
+            return False
+
+        try:
+            # Get correlation EPS only.
+            eps = int(ansible_output['contacted'][self.__server_ip]['data']['sim_eps'])
+        except KeyError:
+            logger.error("Cannot get server EPS number")
+            return False
+        except ValueError:
+            logger.error("Server EPS value is not an integer")
+            return False
+
+        eps_data = eps_data[-(self.__max_samples - 1):] + [eps]
+        with open(self.__eps_log_file, 'w') as f:
+            try:
+                f.write(json.dumps(eps_data, indent=4, separators=(',', ': ')))
+            except Exception, e:
+                logger.error("Cannot write server EPS stats to file: %s" % str(e))
+
+        return True
+
 
 class MonitorServerSensorActivity(Monitor):
     """

@@ -45,7 +45,7 @@ update_ossim_db () {
         return 0
     fi
 
-    sensor_id=$(echo "SELECT HEX(sensor.id) FROM sensor WHERE sensor.ip = INET6_PTON('$admin_ip');" | ossim-db || echo "Error")
+    sensor_id=$(echo "SELECT HEX(sensor.id) FROM sensor WHERE sensor.ip = INET6_ATON('$admin_ip');" | ossim-db || echo "Error")
 
     if [ "$sensor_id" = "Error" ] ; then
         echo "Sensor id not found for $admin_ip"

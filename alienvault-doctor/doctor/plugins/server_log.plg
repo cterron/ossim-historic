@@ -4,6 +4,7 @@ description=Searches for Server issues parsing its log file.
 category=alienvault,application
 type=file
 filename=/var/log/alienvault/server/server.log
+profiles=Server:>4.0
 raw_limit=1000
 
 [Remote server connection recovery]

@@ -84,14 +84,14 @@ class AVVpn:
         self.__opnodespath = '/etc/openvpn/nodes'
         self.__opccdpath = '/etc/openvpn/ccd'
         self.__opconf_tmp = '/tmp/AVinfraestructure.conf'
-        self.__server_port = ossim_setup.get_vpn_vpn_port()
+        self.__server_port = ossim_setup.get_avvpn_config_port()
         self.__proto = 'tcp'
         self.__device = 'tun'
         self.__ha_enabled = True if ossim_setup.get_ha_ha_heartbeat_start() == 'yes' else False
         self.__ha_virtual_ip = ossim_setup.get_ha_ha_virtual_ip()
         self.__admin_ip = ossim_setup.get_general_admin_ip()
-        self.__server_net = ossim_setup.get_vpn_vpn_net()
-        self.__server_netmask = ossim_setup.get_vpn_vpn_netmask()
+        self.__server_net = ossim_setup.get_avvpn_config_network()
+        self.__server_netmask = ossim_setup.get_avvpn_config_netmask()
         self.__keysdir = '/etc/openvpn/AVinfraestructure/keys'
         self.__ca = '/etc/openvpn/AVinfraestructure/keys/ca.crt'
         self.__cert = '/etc/openvpn/AVinfraestructure/keys/alienvcd.crt'
@@ -116,91 +116,6 @@ class AVVpn:
         """Returns an string representing the object
         """
         return "AVVPN: system_ip:%s " % (self.__sytem_ip)
-
-    def __create_server_openvpn_configuration(self):
-        """ Create openvpn configuration for server
-        """
-        try:
-            lines = ["port %s\n" % self.__server_port,
-                     "proto %s\n" % self.__proto,
-                     "dev %s\n" % self.__device,
-                     "server %s.0 %s\n" % (self.__server_net,
-                                           self.__server_netmask),
-                     "ca %s\n" % self.__ca,
-                     "cert %s\n" % self.__cert,
-                     "key %s\n" % self.__key,
-                     "dh %s\n" % self.__pem,
-                     "user %s\n" % self.__user,
-                     "group %s\n" % self.__group,
-                     "verb %s\n" % self.__verb,
-                     "mute %s\n" % self.__mute,
-                     "keepalive %s\n" % self.__keepalive,
-                     "client-config-dir %s\n" % self.__clientConfigDir,
-                     "ccd-exclusive\n",
-                     "client-to-client\n"]
-            if self.__compressLzo:
-                lines.append("comp-lzo\n")
-            if self.__persistKey:
-                lines.append("persist-key\n")
-            if self.__persistTun:
-                lines.append("persist-tun\n")
-
-            # server_file = self.__temp_dir + "/AVinfraestructure.conf"
-            server_file = self.__opconf
-            file = open(server_file, "w")
-            file.writelines(lines)
-            file.close()
-        except Exception as err:
-            return False, str(err)
-        return True, ""
-
-    def __create_environment_file_and_keys(self):
-        """ Environment
-        """
-        try:
-            lines = ["export EASY_RSA=\"`pwd`\"\n",
-                     "export OPENSSL=\"openssl\"\n",
-                     "export PKCS11TOOL=\"pkcs11-tool\"\n",
-                     "export GREP=\"grep\"\n",
-                     "export KEY_CONFIG=`$EASY_RSA/whichopensslcnf $EASY_RSA`\n",
-                     "export KEY_DIR=\"$EASY_RSA/keys\" \n",
-                     "export PKCS11_MODULE_PATH=\"dummy\" \n",
-                     "export PKCS11_PIN=\"dummy\" \n",
-                     "export KEY_SIZE=1024 \n",
-                     "export CA_EXPIRE=3650 \n",
-                     "export KEY_EXPIRE=3650 \n",
-                     "export KEY_COUNTRY=\"ES\" \n",
-                     "export KEY_PROVINCE=\"ES\" \n",
-                     "export KEY_CITY=\"Madrid\" \n",
-                     "export KEY_ORG=\"Alienvault\"\n",
-                     "export KEY_EMAIL=\"root@alienvault.com\" \n"]
-
-            # server_file = self.__temp_dir + "/vars"
-            server_file = self.__opvars
-            file = open(server_file, "w")
-            file.writelines(lines)
-            file.close()
-
-            if not os.path.exists(self.__keysdir):
-                os.makedirs(self.__keysdir)
-
-            cmd = 'cd %s \n' % self.__oppath
-            cmd += '. %s \n' % self.__opvars
-            cmd += './clean-all \n'
-            cmd += './build-dh \n'
-            cmd += 'export EASY_RSA="${EASY_RSA:-.}" \n'
-            cmd += '"$EASY_RSA/pkitool"  --initca $* \n'
-            cmd += 'export EASY_RSA="${EASY_RSA:-.}" \n'
-            cmd += '"$EASY_RSA/pkitool" --server alienvcd \n'
-            cmd += 'cp -rf keys/* /etc/openvpn/AVinfraestructure/keys/ '
-
-            (status, output) = getstatusoutput(cmd)
-            if status != 0:
-                return False, output
-        except Exception as err:
-            return False, str(err)
-
-        return True, ""
 
     def __create_node_configuration(self):
 
@@ -388,15 +303,6 @@ class AVVpn:
         return True
 
     def create_configuration_files(self):
-
-        # Server Configuration
-        if not os.path.exists(self.__opconf):
-            success, data = self.__create_server_openvpn_configuration()
-            if not success:
-                return False, data
-            success, data = self.__create_environment_file_and_keys()
-            if not success:
-                return False, data
 
         # Node Configuration
         self.remove_node_configuration()

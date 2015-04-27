@@ -71,10 +71,10 @@ function SIEM_trends($h = 24)
 		
     $sensor_where = make_ctx_filter().$asset_where;
     
-	$sqlgraph = "SELECT COUNT(acid_event.id) AS num_events, hour(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, 
+	$sqlgraph = "SELECT SUM(acid_event.cnt) AS num_events, hour(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, 
 	   day(convert_tz(timestamp,'+00:00','$tzc')) as suf 
-	   FROM acid_event 
-	   WHERE timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-(3600*$h))."' AND '".gmdate("Y-m-d H:i:s")."' $sensor_where 
+	   FROM ac_acid_event acid_event
+	   WHERE timestamp BETWEEN '".gmdate("Y-m-d H:00:00",gmdate("U")-(3600*$h))."' AND '".gmdate("Y-m-d H:59:59")."' $sensor_where 
 	   GROUP BY suf, intervalo";
 	
 	$rg = $dbconn->CacheExecute($sqlgraph);
@@ -134,8 +134,8 @@ function SIEM_trends_week($param = '')
         $plugins     = '7000-7999';
 	}
 	
-	$sqlgraph = "SELECT COUNT(acid_event.id) as num_events, day(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, monthname(convert_tz(timestamp,'+00:00','$tzc')) AS suf 
-        FROM $tax_join alienvault_siem.acid_event 
+	$sqlgraph = "SELECT SUM(acid_event.cnt) as num_events, day(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, monthname(convert_tz(timestamp,'+00:00','$tzc')) AS suf 
+        FROM $tax_join alienvault_siem.ac_acid_event acid_event
         WHERE timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-604800)."' AND '".gmdate("Y-m-d 23:59:59")."' $plugins_sql $sensor_where $tax_where 
         GROUP BY suf, intervalo 
         ORDER BY suf, intervalo";

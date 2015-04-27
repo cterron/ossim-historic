@@ -195,8 +195,8 @@ class Incident
     public $_life_time_diff;
 
 
-    public function __construct($id, $uuid, $ctx, $title, $date, $ref, $type, $submitter, $priority, $in_charge, $status, $last_update, 
-        $tags, $life_time_diff, $event_start, $event_end, $src_ips = '') 
+    public function __construct($id, $uuid, $ctx, $title, $date, $ref, $type, $submitter, $priority, $in_charge, $status, $last_update,
+        $tags, $life_time_diff, $event_start, $event_end, $src_ips = '')
     {
         $this->id              = intval($id);
         $this->uuid            = $uuid;
@@ -330,8 +330,8 @@ class Incident
     {
         return $this->event_start;
     }
-    
-    
+
+
     public function get_event_end()
     {
         return $this->event_end;
@@ -409,7 +409,7 @@ class Incident
         $status      = $this->status;
         $start_date  = $this->date;
         $last_update = $this->last_update;
-        
+
         if ($status == 'Closed')
         {
             $end_date = $last_update;
@@ -471,43 +471,43 @@ class Incident
                 $fgcolor = 'fff';
                 $name_risk='Serious';
             break;
-            
+
             case 2:
                 $bgcolor = 'FF0000';
                 $fgcolor = 'fff';
                 $name_risk='High';
             break;
-            
+
             case 3:
                 $bgcolor = 'FFA500';
                 $fgcolor = 'fff';
                 $name_risk='Medium';
             break;
-            
+
             case 4:
                 $bgcolor = 'FFA500';
                 $fgcolor = 'fff';
                 $name_risk='Medium';
             break;
-            
+
             case 5:
                 $bgcolor = 'FFA500';
                 $fgcolor = 'fff';
                 $name_risk='Medium';
             break;
-            
+
             case 6:
                 $bgcolor = 'FFD700';
                 $fgcolor = '000';
                 $name_risk='Low';
             break;
-            
+
             case 7:
                 $bgcolor = 'F0E68C';
                 $fgcolor = '000';
                 $name_risk='Info';
             break;
-            
+
             default:
                 $bgcolor = 'white';
                 $fgcolor = 'black';
@@ -517,8 +517,8 @@ class Incident
 
         return array($bgcolor, $fgcolor, $name_risk);
     }
-    
-    
+
+
     /*
      * Static function
      */
@@ -528,7 +528,7 @@ class Incident
         $fgcolor = self::get_priority_fgcolor($priority);
 
         $html = "<div style='width:20px;margin:0 auto;height:20px;line-height:20px;border-radius:100%;text-align:center;background:$bgcolor'>";
-        
+
         if ($link != '')
         {
               $html .= "<a href='$link' style='color:$fgcolor' target='topmenu'>$priority</a>";
@@ -542,12 +542,12 @@ class Incident
 
         return $html;
     }
-    
-    
+
+
     public static function get_risk_in_html($risk, $link = '')
     {
         list($bgcolor, $fgcolor, $risk) = self::get_risk_info($risk);
-        
+
         if ($link != '')
             $html = '
                 <table align="center" style="background-color:#' . $bgcolor . '" class="transparent" width="20">
@@ -697,7 +697,7 @@ class Incident
                 OSS_NULLABLE,
                 'illegal:' . _("Host")
             ),
-            
+
             'sensor' => array(
                 OSS_FQDN_IP,
                 OSS_NULLABLE,
@@ -820,7 +820,7 @@ class Incident
         $tz = Util::get_timezone();
 
         $list  = array();
-        $query = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, 
+        $query = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter,
                     incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end
                     FROM incident $args";
 
@@ -831,22 +831,22 @@ class Incident
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
         while (!$rs->EOF)
         {
-            if($tz != 0) 
+            if($tz != 0)
             {
                 $rs->fields["date"]        = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["date"])+3600*$tz);
                 $rs->fields["last_update"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["last_update"])+3600*$tz);
                 $rs->fields["event_start"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_start"])+3600*$tz);
                 $rs->fields["event_end"]   = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_end"])+3600*$tz);
             }
-            
+
             if($rs->fields["ref"] == '')
             {
                 $rs->fields["ref"] = "Custom";
             }
-            
+
             $list[] = new self($rs->fields["id"], $rs->fields["uuid"], $rs->fields["ctx"], $rs->fields["title"], $rs->fields["date"], $rs->fields["ref"], $rs->fields["type"], $rs->fields["submitter"], $rs->fields["priority"], $rs->fields["in_charge"], $rs->fields["status"], $rs->fields["last_update"], array() , NULL, $rs->fields["event_start"], $rs->fields["event_end"]);
 
             $rs->MoveNext();
@@ -881,7 +881,7 @@ class Incident
             }
 
             if (empty($user_perms[$myself]))
-            { 
+            {
                 $user_perms[$myself]=$myself;
             } // add myself
         }
@@ -892,13 +892,13 @@ class Incident
         {
             return $user_perms;
         }
-        
+
         if (!$pro)
         {
             if(!empty($user_perms))
             {
                 return array_intersect($user_perms, array($user_t => $user_t));
-            } 
+            }
             else
             {
                 return array($user_t => $user_t);
@@ -911,7 +911,7 @@ class Incident
         {
             $list               = Acl::get_all_users_by_entity($conn, $user_t);
             $my_entities_childs = Acl::get_entity_childs($conn, $user_t);
-            
+
             if (is_array($my_entities_childs))
             {
                 foreach ($my_entities_childs as $entity_id)
@@ -1027,7 +1027,7 @@ class Incident
                 $rs->fields["status"],
                 $rs->fields["last_update"],
                 array(),
-                NULL, 
+                NULL,
                 $rs->fields["event_start"],
                 $rs->fields["event_end"]
             );
@@ -1059,25 +1059,25 @@ class Incident
         else
         {
             $user_where = "'".implode("', '", $user_list)."'";
-            
+
             $query   = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref,
                              incident.type_id as type, incident.submitter as submitter,
                              incident.priority, incident.in_charge, incident.status,
                              incident.last_update, incident.event_start, incident.event_end
-                      FROM incident 
+                      FROM incident
                       LEFT JOIN incident_ticket ON incident_ticket.incident_id = incident.id
                       LEFT JOIN incident_subscrip ON incident_subscrip.incident_id = incident.id
                       WHERE 1=1 AND(
                         incident.in_charge in ($user_where) OR
                         incident.submitter in ($user_where) OR
-                        incident_ticket.users in ($user_where) OR 
-                        incident_ticket.in_charge in ($user_where) OR 
-                        incident_ticket.transferred in ($user_where) OR 
+                        incident_ticket.users in ($user_where) OR
+                        incident_ticket.in_charge in ($user_where) OR
+                        incident_ticket.transferred in ($user_where) OR
                         incident_subscrip.login in ($user_where)
                         )
                       $args
                     ";
-        
+
         }
 
         $query = ossim_query($query);
@@ -1097,7 +1097,7 @@ class Incident
                 $rs->fields["event_start"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_start"])+3600*$tz);
                 $rs->fields["event_end"]   = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_end"])+3600*$tz);
             }
-            
+
             if($rs->fields["ref"] == '')
             {
                 $rs->fields["ref"] = "Custom";
@@ -1191,10 +1191,10 @@ class Incident
 
         $host_where = $host_where_2 = $host_where_3 = '';
 
-        foreach ($assets as $k => $v) 
+        foreach ($assets as $k => $v)
         {
             //Filtered by the first network if there are multiples
-            if (preg_match("/,/",$v)) 
+            if (preg_match("/,/",$v))
             {
                 $range         = explode(",",$v);
                 $host_where   .= " OR (INET_ATON(SUBSTRING_INDEX(a.src_ips, ',', 1)) >= ".$range[0]." AND INET_ATON(SUBSTRING_INDEX(a.src_ips, ',', 1)) <= ".$range[1].") OR (INET_ATON(SUBSTRING_INDEX(a.dst_ips, ',', 1)) >= ".$range[0]." AND INET_ATON(SUBSTRING_INDEX(a.dst_ips, ',', 1)) <= ".$range[1].")";
@@ -1204,7 +1204,7 @@ class Incident
                 //$host_where   .= "a.src_ips LIKE '$asset_filter%' OR a.dst_ips LIKE '$asset_filter%' OR a.src_ips LIKE ',$asset_filter%' OR a.dst_ips LIKE ',$asset_filter%'";
                 //$host_where_2 .= "a.ip LIKE '$asset_filter%'";
                 //$host_where_3 .= "a.target LIKE '$asset_filter%'";
-            } 
+            }
             else
             {
                 $host_where   .=  " OR a.src_ips LIKE '$v' OR a.src_ips LIKE '%,$v,%' OR a.src_ips LIKE '$v,%' OR a.src_ips LIKE '%,$v'
@@ -1214,7 +1214,7 @@ class Incident
 
                 //$host_where   .= " OR INET_ATON(SUBSTRING_INDEX(a.src_ips, ',', 1)) = '$v' OR INET_ATON(SUBSTRING_INDEX(a.dst_ips, ',', 1)) = '$v'";
                 //$host_where_2 .= " OR INET_ATON(SUBSTRING_INDEX(a.ip, ',', 1)) = '$v'";
-                //$host_where_3 .= " OR a.target LIKE '%$v%'";          
+                //$host_where_3 .= " OR a.target LIKE '%$v%'";
             }
         }
 
@@ -1226,24 +1226,24 @@ class Incident
         if ($host_where_2 == '') $host_where_2="1=1";
         if ($host_where_3 == '') $host_where_3="1=1";
 
-        $query = "(SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.src_ips 
-                 FROM incident,incident_alarm a 
+        $query = "(SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.src_ips
+                 FROM incident,incident_alarm a
                  WHERE incident.id=a.incident_id AND ($host_where) $args)
                 UNION
-                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.ip as src_ips 
-                  FROM incident,incident_vulns a 
+                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.ip as src_ips
+                  FROM incident,incident_vulns a
                   WHERE incident.id=a.incident_id AND ($host_where_2) $args)
                 UNION
-                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.src_ips 
-                 FROM incident,incident_event a 
+                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.src_ips
+                 FROM incident,incident_event a
                  WHERE incident.id=a.incident_id AND ($host_where) $args)
                 UNION
-                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.ip as src_ips 
-                 FROM incident,incident_anomaly a 
+                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.ip as src_ips
+                 FROM incident,incident_anomaly a
                  WHERE incident.id=a.incident_id AND ($host_where_2) $args)
                 UNION
-                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.target as src_ips 
-                 FROM incident,incident_metric a 
+                (SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.target as src_ips
+                 FROM incident,incident_metric a
                  WHERE incident.id=a.incident_id AND ($host_where_3) $args)
                 ";
 
@@ -1254,7 +1254,7 @@ class Incident
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
         while (!$rs->EOF)
         {
             if($tz != 0)
@@ -1285,22 +1285,22 @@ class Incident
     }
 
 
-    public function get_list_type_descr($conn, $args = '') 
+    public function get_list_type_descr($conn, $args = '')
     {
         $tz = Util::get_timezone();
 
         $user = Session::get_session_user();
         $list = array();
 
-        $query  = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end, incident_type.descr FROM incident LEFT JOIN incident_type ON (incident.type_id = incident_type.id) $args";        
+        $query  = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end, incident_type.descr FROM incident LEFT JOIN incident_type ON (incident.type_id = incident_type.id) $args";
         $query  = ossim_query($query);
 
         $rs   = $conn->Execute($query);
         if (!$rs)
-        { 
+        {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-       
+
         while (!$rs->EOF)
         {
             $allowed = self::get_users_list($conn, $rs->fields["id"], $rs->fields["submitter"], $rs->fields["in_charge"]);
@@ -1314,7 +1314,7 @@ class Incident
                     $rs->fields["event_start"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_start"])+3600*$tz);
                     $rs->fields["event_end"]   = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_end"])+3600*$tz);
                 }
-                
+
                 if($rs->fields["ref"] == '')
                 {
                     $rs->fields["ref"] = "Custom";
@@ -1332,8 +1332,8 @@ class Incident
 
         return $list;
     }
-    
-    
+
+
     public function get_keywords_from_type($conn)
     {
         $keywords = '';
@@ -1347,7 +1347,7 @@ class Incident
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
         if (!$rs->EOF)
         {
             $keywords = $rs->fields["keywords"];
@@ -1361,7 +1361,7 @@ class Incident
     {
         $tz  = Util::get_timezone();
         $tzc = Util::get_tzc();
-        
+
         $search_opts = array(
             'incident_id',
             'ref',
@@ -1395,7 +1395,7 @@ class Incident
         {
             $where[] = "convert_tz(incident.last_update,'+00:00','".$tzc."') >= ".$opts['last_update'];
         }
-        
+
         if (is_array($opts['creation_date']))
         {
             $where[] = "convert_tz(incident.date,'+00:00','".$tzc."') between ".$opts['creation_date'][0]." AND ".$opts['creation_date'][1];
@@ -1429,7 +1429,7 @@ class Incident
             // XXX use that strange trick to overpass Adodb quoting limitations
             $parms[] = '%' . strtoupper($opts['title']) . '%';
         }
-        
+
         if ($opts['status'])
         {
             if($opts['status'] == "not_closed")
@@ -1442,12 +1442,12 @@ class Incident
                 $parms[] = $opts['status'];
             }
         }
-        
+
         if ($opts['priority_str'])
         {
             $p = $opts['priority_str'];
 
-            if ($p == 'High') 
+            if ($p == 'High')
             {
                 $where[] = "incident.priority > 7";
             }
@@ -1477,7 +1477,7 @@ class Incident
         {
             $where[] = "incident.in_charge = ?";
             $parms[] = $opts['in_charge'];
-            
+
         }
 
         if ($opts['tag'])
@@ -1505,7 +1505,7 @@ class Incident
 
             // search also inside the title if the user didn't specified
             // other specific title search
-            if (!$opts['title']) 
+            if (!$opts['title'])
             {
                 $tmp_w     = $where;
                 $tmp_w[]   = "(UPPER(incident.title) LIKE ?)";
@@ -1592,7 +1592,7 @@ class Incident
         {
             $query .= " LIMIT ".(abs($page-1)*$rows_per_page).",$rows_per_page";
         }
-        
+
         // Gets tags
         $tags = array();
 
@@ -1639,12 +1639,12 @@ class Incident
                 $rs->fields["event_start"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_start"])+3600*$tz);
                 $rs->fields["event_end"]   = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_start_end"])+3600*$tz);
             }
-            
+
             if($rs->fields["ref"] == '')
             {
                 $rs->fields["ref"] = "Custom";
             }
-            
+
             $list[] = new self($rs->fields["id"], $rs->fields["uuid"], $rs->fields["ctx"], $rs->fields["title"], $rs->fields["date"], $rs->fields["ref"], $rs->fields["type_id"], $rs->fields["submitter"], $rs->fields["priority"], $rs->fields["in_charge"], $rs->fields["status"], $rs->fields["last_update"], $itags, $life_time_diff, $rs->fields["event_start"], $rs->fields["event_end"]);
 
             $rs->MoveNext();
@@ -1656,7 +1656,7 @@ class Incident
 
     public static function search_count($conn)
     {
-        if (isset($_SESSION["_incident_search_count"])) 
+        if (isset($_SESSION["_incident_search_count"]))
         {
             return $_SESSION["_incident_search_count"];
         }
@@ -1664,7 +1664,7 @@ class Incident
         $foundrows = 0;
 
         $rf = $conn->Execute("SELECT FOUND_ROWS() AS total");
-        if ($rf) 
+        if ($rf)
         {
             $foundrows = $rf->fields["total"];
         }
@@ -1680,7 +1680,7 @@ class Incident
 
         $w    = implode("\nAND ", $where);
         $from = '';
-        
+
         // Scan needed tables
         if (count($where))
         {
@@ -1695,7 +1695,7 @@ class Incident
         {
             $from = 'incident';
         }
-        
+
         $query   = $start_sql . "\nFROM $from";
         $myself  = Session::get_session_user();
 
@@ -1714,7 +1714,7 @@ class Incident
         {
             $user_tmp[$entity] = $entity;
         }
-        
+
         $dbaux->close();
 
 
@@ -1725,10 +1725,10 @@ class Incident
 
         $user_where = "'".implode("', '", $user_tmp)."'";
 
-        if (!Session::am_i_admin()) 
+        if (!Session::am_i_admin())
         { //  $user != ACL_DEFAULT_OSSIM_ADMIN
             if (preg_match("/incident_event/",$w) || preg_match("/incident_alarm/",$w)
-                || preg_match("/incident_metric/",$w) || preg_match("/incident_vulns/",$w) || preg_match("/incident_custom/",$w)) 
+                || preg_match("/incident_metric/",$w) || preg_match("/incident_vulns/",$w) || preg_match("/incident_custom/",$w))
             {
                 $query .= " LEFT JOIN incident_subscrip ON incident_subscrip.incident_id=incident.id WHERE incident_subscrip.login in ($user_where)";
             }
@@ -1763,12 +1763,12 @@ class Incident
     {
         $diff1 = $a->_life_time_diff;
         $diff2 = $b->_life_time_diff;
-        
+
         if ($diff1 == $diff2)
         {
             return 0;
         }
-        
+
         return ($diff1 > $diff2) ? 1 : -1;
     }
 
@@ -1833,7 +1833,7 @@ class Incident
                 $rs->MoveNext();
             }
         }
-        
+
         return $list;
     }
 
@@ -1876,7 +1876,7 @@ class Incident
 
         //Admin
         if (Session::is_admin($conn, $user))
-        { 
+        {
             return array($user => $user);
         }
 
@@ -1941,7 +1941,7 @@ class Incident
             else
             {
                 $my_entities = Acl::get_my_entities($conn, $in_charge, FALSE);
-                
+
                 if(is_array($my_entities))
                 {
                     foreach($my_entities as $id => $entity)
@@ -2011,7 +2011,7 @@ class Incident
                             }
                         }
                     }
-                    else 
+                    else
                     {
                         $list[$in_charge] = $in_charge;
                     }
@@ -2049,7 +2049,7 @@ class Incident
         $list1 = array();
         $list2 = array();
 
-        $query = "SELECT u.login, u.name, u.email, u.company, u.department FROM users u, incident_subscrip s 
+        $query = "SELECT u.login, u.name, u.email, u.company, u.department FROM users u, incident_subscrip s
             WHERE s.incident_id = ? AND u.login = s.login ORDER BY u.name";
 
         $rs = $conn->Execute($query, $incident_id);
@@ -2063,11 +2063,11 @@ class Incident
             while (!$rs->EOF)
             {
                 $list1[] = $rs->fields;
-                
+
                 $rs->MoveNext();
             }
         }
-        
+
         if ($pro && valid_hex32($entity_id))
         {
             $users_entity = array();
@@ -2080,7 +2080,7 @@ class Incident
                     $users_entity[] = "'".$user["login"]."'";
                 }
 
-                $query = "SELECT u.login, u.name, u.email, u.company, u.department FROM users u 
+                $query = "SELECT u.login, u.name, u.email, u.company, u.department FROM users u
                     WHERE u.login in (".implode(",",$users_entity).") ORDER BY u.name";
 
                 $rs = $conn->Execute($query);
@@ -2104,7 +2104,7 @@ class Incident
 
 
     /*
-     *  @return true if current user have permissions to edit, delete, 
+     *  @return true if current user have permissions to edit, delete,
      *  subscribe and unsubscribe incidents
      */
     public static function user_incident_perms($conn, $incident_id, $action, $user = NULL)
@@ -2136,11 +2136,11 @@ class Incident
 
 
         //I'm the submmiter
-        
+
         if (!empty($submitter_data[1]))
         {
             if($submitter_data[1] == $user)
-            { 
+            {
                 return TRUE;
             }
         }
@@ -2154,8 +2154,8 @@ class Incident
                 return TRUE;
             }
         }
-        
-        
+
+
         if (($action == 'show' || $action == 'e_subscription' || $action == 'newticket'))
         {
             $allowed = self::get_users_list($conn, $incident_id, $submitter, $in_charge);
@@ -2275,7 +2275,7 @@ class Incident
                 if ($type->get_id() != '')
                 {
                     $output.= "<option ";
-                    
+
                     if ($selected == $type->get_id())
                     {
                         $output.= " selected='selected' ";
@@ -2299,17 +2299,18 @@ class Incident
         $user = Session::get_session_user();
 
         if($in_charge == '')
-        { 
+        {
             $in_charge = $user;
         }
 
         $tz = Util::get_timezone();
 
-        if($tz!=0)
+        if($tz != 0 )
         {
-            $date   = gmdate("Y-m-d H:i:s");
+            $date = gmdate("Y-m-d H:i:s");
 
-            if (empty($event_start)){
+            if (empty($event_start))
+            {
                 $event_start = $date;
             }
             else
@@ -2330,7 +2331,7 @@ class Incident
         }
         else
         {
-            $date   = date('Y-m-d H:i:s');
+            $date = date('Y-m-d H:i:s');
 
             if (empty($event_start))
             {
@@ -2373,7 +2374,7 @@ class Incident
         }
         /* Get last inserted id */
         $query = ossim_query("SELECT LAST_INSERT_ID() as id FROM incident");
-        
+
         $rs = $conn->Execute($query);
         if (!$rs)
         {
@@ -2390,7 +2391,7 @@ class Incident
 
 
     public static function insert_alarm($conn, $title, $type, $submitter, $priority, $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end,
-       $backlog_id, $event_id, $alarm_group_id, $transferred_user, $transferred_entity) 
+       $backlog_id, $event_id, $alarm_group_id, $transferred_user, $transferred_entity)
     {
 
         $in_charge = ($transferred_user != '')  ? $transferred_user : $transferred_entity;
@@ -2413,7 +2414,7 @@ class Incident
         );
 
         if (!$conn->Execute($query, $params))
-        { 
+        {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
@@ -2425,7 +2426,7 @@ class Incident
 
 
     public static function insert_event($conn, $title, $type, $submitter, $priority, $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start,
-        $event_end, $transferred_user, $transferred_entity) 
+        $event_end, $transferred_user, $transferred_entity)
     {
 
         $in_charge = ($transferred_user != '') ? $transferred_user : $transferred_entity;
@@ -2499,8 +2500,8 @@ class Incident
 
         $last_id = self::__insert($conn, $title, $type, $submitter, $priority, "Vulnerability", '', '', $in_charge);
 
-        $query = "INSERT INTO incident_vulns 
-                (id, incident_id, ip, port, nessus_id, risk, description) 
+        $query = "INSERT INTO incident_vulns
+                (id, incident_id, ip, port, nessus_id, risk, description)
                 VALUES (?,?, ?, ?, ?, ?, ?)";
 
         $vuln_entry_id = $conn->GenID('incident_vulns_seq');
@@ -2525,15 +2526,15 @@ class Incident
 
         return $last_id;
     }
-    
-    
+
+
     public static function insert_custom($conn, $title, $type, $submitter, $priority, $transferred_user, $transferred_entity, $fields = array())
     {
         $in_charge = ($transferred_user != '') ? $transferred_user : $transferred_entity;
         $in_charge = ($in_charge != '')        ? $in_charge : Session::get_session_user();
-        
+
         $last_id = self::__insert($conn, $title, $type, $submitter, $priority, 'Custom', '', '', $in_charge);
-        
+
         foreach ($fields as $value)
         {
             if(is_array($value["content"]))
@@ -2561,8 +2562,8 @@ class Incident
 
         return $last_id;
     }
-    
-    
+
+
     public static function insert_metric($conn, $title, $type, $submitter, $priority, $target, $metric_type, $metric_value, $event_start, $event_end, $transferred_user, $transferred_entity)
     {
         $in_charge = ( $transferred_user != '' ) ? $transferred_user : $transferred_entity;
@@ -2595,7 +2596,7 @@ class Incident
         ossim_valid($incident_id, OSS_DIGIT, 'illegal:' . _("ID"));
         ossim_valid($login, OSS_USER,        'illegal:' . _("Login"));
 
-        if (ossim_error()) 
+        if (ossim_error())
         {
             die(ossim_error());
         }
@@ -2603,7 +2604,7 @@ class Incident
         // Check if he's already subscribed
         $query = "SELECT login FROM incident_subscrip WHERE login=? AND incident_id=?";
 
-        if (!$rs = $conn->Execute($query, array($login, $incident_id))) 
+        if (!$rs = $conn->Execute($query, array($login, $incident_id)))
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -2615,7 +2616,7 @@ class Incident
 
         $query = "INSERT INTO incident_subscrip VALUES (?, ?)";
 
-        if (!$conn->Execute($query, array($login, $incident_id))) 
+        if (!$conn->Execute($query, array($login, $incident_id)))
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -2637,6 +2638,7 @@ class Incident
             else
             {
                 list ($y,$m,$d,$h,$u,$s,$time) = Util::get_utc_from_date($conn, $event_start, $tz);
+
                 $event_start = "$y-$m-$d $h:$u:$s";
             }
 
@@ -2656,7 +2658,7 @@ class Incident
             {
                 $event_start = "now";
             }
-            
+
             if (empty($event_end))
             {
                 $event_end   = "now";
@@ -2678,6 +2680,7 @@ class Incident
             $event_end,
             $incident_id
         );
+
 
         if (!$conn->Execute($query, $params))
         {
@@ -2727,7 +2730,7 @@ class Incident
 
 
     public function update_event($conn, $incident_id, $title, $type, $submitter, $priority, $src_ips, $dst_ips, $src_ports, $dst_ports,
-         $event_start, $event_end, $transferred_user, $transferred_entity) 
+         $event_start, $event_end, $transferred_user, $transferred_entity)
     {
 
         //Get user in charge
@@ -2753,7 +2756,7 @@ class Incident
         );
 
         if (!$conn->Execute($query, $params))
-        { 
+        {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
@@ -2797,7 +2800,7 @@ class Incident
             $params = array( $content, $value["name"], $incident_id);
 
             if (!$conn->Execute($query, $params))
-            { 
+            {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
 
@@ -2812,12 +2815,12 @@ class Incident
                 );
 
                 if (!$conn->Execute($query, $params))
-                { 
+                {
                     Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
             }
         }
-        
+
         //Send email automatically if user (in charge) has changed
         if ($in_charge != $old_in_charge)
         {
@@ -2829,14 +2832,14 @@ class Incident
 
 
     public static function update_metric($conn, $incident_id, $title, $type, $submitter, $priority, $target, $metric_type, $metric_value,
-        $event_start, $event_end, $transferred_user, $transferred_entity) 
+        $event_start, $event_end, $transferred_user, $transferred_entity)
     {
         //Get user in charge
         $incident = self::get_list($conn, "AND incident.id='$incident_id'");
 
         if (count($incident) > 0)
         {
-            $old_in_charge = $incident[0]->get_in_charge(); 
+            $old_in_charge = $incident[0]->get_in_charge();
         }
 
         $in_charge = ($transferred_user != '') ? $transferred_user : $transferred_entity;
@@ -2868,7 +2871,7 @@ class Incident
 
 
     public static function update_anomaly($conn, $incident_id, $title, $type, $submitter, $priority, $anom_type, $ip, $data_orig, $data_new,
-        $transferred_user, $transferred_entity) 
+        $transferred_user, $transferred_entity)
     {
         $s_data_orig = implode(",", $data_orig);
         $s_data_new  = implode(",", $data_new);
@@ -2884,10 +2887,10 @@ class Incident
         $in_charge   = ($transferred_user != '') ? $transferred_user : $transferred_entity;
 
         self::__update($conn, $incident_id, $title, $type, $submitter, $priority, '', '', $in_charge);
-        
-            
+
+
         $query = "UPDATE incident_anomaly " . "SET anom_type = ?, ip = ?, data_orig = ?, data_new = ? " . "WHERE incident_id = ?";
-                
+
         $params = array(
             $anom_type,
             $ip,
@@ -2897,7 +2900,7 @@ class Incident
         );
 
         if (!$conn->Execute($query, $params))
-        { 
+        {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
@@ -2912,7 +2915,7 @@ class Incident
 
 
     public static function update_vulnerability($conn, $incident_id, $title, $type, $submitter, $priority, $ip, $port, $nessus_id, $risk,
-       $description, $transferred_user, $transferred_entity) 
+       $description, $transferred_user, $transferred_entity)
     {
 
         //Get user in charge
@@ -3070,11 +3073,11 @@ class Incident
         );
         $qs = $query_string; //shorter
 
-        foreach(array_keys($search_array) as $table) 
+        foreach(array_keys($search_array) as $table)
         {
             $query = "SELECT " . $search_array[$table]["return_column"] . " FROM " . $table . " WHERE ";
 
-            foreach($search_array[$table]["check_columns"] as $column) 
+            foreach($search_array[$table]["check_columns"] as $column)
             {
                 $query.= $column . " LIKE \"%" . $qs . "%\" OR ";
             }
@@ -3103,7 +3106,7 @@ class Incident
             $list = array_flip(array_flip($list));
             $where = " AND incident.id = " . array_pop($list) . " ";
 
-            foreach($list as $incident_id) 
+            foreach($list as $incident_id)
             {
                 $where.= "OR incident.id = \"$incident_id\" ";
             }
@@ -3143,7 +3146,7 @@ class Incident
 
         $rs = $conn->Execute(ossim_query($query));
         if (!$rs)
-        { 
+        {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
@@ -3152,7 +3155,7 @@ class Incident
         while (!$rs->EOF)
         {
             $tags[$rs->fields["id"]]=$rs->fields["name"];
-            
+
             $rs->MoveNext();
         }
 
@@ -3178,8 +3181,7 @@ class Incident
 
     public static function incidents_by_tag($conn, $assets = '', $user = '', $args = NULL, $tags = NULL)
     {
-        $tags           = array();
-        $args           =  $args." AND incident.status!='Closed' ";
+        $args           = $args." AND incident.status!='Closed' ";
         $incident_list  = self::get_list_filtered($conn, $assets, $args, $user);
         $ids            = '';
 
@@ -3213,9 +3215,9 @@ class Incident
 
         $query = "
             SELECT incident_tag_descr.name AS name, count(incident_tag.incident_id) AS count
-            FROM 
-                incident_tag_descr 
-                    INNER JOIN incident_tag ON incident_tag_descr.id=incident_tag.tag_id 
+            FROM
+                incident_tag_descr
+                    INNER JOIN incident_tag ON incident_tag_descr.id=incident_tag.tag_id
                     INNER JOIN incident ON incident_tag.incident_id=incident.id $tag_clausule
             WHERE incident.status != 'Close' AND
                   incident.id in (".$ids.")
@@ -3235,6 +3237,7 @@ class Incident
         while (!$rs->EOF)
         {
             $tags[$rs->fields["name"]]=$rs->fields["count"];
+
             $rs->MoveNext();
         }
 
@@ -3252,7 +3255,7 @@ class Incident
 
         if (is_array($incident_list) && !empty($incident_list))
         {
-            foreach($incident_list as $incident) 
+            foreach($incident_list as $incident)
             {
                 $class                     = $incident->get_ref();
                 $class_accumulated[$class] = (array_key_exists($class, $class_accumulated)) ? $class_accumulated[$class] + 1 : 1;
@@ -3286,7 +3289,7 @@ class Incident
 
         if (is_array($incident_list) && !empty($incident_list))
         {
-            foreach($incident_list as $incident) 
+            foreach($incident_list as $incident)
             {
                 $incident->_life_time_diff = strtotime($incident->get_date()) - strtotime($incident->get_last_modification($conn));
                 $incident->tags            = (isset($tags[$incident->get_id()])) ? $tags[$incident->get_id()] : array();
@@ -3383,7 +3386,7 @@ class Incident
         if (is_array($incident_list) && !empty($incident_list))
         {
             $list_aux = array();
-            
+
             foreach($incident_list as $incident)
             {
                 $in_charge  = $incident->get_in_charge();
@@ -3410,7 +3413,7 @@ class Incident
         $args =  $args. " AND incident.status!='Closed' ORDER BY status DESC";
 
         $incident_list = self::get_list_filtered($conn, $assets, $args, $user);
-        
+
         if (is_array($incident_list) && !empty($incident_list))
         {
             $prio_accumulated = array(
@@ -3476,7 +3479,7 @@ class Incident
         for ($i = 11; $i>=0 ; $i--)
         {
             $time    = strtotime("-".$i." months");
-            
+
             $m_l     = date("F", $time);
             $y       = date("Y", $time);
 
@@ -3537,7 +3540,7 @@ class Incident
             $m_s  = date("M", $time);
             //$d       = date("d", $time);
 
-            //$months["$m_s-$y_s"] = "date >= \"$y-$m-01 00:00:00\" and date <= \"$y-$m-$d 23:59:59\''; 
+            //$months["$m_s-$y_s"] = "date >= \"$y-$m-01 00:00:00\" and date <= \"$y-$m-$d 23:59:59\'';
             $months["$m_s-$y_s"] = "month(convert_tz(incident.date,'+00:00','$tzc'))=$m AND year(convert_tz(incident.date,'+00:00','$tzc'))=$y";
         }
 
@@ -3574,37 +3577,37 @@ class Incident
                 $unique_id = md5(uniqid());
 
                 $value = (empty($value)) ? _('Not available') : $value;
-                
+
                 $field  = "<span style='font-weight: bold; padding-right: 10px;'>Location:</span><span>".$value."</span>
                            <div id='".$unique_id."' style='margin: 10px auto; height:200px; width:100%;'></div>
-                           <script type='text/javascript'>                         
+                           <script type='text/javascript'>
                                av_map_".$unique_id." = new Av_map('".$unique_id."');
-                               
+
                                Av_map.is_map_available(function(conn)
                                {
                                    if(conn)
                                    {
                                         av_map_".$unique_id.".draw_map();
-    
+
                                         av_map_".$unique_id.".map.setOptions({draggable: false});
-    
+
                                         // Set drap property to false
-    
+
                                         google.maps.event.addListener(av_map_".$unique_id.".map, 'bounds_changed', function(){
-    
+
                                             //Set draggable property to false
                                             if (Object.keys(av_map_".$unique_id.".markers).length > 0)
                                             {
                                                 av_map_".$unique_id.".markers[0].setDraggable(false);
                                                 av_map_".$unique_id.".markers[0].setMap(av_map_".$unique_id.".map);
-    
+
                                                 av_map_".$unique_id.".set_zoom(4);
-    
+
                                                 //Remove event handler
                                                 google.maps.event.clearListeners(av_map_".$unique_id.".map, 'bounds_changed');
                                             }
                                         });
-    
+
                                         av_map_".$unique_id.".set_location_by_address('".$value."');
                                    }
                                    else
@@ -3621,7 +3624,7 @@ class Incident
                 $conf    = $GLOBALS['CONF'];
                 $version = $conf->get_conf('ossim_server_version');
 
-                if (preg_match("/pro|demo/i",$version) && preg_match("/ENTITY:\s*([a-f0-9]{32})/i",$value,$found)) 
+                if (preg_match("/pro|demo/i",$version) && preg_match("/ENTITY:\s*([a-f0-9]{32})/i",$value,$found))
                 {
                     $db          = new ossim_db();
                     $conn        = $db->connect();

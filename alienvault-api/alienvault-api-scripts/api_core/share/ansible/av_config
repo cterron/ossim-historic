@@ -126,8 +126,6 @@ av_config_methods = {'general_admin_dns' : {'get': 'get_general_admin_dns',
                      'update_update_proxy_pass' : {'get': 'get_update_update_proxy_pass'},
                      'update_update_proxy_port' : {'get': 'get_update_update_proxy_port'},
                      'update_update_proxy_user' : {'get': 'get_update_update_proxy_user'},
-                     'vpn_vpn_infraestructure' : {'get': 'get_vpn_vpn_infraestructure',
-                                                   'set' : 'set_vpn_vpn_infraestructure'},
                      'ha_ha_role':{'get':'get_ha_ha_role'},
                      'ha_ha_other_node_ip':{'get':'get_ha_ha_other_node_ip'},
                      'ha_ha_virtual_ip':{'get':'get_ha_ha_virtual_ip'},
@@ -135,7 +133,9 @@ av_config_methods = {'general_admin_dns' : {'get': 'get_general_admin_dns',
                      # Non ossim_setup.conf related stuff
                      ####################################
                      'network_interfaces': {'get': 'get_net_iface_config_all',
-                                            'set': 'set_net_iface_config'}
+                                            'set': 'set_net_iface_config'},
+                     'vpn_config': {'get': 'get_avvpn_config_all',
+                                    'set': 'set_avvpn_config'}
                  }
 
 def __get_method (config, operation, path):
@@ -248,12 +248,11 @@ def main():
             update_update_proxy_pass = dict(default=False),
             update_update_proxy_port = dict(default=False),
             update_update_proxy_user = dict(default=False),
-            vpn_vpn_infraestructure = dict(default=False),
             network_interfaces = dict(default=False),
+            vpn_config = dict(default=False),
             ha_ha_role = dict(delfault=False),
             ha_ha_virtual_ip = dict(default=False),
             ha_ha_other_node_ip = dict(default=False)
-
         )
     )
 

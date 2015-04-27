@@ -44,181 +44,166 @@ $avc_list = Av_center::get_avc_list($conn);
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	<title><?php echo _("OSSIM Framework");?></title>
-	<meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
-	<meta http-equiv="Pragma" content="no-cache"/>
-	<script type="text/javascript" src="js/jquery.min.js"></script>
-	<script type="text/javascript" src="../js/jquery-ui.min.js"></script>
-	<!--<script type="text/javascript" src="../js/jquery-1.4.2.min.js"></script>-->
+    <title><?php echo _("OSSIM Framework");?></title>
+    <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
 
-	<!-- Code Mirror -->
-	<script type='text/javascript' src='js/codemirror/codemirror.js' ></script>
-	<script type='text/javascript' src="js/codemirror/mode/xmlpure/xmlpure.js"></script>
-	<script type='text/javascript' src="js/codemirror/mode/properties/properties.js"></script>
-	<script src="js/codemirror/util/dialog.js"></script>
-	<script src="js/codemirror/util/searchcursor.js"></script>
-	<script src="js/codemirror/util/search.js"></script>
-	<link rel="stylesheet" type="text/css" href="js/codemirror/codemirror.css"/>
+    <?php
+    //CSS Files
+    $_files = array(
+        array('src' => '/av_center/js/codemirror/codemirror.css',               'def_path' => FALSE),
+        array('src' => 'tree.css',                                              'def_path' => TRUE),
+        array('src' => 'jquery.autocomplete.css',                               'def_path' => TRUE),
+        array('src' => '/av_center/js/jqplot/jquery.jqplot.css',                'def_path' => FALSE),
+        array('src' => 'xbreadcrumbs.css',                                      'def_path' => TRUE),
+        array('src' => 'tipTip.css',                                            'def_path' => TRUE),
+        array('src' => 'jquery.dataTables.css',                                 'def_path' => TRUE),
+        array('src' => 'ui.multiselect.css',                                    'def_path' => TRUE),
+        array('src' => 'jquery.contextMenu.css',                                'def_path' => TRUE),
+        array('src' => 'progress.css',                                          'def_path' => TRUE),
+        array('src' => 'jquery-ui-1.7.custom.css',                              'def_path' => TRUE),
+        array('src' => 'av_common.css?t='.Util::get_css_id(),                   'def_path' => TRUE),
+    );
 
-	<!-- Dynatree libraries: -->
-	<script type="text/javascript" src="../js/jquery.cookie.js"></script>
-	<script type="text/javascript" src="../js/jquery.dynatree.js"></script>
+    Util::print_include_files($_files, 'css');
 
-	<link type="text/css" rel="stylesheet" href="/ossim/style/tree.css" />
+    //JS Files
+    $_files = array(
+        array('src' => '/av_center/js/jquery.min.js',                            'def_path' => FALSE),
+        array('src' => 'jquery-ui.min.js',                                       'def_path' => TRUE),
+        array('src' => 'jquery.dynatree.js',                                     'def_path' => TRUE),
+        array('src' => 'jquery.cookie.js',                                       'def_path' => TRUE),
+        array('src' => 'jquery.autocomplete.pack.js',                            'def_path' => TRUE),
+        array('src' => 'jquery.elastic.source.js',                               'def_path' => TRUE),
+        array('src' => 'jquery.sparkline.js',                                    'def_path' => TRUE),
+        array('src' => 'jqplot/jquery.jqplot.min.js',                            'def_path' => TRUE),
+        array('src' => 'jqplot/plugins/jqplot.pieRenderer.js',                   'def_path' => TRUE),
+        array('src' => 'jquery.dataTables.js',                                   'def_path' => TRUE),
+        array('src' => 'jquery.dataTables.plugins.js',                           'def_path' => TRUE),
+        array('src' => 'jquery.tmpl.1.1.1.js',                                   'def_path' => TRUE),
+        array('src' => 'jquery.contextMenu.js',                                  'def_path' => TRUE),
+        array('src' => 'ui.multiselect.js',                                      'def_path' => TRUE),
+        array('src' => 'greybox.js',                                             'def_path' => TRUE),
+        array('src' => 'notification.js',                                        'def_path' => TRUE),
+        array('src' => 'ajax_validator.js',                                      'def_path' => TRUE),
+        array('src' => 'messages.php',                                           'def_path' => TRUE),
+        array('src' => 'utils.js',                                               'def_path' => TRUE),
+        array('src' => 'token.js',                                               'def_path' => TRUE),
+        array('src' => 'av_progress_bar.js.php',                                 'def_path' => TRUE),
+        array('src' => '/av_center/js/codemirror/codemirror.js',                 'def_path' => FALSE),
+        array('src' => '/av_center/js/codemirror/mode/xmlpure/xmlpure.js',       'def_path' => FALSE),
+        array('src' => '/av_center/js/codemirror/mode/properties/properties.js', 'def_path' => FALSE),
+        array('src' => '/av_center/js/codemirror/util/dialog.js',                'def_path' => FALSE),
+        array('src' => '/av_center/js/codemirror/util/searchcursor.js',          'def_path' => FALSE),
+        array('src' => '/av_center/js/codemirror/util/search.js',                'def_path' => FALSE),
+        array('src' => '/av_center/js/config.js',                                'def_path' => FALSE),
+        array('src' => '/av_center/js/xbreadcrumbs.js',                          'def_path' => FALSE),
+        array('src' => '/av_center/js/jquery.tipTip.js',                         'def_path' => FALSE),
+        array('src' => '/av_center/js/avc_msg.php',                              'def_path' => FALSE),
+        array('src' => '/av_center/js/progress_bar.js',                          'def_path' => FALSE),
+        array('src' => '/av_center/js/vprogress_bar.js',                         'def_path' => FALSE),
+        array('src' => '/av_center/js/common.js',                                'def_path' => FALSE),
+        array('src' => '/av_center/js/change_control.js',                        'def_path' => FALSE),
+        array('src' => '/av_center/js/av_tree.js',                               'def_path' => FALSE),
+        array('src' => '/av_center/js/av_center.js',                             'def_path' => FALSE)
+    );
 
-	<!-- Autocomplete libraries: -->
-	<script type="text/javascript" src="../js/jquery.autocomplete.pack.js"></script>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/jquery.autocomplete.css"/>
+    Util::print_include_files($_files, 'js');
 
-	<!-- Elastic textarea: -->
-	<script type="text/javascript" src="../js/jquery.elastic.source.js" charset="utf-8"></script>
-
-    <!-- Progress Bar: -->
-    <script type="text/javascript" src="js/progress_bar.js"></script>
-
-    <!-- Vertical Progress Bar: -->
-    <script type="text/javascript" src="js/vprogress_bar.js"></script>
-
-    <!-- Spark Line: -->
-    <script type="text/javascript" src="../js/jquery.sparkline.js"></script>
+    ?>
 
     <!-- JQplot: -->
     <!--[if IE]><script language="javascript" type="text/javascript" src="../js/jqplot/excanvas.js"></script><![endif]-->
-    <link rel="stylesheet" type="text/css" href="../js/jqplot/jquery.jqplot.css" />
-    <script language="javascript" type="text/javascript" src="../js/jqplot/jquery.jqplot.min.js"></script>
-    <script language="javascript" type="text/javascript" src="../js/jqplot/plugins/jqplot.pieRenderer.js"></script>
 
-    <!-- Xbreadcrumbse: -->
-    <script type="text/javascript" src="js/xbreadcrumbs.js"></script>
-    <link rel="stylesheet" type="text/css" href="/ossim/style/xbreadcrumbs.css"/>
+    <script type='text/javascript'>
 
-    <!-- JQuery tipTip: -->
-    <script src="js/jquery.tipTip.js" type="text/javascript"></script>
-    <link rel="stylesheet" type="text/css" href="/ossim/style/tipTip.css"/>
+        $(document).ready(function(){
 
-    <!-- JQuery DataTable: -->
-    <script type="text/javascript" src="/ossim/js/jquery.dataTables.js"></script>
-    <link rel="stylesheet" type="text/css" href="/ossim/style/jquery.dataTables.css"/>
+            //JQplot
+            $.jqplot.config.enablePlugins = true;
 
-    <!-- JQuery MultiSelect: -->
-    <script type="text/javascript" src="/ossim/js/jquery.tmpl.1.1.1.js"></script>
-	<script type="text/javascript" src="../js/ui.multiselect.js"></script>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/ui.multiselect.css"/>
+            //Ajax Request
+            ajax_requests = new Ajax_Requests(20);
 
-	<!-- JQuery Context Menu: -->
-	<script type="text/javascript" src="../js/jquery.contextMenu.js"></script>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/jquery.contextMenu.css"/>
+            //Action in progress: Saving data in forms.
+            action_in_progress = false;
 
-    <!-- AV Activity Bar plugin -->
-    <script type="text/javascript" src="/ossim/js/av_progress_bar.js.php"></script>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/progress.css"/>
+            $('#breadcrumbs').xBreadcrumbs();
 
+            tree = new Tree('profile');
 
-    <!-- Own libraries: -->
-	<script type="text/javascript" src="js/config.js"></script>
-	<script type="text/javascript" src="../js/messages.php"></script>
-	<script type='text/javascript' src="../js/utils.js"></script>
-	<script type="text/javascript" src="../js/notification.js"></script>
-	<script type="text/javascript" src="../js/ajax_validator.js"></script>
-	<script type="text/javascript" src="js/avc_msg.php"></script>
-	<script type="text/javascript" src="js/common.js"></script>
-	<script type="text/javascript" src="js/change_control.js"></script>
-	<script type="text/javascript" src="js/av_center.js"></script>
-    <script type="text/javascript" src="js/av_tree.js"></script>
-    <script type="text/javascript" src="/ossim/js/greybox.js"></script>
+            if (tree.tree_status == '')
+            {
+                <?php
+                if ($avc_list['status'] == 'error')
+                {
+                    ?>
+                    $('.avc_hmenu').remove();
+                    display_sec_errors(labels['error_ret_info']);
+                    <?php
+                }
+                else
+                {
+                    ?>
+                    tree.load_tree();
 
-    <link rel="stylesheet" type="text/css" href="/ossim/style/jquery-ui-1.7.custom.css"/>
-    <link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
+                    $('#avtc_container').tipTip({maxWidth: 'auto', content: labels['show_tree']});
 
-	<script type='text/javascript'>
+                    $('#avtc_container').click(function() {
+                        toggle_tree();
+                    });
 
-		$(document).ready(function(){
+                    //Change Tree ordenation
+                    $('#tree_ordenation').change(function() {
+                        var type = $('#tree_ordenation').val();
+                        tree.change_tree(type);
+                    });
 
-    		//JQplot
-    		$.jqplot.config.enablePlugins = true;
+                    $('#search').click(function() {Main.pre_search_avc();});
 
-    		//Ajax Request
-    		ajax_requests = new Ajax_Requests(20);
+                    <?php
+                    //Alienvault Components (Autocomplete)
+                    if (is_array($avc_list['data']))
+                    {
+                        $cont = 0;
+                        foreach ($avc_list['data'] as $system_id => $data)
+                        {
+                            $av_components .= ($cont > 0) ? ", " : "";
 
-    		//Action in progress: Saving data in forms.
-    		action_in_progress = false;
+                            $hostname = $data['name'];
+                            $host_ip  = $data['admin_ip'];
 
-    		$('#breadcrumbs').xBreadcrumbs();
+                            $av_components .= '{"txt" : "'.$hostname.' ['.$host_ip.']", "id" :"'.$system_id.'" }';
 
-    		tree = new Tree('profile');
+                            $cont++;
+                        }
+                    }
 
-    		if (tree.tree_status == '')
-    		{
-    			<?php
-    			if ($avc_list['status'] == 'error')
-    			{
-    				?>
-    				$('.avc_hmenu').remove();
-    				display_sec_errors(labels['error_ret_info']);
-    				<?php
-    			}
-    			else
-    			{
-    				?>
-    				tree.load_tree();
+                    ?>
+                    var av_components = [ <?php echo $av_components?> ];
+                    Main.autocomplete_avc(av_components);
 
-    				$('#avtc_container').tipTip({maxWidth: 'auto', content: labels['show_tree']});
+                    $('#go').click(function() { Main.search(); });
 
-    				$('#avtc_container').click(function() {
-    				    toggle_tree();
-    				});
-
-    				//Change Tree ordenation
-    				$('#tree_ordenation').change(function() {
-						var type = $('#tree_ordenation').val();
-						tree.change_tree(type);
-    				});
-
-    				$('#search').click(function() {Main.pre_search_avc();});
-
-    				<?php
-    				//Alienvault Components (Autocomplete)
-    				if (is_array($avc_list['data']))
-    				{
-    					$cont = 0;
-    					foreach ($avc_list['data'] as $system_id => $data)
-    					{
-    						$av_components .= ($cont > 0) ? ", " : "";
-
-    						$hostname = $data['name'];
-    						$host_ip  = $data['admin_ip'];
-
-    						$av_components .= '{"txt" : "'.$hostname.' ['.$host_ip.']", "id" :"'.$system_id.'" }';
-
-    						$cont++;
-    					}
-    				}
-
-    				?>
-    				var av_components = [ <?php echo $av_components?> ];
-    				Main.autocomplete_avc(av_components);
-
-    				$('#go').click(function() { Main.search(); });
-
-    				Main.display_avc_info(true);
-    				<?php
-    			}
-    			?>
-    		}
-    		else
-    		{
-    			$('.avc_hmenu').remove();
-    			display_sec_errors(tree.tree_status);
-    		}
-	});
-	</script>
+                    Main.display_avc_info(true);
+                    <?php
+                }
+                ?>
+            }
+            else
+            {
+                $('.avc_hmenu').remove();
+                display_sec_errors(tree.tree_status);
+            }
+    });
+    </script>
 </head>
 
 <body>
 
-	<?php
+    <?php
 
-	$db->close();
+    $db->close();
 
     //Local menu
     include_once '../local_menu.php';
@@ -239,45 +224,45 @@ $avc_list = Av_center::get_avc_list($conn);
                         <ul class="xbreadcrumbs" id="breadcrumbs">
                             <li class='current'><a href='index.php' class="home"><?php echo _('AlienVault Center')?></a></li>
                         </ul>
-					</td>
+                    </td>
                 </tr>
             </table>
 
             <table id='section_container'>
-				<tr class='avc_hmenu'>
-					<td id='avc_clcontainer'>
-						<div id='search_container'>
+                <tr class='avc_hmenu'>
+                    <td id='avc_clcontainer'>
+                        <div id='search_container'>
 
-							<div id='l_sc'>
-								<label id='lbl_search' for='search'><?php echo _('Search')?>:</label>
-								<input type='text' id='search' name='search' value='<?php echo _('Search by hostname or IP')?>'/>
-								<input type='hidden' id='h_search' name='h_search'/>
-								<input type='button' id='go' name='go' class='small' value='<?php echo _('Go')?>'/>
+                            <div id='l_sc'>
+                                <label id='lbl_search' for='search'><?php echo _('Search')?>:</label>
+                                <input type='text' id='search' name='search' value='<?php echo _('Search by hostname or IP')?>'/>
+                                <input type='hidden' id='h_search' name='h_search'/>
+                                <input type='button' id='go' name='go' class='small' value='<?php echo _('Go')?>'/>
 
-								<div id='search_results'>
-    						        <div></div>
-    						    </div>
-							</div>
-							<div id='r_sc'>
-    							<label id='lbl_to' for='tree_ordenation'><?php echo _('Order By')?>:</label>
-    							<select id='tree_ordenation' name='tree_ordenation'>
-    								<option value='profile' selected='selected'><?php echo _('profile')?></option>
-    								<option value='hostname'><?php echo _('hostname')?></option>
-    							</select>
-							</div>
-						</div>
-						<div id='tree_container_top'>
-						</div>
-						<div id='tree_container_bt'></div>
-					</td>
-				</tr>
-				<tr class='avc_hmenu'>
-					<td id='avc_cmcontainer'>
+                                <div id='search_results'>
+                                    <div></div>
+                                </div>
+                            </div>
+                            <div id='r_sc'>
+                                <label id='lbl_to' for='tree_ordenation'><?php echo _('Order By')?>:</label>
+                                <select id='tree_ordenation' name='tree_ordenation'>
+                                    <option value='profile' selected='selected'><?php echo _('profile')?></option>
+                                    <option value='hostname'><?php echo _('hostname')?></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id='tree_container_top'>
+                        </div>
+                        <div id='tree_container_bt'></div>
+                    </td>
+                </tr>
+                <tr class='avc_hmenu'>
+                    <td id='avc_cmcontainer'>
                         <div id='avtc_container'>
                             <div id='avc_arrow' class='arrow_bottom'></div>
                         </div>
-					</td>
-				</tr>
+                    </td>
+                </tr>
 
                 <tr>
                     <td id='avc_crcontainer'>

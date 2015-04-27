@@ -59,13 +59,12 @@ $_SESSION['_idm'] = $idm_enabled;
 // Custom Views
 $login    = Session::get_session_user();
 
-$db_aux   = new ossim_db();
+$db_aux   = new ossim_db(true);
 $conn_aux = $db_aux->connect();
-
 
 $config = new User_config($conn_aux);
 
-
+$nocache = (intval($_REQUEST['nocache'])==1) ? true : false;
 
 $_SESSION['views'] = $config->get($login, 'custom_views', 'php', "siem");
 $default_view = ($config->get($login, 'custom_view_default', 'php', "siem") != "") ? $config->get($login, 'custom_view_default', 'php', "siem") : (($idm_enabled) ? 'IDM' : 'default');
@@ -123,12 +122,31 @@ if ($idm_enabled && $_SESSION['views']['IDM'] == "")
 }
 
 // sensor or entity queries
-if (preg_match("/^[A-F0-9]{32}$/i",$_GET["sensor"]))
+if (preg_match("/^\!?[A-F0-9]{32}$/i",$_GET["sensor"]))
 {
-    $_GET["ctx"] = $_GET["sensor"];
-    unset($_GET["sensor"]);
+    $nop = preg_match("/^\!/",$_GET["sensor"]) ? '!' : '';
+    
+    /*
+     * Resolve Sensor ID -> Device ID
+     * Must match device IP with real sensor IP (This will discard Device IPs not present in alienvault.sensor)
+     * When multiple device_id1,device_id2,device_id3 GetSensorName will resolve the first one
+     */
+    $sids = $conn_aux->GetOne("SELECT GROUP_CONCAT(device.id SEPARATOR ',') as id
+                               FROM alienvault_siem.device, alienvault.sensor
+                               WHERE device.sensor_id=UNHEX(?) AND device.device_ip=sensor.ip
+                               ORDER BY device.id", array(str_replace('!','',$_GET["sensor"])));
+    
+    if (empty($sids))
+    {
+        $_GET["ctx"] = $_GET["sensor"];
+        unset($_GET["sensor"]);
+    }
+    else
+    {
+        $_GET["sensor"] = $nop . $sids;
+        unset($_GET["ctx"]);
+    }
 }
-
 
 // ********* IP and Host Searches ***********
 
@@ -418,7 +436,7 @@ if ($_GET["server"]!="") {
 	    if ($_server > 0)
 	    {
 	        // Query DB server
-    	    $dbo  = new ossim_db();
+    	    $dbo  = new ossim_db(true);
     	    $conn = $dbo->connect();
             list($db_server) = Databases::get_list($conn,'WHERE id = '.$_server);
         	$dbo->close();
@@ -429,8 +447,10 @@ if ($_GET["server"]!="") {
         	}
 	    }
 	}
-	Util::memcacheFlush(false);
+	if (!$nocache) Util::memcacheFlush(false);
 }
+
+if ($nocache) Util::memcacheFlush(false);
 
 if (is_array($_SESSION['server']) && $_SESSION["server"][0] != '')
 {
@@ -445,7 +465,7 @@ if (is_array($_SESSION['server']) && $_SESSION["server"][0] != '')
     $db_connect_method = DB_PCONNECT;
 
 
-    $dbo = new ossim_db();
+    $dbo = new ossim_db(true);
     error_reporting(E_ERROR | E_PARSE);
 
     // Try to connect
@@ -524,8 +544,8 @@ $current_cols_titles = array(
     "PLUGIN_SOURCE_TYPE" => _("Source Type"),
     "PLUGIN_SID_CATEGORY" => _("Category"),
     "PLUGIN_SID_SUBCATEGORY" => _("SubCategory"),
-	'SRC_USERDOMAIN' => _("IDM User@Domain Src IP"),
-	'DST_USERDOMAIN' => _("IDM User@Domain Dst IP"),
+    'SRC_USERDOMAIN' => _("IDM User@Domain Src IP"),
+    'DST_USERDOMAIN' => _("IDM User@Domain Dst IP"),
     'SRC_HOSTNAME' => _("IDM Source"),
     'DST_HOSTNAME' => _("IDM Destination"),
     'SRC_MAC' => _("IDM MAC Src IP"),
@@ -536,7 +556,7 @@ $current_cols_titles = array(
     'REP_REL_DST' => _("Rep Dst IP Rel"),
     'REP_ACT_SRC' => _("Rep Src IP Act"),
     'REP_ACT_DST' => _("Rep Dst IP Act"),
-	"DEVICE" => _("Device")
+    'DEVICE' => _("Device IP")
 );
 $current_cols_widths = array(
     "SIGNATURE" => "45mm",

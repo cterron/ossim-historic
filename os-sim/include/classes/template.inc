@@ -50,7 +50,7 @@
 * @package    ossim-framework\Administration
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Template
@@ -545,138 +545,137 @@ class Template
     /**
     * This function returns an array of templates that satisfies the filter
     *
-    * @param object $conn    Database access object
-    * @param integer $from   [Optional] First row of range (For SQL query)
-    * @param integer $max    [Optional] Number of rows
-    * @param string $filter  [Optional] SQL condition.  For example: " WHERE name like '%$search%' "
+    * @param object   $conn    Database access object
+    * @param integer  $from    [Optional] First row of range (For SQL query)
+    * @param integer  $max     [Optional] Number of rows
+    * @param string   $filter  [Optional] SQL condition.  For example: " WHERE name like '%$search%' "
     *
     * @throws Exception  If a connection error occurred
     *
-    * @return array      
-    */  
+    * @return array
+    */
     public static function get_list($conn, $from = 0, $max = 20, $filter = '')
     {
         Ossim_db::check_connection($conn);
 
         $list      = array();
         $num_rows  = 0;
-        
+
         //Proadmin visibility
         $perms_where   = '';
         $users_allowed = array();
-        
-        if (Session::is_pro() && Acl::am_i_proadmin()) 
+
+        if (Session::is_pro() && Acl::am_i_proadmin())
         {
-            if (is_array($_SESSION['_user_vision']['users_to_assign'])) 
+            if (is_array($_SESSION['_user_vision']['users_to_assign']))
             {
-                foreach ($_SESSION['_user_vision']['users_to_assign'] as $user => $perm) 
+                foreach ($_SESSION['_user_vision']['users_to_assign'] as $user => $perm)
                 {
                     if ($perm && $user != Session::get_session_user())
-                    { 
-                        $users_allowed[] = $user; 
+                    {
+                        $users_allowed[] = $user;
                     }
                 }
             }
-            
+
             $perms_where = "WHERE id NOT IN (SELECT DISTINCT template_id FROM users)";
-            
-            if (count($users_allowed) > 0) 
+
+            if (count($users_allowed) > 0)
             {
-                $perms_where = "WHERE (id NOT IN (SELECT DISTINCT template_id FROM users) 
+                $perms_where = "WHERE (id NOT IN (SELECT DISTINCT template_id FROM users)
                     OR id IN (SELECT DISTINCT template_id FROM users WHERE login IN ('".implode("', '", $users_allowed)."')))";
-            } 
+            }
         }
-        
-        
+
         //Search filter
-        if($filter != '' && preg_match('/where/i', $perms_where)) 
+        if($filter != '' && preg_match('/where/i', $perms_where))
         {
             $filter = preg_replace('/where/i', 'AND', $filter);
         }
-                            
-        $query = "SELECT SQL_CALC_FOUND_ROWS HEX(id) AS id, name 
-            FROM acl_templates 
-            $perms_where $filter 
+
+        $query = "SELECT SQL_CALC_FOUND_ROWS HEX(id) AS id, name
+            FROM acl_templates
+            $perms_where $filter
             LIMIT $from, $max";
-        
-        
+
         $rs = $conn->Execute($query);
-        
+
         if (!$rs)
-        {            
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());            
-        }  
-        
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
         //Getting total number of templates
         $rs_total = $conn->Execute('SELECT FOUND_ROWS() AS counter');
-        
-        if (!$rs_total->EOF) 
+
+        if (!$rs_total->EOF)
         {
             $num_rows = $rs_total->fields['counter'];
         }
-            
-        while (!$rs->EOF) 
+
+        while (!$rs->EOF)
         {
-            // Getting users that using each template
-            $query = "SELECT login FROM users WHERE template_id = UNHEX(?)";
-            $users = array();
-            
+            // Getting users which using each template
             $params = array($rs->fields['id']);
-            $rs_2   = $conn->Execute($query, $params);
-            
+            $query  = "SELECT login FROM users WHERE template_id = UNHEX(?)";
+
+            $rs_2 = $conn->Execute($query, $params);
+
             if (!$rs_2)
-            {            
+            {
                 $exp_msg = _('Error! Template users not found. Unable to connect to Database');
 
                 Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
-            } 
-                        
-            while (!$rs_2->EOF) 
+            }
+
+            $users = array();
+
+            while (!$rs_2->EOF)
             {
                 $users[] = $rs_2->fields['login'];
-                
+
                 $rs_2->MoveNext();
             }
-                         
+
             // Getting permission coverage
-                                       
-            $rs_total = $conn->Execute($query, $params);
-            
-            $query = "SELECT count(*) AS total FROM acl_perm 
-                WHERE type = 'MENU' AND description != '' AND enabled = 1";  
-                                       
+
+            $query = "SELECT count(*) AS total FROM acl_perm
+                WHERE type = 'MENU' AND description != '' AND enabled = 1";
+
+            $rs_total = $conn->Execute($query);
+
             if (!$rs_total->EOF)
-            {           
+            {
                 $total_perms = $rs_total->fields['total'];
-            }            
-            
+            }
+
             $total_perms = ($total_perms < 1) ? 1 : $total_perms;
-            
+
             $params   =  array($rs->fields['id']);
-            $query    = "SELECT count(*) AS num FROM acl_templates_perms 
+            $query    = "SELECT count(*) AS num FROM acl_templates_perms
                 WHERE ac_templates_id = UNHEX(?)";
-            
+
             $rs_total = $conn->Execute($query, $params);
 
-            if (!$rs_total->EOF) 
+            if (!$rs_total->EOF)
             {
                 $count_perms = $rs_total->fields['num'];
                 $count_perms = ($count_perms > $total_perms) ? $total_perms : $count_perms;
             }
-                            
+
             $perc = round($count_perms * 100 / $total_perms);
-            
+
             $list[] = array(
                 'id'      => $rs->fields['id'],
                 'name'    => $rs->fields['name'],
                 'users'   => implode(', ', $users),
                 'percent' => $perc
             );
-            
+
             $rs->MoveNext();
         }
 
-        return array($list, $num_rows);    
+        return array($list, $num_rows);
     }
 }
 

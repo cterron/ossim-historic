@@ -144,10 +144,10 @@ BEGIN
 
     -- ISO27001
     DECLARE cur1 CURSOR FOR SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A05_Security_Policy WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A06_IS_Organization WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A07_Asset_Mgnt WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A08_Human_Resources WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A09_Physical_security WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A10_Com_OP_Mgnt WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A11_Acces_control WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A12_IS_acquisition WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A13_IS_incident_mgnt WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A14_BCM WHERE SIDSS_Ref >= 1 UNION ALL SELECT `Ref`,Security_controls,SIDSS_Ref FROM ISO27001An.A15_Compliance WHERE SIDSS_Ref >= 1;
-    DECLARE cur2 CURSOR FOR SELECT DISTINCT(i.destination) AS dest_ip, net.name AS service FROM alienvault.net, alienvault.net_cidrs, datawarehouse.incidents_ssi i WHERE net.id=net_cidrs.net_id AND inet6_pton(i.destination) >=  net_cidrs.begin AND inet6_pton(i.destination) <=  net_cidrs.end AND i.destination <> '' AND i.destination <> '0.0.0.0' GROUP BY 1;
+    DECLARE cur2 CURSOR FOR SELECT DISTINCT(i.destination) AS dest_ip, net.name AS service FROM alienvault.net, alienvault.net_cidrs, datawarehouse.incidents_ssi i WHERE net.id=net_cidrs.net_id AND inet6_aton(i.destination) >=  net_cidrs.begin AND inet6_aton(i.destination) <=  net_cidrs.end AND i.destination <> '' AND i.destination <> '0.0.0.0' GROUP BY 1;
     DECLARE cur3 CURSOR FOR SELECT incident.type_id, incident.title, incident.priority, incident_alarm.src_ips, incident_alarm.dst_ips, ifnull(incident_ticket.description,''), YEAR(incident.event_start), MONTH(incident.event_start), DAY(incident.event_start), HOUR(incident.event_start), MINUTE(incident.event_start), count(distinct(incident.id)) FROM incident LEFT JOIN incident_ticket ON incident_ticket.incident_id=incident.id,incident_alarm, incident_type WHERE incident_alarm.incident_id=incident.id and incident_type.id=incident.type_id GROUP BY 1,2,3,4,5,7,8,9,10,11;
-    DECLARE cur4 CURSOR FOR SELECT a.plugin_sid, s.name, a.risk, inet6_ntop(a.src_ip), inet6_ntop(a.dst_ip), "no_detail", YEAR(a.timestamp), MONTH(a.timestamp), HOUR(a.timestamp), DAY(a.timestamp), MINUTE(a.timestamp), count(*) as volume FROM alienvault.alarm a, alienvault.plugin_sid s WHERE a.plugin_id=s.plugin_id AND a.plugin_sid=s.sid AND a.status="open" AND s.plugin_id=1505 GROUP BY 1,2,3,4,5,6,7,8,9,10,11;
-    DECLARE cur5 CURSOR FOR SELECT inet6_ntop(a.src_ip) AS ip, net.name AS service FROM alienvault.net, alienvault.alarm a, alienvault.net_cidrs n WHERE n.net_id=net.id AND a.src_ip >= n.begin AND a.src_ip <= n.end GROUP BY 1 UNION SELECT inet6_ntop(a.dst_ip) AS ip, net.name AS service FROM alienvault.net, alienvault.alarm a, alienvault.net_cidrs n WHERE n.net_id=net.id AND a.dst_ip >= n.begin AND a.dst_ip <= n.end GROUP BY 1;
+    DECLARE cur4 CURSOR FOR SELECT a.plugin_sid, s.name, a.risk, inet6_ntoa(a.src_ip), inet6_ntoa(a.dst_ip), "no_detail", YEAR(a.timestamp), MONTH(a.timestamp), HOUR(a.timestamp), DAY(a.timestamp), MINUTE(a.timestamp), count(*) as volume FROM alienvault.alarm a, alienvault.plugin_sid s WHERE a.plugin_id=s.plugin_id AND a.plugin_sid=s.sid AND a.status="open" AND s.plugin_id=1505 GROUP BY 1,2,3,4,5,6,7,8,9,10,11;
+    DECLARE cur5 CURSOR FOR SELECT inet6_ntoa(a.src_ip) AS ip, net.name AS service FROM alienvault.net, alienvault.alarm a, alienvault.net_cidrs n WHERE n.net_id=net.id AND a.src_ip >= n.begin AND a.src_ip <= n.end GROUP BY 1 UNION SELECT inet6_ntoa(a.dst_ip) AS ip, net.name AS service FROM alienvault.net, alienvault.alarm a, alienvault.net_cidrs n WHERE n.net_id=net.id AND a.dst_ip >= n.begin AND a.dst_ip <= n.end GROUP BY 1;
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
@@ -397,11 +397,11 @@ SENSOR:BEGIN
     DECLARE y INT;
     
     -- needed params
-    IF INET6_PTON(ip) IS NOT NULL AND NOT user = '' THEN
+    IF INET6_ATON(ip) IS NOT NULL AND NOT user = '' THEN
     
         -- check params
         SELECT IF (uuid='',UPPER(REPLACE(UUID(), '-', '')),UPPER(uuid)) into @uuid;
-        SET @ip = HEX(INET6_PTON(ip));
+        SET @ip = HEX(INET6_ATON(ip));
         SELECT IF (name='','(null)',name) into @name;
         SELECT IF (prio<1 OR prio>10,5,prio) into @prio;
         SELECT IF (port<1 OR port>65535,40001,port) into @port;
@@ -491,7 +491,7 @@ SENSOR:BEGIN
 
         -- Default nessus host
         IF @nessus_host = '' THEN
-            REPLACE INTO alienvault.config VALUES ('nessus_host',INET6_NTOP(UNHEX(@ip)));
+            REPLACE INTO alienvault.config VALUES ('nessus_host',INET6_NTOA(UNHEX(@ip)));
             REPLACE INTO alienvault.config VALUES ('nessus_pass',AES_ENCRYPT('ossim',@system_uuid));
         END IF;
 
@@ -573,12 +573,12 @@ BEGIN
             SET @title = (SELECT ifnull(TRIM(LEADING "directive_event:" FROM name),'Unknown Directive') as name from plugin_sid where plugin_ctx=NEW.corr_engine_ctx AND plugin_id = NEW.plugin_id and sid = NEW.plugin_sid LIMIT 1);
         END IF;
         
-        SET @title = REPLACE(@title,"DST_IP", inet6_ntop(NEW.dst_ip));
-        SET @title = REPLACE(@title,"SRC_IP", inet6_ntop(NEW.src_ip));
+        SET @title = REPLACE(@title,"DST_IP", inet6_ntoa(NEW.dst_ip));
+        SET @title = REPLACE(@title,"SRC_IP", inet6_ntoa(NEW.src_ip));
         SET @title = REPLACE(@title,"PROTOCOL", NEW.protocol);
         SET @title = REPLACE(@title,"SRC_PORT", NEW.src_port);
         SET @title = REPLACE(@title,"DST_PORT", NEW.dst_port);
-        SET @title = CONCAT(@title, " (", inet6_ntop(NEW.src_ip), ":", CAST(NEW.src_port AS CHAR), " -> ", inet6_ntop(NEW.dst_ip), ":", CAST(NEW.dst_port AS CHAR), ")");
+        SET @title = CONCAT(@title, " (", inet6_ntoa(NEW.src_ip), ":", CAST(NEW.src_port AS CHAR), " -> ", inet6_ntoa(NEW.dst_ip), ":", CAST(NEW.dst_port AS CHAR), ")");
         
         SELECT value FROM config WHERE conf = 'incidents_incharge_default' into @incharge;
         IF (@incharge IS NULL OR @incharge = '') THEN
@@ -588,7 +588,7 @@ BEGIN
         INSERT INTO incident(uuid,ctx,title,date,ref,type_id,priority,status,last_update,in_charge,submitter,event_start,event_end) values (UNHEX(REPLACE(UUID(),'-','')), NEW.corr_engine_ctx, @title, NEW.timestamp, "Alarm", "Generic", NEW.risk, "Open", NOW(), @incharge, "admin", NEW.timestamp, NEW.timestamp);
 
         SET @last_incident_id = (SELECT LAST_INSERT_ID() FROM incident LIMIT 1);
-        INSERT INTO incident_alarm(incident_id, src_ips, dst_ips, src_ports, dst_ports, backlog_id, event_id, alarm_group_id) values (@last_incident_id, inet6_ntop(NEW.src_ip), inet6_ntop(NEW.dst_ip), NEW.src_port, NEW.dst_port, NEW.backlog_id, NEW.event_id, 0);
+        INSERT INTO incident_alarm(incident_id, src_ips, dst_ips, src_ports, dst_ports, backlog_id, event_id, alarm_group_id) values (@last_incident_id, inet6_ntoa(NEW.src_ip), inet6_ntoa(NEW.dst_ip), NEW.src_port, NEW.dst_port, NEW.backlog_id, NEW.event_id, 0);
 
         CALL incident_ticket_populate(@last_incident_id, @tmp_src_ip, @tmp_dst_ip, @tmp_risk);
     END IF;
@@ -607,7 +607,7 @@ BEGIN
     DECLARE source VARCHAR(39);
     DECLARE dest VARCHAR(39);
     
-    DECLARE cur1 CURSOR FOR select count(*) as cnt,  inet6_ntop(event.src_ip) as src, inet6_ntop(event.dst_ip) as dst, plugin.name, plugin_sid.name, min(timestamp) as frst, max(timestamp) as last, count(distinct(event.src_ip)) as cnt_src, count(distinct(event.dst_ip)) as cnt_dst from event, plugin, plugin_sid where (event.src_ip = src_ip or event.dst_ip = src_ip or event.src_ip = dst_ip or event.dst_ip =dst_ip ) and timestamp > DATE_SUB(NOW(), INTERVAL 7 DAY) AND alienvault.plugin.id = event.plugin_id and alienvault.plugin_sid.sid = event.plugin_sid and alienvault.plugin_sid.plugin_id = event.plugin_id group by event.plugin_id, event.plugin_sid ORDER by cnt DESC limit 50;
+    DECLARE cur1 CURSOR FOR select count(*) as cnt,  inet6_ntoa(event.src_ip) as src, inet6_ntoa(event.dst_ip) as dst, plugin.name, plugin_sid.name, min(timestamp) as frst, max(timestamp) as last, count(distinct(event.src_ip)) as cnt_src, count(distinct(event.dst_ip)) as cnt_dst from event, plugin, plugin_sid where (event.src_ip = src_ip or event.dst_ip = src_ip or event.src_ip = dst_ip or event.dst_ip =dst_ip ) and timestamp > DATE_SUB(NOW(), INTERVAL 7 DAY) AND alienvault.plugin.id = event.plugin_id and alienvault.plugin_sid.sid = event.plugin_sid and alienvault.plugin_sid.plugin_id = event.plugin_id group by event.plugin_id, event.plugin_sid ORDER by cnt DESC limit 50;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
     
     SET i = (SELECT IFNULL(MAX(id), 0) + 1 FROM incident_ticket);
@@ -654,7 +654,9 @@ CREATE PROCEDURE addcol() BEGIN
         IF NOT EXISTS (SELECT 1 FROM policy_host_reference WHERE policy_id=@dpid) THEN
             INSERT IGNORE INTO policy_host_reference (`policy_id`, `host_id`, `direction`) VALUES (@dpid, 0x00000000000000000000000000000000,'source'),(@dpid, 0x00000000000000000000000000000000,'dest');
         ELSE
-            UPDATE policy_host_reference SET host_id = 0x00000000000000000000000000000000 WHERE policy_id = @dpid;
+            IF EXISTS (SELECT count(*) as total FROM policy_host_reference WHERE policy_id=@dpid HAVING total<=2) THEN
+                UPDATE policy_host_reference SET host_id = 0x00000000000000000000000000000000 WHERE policy_id = @dpid;
+            END IF;
         END IF;
         IF NOT EXISTS (SELECT 1 FROM policy_target_reference WHERE policy_id=@dpid) THEN
             INSERT IGNORE INTO policy_target_reference (policy_id, target_id) VALUES (@dpid, IF(@server_id IS NULL or @server_id = '', 0x00000000000000000000000000000000, @server_id));

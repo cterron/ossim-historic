@@ -180,7 +180,12 @@ ksort($ports);
     { 
         echo "<a href='javascript:void(0);' class='$homelan' onclick='show$prefix();'>";
     }
-    if(!empty($flag)) 
+
+    if(!empty($data['icon']))
+    {
+        echo preg_replace("/\>$/"," width='18px' height='12px' align='absmiddle' style='padding-bottom:4px;'/> ",$data['icon']);
+    }
+    elseif(!empty($flag)) 
 	{ 
 		echo "<img src='/ossim/pixmaps/flags/$flag.png' width='20px' height='14px' align='absmiddle' style='padding-bottom:5px;'/> ";
 	}

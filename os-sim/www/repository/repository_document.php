@@ -75,8 +75,7 @@ if(!empty($text))
         //CSS Files
         $_files = array(
             array('src' => 'av_common.css',                     'def_path' => TRUE),
-            array('src' => 'tipTip.css',                        'def_path' => TRUE),
-            array('src' => '/fancybox/assets_list_view.css',    'def_path' => TRUE)
+            array('src' => 'tipTip.css',                        'def_path' => TRUE)
         );
         
         Util::print_include_files($_files, 'css');

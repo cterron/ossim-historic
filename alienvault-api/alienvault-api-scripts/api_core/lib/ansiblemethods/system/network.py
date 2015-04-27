@@ -493,7 +493,7 @@ def make_tunnel(system_ip, local_server_id, password=""):
             return False, "Error getting the remote profile:  %s" % str(err)
 
         # UPDATE LOCAL SERVER TABLE: Set the local vpn ip
-        cmd = """echo \"update alienvault.server set ip=inet6_pton('%s') where id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
+        cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
         response = ansible.run_module(host_list=[host], module="shell", args=cmd)
         success, msg = ansible_is_valid_response(host, response)
         if not success:
@@ -504,7 +504,7 @@ def make_tunnel(system_ip, local_server_id, password=""):
 
         if "server" in remote_profiles:
             # IF SERVER PROFILE, UPDATE LOCAL SERVER TABLE AS WELL
-            cmd = """echo \"update alienvault.server set ip=inet6_pton('%s') where id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
+            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
             response = ansible.run_module(host_list=[host], module="shell", args=cmd)
             success, msg = ansible_is_valid_response(host, response)
             if not success:
@@ -516,7 +516,7 @@ def make_tunnel(system_ip, local_server_id, password=""):
             # UPDATE REMOTE SERVER TABLE
             print "Remote profile server found... configuring it"
             print "Set vpn server ip on remote db..."
-            cmd = """echo \"update alienvault.server set ip=inet6_pton('%s') where id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
+            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
             response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
@@ -525,7 +525,7 @@ def make_tunnel(system_ip, local_server_id, password=""):
             if response['contacted'][system_ip]['rc'] !=0:
                 return False, response['contacted'][system_ip]['stderr']
             print "Set local vpn ip on remote db ..."
-            cmd = """echo \"update alienvault.server set ip=inet6_pton('%s') where id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
+            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
             response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
@@ -536,7 +536,7 @@ def make_tunnel(system_ip, local_server_id, password=""):
 
 
             # UPDATE REMOTE SYSTEM TABLE
-            cmd = """echo \"update alienvault.system set vpn_ip=inet6_pton('%s') where server_id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
+            cmd = """echo \"update alienvault.system set vpn_ip=inet6_aton('%s') where server_id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
             response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
@@ -546,7 +546,7 @@ def make_tunnel(system_ip, local_server_id, password=""):
                 return False, response['contacted'][system_ip]['stderr']
 
             print "Set local vpn ip on remote db (systems)..."
-            cmd = """echo \"update alienvault.system set vpn_ip=inet6_pton('%s') where server_id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
+            cmd = """echo \"update alienvault.system set vpn_ip=inet6_aton('%s') where server_id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
             response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:

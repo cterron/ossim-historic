@@ -2,6 +2,7 @@
 name=Reachable systems
 description=Check for reachable systems using the API
 category=alienvault,system
+profiles=Server:>4.0
 type=command
 command=alienvault-api systems
 

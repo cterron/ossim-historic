@@ -38,8 +38,16 @@ case "$1" in
         if ! getent passwd avapi > /dev/null; then
             adduser --system --shell /bin/bash --ingroup alienvault --gecos "AlienVault SIEM" avapi
         fi
+        if [ -f /home/avapi/.ssh/known_hosts ] 
+        then
+            ssh-keygen -R 127.0.0.1 -f /home/avapi/.ssh/known_hosts
+            ssh-keygen -R localhost -f /home/avapi/.ssh/known_hosts        
+        fi
+        ssh-keyscan 127.0.0.1 localhost >> /home/avapi/.ssh/known_hosts 
+        chown avapi:alienvault /home/avapi/.ssh/known_hosts
+        chmod 600 /home/avapi/.ssh/known_hosts
+        chown -f avapi:alienvault /home/avapi/.ssh/known_hosts.old || true
 
-        # Add avapi user to sudoers.
 
         COMMANDS=('/usr/share/alienvault/api_core/bin/ansible' \
                   '/usr/bin/sudo' \

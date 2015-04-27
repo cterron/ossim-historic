@@ -2,6 +2,7 @@
 name=Network routing
 description=Parses the /etc/resolv.conf file for inconsistencies
 category=system,network
+strike_zone=True
 type=command
 command=route -n
 raw_limit=100

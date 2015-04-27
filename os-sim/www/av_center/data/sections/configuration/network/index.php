@@ -274,7 +274,7 @@ else
 		Configuration.check_status();
 
 		//DNS Server Information
-		Js_tooltip.show('#admin_dns', { content: '<?php echo _('You can type one unique IP Address or a IP list separated by comma: IP1,IP2,IP3 (3 DNS Server IPs maximum allowed)')?>'});
+		Js_tooltip.show('#admin_dns', { content: '<?php echo _('You can type one unique IP Address or an IP list separated by commas: IP1,IP2,IP3 (3 DNS Server IPs maximum allowed)')?>'});
 
 	</script>
 	<?php

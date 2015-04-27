@@ -100,9 +100,6 @@ class DoRestore(threading.Thread):
                         'reputation_data',
                         'idm_data',
                         'extra_data',]
-                        #'ac_acid_event',]#Changes #4376
-                        #'ac_alerts_signature', 
-                        #'ac_sensor_sid']
         self.__msgerror = ""
         self.__purgeStatus = DoRestore.PURGE_STATUS_OK
     def purge_status(self):
@@ -274,7 +271,8 @@ class DoRestore(threading.Thread):
         for filename in glob.glob(os.path.join(self.__bkConfig['backup_dir'], 'delete-*.sql.gz')):
             if filename in deletes:
                 logger.info("Running delete...%s" % filename)
-                cmd = "mysql --host=%s --user=%s --password=%s  alienvault_siem < $FILE" % (bbddhost,bbdduser,bbddpasswd)
+                fdate = re.sub(r'.*(\d\d\d\d)(\d\d)(\d\d).*', '\\1-\\2-\\3', filename)
+                cmd = "mysql --host=%s --user=%s --password=%s  alienvault_siem < $FILE; echo \"CALL alienvault_siem.fill_tables('%s 00:00:00','%s 23:59:59');\" | mysql --host=%s --user=%s --password=%s alienvault_siem" % (bbddhost, bbdduser, bbddpasswd, fdate, fdate, bbddhost, bbdduser, bbddpasswd)
                 random_string = ''.join(random.choice(string.ascii_uppercase) for x in range(10))
                 ff = gzip.open(filename, 'rb')
                 data = ff.read()
@@ -285,7 +283,7 @@ class DoRestore(threading.Thread):
                 fd.close()
                 os.chmod(tmpfile, 0644)
                 cmd = cmd.replace('$FILE',tmpfile)
-                logger.info("Running purge eventes %s" % cmd)
+                logger.info("Running purge events from %s to %s" % (fdate, fdate))
                 status, output = commands.getstatusoutput(cmd)
                 if status != 0:
                     logger.error("Error running purge: %s" % output)
@@ -445,8 +443,22 @@ class DoRestore(threading.Thread):
         """Restores the backup file regardless of the entity
         @param bakcupfile file to restore
         """
-        restore_command = "zcat %s | grep -i ^insert | mysql --host=%s --user=%s --password=%s  alienvault_siem" % \
-                          (backupfile, self.__bbddhost, self.__bbdduser,self.__bbddpasswd)
+        tmpfile = "/tmp/set.sql"
+        createtmpdatabase = open(tmpfile,'w')
+        createtmpdatabase.write("SET UNIQUE_CHECKS=0;SET @disable_count=1;\n")
+        createtmpdatabase.close()
+        try:
+            status, output = commands.getstatusoutput("pigz %s" % tmpfile)
+            if status != 0:
+                self.__setError("Error gzipping %s" % tmpfile)
+                return False
+        except Exception, e:
+            self.__setError("Error gzipping %s" % tmpfile)
+            return False
+        
+        fdate = re.sub(r'.*(\d\d\d\d)(\d\d)(\d\d).*', '\\1-\\2-\\3', backupfile)
+        restore_command = "zcat %s.gz %s | grep -i ^insert | mysql --host=%s --user=%s --password=%s alienvault_siem; echo \"CALL alienvault_siem.fill_tables('%s 00:00:00','%s 23:59:59');\" | mysql --host=%s --user=%s --password=%s alienvault_siem; rm -f %s.gz" % \
+                          (tmpfile, backupfile, self.__bbddhost, self.__bbdduser, self.__bbddpasswd, fdate, fdate, self.__bbddhost, self.__bbdduser, self.__bbddpasswd, tmpfile)
         logger.info("Running restore ")
         try:
             status, output = commands.getstatusoutput(restore_command)
@@ -877,11 +889,12 @@ class BackupManager(threading.Thread):
                 endd = last_day.replace(hour=23, minute=59, second=59, microsecond=0)
                 try:
                     
-                    #delete_file.write("DELETE FROM alienvault_siem.ac_acid_event WHERE day='%s';\n" % date.isoformat())
                     delete_file.write("DELETE aux FROM alienvault_siem.idm_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
                     delete_file.write("DELETE aux FROM alienvault_siem.reputation_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
                     delete_file.write("DELETE aux FROM alienvault_siem.extra_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
-                    delete_file.write("DELETE FROM alienvault_siem.acid_event WHERE timestamp between '%s' and '%s';\n" % (initd, endd))
+                    delete_file.write("DELETE FROM alienvault_siem.ac_acid_event WHERE timestamp BETWEEN '%s' AND '%s';\n" % (initd, endd))
+                    delete_file.write("DELETE FROM alienvault_siem.po_acid_event WHERE timestamp BETWEEN '%s' AND '%s';\n" % (initd, endd))
+                    delete_file.write("SET @disable_del_count = 1;\nDELETE FROM alienvault_siem.acid_event WHERE timestamp between '%s' and '%s';\nSET @disable_del_count = null;\n" % (initd, endd))
                     delete_file.close()
                     os.chmod(deletefilename, 0644)
                 except Exception,e:
@@ -958,13 +971,18 @@ class BackupManager(threading.Thread):
                 end_date = limit_date
                 query = "SELECT COUNT(id) AS total FROM alienvault_siem.acid_event WHERE timestamp BETWEEN '%s' AND '%s';" % (begin_date, end_date)
             else:
-                query = "SELECT ifnull(SUM(cnt),0) AS total FROM alienvault_siem.ac_acid_event WHERE day = '%s';" % (begin_date.date())
+                query = "SELECT ifnull(SUM(cnt),0) AS total FROM alienvault_siem.ac_acid_event WHERE timestamp BETWEEN '%s' AND '%s';" % (begin_date, end_date)
             query_result = self.__myDB.exec_query(query)
             if len(query_result) == 1:
                 events_to_delete = query_result[0]['total']
                 total_events += events_to_delete
                 if events_to_delete != 0:
                     logger.info("Events to delete: '%s' events from %s to %s" % (events_to_delete, begin_date, end_date ))
+
+                    # Delete acumulate tables entries
+                    deletes.append("DELETE FROM alienvault_siem.ac_acid_event WHERE timestamp BETWEEN '%s' AND '%s';" % (begin_date, end_date))
+                    deletes.append("DELETE FROM alienvault_siem.po_acid_event WHERE timestamp BETWEEN '%s' AND '%s';" % (begin_date, end_date))
+ 
                     block = 100000
 
                     delete_tmp_table = "alienvault_siem.backup_delete_temporal"
@@ -980,7 +998,7 @@ class BackupManager(threading.Thread):
                     for limit in range(0, events_to_delete + 1, block):
                         deletes.append("INSERT INTO %s SELECT id FROM %s LIMIT %d;" % (delete_mem_table, delete_tmp_table, block))
                         deletes.append("CALL alienvault_siem.delete_events('%s');" % (delete_mem_table))
-                        deletes.append("DELETE FROM %s limit %s;" % (delete_tmp_table, block))
+                        deletes.append("DELETE t FROM %s t, %s m WHERE t.id=m.id;" % (delete_tmp_table, delete_mem_table))
                         deletes.append("TRUNCATE TABLE %s;" % (delete_mem_table))
 
                     deletes.append("DROP TABLE %s;" % (delete_mem_table))
@@ -994,10 +1012,6 @@ class BackupManager(threading.Thread):
                     break;
 
                 begin_date = next_date
-
-        # Delete acumulate tables entries
-        deletes.append("DELETE FROM alienvault_siem.ac_acid_event WHERE cnt=0;")
-        deletes.append("DELETE FROM alienvault_siem.ah_acid_event WHERE cnt=0;")
 
         logger.info("-- Total events to delete: %s" % total_events)
 
@@ -1044,7 +1058,8 @@ class BackupManager(threading.Thread):
             max_events = 0
 
         if max_events > 0: # backup_events = 0 -> unlimited
-            query = "select timestamp from alienvault_siem.acid_event order by timestamp desc limit %s,1;" % self.__bkConfig['backup_events']
+            # query = "select timestamp from alienvault_siem.acid_event order by timestamp desc limit %s,1;" % self.__bkConfig['backup_events']
+            query = "select timestamp from (select timestamp,@total := @total - cnt as total from (alienvault_siem.ac_acid_event, (select @total := (select ifnull(sum(cnt),0) from alienvault_siem.ac_acid_event)) t) order by timestamp asc) as ac where total>%s order by timestamp desc limit 1;" % self.__bkConfig['backup_events']
             data = self.__myDB.exec_query(query)
 
             if len(data) == 1:
@@ -1191,7 +1206,7 @@ class BackupManager(threading.Thread):
                                 logger.error("Error (%s) running: %s" % (status, table_day))
                                 return
                         try:
-                            status, output = commands.getstatusoutput("gzip -f %s" % insert_backupFile)
+                            status, output = commands.getstatusoutput("pigz -f %s" % insert_backupFile)
                             if status == 0:
                                 logger.info("Backup file has been compressed")
                                 os.chmod(insert_backupFile + ".gz", 0640)

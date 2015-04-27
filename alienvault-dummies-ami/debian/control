@@ -1,6 +1,6 @@
 Source: alienvault-dummies-ami
 Section: misc
-Priority: optional
+Priority: standard
 Maintainer: AlienVault package developers <debian-devel@alienvault.com>
 Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.9.4

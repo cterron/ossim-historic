@@ -32,41 +32,46 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 from flask.ext.principal import Principal
 
-from api import secret
-from api.config import Config
 from api.lib.common import use_pretty_default_error_handlers
-from sqlalchemy import event
 from i18n import AlienvaultMessageHandler, AlienvaultApps
 
-# TEMPORAL FIX UNTIL WE DECIDE WHAT TO DO WITH LOGS
-
 import logging
+from logging import Formatter
 import logging.handlers
 from api.api_i18n import messages as i18nmsgs
 
 LOG_FILENAME = '/var/log/alienvault/api/api.log'
 API_LOGGER = logging.getLogger('api-logger')
+handler = logging.handlers.RotatingFileHandler(LOG_FILENAME,
+                                               maxBytes=10000,
+                                               backupCount=1)
 
-handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=10000, backupCount=1)
-# END TEMPORAL FIX
-
-#handler = RotatingApiFileHandler('/var/log/alienvault/api/api.log', maxBytes=10000, backupCount=1)
+handler.setFormatter(Formatter('%(asctime)s alienvault-api [%(levelname)s]: %(message)s'))
 
 app = Flask(__name__)
 app.config.from_object('api.config.Config')
 app.logger.addHandler(handler)
-app.secret_key = secret.key
+
+try:
+    from api import secret
+    app.secret_key = secret.key
+except ImportError:
+    app.logger.warning("Error importing secret key. Using a randomly generated key")
+    import random
+    import string
+    app.secret_key = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(24))
+
 
 # SetUP the library
 API_i18n = AlienvaultMessageHandler
-(success, msg) = API_i18n.setup("alienvault_api", os.path.dirname(os.path.abspath(__file__)) + "/api_i18n/locales/",
+locales_dir = os.path.dirname(os.path.abspath(__file__)) + "/api_i18n/locales/"
+(success, msg) = API_i18n.setup("alienvault_api",
+                                locales_dir,
                                 AlienvaultApps.API, i18nmsgs.api_messages)
 if not success:
     app.logger.warning("Error handler can't be installed: %s" % (msg))
 
-
-
-db=SQLAlchemy(app, session_options={'autocommit': True})
+db = SQLAlchemy(app, session_options={'autocommit': True})
 
 login_manager = LoginManager(app)
 principals = Principal(app)
@@ -78,12 +83,36 @@ from celerymethods.celery_manager import CeleryManager
 cm = CeleryManager()
 cm.start()
 
+from celerymethods.utils import restore_tasks_to_db
+restore_tasks_to_db()
+
 from apimethods.system.cache import flush_cache
 try:
     flush_cache(namespace='system_packages')
 except Exception, msg:
     app.logger.warning("Error flushing system_packages namespace: %s" % (msg))
-    
+
+try:
+    from api.lib.monitors.messages import initial_msg_load
+    success, data = initial_msg_load()
+    if not success:
+        app.logger.warning("Messages couldn't be loaded in the database, %s" % str(data))
+    else:
+        app.logger.info("Messages have been successfully loaded")
+except Exception, msg:
+    app.logger.warning("Error loading messages in database")
+
+# Purge celery-once references from redis
+from celery_once.helpers import queue_once_key
+from celery_once.tasks import QueueOnce
+from db.methods.system import get_system_id_from_local
+system_id=get_system_id_from_local()[1]
+args={'system_id' : u'%s' % system_id}
+task_name = "celerymethods.tasks.backup_tasks.backup_configuration_for_system_id"
+key = queue_once_key(task_name, args, None)
+aux = QueueOnce()
+aux.clear_lock(key)
+
 # This is the recommended way of packaging a Flask app.
 # This seems to be a hack to avoid circulat imports.
 # See http://flask.pocoo.org/docs/patterns/packages/

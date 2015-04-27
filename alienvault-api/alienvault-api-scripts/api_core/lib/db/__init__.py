@@ -37,7 +37,8 @@ from sqlalchemy.pool import NullPool
 engines = {}
 session = scoped_session(lambda: create_session(binds=get_engine(database='all')))
 
-def get_engine (database='all'):
+
+def get_engine(database='all'):
     global engines
     if engines == {}:
         from avconfig.ossimsetupconfig import AVOssimSetupConfigHandler
@@ -59,3 +60,20 @@ def get_engine (database='all'):
         return engines
 
     return engines.get(database)
+
+
+def get_alienvault_databases():
+    """
+        Return a list with all databases used in a Alienvault System
+    """
+    return ['ISO27001An',
+            'PCI',
+            'PCI3',
+            'alienvault',
+            'alienvault_api',
+            'alienvault_asec',
+            'alienvault_siem',
+            'categorization',
+            'datawarehouse',
+            'ocsweb',
+            ]

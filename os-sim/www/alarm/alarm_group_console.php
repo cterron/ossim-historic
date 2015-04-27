@@ -38,11 +38,13 @@ Session::logcheck("analysis-menu", "ControlPanelAlarms");
 $db   = new ossim_db(TRUE);
 $conn = $db->connect();
 
-$mssp = Session::show_entities(); 
+$mssp = Session::show_entities();
 
-$tags    = Tags::get_list($conn);
-$intents = Alarm::get_intents($conn);
-$sensors = Av_sensor::get_list($conn, array(), FALSE, TRUE);
+list($count_tags, $tags) = Tag::get_tags_by_type($conn, 'alarm');
+$intents      = Alarm::get_intents($conn);
+$sensors      = Av_sensor::get_list($conn, array(), FALSE, TRUE);
+$_groups_data = Asset_group::get_list($conn);
+$asset_groups = $_groups_data[0];
 
 
 //Autocomplete
@@ -72,7 +74,8 @@ $db->close();
             array('src' => 'jquery.autocomplete.css',       'def_path' => TRUE),
             array('src' => 'tipTip.css',                    'def_path' => TRUE),
             array('src' => 'jquery.dataTables.css',         'def_path' => TRUE),
-            array('src' => '/alarm/console.css',            'def_path' => TRUE)
+            array('src' => '/alarm/console.css',            'def_path' => TRUE),
+            array('src' => 'av_tags.css',                   'def_path' => TRUE)
         );
         
         Util::print_include_files($_files, 'css');
@@ -117,7 +120,7 @@ $db->close();
     <div id='ag_notif'></div>
     
     
-    <div class="filters" >
+    <div class="filters uppercase">
         <img id='search_arrow' src='/ossim/pixmaps/arrow_right.png' />
         <a href='javascript:;' onclick="toggle_filters()"><?php echo _('Search and filter') ?></a>
     </div>
@@ -146,6 +149,19 @@ $db->close();
                 
                 <label for='dst_ip'><?php echo _('Destination IP Address') ?></label>
                 <input type='search' id='dst_ip' class='ag_param' name='dst_ip' value=''>
+                
+                <label for='asset_group'><?php echo _('Asset Group') ?></label>
+                <select id='asset_group' class='ag_param' name='asset_group'>
+                    <option value=''><?php echo (count($asset_groups) > 0) ? '' : '- '._('No groups found').' -' ?></option>
+                    <?php
+                    foreach ($asset_groups as $group_id => $group_obj)
+                    {
+                        ?>
+                        <option value='<?php echo $group_id ?>'><?php echo $group_obj->get_name() ?></option>
+                        <?php
+                    }
+                    ?>
+                </select>
                 
                 <label><?php echo _('Date') ?></label>
                 <div class="datepicker_range">

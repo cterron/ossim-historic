@@ -52,12 +52,12 @@ $today_d     = gmdate("d",$timetz);
 $today_m     = gmdate("m",$timetz);
 $today_y     = gmdate("Y",$timetz);
 $today_h     = gmdate("H",$timetz);
-$yesterday_d = gmdate("d", strtotime("-1 day UTC",$timetz));
-$yesterday_m = gmdate("m", strtotime("-1 day UTC",$timetz));
-$yesterday_y = gmdate("Y", strtotime("-1 day UTC",$timetz));
-$week_d      = gmdate("d", strtotime("-1 week UTC",$timetz));
-$week_m      = gmdate("m", strtotime("-1 week UTC",$timetz));
-$week_y      = gmdate("Y", strtotime("-1 week UTC",$timetz));
+$yesterday_d = gmdate("d", $timetz-86400);
+$yesterday_m = gmdate("m", $timetz-86400);
+$yesterday_y = gmdate("Y", $timetz-86400);
+$week_d      = gmdate("d", $timetz-604800);
+$week_m      = gmdate("m", $timetz-604800);
+$week_y      = gmdate("Y", $timetz-604800);
 $month_d     = gmdate("d", strtotime("-1 month UTC",$timetz));
 $month_m     = gmdate("m", strtotime("-1 month UTC",$timetz));
 $month_y     = gmdate("Y", strtotime("-1 month UTC",$timetz));
@@ -113,20 +113,20 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                                     ?>
                                     <tr>
                                         <td class='left noborder' style='padding:5px'>
-                                        <?php                                    
+                                        <?php
                                         if ($_db_aux->get_icon() != '')
                                         {
                                             ?>
-                                            <img id='db_icon' style='width: 16px; height: 16px;' src='data:image/png;base64,<?php echo base64_encode($_db_aux->get_icon())?>' border='0' align='absbottom'/>
+                                            <img id='db_icon' class='asset_icon w16' src='data:image/png;base64,<?php echo base64_encode($_db_aux->get_icon())?>'/>
                                             <?php
                                         }
                                         else
                                         {
                                             ?>
-                                            <img id='db_icon' style='width: 16px; height: 16px;' src='../forensics/images/server.png' border='0' align='absbottom'/>                                    
+                                            <img id='db_icon' class='asset_icon w16' src='../forensics/images/server.png'/>
                                             <?php
-                                        }                                          
-                                        ?>                                
+                                        }
+                                        ?>
                                         </td>
                                         <td class='left noborder' nowrap>
                                             <a href='<?php echo preg_replace("/\&server\=[^\&]+/","",$actual_url) ?>server=<?php echo $svar ?>'><?php echo $name ?></a>
@@ -134,8 +134,8 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                                     </tr>
                                     <?php 
                                 }
-                                ?>                                
-                            
+                                ?>
+
                                 <tr>
                                     <td class='left noborder' style='padding:5px'>
                                         <img id='db_icon' style='width: 16px; height: 16px;' src='../forensics/images/home.png' border='0' align='absbottom'/>                                
@@ -197,7 +197,7 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
 							
                         <!-- GO SUBMIT BUTTON -->
                         <div class='left_float'>
-                            <input type="submit" style="padding:6px 5px" value="<?php echo _('Go') ?>" id="go_button">
+                            <input type="submit" style="margin-top: 3px;padding: 5px 5px;" value="<?php echo _('Go') ?>" id="go_button">
                         </div>
                         
                         <img id='help_tooltip' class='help_icon_1' src="/ossim/pixmaps/help_small.png">
@@ -366,17 +366,17 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                                     
     				                    <div>
     				                        <div class='siem_form_daterange'>
-    				                        <input class="margin0" type="radio" <? if ($_GET['time_range'] == "day")   echo "checked" ?> name="selected_time_range" onclick="document.location.href='<?php echo Util::get_sanitize_request_uri($urltimecriteria) ?>?time_range=day&time%5B0%5D%5B0%5D=+&time%5B0%5D%5B1%5D=%3E%3D&time%5B0%5D%5B2%5D=<?php echo $yesterday_m ?>&time%5B0%5D%5B3%5D=<?php echo $yesterday_d ?>&time%5B0%5D%5B4%5D=<?php echo $yesterday_y ?>&time%5B0%5D%5B5%5D=<?php echo $today_h ?>&time%5B0%5D%5B6%5D=&time%5B0%5D%5B7%5D=&time%5B0%5D%5B8%5D=+&time%5B0%5D%5B9%5D=+&submit=Query+DB&num_result_rows=-1&time_cnt=1<?php echo $params ?>'"/>
+    				                        <input class="margin0" type="radio" <? if ($_GET['time_range'] == "day")   echo "checked" ?> name="selected_time_range" onclick="load_link('<?php echo Util::get_sanitize_request_uri($urltimecriteria) ?>?time_range=day&time%5B0%5D%5B0%5D=+&time%5B0%5D%5B1%5D=%3E%3D&time%5B0%5D%5B2%5D=<?php echo $yesterday_m ?>&time%5B0%5D%5B3%5D=<?php echo $yesterday_d ?>&time%5B0%5D%5B4%5D=<?php echo $yesterday_y ?>&time%5B0%5D%5B5%5D=<?php echo $today_h ?>&time%5B0%5D%5B6%5D=&time%5B0%5D%5B7%5D=&time%5B0%5D%5B8%5D=+&time%5B0%5D%5B9%5D=+&submit=Query+DB&num_result_rows=-1&time_cnt=1<?php echo $params ?>')"/>
     				                        <?php echo _("Last Day") ?>
     				                        </div>
     				                        
     				                        <div class='siem_form_daterange'>
-    				                        <input class="margin0" type="radio" <? if ($_GET['time_range'] == "week")  echo "checked" ?> name="selected_time_range" onclick="document.location.href='<?php echo Util::get_sanitize_request_uri($urltimecriteria) ?>?time_range=week&time%5B0%5D%5B0%5D=+&time%5B0%5D%5B1%5D=%3E%3D&time%5B0%5D%5B2%5D=<?php echo $week_m ?>&time%5B0%5D%5B3%5D=<?php echo $week_d ?>&time%5B0%5D%5B4%5D=<?php echo $week_y ?>&time%5B0%5D%5B5%5D=<?php echo $today_h ?>&time%5B0%5D%5B6%5D=&time%5B0%5D%5B7%5D=&time%5B0%5D%5B8%5D=+&time%5B0%5D%5B9%5D=+&submit=Query+DB&num_result_rows=-1&time_cnt=1<?php echo $params ?>'"/>
+    				                        <input class="margin0" type="radio" <? if ($_GET['time_range'] == "week")  echo "checked" ?> name="selected_time_range" onclick="load_link('<?php echo Util::get_sanitize_request_uri($urltimecriteria) ?>?time_range=week&time%5B0%5D%5B0%5D=+&time%5B0%5D%5B1%5D=%3E%3D&time%5B0%5D%5B2%5D=<?php echo $week_m ?>&time%5B0%5D%5B3%5D=<?php echo $week_d ?>&time%5B0%5D%5B4%5D=<?php echo $week_y ?>&time%5B0%5D%5B5%5D=<?php echo $today_h ?>&time%5B0%5D%5B6%5D=&time%5B0%5D%5B7%5D=&time%5B0%5D%5B8%5D=+&time%5B0%5D%5B9%5D=+&submit=Query+DB&num_result_rows=-1&time_cnt=1<?php echo $params ?>')"/>
     				                        <?php echo _("Last Week") ?>
     				                        </div>
     				                        
     				                        <div class='siem_form_daterange'>
-    				                        <input class="margin0" type="radio" <? if ($_GET['time_range'] == "month") echo "checked" ?> name="selected_time_range" onclick="document.location.href='<?php echo Util::get_sanitize_request_uri($urltimecriteria) ?>?time_range=month&time%5B0%5D%5B0%5D=+&time%5B0%5D%5B1%5D=%3E%3D&time%5B0%5D%5B2%5D=<?php echo $month_m ?>&time%5B0%5D%5B3%5D=<?php echo $month_d ?>&time%5B0%5D%5B4%5D=<?php echo $month_y ?>&time%5B0%5D%5B5%5D=<?php echo $today_h ?>&time%5B0%5D%5B6%5D=&time%5B0%5D%5B7%5D=&time%5B0%5D%5B8%5D=+&time%5B0%5D%5B9%5D=+&submit=Query+DB&num_result_rows=-1&time_cnt=1<?php echo $params ?>'"/>
+    				                        <input class="margin0" type="radio" <? if ($_GET['time_range'] == "month") echo "checked" ?> name="selected_time_range" onclick="load_link('<?php echo Util::get_sanitize_request_uri($urltimecriteria) ?>?time_range=month&time%5B0%5D%5B0%5D=+&time%5B0%5D%5B1%5D=%3E%3D&time%5B0%5D%5B2%5D=<?php echo $month_m ?>&time%5B0%5D%5B3%5D=<?php echo $month_d ?>&time%5B0%5D%5B4%5D=<?php echo $month_y ?>&time%5B0%5D%5B5%5D=<?php echo $today_h ?>&time%5B0%5D%5B6%5D=&time%5B0%5D%5B7%5D=&time%5B0%5D%5B8%5D=+&time%5B0%5D%5B9%5D=+&submit=Query+DB&num_result_rows=-1&time_cnt=1<?php echo $params ?>')"/>
     				                        <?php echo _("Last Month") ?>
     				                        </div>
     				                        
@@ -446,14 +446,17 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                             					</select>
             				            </div>
                                     
+                                    <!-- force order -->
+                                    <input type="hidden" id="sort_order" name="sort_order" value="">
+                                    
                                     <!-- Risk -->
                                     <div class='siem_form_title'><?php echo _("Risk") ?></div>
                                     <div>
-                                            <select name="ossim_risk_a" class="selectp" onchange="this.form.bsf.click()"><option value=' '>
-                            					<option value="low"<?php if ($_SESSION['ossim_risk_a'] == "low") echo " selected" ?>><?php echo _("Low") ?></option>
-                            					<option value="medium"<?php if ($_SESSION['ossim_risk_a'] == "medium") echo " selected" ?>><?php echo _("Medium") ?></option>
-                            					<option value="high"<?php if ($_SESSION['ossim_risk_a'] == "high") echo " selected" ?>><?php echo _("High") ?></option>
-                                            </select>
+                                        <select name="ossim_risk_a" class="selectp" onchange="$('#sort_order').val((this.value==' ') ? '' : 'oriska_d');this.form.bsf.click()"><option value=' '>
+                                            <option value="low"<?php if ($_SESSION['ossim_risk_a'] == "low") echo " selected" ?>><?php echo _("Low") ?></option>
+                                            <option value="medium"<?php if ($_SESSION['ossim_risk_a'] == "medium") echo " selected" ?>><?php echo _("Medium") ?></option>
+                                            <option value="high"<?php if ($_SESSION['ossim_risk_a'] == "high") echo " selected" ?>><?php echo _("High") ?></option>
+                                        </select>
                                     </div>
                                     
                                     <!-- Sensors -->
@@ -767,7 +770,7 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
     <td id="grouped_option" style="padding:3px;padding-left:0px;padding-top:10px;display:none">
         <table class="transparent" cellpadding="0" cellspacing="0">
             <tr>
-                <td class="left siem_title_gray"><?php echo _("Group Events by") ?></td>
+                <td class="left siem_title_gray" style="padding-right:7px"><?php echo _("Group Events by") ?></td>
                 <td class="left">
                 <?php global $addr_type ?>
                     <!-- Level 1 grouping -->

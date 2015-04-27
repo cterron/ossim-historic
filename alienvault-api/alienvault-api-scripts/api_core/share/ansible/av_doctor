@@ -79,6 +79,7 @@ import json
 def main():
     module = AnsibleModule(
         argument_spec=dict(
+            verbose = dict(default=0),
             plugin_list = dict(default='all'),
             category_list = dict(default='all'),
             plugin_dir = dict(default='/etc/ossim/doctor/plugins'),
@@ -86,6 +87,7 @@ def main():
             output_file_prefix = dict(default='data'),
             output_raw = dict(default=False)))
 
+    verbose = ' -v' * int(module.params.get('verbose'))
     plugin_list = ' -l ' + module.params.get('plugin_list')
     category_list = ' -c ' + module.params.get('category_list')
     plugin_dir = ' -P ' + module.params.get('plugin_dir')
@@ -94,7 +96,7 @@ def main():
     output_raw = ' -r' if module.params.get('output_raw') else ''
 
     cmd = '/usr/bin/alienvault-doctor' \
-          + plugin_list + category_list + plugin_dir \
+          + verbose + plugin_list + category_list + plugin_dir \
           + output_type + output_file_prefix + output_raw
 
     try:
@@ -102,18 +104,11 @@ def main():
     except Exception,e:
         module.fail_json(rc=1, msg=str(e))
 
-    # Sometimes it doesn't return a JSON (i.e. calling it in 'support' mode)
-    try:
-        data = json.loads (out)
-    except Exception, e:
-        data = out
-
     module.exit_json (changed=True,
-                      data=data,
+                      data=out,
                       err=err,
                       rc=rc,
                       cmd=cmd)
-
 
 # this is magic, see lib/ansible/module_common.py
 #<<INCLUDE_ANSIBLE_MODULE_COMMON>>

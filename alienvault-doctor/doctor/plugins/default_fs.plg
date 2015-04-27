@@ -2,6 +2,7 @@
 name=Default mounted file systems
 description=Check the mounted file systems.
 category=system
+strike_zone=True
 type=command
 requires=@files:/bin/mount
 command=mount

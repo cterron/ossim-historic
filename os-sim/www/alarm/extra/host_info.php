@@ -332,7 +332,7 @@ $h_obj  = Asset_host::get_object($conn, $h_id, TRUE);
     		</div>
     		
     		<div id="tabs-4" style='position:relative;'>
-    			<iframe src="../../asset_details/ajax/view_notes.php?id=<?php echo $h_id ?>&type=host" marginwidth='0' marginheight='0'></iframe>
+    			<iframe src="/ossim/av_asset/common/views/notes.php?asset_id=<?php echo $h_id ?>&asset_type=asset" marginwidth='0' marginheight='0'></iframe>
     		</div>
 		<?php
 		} 

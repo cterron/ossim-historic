@@ -52,7 +52,7 @@ require_once 'av_handlers.php';
 * @package    ossim-framework\Traffic_Capture
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Traffic_capture
 {

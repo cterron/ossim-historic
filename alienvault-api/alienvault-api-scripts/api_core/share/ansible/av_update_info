@@ -137,7 +137,7 @@ def get_last_time_update():
     last_time_str = "unknown"
     try:
         #cmd ="tail -1 /var/log/dpkg.log  | awk {'print $1,$2'}"
-        cmd = "cat /var/log/dpkg.log* | awk {'print $1,$2'} | sort -u | tail -1"
+        cmd = "cat $(ls /var/log/dpkg.log* | grep -v .*\.gz) | awk {'print $1,$2'} | sort -u | tail -1"
         return_code, output,error_str = _run_command(cmd)
         if return_code == 0:
             last_time_str = output.rstrip()

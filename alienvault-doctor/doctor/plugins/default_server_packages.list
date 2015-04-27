@@ -50,6 +50,7 @@ alienvault-rsyslog
 alienvault-snmpd
 alienvault-suricata
 alienvault-sysctl
+alienvault-system-benchmark
 alienvault-vmware-aio-6x1gb
 alienvault-vmware-logger-standard
 alienvault-vmware-sensor-remote
@@ -171,6 +172,7 @@ hostname
 htop
 ifrename
 ifupdown
+igb-pfring
 info
 initramfs-tools
 initscripts
@@ -187,6 +189,8 @@ iputils-ping
 irqbalance
 isc-dhcp-client
 isc-dhcp-common
+ixgbe-pfring
+joe
 kbd
 keyboard-configuration
 klibc-utils
@@ -323,6 +327,7 @@ libisccc60
 libisccfg62
 libiw30
 libjansson4
+libjemalloc1
 libjpeg62
 libjs-jquery
 libjson-glib-1.0-0
@@ -386,6 +391,7 @@ libpcap0.8
 libpci3
 libpcre3
 libpcrecpp0
+libperconaserverclient18.1
 libperl5.10
 libperl6-export-perl
 libperl6-slurp-perl
@@ -428,6 +434,7 @@ libsqlite3-0
 libss2
 libssh2-1
 libssl0.9.8
+libssl1.0.0
 libstatgrab6
 libstdc++6
 libsybdb5
@@ -443,6 +450,7 @@ libthai-data
 libthai0
 libtidy-0.99-0
 libtimedate-perl
+libtinfo5
 libudev0
 libunistring0
 liburi-perl
@@ -503,6 +511,7 @@ make
 man-db
 manpages
 mawk
+mbw
 memcached
 mime-support
 module-init-tools
@@ -580,9 +589,10 @@ passwd
 patch
 pciutils
 percona-nagios-plugins
-percona-server-client-5.5
-percona-server-common-5.5
-percona-server-server-5.5
+percona-server-client-5.6
+percona-server-common-5.6
+percona-server-server-5.6
+percona-server-tokudb-5.6
 perl
 perl-base
 perl-modules
@@ -609,6 +619,7 @@ php5-mongo
 php5-mysql
 php5-tidy
 php5-xsl
+pigz
 plymouth
 po-debconf
 postfix
@@ -682,6 +693,7 @@ ssl-cert
 sudo
 suricata
 suricata-rules-default
+sysbench
 sysstat
 sysv-rc
 sysvinit
@@ -736,6 +748,7 @@ alienvault-nic-order
 alienvault-license
 alienvault-hw-logger-enterprise
 alienvault-hw-aio-niap
+alienvault-hw-aio-6x1gb
 alienvault-hw-logger-standard
 alienvault-hw-sensor-enterprise-ids-2x10gb
 alienvault-hw-sensor-enterprise-ids-6x1gb

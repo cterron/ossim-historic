@@ -991,7 +991,7 @@ class CtxCriteria extends SingleElementCriteria {
     function Clear() {
     }
     function SanitizeElement() {
-        $this->criteria = CleanVariable($this->criteria, VAR_ALPHA); // Ctx by uuid
+        $this->criteria = CleanVariable($this->criteria, VAR_HEX); // Ctx by uuid
     }
     function PrintForm() {
     }
@@ -1172,7 +1172,8 @@ class SensorCriteria extends SingleElementCriteria {
 			$snortsensors = GetSensorSids($db);
 			$sensor_str = "";
 			foreach ($user_sensors as $user_sensor)
-				if (count($snortsensors[$user_sensor]) > 0) $sensor_str .= ($sensor_str != "") ? ",".implode(",",$snortsensors[$user_sensor]) : implode(",",$snortsensors[$user_sensor]);
+				if (count($snortsensors[$user_sensor]) > 0)
+					$sensor_str .= (($sensor_str != "") ? ',' : '') . $snortsensors[$user_sensor];
 			if ($sensor_str == "") $sensor_str = "0";
 			$where_sensor = " AND d.id in (" . $sensor_str . ")";
 		}

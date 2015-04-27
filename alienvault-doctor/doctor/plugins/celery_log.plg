@@ -2,6 +2,7 @@
 name=Celerybeat log
 description=Parses the celerybeat.log file, searching for errors.
 category=alienvault,platform
+profiles=Server:>4.0
 type=file
 filename=/var/log/alienvault/api/celerybeat.log
 raw_limit=1000

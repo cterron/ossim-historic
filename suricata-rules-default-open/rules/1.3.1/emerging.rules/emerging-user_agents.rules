@@ -103,7 +103,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious Us
 
 #by evilghost
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User Agent (Microsoft Internet Explorer)"; flow: to_server,established; content:"Microsoft Internet Explorer"; depth:28; http_user_agent; content:!"bbc.co.uk|0d 0a|"; nocase; http_header; content:!"vmware.com|0d 0a|"; nocase; http_header; content:!"rc.itsupport247.net|0d 0a|"; nocase; http_header; content:!"msn.com|0d 0a|"; nocase; http_header; content:!"msn.es|0d 0a|"; nocase; http_header; content:!"live.com|0d 0a|"; nocase; http_header; content:!"gocyberlink.com|0d 0a|"; nocase; http_header; threshold:type limit, track by_src, count 2, seconds 360; reference:url,doc.emergingthreats.net/bin/view/Main/2002400; classtype:trojan-activity; sid:2002400; rev:30;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User Agent (Microsoft Internet Explorer)"; flow: to_server,established; content:"Microsoft Internet Explorer"; depth:28; http_user_agent; content:!"bbc.co.uk|0d 0a|"; nocase; http_header; content:!"vmware.com|0d 0a|"; nocase; http_header; content:!"rc.itsupport247.net|0d 0a|"; nocase; http_header; content:!"msn.com|0d 0a|"; nocase; http_header; content:!"msn.es|0d 0a|"; nocase; http_header; content:!"live.com|0d 0a|"; nocase; http_header; content:!"gocyberlink.com|0d 0a|"; nocase; http_header; content:!"ultraedit.com|0d 0a|"; nocase; http_header; threshold:type limit, track by_src, count 2, seconds 360; reference:url,doc.emergingthreats.net/bin/view/Main/2002400; classtype:trojan-activity; sid:2002400; rev:31;)
 
 #by evilghost
 #
@@ -151,7 +151,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Winfi
 
 #Matt Jonkman, From spyware listening post data
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS 180 Solutions (Zango Installer) User Agent"; flow:to_server,established; content:"User-Agent|3a|"; nocase; http_header; content:"SAIv"; fast_pattern; http_header; pcre:"/User-Agent\:[^\n]+SAIv/Hi"; reference:url,doc.emergingthreats.net/2003062; classtype:trojan-activity; sid:2003062; rev:11;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS 180 Solutions (Zango Installer) User Agent"; flow:to_server,established; content:"User-Agent|3a|"; http_header; content:"SAIv"; distance:0; fast_pattern; http_header; pcre:"/^User-Agent\x3a[^\r\n]+SAIv/Hm";  reference:url,doc.emergingthreats.net/2003062; classtype:trojan-activity; sid:2003062; rev:12;)
 
 #Matt Jonkman, From spyware listening post data
 #

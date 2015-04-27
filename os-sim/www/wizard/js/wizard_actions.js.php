@@ -36,8 +36,9 @@ header("Content-type: text/javascript");
 require_once 'av_init.php';
 
 ?>
-var __ajax_path = "<?php echo AV_MAIN_PATH . '/wizard/ajax/' ?>";
 
+var __ajax_path = "<?php echo AV_MAIN_PATH . '/wizard/ajax/' ?>";
+var __asset_cfg = <?php echo Asset::get_path_url() ?>;
 
 
 /******************************************************************************************/
@@ -442,7 +443,7 @@ function load_handler_step_discovery()
     {
         params = {
             caption : "<?php echo Util::js_entities(_('Import Assets from CSV')) ?>", 
-            url     : '/host/import_all_hosts.php?import_type=welcome_wizard_hosts', 
+            url     : __asset_cfg.asset.views + 'import_all_hosts.php?import_type=welcome_wizard_hosts', 
             height  : 600,
             width   : 900
         };

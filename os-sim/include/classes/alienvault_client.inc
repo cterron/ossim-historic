@@ -3,7 +3,7 @@
 * Alienvault_client.inc
 *
 * File Alienvault_client.inc is used to:
-*   - Use to make request to Alienvault REST API
+*   - Use to make request to AlienVault REST API
 *
 *
 * License:
@@ -44,7 +44,7 @@
 
 
 /**
-* The goal of this class is to make request to Alienvault REST API
+* The goal of this class is to make request to AlienVault REST API
 *
 * <br/>
 * <pre>
@@ -123,8 +123,8 @@ class Alienvault_client
      */
     public function get_error_message($response)
     {
-        $error_msg = _('API Error: Sorry, operation was not completed due to an unknown error');
-
+        $error_msg = _('Unknown error - Operation cannot be completed');
+        
         if (!empty($response))
         {
             if ($response['message'] != '')

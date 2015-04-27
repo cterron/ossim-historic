@@ -38,7 +38,7 @@ Session::logcheck("analysis-menu", "EventsForensics");
 
 $login  = Session::get_session_user();
 
-$db     = new ossim_db();
+$db     = new ossim_db(true);
 $conn   = $db->connect();
 
 $config = new User_config($conn);

@@ -28,47 +28,97 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
+#pylint: disable=F0401
+# Generics
 import api_log
-from db.methods.system import (get_systems, get_systems_full, get_system_ip_from_system_id,
-                               get_system_id_from_local, get_system_id_from_system_ip)
-from db.methods.system import db_add_system, db_remove_system
-from db.methods.system import get_system_ip_from_local, has_forward_role
-from db.methods.system import set_system_vpn_ip
-from db.methods.sensor import get_sensor_id_from_sensor_ip
-from db.methods.server import db_get_server, db_add_child_server, get_server_id_from_local, get_server_ip_from_server_id
-
-from ansiblemethods.system.system import (get_system_setup_data,
-                                          ansible_add_system)
-from ansiblemethods.system.system import (ansible_remove_certificates,
-                                          ansible_get_system_info,
-                                          restart_ossim_server, generate_sync_sql)
-from ansiblemethods.system.system import ansible_run_async_reconfig
-from ansiblemethods.system.system import ansible_check_asynchronous_command_return_code
-
-from ansiblemethods.system.system import ansible_check_if_process_is_running
-from ansiblemethods.system.system import ansible_get_asynchronous_command_log_file
-from ansiblemethods.system.system import delete_parent_server as ansible_delete_parent_server
-from ansiblemethods.system.system import ansible_get_update_info, ansible_download_release_info
-from ansiblemethods.system.system import ansible_get_log_lines
-from ansiblemethods.system.system import ansible_install_plugin
-from ansiblemethods.system.system import ansible_restart_frameworkd
-from ansiblemethods.system.about import get_license_info, get_alienvault_version
-from ansiblemethods.system.about import get_is_professional
-from ansiblemethods.server.server import ans_add_server, ans_add_server_hierarchy
-from ansiblemethods.sensor.detector import set_sensor_detectors, get_sensor_detectors
-from ansiblemethods.ansibleinventory import AnsibleInventoryManager
-from ansiblemethods.helper import local_copy_file, remove_file
-from celerymethods.utils import get_task_status
-from celerymethods.jobs.system import alienvault_asynchronous_update
-from apimethods.utils import create_local_directory, get_base_path_from_system_id, get_hex_string_from_uuid
-from apimethods.system.cache import use_cache
-from ansiblemethods.system.util import rsync_pull
-from ansiblemethods.system.system import ping_system
-from apimethods.system.cache import flush_cache
-from apimethods.utils import is_valid_ipv4
 from subprocess import call, Popen, PIPE
-from ansiblemethods.system.network import make_tunnel as ansible_make_tunnel_with_vpn
+from ast import literal_eval
+from ConfigParser import RawConfigParser, NoOptionError
+
+# DB methods
+from db.methods.system import (
+    get_systems,
+    get_systems_full,
+    get_system_ip_from_system_id,
+    get_system_id_from_local,
+    get_system_id_from_system_ip,
+    db_add_system,
+    db_remove_system,
+    get_system_ip_from_local,
+    has_forward_role,
+    set_system_vpn_ip)
+
+from db.methods.sensor import get_sensor_id_from_sensor_ip
+
+from db.methods.server import (
+    db_get_server,
+    db_add_child_server,
+    get_server_id_from_local,
+    get_server_ip_from_server_id)
+
+# Ansible methods
+from ansiblemethods.system.system import (
+    get_system_setup_data,
+    ansible_add_system,
+    ansible_remove_certificates,
+    ansible_get_system_info,
+    restart_ossim_server,
+    generate_sync_sql,
+    ansible_run_async_reconfig,
+    ansible_check_asynchronous_command_return_code,
+    ansible_check_if_process_is_running,
+    ansible_get_asynchronous_command_log_file,
+    delete_parent_server as ansible_delete_parent_server,
+    ansible_get_update_info,
+    ansible_download_release_info,
+    ansible_get_log_lines,
+    ansible_install_plugin,
+    ansible_restart_frameworkd,
+    ping_system)
+
+from ansiblemethods.system.about import (
+    get_license_info,
+    get_alienvault_version,
+    get_is_professional)
+
+from ansiblemethods.system.network import \
+    make_tunnel as ansible_make_tunnel_with_vpn
+
+from ansiblemethods.server.server import (
+    ans_add_server,
+    ans_add_server_hierarchy)
+
+from ansiblemethods.sensor.detector import (
+    set_sensor_detectors,
+    get_sensor_detectors)
+
+from ansiblemethods.ansibleinventory import AnsibleInventoryManager
+from ansiblemethods.helper import (
+    local_copy_file,
+    remove_file)
+
+from ansiblemethods.system.util import rsync_pull
+
+# Celery methods
+from celerymethods.utils import (
+    get_task_status,
+    get_running_tasks)
+
+from celerymethods.jobs.system import alienvault_asynchronous_update
+
 from celerymethods.jobs.reconfig import alienvault_reconfigure
+from apimethods.system.otx import is_otx_enabled
+
+# API methods
+from apimethods.utils import (
+    create_local_directory,
+    get_base_path_from_system_id,
+    get_hex_string_from_uuid,
+    is_valid_ipv4)
+
+from apimethods.system.cache import (
+    use_cache,
+    flush_cache)
 
 
 def get_all():
@@ -79,9 +129,10 @@ def get_all():
     if not success:
         return ret
 
-    return (success, dict([(x[0], {'admin_ip': x[1]['admin_ip'],
-                                   'hostname': x[1]['hostname'],
-                                   'profile': x[1]['profile']}) for x in system_data]))
+    return (success,
+            dict([(x[0], {'admin_ip': x[1]['admin_ip'],
+                          'hostname': x[1]['hostname'],
+                          'profile': x[1]['profile']}) for x in system_data]))
 
 
 def get_local_info():
@@ -90,16 +141,22 @@ def get_local_info():
     """
     success, local_system_id = get_system_id_from_local()
     if not success:
-        return success, "Something wrong happened retrieving the local system id"
+        error_msg = "Something wrong happened retrieving " + \
+                    "the local system id"
+        return success, error_msg
 
     success, system_data = get_all()
     if not success:
-        return success, "Something wrong happened retrieving the system info"
+        error_msg = "Something wrong happened retrieving " + \
+                    "the system info"
+        return success, error_msg
 
     if local_system_id in system_data:
         return True, system_data[local_system_id]
     else:
-        return False, "Something wrong happened retrieving the local system info"
+        error_msg = "Something wrong happened retrieving " + \
+                    "the local system info"
+        return False, error_msg
 
 
 def get_all_systems_with_ping_info():
@@ -117,7 +174,7 @@ def get_all_systems_with_ping_info():
         if system_data['vpn_ip'] != '':
             system_ip = system_data['vpn_ip']
 
-        success, msg = ping_system(system_ip)
+        success, dummy_msg = ping_system(system_ip)
         systems[system_id]['reachable'] = success
 
     return True, systems
@@ -128,14 +185,17 @@ def get(system_id, no_cache=False):
     """
     Get information about a single system
     """
-    (success, ip) = ret = get_system_ip_from_system_id(system_id)
+    (success, ip_addr) = ret = get_system_ip_from_system_id(system_id)
     if not success:
         return ret
 
-    return get_system_setup_data(ip)
+    return get_system_setup_data(ip_addr)
 
 
 def create_directory_for_ossec_remote(system_id):
+    """
+    Creates a directory for ossec remote deployment
+    """
 
     path = get_base_path_from_system_id(system_id) + "/ossec/"
     success, msg = create_local_directory(path)
@@ -146,6 +206,9 @@ def create_directory_for_ossec_remote(system_id):
 
 
 def add_child_server(system_ip, server_id):
+    """
+    Adds a child server
+    """
 
     db_add_child_server(server_id)
     success, local_server = db_get_server('local')
@@ -189,7 +252,9 @@ def add_ha_system(system_ip, password, add_to_database=True):
     # Get local IP
     (success, local_system_id) = get_system_id_from_local()
     if not success:
-        return success, "[add_ha_system] Something wrong happened retrieving the local system id"
+        error_msg = "[add_ha_system] Something wrong happened retrieving " + \
+                    "the local system id"
+        return success, error_msg
 
     # Exchange certificates
     (success, response) = ansible_add_system(local_system_id=local_system_id,
@@ -219,7 +284,9 @@ def add_ha_system(system_ip, password, add_to_database=True):
                                        sensor_id=system_info['sensor_id'])
         if not success:
             api_log.error(msg)
-            return (False, "Something wrong happened inserting the system into the database")
+            error_msg = "Something wrong happened inserting " + \
+                        "the system into the database"
+            return (False, error_msg)
 
     return success, response
 
@@ -230,7 +297,9 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
     """
     (success, local_system_id) = get_system_id_from_local()
     if not success:
-        return success, "Something wrong happened retrieving the local system id"
+        error_msg = "Something wrong happened retrieving " + \
+                    "the local system id"
+        return success, error_msg
 
     (success, response) = ansible_add_system(local_system_id=local_system_id,
                                              remote_system_ip=system_ip,
@@ -248,10 +317,12 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
     if 'server' in system_info['profile']:
         # - Do not add the child server when I'm myself
         if system_info['server_id'] != local_system_id:
-            success, msg = add_child_server(system_ip, system_info['server_id'])
+            success, msg = add_child_server(system_ip,
+                                            system_info['server_id'])
             if not success:
                 api_log.error(str(msg))
-                return False, "Something wrong happened setting the child server"
+                error_msg = "Something wrong happened setting the child server"
+                return False, error_msg
 
     if 'sensor' in system_info['profile']:
         if 'server' in system_info['profile'] and system_info['sensor_id']:
@@ -282,7 +353,9 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
                                        sensor_id=system_info['sensor_id'])
         if not success:
             api_log.error(msg)
-            return (False, "Something wrong happened inserting the system into the database")
+            error_msg = "Something wrong happened inserting " + \
+                        "the system into the database"
+            return (False, error_msg)
 
     (success, msg) = create_directory_for_ossec_remote(system_info['system_id'])
     if not success:
@@ -299,9 +372,13 @@ def add_system(system_id, password):
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
         api_log.error(str(system_ip))
-        return False, "Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "Error retrieving the system ip " + \
+                    "for the system id %s -> %s" % (system_ip, str(system_ip))
+        return False, error_msg
 
-    success, msg = add_system_from_ip(system_ip, password, add_to_database=False)
+    success, msg = add_system_from_ip(system_ip,
+                                      password,
+                                      add_to_database=False)
     if not success:
         api_log.error(str(msg))
         return False, msg
@@ -312,30 +389,42 @@ def add_system(system_id, password):
 def apimethod_delete_system(system_id):
     success, local_system_id = get_system_id_from_local()
     if not success:
-        return success, "Cannot retrieve the local system id. %s" % str(local_system_id)
+        error_msg = "Cannot retrieve the " + \
+                    "local system id. %s" % str(local_system_id)
+        return success, error_msg
     if system_id == 'local' or get_hex_string_from_uuid(local_system_id) == get_hex_string_from_uuid(system_id):
-        return False, "You're trying to remove the local system, which it's not allowed"
+        error_msg = "You're trying to remove the local system, " + \
+                    "which it's not allowed"
+        return False, error_msg
 
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
-        return success, "Cannot retrieve the system ip for the given system-id %s" % (str(system_ip))
+        error_msg = "Cannot retrieve the system ip " + \
+                    "for the given system-id %s" % (str(system_ip))
+        return success, error_msg
     # Check whether the remote system is reachable or not:
     remote_system_is_reachable, msg = ping_system(system_ip)
     # 1 - Remove it from the database
     success, msg = db_remove_system(system_id)
     if not success:
-        return success, "Cannot remove the system from the database <%s>" % str(msg)
+        error_msg = "Cannot remove the system " + \
+                    "from the database <%s>" % str(msg)
+        return success, error_msg
     # 2 - Remove the remote certificates
     # success, msg = ansible_remove_certificates(system_ip)
     # if not success:
-    #     return success, "Error while removing the remote certificates: %s" % str(msg)
+    #     return (success,
+    #            "Error while removing the remote certificates: %s" % str(msg))
     # 3 - Remove the local certificates and keys
     success, local_ip = get_system_ip_from_local()
     if not success:
-        return success, "Cannot retrieve the local ip <%s>" % str(local_ip)
+        error_msg = "Cannot retrieve the local ip " + \
+                    "<%s>" % str(local_ip)
+        return success, error_msg
 
     #Remove remote system certificates on the local system
-    success, msg = ansible_remove_certificates(system_ip=local_ip, system_id_to_remove=system_id)
+    success, msg = ansible_remove_certificates(system_ip=local_ip,
+                                               system_id_to_remove=system_id)
     if not success:
         return success, "Cannot remove the local certificates <%s>" % str(msg)
 
@@ -346,51 +435,79 @@ def apimethod_delete_system(system_id):
         aim.save_inventory()
         del aim
     except Exception as aim_error:
-        return False, "Cannot remove the system from the ansible inventory file <%s>" % str(aim_error)
+        error_msg = "Cannot remove the system from the " + \
+                    "ansible inventory file " + \
+                    "<%s>" % str(aim_error)
+        return False, error_msg
 
-    # 5 - Try to connect to the child and remove the parent using it's server_id
+    # 5 - Try to connect to the child and remove the parent
+    # using it's server_id
     success, own_server_id = get_server_id_from_local()
     if not success:
-        return success, "Cannot retrieve the server-id from local <%s>" % str(msg)
+        error_msg = "Cannot retrieve the server-id " + \
+                    "from local <%s>" % str(msg)
+        return success, error_msg
 
     if remote_system_is_reachable:
         success, msg = ansible_delete_parent_server(system_ip, own_server_id)
         if not success:
-            return success, "Cannot delete parent server in child <%s>" % str(msg)
+            error_msg = "Cannot delete parent server in child <%s>" % str(msg)
+            return success, error_msg
         return True, ""
 
-    return True, "The remote system is not reachable. We had not been able to remove the parent configuration"
+    msg = "The remote system is not reachable. " + \
+          "We had not been able to remove the parent configuration"
+    return True, msg
 
 
 def sync_database_from_child(system_id):
     """
-    Check SQL sync file in system_id and if it differs from the local one, get it and add to local database
-    Then, check if we have to propagate changes upwards and generate sync.sql if so
+    Check SQL sync file in system_id and if it differs from the local one,
+    get it and add to local database
+    Then, check if we have to propagate changes upwards
+    and generate sync.sql if so
     """
     # Get remote and local IPs
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
-        return success, "[Apimethod sync_database_from_child] Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "[Apimethod sync_database_from_child] " + \
+                    "Error retrieving the system ip for the system id " + \
+                    "%s -> %s" % (system_ip, str(system_ip))
+        return success, error_msg
 
     success, local_ip = get_system_ip_from_local()
     if not success:
-        return success, "[Apimethod sync_database_from_child] Error while getting the local ip: %s" % str(local_ip)
+        error_msg = "[Apimethod sync_database_from_child] " + \
+                    "Error while getting the local ip: %s" % str(local_ip)
+        return success, error_msg
 
     # Get remote sync file if changed
     remote_file_path = "/var/lib/alienvault-center/db/sync.sql"
-    local_file_path = "%s/sync_%s.sql" % (get_base_path_from_system_id(system_id), system_id)
-    (retrieved, msg) = rsync_pull(system_ip, remote_file_path, local_ip, local_file_path)
+    local_file_path = "%s" % get_base_path_from_system_id(system_id) + \
+                      "/sync_%s.sql" % system_id
+    (retrieved, msg) = rsync_pull(system_ip,
+                                  remote_file_path,
+                                  local_ip,
+                                  local_file_path)
     if not retrieved:
         if 'already in sync' in msg:
-            return True, "[Apimethod sync_database_from_child] Databases already in sync"
+            true_msg = "[Apimethod sync_database_from_child] " + \
+                       "Databases already in sync"
+            return True, true_msg
         else:
-            return False, "[Apimethod sync_database_from_child] %s" % msg
+            false_msg = "[Apimethod sync_database_from_child] " + \
+                        "%s" % msg
+            return False, false_msg
 
     # SQL file changed. Get it, check md5 and apply
     # Get MD5SUM file for the SQL file
     remote_md5file_path = "/var/lib/alienvault-center/db/sync.md5"
-    local_md5file_path = "%s/sync_%s.md5" % (get_base_path_from_system_id(system_id), system_id)
-    (retrieved, msg) = rsync_pull(system_ip, remote_md5file_path, local_ip, local_md5file_path)
+    local_md5file_path = "%s" % get_base_path_from_system_id(system_id) + \
+                         "/sync_%s.md5" % system_id
+    (retrieved, msg) = rsync_pull(system_ip,
+                                  remote_md5file_path,
+                                  local_ip,
+                                  local_md5file_path)
     if not retrieved and 'already in sync' not in msg:
         return False, "[Apimethod sync_database_from_child] %s" % msg
 
@@ -402,14 +519,20 @@ def sync_database_from_child(system_id):
     if err:
         return False, "[Apimethod sync_database_from_child] %s" % err
     if not str(md5_read.rstrip('\n')) in str(md5_calc):
-        return False, "[Apimethod sync_database_from_child] Corrupt or incomplete SQL file (bad md5sum)"
+        error_msg = "[Apimethod sync_database_from_child] " + \
+                    "Corrupt or incomplete SQL file (bad md5sum)"
+        return False, error_msg
 
     # SQL file OK. Apply
     with open(local_file_path) as f:
         if call(['/usr/bin/ossim-db'], stdin=f):
-            return False, "[Apimethod sync_database_from_child] Error applying SQL file to ossim-db"
+            error_msg = "[Apimethod sync_database_from_child] " + \
+                        "Error applying SQL file to ossim-db"
+            return False, error_msg
         else:
-            api_log.info("[Apimethod sync_database_from_child] SQL applied successfully")
+            info_msg = "[Apimethod sync_database_from_child] " + \
+                       "SQL applied successfully"
+            api_log.info(info_msg)
             # Check first line of sync.sql file for mySQL restart option
             f.seek(0, 0)
             restart_db = "RESTART OSSIM-SERVER" in f.readline()
@@ -419,7 +542,9 @@ def sync_database_from_child(system_id):
         try:
             restart_ossim_server(local_ip)
         except Exception, err:
-            return False, "An error occurred while restarting MySQL server: %s" % str(err)
+            error_msg = "An error occurred while restarting " + \
+                        "MySQL server: %s" % str(err)
+            return False, error_msg
 
     # Check server_forward_role and generate sync.sql
     (success, local_id) = get_system_id_from_local()
@@ -427,7 +552,9 @@ def sync_database_from_child(system_id):
         try:
             generate_sync_sql(local_ip, restart_db)
         except Exception, err:
-            return False, "An error occurred while generating sync.sql file: %s" % str(err)
+            error_msg = "An error occurred while generating " + \
+                        "sync.sql file: %s" % str(err)
+            return False, error_msg
 
     return True, "[Apimethod sync_database_from_child] SQL sync successful"
 
@@ -436,26 +563,41 @@ def sync_database_from_child(system_id):
 def apimethod_get_update_info(system_id, no_cache=False):
     """Retrieves the system update information
     Args:
-      system_id(str): The system id of which we want to know if it has available updates
+      system_id(str): The system id of which we want to know
+                      if it has available updates
     Returns:
-      (success,data): success=True when the operation when ok, otherwise success=False. On success data will contain a json object with the updates information.
+      (success,data): success=True when the operation when ok,
+                      otherwise success=False.
+                      On success data will contain a json object
+                      with the updates information.
     """
     try:
         (success, system_ip) = get_system_ip_from_system_id(system_id)
         if not success:
-            return success, "[apimethod_get_packages_info] Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+            error_msg = "[apimethod_get_packages_info] Error retrieving " + \
+                        "the system ip for the system id " + \
+                        "%s -> %s" % (system_ip, str(system_ip))
+            return success, error_msg
         success, data = ansible_get_update_info(system_ip)
     except Exception as err:
-        return False, "[apimethod_get_packages_info] An error occurred while retrieving the update info <%s>" % str(err)
+        error_msg = "[apimethod_get_packages_info] " + \
+                    "An error occurred while retrieving " + \
+                    "the update info <%s>" % str(err)
+        return False, error_msg
     return success, data
 
 
 def apimethod_get_pending_packges(system_id, no_cache=False):
-    """Retrieves the available updates for the given system_id and the release_info file
+    """Retrieves the available updates for the given system_id
+       and the release_info file
     Args:
-      system_id(str): The system id of which we want to know if it has available updates
+      system_id(str): The system id of which we want to know
+                      if it has available updates
     Returns:
-      (success,data): success=True when the operation when ok, otherwise success=False. On success data will contain a json object with the updates information.
+      (success,data): success=True when the operation when ok,
+                      otherwise success=False.
+                      On success data will contain a json object
+                      with the updates information.
     """
     success, data = apimethod_get_update_info(system_id, no_cache=no_cache)
     if not success:
@@ -468,19 +610,25 @@ def apimethod_get_pending_packges(system_id, no_cache=False):
         # Check for release info file
         success, local_ip = get_system_ip_from_local()
         if not success:
-            api_log.error("[apimethod_get_pending_packges] Unable to get local IP: %s" % local_ip)
+            error_msg = "[apimethod_get_pending_packges] " + \
+                        "Unable to get local IP: %s" % local_ip
+            api_log.error(error_msg)
             return False, available_updates
 
         success, is_pro = get_is_professional(local_ip)
         if success and is_pro:
             success, is_trial = system_is_trial(system_id='local')
             if success and is_trial:
-                api_log.info("[apimethod_get_pending_packges] Trial version. Skipping download release info file")
+                info_msg = "[apimethod_get_pending_packges] " + \
+                           "Trial version. Skipping download release info file"
+                api_log.info(info_msg)
                 return True, available_updates
 
         success, msg = ansible_download_release_info(local_ip)
         if not success:
-            api_log.error("[apimethod_get_pending_packges] Unable to retrieve release info file: %s" % msg)
+            error_msg = "[apimethod_get_pending_packges] " + \
+                        "Unable to retrieve release info file: %s" % msg
+            api_log.error(error_msg)
 
     return True, available_updates
 
@@ -488,15 +636,19 @@ def apimethod_get_pending_packges(system_id, no_cache=False):
 def apimethod_get_remote_software_update(system_id, no_cache=False):
     """Retrieves the available updates for the given system_id
     Args:
-      system_id(str): The system id of which we want to know if it has available updates
+      system_id(str): The system id of which we want to know
+                      if it has available updates
     Returns:
-      (success,data): success=True when the operation when ok, otherwise success=False. On success data will contain a json object with the updates information.
+      (success,data): success=True when the operation when ok,
+                      otherwise success=False.
+                      On success data will contain a json object
+                      with the updates information.
     """
     systems = []  # Systems that we are going to check the updates
     updates = {}  # Dic with the updates available for each system
 
     if system_id == 'all':  # If all, we load all the systems
-        result, all_systems = get_systems()
+        result, all_systems = get_systems(directly_connected=False)
         if not result:
             api_log.error("Can't retrieve the system info: %s" % str(systems))
             return False, "Can't retrieve the system info: %s" % str(systems)
@@ -511,7 +663,9 @@ def apimethod_get_remote_software_update(system_id, no_cache=False):
     for sys_id in systems:
         success, data = apimethod_get_update_info(sys_id, no_cache=no_cache)
         if not success:
-            api_log.error("Can't retrieve the system updates for system %s: %s" % (str(sys_id), str(data)))
+            error_msg = "Can't retrieve the system updates " + \
+                        "for system %s: %s" % (str(sys_id), str(data))
+            api_log.error(error_msg)
             updates[sys_id] = {}
             continue
 
@@ -540,7 +694,10 @@ def asynchronous_reconfigure(system_id):
     """
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
-        return success, "[asynchronous_reconfigure] Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "[asynchronous_reconfigure] " + \
+                    "Error retrieving the system ip " + \
+                    "for the system id %s -> %s" % (system_ip, str(system_ip))
+        return success, error_msg
 
     return ansible_run_async_reconfig(system_ip)
 
@@ -550,7 +707,8 @@ def asynchronous_update(system_id, only_feed=False, update_key=""):
 
     Args:
       system_id (str): The system_id of the system to update.
-      only_feed (boolean): A boolean to indicate that we need update only the feed.
+      only_feed (boolean): A boolean to indicate that we need
+                           to update only the feed.
     Returns:
       (boolean, job_id): A tuple containing the result of the execution
 
@@ -560,12 +718,19 @@ def asynchronous_update(system_id, only_feed=False, update_key=""):
     """
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
-        return False, "[asynchronous_update] Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "[asynchronous_update] Error retrieving " + \
+                    "the system ip for the system id " + \
+                    "%s -> %s" % (system_ip, str(system_ip))
+        return False, error_msg
 
-    job = alienvault_asynchronous_update.delay(system_ip, only_feed, update_key)
+    job = alienvault_asynchronous_update.delay(system_ip,
+                                               only_feed,
+                                               update_key)
     if job is None:
-        api_log.error("Cannot update system %s. Please verify that the system is reachable." % system_id)
-        return False, "Cannot update system %s. Please verify that the system is reachable." % system_id
+        error_msg = "Cannot update system %s. " % system_id + \
+                    "Please verify that the system is reachable."
+        api_log.error(error_msg)
+        return False, error_msg
 
     flush_cache(namespace="system_packages")
 
@@ -576,7 +741,8 @@ def check_if_process_is_running(system_id, ps_filter):
     """Check if there is any process running that meet the ps_filter.
 
     Args:
-      system_ip (str): The system_id where you want to know if the process is running
+      system_ip (str): The system_id where you want to know
+                       if the process is running
       ps_filter(str): Filter to be passed to grep the results.
 
     Returns:
@@ -589,7 +755,10 @@ def check_if_process_is_running(system_id, ps_filter):
 
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
-        return success, "[check_if_process_is_running] Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "[check_if_process_is_running] " + \
+                    "Error retrieving the system ip " + \
+                    "for the system id %s -> %s" % (system_ip, str(system_ip))
+        return success, error_msg
 
     return ansible_check_if_process_is_running(system_ip, ps_filter)
 
@@ -598,7 +767,8 @@ def apimethod_check_asynchronous_command_return_code(system_id, rc_file):
     """Check the return code of a previously asynchronous request
 
     Args:
-      system_ip (str): The system_id where you want to know if the process is running
+      system_ip (str): The system_id where you want to know
+                       if the process is running
       rc_file(str): The return code file
 
     Returns:
@@ -611,7 +781,11 @@ def apimethod_check_asynchronous_command_return_code(system_id, rc_file):
 
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
-        return success, "[apimethod_ansible_check_asynchronous_command_return_code] Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "[apimethod_ansible_check_" + \
+                    "asynchronous_command_return_code] " + \
+                    "Error retrieving the system ip " + \
+                    "for the system id %s -> %s" % (system_ip, str(system_ip))
+        return success, error_msg
 
     return ansible_check_asynchronous_command_return_code(system_ip, rc_file)
 
@@ -624,7 +798,8 @@ def apimethod_get_asynchronous_command_log_file(system_id, log_file):
         log_file(str): The log file you want to retrieve.
 
     Returns:
-        (boolean,str): A tuple containing the result of the execution. On success the str will contain the local copy.
+        (boolean,str): A tuple containing the result of the execution.
+                       On success the str will contain the local copy.
 
     Examples:
       >>> apimethod_get_asynchronous_command_log_file("11111111-1111-1111-1111-1111222244445555", "/var/log/alienvault/update/system_reconfigure.log")
@@ -632,14 +807,18 @@ def apimethod_get_asynchronous_command_log_file(system_id, log_file):
 
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
-        return success, "[apimethod_get_asynchronous_command_log_file] Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "[apimethod_get_asynchronous_command_log_file] " + \
+                    "Error retrieving the system ip " + \
+                    "for the system id %s -> %s" % (system_ip, str(system_ip))
+        return success, error_msg
 
     return ansible_get_asynchronous_command_log_file(system_ip, log_file)
 
 
 def apimethod_check_task_status(system_id, tasks):
     """
-    Check the status of a given list of tasks. IE: alienvault-update, alienvault-reconfig
+    Check the status of a given list of tasks.
+    IE: alienvault-update, alienvault-reconfig
 
     Args:
         system_id (str) : The system_id where you want to check if it's running
@@ -647,20 +826,27 @@ def apimethod_check_task_status(system_id, tasks):
 
     Returns:
         success (bool)     : True if successful, False elsewhere
-        task_status (dict) : A dictionary containing job_id, job_status for each task
+        task_status (dict) : A dictionary containing job_id,
+                             job_status for each task
 
     """
     task_status = {}
 
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
-        api_log.error("[apimethod_check_task_status] Unable to get system ip for system id %s: %s" % (system_id, system_ip))
+        error_msg = "[apimethod_check_task_status] " + \
+                    "Unable to get system ip " + \
+                    "for system id %s: %s" % (system_id, system_ip)
+        api_log.error(error_msg)
         return False, {}
 
     success, task_status = get_task_status(system_id, system_ip, tasks)
 
     if not success:
-        api_log.error("[apimethod_check_task_status] Unable to get the task status for system %s: %s" % (system_id, str(task_status)))
+        error_msg = "[apimethod_check_task_status] " + \
+                    "Unable to get the task status " + \
+                    "for system %s: %s" % (system_id, str(task_status))
+        api_log.error(error_msg)
         return False, {}
 
     return success, task_status
@@ -674,11 +860,15 @@ def check_update_and_reconfig_status(system_id):
         system_id (str) : The system_id where you want to check if it's running
     Returns:
         success (bool)     : True if successful, False elsewhere
-        task_status (dict) : A dictionary containing job_id, job_status for each task
+        task_status (dict) : A dictionary containing job_id,
+                            job_status for each task
     """
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
-        api_log.error("[check_update_and_reconfig_status] Unable to get system ip for system id %s: %s" % (system_id, system_ip))
+        error_msg = "[check_update_and_reconfig_status] " + \
+                    "Unable to get system ip " + \
+                    "for system id %s: %s" % (system_id, system_ip)
+        api_log.error(error_msg)
         return False, ""
 
     """"
@@ -690,7 +880,9 @@ def check_update_and_reconfig_status(system_id):
                              'param_argnum': <position of the condition>}
     }
 
-    In this particular case, we check the alienvault-update and alienvault-reconfig. The condition is that the task has to belong to the given system_ip
+    In this particular case, we check the alienvault-update and
+    alienvault-reconfig. The condition is that the task has to belong
+    to the given system_ip
     """
     t_list = {"alienvault-update": {'task': 'alienvault_asynchronous_update',
                                     'process': 'alienvault-update',
@@ -704,10 +896,13 @@ def check_update_and_reconfig_status(system_id):
                                  'process': 'ossim-reconfig',
                                  'param_value': system_ip,
                                  'param_argnum': 0}
-                                    } 
+              }
     (success, tasks_status) = apimethod_check_task_status(system_id, t_list)
     if not success:
-        api_log.error("check_update_and_reconfig_status: %s" % str(tasks_status))
+        error_msg = "[check_update_and_reconfig_status] " + \
+                    "Unable to get system ip " + \
+                    "for system id %s: %s" % (system_id, system_ip)
+        api_log.error(error_msg)
 
     return success, tasks_status
 
@@ -725,7 +920,9 @@ def get_last_log_lines(system_id, log_file, lines):
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
         api_log.error(str(system_ip))
-        return False, "Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "Error retrieving the system ip " + \
+                    "for the system id %s -> %s" % (system_ip, str(system_ip))
+        return False, error_msg
 
     # White list check
     allowed_files = {
@@ -748,9 +945,13 @@ def get_last_log_lines(system_id, log_file, lines):
         return False, "%s is not a valid key for a log file" % log_file
 
     if lines not in [50, 100, 1000, 5000]:
-        return False, "%s is not a valid number of lines. The number of lines be in [50, 100, 1000, 5000]" % str(lines)
+        error_msg = "%s is not a valid number of lines." % str(lines) + \
+                    "The number of lines be in [50, 100, 1000, 5000]"
+        return False, error_msg
 
-    (success, msg) = ansible_get_log_lines(system_ip, logfile=allowed_files[log_file], lines=lines)
+    (success, msg) = ansible_get_log_lines(system_ip,
+                                           logfile=allowed_files[log_file],
+                                           lines=lines)
 
     if not success:
         api_log.error(str(msg))
@@ -765,13 +966,17 @@ def make_tunnel_with_vpn(system_ip, password):
         return False, "Invalid system ip: %s" % str(system_ip)
     success, own_server_id = get_server_id_from_local()
     if not success:
-        return success, "Error while retrieving server_id from local: %s" % str(own_server_id)
+        error_msg = "Error while retrieving " + \
+                    "server_id from local: %s" % str(own_server_id)
+        return success, error_msg
 
     success, local_ip = get_system_ip_from_local()
     if not success:
         return success, "Cannot retrieve the local ip <%s>" % str(local_ip)
 
-    success, data = ansible_make_tunnel_with_vpn(system_ip=system_ip, local_server_id=get_hex_string_from_uuid(own_server_id), password=password)
+    success, data = ansible_make_tunnel_with_vpn(system_ip=system_ip,
+                                                 local_server_id=get_hex_string_from_uuid(own_server_id),
+                                                 password=password)
     if not success:
         return success, data
 
@@ -819,37 +1024,57 @@ def sync_asec_plugins(plugin=None, enable=True):
         if not success:
             return False, "Unable to get sensors list: %s" % sensors
 
-        # Bug in ansible copy module prevents us from copying the files from /var/lib/asec/plugins as it has permissions 0 for "other"
+        # Bug in ansible copy module prevents us from copying the files from
+        # /var/lib/asec/plugins as it has permissions 0 for "other"
         # Workaround: make a local copy using ansible command module
         plugin_tmp_path = "/tmp/" + plugin + ".cfg"
         sql_tmp_path = plugin_tmp_path + ".sql"
         success, local_ip = get_system_ip_from_local()
         if not success:
-            return False, "[ansible_install_plugin] Failed to make get local IP: %s" % local_ip
-        (success, msg) = local_copy_file(local_ip, plugin_path, plugin_tmp_path)
+            error_msg = "[ansible_install_plugin] " + \
+                        "Failed to make get local IP: %s" % local_ip
+            return False, error_msg
+        (success, msg) = local_copy_file(local_ip,
+                                         plugin_path,
+                                         plugin_tmp_path)
         if not success:
-            return False, "[ansible_install_plugin] Failed to make temp copy of plugin file: %s" % msg
+            error_msg = "[ansible_install_plugin] " + \
+                        "Failed to make temp copy of plugin file: %s" % msg
+            return False, error_msg
         (success, msg) = local_copy_file(local_ip, sql_path, sql_tmp_path)
         if not success:
-            return False, "[ansible_install_plugin] Failed to make temp copy of sql file: %s" % msg
+            error_msg = "[ansible_install_plugin] " + \
+                        "Failed to make temp copy of sql file: %s" % msg
+            return False, error_msg
 
         all_ok = True
         for (sensor_id, sensor_ip) in sensors:
-            (success, msg) = ansible_install_plugin(sensor_ip, plugin_tmp_path, sql_tmp_path)
+            (success, msg) = ansible_install_plugin(sensor_ip,
+                                                    plugin_tmp_path,
+                                                    sql_tmp_path)
             if success and enable:
-                # Get list of active plugins and add the new one. Then send the list back to the sensor?
+                # Get list of active plugins and add the new one.
+                # Then send the list back to the sensor?
                 (success, data) = get_sensor_detectors(sensor_ip)
                 if success:
                     data['sensor_detectors'].append(plugin)
-                    (success, msg) = set_sensor_detectors(sensor_ip, ','.join(data['sensor_detectors']))
+                    sensor_det = ','.join(data['sensor_detectors'])
+                    (success, msg) = set_sensor_detectors(sensor_ip,
+                                                          sensor_det)
                 if not success:
-                    api_log.error("[sync_asec_plugins] Error enabling plugin %s for sensor %s: %s" % (plugin, sensor_ip, msg))
+                    error_msg = "[sync_asec_plugins] " + \
+                                "Error enabling plugin %s " % plugin + \
+                                "for sensor %s: %s" % (sensor_ip, msg)
+                    api_log.error(error_msg)
                     all_ok = False
                 else:
                     # Now launch reconfig task
                     job = alienvault_reconfigure.delay(sensor_ip)
             else:
-                api_log.error("[sync_asec_plugins] Error installing plugin %s in sensor %s: %s" % (plugin, sensor_ip, msg))
+                error_msg = "[sync_asec_plugins] " + \
+                            "Error installing plugin %s " % plugin + \
+                            "in sensor %s: %s" % (sensor_ip, msg)
+                api_log.error(error_msg)
                 all_ok = False
 
         # Delete temporal copies of the files
@@ -857,8 +1082,12 @@ def sync_asec_plugins(plugin=None, enable=True):
         remove_file([local_ip], sql_tmp_path)
 
         if not all_ok:
-            return False, "Plugin %s installation failed for some sensors" % plugin
-        return True, "Plugin %s installed. Enabled = %s" % (plugin, str(enable))
+            error_msg = "Plugin %s installation failed " % plugin + \
+                        "for some sensors"
+            return False, error_msg
+
+        info_msg = "Plugin %s installed. Enabled = %s" % (plugin, str(enable))
+        return True, info_msg
 
     except Exception as e:
         api_log.error("[sync_asec_plugins] Exception catched: %s" % str(e))
@@ -875,7 +1104,9 @@ def system_is_trial(system_id='local'):
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
         api_log.error(str(system_ip))
-        return False, "Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "Error retrieving the system ip for the " + \
+                    "system id %s -> %s" % (system_ip, str(system_ip))
+        return False, error_msg
 
     success, license_data = get_license_info(system_ip)
     if success and 'email' in license_data:
@@ -894,10 +1125,130 @@ def system_is_professional(system_id='local'):
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
         api_log.error(str(system_ip))
-        return False, "Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+        error_msg = "Error retrieving the system ip for the " + \
+                    "system id %s -> %s" % (system_ip, str(system_ip))
+        return False, error_msg
 
     success, version_data = get_alienvault_version(system_ip)
     if success and '' in version_data:
         return True, True
 
     return True, False
+
+
+def get_system_tags(system_id='local'):
+    """Retrieves the list of system tags
+
+    Args:
+        system_id (str) : The system_id of the system which you want to get
+                          the information
+    Returns:
+        success (bool)     : True if successful, False elsewhere
+        tag_list (list) : A list containing all the system tags.
+    """
+    tags = []
+    success, is_professional = system_is_professional(system_id=system_id)
+    if not success:
+        return False, []
+    if is_professional:
+        tags.append('USM')
+    else:
+        tags.append('OSSIM')
+    success, is_trial = system_is_trial(system_id=system_id)
+    if not success:
+        return False, []
+    if is_trial:
+        tags.append('TRIAL')
+    else:
+        tags.append('NO-TRIAL')
+    if is_otx_enabled():
+        tags.append('OTX')
+    else:
+        tags.append('NO-OTX')
+    return tags
+
+
+def get_jobs_running(system_id='local'):
+    """
+    Searches a system for running jobs
+    """
+    # Get system_ip from system id
+    (success, system_ip) = get_system_ip_from_system_id(system_id)
+    if not success:
+        error_msg = "Error retrieving the system ip " + \
+                    "for the system id %s " % system_id + \
+                    "-> %s" % str(system_ip)
+        api_log.error(str(system_ip))
+        return False, error_msg
+
+    success, running_tasks = get_running_tasks(system_ip)
+
+    conf_backup_task = ".".join(["celerymethods",
+                                 "tasks",
+                                 "backup_tasks",
+                                 "backup_configuration_for_system_id"])
+    conf_backup_file_task = ".".join(["celerymethods",
+                                      "tasks",
+                                      "backup_tasks",
+                                      "get_backup_file"])
+    reconfigure_task = ".".join(["celerymethods",
+                                 "jobs",
+                                 "reconfig",
+                                 "alienvault_reconfigure"])
+    as_reconfigure_task = ".".join(["celerymethods",
+                                    "jobs",
+                                    "system",
+                                    "alienvault_asynchronous_reconfigure"])
+    update_task = ".".join(["celerymethods",
+                            "jobs",
+                            "system",
+                            "alienvault_asynchronous_update"])
+
+    task_types_dict = {conf_backup_task: "configuration_backup",
+                       conf_backup_file_task: "get_configuration_backup",
+                       reconfigure_task: "reconfigure",
+                       as_reconfigure_task: "reconfigure",
+                       update_task: "update"}
+
+    jobs_list = []
+    for dummy_node, task_list in running_tasks.iteritems():
+        for task in task_list:
+            if task["name"] in task_types_dict.keys():
+                cond1 = system_id in literal_eval(task['args'])
+                cond2 = "system_id" in literal_eval(task['kwargs']).keys()
+                cond3 = False
+                if cond2:
+                    cond3 = literal_eval(task['kwargs'])["system_id"] == system_id
+                if cond1 or (cond2 and cond3):
+                    api_log.error("%s\n" % task['args'])
+                    aux_job = {"name": task_types_dict[task["name"]],
+                               "time_start": int(task["time_start"]),
+                               "job_id": task["id"]}
+                    jobs_list.append(aux_job)
+
+    return success, jobs_list
+
+
+def get_license_devices():
+    """
+    Retrieves the number of assets for a given license
+
+    Return:
+        Number of devices signed for a license
+        0 if an error occurs
+        1000000 if 'devices' is not specified in the ossim.lic file
+    """
+    devices = 0
+    config = RawConfigParser()
+    try:
+        license_file = config.read('/etc/ossim/ossim.lic')
+    except Exception:
+        api_log.error("There is no ossim.lic file in the current system")
+        devices = 0
+
+    try:
+        devices = config.getint('appliance', 'devices')
+    except NoOptionError:
+        devices = 1000000
+
+    return devices

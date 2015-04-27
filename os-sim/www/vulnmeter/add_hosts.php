@@ -45,7 +45,7 @@ function hosts_fqdns_to_insert($conn, $report_id, $plugins)
 
     $result = $conn->Execute("SELECT distinct v.hostIP, HEX(v.ctx) AS ctx
                                 FROM vuln_nessus_results v
-                                WHERE v.report_id='$report_id' AND v.hostIP NOT IN (SELECT distinct inet6_ntop(ip) FROM host_ip,host WHERE host_ip.host_id=host.id AND host.ctx=v.ctx)");
+                                WHERE v.report_id='$report_id' AND v.hostIP NOT IN (SELECT distinct inet6_ntoa(ip) FROM host_ip,host WHERE host_ip.host_id=host.id AND host.ctx=v.ctx)");
 
     while (!$result->EOF) 
     {
@@ -159,7 +159,7 @@ function hosts_fqdns_to_insert($conn, $report_id, $plugins)
 function display_errors($info_error) 
 {
     $errors    = implode ("</div><div style='padding-top: 3px;'>", $info_error);
-    $error_msg = "<div>"._("We found the following errors:")."</div><div style='padding-left: 15px;'><div>$errors</div></div>";
+    $error_msg = "<div>"._("The following errors occurred:")."</div><div style='padding-left: 15px;'><div>$errors</div></div>";
 
     return ossim_error($error_msg);
 }

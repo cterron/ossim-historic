@@ -55,7 +55,7 @@ define('_MAIN_PATH', "/etc/ossim/server");
  * @package    ossim-framework\Directives
  * @autor      AlienVault INC
  * @copyright  2007-2013 AlienVault
- * @link       https://www.alienvault.com/ Alienvault web page
+ * @link       https://www.alienvault.com/ AlienVault web page
  */
 class Directive_editor {
     
@@ -186,7 +186,7 @@ class Directive_editor {
                     $lines = file($file);
                     foreach ($lines as $line)
                     {
-                        if (preg_match("/directive id\=\"(\d+)\"\s+name\=\"([^\"]+)\"/",$line,$found))
+                        if (preg_match("/directive id\=\"(\d+)\"\s+name\=\"([^\"]+)\"\s+priority\=\"(\d+)\"/",$line,$found))
                         {
                             if ($query != '')
                             {
@@ -196,7 +196,7 @@ class Directive_editor {
                                     continue;
                                 }
                             }
-                            $directives[$found[1]] = $found[2];
+                            $directives[$found[1]] = array('name' => $found[2], 'priority' => $found[3]);
                         }
                     }
                 }

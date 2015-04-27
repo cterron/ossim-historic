@@ -276,7 +276,7 @@ if (isset($_POST['upload']))
     <?php
     if (is_array($validation_errors) && !empty($validation_errors))
     {
-        $txt_error = '<div>'._('We Found the following errors').":</div>
+        $txt_error = '<div>'._('The following errors occurred').":</div>
                           <div style='padding: 10px;'>".implode('<br/>', $validation_errors).'</div>';
 
         $config_nt = array(

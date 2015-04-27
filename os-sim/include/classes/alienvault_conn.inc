@@ -3,7 +3,7 @@
 * Alienvault_conn.inc
 *
 * File Alienvault_conn.inc is used to:
-*   - Interact with the Alienvault REST API
+*   - Interact with the AlienVault REST API
 *
 *
 * License:
@@ -44,7 +44,7 @@
 
  
 /**
-* The goal of this class is to interact with the Alienvault REST API
+* The goal of this class is to interact with the AlienVault REST API
 *
 * <br/>
 * <pre>
@@ -280,6 +280,10 @@ class Alienvault_conn {
         if ($this->log)
         {
             error_log(gmdate("Y-m-d H:i:s")." GMT\n".strtoupper($method)." https://".$this->host.":".$this->port.$url."\n", 3, $this->debug_file);
+            if (strtoupper($method)=='POST')
+            {
+                error_log($this->format_query($parameters)."\n", 3, $this->debug_file);
+            }
         }
 
         $response = curl_exec($handle);

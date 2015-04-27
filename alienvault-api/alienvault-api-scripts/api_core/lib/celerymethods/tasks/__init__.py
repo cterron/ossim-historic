@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 #  License:
 #
@@ -27,5 +28,13 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
+import logging
+import celery.utils.log
+
+logger = celery.utils.log.get_logger("celery")
+logger.setLevel(logging.INFO)
+
 import celery
-celery_instance = celery.Celery('celerymethods.tasks', backend='amqp', broker='amqp://guest@127.0.0.1//')
+import celerymethods.celeryconfig
+celery_instance = celery.Celery(main='celerymethods.tasks', set_as_current=True, log=logger)
+celery_instance.config_from_object('celerymethods.celeryconfig')

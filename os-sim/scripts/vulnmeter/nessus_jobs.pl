@@ -580,7 +580,7 @@ sub select_job {
             my $used_slots = 0;
             my $scanner    = $CONFIG{'NESSUSPATH'};
 
-            my $sql_server_ip = "SELECT inet6_ntop(s.ip) FROM vuln_nessus_servers vns, sensor s WHERE vns.hostname='$serverid' AND HEX(s.id)=vns.hostname";
+            my $sql_server_ip = "SELECT inet6_ntoa(s.ip) FROM vuln_nessus_servers vns, sensor s WHERE vns.hostname='$serverid' AND HEX(s.id)=vns.hostname";
             #logwriter( $sql_server_ip, 4 );
             $sth_sel = $dbh->prepare( $sql_server_ip );
             $sth_sel->execute();
@@ -662,6 +662,9 @@ sub select_job {
                 }
 
                 run_job ( $job_id, $serverid );        #RUN ONE JOB THEN QUIT
+                
+                system("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/util.php update_vuln_jobs_assets insert 0 0");
+                
                 return;
             }
         }
@@ -682,52 +685,16 @@ sub run_job {
     my $startdate = getCurrentDateTime();
 
     #$sql = qq{ SELECT name, username, fk_name, job_TYPE, meth_TARGET, meth_VSET, meth_TIMEOUT
-    $sql = qq{ SELECT name, username, notify, job_TYPE, meth_TARGET, meth_VSET, meth_TIMEOUT, meth_CRED, authorized, resolve_names
+    $sql = qq{ SELECT fk_name, name, username, notify, job_TYPE, meth_TARGET, meth_VSET, meth_TIMEOUT, meth_CRED, authorized, resolve_names
         FROM vuln_jobs WHERE id='$job_id' LIMIT 1 };
     logwriter( $sql, 5 );
     $sth_sel = $dbh->prepare( $sql );
     $sth_sel->execute(  );
     
-    # jbfk_name is the sensor ID
+    my ( $creator, $Jname, $juser, $sensor_id, $Jtype, $host_list, $Jvset, $jtimout, $meth_CRED, $scan_locally, $resolve_names) = $sth_sel->fetchrow_array(  );
     
-    my ( $Jname, $juser, $jbfk_name, $Jtype, $host_list, $Jvset, $jtimout, $meth_CRED, $scan_locally, $resolve_names) = $sth_sel->fetchrow_array(  );
+    get_asset_data($host_list, $job_id, $sensor_id, $creator);
     
-    # hash to manage targets: ctx and ID
-    
-    my @aux         = split /\n/, $host_list;
-    my $default_ctx = get_default_ctx();
-    my %ctxs        = get_ctxs_by_ip($job_id);
-    my $host_ctx    = "";
-    my $host_ip     = "";
-    
-    # load ctx in vuln_jobs table
-    foreach my $ip_in_db (keys %ctxs) {
-        $asset_data{$ip_in_db}{'ctx'} = $ctxs{$ip_in_db};
-    }
-
-    foreach my $idip (@aux) {
-        if ( $idip =~ m/^([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { #     host_id#Ip or net_id#CIDR
-            $asset_data{$2}{'ctx'} = get_asset_ctx($idip);
-            $asset_data{$2}{'id'}  = $1;
-            logwriter("Search ctx by ID ".$idip." -> ".get_asset_ctx($idip), 4);
-            push(@asset_to_scan, $2);
-        }
-        elsif( $idip =~ m/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { # set the default ctx
-            $asset_data{$1}{'ctx'} = $default_ctx;
-            logwriter("Search default ctx ".$idip." -> ".$default_ctx, 4);
-            push(@asset_to_scan, $idip);
-        }
-        else { # host name
-            $idip     =~ s/[|;"']//g;
-            $host_ctx = get_asset_ctx($idip);
-            $host_ip  = `/usr/bin/dig '$idip' A +short | /usr/bin/tail -1`; chomp($host_ip);
-            if( $host_ctx =~ m/^[a-f\d]{32}$/i && $host_ip =~ m/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {
-                logwriter("Search ctx by name ".$idip." -> ".$host_ctx, 4);
-                $asset_data{$host_ip}{'ctx'} = get_asset_ctx($idip);
-                push(@asset_to_scan, $idip);
-            }
-        }
-    }
     $host_list = join("\n", @asset_to_scan);
     
     $sth_sel->finish;
@@ -775,7 +742,7 @@ sub run_job {
         #generate_email ( $job_id, "start" );	    #ie MANUAL/REQUESTS
     }
 
-    my $enddate = setup_scan( $job_id, $Jname, $juser, $Jtype, $host_list, $Jvset, $jtimout, $jbfk_name, $meth_CRED, $scan_locally, $resolve_names);
+    my $enddate = setup_scan( $job_id, $Jname, $juser, $Jtype, $host_list, $Jvset, $jtimout, $sensor_id, $meth_CRED, $scan_locally, $resolve_names);
 
     if ( $notify_by_email ) {
         #generate_email ( $job_id, "finish" );	    #ie MANUAL/REQUESTS
@@ -870,12 +837,8 @@ sub setup_scan {
     #MAKE IT GLOBAL FOR USE WITH INCIDENT TRACKER
     @vuln_nessus_plugins = get_plugins( $Jvset, $job_id );
 
-    #if ( $use_scanlite ) {
-    #    @results = run_scanlite_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $Jname, $juser, \@hostarr, $Jvset, $job_id);
-    #} else {
     @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $Jname, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names);
-    #}
-
+    
     $scantime = getCurrentDateTime();
 
     if ( check_dbOK() == "0" ) { $dbh = conn_db(); }
@@ -1330,6 +1293,8 @@ sub run_nessus {
             
             $sql = qq{ UPDATE vuln_jobs SET meth_CPLUGINS='$task_id' WHERE id='$job_id' };
             safe_db_write ( $sql, 4 );
+            
+            system("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/util.php update_vuln_jobs_assets insert $job_id 1");
 
             logwriter("play_task $task_id", 4);
             play_task($task_id);
@@ -1362,6 +1327,8 @@ sub run_nessus {
                 }
                 
             } while (($status eq "Running" || $status eq "Requested" || $status eq "Pause Requested" || $status eq "Paused") && $endScan == 0);
+            
+            system("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/util.php update_vuln_jobs_assets delete $job_id 1");
             
             if($endScan==1) {
                 $omp_scan_timeout = TRUE;
@@ -2752,10 +2719,27 @@ sub process_results {
         }
         
         # get host id
-        $hid = "";
+        $hid = '';
         
         if(defined($asset_data{$hostip}{'id'})) {
             $hid = $asset_data{$hostip}{'id'};
+        }
+        else # we need to insert the new host
+        {
+            $hostname = $hostip;
+            $hostname =~ s/\./\-/g;
+        
+            my $host_data = trim(encode_base64("$hostip|$ctx|Host-$hostname|"));
+
+            $host_data =~ s/\n//g;
+
+            my $result = `/usr/bin/php /usr/share/ossim/scripts/vulnmeter/util.php insert_host $host_data`;
+            
+            if ( $result =~ m/.*Host\s*ID:\s*([a-f\d]{32})\s*$/i )
+            {
+                logwriter("New host -> Hostname: $hostname, ID: $1", 4 );
+                $hid = $1;
+            }
         }
         
         if ( $hostHash{$host}{'fqdn'}   ) {    $hostname  = $hostHash{$host}{'fqdn'};    }
@@ -3359,43 +3343,77 @@ sub check_connect {
 sub check_schedule {
 
     my ( $sql, $sth_sel, $sth_sel2, $now );
-
+    
     $now = getCurrentDateTime();
 
     $sql = qq{ SELECT id, name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, time, email,
         meth_TARGET, meth_CRED, meth_VSET, meth_TIMEOUT, scan_ASSIGNED, next_CHECK, meth_Ucheck, resolve_names, IP_ctx, meth_Wfile, credentials
         FROM vuln_job_schedule WHERE enabled != '0' and next_check <= '$now' };
+        
     logwriter( $sql, 5 );
+        
     $sth_sel=$dbh->prepare( $sql );
     $sth_sel->execute;
 
     while ( my ($jid, $name, $username, $fk_name, $jobTYPE, $schedule_type, $day_of_week, $day_of_month, $time_run, $email,
         $meth_TARGET, $meth_CRED, $meth_VSET, $meth_TIMEOUT, $scan_server, $next_check, $scan_locally, $resolve_names, $IP_ctx, $send_email,
-        $credentials) = $sth_sel->fetchrow_array ) {
+        $credentials) = $sth_sel->fetchrow_array )
+    {
+        logwriter("datediff between nex_check and now: " . datediff($next_check, $now , 'H') . " hours", 4);
         
-        $scan_locally=0 if ($scan_locally eq "" || !$scan_locally);
-
-        #DECIDED TO DROP TRACKING ON DAY/MONTH/TIME_RUN RELY SOLELY ON A GOOD NEXT_CHECK DATE
-        gen_sched_next_scan ( $jid, $schedule_type );
-
-        if ( $jobTYPE eq "S" ) {
-           #my $sql = qq{ SELECT hostip from vuln_systems t1
-           #  LEFT JOIN vuln_system_hosts t2 on t2.sysID = t1.id
-           #  WHERE t1.acronym='$fk_name' };
-           #my $sth_sel2=$dbh->prepare( $sql );
-           #$sth_sel2->execute;
-           #while ( my ( $hostip )=$sth_sel2->fetchrow_array ) {
-           #   $meth_TARGET .= "$hostip\n";
-           #}
+        if (datediff($next_check, $now , 'H') >= 1)
+        {
+            # The "Run Once" jobs will be deleted
+            
+            if ($schedule_type eq 'O') {
+                $sql = qq{ DELETE FROM vuln_job_schedule WHERE id='$jid' };
+                safe_db_write($sql, 4);
+            }
+            else
+            {
+                # The others jobs will be rescheduled
+                
+                resched_scan ($jid, $schedule_type);   
+            }
         }
-        if ( $fk_name eq "" ) { $fk_name = "NULL"; } else { $fk_name = "'".$fk_name."'"; }
-        if ( $scan_server eq "" ) { $scan_server = "NULL"; }
-
-        $sql = qq{ INSERT INTO vuln_jobs ( name, username, fk_name, job_TYPE, meth_TARGET, meth_CRED, meth_VSET,
-            meth_TIMEOUT, scan_ASSIGNED, scan_SUBMIT, scan_NEXT,  notify, tracker_id, authorized, resolve_names, author_uname, meth_Wfile, credentials ) VALUES (
-            'SCHEDULED - $name', '$username', $fk_name, '$jobTYPE', '$meth_TARGET', '$meth_CRED', '$meth_VSET', 
-            '$meth_TIMEOUT', '$scan_server', '$now', '$next_check', '$email', '$jid', '$scan_locally', $resolve_names, '$IP_ctx', $send_email, '$credentials' )  };
-        safe_db_write ( $sql, 4 );            #use insert/update routine
+        else
+        {
+            $scan_locally=0 if ($scan_locally eq "" || !$scan_locally);
+    
+            #DECIDED TO DROP TRACKING ON DAY/MONTH/TIME_RUN RELY SOLELY ON A GOOD NEXT_CHECK DATE
+            gen_sched_next_scan ( $jid, $schedule_type );
+    
+            if ( $fk_name eq "" ) { $fk_name = "NULL"; } else { $fk_name = "'".$fk_name."'"; }
+            
+            # split the scheduled jobs
+            
+            my $get_jobs_file = "/usr/share/ossim/www/tmp/get_jobs_$$";
+            
+            system("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/get_jobs.php '$jid' > $get_jobs_file ");
+    
+            open(SCHEDULED_JOBS, $get_jobs_file) or die "failed to fork :$!\n";
+            
+            while(<SCHEDULED_JOBS>){
+                chomp;
+                
+                if (m/^([a-f0-9]{32})\|(.*)/i)
+                {   
+                    my $job_targets = $2;
+                    my $sensor_id   = $1;
+                    
+                    $job_targets =~ s|;|\n|g;
+                    
+                    $sql = qq{ INSERT INTO vuln_jobs ( name, username, fk_name, job_TYPE, meth_TARGET, meth_CRED, meth_VSET,
+                        meth_TIMEOUT, scan_ASSIGNED, scan_SUBMIT, scan_NEXT,  notify, tracker_id, authorized, resolve_names, author_uname, meth_Wfile, credentials ) VALUES (
+                        'SCHEDULED - $name', '$username', $fk_name, '$jobTYPE', '$job_targets', '$meth_CRED', '$meth_VSET', 
+                        '$meth_TIMEOUT', '$sensor_id', '$now', '$next_check', '$sensor_id', '$jid', '$scan_locally', $resolve_names, '$IP_ctx', $send_email, '$credentials' )  };
+                    safe_db_write ( $sql, 4 );
+                }
+            }
+            close SCHEDULED_JOBS;
+            
+            unlink $get_jobs_file if -e $get_jobs_file;
+        }
     }
 }
 
@@ -3948,6 +3966,134 @@ sub gen_sched_next_scan {
     return $next_run; 
 }
 
+
+sub resched_scan{
+    my ( $schedid, $schedule_type ) = @_;
+
+    my ( $sth_sel, $sql, $next_run, $time_interval, $day_offset, $week_offset, $now );
+    
+    $now = getCurrentDateTime();
+
+    do {
+        if ($schedule_type ne "NW") {
+            #select time_interval to skip some days or weeks
+            if($schedule_type eq "D" || $schedule_type eq "W") {
+                $sth_sel = $dbh->prepare( qq{ SELECT time_interval FROM vuln_job_schedule WHERE id='$schedid' } );
+                $sth_sel->execute(  );
+                $time_interval = $sth_sel->fetchrow_array(  ); 
+                
+                $day_offset  = $time_interval;
+                $week_offset = 7*$time_interval;
+            }
+            
+            if ($schedule_type eq "D") {
+                $sql = qq{ SELECT next_CHECK + INTERVAL $day_offset DAY FROM vuln_job_schedule WHERE id='$schedid' };
+            } elsif ($schedule_type eq "W") {
+                $sql = qq{ SELECT next_CHECK + INTERVAL $week_offset DAY FROM vuln_job_schedule WHERE id='$schedid' };
+            } elsif ($schedule_type eq "M") {
+                $sql = qq{ SELECT next_CHECK + INTERVAL 1 MONTH FROM vuln_job_schedule WHERE id='$schedid' }; 
+            };
+    
+    
+            $sth_sel = $dbh->prepare( $sql );
+            $sth_sel->execute();
+            $next_run = $sth_sel->fetchrow_array(  ); 
+    
+            $next_run  =~ s/://g;
+            $next_run  =~ s/-//g;
+            $next_run  =~ s/\s//g;
+    
+        }
+        else {
+            my %day_of_week = ("Su" => "sunday", 
+                               "Mo" => "monday",
+                               "Tu" => "tuesday",
+                               "We" => "wednesday",
+                               "Th" => "thursday",
+                               "Fr" => "friday", 
+                               "Sa" => "saturday");
+            
+            my %day_of_month = ("1" => "first", 
+                                "2" => "second",
+                                "3" => "third",
+                                "4" => "fourth",
+                                "5" => "fifth");
+                                
+            my %months = ("1" => "january", 
+                          "2" => "february",
+                          "3" => "march",
+                          "4" => "april",
+                          "5" => "may",
+                          "6" => "june", 
+                          "7" => "july",
+                          "8" => "august",
+                          "9" => "september",
+                          "10" => "october",
+                          "11" => "november",
+                          "12" => "december");
+                                
+    
+            $sql = qq{ SELECT day_of_week, day_of_month, next_CHECK FROM vuln_job_schedule WHERE id='$schedid' };
+            $sth_sel = $dbh->prepare( $sql );
+            $sth_sel->execute(  );
+            my ( $day_of_week_db, $day_of_month_db, $next_check_db ) = $sth_sel->fetchrow_array(  );
+    
+            my ($year, $month) = (localtime(time()))[5,4];
+            $year+=1900;
+            $month+=1;
+            
+            $month+=1; #select next month
+            if($month==13){
+                $month=1; 
+                $year++;
+            }
+    
+            #$month = 1; # to debug
+    
+            my $last_date = "";
+            my $i     = 1; # first, second, third ...
+            my $total = 0;
+            do {
+                $next_run = ParseDate($day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year);
+                #print $day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year."\n";
+                #logwriter( "Parse date: ".$day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year, 4 );
+                
+                if($next_run eq "") {
+                    $i = 1; # to begin with the first day
+                    $month+=1;
+                    if($month==13){
+                        $month=1; 
+                        $year++;
+                    }
+                }
+                elsif($last_date ne $next_run){
+                    $last_date = $next_run;
+                    $total++;
+                    $i++;
+                }
+                else {
+                    $i++;
+                }
+            } while($day_of_month_db != $total);
+    
+            $next_check_db =~ s/........(......)/$1/;
+            $next_run =~ s/^(........).*/$1/;
+            $next_run = $next_run.$next_check_db; # date and time
+    
+        }
+        
+        # Update the next_CHECK field to find the next datetime
+        
+        $sql = qq{ UPDATE vuln_job_schedule SET next_CHECK='$next_run' WHERE id='$schedid' };
+        safe_db_write ( $sql, 5 ); 
+        
+    } until ($next_run - $now > 0);
+
+    logwriter( "\tresched_scan nextscan=$next_run", 4 );
+
+    return $next_run; 
+}
+
 sub get_live_subnets {
     # VER: 1.0 MODIFIED: 8/05/08 16:
     my ( $sql, $sth_sel );
@@ -4005,7 +4151,7 @@ sub get_server_credentials {
                 my $dnessuspassword = "";
                 ($nessushost, $nessusport, $nessususer, $nessuspassword, $dnessuspassword)=$sth_sel->fetchrow_array;
                 
-                logwriter( "dnessuspassword: $dnessuspassword for sensor_id: $select_id ", 4 );
+                #logwriter( "dnessuspassword: $dnessuspassword for sensor_id: $select_id ", 4 );
                 
                 $nessuspassword = $dnessuspassword if (defined($dnessuspassword) && $dnessuspassword ne "");
                 $sth_sel->finish;
@@ -4867,6 +5013,7 @@ sub update_ossim_incidents {
             my $vuln_name = "";
             if ( noEmpty( $name_psid) ) {
                 $vuln_name = $name_psid;
+                $vuln_name =~ s/^nessus\s*:\s*/Vulnerability - /g;
             }
             else{
                 $vuln_name = "Vulnerability - Unknown detail";
@@ -4902,7 +5049,7 @@ sub update_ossim_incidents {
 
 sub get_server_data {
 	my $sensor_id = shift;
-    my $sql = qq{ SELECT vns.port, vns.user, vns.password, AES_DECRYPT(vns.password,'$uuid'), inet6_ntop(s.ip) 
+    my $sql = qq{ SELECT vns.port, vns.user, vns.password, AES_DECRYPT(vns.password,'$uuid'), inet6_ntoa(s.ip) 
     				FROM vuln_nessus_servers vns, sensor s
     				WHERE vns.enabled='1' AND vns.hostname='$sensor_id' AND HEX(s.id) = UPPER(vns.hostname) };
     my $sthss=$dbh->prepare( $sql );
@@ -5513,18 +5660,18 @@ sub getassetbyname {
     
     my $resolv = TRUE;
         
-    $sql = qq{ SELECT inet6_ntop(hip.ip) AS ip 
+    $sql = qq{ SELECT inet6_ntoa(hip.ip) AS ip 
                         FROM host h, host_ip hip, vuln_nessus_latest_reports vnlr
                         WHERE h.id = hip.host_id 
                         AND h.hostname = '$hostname'
-                        AND vnlr.hostIP = inet6_ntop(hip.ip) };
+                        AND vnlr.hostIP = inet6_ntoa(hip.ip) };
 
     $sth_sel = $dbh->prepare( $sql );
     $sth_sel->execute;
     $ip = $sth_sel->fetchrow_array;
     
     if(!defined($ip)) {
-        $sql = qq{ SELECT inet6_ntop(hip.ip) as ip 
+        $sql = qq{ SELECT inet6_ntoa(hip.ip) as ip 
                             FROM host h, host_ip hip
                             WHERE h.id=hip.host_id 
                             and h.hostname = '$hostname' };
@@ -5559,11 +5706,11 @@ sub check_running_scans {
 
     $now = strftime "%Y-%m-%d %H:%M:%S", gmtime;
 
-    $sql = qq{ SELECT meth_TARGET, id, scan_PID, meth_Wfile, meth_CPLUGINS, notify, name, job_TYPE, username, meth_VSET FROM vuln_jobs WHERE status='R' AND UNIX_TIMESTAMP('$now') - UNIX_TIMESTAMP(scan_START) > 3600 };
+    $sql = qq{ SELECT fk_name, meth_TARGET, id, scan_PID, meth_Wfile, meth_CPLUGINS, notify, name, job_TYPE, username, meth_VSET FROM vuln_jobs WHERE status='R' AND UNIX_TIMESTAMP('$now') - UNIX_TIMESTAMP(scan_START) > 3600 };
                         
     $sthse=$dbh->prepare( $sql );
     $sthse->execute;
-    while ( my($targets, $job_id, $scan_pid, $semail, $task_id, $sensor_id, $job_title, $Jtype, $juser, $Jvset ) = $sthse->fetchrow_array() ) {
+    while ( my($creator, $targets, $job_id, $scan_pid, $semail, $task_id, $sensor_id, $job_title, $Jtype, $juser, $Jvset ) = $sthse->fetchrow_array() ) {
     
     	$scantime = getCurrentDateTime();
     
@@ -5609,37 +5756,7 @@ sub check_running_scans {
 		        
 		        # load ctx info
 		        
-		        my @aux         = split /\n/, $targets;
-			    my $default_ctx = get_default_ctx();
-			    my %ctxs        = get_ctxs_by_ip($job_id);
-			    my $host_ctx    = "";
-			    my $host_ip     = "";
-			    
-			    # load ctx in vuln_jobs table
-			    foreach my $ip_in_db (keys %ctxs) {
-			        $asset_data{$ip_in_db}{'ctx'} = $ctxs{$ip_in_db};
-			    }
-			
-			    foreach my $idip (@aux) {
-			        if ( $idip =~ m/^([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { #     host_id#Ip or net_id#CIDR
-			            $asset_data{$2}{'ctx'} = get_asset_ctx($idip);
-			            $asset_data{$2}{'id'}  = $1;
-			            logwriter("Search ctx by ID ".$idip." -> ".get_asset_ctx($idip), 4);
-			        }
-			        elsif( $idip =~ m/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { # set the default ctx
-			            $asset_data{$1}{'ctx'} = $default_ctx;
-			            logwriter("Search default ctx ".$idip." -> ".$default_ctx, 4);
-			        }
-			        else { # host name
-			            $idip     =~ s/[|;"']//g;
-			            $host_ctx = get_asset_ctx($idip);
-			            $host_ip  = `/usr/bin/dig '$idip' A +short | /usr/bin/tail -1`; chomp($host_ip);
-			            if( $host_ctx =~ m/^[a-f\d]{32}$/i && $host_ip =~ m/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {
-			                logwriter("Search ctx by name ".$idip." -> ".$host_ctx, 4);
-			                $asset_data{$host_ip}{'ctx'} = get_asset_ctx($idip);
-			            }
-			        }
-			    }
+		        get_asset_data($targets, $job_id, $sensor_id, $creator);
 		        
 		        %task_data = get_task_data($task_id, $sensor_id);
 		        
@@ -5888,4 +6005,48 @@ sub fix_vulns_tables {
     $sql        = qq{ UPDATE vuln_jobs v,sensor s SET v.notify=hex(s.id) WHERE v.notify=s.name };
     safe_db_write($sql, 5);
 
+}
+
+sub get_asset_data {
+    my $host_list = shift;
+    my $job_id    = shift;
+    my $sensor_id = shift;
+    my $creator   = shift;
+    
+    # hash to manage targets: ctx and ID
+    
+    my @aux         = split /\n/, $host_list;
+    my $default_ctx = get_default_ctx();
+    my %ctxs        = get_ctxs_by_ip($job_id);
+    my $host_ctx    = "";
+    my $host_ip     = "";
+    
+    # load ctx in vuln_jobs table
+    foreach my $ip_in_db (keys %ctxs) {
+        $asset_data{$ip_in_db}{'ctx'} = $ctxs{$ip_in_db};
+    }
+
+    foreach my $idip (@aux) {
+        if ( $idip =~ m/^([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { #     host_id#Ip or net_id#CIDR
+            $asset_data{$2}{'ctx'} = get_asset_ctx($idip);
+            $asset_data{$2}{'id'}  = $1;
+            logwriter("Search ctx by ID ".$idip." -> ".get_asset_ctx($idip), 4);
+            push(@asset_to_scan, $2);
+        }
+        elsif( $idip =~ m/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { # set the default ctx
+            $asset_data{$1}{'ctx'} = $default_ctx;
+            logwriter("Search default ctx ".$idip." -> ".$default_ctx, 4);
+            push(@asset_to_scan, $idip);
+        }
+        else { # host name
+            $idip     =~ s/[|;"']//g;
+            $host_ctx = get_asset_ctx($idip);
+            $host_ip  = `/usr/bin/dig '$idip' A +short | /usr/bin/tail -1`; chomp($host_ip);
+            if( $host_ctx =~ m/^[a-f\d]{32}$/i && $host_ip =~ m/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {
+                logwriter("Search ctx by name ".$idip." -> ".$host_ctx, 4);
+                $asset_data{$host_ip}{'ctx'} = get_asset_ctx($idip);
+                push(@asset_to_scan, $idip);
+            }
+        }
+    }  
 }

@@ -33,6 +33,7 @@ from db.methods.system import get_system_ip_from_system_id
 from db.methods.system import db_system_update_hostname
 from db.methods.system import db_system_update_admin_ip
 from celerymethods.jobs.system import alienvault_asynchronous_reconfigure
+from celerymethods.utils import set_task_config, get_task_config
 from ansiblemethods.system.system import get_av_config
 from ansiblemethods.system.system import set_av_config
 from ansiblemethods.system.system import ansible_add_ip_to_inventory
@@ -63,8 +64,7 @@ def get_system_config_general(system_id, no_cache=False):
                                                          'update_update_proxy_dns': '',
                                                          'update_update_proxy_pass': '',
                                                          'update_update_proxy_port': '',
-                                                         'update_update_proxy_user': '',
-                                                         'vpn_vpn_infraestructure': ''
+                                                         'update_update_proxy_user': ''
                                                          })
 
     if not success:
@@ -176,3 +176,25 @@ def set_system_sensor_configuration(system_id, set_values):
         api_log.error("system: set_config_general error: " + str(config_values))
         return (False, "Cannot set general configuration info: %s" % str(config_values))
     return True, "OK"
+
+
+def set_system_config_telemetry_collection (enabled = False):
+    """
+    Enable/Disable the local telemetry collection.
+    """
+    crontab = {'minute': 0, 'hour': 2, 'day_of_week': 0, 'day_of_month': '*', 'month_of_year': '*'}
+    return set_task_config ('monitor_check_platform_telemetry_data', \
+                            'celerymethods.tasks.monitor_tasks.monitor_check_platform_telemetry_data', \
+                            args = [], kwargs = {}, crontab = crontab, enabled = enabled, kind = 'default')
+
+def get_system_config_telemetry_collection ():
+    """
+    Get the local telemetry collection enabled flag.
+    """
+    crontab = {'minute': 0, 'hour': 2, 'day_of_week': 0, 'day_of_month': '*', 'month_of_year': '*'}
+    (success, tasks) = get_task_config ('celerymethods.tasks.monitor_tasks.monitor_check_platform_telemetry_data', \
+                                        args = [], kwargs = {}, crontab = crontab, kind = 'default')
+
+    if success:
+        return (True, tasks[0]['enabled'])
+    return (False, "Default task 'monitor_check_platform_telemetry_data' does not exist")

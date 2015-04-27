@@ -68,7 +68,7 @@ else
         // Restore button
         case 'insert':
             
-            if (Token::verify('tk_delete_events', GET('token')) == FALSE)
+            if (Token::verify('tk_insert_events', GET('token')) == FALSE)
             {
                 $response['status']  = 'error';
                 $response['message'] = Token::create_error_message();

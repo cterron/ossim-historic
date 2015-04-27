@@ -35,6 +35,11 @@ OLD_ADMIN_IP=$(grep -w -m1 address "$NETWORK_INTERFACES_FILE" | grep -v loopback
 OLD_ADMIN_GW=$(grep -w -m1 gateway "$NETWORK_INTERFACES_FILE" | grep -v loopback | sed -e "s/^ *//" | cut -d' ' -f2)
 OLD_ADMIN_NETMASK=$(grep -w -m1 netmask "$NETWORK_INTERFACES_FILE" | grep -v loopback | sed -e "s/^ *//" | cut -d' ' -f2)
 
+# 'no' means 'no restart'
+# 'new' means 'restart just the 'NEW_INTERFACE'
+# 'all' means 'restart all interfaces'
+NEEDS_INTERFACE_RESTART="no"
+
 validate_network_interfaces_file() {
 
     new_admin_dns_formatted=$(echo "$NEW_ADMIN_DNS" | sed -e "s/,/ /g")
@@ -91,7 +96,7 @@ update_domain_name(){
 
     # 3. Update resolv.conf
     sed -i "s/dns-search .*$/dns-search $network_domain/g" $NETWORK_INTERFACES_FILE
-    restart_interface $NEW_INTERFACE
+    NEEDS_INTERFACE_RESTART="new"
 
     # 4. Update mailname
     echo "$new_fqdn" > $MAILNAME_FILE
@@ -235,7 +240,7 @@ update_network_interfaces() {
         validate_network_interfaces_file
 
         # Restart all the interfaces
-        restart_all_interfaces
+        NEEDS_INTERFACE_RESTART="all"
         return 0
     fi
 
@@ -258,7 +263,7 @@ update_admin_ip(){
     quit
 EOF
     validate_network_interfaces_file
-    restart_interface $NEW_INTERFACE
+    NEEDS_INTERFACE_RESTART="new"
 }
 
 update_admin_netmask(){
@@ -277,14 +282,15 @@ EOF
     
     
     validate_network_interfaces_file
-    restart_interface $NEW_INTERFACE
+    NEEDS_INTERFACE_RESTART="new"
 }
 
 update_admin_gateway(){
 
     sed -i "s/gateway $OLD_ADMIN_GW/gateway $NEW_ADMIN_GW/g" $NETWORK_INTERFACES_FILE
     validate_network_interfaces_file
-    restart_interface $NEW_INTERFACE
+
+    NEEDS_INTERFACE_RESTART="new"
 }
 
 update_admin_dns() {
@@ -292,7 +298,7 @@ update_admin_dns() {
     new_admin_dns_formatted=$(echo "$NEW_ADMIN_DNS" | sed -e "s/,/ /g")
     sed -i "s/dns-nameservers .*$/dns-nameservers $new_admin_dns_formatted/g" $NETWORK_INTERFACES_FILE
     validate_network_interfaces_file
-    restart_interface $NEW_INTERFACE 
+    NEEDS_INTERFACE_RESTART="new"
 }
 
 
@@ -346,6 +352,17 @@ case "$1" in
         echo "postinst called with unknown argument \`$1'" >&2
         exit 1
     ;;
+esac
+
+case $NEEDS_INTERFACE_RESTART in
+    new)
+        restart_interface "$NEW_INTERFACE"
+        ;;
+    all)
+        restart_all_interfaces
+        ;;
+    *)
+        ;;
 esac
 
 # dh_installdeb will replace this with shell code automatically

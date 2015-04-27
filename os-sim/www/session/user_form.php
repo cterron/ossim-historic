@@ -594,6 +594,46 @@ if ($login != '')
 							k = dtnode.data.key.replace(/(sensor)_/, '');
 							addto("sensors",dtnode.data.val+" ("+dtnode.data.ip+")",k);
 						}
+
+						// Click on asset group, fill box with its members
+						else if (dtnode.data.key.match(/hostgroup_/))
+						{
+						    $.ajax({
+						        type: 'GET',
+						        url: "../tree.php",
+						        data: 'key=' + dtnode.data.key + ';1000',
+						        dataType: 'json',
+						        success: function(data)
+						        {
+							        if (data.length < 1)
+							        {
+							            var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+							            var msg = '<?php echo _('Unable to fetch the asset group members') ?>';
+							            show_notification('av_info_assets', msg, 'nf_error', 0, 1, nf_style);
+							        }
+							        else
+							        {
+                                        // Group reached the 1000 top of page: show warning
+	                                    var last_element = data[data.length - 1].key;
+
+	                                    if (last_element.match(/hostgroup_/))
+	                                    {
+	                                        var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+	                                        var msg = '<?php echo _('This asset group has more than 1000 assets, please try again with a smaller group') ?>';
+	                                        show_notification('av_info_assets', msg, 'nf_warning', 0, 1, nf_style);
+	                                    }
+	                                    else
+	                                    {
+        	                                    jQuery.each(data, function(i, group_member)
+        		                                {
+    	                                            var k = group_member.key.replace("host_","");
+    	                                            addto(combo, group_member.val, k);
+        	                                    });
+	                                    }
+							        }
+						        }
+						      });
+						}
 					},
 					onDeactivate: function(dtnode) {},
 					onLazyRead: function(dtnode){
@@ -963,6 +1003,11 @@ if ($login != '')
 		#av_info
 		{ 
 		    margin: 20px auto;    		
+		}
+		
+        #av_info_assets
+		{ 
+		    margin: 10px auto;
 		}
         
         #send 
@@ -1415,6 +1460,7 @@ if ($login != '')
 								</tr>
 								<tr>
 									<td>
+									    <div id='av_info_assets'></div>
 										<select name="assets[]" id="assets" class='vfield' multiple="multiple">
 											<?php 
 											if (is_array($sel_assets) && !empty($sel_assets))

@@ -320,7 +320,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
         
         fputs($f, "CREATE TABLE IF NOT EXISTS `deletetmp` (`id` int(11) NOT NULL,`perc` int(11) NOT NULL, PRIMARY KEY (`id`));\n");
         fputs($f, "INSERT INTO deletetmp (id,perc) VALUES ($rnd,1) ON DUPLICATE KEY UPDATE perc=1;\n");
-        fputs($f, "CREATE TABLE IF NOT EXISTS del_$rnd ( id binary(16) NOT NULL, PRIMARY KEY ( id ) );\n");
+        fputs($f, "CREATE TABLE IF NOT EXISTS del_$rnd ( id binary(16) NOT NULL,timestamp DATETIME NOT NULL, PRIMARY KEY ( id ) );\n");
     }
     
     // Loop through all the alert blobs
@@ -454,7 +454,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 
                 $f = fopen($deltmp, "a");
                 
-                fputs($f, "INSERT IGNORE INTO del_$rnd ".str_replace("hex(acid_event.id) as id","acid_event.id",$sql).";\n");
+                fputs($f, "INSERT IGNORE INTO del_$rnd ".str_replace("hex(acid_event.id) as id","acid_event.id,DATE_FORMAT(acid_event.timestamp, '%Y-%m-%d %H:00:00')",$sql).";\n");
                 fputs($f, "CREATE TEMPORARY TABLE tmp_delete (id binary(16) NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY;\n");
                 fputs($f, "SET AUTOCOMMIT=0;\n");
                 
@@ -479,7 +479,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                     fputs($f, "DELETE aux FROM idm_data aux LEFT JOIN tmp_delete t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                     fputs($f, "DELETE aux FROM reputation_data aux LEFT JOIN tmp_delete t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                     fputs($f, "DELETE aux FROM extra_data aux LEFT JOIN tmp_delete t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
-                    fputs($f, "TRUNCATE TABLE tmp_delete;\nDELETE FROM del_$rnd limit $block;\n");
+                    fputs($f, "DELETE d FROM del_$rnd d, tmp_delete t WHERE t.id=d.id;TRUNCATE TABLE tmp_delete;\n\n");
                     fputs($f, "COMMIT;\n");
                 }
                 
@@ -487,6 +487,8 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 fputs($f, "DELETE aux FROM idm_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "DELETE aux FROM reputation_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "DELETE aux FROM extra_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
+                fputs($f, "SELECT min(timestamp),max(timestamp) FROM del_$rnd INTO @date_from,@date_to;\n");
+                fputs($f, "CALL fill_tables(DATE_FORMAT(@date_from, '%Y-%m-%d %H:00:00'),DATE_FORMAT(@date_to, '%Y-%m-%d %H:59:59'));\n");
                 fputs($f, "TRUNCATE TABLE del_$rnd;\nDROP TABLE tmp_delete;\n");
                 fputs($f, "COMMIT;\n");
             }
@@ -788,6 +790,7 @@ function PurgeAlert($id, $db, $deltmp, $j, $perc, $f) {
     fputs($f, "UPDATE deletetmp SET perc='$perc' WHERE id='" . $rnd[1] . "';\n");
     
     fputs($f, "SET AUTOCOMMIT=0;\n");
+    fputs($f, "CALL update_tables('$id');\n");
     for ($k = 0; $k < count($del_table_list); $k++) {
         /* If trying to add to an BASE table append ag_ to the fields */
         if (strstr($del_table_list[$k], "acid_event") == "")

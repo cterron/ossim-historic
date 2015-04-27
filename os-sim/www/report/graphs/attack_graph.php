@@ -114,7 +114,7 @@ foreach($list as $key => $l) {
 
     $hostname = (valid_hex32($id)) ? Asset_host::get_name_by_id($security_report->ossim_conn, $id) : $ip;
 		
-    $datax[] = $hostname;
+    $datax[] = ($hostname) ? $hostname : $ip;
     $datay[] = $l[1];
 }
 require_once ('ossim_conf.inc');

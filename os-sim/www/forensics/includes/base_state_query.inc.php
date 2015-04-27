@@ -290,8 +290,8 @@ class QueryState {
     }
     function EstimateNumber($n,$count,$show,$rows) {
         if ($count<=$show) return $rows;
-	    if ($n>1999999) return _("millons");
-	    elseif ($n>999999) return _("a millon");
+	    if ($n>1999999) return _("millions");
+	    elseif ($n>999999) return _("a million");
 	    elseif ($n>199999) return _("hundred thousands");
 	    elseif ($n>99999) return _("a hundred thousand");
 	    elseif ($n>1999) return _("thousands");
@@ -306,7 +306,7 @@ class QueryState {
         GLOBAL $show_rows, $db;
         echo "<table class='container' style='height:30px'><tr><td>";
         if($displaying=="") {
-            $displaying = gettext("Displaying events %d-%d of about <b>%s</b> matching your selection.");
+            $displaying = gettext("Displaying events %d-%d of about <span id='eventselected'>%s</span> matching your selection.");
         }
         if ($this->num_result_rows != 0) {
             if ($this->isCannedQuery()) {
@@ -380,7 +380,7 @@ class QueryState {
             } else {
                 echo '<TD><a href="" class="link_paginate_disabled" onclick="return false">&lt; ' . _("PREVIOUS") . '</a>' . "\n</TD>";
             }
-            echo '<TD width="10px"><INPUT TYPE="submit" name="submit" style="display:none" id="pag' . intval($this->current_view) . '" value="' . intval($this->current_view) . '"></TD>';
+            echo '<TD width="10px"><INPUT TYPE="hidden" id="nocache" name="nocache" value="0"><INPUT TYPE="submit" name="submit" style="display:none" id="pag' . intval($this->current_view) . '" value="' . intval($this->current_view) . '"></TD>';
         	if ($this->num_query_rows > $show_rows) { // Next
          	    $i = $this->current_view + 1;
                 echo '<TD><INPUT TYPE="submit" name="submit" style="display:none" id="pag' . $i . '" value="' . $i . '">
@@ -388,15 +388,27 @@ class QueryState {
         	} else {
                 echo '<TD><a href="" class="link_paginate_disabled" onclick="return false">' . _("NEXT") . ' &gt;</a>' . "\n</TD>";            	
         	}
-            echo '<script> function pag_reload(){ $("#pag'.intval($this->current_view).'").click(); } </script>';
+            echo '<script> function pag_reload()
+                            {
+                                $("#nocache").val("1");
+                                $("#pag'.intval($this->current_view).'").click();
+                            }
+                  </script>';
             echo "\n</TR></TABLE>\n";
         }     
         else {
-            echo '<script> function pag_reload(){ document.location.reload() } </script>';
+            echo '<script> 
+                function pag_reload()
+                { 
+                   var href = document.location.href.replace("&nocache=1","");
+                   document.location.href = href + "&nocache=1";
+                   document.location.reload(false);
+                }
+                </script>';
         }
     }
     function PrintAlertActionButtons() {
-		GLOBAL $BASE_urlpath;
+		GLOBAL $BASE_urlpath, $show_rows;
 		$conf = $GLOBALS["CONF"];
 		$server_logger_if_priority = $conf->get_conf("server_logger_if_priority", FALSE);
 		$backup_events = $conf->get_conf("backup_events", FALSE);
@@ -413,15 +425,31 @@ class QueryState {
         if ($this->action_arg!="") echo "    <INPUT TYPE=\"text\" NAME=\"action_arg\" VALUE=\"" . $this->action_arg . "\">\n";
         reset($this->valid_action_op_list);
         $bt = 1;
-        while ($current_op = each($this->valid_action_op_list)) {
-            if ($current_op["value"] == gettext("Insert into DS Group")) { // Exceptional case: execute a javascript function, do not submit
-            	echo "    <INPUT TYPE=\"button\" class=\"action_button av_b_secondary\" onclick=\"dsgroup_for_selected()\" VALUE=\"" . $current_op["value"] . "\">\n";
-            } elseif ($current_op["value"] == gettext("Delete ALL on Screen")) {
-        		echo "    <input type=\"submit\" style=\"display:none\" id=\"eqbtn".$bt."\" NAME=\"submit\" VALUE=\"" . $current_op["value"] . "\"/><INPUT TYPE=\"button\" class=\"action_button av_b_secondary\" onclick=\"if (confirm('". Util::js_entities(_("Are you sure?"))."')) click_all('".$bt."')\" VALUE=\"" . $current_op["value"] . "\">\n";
-			} else {
-        		echo "    <input type=\"submit\" style=\"display:none\" id=\"eqbtn".$bt."\" NAME=\"submit\" VALUE=\"" . $current_op["value"] . "\"/><INPUT TYPE=\"button\" class=\"action_button av_b_secondary\" onclick=\"if (confirm('". Util::js_entities(_("Are you sure?"))."')) $('#eqbtn".$bt."').click()\" VALUE=\"" . $current_op["value"] . "\">\n";
+        while ($current_op = each($this->valid_action_op_list))
+        {
+            $confirm_msg = _("You are about to delete __EVENTS__ events. Are you sure you want to continue?");
+            
+            if ($current_op["value"] == gettext("Delete ALL on Screen"))
+            {
+                $confirm_msg = sprintf(_("You are about to delete %s events. Are you sure you want to continue?"), $show_rows);
             }
-            //echo "    <input type=\"submit\" class=\"button\" NAME=\"submit\" VALUE=\"" . $current_op["value"] . "\"/>\n";
+            elseif ($current_op["value"] == gettext("Delete Selected"))
+            {
+                $confirm_msg = _("You are about to delete selected events. Are you sure you want to continue?");
+            }
+            
+            if ($current_op["value"] == gettext("Insert into DS Group"))
+            { // Exceptional case: execute a javascript function, do not submit
+                echo " <INPUT TYPE=\"button\" class=\"action_button av_b_secondary\" onclick=\"dsgroup_for_selected()\" VALUE=\"" . $current_op["value"] . "\">\n";
+            }
+            elseif ($current_op["value"] == gettext("Delete ALL on Screen"))
+            {
+                echo " <input type=\"submit\" style=\"display:none\" id=\"eqbtn".$bt."\" NAME=\"submit\" VALUE=\"" . $current_op["value"] . "\"/><INPUT TYPE=\"button\" class=\"action_button av_b_secondary\" onclick=\"if (confirm('". Util::js_entities($confirm_msg)."')) click_all('".$bt."')\" VALUE=\"" . $current_op["value"] . "\">\n";
+            }
+            else
+            {
+                echo " <input type=\"submit\" style=\"display:none\" id=\"eqbtn".$bt."\" NAME=\"submit\" VALUE=\"" . $current_op["value"] . "\"/><INPUT TYPE=\"button\" class=\"action_button av_b_secondary\" onclick=\"var str='". Util::js_entities($confirm_msg)."';if (confirm(str.replace('__EVENTS__',$('#eventselected').html()))) $('#eqbtn".$bt."').click()\" VALUE=\"" . $current_op["value"] . "\">\n";
+            }
             $bt++;
         }
         //echo "   </TD>\n" . "  </TR>\n" . " </TABLE>\n" . "</CENTER>\n\n";

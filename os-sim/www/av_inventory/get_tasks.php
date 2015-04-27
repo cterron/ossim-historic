@@ -33,7 +33,17 @@
 
 
 require_once 'av_init.php';
-Session::logcheck('configuration-menu', 'AlienVaultInventory');
+
+
+// Log check by s_type
+if (GET('s_type') == 'ocs')
+{
+    Session::logcheck('configuration-menu', 'AlienVaultInventory');
+}
+else
+{
+    Session::logcheck('environment-menu', 'AlienVaultInventory');
+}
 
 
 header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");

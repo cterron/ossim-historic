@@ -34,17 +34,30 @@ import json
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 import db
-from db.models.alienvault import Sensor, Host_Sensor_Reference, System, Sensor_Properties
-from db.methods.system import get_system_id_from_system_ip, get_system_ip_from_local
+from db.models.alienvault import (
+    Sensor,
+    Host_Sensor_Reference,
+    System,
+    Sensor_Properties
+)
+from db.methods.system import (
+    get_system_id_from_system_ip,
+    get_system_ip_from_local
+)
 from db.methods.api import get_monitor_data
 import api_log
-from apimethods.decorators import accepted_values, accepted_types, require_db
-from apimethods.utils import (get_bytes_from_uuid,
-                              get_ip_str_from_bytes,
-                              get_ip_bin_from_str,
-                              get_uuid_string_from_bytes,
-                              compare_dpkg_version
-                              )
+from apimethods.decorators import (
+    accepted_values,
+    accepted_types,
+    require_db
+)
+from apimethods.utils import (
+    get_bytes_from_uuid,
+    get_ip_str_from_bytes,
+    get_ip_bin_from_str,
+    get_uuid_string_from_bytes,
+    compare_dpkg_version
+)
 
 from avconfig.ossimsetupconfig import AVOssimSetupConfigHandler
 ossim_setup = AVOssimSetupConfigHandler()
@@ -52,6 +65,8 @@ ossim_setup = AVOssimSetupConfigHandler()
 # I would prefer this constant defined in one file
 #
 MONITOR_PLUGINS_VERSION = 12
+
+
 @require_db
 @accepted_types(UUID)
 @accepted_values([], ['str', 'bin'])
@@ -71,7 +86,7 @@ def get_system_id_from_sensor_id(sensor_id, output='str'):
         db.session.rollback()
         return (False, "Error captured while querying for sensor id '%s': %s" % (str(sensor_id), str(msg)))
     if output == 'str':
-        return (True, get_uuid_string_from_bytes (sensor_ids[0]))
+        return (True, get_uuid_string_from_bytes(sensor_ids[0]))
     else:
         return (True, sensor_ids[0])
 
@@ -134,10 +149,10 @@ def get_sensors_for_asset(host_id):
 @require_db
 def get_ids_of_logging_devices_per_sensor(sensor_ip, device_ips):
     devices = {}
-    ip_list = ','.join("inet6_pton(\"%s\")" % i for i in device_ips)
-    query = "SELECT DISTINCT hex(host.id), inet6_ntop(host_ip.ip) FROM host, host_ip, acl_sensors, sensor WHERE " \
+    ip_list = ','.join("inet6_aton(\"%s\")" % i for i in device_ips)
+    query = "SELECT DISTINCT hex(host.id), inet6_ntoa(host_ip.ip) FROM host, host_ip, acl_sensors, sensor WHERE " \
             "acl_sensors.sensor_id=sensor.id AND host.ctx=acl_sensors.entity_id AND host.id=host_ip.host_id AND " \
-            "host_ip.ip IN (%s) AND sensor.ip=inet6_pton(\"%s\");" % (ip_list, sensor_ip)
+            "host_ip.ip IN (%s) AND sensor.ip=inet6_aton(\"%s\");" % (ip_list, sensor_ip)
     try:
         data = db.session.connection(mapper=Sensor).execute(query)
         for row in data:
@@ -151,9 +166,9 @@ def get_ids_of_logging_devices_per_sensor(sensor_ip, device_ips):
 @require_db
 def get_list_of_device_ids_per_sensor(sensor_ip):
     devices = {}
-    query = "SELECT DISTINCT hex(host.id), inet6_ntop(host_ip.ip) FROM host, host_ip, acl_sensors, sensor WHERE " \
+    query = "SELECT DISTINCT hex(host.id), inet6_ntoa(host_ip.ip) FROM host, host_ip, acl_sensors, sensor WHERE " \
             "acl_sensors.sensor_id=sensor.id AND host.ctx=acl_sensors.entity_id AND host.id=host_ip.host_id AND " \
-            "sensor.ip=inet6_pton(\"%s\");" % sensor_ip
+            "sensor.ip=inet6_aton(\"%s\");" % sensor_ip
     try:
         data = db.session.connection(mapper=Sensor).execute(query)
         for row in data:
@@ -303,6 +318,7 @@ def set_sensor_properties_passive_inventory(sensor_id, value):
 def set_sensor_properties_netflow(sensor_id, value):
     return set_sensor_properties_value(sensor_id, 'netflows', value)
 
+
 def get_newest_plugin_system():
     """
         Get the current stored plugin packages version. Check all sensor
@@ -311,7 +327,7 @@ def get_newest_plugin_system():
         sensors - no sense, but this scenario can exists in a instalation -, we must be sure that
     """
     current_sensors = get_monitor_data(MONITOR_PLUGINS_VERSION)
-    system_id = None 
+    system_id = None
     md5 = None
     max_sensor = None
     system_id = None
@@ -331,5 +347,30 @@ def get_newest_plugin_system():
                 else:
                     system_id = None
                     md5 = None
-            
+
     return (system_id, md5)
+
+
+@require_db
+def check_any_orphan_sensor():
+    """
+        Checks the existance of sensors which have not been inserted in the system
+    """
+    try:
+        result = db.session.query(Sensor, Sensor_Properties).filter(Sensor_Properties.sensor_id == Sensor.id).filter(Sensor.name == '(null)').filter(Sensor_Properties.version != '').one()
+        success = False
+        message = "There seems to be orphan sensors which have not been added to a server"
+    except NoResultFound:
+        db.session.rollback()
+        message = "There are no orphan sensors"
+        success = True
+    except MultipleResultsFound:
+        db.session.rollback()
+        message = "There seems to be more than one orphan sensor"
+        success = False
+    except Exception as e:
+        db.session.rollback()
+        message = "An error occurred while looking for orphan sensors: %s" % (str(e))
+        success = False
+
+    return success, message

@@ -105,9 +105,12 @@ function siem_unique_events($date_from, $date_to, $top, $dDB, $dDBdata)
         $dDB["ctx"] = array();
     }
     
+    $where = Security_report::make_where($conn,$date_from,$date_to,$plugin_list,$dDB);
+    $ejoin = (preg_match('/plist_[a-z]+/',$where)) ? preg_replace('/.*(plist_[a-z]+)\.id .*/',',\\1',$where) : '';
+    
     $where = "FROM acid_event 
-    		LEFT JOIN alienvault.plugin_sid ON acid_event.plugin_id=plugin_sid.plugin_id AND acid_event.plugin_sid=plugin_sid.sid
-    		WHERE 1 ".Security_report::make_where($conn,$date_from,$date_to,$plugin_list,$dDB);
+    		LEFT JOIN alienvault.plugin_sid ON acid_event.plugin_id=plugin_sid.plugin_id AND acid_event.plugin_sid=plugin_sid.sid $ejoin
+    		WHERE 1 $where";
     //
     $query = "SELECT SQL_CALC_FOUND_ROWS DISTINCT acid_event.plugin_id, acid_event.plugin_sid, plugin_sid.name as sidname, count(acid_event.plugin_sid) as sig_cnt, min(timestamp) as first_timestamp, max(timestamp) as last_timestamp, count(DISTINCT(acid_event.id)) as sid_cnt, count(DISTINCT(ip_src)) as saddr_cnt, count(DISTINCT(ip_dst)) as daddr_cnt
     $where GROUP BY plugin_id, plugin_sid ORDER BY $order_by LIMIT $top";

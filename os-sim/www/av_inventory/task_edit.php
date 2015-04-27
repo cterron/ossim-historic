@@ -34,7 +34,16 @@
 
 require_once 'av_init.php';
 
-Session::logcheck('configuration-menu', 'AlienVaultInventory');
+
+// Log check by s_type
+if (GET('s_type') == 'ocs')
+{
+    Session::logcheck('configuration-menu', 'AlienVaultInventory');
+}
+else
+{
+    Session::logcheck('environment-menu', 'AlienVaultInventory');
+}
 
 
 $db   = new ossim_db();
@@ -378,7 +387,7 @@ else if (POST('mode') == 'insert' || POST('mode') == 'update')
 	    		
 	if ($data['status'] == 'error')
 	{
-		$txt_error = '<div>'._('We Found the following errors').":</div>
+		$txt_error = '<div>'._('The following errors occurred').":</div>
 					  <div style='padding: 2px 10px 5px 10px;'>".implode('<br/>', $validation_errors).'</div>';				
 				
 		$config_nt = array(
@@ -642,7 +651,7 @@ $sensors = Av_sensor::get_basic_list($conn);
         		{
                     type: "GET",
 					url: "get_nets_by_sensor.php",
-					data: { sensor_id: sid },
+					data: { sensor_id: sid , s_type: '<?php echo $s_type ?>'},
         			dataType: "json",
         			cache: false,
         			async: false,
@@ -674,7 +683,7 @@ $sensors = Av_sensor::get_basic_list($conn);
 		$(document).ready(function()
 		{			
             var items       = {};
-            items['all']    = {'title': "<?php echo _('Scheduler') ?>", 'action': go_back};
+            items['all']    = {'title': "<?php echo _('Schedule Scan') ?>", 'action': go_back};
             items['ticket'] = {'title': "<?php echo Util::js_entities(strtoupper($s_type)) ?>", 'action': ''};
                 
             $('#task_breadcrumb').AVbreadcrumb(
@@ -694,7 +703,7 @@ $sensors = Av_sensor::get_basic_list($conn);
 				},
 				form : {
 					id  : 'form_task',
-					url : "task_edit.php"
+					url : "task_edit.php?s_type=<?php echo $s_type ?>"
 				},
 				actions: {
 					on_submit:{
@@ -813,7 +822,7 @@ $sensors = Av_sensor::get_basic_list($conn);
 				<?php 
 				if ($s_type == 'nmap')
 				{ 
-					$title = _('You can type one unique CIDR (x.x.x.x/xx) or a CIDR list separated by coma: CIDR1, CIDR2, CIDR3...');
+					$title = _('You can type one unique CIDR (x.x.x.x/xx) or a CIDR list separated by commas: CIDR1, CIDR2, CIDR3...');
 					
 					// Default values
 					$ttemplate        = '-T3';

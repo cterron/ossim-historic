@@ -49,7 +49,7 @@ EXAMPLES= """
 
 import json, base64, httplib
 
-SERVER_COMMANDS = ['per_session_stats', 'forwarding_stats', 'rserver_stats']
+SERVER_COMMANDS = ['server_stats', 'per_session_stats', 'forwarding_stats', 'rserver_stats']
 
 def build_headers (username, password):
     headers={}
@@ -70,6 +70,7 @@ def main():
             password = dict(default=None, required=False),
             server_ip = dict(default=None, required=True),
             server_port = dict(default=None, required=True),
+            server_stats = dict(default=None, choices=BOOLEANS, required=False),
             per_session_stats = dict(default=None, choices=BOOLEANS, required=False),
             forwarding_stats = dict(default=None, choices=BOOLEANS, required=False),
             rserver_stats = dict(default=None, choices=BOOLEANS, required=False)),

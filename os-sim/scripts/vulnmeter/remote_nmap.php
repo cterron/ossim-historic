@@ -140,7 +140,7 @@ if (ossim_error())
 
 if (!empty($error_message))
 {
-    $status_message  = _('Scan could not be completed.  We found the following errors').":\n".implode("\n", $error_message);
+    $status_message  = _('Scan could not be completed.  The following errors occurred').":\n".implode("\n", $error_message);
 
     die($status_message);
 }
@@ -160,7 +160,7 @@ if ($remote_sensor != '' && $remote_sensor != 'null')
 
     if (is_array($last_error) && !empty($last_error['data']))
     {
-        $status_message = _('Scan could not be completed.  We found the following errors').":\n".$last_error['data'];
+        $status_message = _('Scan could not be completed.  The following errors occurred').":\n".$last_error['data'];
 
         die($status_message);
     }

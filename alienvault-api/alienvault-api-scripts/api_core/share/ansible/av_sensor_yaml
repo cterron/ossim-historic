@@ -125,7 +125,7 @@ class SensorYamlConfig(object):
                                            }
                                        }
                     new_config['plugins'].append(new_plugin_conf)
-            yaml.dump(new_config, f)
+            yaml.dump(new_config, f, width=1000)
             f.close()
         except Exception, e:
             msg = "Error writing the new configuration: %s" % str(e)
@@ -145,7 +145,7 @@ class SensorYamlConfig(object):
         """
         try:
             f = open(filename,'w')
-            yaml.dump(self.raw_data,f)
+            yaml.dump(self.raw_data, f, width=1000)
             f.close()
         except Exception,e:
             return False, "Error saving the yaml file; %s" % str(e)

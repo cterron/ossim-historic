@@ -88,9 +88,10 @@ $selected = "";
 
 // src_ips from acid_event
 $where = Security_report::make_where($conn,$date_from,$date_to,$plugin_list,$dDB);
+$ejoin = (preg_match('/plist_[a-z]+/',$where)) ? preg_replace('/.*(plist_[a-z]+)\.id .*/',',\\1',$where) : '';
 
-$query = "SELECT DISTINCT ip_src AS ip FROM alienvault_siem.acid_event WHERE 1=1 $where 
-    UNION SELECT DISTINCT ip_dst as ip FROM alienvault_siem.acid_event WHERE 1=1 $where";
+$query = "SELECT DISTINCT ip_src AS ip FROM alienvault_siem.acid_event $ejoin WHERE 1=1 $where 
+    UNION SELECT DISTINCT ip_dst as ip FROM alienvault_siem.acid_event $ejoin WHERE 1=1 $where";
 
 $rs = $conn->Execute($query);
 

@@ -201,7 +201,7 @@ echo '<BR> </FONT></td></tr></table>';
                  // <TD>' . $ip . '</TD><TD>' . $netmask . '</TD></TR>
            // </TABLE>';
 /* Print the Statistics the IP address */
-$db_object = new ossim_db();
+$db_object = new ossim_db(true);
 if (is_array($_SESSION["server"]) && $_SESSION["server"][0]!="")
 	$conn_object = $db_object->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
 else

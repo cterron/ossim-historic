@@ -193,7 +193,7 @@ switch($type)
 {
 	case 'src':
 		//Date range.
-		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 
 		//Limit of host to show in the widget.
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
@@ -204,7 +204,7 @@ switch($type)
 
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sqlgraph      = "select count(acid_event.id) as num_events, acid_event.ip_src as name from alienvault_siem.acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_src order by num_events desc limit $limit";
+		$sqlgraph      = "select sum(acid_event.cnt) as num_events, acid_event.ip_src as name from alienvault_siem.po_acid_event acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_src order by num_events desc limit $limit";
 		
 		$rg = $conn->CacheExecute($sqlgraph);
 		
@@ -236,7 +236,7 @@ switch($type)
 	case 'dst':
 		
 		//Date range.
-		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 
 		//Limit of host to show in the widget.
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
@@ -247,7 +247,7 @@ switch($type)
 
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sqlgraph      = "select count(acid_event.id) as num_events, acid_event.ip_dst as name from alienvault_siem.acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_dst order by num_events desc limit $limit";
+		$sqlgraph      = "select sum(acid_event.cnt) as num_events, acid_event.ip_dst as name from alienvault_siem.po_acid_event acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_dst order by num_events desc limit $limit";
 		
 		$rg = $conn->CacheExecute($sqlgraph);
 		
@@ -279,7 +279,7 @@ switch($type)
 	case 'events':	
 			
 		//Date range.
-		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 
 		//Limit of host to show in the widget.
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
@@ -290,7 +290,7 @@ switch($type)
 
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sqlgraph = "select sum(acid_event.cnt) as val,p.name,p.plugin_id,p.sid FROM alienvault_siem.ac_acid_event acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.day BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by p.name order by val desc limit $limit";
+		$sqlgraph = "select sum(acid_event.cnt) as val,p.name,p.plugin_id,p.sid FROM alienvault_siem.ac_acid_event acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:59:59")."' $query_where group by p.name order by val desc limit $limit";
 		
         $rg = $conn->CacheExecute($sqlgraph);
 
@@ -358,7 +358,7 @@ switch($type)
 	case "honeypot":
 			
 		//Date range.
-		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 
 		//Limit of host to show in the widget.
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
@@ -369,7 +369,7 @@ switch($type)
 
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sqlgraph = "select sum(acid_event.cnt) as num_events,pl.name,pl.id as plugin_id FROM alienvault_siem.ac_acid_event acid_event, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.plugin_id=pl.id AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.day BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by p.plugin_id order by num_events desc limit $limit";
+		$sqlgraph = "select sum(acid_event.cnt) as num_events,pl.name,pl.id as plugin_id FROM alienvault_siem.ac_acid_event acid_event, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.plugin_id=pl.id AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:59:59")."' $query_where group by p.plugin_id order by num_events desc limit $limit";
 		
 		$rg = $conn->CacheExecute($sqlgraph);
 		
@@ -403,13 +403,13 @@ switch($type)
 		//Filters of sensors.
 		
 		//Date range.
-		$range    = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 604800;
+		$range    = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 
 		//Limit of host to show in the widget.
 		$limit    = ($chart_info['top'] != '')? $chart_info['top'] : 10;
 		
 		$geoloc   = new Geolocation("/usr/share/geoip/GeoLiteCity.dat");
-		$sqlgraph = "select acid_event.ip_src as ip, count(*) as num_events FROM alienvault_siem.acid_event, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.plugin_id=pl.id AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_src order by num_events desc";
+		$sqlgraph = "select acid_event.ip_src as ip, sum(acid_event.cnt) as num_events FROM alienvault_siem.po_acid_event AS acid_event, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.plugin_id=pl.id AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_src order by num_events desc";
 
 		$countries = array();
 		$country_names = array();

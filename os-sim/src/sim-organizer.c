@@ -786,7 +786,7 @@ sim_organizer_snort_event_update_acid_event(SimDatabase *db_snort,
   else
   {
     timestamp = g_new0 (gchar, TIMEBUF_SIZE);
-    strftime(timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", gmtime((time_t *) &event->time));
+    sim_time_t_to_str (timestamp, event->time);
   }
 
   ctx = sim_context_get_id (event->context);

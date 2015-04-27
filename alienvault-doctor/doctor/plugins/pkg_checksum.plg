@@ -3,6 +3,7 @@ name=Package checksum
 description=Finds modified files that originally belonged to a package.
 category=alienvault,system
 type=command
+strike_zone=True
 command=debsums ossim-server ossim-agent ossim-framework alienvault-plugins
 requires=@dpkg:debsums
 

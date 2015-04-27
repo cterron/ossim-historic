@@ -91,8 +91,8 @@ class ControlPanelRRD (threading.Thread):
     # get hosts c&a
     def __get_hosts(self):
 
-        query = "SELECT hex(host_qualification.host_id) as id,inet6_ntop(host_ip.ip) as ip,host_qualification.compromise as compromise,host_qualification.attack as attack FROM host_qualification,host_ip where\
-        host_qualification.host_id=host_ip.host_id and  host_ip.ip != inet6_pton('0.0.0.0')"
+        query = "SELECT hex(host_qualification.host_id) as id,inet6_ntoa(host_ip.ip) as ip,host_qualification.compromise as compromise,host_qualification.attack as attack FROM host_qualification,host_ip where\
+        host_qualification.host_id=host_ip.host_id and  host_ip.ip != inet6_aton('0.0.0.0')"
         return self.__conn.exec_query(query)
 
 
@@ -628,7 +628,9 @@ class ControlPanelRRD (threading.Thread):
         random_string = ''.join(random.choice(string.ascii_uppercase) for x in range(10))
         tmpfile = '/tmp/%s.sql' % random_string
         fd = open(tmpfile,'w')
+        fd.write("set autocommit=0;set unique_checks=0;\n")
         fd.write(querydata)
+        fd.write("commit;\n")
         fd.close()
         os.chmod(tmpfile, 0644)
         return tmpfile

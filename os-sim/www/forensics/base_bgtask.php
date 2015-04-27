@@ -20,7 +20,7 @@ if ($_SESSION["deletetask"] != "")
 {
     $perc  = 0;
     $tasks = FALSE;
-    $db    = new ossim_db();
+    $db    = new ossim_db(true);
     $conn  = $db->snort_connect();
     
     // Search for current background purge tasks

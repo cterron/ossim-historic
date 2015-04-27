@@ -1,20 +1,20 @@
-alienvault-api (4.15.2-0) stable; urgency=low
+alienvault-api (5.0.0-0) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Thu, 05 Feb 2015 06:14:38 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:53:51 -0400
 
-alienvault-api (4.15.1-0) stable; urgency=low
-
-  * New release
-
- -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:16:01 -0500
-
-alienvault-api (4.15.0-0) stable; urgency=low
+alienvault-api (5.0-0) unstable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Mon, 22 Dec 2014 11:17:35 -0500
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:19:34 -0500
+
+alienvault-api (4.16-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Tue, 23 Dec 2014 10:11:43 -0500
 
 alienvault-api (4.15-0) unstable; urgency=low
 

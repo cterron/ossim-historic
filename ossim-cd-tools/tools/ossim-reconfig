@@ -93,13 +93,9 @@ my $avgroup="alienvault";
 
 my $framework_file="/etc/ossim/framework/ossim.conf";
 my $apachentop_file="/etc/apache2/conf.d/ntop.conf";
-my $vpn_file="/etc/openvpn/db.conf";
 my $ocs_setup_file="/usr/share/ossim-installer/ocs/OCS_LINUX_SERVER_1.01.OSSIM/setup.sh";
 my $ocs_local_file="/usr/share/ossim/www/ocsreports/local.php";
 
-
-
-my $avkey="/etc/openvpn/av.key";
 
 my $snmpcfg_file="/etc/snmp/snmpd.conf";
 my $snmptrapcfg_file="/etc/snmp/snmptrapd.conf";
@@ -423,14 +419,6 @@ EOF
 	}
 
 
-	if ((exists $config{'add_vpnnode'})){
-		console_log("Adding a new vpn node: ($config{'add_vpnnode'}) ");
-		gen_openvpn();
-		exit 0;
-
-	}
-
-
 	foreach my $profile (@profiles_arr){
 
 		given($profile){
@@ -556,11 +544,6 @@ sub parse_argv() {
                         if ($parms[1] eq "") { error("Sensor name required (example: --add_sensor_name=joaquin");}
                         $config{'add_sensor_name'} = "$parms[1]"; 
 			}			
-	        elsif (($parms[0] eq "--add_vpnnode") || ($parms[0] eq "-avpn")) {
-                        if ($parms[1] eq "") { error("Please enter the IP address of the new VPN node (example: --add_vpnnode=192.168.1.100");}
-                        $config{'add_vpnnode'} = "$parms[1]"; 
-			$dialog_active = 0;
-			}	      
         elsif ($parms[0] eq "--rebuild_db") {
                         $db_reb='yes';
             }
@@ -635,9 +618,6 @@ Command line options:
 	--add_sensor (or -a) + --add_sensor_name (or -an)
 	  Add a new sensor to database
 	
-	--add_vpnnode 
-	  Create a new vpn node 
-	  
 	--update_sensors
 	  Update sensors config from ddbb info. (only for cron.d)
 	  
@@ -817,26 +797,6 @@ sub restart_services(){
 			
 				system("update-rc.d ossim-agent defaults  $stdout $stderr ");}
 			#system("ps -fea | grep snort | awk '{print $2}' |while read line ; do kill -9 $line ; done");	
-			if($reset{'openvpn'}){
-				console_log("Restarting vpn");dp("Restarting vpn");
-				system("/etc/init.d/openvpn restart $stdout $stderr "); }
-
-                        if ( $config{'firewall_active'} eq "yes" ){
-                                if($reset{'iptables'}){
-                                        console_log("Restarting firewall");dp("Restarting firewall");
-                                        if ( -f "/etc/network/if-pre-up.d/iptables" ){
-                                                system("/etc/network/if-pre-up.d/iptables");
-                                        }else{
-                                                console_log("ERROR: iptables file does not exist");dp("ERROR: iptables file does not exist");
-                                        }
-                                }else{
-                                        console_log("Skipping firewall reset");dp("Skipping firewall reset");
-                                }
-                        }else{
-                                console_log("Disable firewall");dp("Disable firewall");
-                                # system("iptables -F -t filter; iptables -F -t nat; iptables -F -t mangle");
-                                system("iptables -F");
-                        }
 
 			if($reset{'ntop'}){
 				console_log("Restarting ntop");dp("Restarting ntop");
@@ -855,22 +815,6 @@ sub restart_services(){
 				console_log("Restarting postfix");dp("Restarting postfix");
 				system("/etc/init.d/postfix restart  $stdout $stderr ");}
 
-
-			if ($config{'vpn_infraestructure'} eq "yes"){
-				console_log("Restarting openvpn");
-				system("/etc/init.d/openvpn restart  $stdout $stderr ");}
-			
-				console_log("Restarting fprobe");dp("Restarting fprobe");
-				if($reset{'fprobe'}){
-					if ($config{'netflow'} eq "yes" ){
-						system("/etc/init.d/fprobe stop  $stdout $stderr ");
-						sleep (2);
-						system("/etc/init.d/fprobe start  $stdout $stderr ");
-				 	}else{
-			 			system("update-rc.d -f fprobe remove  $stdout $stderr "); 
-						system("/etc/init.d/fprobe stop  $stdout $stderr "); 
-					}			
-				}
 
 			if ( ( -f "/etc/rc.local" ) && ( -f "/etc/init.d/rc.local" ) ){
                                 console_log("Start rc.local");
@@ -900,13 +844,12 @@ console_log("Disable services");dp("Disable services");
 	system("update-rc.d -f nfsen remove  $stdout $stderr ");
 	system("update-rc.d -f nfdump remove  $stdout $stderr ");
 	system("update-rc.d -f fprobe remove  $stdout $stderr ");
-	system("update-rc.d -f openvpn remove  $stdout $stderr ");
 	system("update-rc.d -f heartbeat remove  $stdout $stderr ");
 	system("update-rc.d -f monit remove  $stdout $stderr ");
 =cut
 
 #	my @stopsysvrcl=('monit','ossim-ha','heartbeat','ossim-server','alienvault-idm','ossim-framework','ossim-agent','apache2','nessusd','openvas-scanner','openvas-manager','openvas-administrator','nagios3','snort','suricata','prads','p0f','snmpd','nfsen','nfdump','fprobe','openvpn','ossec','pads','arpwatch','memcached','asec-machete','asec-mixter');
-	my @stopsysvrcl=('monit','alienvault-ha','heartbeat','ossim-server','ossim-framework','ossim-agent','apache2','nessusd','nagios3','snort','suricata','prads','snmpd','nfsen','nfdump','fprobe','openvpn','asec-machete','asec-mixter');
+	my @stopsysvrcl=('monit','alienvault-ha','heartbeat','ossim-server','ossim-framework','ossim-agent','apache2','nessusd','nagios3','snort','suricata','prads','snmpd','nfsen','nfdump','fprobe','asec-machete','asec-mixter');
 	foreach (@stopsysvrcl){
 		my $command="test -x /etc/init.d/$_ && update-rc.d -f $_ remove >/dev/null 2>&1";
 		debug_log("$command");
@@ -966,262 +909,8 @@ console_log("Enable services");dp("Enable services");
 		system("/etc/init.d/snmpd stop  $stdout $stderr "); 
 	}
 
-	if ($config{'vpn_infraestructure'} eq "yes"){
-		system("update-rc.d openvpn defaults  $stdout $stderr "); 
-
-	}
 	system("update-rc.d -f monit remove $stdout $stderr ");
 	system("update-rc.d monit defaults  90 01 $stdout $stderr ");
-
-}
-
-sub gen_openvpn(){
-
-#if ( $config{'vpn_infraestructure'} eq "yes" ){
-my $oppath="/usr/share/doc/openvpn/examples/easy-rsa/2.0";
-my $opvars="/usr/share/doc/openvpn/examples/easy-rsa/2.0/vars";
-my $opconf="/etc/openvpn/AVinfraestructure.conf";
-
-	if ( $profile_server == 1 ) {
-		if ( ! -f $opconf ){
-			console_log("Server Profile: Create $opconf");dp("Server Profile: Create $opconf");
-			open VPNFILE, "> $opconf" or die "Error open log file $!";
-print VPNFILE <<EOF;
-$script_msg
-port $config{'vpn_port'}
-proto tcp
-dev tun
-server $config{'vpn_net'}.0 $config{'vpn_netmask'}
-ca /etc/openvpn/AVinfraestructure/keys/ca.crt
-cert /etc/openvpn/AVinfraestructure/keys/alienvcd.crt
-key /etc/openvpn/AVinfraestructure/keys/alienvcd.key
-dh /etc/openvpn/AVinfraestructure/keys/dh1024.pem
-user nobody
-group nogroup
-verb 3
-mute 20
-keepalive 10 120
-client-config-dir /etc/openvpn/ccd
-comp-lzo
-persist-key
-persist-tun
-ccd-exclusive
-client-to-client
-EOF
-
-console_log("Server Profile: Create $opvars");
-open VPK, "> $opvars" or die "Error open log file $!";
-print VPK <<EOF;
-export EASY_RSA="`pwd`"
-export OPENSSL="openssl"
-export PKCS11TOOL="pkcs11-tool"
-export GREP="grep"
-export KEY_CONFIG=`\$EASY_RSA/whichopensslcnf \$EASY_RSA`
-export KEY_DIR="\$EASY_RSA/keys"
-export PKCS11_MODULE_PATH="dummy"
-export PKCS11_PIN="dummy"
-export KEY_SIZE=1024
-export CA_EXPIRE=3650
-export KEY_EXPIRE=3650
-export KEY_COUNTRY="ES"
-export KEY_PROVINCE="ES"
-export KEY_CITY="Madrid"
-export KEY_ORG="Alienvault"
-export KEY_EMAIL="root\@alienvault.com"
-EOF
-
-
-			if ( ! -d "/etc/openvpn/AVinfraestructure/keys"){
-				system ("mkdir -p /etc/openvpn/AVinfraestructure/keys");
-				my $command = <<"EOF";
-cd $oppath
-. $opvars
-./clean-all
-./build-dh
-export EASY_RSA="\${EASY_RSA:-.}"
-"\$EASY_RSA/pkitool"  --initca \$*
-export EASY_RSA="\${EASY_RSA:-.}"
-"\$EASY_RSA/pkitool" --server alienvcd
-cp -rf keys/* /etc/openvpn/AVinfraestructure/keys/
-EOF
-				console_log($command);
-				system($command);
-			}
-
-		}
-
-
-if ( ! -d "/etc/openvpn/nodes"){
-	
-	system ("mkdir /etc/openvpn/nodes");
-}
-
-
-if ( ! -d "/etc/openvpn/ccd"){
-
-        system ("mkdir /etc/openvpn/ccd");
-}
-
-
-if ( ! -d "/etc/openvpn/nodes/$config{'add_vpnnode'}"){
-	
-	system ("mkdir -p /etc/openvpn/nodes/$config{'add_vpnnode'}/keys");
-}
-	
-	my $opnodeconf="/etc/openvpn/nodes/$config{'add_vpnnode'}.conf";
-
-
-	open VPNNODE, "> $opnodeconf" or die "Error open log file $!";
-	print VPNNODE <<EOF;
-$script_msg
-client
-dev tun
-proto tcp
-remote $config{'admin_ip'} $config{'vpn_port'}
-resolv-retry infinite
-nobind
-user nobody
-group users
-persist-key
-persist-tun
-comp-lzo
-verb 3
-
-ca /etc/openvpn/$config{'add_vpnnode'}/keys/ca.crt
-cert /etc/openvpn/$config{'add_vpnnode'}/keys/$config{'add_vpnnode'}.crt
-key /etc/openvpn/$config{'add_vpnnode'}/keys/$config{'add_vpnnode'}.key
-
-script-security 2 system
-up "/etc/init.d/fprobe stop || true"
-EOF
-	
-	system("cp -rf /etc/openvpn/AVinfraestructure/keys/ca.crt /etc/openvpn/nodes/$config{'add_vpnnode'}/keys/");
-	system("cp -rf /usr/share/doc/openvpn/examples/easy-rsa/2.0/openssl.cnf /etc/openvpn/nodes/");
-	my $command = <<"EOF";
-cd $oppath
-. $opvars
-export EASY_RSA="\${EASY_RSA:-.}"
-"\$EASY_RSA/pkitool" $config{'add_vpnnode'}
-cp -rf keys/$config{'add_vpnnode'}* /etc/openvpn/nodes/$config{'add_vpnnode'}/keys/
-EOF
-	console_log($command);
-system($command);
-
-
-	system("cd /etc/openvpn/nodes/ ; tar zcvf $config{'add_vpnnode'}.tar.gz $config{'add_vpnnode'} $config{'add_vpnnode'}.conf openssl.cnf");
-	system("rm -rf /etc/openvpn/nodes/$config{'add_vpnnode'}");
-	system("rm -rf /etc/openvpn/nodes/$config{'add_vpnnode'}.conf");
-	system("rm -rf /etc/openvpn/nodes/openssl.cnf");
-		
-	
-
-	#ccd
-
-	my $f_free=10;
-	my $l_free=254;
-
-        my @ip_assign_local=`cat /etc/openvpn/ccd/* | awk '{print \$3}' | awk -F\. '{print \$4}' | sort`;
-        my @ip_assign_remote=`cat /etc/openvpn/ccd/* | awk '{print \$2}' | awk -F\. '{print \$4}' | sort`;
-	
-	my $first_host_free;  
-	my $second_host_free;  
-
-	foreach ($f_free .. $l_free){
-        	
-		my $host_current = $_;
-
-	        if (map(/$host_current/,@ip_assign_local)){ next; }
-       		if (map(/$host_current/,@ip_assign_remote)){ next; }
-
-
-	        $first_host_free=$host_current;
-	        push(@ip_assign_local,$host_current);
-       		last;
-
-	}
-
-
-	foreach ($f_free .. $l_free){
-
-
-        	my $host_current = $_;
-
-
-	        if (map(/$host_current/,@ip_assign_local)){ next; }
-       		if (map(/$host_current/,@ip_assign_remote)){ next; }
-
-
-	        $second_host_free=$host_current;
-       		last;
-
-	}
-
-
-	my $ccd_file="/etc/openvpn/ccd/$config{'add_vpnnode'}";
-	console_log("add Sensor $config{'add_vpnnode'} with $config{'vpn_net'}.$first_host_free and $config{'vpn_net'}.$second_host_free");
-	open CCDFILE, "> $ccd_file" or die "Error open log file $!";
-		
-	print CCDFILE "ifconfig-push $config{'vpn_net'}.$first_host_free $config{'vpn_net'}.$second_host_free\n";
-	close(CCDFILE);
-
-
-	console_log("OpenVPN restart");dp("OpenVPN restart");
-	system("/etc/init.d/openvpn restart");
-
-	
-		
-	}
-
-
-
-
-
-
-
-
-#open VPNFRAMEWORK, "> $opframeworkconf" or die "Error open log file $!";
-#print VPNFRAMEWORK <<EOF;
-#$script_msg
-#client
-#dev tun
-#proto tcp
-#remote $config{'admin_ip'} 33800
-#resolv-retry infinite
-#nobind
-#user nobody
-#group users
-#persist-key
-#persist-tun
-#comp-lzo
-#verb 3
-
-#ca /etc/openvpn/keys/ca.crt
-#cert /etc/openvpn/keys/framework.crt
-#key /etc/openvpn/keys/framework.key
-#EOF
-
-#open VPNSERVER, "> $opserverconf" or die "Error open log file $!";
-#print VPNSERVER <<EOF;
-#$script_msg
-#client
-#dev tun
-#proto tcp
-#remote $config{'admin_ip'} 33800
-#resolv-retry infinite
-#nobind
-#user nobody
-#group users
-#persist-key
-#persist-tun
-#comp-lzo
-#verb 3
-
-#ca /etc/openvpn/keys/ca.crt
-#cert /etc/openvpn/keys/framework.crt
-#key /etc/openvpn/keys/framework.key
-#EOF
-
-#	}
 
 }
 

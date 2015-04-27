@@ -46,15 +46,15 @@ nickname = 'Mewes'
 version_string = 'AlienVault Doctor version %s\n' % version
 
 error_codes = {'invalid_dir': -1,
-               'undef_ossim_profiles': -2,
-               'invalid_ossim_profile': -3,
+               'undef_software_profile': -2,
+               'invalid_hardware_profile': -3,
                'missing_network_config': -4,
                'invalid_network_config': -5,
                'missing_mysql_config': -6,
                'undef_support_prefix': -7,
                'diff_versions_essential_packages': -8,
                'missing_sensor_config': -9,
-               'cannot_connect_db': -10,}
+               'cannot_connect_db': -10, }
 
 exit_codes = {'all_good': 0,
               'ftp_upload_failed': 1}

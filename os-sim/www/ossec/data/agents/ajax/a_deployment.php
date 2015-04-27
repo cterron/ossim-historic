@@ -103,7 +103,7 @@ if (is_array($validation_errors) && !empty($validation_errors))
     }
     else
     {
-        $data['data'] = '<div>'._('We Found the following errors').":</div>
+        $data['data'] = '<div>'._('The following errors occurred').":</div>
             <div style='padding: 10px;'>".implode('<br/>', $validation_errors).'</div>';
     }
 }

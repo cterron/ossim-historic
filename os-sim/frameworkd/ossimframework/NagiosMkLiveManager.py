@@ -335,7 +335,7 @@ class NagiosMkLiveManager(threading.Thread):
         @param host_ip The host IP address
         @returns the host_id uuid if it exists, otherwise empty
         """
-        query = """select hex(host.id) as id  from host,host_ip where host_ip.ip =inet6_pton('%s') and host.id = host_ip.host_id"""  % (host_ip)
+        query = """select hex(host.id) as id  from host,host_ip where host_ip.ip =inet6_aton('%s') and host.id = host_ip.host_id"""  % (host_ip)
         data = _DB.exec_query(query)
         if data:
             return data[0]['id']
@@ -376,6 +376,12 @@ class NagiosMkLiveManager(threading.Thread):
                     hostsData[host_id].addServicesWarning(host_nservices_warn)
                     hostsData[host_id].addHostState(host_state)
                     hostsData[host_id].setHostServicesState(host_services_state)
+                    # Update status column accordingly (host_scan)
+                    host_states={0:2, 1:1, 2:1, 3:0}
+                    query = "UPDATE host_scan SET status = %d WHERE host_id = unhex('%s') AND plugin_id = %d AND plugin_sid = %d" % (host_states[host_state], host_id, 2007, 0)
+                    logger.info("%s" % query)
+                    _DB.exec_query(query)
+
             for hostid,hostinfo in hostsData.iteritems():
                 logger.info("Host ID: %s " % hostid)
                 severity = hostinfo.getSeverity()
@@ -413,18 +419,33 @@ class NagiosMkLiveManager(threading.Thread):
                     host_group_name = hostgroup_data[0]
                     host_group_id = self.getHostGroupIDFromGroupName(host_group_name)
                     if host_group_id in self.host_list_groups:#host group name
+                        # hostgroup_states=[] 
                         for host in hostgroup_data[1]:
                             #From mk-livestatus-1.2.0b3/src/TableServicegroups.cc:62
                             #host[0] = hostname
                             #host[1] = host state
                             #host[2] =  has been checked
+                            
                             if len(host) == 3:
+                                # hostgroup_states.append(host[1])
                                 if host[1] != 0 and host[2] == 1:#host state
                                     query = "DELETE FROM bp_member_status WHERE hex(member_id) = '%s' and measure_type = '%s';" % (host_group_id,'host_group_availability') 
                                     _DB.exec_query(query)
                                     query = "INSERT INTO bp_member_status (member_id, status_date, measure_type, severity) VALUES(0x%s, now(), '%s', %d);" % (host_group_id,'host_group_availability', NagiosMkLiveManager.HOST_STATES_SEVERITY [host[1]])
                                     _DB.exec_query(query)
                                     logger.info("Updating Host Grop bp_member_status -> member:%s type: %s severity:%s" % (host_group_name,'host_group_availability',NagiosMkLiveManager.HOST_STATES_SEVERITY [host[1]]))
+
+                    # This could be a way of updating status column in host_group_scan 
+                    # hostgroup_state = 0         
+                    # if 3 in hostgroup_states:
+                    #     hostgroup_state = 2
+                    # elif 2 in hostgroup_states or 1 in hostgroup_states:
+                    #     hostgroup_state = 1
+                    # else:
+                    #     hostgroup_state = 0 
+                    
+                    # update_query="UPDATE host_group_scan SET status = %d WHERE host_group_id = unhex('%s') AND plugin_id = 2007 AND plugin_sid = 0" % (hostgroup_state, host_id)
+
 
     def run(self):
         """Nagios Mklive wrapper entry point.

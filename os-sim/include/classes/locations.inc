@@ -282,7 +282,7 @@ class Locations
 
         $list  = array();
 
-        $query = ossim_query("SELECT s.name, INET6_NTOP(s.ip) AS ip, HEX(s.id) AS id 
+        $query = ossim_query("SELECT s.name, INET6_NTOA(s.ip) AS ip, HEX(s.id) AS id 
             FROM sensor s, location_sensor_reference l WHERE s.id = l.sensor_id 
             AND l.location_id = UNHEX(?)");
 

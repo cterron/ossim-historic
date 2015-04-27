@@ -47,7 +47,7 @@ alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET TELNET External Telnet Atte
 #alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET TELNET External Telnet Login To Cisco Device"; flow:from_server,established; pcre:"/^(\r\n)*/"; content:"User Access Verification"; within:24; reference:url,articles.techrepublic.com.com/5100-10878_11-5875046.html; reference:url,doc.emergingthreats.net/bin/view/Main/2008861; classtype:misc-activity; sid:2008861; rev:4;)
 
 #
-	alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"GPL TELNET Bad Login"; flow:from_server,established; content:"Login incorrect"; fast_pattern:only; nocase; classtype:bad-unknown; sid:2101251; rev:10;)
+alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"GPL TELNET Bad Login"; flow:from_server,established; content:"Login incorrect"; fast_pattern:only; nocase; classtype:bad-unknown; sid:2101251; rev:11;)
 
 #
 #alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET TELNET access"; flow:from_server,established; content:"|FF FD|"; rawbytes; content:"|FF FD|"; distance:0; rawbytes; content:"|FF FD|"; distance:0; rawbytes; reference:arachnids,08; reference:cve,1999-0619; reference:nessus,10280; classtype:not-suspicious; sid:2100716; rev:14;)

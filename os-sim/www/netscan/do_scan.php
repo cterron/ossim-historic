@@ -44,14 +44,14 @@ $data['status']  = 'success';
 $data['data']    = NULL;
 
 
-$assets          = GET('assets');
-$scan_mode       = GET('scan_mode');
-$timing_template = GET('timing_template');
-$custom_ports    = GET('custom_ports');
-$sensor          = GET('sensor');
-$only_stop       = intval(GET('only_stop'));
-$autodetect      = (GET('autodetect') == '1') ? 1 : 0;
-$rdns            = (GET('rdns') == '1') ? 1 : 0;
+$assets          = POST('assets');
+$scan_mode       = POST('scan_mode');
+$timing_template = POST('timing_template');
+$custom_ports    = POST('custom_ports');
+$sensor          = POST('sensor');
+$only_stop       = intval(POST('only_stop'));
+$autodetect      = (POST('autodetect') == '1') ? 1 : 0;
+$rdns            = (POST('rdns') == '1') ? 1 : 0;
 $custom_ports    = str_replace(' ', '', $custom_ports);
 
 ossim_valid($scan_mode,       OSS_ALPHA, OSS_SCORE, OSS_NULLABLE,                 'illegal:' . _('Full scan'));
@@ -64,7 +64,7 @@ ossim_valid($only_stop,       OSS_DIGIT, OSS_NULLABLE,                          
 if (ossim_error())
 {
     $data['status']  = 'error';
-    $data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('We found the following errors').":</div>
+    $data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('The following errors occurred').":</div>
                         <div class='error_item'>".ossim_get_error_clean()."</div>";
 
     echo json_encode($data);
@@ -103,7 +103,7 @@ if (is_array($assets) && count($assets) > 0)
         if (ossim_error())
         {
             $data['status']  = 'error';
-            $data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('We found the following errors').":</div>
+            $data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('The following errors occurred').":</div>
                         <div class='error_item'>".ossim_get_error_clean()."</div>";
 
             echo json_encode($data);

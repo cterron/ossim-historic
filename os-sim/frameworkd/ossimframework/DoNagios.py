@@ -221,17 +221,17 @@ class DoNagios(threading.Thread):
     def load_active_hosts(self):
         """ Loads those host that has nagios active and almost one service active
         """
-        #query = "select hex(h.id) as id, inet6_ntop(hss.host_ip) as hostip, \
+        #query = "select hex(h.id) as id, inet6_ntoa(hss.host_ip) as hostip, \
         #h.hostname from host h, host_scan hs,host_services hss where \
         #h.id = hss.host_id and h.id=hs.host_id and hss.nagios=1 \
         #and (hss.protocol =1 or hss.protocol=0 or hss.protocol=6 \
         #or hss.protocol=17) and hs.plugin_id=2007 group by hss.host_ip;"
-        query="select hex(h.id) as id, inet6_ntop(hss.host_ip) as hostip,\
+        query="select hex(h.id) as id, inet6_ntoa(hss.host_ip) as hostip,\
         h.hostname from host h LEFT JOIN host_services hss ON h.id = hss.host_id,\
         host_scan hs where  h.id=hs.host_id and hss.nagios=1 and \
         (hss.protocol =1 or hss.protocol=0 or hss.protocol=6 \
         or hss.protocol=17) and hs.plugin_id=2007 group by hss.host_ip \
-        UNION select hex(h.id) as id, inet6_ntop(hip.ip) as hostip, \
+        UNION select hex(h.id) as id, inet6_ntoa(hip.ip) as hostip, \
         h.hostname from host h, host_scan hs, host_ip as hip where\
         h.id=hip.host_id and h.id=hs.host_id and hs.plugin_id=2007;"
 
@@ -252,10 +252,10 @@ class DoNagios(threading.Thread):
                 self.__active_hosts[hostid] = ActiveHost(hostid,hostname)
                 self.__active_hosts[hostid].appendHostIP(hostip)
             #Loads the services associated with that ip
-            query = 'select inet6_ntop(hss.host_ip) as ip, h.hostname as hostname,\
+            query = 'select inet6_ntoa(hss.host_ip) as ip, h.hostname as hostname,\
             h.id as id, hss.port as port, hss.protocol as protocol,\
             hss.service as service from host h, host_services hss \
-            where hss.host_id=unhex("%s") and hss.host_ip=inet6_pton("%s")  \
+            where hss.host_id=unhex("%s") and hss.host_ip=inet6_aton("%s")  \
             and (hss.protocol =1 or hss.protocol=0 or hss.protocol=6 or \
             hss.protocol=17) and nagios=1 and hss.host_id = h.id;' % (hostid,hostip)
             services = self.__dbConnection.exec_query(query)
@@ -267,10 +267,10 @@ class DoNagios(threading.Thread):
 #        """Returns the service list for a specified host_id
 #        @param host_id Host identifier in a standard uuid format.
 #        """
-#        query = 'select inet6_ntop(hss.host_ip) as ip, h.hostname as hostname,\
+#        query = 'select inet6_ntoa(hss.host_ip) as ip, h.hostname as hostname,\
 #        h.id as id, hss.port as port, hss.protocol as protocol,\
 #        hss.service as service from host h, host_services hss \
-#        where hss.host_id=unhex("%s") and hss.host_ip=inet6_pton("%s")  \
+#        where hss.host_id=unhex("%s") and hss.host_ip=inet6_aton("%s")  \
 #        and (hss.protocol =1 or hss.protocol=0 or hss.protocol=6 or \
 #        hss.protocol=17) and nagios=1 and hss.host_id = h.id;' % (host_id,host_ip)
 #        if not self.__dbConnected:

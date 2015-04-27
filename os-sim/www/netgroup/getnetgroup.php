@@ -162,8 +162,6 @@ foreach($net_group_list as $net_group)
     }
 	
     $xml.= "<cell><![CDATA[" . $nets . "]]></cell>";
-    $xml.= "<cell><![CDATA[" . $net_group->get_threshold_c() . "]]></cell>";
-    $xml.= "<cell><![CDATA[" . $net_group->get_threshold_a() . "]]></cell>";
     /* Nessus
     if ($scan_list = Net_group_scan::get_list($conn, "WHERE net_group_name = '$name' AND plugin_id = 3001")) {
         $scan_types = "<img src='../pixmaps/tables/tick.png'>";
@@ -195,10 +193,10 @@ foreach($net_group_list as $net_group)
     $rep = '';
     if ($notes = Notes::howmanynotes($conn, $id, 'net_group')) 
     {
-    	$rep .= "<a href=\"javascript:;\" onclick=\"GB_notes('../asset_details/ajax/view_notes.php?type=net_group&id=" . $id . "')\" class=\"blue\" target=\"main\">[" . $notes . "]</a>&nbsp;";
+    	$rep .= "<a href=\"javascript:;\" onclick=\"GB_notes('../av_asset/common/views/notes.php?asset_type=net_group&asset_id=" . $id . "')\" class=\"blue\" target=\"main\">[" . $notes . "]</a>&nbsp;";
     }
     
-    $rep .= "<a href=\"javascript:;\" onclick=\"GB_notes('../asset_details/ajax/view_notes.php?type=net_group&id=" . $id . "')\"><img src=\"../pixmaps/notes.png\" border=0 title=\"View Notes\" alt=\"View Notes\" width='16px' align=\"absmiddle\"></a>";
+    $rep .= "<a href=\"javascript:;\" onclick=\"GB_notes('../av_asset/common/views/notes.php?asset_type=net_group&asset_id=" . $id . "')\"><img src=\"../pixmaps/notes.png\" border=0 title=\"View Notes\" alt=\"View Notes\" width='16px' align=\"absmiddle\"></a>";
     $xml.= "<cell><![CDATA[" . Util::utf8_encode2($rep) . "]]></cell>";
        
     $xml.= "</row>\n";

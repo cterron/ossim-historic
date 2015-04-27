@@ -53,7 +53,7 @@ Description: Open Source Security Information Management (Framework Daemon)
 
 Package: ossim-utils
 Architecture: all
-Depends: ${misc:Depends}, perl (>= 5.8.4), libcompress-zlib-perl, libdbi-perl, libdbd-mysql-perl, librrds-perl (>= 1.1.0), libxml-parser-perl, libcrypt-cbc-perl, libmime-lite-perl, libdate-calc-perl, python-ipy, python-pycurl, python-mysqldb
+Depends: ${misc:Depends}, perl (>= 5.8.4), libcompress-zlib-perl, libdbi-perl, libdbd-mysql-perl, librrds-perl (>= 1.1.0), libxml-parser-perl, libcrypt-cbc-perl, libmime-lite-perl, libdate-calc-perl, python-ipy, python-pycurl, python-mysqldb, sshpass
 Suggests: ossim-contrib
 Description: Open Source Security Information Management (Utils)
  OSSIM is a distribution of open source products that are integrated

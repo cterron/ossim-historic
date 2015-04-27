@@ -20,7 +20,7 @@ if test -z "$HOST"; then
 	HOST=localhost
 fi
 
-mysql --default-character-set=utf8 -A -u $USER -h $HOST  -p$PASS $DB -e "exit" &>/dev/null
+sshpass -p $PASS mysql --default-character-set=utf8 -A -u $USER -h $HOST $DB -p -e "exit" &>/dev/null
 
 if [ $? -ne 0  ]; then
 	>&2 echo "Access denied. Trying old settings..."
@@ -35,4 +35,4 @@ if [ $? -ne 0  ]; then
 	PASS=`grep ^pass= /etc/ossim/ossim_setup.conf_last | cut -f 2 -d "=" | sed '/^$/d'`
 fi
 
-mysql --default-character-set=utf8 -A -u $USER -h $HOST -p$PASS $DB
+sshpass -p $PASS mysql --default-character-set=utf8 -A -u $USER -h $HOST $DB -p

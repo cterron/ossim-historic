@@ -86,19 +86,17 @@ if ( Session::menu_perms("analysis-menu", "EventsForensics") )
         $th_style = 'font-size: 10px;';
 				       
 						
-        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:38mm;'>"._("Port")."</th>\n
-						 <th align='center' valign='middle' style='".$th_style." width:55mm;'>"._($var_field)."</th>\n
+        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:60mm;'>"._("Port")."</th>\n
+						 <th align='center' valign='middle' style='".$th_style." width:77mm;'>"._($var_field)."</th>\n
 					     <th align='center' valign='middle' style='".$th_style." width:22mm;'>"._("Occurrences")." #</th>\n
-                         <th align='center' valign='middle' style='".$th_style." width:22mm;'>"._("Unique events")." #</th>\n
-						 <th align='center' valign='middle' style='".$th_style." width:18mm;'>"._("Unique Src")." #</th>\n
-						 <th align='center' valign='middle' style='".$th_style." width:18mm;'>"._("Unique Dst")." #</th>\n";               
+                         <th align='center' valign='middle' style='".$th_style." width:22mm;'>"._("Unique events")." #</th>\n";               
 				
 		$htmlPdfReport->set("<tr>\n".$html_headers."</tr>\n");
 		
 		if ( $rs->RecordCount() == 0 )
 		{
 			$htmlPdfReport->set("<tr>
-									<td colspan='6' style='text-align:center; padding: 15px 0px;' class='w100' valign='middle'>"._("No ports found for this search criteria")."</td>
+									<td colspan='4' style='text-align:center; padding: 15px 0px;' class='w100' valign='middle'>"._("No ports found for this search criteria")."</td>
 								</tr>\n");
 		}
 		else
@@ -109,12 +107,10 @@ if ( Session::menu_perms("analysis-menu", "EventsForensics") )
 			{
 				$td_style = 'font-size: 10px; text-align:center;';
 				
-				$html_fields = "<td valign='middle' style='".$td_style." width:38mm; text-align: left;'>".$rs->fields['dataV1']."</td>\n
-								<td valign='middle' style='".$td_style." width:55mm;'>".$rs->fields['dataV11']."</td>\n
+				$html_fields = "<td valign='middle' style='".$td_style." width:60mm; text-align: left;'>".$rs->fields['dataV1']."</td>\n
+								<td valign='middle' style='".$td_style." width:77mm;'>".$rs->fields['dataV11']."</td>\n
 								<td valign='middle' style='".$td_style." width:22mm;'>".$rs->fields['dataI3']."</td>\n
-								<td valign='middle' style='".$td_style." width:22mm;'>".$rs->fields['dataV2']."</td>\n
-								<td valign='middle' style='".$td_style." width:18mm;'>".$rs->fields['dataV3']."</td>\n
-								<td valign='middle' style='".$td_style." width:18mm;'>".$rs->fields['dataV4']."</td>\n";     
+								<td valign='middle' style='".$td_style." width:22mm;'>".$rs->fields['dataV2']."</td>\n";     
 					
 				$bc = ( $i++%2!=0 ) ? "class='par'" : "";           
 				$htmlPdfReport->set("<tr style='width: 193mm;' $bc>\n".$html_fields."</tr>\n");

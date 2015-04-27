@@ -92,8 +92,8 @@ include_once ("$BASE_path/base_stat_common.php");
 
         if ($tr=="range")
         {
-            $desde = strtotime($_SESSION["time"][0][4]."-".$_SESSION["time"][0][2]."-".$_SESSION["time"][0][3].' '.$_SESSION['time'][0][5].':'.$_SESSION['time'][0][6].':'.$_SESSION['time'][0][7]);
-            $hasta = strtotime($_SESSION["time"][1][4]."-".$_SESSION["time"][1][2]."-".$_SESSION["time"][1][3].' '.$_SESSION['time'][1][5].':'.$_SESSION['time'][1][6].':'.$_SESSION['time'][1][7]);
+            $desde = strtotime($_SESSION["time"][0][4]."-".$_SESSION["time"][0][2]."-".$_SESSION["time"][0][3].' '.$_SESSION['time'][0][5].':'.$_SESSION['time'][0][6].':'.$_SESSION['time'][0][7]) + date("Z");
+            $hasta = strtotime($_SESSION["time"][1][4]."-".$_SESSION["time"][1][2]."-".$_SESSION["time"][1][3].' '.$_SESSION['time'][1][5].':'.$_SESSION['time'][1][6].':'.$_SESSION['time'][1][7]) + date("Z");
             $trdata = array ($desde,$hasta,"range");
         }
 
@@ -121,7 +121,7 @@ include_once ("$BASE_path/base_stat_common.php");
 
             $qs->SaveReportData($gdata,$graph_report_type);
             //print_r($xlabels);print_r($xticks);print_r ($x);print_r ($y);
-            $plot = plot_graphic("plotareaglobal", 60, 600, $x, $y, $xticks, $xlabels, true, 'base_qry_main.php?num_result_rows=-1&current_view=-1');
+            $plot = plot_graphic("plotareaglobal", 60, 800, $x, $y, $xticks, $xlabels, true, 'base_qry_main.php?num_result_rows=-1&current_view=-1');
             //echo "PLOT:".Util::htmlentities($plot).".";
             echo $plot;
 

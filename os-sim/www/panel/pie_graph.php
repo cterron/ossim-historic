@@ -72,7 +72,7 @@ $tz            = Util::get_timezone();
 list($join,$asset_where) = make_asset_filter("event", "a");
 $sensor_where            = make_ctx_filter("a").$asset_where;
 
-$query     = "SELECT count(a.id) as num_events,c.cat_id,c.id,c.name FROM alienvault_siem.acid_event a,alienvault.plugin_sid p,alienvault.subcategory c WHERE c.id=p.subcategory_id AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",strtotime(date("Y-m-d 00:00:00"))-$range+(-$tz))."' AND '".gmdate("Y-m-d 23:59:59")."' $sensor_where TAXONOMY group by c.id,c.name order by num_events desc LIMIT 10";
+$query     = "SELECT sum(a.cnt) as num_events,c.cat_id,c.id,c.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin_sid p,alienvault.subcategory c WHERE c.id=p.subcategory_id AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",strtotime(date("Y-m-d 00:00:00"))-$range+(-$tz))."' AND '".gmdate("Y-m-d 23:59:59")."' $sensor_where TAXONOMY group by c.id,c.name order by num_events desc LIMIT 10";
 
 
 switch(GET('type'))
@@ -100,16 +100,7 @@ switch(GET('type'))
             }
         }
 
-        if ($sensor_where != '')
-        { 
-            $sqlgraph = "SELECT count(a.id) as num_events,a.plugin_id FROM alienvault_siem.acid_event a where a.timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d 23:59:59")."' $sensor_where group by a.plugin_id";
-        }
-        else
-        {
-            $sqlgraph = "SELECT sum(cnt) as num_events,plugin_id FROM alienvault_siem.ac_acid_event where day BETWEEN '".gmdate("Y-m-d",gmdate("U")-$range)."' AND '".gmdate("Y-m-d")."' group by plugin_id";
-        }
-
-        //echo $sqlgraph;
+        $sqlgraph = "SELECT sum(a.cnt) as num_events,a.plugin_id FROM alienvault_siem.ac_acid_event a where a.timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d 23:59:59")."' $sensor_where group by a.plugin_id";
 
         if (!$rg = $conn->CacheExecute($sqlgraph))
         {
@@ -144,14 +135,7 @@ switch(GET('type'))
 
     // Top 10 Event Categories - Last Week
     case "category":
-        if ($sensor_where != '')
-        {
-            $sqlgraph = "SELECT count(a.id) as num_events,p.category_id,c.name FROM alienvault_siem.acid_event a,alienvault.plugin_sid p,alienvault.category c WHERE c.id=p.category_id AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d 23:59:59")."' $sensor_where group by p.category_id order by num_events desc LIMIT 10";
-        }
-        else
-        {
-            $sqlgraph = "SELECT sum(a.cnt) as num_events,p.category_id,c.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin_sid p,alienvault.category c WHERE c.id=p.category_id AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.day BETWEEN '".gmdate("Y-m-d",gmdate("U")-$range)."' AND '".gmdate("Y-m-d")."' group by p.category_id order by num_events desc LIMIT 10";
-        }
+        $sqlgraph = "SELECT sum(a.cnt) as num_events,p.category_id,c.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin_sid p,alienvault.category c WHERE c.id=p.category_id AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d 23:59:59")."' $sensor_where group by p.category_id order by num_events desc LIMIT 10";
 
         if (!$rg = $conn->CacheExecute($sqlgraph))
         {
@@ -182,17 +166,12 @@ switch(GET('type'))
     // Top 10 Ossec Categories - Last Week
     case "hids":
         //$oss_p_id_name = Plugin::get_id_and_name($conn, "WHERE name LIKE 'ossec%'");
+        
+        $pie_labels = array();
 
         $plugins = ' AND a.plugin_id BETWEEN 7000 AND 7999 ';
 
-        if ($sensor_where != '')
-        {
-            $sqlgraph = "SELECT count(a.id) as num_events,p.id,p.name FROM alienvault_siem.acid_event a,alienvault.plugin p WHERE p.id=a.plugin_id AND a.timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d 23:59:59")."' $plugins $sensor_where group by p.name order by num_events desc LIMIT 8";
-        }
-        else
-        {
-            $sqlgraph = "SELECT sum(a.cnt) as num_events,p.id,p.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin p WHERE p.id=a.plugin_id AND a.day BETWEEN '".gmdate("Y-m-d",gmdate("U")-$range)."' AND '".gmdate("Y-m-d")."' $plugins AND a.cnt > 0 group by p.name order by num_events desc LIMIT 8";
-        }
+        $sqlgraph = "SELECT sum(a.cnt) as num_events,p.id,p.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin p WHERE p.id=a.plugin_id AND a.timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d 23:59:59")."' $plugins $sensor_where group by p.name order by num_events desc LIMIT 8";
         
         if (!$rg = $conn->CacheExecute($sqlgraph))
         {
@@ -202,11 +181,15 @@ switch(GET('type'))
         {
             while (!$rg->EOF)
             {
-                $name = ucwords(str_replace("_", " ", str_replace("ossec-","ossec: ",$rg->fields['name'])));
+                $name = ucwords(str_replace("_", " ", str_replace("ossec-", "ossec: ", $rg->fields['name'])));
+                
+                $hids_label   = ucwords(str_replace("_", " ", str_replace("ossec-", "", $rg->fields['name'])));
+                
+                $pie_labels[] = (strlen($hids_label) > 8) ? substr($hids_label, 0, 8) . "..." : $hids_label;
 
                 $url   = Menu::get_menu_url($f_url."&plugin=".$rg->fields["id"], 'analysis', 'security_events', 'security_events');
 
-                $data .= "['<a class=\"no_text_decoration\" href=\"$url\">".$name."</a>',".$rg->fields['num_events']."],";
+                $data .= "['<a class=\"no_text_decoration\" href=\"$url\">" . $name . " [" . $rg->fields['num_events'] . "]</a>'," . $rg->fields['num_events']."],";
 
                 $urls .= "'$url',";
 
@@ -317,7 +300,7 @@ switch(GET('type'))
     case "virus":
         $taxonomy = make_where($conn,array("Antivirus" => array("Virus_Detected")));
 
-        $sqlgraph = "SELECT count(a.id) as num_events,inet_ntoa(a.ip_src) as name FROM alienvault_siem.acid_event a,alienvault.plugin_sid p LEFT JOIN alienvault.subcategory c ON c.cat_id=p.category_id AND c.id=p.subcategory_id WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $taxonomy group by a.ip_src order by num_events desc limit 10";
+        $sqlgraph = "SELECT sum(a.cnt) as num_events,inet_ntoa(a.ip_src) as name FROM alienvault_siem.po_acid_event a,alienvault.plugin_sid p LEFT JOIN alienvault.subcategory c ON c.cat_id=p.category_id AND c.id=p.subcategory_id WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $taxonomy group by a.ip_src order by num_events desc limit 10";
 
         //print_r($sqlgraph);
         if (!$rg = $conn->CacheExecute($sqlgraph))
@@ -418,7 +401,7 @@ switch(GET('type'))
 
         $nodata_text .= _(" for <i>Honeypot</i>");
 
-        $sqlgraph = "select count(*) as num_events,pl.name,pl.id as plugin_id FROM alienvault_siem.acid_event a, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND p.plugin_id=pl.id AND p.category_id=19 AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $sensor_where group by p.plugin_id order by num_events desc limit 10";
+        $sqlgraph = "select sum(cnt) as num_events,pl.name,pl.id as plugin_id FROM alienvault_siem.ac_acid_event a, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND p.plugin_id=pl.id AND p.category_id=19 AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $sensor_where group by p.plugin_id order by num_events desc limit 10";
 
         if (!$rg = $conn->CacheExecute($sqlgraph))
         {
@@ -453,7 +436,7 @@ switch(GET('type'))
 
         $nodata_text .= _(" for <i>Honeypot</i>");
 
-        $sqlgraph = "select INET_NTOA(a.ip_src) as ip, count(*) as num_events FROM alienvault_siem.acid_event a, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND p.plugin_id=pl.id AND p.category_id=19 AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $sensor_where group by a.ip_src order by num_events desc";
+        $sqlgraph = "select INET_NTOA(a.ip_src) as ip, sum(cnt) as num_events FROM alienvault_siem.po_acid_event a, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND p.plugin_id=pl.id AND p.category_id=19 AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $sensor_where group by a.ip_src order by num_events desc";
 
         //echo $sqlgraph;
         $countries   = array();
@@ -660,13 +643,21 @@ $db->close();
                         renderer:$.jqplot.PieRenderer,
                         rendererOptions: {
                             showDataLabels: true,
-                            <?php if (GET('type') == "honeypot_countries") { ?>
-                            dataLabelFormatString: '%d%',
-                            dataLabels: "percent"
-                            <?php } else { ?>
-                            dataLabelFormatString: '%d',
-                            dataLabels: "value"
-                            <?php } ?>
+                            <?php
+                            if (GET('type') == "honeypot_countries") { ?>
+                                dataLabelFormatString: '%d%',
+                                dataLabels: "percent"
+                            <?php
+                            }
+                            else if (GET('type') == "hids") { ?>
+                                dataLabels: <?php echo json_encode($pie_labels) ?>
+                            <?php
+                            }
+                            else { ?>
+                                dataLabelFormatString: '%d',
+                                dataLabels: "value"
+                            <?php
+                            } ?>
                         }
                     },
                     legend: {
@@ -677,7 +668,6 @@ $db->close();
                         location: 'w'
                     }
                 });
-
 
                 $('#chart').append('<div id="myToolTip"></div>');
 

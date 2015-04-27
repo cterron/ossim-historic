@@ -122,7 +122,7 @@ def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
             return (success, msg)
 
 
-def rsync_pull(remote_ip, remote_file_path, local_ip, local_file_path):
+def rsync(local_ip, src, dest):
     """ Rsync pull remote file to local path
     :param remote_ip: The system ip where the remote file is
     :param remote_file_path: Path to remote file
@@ -131,24 +131,58 @@ def rsync_pull(remote_ip, remote_file_path, local_ip, local_file_path):
     :returns True if the file was fetched, False elsewhere
     """
     # Check parameters
-    if not local_ip or not remote_ip or not remote_file_path or not local_file_path:
+    if not local_ip or not src or not dest:
         return False, "Invalid parameters"
 
-    local_md5, remote_md5 = None, None
     ssh_key_file = '/var/ossim/ssl/local/private/cakey_avapi.pem'
     # Use -i option to know if the file has changed
-    rsync_command = 'rsync -aizPe "ssh -i %s" %s:%s %s' % (ssh_key_file, remote_ip, remote_file_path, local_file_path)
+    rsync_command = 'rsync -aizPe "ssh -i %s" %s %s' % (ssh_key_file, src, dest)
 
     # Rsync pull remote file
     try:
         response = ansible.run_module(host_list=[local_ip], module='command', args=rsync_command, use_sudo=False)
     except Exception, exc:
-        return False, "Ansible Error: An error occurred while rsyncing file: %s" % str(exc)
+        return False, "Ansible Error: An error occurred while rsyncing file(s): %s" % str(exc)
 
     (success, msg) = ansible_is_valid_response(local_ip, response)
     if not success or response['contacted'][local_ip]['stderr'] != '':
         return (success, "Could't retrieve file")
     elif response['contacted'][local_ip]['stdout'] == '':
-        return (False, "Files already in sync")
+        return (False, "File(s) already in sync")
     else:
-        return (success, "File retrieved")
+        return (success, "File(s) synced")
+
+
+def rsync_pull(remote_ip, remote_file_path, local_ip, local_file_path):
+    """ Rsync pull remote file to local path
+    :param remote_ip: The system ip where the remote file is
+    :param remote_file_path: Path to remote file
+    :param local_ip: The local system ip
+    :param local_file_path: Path to local file
+    :returns True if the file(s) was fetched, False elsewhere
+    """
+    # Check parameters
+    if not local_ip or not remote_ip or not remote_file_path or not local_file_path:
+        return False, "Invalid parameters"
+
+    src = "%s:%s" % (remote_ip, remote_file_path)
+    dest = local_file_path
+    return rsync(local_ip=local_ip, src=src, dest=dest)
+
+
+def rsync_push(local_ip, local_file_path, remote_ip, remote_file_path):
+    """ Rsync pull remote file to local path
+    :param local_ip: The local system ip
+    :param local_file_path: Path to local file(s)
+    :param remote_ip: The target system ip
+    :param remote_file_path: target path
+
+    :returns True if the file(s) was pushed, False elsewhere
+    """
+    # Check parameters
+    if not local_ip or not remote_ip or not remote_file_path or not local_file_path:
+        return False, "Invalid parameters"
+
+    src = local_file_path
+    dest = "%s:%s" % (remote_ip, remote_file_path)
+    return rsync(local_ip=local_ip, src=src, dest=dest)

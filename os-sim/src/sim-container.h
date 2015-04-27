@@ -238,6 +238,7 @@ sim_container_get_engine_stats_json (SimContainer *container,
                                 glong         elapsed_time);
 gint              sim_container_get_proto_by_name               (SimContainer *container, const gchar *name);
 const gchar *     sim_container_get_proto_by_number             (SimContainer *container, gint number);
+const gchar *     sim_container_get_banner_by_cpe               (SimContainer *container, const gchar *cpe);
 G_END_DECLS
 
 #endif /* __SIM_CONTAINER_H__ */

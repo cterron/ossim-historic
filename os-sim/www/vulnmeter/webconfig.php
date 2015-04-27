@@ -652,7 +652,7 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
     else if( $error_message != "" ) 
 	{
 		$show_notification = true;
-        $message          .= "<div style='text-align: left;'>". _("We found the following errors:")."</div>
+        $message          .= "<div style='text-align: left;'>". _("The following errors occurred:")."</div>
 							  <div style='padding-left: 10px; text-align: left;'>".$error_message."</div>";
         $message_type      = 'nf_error';
     }

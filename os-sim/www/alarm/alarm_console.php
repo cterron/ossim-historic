@@ -52,6 +52,7 @@ $order           = intval(GET('order'));
 $torder          = GET('torder');
 $src_ip          = GET('src_ip');
 $dst_ip          = GET('dst_ip');
+$asset_group     = GET('asset_group');
 $backup_inf      = $inf = GET('inf');
 $sup             = GET('sup');
 $hide_closed     = GET('hide_closed');
@@ -79,11 +80,12 @@ $beep             = intval(GET('beep'));
 $num_alarms_page  = (GET('num_alarms_page') != "") ? intval(GET('num_alarms_page')) : 20;
 
 
-$tags             = Tags::get_list($conn);
-$tags_html        = Tags::get_list_html($conn,"",false);
+list($tags_count, $tags) = Tag::get_tags_by_type($conn, 'alarm');
 
 //$asset_data
 $asset_sensors    = Av_sensor::get_list($conn, array(), FALSE, TRUE);
+$_groups_data     = Asset_group::get_list($conn);
+$asset_groups     = $_groups_data[0];
 
 if (Session::is_pro() && Session::show_entities()) 
 {
@@ -105,13 +107,14 @@ ossim_valid($directive_id,    OSS_DIGIT, OSS_NULLABLE,                          
 ossim_valid($intent,          OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Intent"));
 ossim_valid($src_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                              'illegal:' . _("Src_ip"));
 ossim_valid($dst_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                              'illegal:' . _("Dst_ip"));
+ossim_valid($asset_group,     OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Asset Group"));
 ossim_valid($inf,             OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Inf"));
 ossim_valid($sup,             OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Order"));
 ossim_valid($hide_closed,     OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Hide_closed"));
 ossim_valid($date_from,       OSS_DATETIME_DATE, OSS_NULLABLE,                              'illegal:' . _("From date"));
 ossim_valid($date_to,         OSS_DATETIME_DATE, OSS_NULLABLE,                              'illegal:' . _("To date"));
 ossim_valid($sensor_query,    OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Sensor_query"));
-ossim_valid($tag,             OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Tag"));
+ossim_valid($tag,             OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Tag"));
 ossim_valid($num_events,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Num_events"));
 ossim_valid($num_events_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Num_events_op"));
 ossim_valid($ds_id,           OSS_DIGIT, "-", OSS_NULLABLE,                                 'illegal:' . _("Datasource"));
@@ -137,6 +140,7 @@ $parameters['order']                  = "order="          .$order;
 $parameters['torder']                 = "torder="         .$torder;
 $parameters['src_ip']                 = "src_ip="         .$src_ip;
 $parameters['dst_ip']                 = "dst_ip="         .$dst_ip;
+$parameters['asset_group']            = "asset_group="    .$asset_group;
 $parameters['date_from']              = "date_from="      .urlencode($date_from);
 $parameters['date_to']                = "date_to="        .urlencode($date_to);
 $parameters['sensor_query']           = "sensor_query="   .$sensor_query;
@@ -172,21 +176,19 @@ $refresh_time_secs = 300;
     <title><?php echo _("Alarm Console")?> </title>
     <meta http-equiv="Pragma" content="no-cache"/>
     
-    <link rel="stylesheet" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-    <link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css">
-
     <?php
         //CSS Files
         $_files = array(
+            array('src' => 'datepicker.css',                'def_path' => TRUE),
             array('src' => 'av_common.css',                 'def_path' => TRUE),
             array('src' => 'jquery-ui.css',                 'def_path' => TRUE),
             array('src' => 'jquery.autocomplete.css',       'def_path' => TRUE),
             array('src' => 'tipTip.css',                    'def_path' => TRUE),
             array('src' => 'jquery.dataTables.css',         'def_path' => TRUE),
-            array('src' => 'jquery.datepicker.css',         'def_path' => TRUE),
             array('src' => 'jquery.dropdown.css',           'def_path' => TRUE),
-            array('src' => 'datepicker.css',                'def_path' => TRUE),
-            array('src' => '/alarm/console.css',            'def_path' => TRUE)
+            array('src' => '/alarm/console.css',            'def_path' => TRUE),
+            array('src' => 'av_dropdown_tag.css',           'def_path' => TRUE),
+            array('src' => 'av_tags.css',                   'def_path' => TRUE)
         );
         
         Util::print_include_files($_files, 'css');
@@ -204,9 +206,10 @@ $refresh_time_secs = 300;
             array('src' => 'jquery.dataTables.plugins.js',    'def_path' => TRUE),
             array('src' => 'jquery.autocomplete.pack.js',     'def_path' => TRUE),
             array('src' => 'jquery.sparkline.js',             'def_path' => TRUE),
-            array('src' => 'jquery.dropdown.js',              'def_path' => TRUE),
             array('src' => 'jquery.hotkeys.js',               'def_path' => TRUE),
             array('src' => 'jquery.spin.js',                  'def_path' => TRUE),
+            array('src' => 'av_tags.js.php',                  'def_path' => TRUE),
+            array('src' => 'av_dropdown_tag.js',              'def_path' => TRUE),
             array('src' => '/alarm/js/alarm_console.js.php',  'def_path' => FALSE)
         );
         
@@ -297,13 +300,6 @@ $refresh_time_secs = 300;
             select_tray_input(backlog_id);
             bg_close();
         }
-                
-        function add_alarm_label_tray(label_id)
-        {
-            select_tray_input(dd_alarm);
-            add_alarm_label(label_id);
-            
-        }
         
         function select_tray_input (backlog_id) 
         {
@@ -342,25 +338,24 @@ $refresh_time_secs = 300;
             
             chk_actions();
         }
-        
+
         function toggle_filters()
         {
-            if($('#searchtable').css('display') == 'none')
+            if($('#alarm_params').css('display') == 'none')
             {
                 $('#search_arrow').attr('src', '/ossim/pixmaps/arrow_down.png');
+                $('#alarm_params').slideDown();
             }
             else
             {
                 $('#search_arrow').attr('src', '/ossim/pixmaps/arrow_right.png');
+                $('#alarm_params').slideUp();
             }
 
-            $('#searchtable').toggle();
-    
             if (!showing_calendar) 
             {
                 calendar();
             }
-
         }
         
         var showing_calendar = false;
@@ -536,145 +531,62 @@ $refresh_time_secs = 300;
             });
             
         }
-        
-        function remove_alarm_label(label)
-        {
-            var alarm_id  = $(label).parents('tr').attr('id');
-            var label_id  = $(label).data('tag');
-            
-            //Settting data array with params
-            var data      = {};
-            
-            data['alarm'] = alarm_id;
-            data['label'] = label_id;
-            
-            var atoken = Token.get_token("alarm_operations");
 
-            $.ajax(
+        // Remove tag from alarm datatable row
+        function remove_alarm_tag(status, data)
+        {
+            $('#delete_data').html('');
+            $('#info_delete').hide();
+
+            if ('OK' == status)
             {
-                type: "POST",
-                dataType: "json",
-                url: "alarm_ajax.php?token="+atoken,
-                data: {"action": 9, "data": data},
-                success: function(data)
+                display_datatables_column(true);
+
+                $(".alarm_check:checked").each(function ()
                 {
-                    $('#delete_data').html('');
-                    $('#info_delete').hide();
-                    
-                    if (typeof data == 'undefined')
+                    var row = $(this).parents('tr');
+                    var cell = $('.a_label_container', row);
+
+                    if ($('div.tag_' + data.id, cell).length != 0)
                     {
-                        alarm_notification("<?php echo _('Unable to remove label') ?>", 'nf_error');
-                        
-                        return false;
+                        $('div.tag_' + data.id, cell).remove();
                     }
-                    
-                    if (data.error != true)
-                    {
-                        $(label).parent('div').remove();
-                        
-                        var show_label = false;
-                        
-                        $(".table_data > tbody > tr").each(function()
-                        {
-                            var labels = $('.a_label_container > div', this).length;
-                            
-                            if (labels > 0)
-                            {
-                                show_label = true;
-                                return false;
-                            }
-    
-                        });
-                        
-                        display_datatables_column(show_label);
-                        
-                        
-                    }
-                    else
-                    {
-                        alarm_notification(data.msg, 'nf_error');
-                    }
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) 
-                {
-                    alarm_notification(errorThrown, 'nf_error');
-                }
-            });
-            
+                });
+
+                check_label_column();
+            }
+            else
+            {
+                alarm_notification(data.msg, 'nf_error');
+            }
         }
 
-        function add_alarm_label(tag)
+        // Add tag to alarm datatable row
+        function add_alarm_tag(status, data)
         {
-            var alarms    = get_alarms_checked();
-            
-            //Settting data array with params
-            var data      = {};
-            
-            data['alarms'] = alarms;
-            data['label']  = tag;
-            
-            var atoken = Token.get_token("alarm_operations");
-            
-            $.ajax(
-            {
-                type: "POST",
-                dataType: "json",
-                url: "alarm_ajax.php?token="+atoken,
-                data: {"action": 8, "data": data},
-                success: function(data)
-                {
-                    $('#delete_data').html('');
-                    $('#info_delete').hide();
-                    
-                    
-                    if (typeof data == 'undefined')
-                    {
-                        alarm_notification("<?php echo _('Unable to remove label') ?>", 'nf_error');
-                        
-                        return false;
-                    }
-                    
-                    if (data.error != true)
-                    {
-                        label = data.data;
-                        
-                        display_datatables_column(true);
-                        
-                        $(".alarm_check:checked").each(function()
-                        {
-                            var row  = $(this).parents('tr');  
-                            var cell = $('.a_label_container', row);
-                            
-                            if ($('div.tag_'+tag, cell).length == 0)
-                            {
-                                $(cell).append(label);
-                            }
-    
-                        });
-                        
-                        
-                        
-                        $('.remove_tag').off('click').on('click', function(e)
-                        {
-                        
-                            e.stopPropagation();
-                            e.preventDefault();
-                            
-                            remove_alarm_label(this);
-                
-                        });
-                    }
-                    else
-                    {
-                        alarm_notification(data.msg, 'nf_error');
-                    }
+            $('#delete_data').html('');
+            $('#info_delete').hide();
 
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) 
+            if ('OK' == status)
+            {
+                display_datatables_column(true);
+
+                $(".alarm_check:checked").each(function ()
                 {
-                    alarm_notification(errorThrown, 'nf_error');
-                }
-            });
+                    var row = $(this).parents('tr');
+                    var cell = $('.a_label_container', row);
+
+                    if ($('div.tag_' + data.id, cell).length == 0)
+                    {
+                        var $tag = draw_tag(data, row.attr('id'), check_label_column);
+                        $(cell).append($tag);
+                    }
+                });
+            }
+            else
+            {
+                alarm_notification(data, 'nf_error');
+            }
         }
 
         function check_background_tasks(times){
@@ -968,8 +880,8 @@ $refresh_time_secs = 300;
              
             return $.ajax(
             {
-                    type: 'GET',
-                    url:  'alarm_quicklook.php?backlog=' + alarm_data[1],
+                type: 'GET',
+                url:  'alarm_quicklook.php?backlog=' + alarm_data[1]
             });           
         }
             
@@ -1019,12 +931,6 @@ $refresh_time_secs = 300;
                 
             });
             
-            $('.remove_tag').on('click', function()
-            {
-                remove_alarm_label(this);
-
-            }); 
-            
             // stop propagation
             $('a.stop, input.stop, td.stop').click(function(e) 
             {
@@ -1032,7 +938,7 @@ $refresh_time_secs = 300;
             });
                 
 
-            $('.table_data tbody tr').on('click', function () 
+            $('.table_data tbody tr').on('click', function ()
             {
                 n_clicks++;  //count clicks
                 
@@ -1106,7 +1012,27 @@ $refresh_time_secs = 300;
         {
             alarm_table.fnSetColumnVis(3, show, false);
         }
-        
+
+
+        function check_label_column()
+        {
+            draw_label = false;
+
+            $(".table_data > tbody > tr").each(function ()
+            {
+                var labels = $('.a_label_container > div', this).length;
+
+                if (labels > 0)
+                {
+                    draw_label = true;
+                    return false;
+                }
+            });
+
+            display_datatables_column(draw_label);
+        }
+
+
         function set_graph_height(h)
         {
                $('#alarm_graph').animate({ height: h+'px' }, 1000).show(); //height(h+'px').show();
@@ -1177,7 +1103,29 @@ $refresh_time_secs = 300;
         
         $(document).ready(function()
         {
-        
+            var i_am_admin = true;
+
+            <?php if (!Session::am_i_admin()){
+                echo 'i_am_admin = false';
+            }?>
+
+            var o = {
+                'load_tags_url': '<?php echo AV_MAIN_PATH?>/tags/providers/get_dropdown_tags.php',
+                'manage_components_url': '<?php echo AV_MAIN_PATH?>/tags/controllers/tag_components_actions.php',
+                'allow_edit': i_am_admin,
+                'tag_type': 'alarm',
+                'components_check_class': 'alarm_check',
+                'on_save': add_alarm_tag,
+                'on_delete': remove_alarm_tag
+            };
+
+            $('#btn_al').av_dropdown_tag(o);
+
+            $('.tags_edit').click(function (e)
+            {
+                edit_tags('alarm');
+            });
+
             $('#clean_date_filter').on('click', function()
             {
                 $('#date_from').val('');
@@ -1212,6 +1160,7 @@ $refresh_time_secs = 300;
                 width: 225,
                 matchContains: "word",
                 autoFill: false,
+                selectFirst: false,
                 formatItem: function(row, i, max) 
                 {
                     return row.txt;
@@ -1227,6 +1176,7 @@ $refresh_time_secs = 300;
                 width: 225,
                 matchContains: "word",
                 autoFill: false,
+                selectFirst: false,
                 formatItem: function(row, i, max) 
                 {
                     return row.txt;
@@ -1256,7 +1206,7 @@ $refresh_time_secs = 300;
                 $("#ds_id").val((item[0].split('###'))[0]);
             });
             
-            <?php if (GET('src_ip') != "" || GET('dst_ip') != "" || GET('host_id') != "" || GET('net_id') != "" || $query != "" || $sensor_query != "" || $directive_id != "" || $num_events > 0) { ?>
+            <?php if (GET('src_ip') != "" || GET('dst_ip') != "" || GET('host_id') != "" || GET('net_id') != "" || $query != "" || $sensor_query != "" || $directive_id != "" || $num_events > 0 || $asset_group != "") { ?>
             toggle_filters();
             <?php } ?>
 
@@ -1277,7 +1227,6 @@ $refresh_time_secs = 300;
                         $(check).attr("checked","checked");
                     }
                 }
-                    
             });
 
 
@@ -1303,9 +1252,9 @@ $refresh_time_secs = 300;
                     { "bSortable": true, "sClass": "left" },
                     { "bSortable": true, "sClass": "left" },
                     { "bSortable": true, sWidth: "50px" },
-                    { "bSortable": false },
-                    { "bSortable": true, "sClass": "left" },
-                    { "bSortable": true, "sClass": "left" },
+                    { "bSortable": false, "sClass": "dt_wrap", sWidth: "80px" },
+                    { "bSortable": true, "sClass": "left nowrap" },
+                    { "bSortable": true, "sClass": "left nowrap" },
                     { "bSortable": false, sWidth: "30px" }
                 ],
                 oLanguage : {
@@ -1328,11 +1277,20 @@ $refresh_time_secs = 300;
                         "sLast":     "<?php echo _('Last') ?>"
                     }
                 },
-                "fnDrawCallback" : function(oSettings) 
+                "fnRowCallback" : function(nRow, aData)
                 {
-                    // hide Label column if there are not content             
-                    display_datatables_column(draw_label);
-                    
+                    var component_id = aData['DT_RowId'];
+
+                    if (true == draw_label)
+                    {
+                        $.each(aData['tags'], function(index, tag) {
+                            var $tag = draw_tag(tag, component_id, check_label_column);
+                            $tag.appendTo($('td:eq(3)', nRow).find('.a_label_container'));
+                        });
+                    }
+                },
+                "fnDrawCallback" : function(oSettings)
+                {
                     // Load callbacks, tiptips and more
                     load_handlers();
                                         
@@ -1358,19 +1316,15 @@ $refresh_time_secs = 300;
                         {
                             $('td:eq(9)',this).removeAttr("nowrap");                    
                         }
-
                     });
 
-                    
+                    chk_actions();
                 },
                 "fnInitComplete": function()
                 {
                     // show contents
                     $('#chkall div.DataTables_sort_wrapper').css('padding-right','0px');
-                    
-                    chk_actions();    
-                    
-                },             
+                },
                 "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) 
                 {
                     draw_label = false;
@@ -1393,7 +1347,8 @@ $refresh_time_secs = 300;
                             }
                             
                             draw_label = json.show_label;
-                            
+                            display_datatables_column(draw_label);
+
                             fnCallback(json);
                         },
                         "error": function(data)
@@ -1434,12 +1389,12 @@ $refresh_time_secs = 300;
                 });
                
             });
-            
+
             $('#dropdown-2').on('show', function(event,data)
-            {  
+            {
                 dd_alarm = data.trigger.data('backlog');
             });
-                        
+
         });
 
         var alt_pressed = false;
@@ -1452,7 +1407,24 @@ $refresh_time_secs = 300;
         {
             alt_pressed = false;
             
-        });    
+        });
+
+        // Redraw table on Mange tags lightbox close
+        function GB_onclose(url)
+        {
+            if (url.match('/tags/'))
+            {
+                alarm_table.fnDraw();
+            }
+        }
+
+        function GB_onhide(url)
+        {
+            if (url.match('/tags/'))
+            {
+                alarm_table.fnDraw();
+            }
+        }
         
     </script>
 </head>
@@ -1530,387 +1502,220 @@ if ($net_id != "")
 if (!isset($_GET["hide_search"])) 
 {
     ?>
-
-    <form method="GET" id="queryform" name="filters">
-
-        <input type="hidden" name="tag" value="<?php echo $tag ?>">
-
-        <table width="100%" align="center" class="transparent" cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="filters">
-                    <a href="javascript:;" onclick="toggle_filters()">
-                        <span class='uppercase'><img id='search_arrow' src='/ossim/pixmaps/arrow_right.png' /><?php echo _("Search and filter") ?></span>
-                    </a>
-                </td>
-                <td class='noborder left'>
-                    <div id='info_delete'>
-                        <img src='../pixmaps/loading3.gif' alt='<?php echo _("Deleting selected alarms")?>'/>
-                        <span id='delete_data'><?php echo _("Deleting selected alarms.  Please, wait a few seconds")?>...</span>
-                    </div>
-                </td>
-                <td class="nobborder right">
-               
-                    <div style="position:relative;z-index:99999"> 
-                        <div id="tags" style="position:absolute;right:0;top:0;display:none">
-                            <ul class="labels">                             
-                                <?php if (Session::am_i_admin()) { ?>
-                                <li class="tagedit" style="text-align:right"><a href="tags_edit.php" style="font-size:10px;font-weight:normal">[<?php echo _("Edit") ?>]</a></li>
-                                <?php }     
-                                if (count($tags) < 1) 
-                                { 
-                                    ?>
-                                    <li><?php echo _("No tags found.") ?></li>
-                                    <?php 
-                                } 
-                                else 
-                                { 
-                                    foreach ($tags as $tg) 
-                                    { 
-                                        ?>
-                                        <li onclick="add_alarm_label('<?php echo $tg->get_id() ?>')">
-                                        <?php echo $tags_html[$tg->get_id()]; ?>
-                                        </li>
-                                        <?php 
-                                    }  
-                                } 
-                                ?>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                
-                </td>
-                <td class="nobborder right" style="width:60px"><a href='../report/sec_report.php?section=all&type=alarm&back=alarm' class='tip greybox2' title='<?php echo _('Alarm Report') ?>' style='text-decoration:none;'><img src='../pixmaps/pie_chart.png' class="gray_img" boder='0'/></a></td>
-            </tr>
-        </table>
+    
+    <div id='info_delete'>
+        <img src='../pixmaps/loading3.gif' alt='<?php echo _("Deleting selected alarms")?>'/>
+        <span id='delete_data'><?php echo _("Deleting selected alarms.  Please, wait a few seconds")?>...</span>
+    </div>
+    
+    <div id='report_icon_container'>
+        <a href='../report/sec_report.php?section=all&type=alarm&back=alarm' class='tip greybox2' title='<?php echo _('Alarm Report') ?>' style='text-decoration:none;'>
+            <img src='../pixmaps/pie_chart.png' class="gray_img" border='0'/>
+        </a>
+    </div>
+    
+    <form method="get" id="queryform" name="filters">
         
+        <div class="filters uppercase">
+            <img id='search_arrow' src='/ossim/pixmaps/arrow_right.png' />
+            <a href='javascript:;' onclick="toggle_filters()"><?php echo _('Search and filter') ?></a>
+        </div>
         
-        <table width="100%" align="center" id="searchtable" cellspacing="0" style="border:none;display:none;">
-            <tr>
-                <th><?php echo _("Filter") ?></th>
-                <th width="300"><?php echo _("Options")?></th>
-            </tr>
-        	<?php
-                if ($date_from != '' && $date_to != '')
-                {
-        	        $date_text  = '<a title="Clean date filter" href="javascript:void(0);" id="clean_date_filter" style="text-decoration: underline;font-weight: bold">' . _('Date') . '</a>';
-        	    }
-        	    else
-        	    {
-            	    $date_text  = '<strong>' . _('Date') . '</strong>';
-        	    }
-            ?>
-            <tr>
-                <td class="nobborder">
-                    <table class="transparent" style='width: 100%'>
-                        <?php 
-                        if ($host_id != "" || $net_id != "") 
-                        { 
-                            ?>
-                            <tr>
-                                <td class='label_filter_l'><strong><?php echo _("Asset")?></strong>:</td>
-                                <td class='noborder left' nowrap='nowrap'>
-                                <a href="javascript:;" onclick="$('#host_id').val('');$('#net_id').val('');$('#btnsearch').click()"><?php echo $asset_filter ?></a>
-                                <input type="hidden" name="host_id" id="host_id" value="<?php echo $host_id ?>">
-                                <input type="hidden" name="net_id" id="net_id" value="<?php echo $net_id ?>">
-                                </td>
-                            </tr>
-                            <?php 
-                        } 
-                        
-                        if (Session::is_pro() && $ctx != "") 
-                        { 
-                            ?>
-                            <tr>
-                                <td class='label_filter_l'><strong><?php echo _("Context")?></strong>:</td>
-                                <td class='noborder left' nowrap='nowrap'>
-                                <?php
-                                $entity_name = Acl::get_entity_name($conn, $ctx);
-                                echo $entity_name;
-                                ?>
-                                <input type="hidden" name="ctx" value="<?php echo $ctx ?>">
-                                </td>
-                            </tr>
-                            <?php 
-                        } 
-                        ?>
-                        
-                        <tr>
-                            <td class='label_filter_l'><strong><?php echo _("Sensor")?></strong>:</td>
-                            <td class='noborder left' nowrap='nowrap'>
-                                <select name="sensor_query" id='sensor_query'>
-                                    <option value=""></option>
-                                    <?php 
-                                    foreach ($asset_sensors[0] as $_sensor_id => $_sensor)
-                                    { 
-                                        $selected = ( $sensor_query == $_sensor_id ) ? "selected='selected'" : "";
-                                        ?>
-                                        <option value="<?php echo $_sensor_id ?>" <?php echo $selected?>><?php echo $_sensor["name"] ?> (<?php echo $_sensor["ip"] ?>)</option>
-                                        <?php 
-                                    } 
-                                    ?>
-                                </select>
-                            </td>
-                            <td class='noborder left'>
-                                <div>
-                                    <strong><?php echo _("Intent") ?></strong>:
-                                    <select name="intent"><option value="0"></option>
-                                    <?php
-                                        $intents = Alarm::get_intents($conn);
-                                        foreach ($intents as $kingdom_id => $kingdom_name)
-                                        {
-                                            $selected = ($kingdom_id==$intent) ? "selected" : "";
-                                            echo '<option value="'.$kingdom_id.'" '.$selected.'>'.Util::htmlentities($kingdom_name).'</option>';
-                                        }
-                                    ?>
-                                    </select>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class='label_filter_l'><strong><?php echo _("Alarm name")?></strong>: </td>
-                            <td class='label_filter_l pl4' nowrap='nowrap'><input type="text" class='inpw_200' name="query" value="<?php echo Util::htmlentities($query) ?>"/></td>
-                            <td class='noborder left'>
-                                <span style='font-weight: bold;'><?php echo _("Directive ID")?>:</span>
-                                <input type="text" class='inpw_200' style='margin-left: 10px;' name="directive_id" value="<?php echo $directive_id?>"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class='label_filter_l'><strong><?php echo _("IP Address") ?></strong>:
-                            </td>
-                            <td class='label_filter_l pl4' nowrap='nowrap'>
-                                <div class='label_ip_s'>
-                                    <div style='width: 60px; float: left;'><?php echo _("Source") ?>:</div> 
-                                    <div style='float: left;'><input type="text" id="src_ip" name="src_ip" value="<?php echo $src_ip ?>"/></div> 
-                                </div>
-                                <div class='label_ip_d'>
-                                    <div style='width: 60px; float: left;'><?php echo _("Destination") ?>:</div> 
-                                    <div style='float: left;'><input type="text" id="dst_ip" name="dst_ip" value="<?php echo $dst_ip ?>"/></div> 
-                                </div>
-                            </td>
-                            <td class='noborder left'>
-                                <div style="margin-top:3px">
-                                    <span style='font-weight: bold;'><?php echo _("Contains the event type")?></span>:
-                                    <input type="text" class='inpw_200' style='width:160px;margin-left: 10px;' name="ds_name" id='ds_name' value="<?php echo Util::htmlentities($ds_name)?>" onchange="if (this.value=='') $('#ds_id').val('')"/>
-                                    <input type="hidden" name="ds_id" id='ds_id' value="<?php echo $ds_id?>"/>
-                                </div>
-                                <div style="margin-top:5px">
-                                    <strong><?php echo _("Number of events in alarm") ?></strong>:
-                                    <select name="num_events_op">
-                                        <option value="less" <?php if ($num_events_op == "less") echo "selected='selected'"?>>&lt;=</option>
-                                        <option value="more" <?php if ($num_events_op == "more") echo "selected='selected'"?>>&gt;=</option>
-                                    </select>
-                                    &nbsp;<input type="text" name="num_events" size='3' value="<?php echo $num_events ?>"/>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class='label_filter_l width100' nowrap='nowrap'></td>
-                            <td class='label_filter_l pl4' nowrap='nowrap'></td>
-                            <td class='noborder left'>
-                        </td>
-                        </tr>
-                        <tr>
-                            <td id="date_str" class='label_filter_l width100'><strong><?php echo $date_text ?></strong>:</td>
-                            <td class="nobborder">
-                                <div class="datepicker_range">
-                                    <div class='calendar_from'>
-                                        <div class='calendar'>
-                                            <input name='date_from' id='date_from' class='date_filter' type="input" value="<?php echo $date_from ?>">
-                                        </div>
-                                    </div>
-                                    <div class='calendar_separator'>
-                                        -
-                                    </div>
-                                    <div class='calendar_to'>
-                                        <div class='calendar'>
-                                            <input name='date_to' id='date_to' class='date_filter' type="input" value="<?php echo $date_to ?>">
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class='noborder'>
-                                <table class="transparent" width="100%" cellspacing="0" cellpadding="0">
-                                    <?php
-                                    if (count($tags) < 1) 
-                                    { 
-                                        ?>
-                                        <tr>
-                                            <td class="nobborder"><?php echo _("No tags found.") ?> <a href="tags_edit.php"><?php echo _("Click here to create") ?></a></td>
-                                        </tr>
-                                        <?php 
-                                    } 
-                                    else 
-                                    { 
-                                        ?>
-                                        <tr>
-                                            <td class="nobborder">
-                                                <div style='text-align: left;width:100%;display:block;'>
-                                                    <div style='float:left;'>
-                                                        <a style='cursor:pointer' class='ndc uppercase' onclick="$('#tags_filter').toggle()">
-                                                            <img src="../pixmaps/arrow_green.png" align="absmiddle" border="0"/>&nbsp;<?php echo _("Filter by label") ?>
-                                                        </a>
-                                                    </div>
-                                                    <?php
-                                                    if ( $tag != "" ) 
-                                                    { 
-                                                        ?>
-                                                        <div style='float:left;margin-left:5px;'>
-                                                            <?php echo preg_replace("/ <a(.*)<\/a>/", "", $tags_html[$tag])?>
-                                                        </div>
-                                                        <?php
-                                                    }
-                                                    ?>
-                                                </div>
-                                                <?php 
-                                                
-                                                $tag_url              = "alarm_console.php?";
-                                                $p_tag                = $parameters;
-                                                $p_tag['hide_closed'] = "hide_closed=".$not_hide_closed;
-                                                $p_tag['tag']         = "tag=";
-                                                $tag_url             .=  implode("&", $p_tag);
-                                                
-                                                if ($tag != "") 
-                                                { 
-                                                    ?>
-                                                    <div style='text-align: left;float:left;margin-left:16px;display:block;width:100%'>
-                                                        <a href="<?php echo $tag_url?>"><?php echo _("Remove filter")?></a>
-                                                    </div>
-                                                    <?php 
-                                                } 
-                                                ?>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="nobborder">
-                                                <div style="position:relative; z-index: 10000000;">
-                                                    <div id="tags_filter" style="display:none;border:0px;position:absolute;background-color:#f9f9f9">
-                                                        <table cellpadding='0' cellspacing='0' align="center">
-                                                            <tr>
-                                                                <th colspan="2" valign='middle' style="border:none; padding: 2px;">
-                                                                    <div style='position: relative; margin:auto;'>
-                                                                        <div style='position: absolute; top: 2px; width: 90%;'><?php echo _("Labels")?></div>
-                                                                    </div>
-                                                                    
-                                                                    <div style='float:right; width:18%; text-align: right;'>
-                                                                        <a style="cursor:pointer; text-align: right;" onclick="$('#tags_filter').toggle()">
-                                                                            <img src="../pixmaps/cross-circle-frame.png" alt="<?php echo _("Close"); ?>" title="<?php echo _("Close"); ?>" border="0" align='absmiddle'/>
-                                                                        </a>
-                                                                    </div>
-                                                                </th>
-                                                            </tr>
-                                                            <?php       
-                                                            foreach ($tags as $tg) 
-                                                            { 
-                                                            ?>
-                                                                <tr>
-                                                                    <td class="nobborder">
-                                                                        <table class="transparent">
-                                                                            <tr>
-                                                                            <?php
-                                                                                $tag_url        = "alarm_console.php?";
-                                                                                $p_tag['tag']   = "tag=".$tg->get_id();
-                                                                                $tag_url       .=  implode("&", $p_tag);
-                                                                                
-                                                                                $style          = "cursor:pointer;border-radius:5px;border:0px;";
-                                                                                $style         .= "background-color: #".$tg->get_bgcolor().";";
-                                                                                $style         .= "color: #".$tg->get_fgcolor().";";
-                                                                                $style         .= ( $tg->get_bold() )   ? "font-weight: bold;"  : "font-weight: normal;";
-                                                                                $style         .= ( $tg->get_italic() ) ? "font-style: italic;" : "font-style: none;";
-                                                                            ?>
-                                                                                <td onclick="document.location='<?php echo $tag_url?>'" style="<?php echo $style?>">
-                                                                                    <?php echo $tg->get_name()?>
-                                                                                </td>
-                                                                            </tr>
-                                                                        </table>
-                                                                    </td>
-                                                                <td class="nobborder">
-                                                                <?php 
-                                                                if ( $tag == $tg->get_id() ) 
-                                                                { 
-                                                                    
-                                                                    $p_tag['tag']  = "tag=";
-                                                                    $tag_url      .=  implode("&", $p_tag);
-                                                                                                                
-                                                                    ?>
-                                                                    <a href="<?php echo $tag_url?>"><img src="../pixmaps/cross-small.png" border="0" alt="<?php echo _("Remove filter") ?>" title="<?php echo _("Remove filter") ?>"/></a>
-                                                                    <?php 
-                                                                } 
-                                                                ?>
-                                                                </td>
-                                                            </tr>
-                                                                <?php 
-                                                            } 
-                                                            ?>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="nobborder"></td>
-                                        </tr>
-                                        <?php 
-                                    } 
-                                        ?>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
+        <div id='alarm_params'>
+            <div class='p_column'>
                 
+                <?php
+                // Some external filters (asset, ctx)
+                // **** Probably deprecated ****
+                if ($host_id != "" || $net_id != "") 
+                { 
+                    ?>
+                    <label for='asset'><?php echo _("Asset")?></label>
+                    <a href="javascript:;" onclick="$('#host_id').val('');$('#net_id').val('');$('#btnsearch').click()"><?php echo $asset_filter ?></a>
+                    <input type="hidden" name="host_id" id="host_id" value="<?php echo $host_id ?>" />
+                    <input type="hidden" name="net_id" id="net_id" value="<?php echo $net_id ?>" />
+                    <?php 
+                } 
                 
+                // **** Probably deprecated ****
+                if (Session::is_pro() && $ctx != "") 
+                { 
+                    ?>
+                    <label for='ctx'><?php echo _("Context")?></label>
                     <?php
-                    $hide_closed     = ( $hide_closed == 1 ) ? 1 : 0;
-                    $not_hide_closed = !$hide_closed;
-                    $not_no_resolv   = !$no_resolv;
-                    $not_beep        = !$beep;
-                    
-                    $checked_resolv  = ( $no_resolv )   ? " checked='checked'" : "";
-                    $checked_hclosed = ( $hide_closed ) ? " checked='checked'" : "";
-                    $checked_beep    = ( $beep )        ? " checked='checked'" : "";
-                    
-                    $no_resolv_url =  $hclosed_url = $refresh_url = $beep_url = "alarm_console.php?";
-                    
-                    $p_no_resolv              = $parameters;
-                    $p_no_resolv['no_resolv'] = "no_resolv=".$not_no_resolv;
-                    $no_resolv_url           .=  implode("&", $p_no_resolv);
-                                            
-                    $p_hclosed                = $parameters;
-                    $p_hclosed['hide_closed'] = "hide_closed=".$not_hide_closed;
-                    $hclosed_url             .=  implode("&", $p_hclosed);
-
-                    $p_beep                   = $parameters;
-                    $p_beep['beep']           = "beep=".$not_beep;
-                    $beep_url                .=  implode("&", $p_beep);
-                    
-                    $refresh_url             .=  implode("&", $parameters);
-                                                                       
+                    $entity_name = Acl::get_entity_name($conn, $ctx);
+                    echo $entity_name;
+                    ?>
+                    <input type="hidden" name="ctx" value="<?php echo $ctx ?>" />
+                    <?php 
+                }
                 ?>
                 
-                <td class="nobborder" style="text-align:center">
-                    <table class="noborder" align="center" style="width:80%;">
-                        <tr>
-                            <td style="text-align: left; border-width: 0px">
-                                <input style="border:none" name="no_resolv" type="checkbox" value="1"  onClick="document.location='<?php echo $no_resolv_url?>'" <?php echo $checked_resolv?>><?php echo gettext("Do not resolve ip names"); ?>
-                            </td>
-                        </tr>       
-                        <tr>
-                            <td style="text-align: left; border-width: 0px">
-                                <input style="border:none" name="hide_closed" type="checkbox" value="1"  onClick="document.location='<?php echo $hclosed_url?>'" <?php echo $checked_hclosed?>><?php echo gettext("Hide closed alarms"); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: left; border-width: 0px">
-                                <input style="border:none" name="beep" type="checkbox" value="1"  onClick="document.location='<?php echo $beep_url?>'" <?php echo $checked_beep?>><?php echo gettext("Beep on new alarm"); ?>
-                            </td>
-                        </tr>
-                    </table>
-                </td>       
-            </tr>
-
-            <tr>
-                <td colspan="4" style="padding:5px;" class='noborder'><input type="submit" name='search' id='btnsearch' value="<?php echo _("Search") ?>"/></td>
-            </tr>
-        </table>
+                <label for='sensor_query'><?php echo _('Sensor')?></label>
+                <select name="sensor_query" id='sensor_query'>
+                    <option value=""></option>
+                    <?php 
+                    foreach ($asset_sensors[0] as $_sensor_id => $_sensor)
+                    { 
+                        $selected = ( $sensor_query == $_sensor_id ) ? "selected='selected'" : "";
+                        ?>
+                        <option value="<?php echo $_sensor_id ?>" <?php echo $selected?>><?php echo $_sensor["name"] ?> (<?php echo $_sensor["ip"] ?>)</option>
+                        <?php 
+                    } 
+                    ?>
+                </select>
+                
+                <label for='query'><?php echo _('Alarm name')?></label>
+                <input type="text" name="query" value="<?php echo Util::htmlentities($query) ?>"/>
+                
+                <label for='src_ip'><?php echo _('Source IP Address')?></label>
+                <input type="text" id="src_ip" name="src_ip" value="<?php echo $src_ip ?>"/>
+                 
+                <label for='dst_ip'><?php echo _('Destination IP Address')?></label> 
+                <input type="text" id="dst_ip" name="dst_ip" value="<?php echo $dst_ip ?>"/> 
+                
+                <?php
+                if ($date_from != '' && $date_to != '')
+                {
+                    $date_text  = '<a title="Clean date filter" href="javascript:void(0);" id="clean_date_filter" style="text-decoration: underline;font-weight: bold">' . _('Date') . '</a>';
+                }
+                else
+                {
+                    $date_text  = _('Date');
+                }
+                ?>
+                <label><?php echo $date_text ?></label>
+                <div class="datepicker_range">
+                    <div class='calendar_from'>
+                        <div class='calendar'>
+                            <input name='date_from' id='date_from' class='date_filter' type="input" value="<?php echo $date_from ?>" />
+                        </div>
+                    </div>
+                    <div class='calendar_separator'>
+                        -
+                    </div>
+                    <div class='calendar_to'>
+                        <div class='calendar'>
+                            <input name='date_to' id='date_to' class='date_filter' type="input" value="<?php echo $date_to ?>" />
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+            
+            <div class='p_column'>
+                
+                <label for='asset_group'><?php echo _('Asset Group')?></label>
+                <select name='asset_group' id='asset_group'>
+                    <option value=''><?php echo (count($asset_groups) > 0) ? '' : '- '._('No groups found').' -' ?></option>
+                    <?php
+                    foreach ($asset_groups as $group_id => $group_obj)
+                    {
+                        $selected = ($asset_group == $group_id) ? 'selected' : '';
+                        ?>
+                        <option value='<?php echo $group_id ?>' <?php echo $selected ?>><?php echo $group_obj->get_name() ?></option>
+                        <?php
+                    }
+                    ?>
+                </select>
+                
+                <label for='intent'><?php echo _('Intent')?></label>
+                <select name="intent" id='intent'><option value="0"></option>
+                <?php
+                    $intents = Alarm::get_intents($conn);
+                    foreach ($intents as $kingdom_id => $kingdom_name)
+                    {
+                        $selected = ($kingdom_id==$intent) ? "selected" : "";
+                        echo '<option value="'.$kingdom_id.'" '.$selected.'>'.Util::htmlentities($kingdom_name).'</option>';
+                    }
+                ?>
+                </select>
+                
+                <label for='directive_id'><?php echo _('Directive ID')?></label>
+                <input type="text" name="directive_id" value="<?php echo $directive_id?>"/>
+                
+                <label for='ds_name'><?php echo _('Contains the Event Type')?></label>
+                <input type="text" name="ds_name" id='ds_name' value="<?php echo Util::htmlentities($ds_name)?>" onchange="if (this.value=='') $('#ds_id').val('')"/>
+                <input type="hidden" name="ds_id" id='ds_id' value="<?php echo $ds_id?>"/>
+                
+                <label for='num_events'><?php echo _('Number of events in alarms')?></label>
+                <select name="num_events_op" id='num_events_op'>
+                    <option value="less" <?php if ($num_events_op == "less") echo "selected='selected'"?>>&lt;=</option>
+                    <option value="more" <?php if ($num_events_op == "more") echo "selected='selected'"?>>&gt;=</option>
+                </select>
+                &nbsp;<input type="text" name="num_events" id='num_events' size='3' value="<?php echo $num_events ?>"/>
+            
+            </div>
+            
+            <div class='p_column'>
+                
+                <label for='tag'>
+                    <?php echo _('Label') ?>
+                    <?php
+                    if (Session::am_i_admin())
+                    {
+                    ?>
+                    <a class='tags_edit'>[<?php echo _("Manage Labels") ?>]</a>
+                    <?php
+                    }
+                    ?>
+                </label>
+                <select id='tag' class='ag_param' name='tag'> 
+                    <option value=''></option>
+                    <?php 
+                    foreach ($tags as $t)
+                    {
+                        $selected = ($t->get_id() == $tag) ? ' selected' : '';
+                        echo '<option value="'. $t->get_id() .'" '.$selected.'>'. $t->get_name() .'</option>';
+                    }
+                    ?>
+                </select>
+                
+                <br/><br/>
+                
+                <?php
+                $hide_closed     = ( $hide_closed == 1 ) ? 1 : 0;
+                $not_hide_closed = !$hide_closed;
+                $not_no_resolv   = !$no_resolv;
+                $not_beep        = !$beep;
+                
+                $checked_resolv  = ( $no_resolv )   ? " checked='checked'" : "";
+                $checked_hclosed = ( $hide_closed ) ? " checked='checked'" : "";
+                $checked_beep    = ( $beep )        ? " checked='checked'" : "";
+                
+                $no_resolv_url =  $hclosed_url = $refresh_url = $beep_url = "alarm_console.php?";
+                
+                $p_no_resolv              = $parameters;
+                $p_no_resolv['no_resolv'] = "no_resolv=".$not_no_resolv;
+                $no_resolv_url           .=  implode("&", $p_no_resolv);
+                
+                $p_hclosed                = $parameters;
+                $p_hclosed['hide_closed'] = "hide_closed=".$not_hide_closed;
+                $hclosed_url             .=  implode("&", $p_hclosed);
+                
+                $p_beep                   = $parameters;
+                $p_beep['beep']           = "beep=".$not_beep;
+                $beep_url                .=  implode("&", $p_beep);
+                
+                $refresh_url             .=  implode("&", $parameters);
+                ?>
+                <input style="border:none" name="no_resolv" type="checkbox" value="1" onclick="document.location='<?php echo $no_resolv_url?>'" <?php echo $checked_resolv?> />
+                <label class='line' for='no_resolve'><?php echo gettext("Do not resolve ip names"); ?></label><br/><br/>
+                
+                <input style="border:none" name="hide_closed" type="checkbox" value="1" onclick="document.location='<?php echo $hclosed_url?>'" <?php echo $checked_hclosed?> />
+                <label class='line' for='hide_closed'><?php echo gettext("Hide closed alarms"); ?></label><br/><br/>
+                
+                <input style="border:none" name="beep" type="checkbox" value="1" onclick="document.location='<?php echo $beep_url?>'" <?php echo $checked_beep?> />
+                <label class='line' for='beep'><?php echo gettext("Beep on new alarm"); ?></label><br/><br/>
+                
+            </div>
+            
+            <div class='search_button_container'>
+                <input type="submit" name='search' id='btnsearch' value="<?php echo _("Search") ?>"/>
+            </div>
+            
+        </div>
+        
     </form>
     <?php
 } 
@@ -1932,7 +1737,7 @@ if (!isset($_GET["hide_search"]))
         ?> 
             <div id ='alarm_console_button_list'>
                 
-                <button id="btn_al" class="button_labels av_b_secondary" data-dropdown="#dropdown-1">
+                <button id="btn_al" class="button_labels av_b_secondary">
                     <?php echo _("Apply Label")?>
                 </button>
             
@@ -2005,70 +1810,6 @@ if (!isset($_GET["hide_search"]))
     <a href="javascript:;" class="fright" style="padding-bottom:15px;" onclick="delete_all_alarms();">
         <?php echo _("Delete ALL"); ?>
     </a>
-
-    
-    <div id="dropdown-1" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
-    
-        <ul class="dropdown-menu labels">                             
-            <?php 
-            if (Session::am_i_admin()) 
-            { 
-                
-            ?>
-                <li class="tagedit" style="text-align:right">
-                    <a href="tags_edit.php" style="font-size:10px;font-weight:normal">[<?php echo _("Edit") ?>]</a>
-                </li>
-            <?php 
-            }     
-            if (count($tags) < 1)
-            {
-            ?>
-                <li>
-                    <?php echo _("No tags found.") ?>
-                </li>
-            <?php 
-            } 
-            else 
-            { 
-                foreach ($tags as $tg) 
-                { 
-                ?>
-                    <li onclick="add_alarm_label('<?php echo $tg->get_id() ?>')">
-                        <?php echo $tags_html[$tg->get_id()]; ?>
-                    </li>
-                <?php 
-                }  
-            } 
-            ?>
-        </ul>	
-    </div>  
-    
-    <div id="dropdown-2" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
-    
-        <ul class="dropdown-menu labels">                             
-            <?
-            if (count($tags) < 1)
-            {
-            ?>
-                <li>
-                    <?php echo _("No tags found.") ?>
-                </li>
-            <?php 
-            } 
-            else 
-            { 
-                foreach ($tags as $tg) 
-                { 
-                ?>
-                    <li onclick="add_alarm_label_tray('<?php echo $tg->get_id() ?>')">
-                        <?php echo $tags_html[$tg->get_id()]; ?>
-                    </li>
-                <?php 
-                }  
-            } 
-            ?>
-        </ul>	
-    </div>          
 
 </body>
 </html>

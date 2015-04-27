@@ -4,8 +4,8 @@ description=Parses the Update log to search for errors.
 category=system
 type=command
 # read latest update file
-command=ls -lt /var/log/alienvault/update/*.log | head -n1 | awk '{ print $9 }' | xargs cat
-raw_limit=200
+command=([ $(ls -lt /var/log/alienvault/update/*.log 2>/dev/null | wc -l) != 0 ] && ls -lt /var/log/alienvault/update/*.log | head -n1 | awk '{ print $9 }' | xargs cat) || ([ $(ls -lt /tmp/alienvault4_update*.log 2>/dev/null | wc -l) != 0 ] && ls -lt /tmp/alienvault4_update*.log | head -n1 | awk '{ print $9 }' | xargs cat)
+raw_limit=400
 
 [alienvault4_update-script-xxx.log checks]
 pattern=^##\s\S+,\scode\s([^\)])

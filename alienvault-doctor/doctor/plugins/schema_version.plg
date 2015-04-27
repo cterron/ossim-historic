@@ -2,8 +2,9 @@
 name=Database schema version
 description=Look for compatibility problems between the DB schema deployed and the packages installed.
 category=alienvault,database
+strike_zone=True
 type=db
-host=localhost
+host=@dbhost@
 user=root
 password=@dbpass@
 database=alienvault
@@ -11,8 +12,8 @@ profiles=Database:>4.0
 raw_limit=100
 
 [Schema version]
-query=select conf, substring(value from 1 for 6) from config where conf = 'ossim_schema_version' or conf = 'ossim_server_version'
-conditions=@string@;@string@:==@version@
+query=select substring(value from 1 for 6) from config where conf = 'ossim_schema_version'
+conditions=@string@:==@version@
 severity=High
 warning=Schema or Server version differs from installed version
 advice=The DB schema is tested to work with servers with the same version. A schema in a different version may lead to unexpected issues.

@@ -39,7 +39,7 @@ require_once 'av_init.php';
 function display_errors($info_error)
 {
     $errors       = implode ("</div><div style='padding-top: 3px;'>", $info_error);
-    $error_msg    = "<div>"._("We found the following errors:")."</div><div style='padding-left: 15px;'><div>$errors</div></div>";
+    $error_msg    = "<div>"._("The following errors occurred:")."</div><div style='padding-left: 15px;'><div>$errors</div></div>";
 
     return ossim_error($error_msg);
 }
@@ -52,15 +52,15 @@ $unlimited_traffic_capture = ($conf->get_conf('unlimited_traffic_capture') == 1)
 
 $info_error = array();
 
-$src              = $parameters['src']              = GET('src');
-$dst              = $parameters['dst']              = GET('dst');
-$timeout          = $parameters['timeout']          = GET('timeout');
-$cap_size         = $parameters['cap_size']         = GET('cap_size');
-$raw_filter       = $parameters['raw_filter']       = GET('raw_filter');
-$sensor_ip        = $parameters['sensor_ip']        = GET('sensor_ip');
-$sensor_interface = $parameters['sensor_interface'] = GET('sensor_interface');
+$src              = $parameters['src']              = POST('src');
+$dst              = $parameters['dst']              = POST('dst');
+$timeout          = $parameters['timeout']          = POST('timeout');
+$cap_size         = $parameters['cap_size']         = POST('cap_size');
+$raw_filter       = $parameters['raw_filter']       = POST('raw_filter');
+$sensor_ip        = $parameters['sensor_ip']        = POST('sensor_ip');
+$sensor_interface = $parameters['sensor_interface'] = POST('sensor_interface');
 
-$soptions         = intval(GET('soptions'));
+$soptions         = intval(POST('soptions'));
 
 $validate  = array (
     'src'              => array('validation' => "OSS_NULLABLE, OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_INPUT, OSS_NL, '\.\,\/'", 'e_message' => 'illegal:' . _('Source')),
@@ -149,6 +149,7 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
     <script type="text/javascript" src="../js/greybox.js"></script>
     <script type="text/javascript" src="../js/utils.js"></script>
     <script type="text/javascript" src="../js/progress.js"></script>
+    <script type="text/javascript" src="../js/notification.js"></script>
     
     <style type='text/css'>
         
@@ -182,8 +183,52 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
                     var ln  = ($('#src').val()!='') ? '\n' : '';
                     var text = "";
                     
-                    // Net
-                    if (dtnode.data.val.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null) 
+                    // Host Group
+            			if (dtnode.data.key.match(/hostgroup_/))
+            			{
+            			    $.ajax({
+            			        type: 'GET',
+            			        url: "../tree.php",
+            			        data: 'key=' + dtnode.data.key + ';1000',
+            			        dataType: 'json',
+            			        success: function(data)
+            			        {
+            				        if (data.length < 1)
+            				        {
+            				            var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+            				            var msg = '<?php echo _('Unable to fetch the asset group members') ?>';
+            				            show_notification('av_info', msg, 'nf_error', 0, 1, nf_style);
+            				        }
+            				        else
+            				        {
+                                    // Group reached the 1000 top of page: show warning
+                                    var last_element = data[data.length - 1].key;
+                        
+                                    if (last_element.match(/hostgroup_/))
+                                    {
+                                        var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+                                        var msg = '<?php echo _('This asset group has more than 1000 assets, please try again with a smaller group') ?>';
+                                        show_notification('av_info', msg, 'nf_warning', 0, 1, nf_style);
+                                    }
+                                    else
+                                    {
+                                        jQuery.each(data, function(i, group_member)
+                                        {
+                                            Regexp = /(\d+\.\d+\.\d+\.\d+)/;
+                                            match  = Regexp.exec(group_member.val);
+                                                    
+                                            var member_ip  = match[1];
+                                            var member_ln  = ($('#src').val()!='') ? '\n' : '';
+                                            
+                                            $('#src').val($('#src').val() + member_ln + member_ip);
+                                        });
+                                    }
+            				        }
+            			        }
+            			    });
+            			}
+            			// Net
+                    else if (dtnode.data.val.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null) 
                     { 
                         Regexp = /(\d+\.\d+\.\d+\.\d+\/\d+)/;
                         match  = Regexp.exec(dtnode.data.val);
@@ -198,6 +243,7 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
                                 
                         text  = match[1];
                     }
+			        
                     if (text != '') 
                     {
                        $('#src').val($('#src').val() + ln + text);
@@ -219,8 +265,52 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
                     var ln  = ($('#dst').val()!='') ? '\n' : '';
                     var text = "";
                     
+                    // Host Group
+            			if (dtnode.data.key.match(/hostgroup_/))
+            			{
+            			    $.ajax({
+            			        type: 'GET',
+            			        url: "../tree.php",
+            			        data: 'key=' + dtnode.data.key + ';1000',
+            			        dataType: 'json',
+            			        success: function(data)
+            			        {
+            				        if (data.length < 1)
+            				        {
+            				            var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+            				            var msg = '<?php echo _('Unable to fetch the asset group members') ?>';
+            				            show_notification('av_info', msg, 'nf_error', 0, 1, nf_style);
+            				        }
+            				        else
+            				        {
+                                    // Group reached the 1000 top of page: show warning
+                                    var last_element = data[data.length - 1].key;
+                        
+                                    if (last_element.match(/hostgroup_/))
+                                    {
+                                        var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+                                        var msg = '<?php echo _('This asset group has more than 1000 assets, please try again with a smaller group') ?>';
+                                        show_notification('av_info', msg, 'nf_warning', 0, 1, nf_style);
+                                    }
+                                    else
+                                    {
+                                        jQuery.each(data, function(i, group_member)
+                                        {
+                                            Regexp = /(\d+\.\d+\.\d+\.\d+)/;
+                                            match  = Regexp.exec(group_member.val);
+                                                    
+                                            var member_ip  = match[1];
+                                            var member_ln  = ($('#dst').val()!='') ? '\n' : '';
+                                            
+                                            $('#dst').val($('#dst').val() + member_ln + member_ip);
+                                        });
+                                    }
+            				        }
+            			        }
+            			    });
+            			}
                     // Net
-                    if (dtnode.data.val.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null)
+                    else if (dtnode.data.val.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null)
                     {
                         Regexp = /(\d+\.\d+\.\d+\.\d+\/\d+)/;
                         match  = Regexp.exec(dtnode.data.val);
@@ -235,6 +325,7 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
                                 
                         text  = match[1];
                     }
+                    
                     if (text != '') 
                     {
                        $('#dst').val($('#dst').val() + ln + text);
@@ -304,9 +395,9 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
     function stop_capture(ip) 
     {
         $.ajax({
-            type: "GET",
-            data: "",
-            url: "manage_scans.php?sensor_ip="+ip+"&op=stop",
+            type: "POST",
+            data: "sensor_ip="+ip+"&op=stop",
+            url: "manage_scans.php",
             success: function(html){
                 document.location.reload();
             }
@@ -319,12 +410,21 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
        
         if (ans) 
         {
-            document.location.href='manage_scans.php?'+data;
+            $.ajax({
+                type: "POST",
+                data: data,
+                url: "manage_scans.php",
+                success: function(html){
+                    document.location.reload();
+                }
+            });
         }
     }
     </script>
 </head>
 <body>
+
+<div id='av_info'></div>
 
 <?php
 if(count($sensors_status) == 0)
@@ -517,7 +617,7 @@ else
     </tr>
 </table>
 
-<form method="get" action="manage_scans.php">
+<form method="post" action="manage_scans.php">
     <br />
             
     <table align="center" class="tscans" <?php echo (count($info_error)>0 || $soptions==1 )? "":"style=\"display:none;\""?>>

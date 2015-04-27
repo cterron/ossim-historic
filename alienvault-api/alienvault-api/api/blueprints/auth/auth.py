@@ -41,8 +41,9 @@ from api.lib.auth import be_logged, be_admin, logged_permission
 import db
 from db.models.alienvault import Users
 from api import API_i18n
-from api.lib.utils import is_valid_user, is_valid_user_password
+from api.lib.utils import is_valid_user, is_valid_user_password, is_admin_user
 from api.api_i18n import messages as i18nmsgs
+from apimethods.system.user import populate_user_permissions_table
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -98,6 +99,9 @@ def login():
         if login_valid == 1:
             login_user(user)
             identity_changed.send(app, identity=Identity(user.login))
+            if not (current_user.is_admin == 1 or current_user.login == 'admin'):
+                success = populate_user_permissions_table(user.login)
+                app.logger.warning("user_perm table for the user %s has been populated successfully? %s" % (user.login, success))
             return make_ok()
 
     return make_error(API_i18n.error(i18nmsgs.INVALID_USERNAME_OR_PASSWORD), 401)

@@ -283,7 +283,7 @@ class Wireless
     static function get_wireless_networks($conn,$order="",$sensors="",$timefilter="")
     {
         $data = $nossid = array();
-        if ($sensors!="") $sensors = "and sensor in (inet6_pton('".str_replace(",","'),inet6_pton('",$sensors)."'))";
+        if ($sensors!="") $sensors = "and sensor in (inet6_aton('".str_replace(",","'),inet6_aton('",$sensors)."'))";
         $trusted = $hideold = "";
         if ($_SESSION["trusted"]==2) {
             $trusted = "and type='Trusted'";
@@ -294,7 +294,7 @@ class Wireless
             $hideold = "and lasttime > '".date("Y-m-d H:i:s",strtotime("3 days ago"))."'";
         }
         if ($order!="") $order = "order by $order";
-        $sql = "select *,inet6_ntop(sensor) as sensor from wireless_networks where 1=1 $sensors $trusted $timefilter $hideold $order";
+        $sql = "select *,inet6_ntoa(sensor) as sensor from wireless_networks where 1=1 $sensors $trusted $timefilter $hideold $order";
         
         //print_r($sql);
         $rs = $conn->Execute($sql);
@@ -324,7 +324,7 @@ class Wireless
 		
 		if ($sensors!="") 
 		{
-		    $sensors = " and w.sensor in (inet6_pton('".str_replace(",","'),inet6_pton('",$sensors)."'))";
+		    $sensors = " and w.sensor in (inet6_aton('".str_replace(",","'),inet6_aton('",$sensors)."'))";
         }
         
         $trusted = $hideold = "";
@@ -344,11 +344,11 @@ class Wireless
         }
 		
         if ($type == 1) // cloked
-            $sql = "select w.ssid, inet6_ntop(w.sensor) AS s_inet6_ntop, ap.* from alienvault.wireless_networks w,alienvault.wireless_aps ap where w.ssid=ap.ssid and w.sensor=ap.sensor $sensors $timefilter $trusted $hideold"; //  and ap.cloaked='No'
+            $sql = "select w.ssid, inet6_ntoa(w.sensor) AS s_inet6_ntoa, ap.* from alienvault.wireless_networks w,alienvault.wireless_aps ap where w.ssid=ap.ssid and w.sensor=ap.sensor $sensors $timefilter $trusted $hideold"; //  and ap.cloaked='No'
         elseif ($type == 2)  // encrypted
-            $sql = "select w.ssid, inet6_ntop(w.sensor) AS s_inet6_ntop, ap.* from alienvault.wireless_networks w,alienvault.wireless_aps ap where w.ssid=ap.ssid and w.sensor=ap.sensor $sensors $timefilter $trusted $hideold"; //  and ap.encryption='None'
+            $sql = "select w.ssid, inet6_ntoa(w.sensor) AS s_inet6_ntoa, ap.* from alienvault.wireless_networks w,alienvault.wireless_aps ap where w.ssid=ap.ssid and w.sensor=ap.sensor $sensors $timefilter $trusted $hideold"; //  and ap.encryption='None'
         elseif ($type == 3)  // weak
-            $sql = "select w.ssid, inet6_ntop(w.sensor) AS s_inet6_ntop, ap.* from alienvault.wireless_networks w,alienvault.wireless_aps ap where w.ssid=ap.ssid and w.sensor=ap.sensor $sensors $timefilter $trusted $hideold and ap.encryption='WEP'";
+            $sql = "select w.ssid, inet6_ntoa(w.sensor) AS s_inet6_ntoa, ap.* from alienvault.wireless_networks w,alienvault.wireless_aps ap where w.ssid=ap.ssid and w.sensor=ap.sensor $sensors $timefilter $trusted $hideold and ap.encryption='WEP'";
 		$rs = $conn->Execute($sql);
 		if (!$rs) 
 		{
@@ -498,7 +498,7 @@ class Wireless
 	static function get_wireless_aps($conn,$ssid,$sensor="")
 	{
 		$aps = array();
-		if ($sensor!="") $sensor = " and sensor=inet6_pton('$sensor')";
+		if ($sensor!="") $sensor = " and sensor=inet6_aton('$sensor')";
 		$vendors = self::get_mac_vendor_list($conn);
 		$sql = "select * from alienvault.wireless_aps where ssid=? $sensor";
 		//echo $sql;
@@ -597,7 +597,7 @@ class Wireless
     				// data from ossim host table
     				$name = "Unknown";
     				$desc = "";
-    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_pton(?)";
+    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_aton(?)";
     				$rsc = $ossim->Execute($sql,array($ip));
                                 if (!$rsc) {
     					print $ossim->ErrorMsg();
@@ -608,7 +608,7 @@ class Wireless
     					$desc =  $rsc->fields["descr"];
     				}
     				$mac = "";
-    				$sql = "select hex(mac) from host_ip where ip = inet6_pton(?)";
+    				$sql = "select hex(mac) from host_ip where ip = inet6_aton(?)";
     				$rsc = $ossim->Execute($sql,array($mac));
                                 if (!$rsc) {
     					print $ossim->ErrorMsg();
@@ -620,7 +620,7 @@ class Wireless
     				// without ip, only mac
     				$ip = "";
     				// data from ossim host table
-    				$sql = "select inet6_ntop(ip) as ip from host_ip where mac = unhex(?)";
+    				$sql = "select inet6_ntoa(ip) as ip from host_ip where mac = unhex(?)";
                                 $rsc = $ossim->Execute($sql,array(str_replace(":","",$mac)));
     				if (!$rsc) {
     					print $ossim->ErrorMsg();
@@ -629,7 +629,7 @@ class Wireless
     				if (!$rsc->EOF) $ip = $rsc->fields["ip"];
     				$name = "Unknown";
     				$desc = "";
-    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_pton(?)";
+    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_aton(?)";
     				$rsc = $ossim->Execute($sql,array($ip));
                                 if (!$rsc) {
     					print $ossim->ErrorMsg();
@@ -745,7 +745,7 @@ class Wireless
     				// data from ossim host table
     				$name = "Unknown";
     				$desc = "";
-    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_pton(?)";
+    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_aton(?)";
     				
                                 $rsc = $ossim->Execute($sql,array($ip));
                                 if (!$rsc) {
@@ -757,7 +757,7 @@ class Wireless
     					$desc = $rsc->fields["desc"];
     				}
     				$mac = "";
-    				$sql = "select hex(mac) from host_ip where ip = inet6_pton(?)";
+    				$sql = "select hex(mac) from host_ip where ip = inet6_aton(?)";
     				$rsc = $ossim->Execute($sql,array($mac));
                                 if (!$rsc) {
     					print $ossim->ErrorMsg();
@@ -769,7 +769,7 @@ class Wireless
     				// without ip, only mac
     				$ip = "";
     				// data from ossim host table
-    				$sql = "select inet6_ntop(ip) as ip from host_ip where mac = unhex(?)";
+    				$sql = "select inet6_ntoa(ip) as ip from host_ip where mac = unhex(?)";
     				$rsc = $ossim->Execute($sql,array(str_replace(":","",$mac)));
                                 if (!$rsc) {
     					print $ossim->ErrorMsg();
@@ -778,7 +778,7 @@ class Wireless
     				if (!$rsc->EOF) $ip = $rsc->fields["ip"];
     				$name = "Unknown";
     				$desc = "";
-    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_pton(?)";
+    				$sql = "select hostname,descr from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id and host_ip.ip=inet6_aton(?)";
     				$rsc = $ossim->Execute($sql,array($ip));
                                 if (!$rsc) {
     					print $ossim->ErrorMsg();
@@ -820,7 +820,7 @@ class Wireless
         $clients = array();
         $vendors = self::get_mac_vendor_list($conn);
         $hosts   = self::resolve_hosts($conn);
-        if ($sensors!="") $sensors = " and c.sensor in (inet6_pton('".str_replace(",","'),inet6_pton('",$sensors)."'))";
+        if ($sensors!="") $sensors = " and c.sensor in (inet6_aton('".str_replace(",","'),inet6_aton('",$sensors)."'))";
         if ($aps!="") $aps = " and c.mac in ('".str_replace(",","','",$aps)."')";
         $hideold = "";
         if ($_SESSION["hideold"]==1) {
@@ -828,7 +828,7 @@ class Wireless
         }
         if ($order!="") $order = "order by c.$order desc";
         //
-        $sql = "select *,inet6_ntop(ip) as ip from wireless_clients c where 1=1 $sensors $timefilter $aps $trusted $hideold $order";
+        $sql = "select *,inet6_ntoa(ip) as ip from wireless_clients c where 1=1 $sensors $timefilter $aps $trusted $hideold $order";
         if ($_SESSION["trusted"]==2) {
             $sql = "select c.* from wireless_clients c,wireless_networks n where n.ssid=c.ssid and n.sensor=c.sensor and n.type='Trusted' $sensors $timefilter $aps $trusted $hideold $order";
         } 
@@ -893,7 +893,7 @@ class Wireless
     static function get_network_data($conn, $ssid, $sensor)
 	{
 		$data = array();
-		$sql = "select * from wireless_networks where ssid=? and sensor=inet6_pton(?)";
+		$sql = "select * from wireless_networks where ssid=? and sensor=inet6_aton(?)";
 		
                 $rsc = $conn->Execute($sql,array($ssid,$sensor));
                 if (!$rsc) {
@@ -908,7 +908,7 @@ class Wireless
 	// update extra info for netword ssid
 	static function update_network_data($conn,$ssid,$sensor,$desc,$type,$notes)
 	{
-		$sql = "insert into wireless_networks (ssid,sensor,description,type,notes) values (?,inet6_pton(?),?,?,?) on duplicate key update description=?, type=?, notes=?";
+		$sql = "insert into wireless_networks (ssid,sensor,description,type,notes) values (?,inet6_aton(?),?,?,?) on duplicate key update description=?, type=?, notes=?";
 		$params = array( $ssid, $sensor, $desc, $type, $notes, $desc, $type, $notes);
 		if ($conn->Execute($sql, $params) === false) {
 			print $conn->ErrorMsg();
@@ -936,7 +936,7 @@ class Wireless
 		while (!$rs->EOF) {
 			$arr = $rs->fields;
 			// clients
-			$sql = "select distinct w.*,INET6_NTOP(s.ip) AS ip from wireless_sensors w,sensor s 
+			$sql = "select distinct w.*,INET6_NTOA(s.ip) AS ip from wireless_sensors w,sensor s 
 			LEFT JOIN host_ip h ON h.ip = s.ip
 			where s.name=w.sensor and w.location='".$arr["location"]."'";
 			$rsc = $conn->Execute($sql);
@@ -1042,17 +1042,17 @@ class Wireless
 	// delete network
 	static function del_network($conn,$ssid,$sensor)
 	{
-		$sql = "delete from wireless_networks where ssid=? and sensor=inet6_pton(?)";
+		$sql = "delete from wireless_networks where ssid=? and sensor=inet6_aton(?)";
 		$params = array( $ssid, $sensor );
 		if ($conn->Execute($sql, $params) === false) {
 			print $conn->ErrorMsg();
 		}
-		$sql = "delete from wireless_aps where ssid=? and sensor=inet6_pton(?)";
+		$sql = "delete from wireless_aps where ssid=? and sensor=inet6_aton(?)";
 		$params = array( $ssid, $sensor );
 		if ($conn->Execute($sql, $params) === false) {
 			print $conn->ErrorMsg();
 		}
-		$sql = "delete from wireless_clients where ssid=? and sensor=inet6_pton(?)";
+		$sql = "delete from wireless_clients where ssid=? and sensor=inet6_aton(?)";
 		$params = array( $ssid, $sensor );
 		if ($conn->Execute($sql, $params) === false) {
 			print $conn->ErrorMsg();
@@ -1063,12 +1063,12 @@ class Wireless
 	// delete ap
 	static function del_ap($conn,$mac,$ssid,$sensor)
 	{
-		$sql = "delete from wireless_aps where mac=? and ssid=? and sensor=inet6_pton(?)";
+		$sql = "delete from wireless_aps where mac=? and ssid=? and sensor=inet6_aton(?)";
 		$params = array( $mac, $ssid, $sensor );
 		if ($conn->Execute($sql, $params) === false) {
 			print $conn->ErrorMsg();
 		}
-		$sql = "delete from wireless_clients where mac=? and ssid=? and sensor=inet6_pton(?)";
+		$sql = "delete from wireless_clients where mac=? and ssid=? and sensor=inet6_aton(?)";
 		$params = array( $mac, $ssid, $sensor );
 		if ($conn->Execute($sql, $params) === false) {
 			print $conn->ErrorMsg();
@@ -1080,10 +1080,10 @@ class Wireless
     static function del_clients($conn, $client_mac, $sensor, $ssid = '')
 	{
 		if ($ssid!="") {
-            $sql = "delete from wireless_clients where client_mac=? and sensor=inet6_pton(?) and ssid=?";
+            $sql = "delete from wireless_clients where client_mac=? and sensor=inet6_aton(?) and ssid=?";
             $params = array( $client_mac, $sensor, $ssid );
         } else {
-            $sql = "delete from wireless_clients where client_mac=? and sensor=inet6_pton(?)";
+            $sql = "delete from wireless_clients where client_mac=? and sensor=inet6_aton(?)";
             $params = array( $client_mac, $sensor);
         }
 		if ($conn->Execute($sql, $params) === false) {
@@ -1133,9 +1133,9 @@ class Wireless
 		    return $data;
 		}
 		
-		$sensors = "inet6_pton('".implode("'),inet6_pton('",$sensors)."')";
+		$sensors = "inet6_aton('".implode("'),inet6_aton('",$sensors)."')";
 		
-        $sql = "SELECT count(*) AS sig_cnt, min(timestamp) AS first, max(timestamp) AS last, plugin_sid.name AS sig_name, inet6_ntop(device.device_ip) AS d_sensor, count(DISTINCT(ip_src)) AS cont_src, count(DISTINCT(ip_dst)) AS cont_dst 
+        $sql = "SELECT count(*) AS sig_cnt, min(timestamp) AS first, max(timestamp) AS last, plugin_sid.name AS sig_name, inet6_ntoa(device.device_ip) AS d_sensor, count(DISTINCT(ip_src)) AS cont_src, count(DISTINCT(ip_dst)) AS cont_dst 
             FROM acid_event 
             LEFT JOIN alienvault.plugin_sid ON plugin_sid.plugin_id=acid_event.plugin_id AND plugin_sid.sid=acid_event.plugin_sid,device
             WHERE acid_event.device_id=device.id AND device.device_ip in ($sensors) AND acid_event.plugin_id=1596
@@ -1204,7 +1204,7 @@ class Wireless
 	function resolve_hosts($conn) 
 	{
 		$hosts = array(); // first load vendors
-		$sql   = "SELECT hostname, ip, inet6_ntop(ip) as ip_inet6, HEX(id) as id from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id";
+		$sql   = "SELECT hostname, ip, inet6_ntoa(ip) as ip_inet6, HEX(id) as id from alienvault.host, alienvault.host_ip WHERE host.id=host_ip.host_id";
 		
                 $aux = $conn->Execute($sql);
                 if (!$aux) {

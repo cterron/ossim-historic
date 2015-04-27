@@ -20,6 +20,8 @@ set -e
 
 case "$1" in
     configure)
+            # Make sure than openvas-manager init script has execution permissions
+            chmod +x /etc/init.d/openvas-manager
 
             if [ ! -z "$2" ]
             then
@@ -212,6 +214,8 @@ case "$1" in
         do
             case "$trigger" in
                 alienvault-openvas-restart)
+                    # Make sure than openvas-manager init script has execution permissions
+                    chmod +x /etc/init.d/openvas-manager
                     update-rc.d openvas-scanner remove
                     update-rc.d openvas-manager remove
                     update-rc.d openvas-scanner defaults

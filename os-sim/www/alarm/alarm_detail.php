@@ -96,13 +96,14 @@ if(!$error)
 	list($risk, $risk_color) = colorize_risk($alarm->get_risk());
 
 	/* Source */
-    $_home_src = Asset_host::get_extended_name($conn, $geoloc, $alarm->get_src_ip(), $ctx, $event_info["src_host"], $event_info["src_net"]);
-	$src_home  = ($_home_src['is_internal']) ? "<img src='/ossim/alarm/style/img/home24.png' class='home_img' /> " : '';
+    $_home_src   = Asset_host::get_extended_name($conn, $geoloc, $alarm->get_src_ip(), $ctx, $event_info["src_host"], $event_info["src_net"]);
+	$src_home    = ($_home_src['is_internal']) ? "<img src='/ossim/alarm/style/img/home24.png' class='home_img' /> " : '';
+	$src['icon'] = $_home_src['html_icon'];
 
 	/* Destination */
-	$_home_dst = Asset_host::get_extended_name($conn, $geoloc, $alarm->get_dst_ip(), $ctx, $event_info["dst_host"], $event_info["dst_net"]);
-	$dst_home  = ($_home_dst['is_internal']) ? "<img src='/ossim/alarm/style/img/home24.png' class='home_img' /> " : '';
-
+	$_home_dst   = Asset_host::get_extended_name($conn, $geoloc, $alarm->get_dst_ip(), $ctx, $event_info["dst_host"], $event_info["dst_net"]);
+	$dst_home    = ($_home_dst['is_internal']) ? "<img src='/ossim/alarm/style/img/home24.png' class='home_img' /> " : '';
+	$dst['icon'] = $_home_dst['html_icon'];
 
 	$promiscous_title = _(is_promiscous(count($src['ip']), count($dst['ip']), $_home_src['is_internal'], $_home_dst['is_internal']));
 
@@ -123,12 +124,8 @@ if(!$error)
 
 	if(!empty($tags))
 	{
-		$tags_list = Tags::get_list($conn);
-		$tlist     = array();
-
-		foreach ($tags as $id_tag)
+		foreach ($tags as $tag)
 		{
-			$tag = $tags_list[$id_tag];
 			if(is_object($tag))
 			{
 				$tlist[] = "<div>".$tag->get_name()."</div>";
@@ -828,7 +825,7 @@ if ($error)
 			}
 			else
 			{
-				$otx_attr  = "onclick=\"GB_show('". _("Send Threat Information") ."','../updates/otxsend.php',450,'70%');\"";
+				$otx_attr  = "onclick=\"GB_show('". _("Send Threat Information") ."','/ossim/updates/otxsend.php',450,'70%');\"";
 			}
 		?>
 		<button class="av_b_secondary" <?php echo $otx_attr?>>

@@ -51,7 +51,7 @@
 * @package    ossim-framework\Alienvault_Components
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 abstract class Av_component
@@ -203,7 +203,7 @@ abstract class Av_component
                 
         if ($this->get_icon() != '')
         {
-            $html_icon = "<img id='asset_icon' src='data:image/png;base64,".base64_encode($this->get_icon())."' border='0' align='absbottom'/>";
+            $html_icon = "<img class='asset_icon w16' src='data:image/png;base64,".base64_encode($this->get_icon())."'/>";
         }
         
         return $html_icon;

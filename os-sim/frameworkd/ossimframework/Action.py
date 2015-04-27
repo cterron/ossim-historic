@@ -221,7 +221,7 @@ class Action(threading.Thread):
 
     def getHostnameFromIP(self, hostip):
         hostname = ""
-        query = "select hostname from host,host_ip where host.id=host_ip.host_id and host_ip.ip=inet6_pton('%s')" % hostip;
+        query = "select hostname from host,host_ip where host.id=host_ip.host_id and host_ip.ip=inet6_aton('%s')" % hostip;
         data = self.__db.exec_query(query)
         if data:            
             hostname = data[0]['hostname']

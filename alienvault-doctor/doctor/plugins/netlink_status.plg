@@ -2,6 +2,7 @@
 name=Network link status
 description=Uses mii-tool to check the network link status
 category=network,hardware
+strike_zone=True
 type=command
 command=mii-tool -v
 raw_limit=100

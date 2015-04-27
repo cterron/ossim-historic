@@ -134,10 +134,10 @@ function directives_select()
 			$dir = $dir['directives'];
 			$dir = (is_array($dir)) ? $dir : array();
 			
-			foreach ($dir as $did => $dname) 
+			foreach ($dir as $did => $ddata)
 			{
-				$name    = (strlen($dname) > 60) ? substr($dname, 0, 57)."..." : $dname;
-				$select .= "<option value='$did' title='$dname'>".$name;
+				$name    = (strlen($ddata['name']) > 60) ? substr($ddata['name'], 0, 57)."..." : $ddata['name'];
+				$select .= "<option value='$did' title='".$ddata['name']."'>".$name;
 			}
 		}
 	}
@@ -252,10 +252,10 @@ function get_doc_info($conn, $rel)
 	$name = '';
 	$url  = '';
 	
-	$url_links['host']        = Menu::get_menu_url('/ossim/asset_details/index.php?id=KKKK', 'environment', 'assets', 'assets');
-	$url_links['net']         = Menu::get_menu_url('/ossim/assets/list_view.php?type=network', 'environment', 'assets', 'nets');
-	$url_links['host_group']  = Menu::get_menu_url('/ossim/hostgroup/hostgroup.php', 'environment', 'assets', 'host_groups');
-	$url_links['net_group']   = Menu::get_menu_url('/ossim/netgroup/netgroup.php', 'environment', 'assets', 'net_groups');
+	$url_links['host']        = Menu::get_menu_url('/ossim/av_asset/common/views/detail.php?asset_id=KKKK', 'environment', 'assets', 'assets');
+	$url_links['net']         = Menu::get_menu_url('/ossim/av_asset/network/view/list.php', 'environment', 'assets', 'networks');
+	$url_links['host_group']  = Menu::get_menu_url('/ossim/av_asset/group/view/list.php', 'environment', 'assets', 'asset_groups');
+	$url_links['net_group']   = Menu::get_menu_url('/ossim/netgroup/netgroup.php', 'environment', 'assets', 'network_groups');
 	$url_links['incident']    = Menu::get_menu_url('/ossim/incidents/incident.php?id=KKKK', 'analysis', 'tickets', 'tickets');
 	$url_links['directive']   = Menu::get_menu_url('/ossim/directives/index.php?toggled_dir=KKKK&dir_info=1', 'configuration', 'threat_intelligence', 'directives');
 	$url_links['plugin_sid']  = Menu::get_menu_url('/ossim/forensics/base_qry_main.php?clear_allcriteria=1&search=1&sensor=&sip=&plugin=&ossim_risk_a=+&submit=Signature&search_str=KKKK', 'analysis', 'security_events', 'security_events');	

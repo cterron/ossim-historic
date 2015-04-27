@@ -88,15 +88,15 @@ $cpu_proc  = $cpu_data['cpu0']['core'];
 $num_cores = count($cpu_data) - 1;
       
 //Real memory
-$rmt = Avc_utilities::bytesToSize($st['memory']['ram']['total']);
-$rmu = Avc_utilities::bytesToSize($st['memory']['ram']['used']);
-$rmf = Avc_utilities::bytesToSize($st['memory']['ram']['free']);
+$rmt = Util::bytes_to_size($st['memory']['ram']['total']);
+$rmu = Util::bytes_to_size($st['memory']['ram']['used']);
+$rmf = Util::bytes_to_size($st['memory']['ram']['free']);
 $rmp = number_format($st['memory']['ram']['percent_used'], 2);
        
 //Virtual memory
-$vmt = Avc_utilities::bytesToSize($st['memory']['swap']['total']);
-$vmu = Avc_utilities::bytesToSize($st['memory']['swap']['used']);
-$vmf = Avc_utilities::bytesToSize($st['memory']['swap']['free']);
+$vmt = Util::bytes_to_size($st['memory']['swap']['total']);
+$vmu = Util::bytes_to_size($st['memory']['swap']['used']);
+$vmf = Util::bytes_to_size($st['memory']['swap']['free']);
 $vmp = number_format($st['memory']['swap']['percent_used'], 2);
 
 //Disk Usage

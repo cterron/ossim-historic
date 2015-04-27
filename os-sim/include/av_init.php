@@ -34,7 +34,7 @@
 //Create session
 session_start();
 
-//Alienvault Constants
+//AlienVault Constants
 require_once 'av_config.php';
 
 //Setting Class Path

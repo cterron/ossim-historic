@@ -4,7 +4,7 @@
 * License:
 *
 * Copyright (c) 2003-2006 ossim.net
-* Copyright (c) 2007-2013 AlienVault
+* Copyright (c) 2007-2015 AlienVault
 * All rights reserved.
 *
 * This package is free software; you can redistribute it and/or modify
@@ -71,269 +71,804 @@
 /* discovered with this program's use.                     */
 /***********************************************************/
 
+
 require_once 'av_init.php';
 require_once 'config.php';
 require_once 'functions.inc';
 
-Session::logcheck("environment-menu", "EventsVulnerabilitiesScan");
-
-define("EXCLUDING_IP",  "^!(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$");
-define("EXCLUDING_IP2", "!(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
+Session::logcheck('environment-menu', 'EventsVulnerabilitiesScan');
 
 $db   = new ossim_db();
 $conn = $db->connect();
 
+$conn->SetFetchMode(ADODB_FETCH_BOTH);
+
+// check the number of plugins
+
+$query  = 'select count(*) as total_plugins from vuln_nessus_plugins';
+
+$result = $conn->execute($query);
+
+if ($result->fields['total_plugins'] == 0)
+{
+   die ('<h2>Please run updateplugins.pl script first before using web interface.</h2>');
+}
+
+define("EXCLUDING_IP",  "^!(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$");
+define("EXCLUDING_IP2", "!(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
+
 // key to display asset tree
 
-if(Session::is_pro()) {
-    $keytree = "assets|entitiesassets";
-}
-else {
-    $keytree = "assets";
-}
+$keytree = (Session::is_pro()) ? 'assets|entitiesassets' : 'assets';
 
-$force           = FALSE;
+$tz    = Util::get_timezone();
 
-$asset_to_select = array();
-$_hosts          = array();
-$hosts           = "";
+$force = FALSE;
 
-$autocomplete_keys = array('hosts', 'nets');
-$assets            = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
+$asset_to_select = array();  
 
-$back_url          = (preg_match("/manage_jobs/", $_SERVER['HTTP_REFERER'])) ? "manage_jobs.php" : Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/index.php', 'environment', 'vulnerabilities','overview');
+$autocomplete_keys   = array('hosts', 'nets', 'host_groups');
+$autocomplete_assets = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 
-$myhostname="";
+$back_url            = (preg_match("/manage_jobs/", $_SERVER['HTTP_REFERER'])) ? "manage_jobs.php" : Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/index.php', 'environment', 'vulnerabilities','overview');
 
-$getParams = array( 'vuln_op', 'rid', 'notify_email', 'tarSel', 'targets', 'ip_start',
-                    'ip_end', 'named_list', 'subnets',  'schedule_type', 'cred_type', 'job_id', 'sched_id','hosts_alive','scan_locally','smethod', 'net_id'
-                   );
+// get parameters
 
-
-$postParams = array( 'vuln_op', 'rid', 'notify_email', 'schedule_type', 'ROYEAR', 'ROMONTH', 'ROday',
-                    'time_hour', 'time_min', 'dayofweek', 'dayofmonth', 'timeout', 'SVRid', 'sid', 'tarSel',
-                     'targets', 'ip_start', 'ip_end', 'named_list', 'subnet', 'system', 'cred_type', 'credid', 'acc',
-                     'domain', 'accpass', 'acctype', 'passtype', 'passstore', 'job_id','wpolicies', 'wfpolicies', 
-                     'upolicies', 'cidr', 'custadd_type', 'cust_plugins', 'sched_id', 'is_enabled', 'submit', 'process',
-                     'isvm', 'sen', 'hostlist', 'pluginlist','user','entity','hosts_alive','scan_locally','nthweekday', 'nthdayofweek', 'time_interval',
-                     'biyear', 'bimonth', 'biday', 'not_resolve', 'semail');
-
- $daysMap = array ( 
-     "0" => "NONE", 
-    "Su" => "Sunday",
-    "Mo" => "Monday",
-    "Tu" => "Tuesday",
-    "We" => "Wednesday",
-    "Th" => "Thursday",
-    "Fr" => "Friday", 
-    "Sa" => "Saturday"
-          );
- $wdaysMap = array ( 
-    "Su" => "0",
-    "Mo" => "1",
-    "Tu" => "2",
-    "We" => "3",
-    "Th" => "4",
-    "Fr" => "5", 
-    "Sa" => "6"
-          );        
-          
-$schedOptions = array( "N" => "Immediately",
-                     "O" => "Run Once", 
-                     "D" => "Daily", 
-                     "W" => "Weekly", 
-                     "M" => "Monthly" );
-
-$pluginOptions = array( "N" => "No Additional Plugins",
-                     "A" => "In Addition to ( selected Profile Plugins)", 
-                     "R" => "In Replace of ( selected Profile Plugins)" );
-
-switch ($_SERVER['REQUEST_METHOD'])
+$parameters = array('action', 'job_name', 'targets', 'schedule_type', 'ROYEAR', 'ROMONTH', 'ROday', 'time_hour',
+                    'time_min', 'dayofweek', 'dayofmonth', 'timeout', 'SVRid', 'sid', 'targets', 'job_id',
+                    'sched_id', 'user', 'entity', 'hosts_alive','scan_locally', 'nthweekday', 'nthdayofweek',
+                    'time_interval', 'biyear', 'bimonth', 'biday', 'not_resolve', 'send_email', 'ssh_credential',
+                    'smb_credential', 'hosts_alive', '$scan_locally', 'not_resolve', 'net_id');
+                     
+foreach ($parameters as $variable)
 {
-case "GET" :
-   foreach ($getParams as $gp) {
-      if (isset($_GET[$gp])) { 
-         if(is_array($_GET[$gp])) {
-            foreach ($_GET[$gp] as $i=>$tmp) {
-               ${$gp}[$i] = sanitize($tmp);
-            }
-         } else {
-            $$gp = sanitize($_GET[$gp]);
-         }
-      } else { 
-         $$gp=""; 
-      }
-   }
-
-   $disp  = GET('disp');
-   $sname = GET('sname');
-
-   break;
-
-case "POST" :
-//   echo "<pre>"; print_r($_POST); echo "</pre>";
-   foreach ($postParams as $pp) {
-      if (isset($_POST[$pp])) { 
-         if(is_array($_POST[$pp])) {
-            foreach($_POST[$pp] as $i=>$tmp) {
-               ${$pp}[$i] = sanitize($tmp);
-            }
-         } else {
-            $$pp = sanitize($_POST[$pp]);
-         }
-      } else { 
-         $$pp=""; 
-      }
-   }
-
-   $disp           = POST('disp');
-   $sname          = POST('sname');
-   $ssh_credential = POST('ssh_credential');
-   $smb_credential = POST('smb_credential');
-
-   break;
+    $$variable = REQUEST($variable);
 }
 
-if ($_GET['status'] != '' || $_POST['status'] != '')
-{
-    $scheduled_status = (GET('status') != '') ? GET('status') : POST('status');
-    $scheduled_status = intval($scheduled_status);
-}
-else
-{
-    $scheduled_status = 1; // enable scheduled jobs by default
-}
+$hosts_alive   = intval($hosts_alive);
+$scan_locally  = intval($scan_locally);
+$not_resolve   = intval($not_resolve);
+$send_email    = intval($send_email);
 
+$scheduled_status =  ($_REQUEST['status'] != '') ? intval($_REQUEST['status']) : 1; // enable scheduled jobs by default
 
-# Handle $disp var separate due to a invalid return value with htmlentities
-ossim_valid($disp, 'create', 'edit_sched', 'delete_scan', 'rerun', OSS_NULLABLE, 'Illegal:'._('Disp'));
+ossim_valid($action, 'create_scan', 'save_scan', 'edit_sched', 'delete_scan', 'rerun_scan', OSS_NULLABLE, 'Illegal:'._('Action'));
+
 if (ossim_error())
 {
-    die(_('Invalid Disp Parameter'));
+    die(_('Invalid Action Parameter'));
 }
 
-$save_scan = (intval($_POST['save_scan'])==1) ? TRUE : FALSE;
+// load common data
 
-if ($schedule_type=="NW") {
-    $dayofweek = $nthdayofweek;
-}
-
-$error_message="";
-
-if ($sname=="") {
-    $error_message .= _("Invalid Job name")."<br/>";
-    $force          = TRUE;
-}
-
-if ($timeout=="") {
-    $error_message .= _("Invalid Timeout")."<br/>";
-}
-
-ossim_valid($sname, OSS_SCORE, OSS_NULLABLE, OSS_ALPHA, OSS_SPACE, 'illegal:' . _("Job name"));
-if (ossim_error()) {
-    $force = TRUE;
-    $error_message .= _("Invalid Job name")."<br/>";
-}
-ossim_set_error(false);
-ossim_valid($entity, OSS_NULLABLE, OSS_HEX, 'illegal:' . _("Entity"));
-if (ossim_error()) {
-    $error_message .= _("Invalid entity")."<br/>";
-}
-ossim_set_error(false);
-ossim_valid($net_id, OSS_NULLABLE, OSS_HEX, 'illegal:' . _("Net ID"));
-if (ossim_error()) {
-    $error_message .= _("Invalid Net ID")."<br/>";
-}
-
-ossim_set_error(false);
-ossim_valid($user, OSS_SCORE, OSS_NULLABLE, OSS_ALPHA, OSS_SPACE, '\.', 'illegal:' . _("User"));
-if (ossim_error()) {
-    $error_message .= _("Invalid user")."<br/>";
-}
-
-ossim_set_error(false);
-ossim_valid($timeout, OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _("Timeout"));
-if (ossim_error()) {
-    $error_message .= _("Invalid timeout")."<br/>";
-}
-
-ossim_set_error(false);
-ossim_valid($ssh_credential, OSS_USER, OSS_SPACE, OSS_AT, '#', OSS_NULLABLE, 'illegal:' . _("SSH Credential"));
-if (ossim_error()) {
-    $error_message .= _("Invalid SSH Credential")."<br/>";
-}
-
-ossim_set_error(false);
-ossim_valid($smb_credential, OSS_USER, OSS_SPACE, OSS_AT, '#', OSS_NULLABLE, 'illegal:' . _("SMB Credential"));
-if (ossim_error()) {
-    $error_message .= _("Invalid SMB Credential")."<br/>";
-}
-
-
-$ip_exceptions_list = array();
-$tip_target         = array();
-
-if(empty($targets)) { $targets = array(); }
-
-foreach($targets as $target) {
-    $target_error = false;
-    $target = trim($target);
+if (in_array ($action, array ('create_scan', 'edit_sched', 'rerun_scan', 'save_scan')))
+{
+    // load the default values for the form
     
-    if (preg_match("/^\!\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/",$target)) {
-        $ip_exceptions_list[] = $target;
+    if ($action == 'create_scan')
+    {
+        $conf         = $GLOBALS['CONF'];
+        $scan_locally = $conf->get_conf('nessus_pre_scan_locally');
+        $timeout      = 28800;
+        $hosts_alive  = 1;
     }
-    else if(!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/",$target)) {
-        ossim_valid($target, OSS_FQDNS , 'illegal: Host name'); // asset id
+    
+    $hosts_alive_data        = get_host_alive_attributes($hosts_alive, $targets);
+    
+    $scan_locally_checked    = ($scan_locally == 1) ? 'checked="checked"' : '';
+    $resolve_names_checked   = ($not_resolve  == 1) ? 'checked="checked"' : '';
+    
+    $email_notification = array();
+    
+    $email_notification['no']  = ($send_email == 0) ? 'checked="checked"' : '';
+    $email_notification['yes'] = ($send_email == 1) ? 'checked="checked"' : '';;
+    
+    // load sensors
+    
+    $filters = array('where' => 'sensor_properties.has_vuln_scanner = 1');
+    
+    list($all_sensors, $s_total) = Av_sensor::get_list($conn);
+    
+    foreach ($all_sensors as $_sensor_id => $sensor_data)
+    {        
+        $all_sensors[$_sensor_id]['selected'] = ($_sensor_id == $SVRid) ? 'selected="selected"' : '';
+    }
+    
+    // load profiles
+    
+    $args = '';
+    
+    if (!Session::am_i_admin())
+    {
+        list($owners, $sqlowners) = Vulnerabilities::get_users_and_entities_filter($conn);
+        $owners[]   = '0';
+        $sql_perms .= " OR owner IN('".implode("', '",$owners)."')";
 
-        if (ossim_error()) {
-            $target_error   = true;
-            $error_message .= _("Invalid asset id").": $asset_id<br/>";
+        $args = "WHERE name='Default' OR name='Deep' OR name='Ultimate' ".$sql_perms;
+    }
+
+    $query = "SELECT id, name, description, owner, type FROM vuln_nessus_settings $args ORDER BY name";
+
+    $conn->SetFetchMode(ADODB_FETCH_BOTH);
+
+    $result = $conn->execute($query);
+    
+    while (!$result->EOF)
+    {
+        $p_description = ($result->fields['description'] != '') ? ' - ' . $result->fields['description'] : '';
+        
+        $v_profiles[$result->fields['id']]['name&description'] = $result->fields['name'] . $p_description;
+        
+        if (($sid == '' && $result->fields['name'] == 'Default') || $result->fields['id'] == $sid)
+        {
+            $v_profiles[$result->fields['id']]['selected'] = 'selected="selected"';
         }
-        else {
+        
+        $result->MoveNext();
+    }
+    
+    // load users and entities
+    
+    $users           = Session::get_users_to_assign($conn);
+    $users_to_assign = array();
+    
+    foreach ($users as $u_key => $u_value)
+    {
+        $users_to_assign[$u_value->get_login()]['selected'] = ($u_value->get_login() == $user) ? 'selected="selected"' : '';
+        $users_to_assign[$u_value->get_login()]['name']     = $u_value->get_login();
+    }
+    
+    $entities           = Session::get_entities_to_assign($conn);
+    $entities_to_assign = array();
+    
+    foreach ($entities as $e_key => $e_value) 
+	{
+    	$entities_to_assign[$e_key]['selected'] = ($e_key == $entity) ? 'selected="selected"' : '';
+    	$entities_to_assign[$e_key]['name']     = $e_value;
+	}
+	
+	// load credentials
+    
+    $ssh_cred = Vulnerabilities::get_credentials($conn, 'ssh');
+    $ssh_arr  = array();
+        
+    foreach ($ssh_cred as $cred) 
+	{	
+    	$login_text = $cred['login'];
+    			
+		if ($login_text == '0' || valid_hex32($login_text))
+		{
+			$login_text =  ($login_text=='0') ? _('All') : Session::get_entity_name($conn, $cred['login']);	
+		}
+		
+		$cred_key = $cred['name'].'#'.$cred['login'];
+		
+        $ssh_arr[$cred_key]['selected'] = ($cred_key == $ssh_credential) ? 'selected="selected"' : '';
+        $ssh_arr[$cred_key]['name']     = $cred['name'] . ' (' . $login_text . ')';
+    }
+    
+    $smb_cred = Vulnerabilities::get_credentials($conn, 'smb');
+    $smb_arr  = array();
+        
+    foreach ($smb_cred as $cred) 
+	{			
+    	$login_text = $cred['login'];
+    	
+		if ($login_text == '0' || valid_hex32($login_text))
+		{
+			$login_text =  ($login_text=='0') ? _('All') : Session::get_entity_name($conn, $cred['login']);	
+		}
+		
+		$cred_key = $cred['name'].'#'.$cred['login'];
+		
+        $smb_arr[$cred_key]['selected'] = ($cred_key == $smb_credential) ? 'selected="selected"' : '';
+        $smb_arr[$cred_key]['name']     = $cred['name'] . ' (' . $login_text . ')';
+    }
+    
+    // fill targets
+    
+    if (empty($targets)==FALSE)
+    {
+        $select_targets = get_targets($conn, $targets);
+    }
+    else if(preg_match('/^[a-f\d]{32}$/i', $net_id) && Asset_net::is_in_db($conn, $net_id))
+    {   
+        // Autofill new scan job from deployment
+        
+        $targets_list = array();
+
+        $cidrs = explode(',', Asset_net::get_ips_by_id($conn, $net_id));
+        
+        foreach ($cidrs as $cidr)
+        {   
+            $targets_list[] = $net_id . '#' . trim($cidr);
+        }
+        
+        $select_targets = get_targets($conn, $targets_list);
+    }
+    
+    // Schedule data
+    
+    $daysMap = array (
+        'Su' => array('text' => _('Sunday'),    'number' => '0'),
+        'Mo' => array('text' => _('Monday'),    'number' => '1'),
+        'Tu' => array('text' => _('Tuesday'),   'number' => '2'),
+        'We' => array('text' => _('Wednesday'), 'number' => '3'),
+        'Th' => array('text' => _('Thursday'),  'number' => '4'),
+        'Fr' => array('text' => _('Friday'),    'number' => '5'),
+        'Sa' => array('text' => _('Saturday'),  'number' => '6'),
+    );
+    
+    $nweekday = array(
+        '1' =>  array('text' =>  _('First'), 'selected' => 'selected="selected"'),
+        '2' =>  array('text' =>  _('Second')),
+        '3' =>  array('text' =>  _('Third')),
+        '4' =>  array('text' =>  _('Fourth')),
+        '5' =>  array('text' =>  _('Fifth')),
+        '6' =>  array('text' =>  _('Sixth')),
+        '7' =>  array('text' =>  _('Seventh')),
+        '8' =>  array('text' =>  _('Eighth')),
+        '9' =>  array('text' =>  _('Ninth')),
+        '10' => array('text' =>  _('Tenth'))
+    );
+    
+    $s_methods = array(
+        'N'   => array('name' => _('Immediately')),
+        'O'   => array('name' => _('Run Once')),
+        'D'   => array('name' => _('Daily')),
+        'W'   => array('name' => _('Day of the Week')),
+        'M'   => array('name' => _('Day of the Month')),
+        'NW'  => array('name' => _('N<sup>th</sup> weekday of the month'))
+    );
+    
+    // date to fill the form
+    
+    // default values
+    
+    $nextscan = gmdate('Y-m-d H:i:s w', gmdate('U') + 3600*$tz);
+        
+    preg_match('/(\d+)\-(\d+)\-(\d+)\s(\d+):(\d+):(\d+)\s(\d)/', $nextscan, $found);
+        
+    $current_year       = $found[1];
+    $selected_year      = $found[1];
+    
+    $current_month      = $found[2];
+    $selected_month     = $found[2];
+    
+    $current_day        = ltrim($found[3], '0');
+    $selected_day       = ltrim($found[3], '0');
+        
+    $selected_time_hour = ltrim($found[4], '0');
+    $selected_time_min  = ltrim($found[5], '0');
+    
+    $selected_week_day  = $found[7];
+        
+    $selected_frequency = 1;
+
+    if ($action == 'save_scan')
+    {   
+        if ($schedule_type == 'O')
+        {
+            $selected_year  = $ROYEAR;
+            $selected_month = $ROMONTH;
+            $selected_day   = $ROday;
+        }
+        else
+        {
+            $selected_year  = $biyear;
+            $selected_month = $bimonth;
+            $selected_day   = $biday;
+        }
+        
+        if ($schedule_type == 'W')
+        {
+            $selected_week_day  = $daysMap[$dayofweek]['number'];
+        }
+        else if ($schedule_type == 'NW')
+        {
+            $selected_week_day  = $daysMap[$nthdayofweek]['number'];
+        }
+        
+        if ($schedule_type == 'M')
+        {
+            $selected_dayofmonth = $dayofmonth;
+        }
+        
+        $selected_time_hour = $time_hour;
+        $selected_time_min  = $time_min;
+        
+        $selected_nweekday  = $nthweekday;
+        
+        $selected_frequency = $time_interval;
+        
+        foreach ($s_methods as $m => $method_data)
+        {
+            $s_methods[$m]['selected'] = ($m == $schedule_type) ? 'selected="selected"' : '';
+        }
+    }
+
+    // day of week
+    
+    foreach ($daysMap as $d => $day_data)
+    {
+        $daysMap[$d]['selected'] = ($day_data['number'] == $selected_week_day) ? 'selected="selected"' : '';
+    }
+    
+    // hour and time
+    
+    $hours = array();
+     
+    for ($i=0;$i<=23;$i++)
+    {
+        $hours[$i]['selected'] = ($i == $selected_time_hour) ? 'selected="selected"' : '';
+    }
+    
+    $minutes = array();
+    
+    for ($i=0;$i<60;$i=$i+15)
+    {
+        $minutes[$i]['selected'] = ($i == $selected_time_min) ? 'selected="selected"' : '';
+    }
+    
+    // Years
+    
+    for ($i=$current_year;$i<=$current_year+1;$i++)
+    {                                          
+        $years[$i]['selected'] = ($i == $selected_year) ? 'selected="selected"' : '';
+    }
+        
+    // Months
+    
+    $months = array();
+    
+    for($i=1;$i<=12;$i++)
+    {
+        $months[$i]['selected'] = ($i == $selected_month) ? 'selected="selected"' : '';
+    }
+        
+    // Days
+    
+    $days = array();
+    
+    for($i=1;$i<=31;$i++)
+    {
+        $days[$i]['selected'] = ($i == $selected_day) ? 'selected="selected"' : '';
+    }
+    
+    // Days of month, another array is needed
+    
+    $days_of_month = array();
+    
+    for($i=1;$i<=31;$i++)
+    {
+        $days_of_month[$i]['selected'] = ($i == $selected_dayofmonth) ? 'selected="selected"' : '';
+    }
+    
+    // Time interval
+    
+    $frequencies = array();
+    
+    for ($i=1;$i<=30;$i++)
+    {
+        $frequencies[$i]['selected'] = ($i == $selected_frequency) ? 'selected="selected"' : '';
+    }
+    
+    foreach ($nweekday as $number => $data)
+    {
+        $nweekday[$number]['selected'] = ($number == $selected_nweekday) ? 'selected="selected"' : '';
+    }
+}
+
+if ($action == 'save_scan')
+{   
+    // validate fields
+    
+    $validation_errors = array();
+    
+    if ($timeout == '') {
+        $validation_errors[] = _('Invalid Timeout');
+    }
+    
+    ossim_valid($job_name, OSS_SCORE, OSS_ALPHA, OSS_SPACE, 'illegal:' . _('Job name'));
+    if (ossim_error()) {
+        $force = TRUE;
+        $validation_errors[] = _('Invalid Job name');
+    }
+    
+    ossim_set_error(FALSE);
+    ossim_valid($entity, OSS_NULLABLE, OSS_HEX, 'illegal:' . _('Entity'));
+    if (ossim_error()) {
+        $validation_errors[] = _('Invalid entity');
+    }
+    ossim_set_error(FALSE);
+    ossim_valid($net_id, OSS_NULLABLE, OSS_HEX, 'illegal:' . _('Net ID'));
+    if (ossim_error()) {
+        $validation_errors[] = _('Invalid Net ID');
+    }
+    
+    ossim_set_error(FALSE);
+    ossim_valid($user, OSS_SCORE, OSS_NULLABLE, OSS_ALPHA, OSS_SPACE, '\.', 'illegal:' . _('User'));
+    if (ossim_error()) {
+        $validation_errors[] = _('Invalid user');
+    }
+    
+    ossim_set_error(FALSE);
+    ossim_valid($timeout, OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _('Timeout'));
+    if (ossim_error()) {
+        $validation_errors[] = _('Invalid timeout');
+    }
+    
+    ossim_set_error(FALSE);
+    ossim_valid($ssh_credential, OSS_USER, OSS_SPACE, OSS_AT, '#', OSS_NULLABLE, 'illegal:' . _("SSH Credential"));
+    if (ossim_error()) {
+        $validation_errors[] = _('Invalid SSH Credential');
+    }
+    
+    ossim_set_error(FALSE);
+    ossim_valid($smb_credential, OSS_USER, OSS_SPACE, OSS_AT, '#', OSS_NULLABLE, 'illegal:' . _("SMB Credential"));
+    if (ossim_error()) {
+        $validation_errors[] = _('Invalid SMB Credential');
+    }
+    
+    $ip_exceptions_list = array();
+    $tip_target         = array();
+    
+    if(empty($targets)) { $targets = array(); }
+    
+    foreach($targets as $target) {
+        $target_error = FALSE;
+        $target = trim($target);
+        
+        if (preg_match("/^\!\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/",$target)) {
+            $ip_exceptions_list[] = $target;
+        }
+        else if(!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?|hostgroup|netgroup$/",$target)) {
+            ossim_valid($target, OSS_FQDNS , 'illegal: Host name'); // asset id
+    
+            if (ossim_error()) {
+                $target_error   = TRUE;
+                $validation_errors[] = _('Invalid asset id'). ': ' . $asset_id;
+            }
+            else {
+                $tip_target[] = $target;
+            }
+        }
+        else if(preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?$/", $target)){
             $tip_target[] = $target;
         }
-    }
-    else if(preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?$/", $target)){
-        $tip_target[] = $target;
-    }
-    else {
-        list($asset_id, $ip_target) = explode("#", $target);
+        else {
             
-        ossim_set_error(false);
-        ossim_valid($asset_id, OSS_HEX, OSS_NULLABLE , 'illegal: Asset id'); // asset id
+            list($asset_id, $ip_target) = explode("#", $target);
+                
+            ossim_set_error(FALSE);
+            ossim_valid($asset_id, OSS_HEX, OSS_NULLABLE , 'illegal: Asset id'); // asset id
+            
+            if (ossim_error()) {
+                $target_error   = FALSE;
+                $validation_errors[] = _('Invalid asset id') . ': ' . $asset_id;
+            }
+    
+            ossim_set_error(FALSE);
+            ossim_valid($ip_target, OSS_NULLABLE, OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, '\.\,\/\!', 'illegal:' . _("Target"));
+            if (ossim_error()) {
+                $target_error   = FALSE;
+                $validation_errors[] = _('Invalid target') . ': '. $ip_target;
+            }
+            if(!$target_error) {
+                $tip_target[] = str_replace('!', '', $target);
+            }
+        }
+    }
+    
+    $ip_list = $tip_target;
+    
+    // validated targets
+    
+    if (count($tip_target)==0)
+    { 
+        $validation_errors[] = _('Invalid Targets');
+    }
+    
+    if(empty($validation_errors))
+    {     
+        // save the scan data
         
-        if (ossim_error()) {
-            $target_error   = true;
-            $error_message .= _("Invalid asset id").": $asset_id<br/>";
-        }
+        submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $schedule_type, $not_resolve, $user, $entity, $targets, $scheduled_status,
+                    $hosts_alive, $sid, $send_email, $timeout, $scan_locally, $dayofweek, $dayofmonth, $ROYEAR, $ROMONTH, $ROday, $time_hour, $time_min,
+                    $time_interval, $sched_id, $biyear, $bimonth, $biday, $nthweekday, $tz, $daysMap, $ip_exceptions_list);
+    }
+}
+else if ($action == 'edit_sched')
+{
+    // read the configuration from database
+    
+    $query    = 'SELECT * FROM vuln_job_schedule WHERE id = ?';
+    
+    $params   = array($sched_id);
+    $result   = $conn->execute($query, $params);
+    
+    $database = $result->fields;
+    
+    // job name
+    
+    $job_name = $database['name'];
+    
+    // sensor
+    
+    foreach ($all_sensors as $_sensor_id => $sensor_data)
+    {        
+        $all_sensors[$_sensor_id]['selected'] = ($_sensor_id == $database['email']) ? 'selected="selected"' : '';
+    }
+    
+    // profile
+    
+    foreach ($v_profiles as $v_profile_id => $profile_data)
+    {
+        $v_profiles[$v_profile_id]['selected'] = ($v_profile_id == $database['meth_VSET']) ? 'selected="selected"' : '';
+    }
+    
+    $hosts_alive_data      = get_host_alive_attributes($database['meth_CRED'], $database['meth_TARGET']);
+    
+    $scan_locally_checked  = (intval($database['meth_Ucheck']) == 1)   ? 'checked="checked"' : '';
+    
+    $resolve_names_checked = (intval($database['resolve_names']) == 0) ? 'checked="checked"' : '';
+    
+    // Advanced configuration
+    
+    $timeout = $database['meth_TIMEOUT'];
+    
+    foreach ($users_to_assign as $u_key => $u_value )
+    {   
+        $users_to_assign[$u_key]['selected'] = ($u_key == $database['username']) ? 'selected="selected"' : '';   
+    }
+    
+    foreach ($entities_to_assign as $e_key => $e_value )
+    {
+        $entities_to_assign[$e_key]['selected'] = ($e_key == $database['username']) ? 'selected="selected"' : '';
+    }
+    
+    $email_notification['no']  = (intval($database['meth_Wfile']) == 0) ? 'checked="checked"' : '';
+    $email_notification['yes'] = (intval($database['meth_Wfile']) == 1) ? 'checked="checked"' : '';  
+    
+    preg_match ('/(.*)\|(.*)/', $database['credentials'], $found);
+    
+    foreach ($ssh_arr as $cred_id => $cred_data)
+    {
+        $ssh_arr[$cred_id]['selected'] = ($cred_id == $found[1]) ? 'selected="selected"' : '';
+    }
+    
+    foreach ($smb_arr as $cred_id => $cred_data)
+    {
+        $smb_arr[$cred_id]['selected'] = ($cred_id == $found[2]) ? 'selected="selected"' : '';
+    }
+    
+    // targets
+    
+    $select_targets = get_targets($conn, $database['meth_TARGET']);
 
-        ossim_set_error(false);
-        ossim_valid($ip_target, OSS_NULLABLE, OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, '\.\,\/\!', 'illegal:' . _("Target"));
-        if (ossim_error()) {
-            $target_error   = true;
-            $error_message .= _("Invalid target").": $ip_target<br/>";
+    // schedule data
+    
+    $nextscan = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime($database['next_CHECK']) + (3600*$tz)); 
+    preg_match('/(\d+)\-(\d+)\-(\d+)\s(\d+):(\d+):(\d+)/', $nextscan, $found);
+    
+    // Time for all types
+    
+    $selected_time_hour = ltrim($found[4], '0');
+    $selected_time_min  = ltrim($found[5], '0');
+    
+    if ($schedule_type == 'O')
+    {
+        $selected_year      = $found[1];
+        $selected_month     = $found[2];
+        $selected_day       = $found[3];
+    }
+    else
+    {
+        preg_match('/(\d{4})(\d{2})(\d{2})/', $database['begin'], $found);
+        
+        $selected_year      = $found[1];
+        $selected_month     = $found[2];
+        $selected_day       = $found[3];
+    }
+    
+    foreach ($hours as $h => $h_data)
+    {
+        $hours[$h]['selected'] = ($h == $selected_time_hour) ? 'selected="selected"' : '';
+    }
+    
+    foreach ($minutes as $m => $m_data)
+    {
+        $minutes[$m]['selected'] = ($m == $selected_time_min) ? 'selected="selected"' : '';
+    }
+    
+    // Years
+    
+    foreach ($years as $y => $year_data)
+    {                                          
+        $years[$y]['selected'] = ($y == $selected_year) ? 'selected="selected"' : '';
+    }
+        
+    // Months
+    
+    foreach ($months as $m => $month_data)
+    {
+        $months[$m]['selected'] = ($m == $selected_month) ? 'selected="selected"' : '';
+    }
+        
+    // Days
+    
+    foreach ($days as $d => $day_data)
+    {
+        $days[$d]['selected'] = ($d == $selected_day) ? 'selected="selected"' : '';
+    }
+    
+    // Time interval
+    
+    foreach ($frequencies as $f => $f_data)
+    {
+        $frequencies[$f]['selected'] = ($f == $database['time_interval']) ? 'selected="selected"' :  '';
+    }
+    
+    // Day of month
+    
+    foreach ($days_of_month as $day => $days_data)
+    {
+        $days_of_month[$day]['selected'] = ($day == $database['day_of_month']) ? 'selected="selected"' : '';
+    }
+    
+    // Day of week
+    
+    foreach ($daysMap as $day => $day_data)
+    {
+        $daysMap[$day]['selected'] = ($day == $database['day_of_week']) ? 'selected="selected"' :  '';
+    }
+    
+    // schedule method
+    
+    foreach ($s_methods as $type => $method_data)
+    {
+        $s_methods[$type]['selected'] = ($type == $database['schedule_type']) ? 'selected="selected"' :  '';
+    }
+}
+else if ($action == 'rerun_scan')
+{
+    // read the configuration from database
+    
+    $query    = 'SELECT * FROM vuln_jobs WHERE id = ?';
+    
+    $params   = array($job_id);
+    $result   = $conn->execute($query, $params);
+    
+    $database = $result->fields;
+    
+    // job name
+    
+    $job_name = $database['name'];
+    
+    // sensor
+    
+    foreach ($all_sensors as $_sensor_id => $sensor_data)
+    {        
+        $all_sensors[$_sensor_id]['selected'] = ($_sensor_id == $database['notify']) ? 'selected="selected"' : '';
+    }
+    
+    // profile
+    
+    foreach ($v_profiles as $v_profile_id => $profile_data)
+    {
+        $v_profiles[$v_profile_id]['selected'] = ($v_profile_id == $database['meth_VSET']) ? 'selected="selected"' : '';
+    }
+    
+    $hosts_alive_data      = get_host_alive_attributes($database['meth_CRED'], $database['meth_TARGET']);
+    
+    $scan_locally_checked  = (intval($database['authorized']) == 1)    ? 'checked="checked"' : '';
+    
+    $resolve_names_checked = (intval($database['resolve_names']) == 0) ? 'checked="checked"' : '';
+    
+    // Advanced configuration
+    
+    $timeout = $database['meth_TIMEOUT'];
+    
+    foreach ($users_to_assign as $u_key => $u_value )
+    {   
+        $users_to_assign[$u_key]['selected'] = ($u_key == $database['username']) ? 'selected="selected"' : '';   
+    }
+    
+    foreach ($entities_to_assign as $e_key => $e_value )
+    {
+        $entities_to_assign[$e_key]['selected'] = ($e_key == $database['username']) ? 'selected="selected"' : '';
+    }
+    
+    $email_notification['no']  = (intval($database['meth_Wfile']) == 0) ? 'checked="checked"' : '';
+    $email_notification['yes'] = (intval($database['meth_Wfile']) == 1) ? 'checked="checked"' : '';  
+    
+    preg_match ('/(.*)\|(.*)/', $database['credentials'], $found);
+    
+    foreach ($ssh_arr as $cred_id => $cred_data)
+    {
+        $ssh_arr[$cred_id]['selected'] = ($cred_id == $found[1]) ? 'selected="selected"' : '';
+    }
+    
+    foreach ($smb_arr as $cred_id => $cred_data)
+    {
+        $smb_arr[$cred_id]['selected'] = ($cred_id == $found[2]) ? 'selected="selected"' : '';
+    }
+    
+    // targets
+    
+    $select_targets = get_targets($conn, $database['meth_TARGET']);
+    
+}
+else if ($action == 'delete_scan')
+{
+    $query = 'SELECT username, name, id, scan_SERVER, report_id, status FROM vuln_jobs WHERE id=?';
+    
+    $params = array($job_id);
+    
+    $result = $conn->execute($query, $params);
+    
+    $username   = $result->fields['username'];
+    $job_name   = $result->fields['name'];
+    $kill_id    = $result->fields['id'];
+    $nserver_id = $result->fields['scan_SERVER'];
+    $report_id  = $result->fields['report_id'];
+    
+    $can_i_delete = FALSE;
+    
+    if (Session::am_i_admin() || Session::get_session_user() == $username)
+    {
+        $can_i_delete = TRUE;
+    }
+    else if (Session::is_pro() && Acl::am_i_proadmin())
+    {
+        $user_vision = (!isset($_SESSION['_user_vision'])) ? Acl::get_user_vision($conn) : $_SESSION['_user_vision'];
+    
+        $my_entities_admin = array_keys($user_vision['entity_admin']);
+        
+        if (in_array($username, $my_entities_admin))
+        {
+            $can_i_delete = TRUE;
         }
-        if(!$target_error) {
-            $tip_target[] = str_replace("!","",$target);
-        }
+    }
+    
+    if ($can_i_delete)
+    {
+        $query  = 'DELETE FROM vuln_jobs WHERE id=?';
+        $params = array($kill_id);
+        $result = $conn->execute($query, $params);
+    
+        $query  = 'DELETE FROM vuln_nessus_reports WHERE report_id=?';
+        $params = array($report_id);
+        $result = $conn->execute($query, $params);
+        
+        $query  = 'DELETE FROM vuln_nessus_report_stats WHERE report_id=?';
+        $params = array($report_id);
+        $result = $conn->execute($query, $params);
+    
+        $query  = 'DELETE FROM vuln_nessus_results WHERE report_id=?';
+        $params = array($report_id);
+        $result = $conn->execute($query, $params);
+        
+        $infolog = array($job_name);
+        Log_action::log(65, $infolog);
     }
 }
 
-$ip_list = $tip_target;
+$db->close($conn);
 
-if (count($tip_target)==0) { // validated targets
-    $error_message .= _("Invalid Targets")."<br/>";
+if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_scan')
+{
+    $url = Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs');
+    
+    header("Location: $url");
+    
+    die();
 }
-
-$hosts_alive  = intval($hosts_alive);
-$scan_locally = intval($scan_locally);
-$not_resolve  = intval($not_resolve);
-
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	<title> <?php echo gettext("Vulnmeter"); ?> </title>
+	<title> <?php echo gettext('Vulnmeter'); ?> </title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 	<meta http-equiv="Pragma" content="no-cache"/>
 	<link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
@@ -351,6 +886,8 @@ $not_resolve  = intval($not_resolve);
 	<?php require ("../host_report_menu.php") ?>
 	<script type="text/javascript">
 		function postload() {
+    		
+    		display_smethod_div();
 		
 		    _excluding_ip = /<?php echo EXCLUDING_IP; ?>/;
 		
@@ -372,50 +909,63 @@ $not_resolve  = intval($not_resolve);
                 onActivate: function(dtnode) 
                 {
                     if(dtnode.data.url!='' && typeof(dtnode.data.url)!='undefined') 
-                    {
-                        var Regexp     = /.*_(\w+)/;
-                        var match      = Regexp.exec(dtnode.data.key);
-                        var id         = "";
-                        var asset_name = "";
-                    
-                        id = match[1];
-
-                        Regexp = /^(.*)\s*\(/;
-	                    match  = Regexp.exec(dtnode.data.val);
-	                            
-	                    asset_name = match[1];
+                    {   
+                        if (dtnode.data.key.match(/hostgroup_[a-f0-9]{32}/i) !== null) // asset group
+                        {   
+                            Regexp = /([a-f0-9]{32})/i;
+                            match  = Regexp.exec(dtnode.data.key);
+                            
+                            value = match[1] + '#hostgroup';
+                            text  = dtnode.data.title;
+                            
+    	                    addto ("targets", text, value);
+                        }
+                        else
+                        {
+                            var Regexp     = /.*_(\w+)/;
+                            var match      = Regexp.exec(dtnode.data.key);
+                            var id         = "";
+                            var asset_name = "";
                         
-                        // Split for multiple IP/CIDR
-						var keys = dtnode.data.val.split(",");
-
-						for (var i = 0; i < keys.length; i++) 
-						{
-							var item   = keys[i];
-							var value  = "";
-	                        var text   = "";
-	                        
-	                        if (item.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null) // net
-	                        { 
-	                            Regexp = /(\d+\.\d+\.\d+\.\d+\/\d+)/;
-	                            match  = Regexp.exec(item);
-	                            
-	                            value = id + "#" + match[1];
-	                            text  = asset_name + " (" + match[1] + ")";
-	                        }
-	                        else if (item.match(/\d+\.\d+\.\d+\.\d+/) !== null) // host
-	                        { 
-	                            Regexp = /(\d+\.\d+\.\d+\.\d+)/;
-	                            match  = Regexp.exec(item);
-	                            
-	                            value = id + "#" + match[1];
-	                            text  = asset_name + " (" + match[1] + ")";
-	                        }
-	                     
-	                        if(value != '' && text != '' && !exists_in_combo('targets', text, value, true))
-	                        {
-	                            addto ("targets", text, value);
-	                        }
-						}
+                            id = match[1];
+    
+                            Regexp = /^(.*)\s*\(/;
+    	                    match  = Regexp.exec(dtnode.data.val);
+    	                            
+    	                    asset_name = match[1];
+    	                    
+                            // Split for multiple IP/CIDR
+    						var keys = dtnode.data.val.split(",");
+    
+    						for (var i = 0; i < keys.length; i++) 
+    						{
+    							var item   = keys[i];
+    							var value  = "";
+    	                        var text   = "";
+    	                        
+    	                        if (item.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null) // net
+    	                        { 
+    	                            Regexp = /(\d+\.\d+\.\d+\.\d+\/\d+)/;
+    	                            match  = Regexp.exec(item);
+    	                            
+    	                            value = id + "#" + match[1];
+    	                            text  = asset_name + " (" + match[1] + ")";
+    	                        }
+    	                        else if (item.match(/\d+\.\d+\.\d+\.\d+/) !== null) // host
+    	                        { 
+    	                            Regexp = /(\d+\.\d+\.\d+\.\d+)/;
+    	                            match  = Regexp.exec(item);
+    	                            
+    	                            value = id + "#" + match[1];
+    	                            text  = asset_name + " (" + match[1] + ")";
+    	                        }
+    	                     
+    	                        if(value != '' && text != '' && !exists_in_combo('targets', text, value, true))
+    	                        {
+    	                            addto ("targets", text, value);
+    	                        }
+    						}
+                        }
 						
 						simulation();
 						
@@ -520,7 +1070,7 @@ $not_resolve  = intval($not_resolve);
             
             $("#searchBox").blur(function() {
                 $("#searchBox").addClass('greyfont');
-                $("#searchBox").val('<?php echo _("Type here to search assets (Hosts/Networks)")?>');
+                $("#searchBox").val('<?php echo _("Type here to search assets")?>');
             });
             
             $('#searchBox').keydown(function(event) {
@@ -553,71 +1103,56 @@ $not_resolve  = intval($not_resolve);
             });
 
             // Autocomplete assets
-            var assets = [ <?php echo $assets ?> ];
+            var assets = [ <?php echo $autocomplete_assets ?> ];
             
             $("#searchBox").autocomplete(assets, {
                 minChars: 0,
                 width: 300,
                 max: 100,
                 matchContains: true,
-                autoFill: true,
+                autoFill: false,
+                selectFirst: false,
                 formatItem: function(row, i, max) {
                     return row.txt;
                 }
                 
             }).result(function(event, item) {
             
-            	var keys = item.ip.split(",");
-
-				for (var i = 0; i < keys.length; i++) 
-				{
-					var ip   = keys[i].replace(/[\s\t\n\r ]+/g,"");
-						
-					var value  = item.id + "#" + ip;                   
-					var text   = item.name + " (" +ip + ")";
-					
-					if(!exists_in_combo('targets', text, value, true))
-					{
-					    addto ("targets", text, value);
-					}
+            	var value = '';
+            	var text  = '';
+            
+                if (item.type == 'host_group' || item.type == 'net_group')
+                {
+                    value = item.id + "#" + item.prefix;
+                    text  = item.name;
+                    
+                    addto ("targets", text, value);
+				}
+                else
+                {
+                	var keys  = item.ip.split(",");
+                	var ip    = '';
+    
+    				for (var i = 0; i < keys.length; i++) 
+    				{
+                        ip   = keys[i].replace(/[\s\t\n\r ]+/g,"");
+    						
+    				    value  = item.id + "#" + ip;                   
+    				    text   = item.name + " (" +ip + ")";
+    					
+    					if(!exists_in_combo('targets', text, value, true))
+    					{
+    					    addto ("targets", text, value);
+    					}
+    				}
 				}
 				simulation();
-                $("#searchBox").val("");
+                $('#searchBox').val('');
                                 
             });
 			
 			$('#scheduleM').change(function() {
-				var type = $(this).attr('value');
-				var id;
-			
-				switch(type)
-				{
-					case "N":
-						id = 1;
-						break;
-					case "O":
-						id = 3;
-						break;
-					case "D":
-						id = 2;
-						break;
-					case "W":
-						id = 4;
-						break;
-					case "M":
-						id = 5;
-						break;
-					case "NW":
-						id = 6;
-						break;
-				}
-		    if(id==1) {
-				$("#smethodtr").hide();
-			}
-			else {
-				$("#smethodtr").show();
-			}
-			showLayer('idSched', id)
+                display_smethod_div();
 			});
 			
 			// Confirm new job with a lot of targets
@@ -633,13 +1168,11 @@ $not_resolve  = intval($not_resolve);
                     av_confirm(msg_confirm, keys).fail(function(){
                         return false; 
                     }).done(function(){
-                        $('#msgform').submit(); 
+                        launch_scan(); 
                     });
 				}
 				else {
-				    $("#hosts_alive").attr('disabled', false);
-				    
-					$('#msgform').submit();
+                    launch_scan();
 				}
   			});
 			
@@ -662,14 +1195,13 @@ $not_resolve  = intval($not_resolve);
             
             <?php
 
-            if((($disp == "edit_sched" || $disp == "rerun" || !empty($ip_list) || GET("net_id") != "") && !$save_scan) || $force)
+            if((($action == 'edit_sched' || $action == 'rerun_scan' || !empty($ip_list) || GET('net_id') != '') && !$save_scan) || $force)
             {
-                ?> 
-                simulation();
-                <?php
+            ?> 
+            simulation();
+            <?php
             }
             ?>
-            
             
             $('#ssh_credential, #smb_credential').change(function() {
 
@@ -799,7 +1331,42 @@ $not_resolve  = intval($not_resolve);
 		{                       
 			$("#mjob").attr("disabled","disabled");
         }
-
+        
+        function display_smethod_div()
+        {
+            var type = $('#scheduleM').attr('value');
+			var id;
+		
+			switch(type)
+			{
+				case "N":
+					id = 1;
+					break;
+				case "O":
+					id = 3;
+					break;
+				case "D":
+					id = 2;
+					break;
+				case "W":
+					id = 4;
+					break;
+				case "M":
+					id = 5;
+					break;
+				case "NW":
+					id = 6;
+					break;
+			}
+			
+		    if(id==1) {
+				$("#smethodtr").hide();
+			}
+			else {
+				$("#smethodtr").show();
+			}
+			showLayer('idSched', id);
+        }
 
         function switch_credentials(select_name)
         {
@@ -830,6 +1397,12 @@ $not_resolve  = intval($not_resolve);
                 }
             }
         }
+        
+        function launch_scan()
+        {
+            $("#hosts_alive").attr('disabled', false);	    
+            $('#msgform').submit();
+        }
 	</script>
 	
 	<style type='text/css'>
@@ -844,6 +1417,14 @@ $not_resolve  = intval($not_resolve);
         .greyfont{
             color: #666666;
         }
+        #title
+        {
+            margin: 10px auto 0px auto;
+        }
+        #main_table{
+            margin:0px auto;
+        }
+        
         #targets {
             width:300px;
             height:200px;
@@ -868,1096 +1449,514 @@ $not_resolve  = intval($not_resolve);
 
 <body>
 
-<div id='v_info'>
-</div>
-
-<?php
-
-$pageTitle = "Nessus Scan Schedule";
-
-//echo "<pre>";
-//print_r($hosts);
-//echo $hosts;
-//print_r($postParams);
-//echo "</pre>";
-
-global $dbconn, $username;
-
-$query = "select count(*) from vuln_nessus_plugins";
-
-$dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-
-$result=$dbconn->execute($query);
-list($pluginscount)=$result->fields;
-
-if ($pluginscount==0) {
-   logAccess( "NO PLUGINS IN THE DB - USER NEED LAUNCH UPDATEPLUGINS" );
-
-   die ("<h2>Please run updateplugins.pl script first before using web interface.</h2>");
-}
-
-$component = getComponent( $username );  
-
-function main_page( $job_id, $vuln_op ){
-   
-	global  $editdata, $scheduler, $defaultVSet, $credAudit, $enComplianceChecks, $profileid, $isvm, $sen, $hostlist, $pluginlist,
-           $timeout, $uroles, $username, $useremail, $dbconn, $disp,
-	   $enDetailedScanRequest, $enScanRequestImmediate, $enScanRequestRecur, $smethod, $back_url;
-
-    $query = "SELECT pn_email, defProfile 
-               FROM vuln_users 
-	       WHERE pn_uname='$username' LIMIT 1";
-	       
-     $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-     
-     $result=$dbconn->execute($query);
-     list($useremail, $user_defsid )=$result->fields;
-
-     $request = "";
-
-     if ( $isvm != "" && $hostlist != "" ) {
-     	$editdata['name'] = "ISVM SCAN - $isvm";
-     	$editdata['meth_TARGET'] = str_replace( "&lt;br&gt;", "\n" , $hostlist );
-     	$editdata['meth_CPLUGINS'] = str_replace( "&lt;br&gt;", "\n" , $pluginlist );
-     }
-     if ( $sen != "" && $hostlist != "" ) {
-     	$editdata['name'] = "INVESTIGATE SCAN - $sen";
-     	$editdata['meth_TARGET'] = str_replace( "&lt;br&gt;", "\n" , $hostlist );
-     	$editdata['meth_CPLUGINS'] = str_replace( "&lt;br&gt;", "\n" , $pluginlist );
-     }     
-     
-     
-     if ( $vuln_op == "reoccuring" ) {
-        $scheduler = "1";
-        $title = "Create Recurring Job";
-        $txt_submit = _("New Job");
-     } elseif ( $vuln_op == "editreocurring" ) {
-        $scheduler = "1";
-        $title = "Edit Recurring Job";
-        $txt_submit = _("Save Changes");
-     } else {
-     	 $scheduler = "0";
-        if ( !($uroles['nessus']) ) {
-	   #Users without nessus role can only submit scan request
-           $request = " Request";   
-        }
-        /*if ( $op != "rerun" ) { #ADD SOME CONTROLS AROUND SETTING/SELECTING SOME IMPORTANT DEFAULTS
-           if ( is_numeric($user_defsid) && $user_defsid > 0 ) {
-           	   $editdata['meth_VSET'] = "$user_defsid";
-           }
-           if ( is_numeric($credAudit) && $credAudit > 0 ) {
-              $editdata['meth_CRED'] = "$credAudit";
-           }
-        }*/
-        if ($disp=="edit_sched")
-            $title = _("Modify Scan Job$request");
-        else
-            $title = _("Create Scan Job$request");
-        $txt_submit = _("New Job");
-     }
-
-    $profileid = $defaultVSet;          #DEFAULT PROFILE
-
-    if($timeout=="") {
-        $timeout = "28800"; // 8 horas
+    <div id='v_info'></div>
+    
+    <?php  
+    if (!empty($validation_errors))
+    {
+        $config_nt = array(
+            'content' => implode('<br/>', $validation_errors),
+            'options' => array (
+            'type'          => 'nf_error',
+            'cancel_button' => TRUE),
+            'style'   => 'width: 80%; margin: 20px auto; text-align: center;'
+        );
+        
+        $nt = new Notification('nt_2', $config_nt);
+        $nt->show();
     }
-
-echo "<center><table style=\"margin-top:10px;\" class=\"transparent\" width=\"80%\" cellspacing=\"0\" cellpadding=\"0\">";
-echo "<tr><td class=\"headerpr_no_bborder\">";
-echo "        <div class='c_back_button'>";
-echo "	          <input type='button' class='av_b_back' onclick=\"document.location.href='$back_url';return false;\"/>";
-echo "	      </div>";
-echo "        $title";
-echo "</td></tr></table></center>";
-echo <<<EOT
-<div>
-     <form method="post" action="sched.php" name="msgform" id='msgform'>
-	 <input type="hidden" name="disp" value="create">
-EOT;
-     if ( $vuln_op == "editrecurring" ) {
-        $sched_id = $editdata['id'];
-        echo <<<EOT
-     <input type="hidden" name="vuln_op" value="editrecurring">
-     <input type="hidden" name="sched_id" value="$sched_id">
-EOT;
-     }
-
-     $tabs = array( "discovery" => "Target");
-     if($uroles['nessus'] || $enDetailedScanRequest) {
-        $tabs['settings'] = "Scan";
-        $tabs['credentials'] = "Credentials";
-        if ($enComplianceChecks ) {
-           $tabs['compliance'] = "Compliance";
-        }
-     }
-
-    echo "<center>".tab_discovery()."</center>";
     ?>
-    <center>
-    <br />
+     
+    <form method="post" action="sched.php" name="msgform" id='msgform'>
+        <input type="hidden" name="action" value="save_scan">
+        <input type="hidden" name="sched_id" value="<?php echo $sched_id ?>">
+        <table id="title" class="transparent" width="80%" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="headerpr_no_bborder">
+                    <div class="c_back_button">
+                        <input type="button" class="av_b_back" onclick="document.location.href='manage_jobs.php';return false;">
+                    </div>
+                    <?php echo _('Create Scan Job');?>
+                </td>
+            </tr>
+        </table>
+        <table id="main_table" width="80%" cellspacing="4" class="main_tables">
+            <tr>
+                <td width="25%" class='job_option'> <?php echo _('Job Name:') ?></td>
+                <td style="text-align:left;"><input type="text" name="job_name" id="job_name" value="<?php echo $job_name ?>"></td>
+            </tr>         
     
-    <?php
-if ( $disp=="edit_sched" )
-    echo "<input type=\"button\" id=\"mjob\" value=\""._("Update Job")."\" disabled=\"disabled\" />";
-else if($smethod=="inmediately")
-    echo "<input type=\"button\" id=\"mjob\" value=\""._("Run Now")."\" disabled=\"disabled\" />";
-else
-    echo "<input type=\"button\" id=\"mjob\" value=\"$txt_submit\" disabled=\"disabled\" />";
-?>
-    
-        <span id="loading" style="display:none;margin:0px 0px 0px 10px;" ><?php echo _("Checking Job...") ?></span>
+            <tr>
+                <td class='job_option'><?php echo _('Select Sensor:')?></td>
+                <td style='text-align:left;'>
+                    <select id='SVRid' style='width:212px' name='SVRid'>
+                        <option value='Null'><?php echo _("First Available Sensor-Distributed")?></option>
+                        <?php
+                        foreach ($all_sensors as $_sensor_id => $sensor_data)
+                        {?>
+                            <option value='<?php echo $_sensor_id ?>' <?php echo $sensor_data['selected'] ?> ><?php echo $sensor_data['name'] . '[' . $sensor_data['ip'] .']' ?></option>
+                        <?php
+                        }
+                        ?>   
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td class='job_option'><?php echo _('Profile:') ?></td>
+                <td style='text-align:left;'>
+                    <select name='sid'>
+                       <?php
+                        foreach ($v_profiles as $v_profile_id => $profile_data)
+                        {?>
+                            <option value='<?php echo $v_profile_id ?>' <?php echo $profile_data['selected'] ?> ><?php echo $profile_data['name&description'] ?></option>
+                        <?php
+                        } 
+                        ?>
+                    </select>
+                 
+                 &nbsp;&nbsp;<a href="<?php echo Menu::get_menu_url('settings.php', 'environment', 'vulnerabilities', 'scan_jobs')?>">[ <?php echo _("EDIT PROFILES") ?> ]</a>
+                </td>
+            </tr>
+    	
+            <tr>
+                <td class='job_option' style='vertical-align: top;'><div><?php echo _('Schedule Method:') ?></div></td>
+    		    <td style='text-align:left'>
+        		    <select name='schedule_type' id='scheduleM'>
+                        <?php
+                        foreach ($s_methods as $s_method_id => $s_method_data)
+                        {?>
+                            <option value='<?php echo $s_method_id ?>' <?php echo $s_method_data['selected'] ?> ><?php echo $s_method_data['name'] ?></option>
+                        <?php
+                        }
+                        ?>
+                    </select>
+                </td>
+    		</tr>
+            
+            <tr $smethodtr_display id='smethodtr'>
+                <td>&nbsp;</td>
+                <td>
+                    <div id="idSched1" class="forminput"></div>
+                    <div id="idSched8" class="forminput">
+                        <table cellspacing="2" cellpadding="0" width="100%">
+                            <tr><th width="35%"><?php echo _("Begin in") ?></th>
+                                <td class="noborder" nowrap="nowrap">
+                                    <?php echo gettext('Year') ?>&nbsp;
+                                    <select name='biyear'>
+                                        <?php
+                                        foreach ($years as $y => $y_data)
+                                        {                                          
+                                        ?>
+                                            <option value="<?php echo $y ?>" <?php echo $y_data['selected'] ?>><?php echo $y ?></option>
+                                        <?php
+                                        }
+                                    ?> 
+                                    </select>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <?php echo gettext('Month') ?>&nbsp;
+                                    <select name='bimonth'>
+                                        <?php
+                                        foreach ($months as $m => $m_data)
+                                        {                                          
+                                        ?>
+                                            <option value="<?php echo $m ?>" <?php echo $m_data['selected'] ?>><?php echo $m ?></option>
+                                        <?php
+                                        }
+                                        ?>    
+                                    </select>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <?php echo gettext('Day') ?>&nbsp;
+                                    <select name='biday'>
+                                        <?php
+                                        foreach ($days as $d => $d_data)
+                                        {                                          
+                                        ?>
+                                            <option value="<?php echo $d ?>" <?php echo $d_data['selected'] ?>><?php echo $d ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="idSched3" class="forminput" style="display: block;">
+                        <table cellspacing="2" cellpadding="0" width="100%">
+                            <tr><th width="35%"><?php echo _('Day') ?></th>
+                                <td colspan="6" class="noborder" nowrap="nowrap">
+                                    <?php echo  _('Year') ?>&nbsp;
+                                    <select name="ROYEAR">
+                                        <?php
+                                        foreach ($years as $y => $y_data)
+                                        {                                          
+                                        ?>
+                                            <option value="<?php echo $y ?>" <?php echo $y_data['selected'] ?>><?php echo $y ?></option>
+                                        <?php
+                                        }?>
+                                    </select>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <?php echo _('Month')?> &nbsp;
+                                    <select name="ROMONTH">
+                                        <?php
+                                        foreach ($months as $m => $m_data)
+                                        {                                          
+                                        ?>
+                                            <option value="<?php echo $m ?>" <?php echo $m_data['selected'] ?>><?php echo $m ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <?php echo  _('Day') ?>&nbsp;
+                                    <select name="ROday">
+                                        <?php
+                                        foreach ($days as $d => $d_data)
+                                        {                                          
+                                        ?>
+                                            <option value="<?php echo $d ?>" <?php echo $d_data['selected'] ?>><?php echo $d ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="idSched4" class="forminput" > 
+                        <table width="100%">
+                            <tr>
+                                <th align="right" width="35%"><?php echo _('Weekly') ?></th>
+                                <td colspan="2" class="noborder">
+                                    <select name="dayofweek">
+                                        <?php
+                                        foreach ($daysMap as $day => $day_data)
+                                        {                                          
+                                        ?>
+                                            <option value="<?php echo $day ?>" <?php echo $day_data['selected'] ?>><?php echo $day_data['text'] ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="idSched5" class="forminput">
+                        <table width="100%">
+                            <tr>
+                                <th width="35%"><?php echo _('Select Day') ?></td>
+                                <td colspan="2" class="noborder">
+                                    <select name="dayofmonth">
+                                        <?php
+                                        foreach ($days_of_month as $m => $m_data)
+                                        {                                            
+                                        ?>
+                                            <option value="<?php echo $m ?>" <?php echo $m_data['selected'] ?>><?php echo $m ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="idSched6" class="forminput">
+                        <table width="100%">
+                            <tr>
+                                <th width="35%"><?php echo _('Day of week') ?></th>
+                                <td colspan="2" class="noborder">
+                                    <select name="nthdayofweek">
+                                        <?php
+                                        foreach ($daysMap as $i_day => $d_data)
+                                        {                                            
+                                        ?>
+                                            <option value="<?php echo $i_day ?>" <?php echo $d_data['selected'] ?>><?php echo $d_data['text'] ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                            </tr>
+                        </table>
+                        <br>
+                        <table width="100%">
+                            <tr>
+                                <th align="right"><?echo _('N<sup>th</sup> weekday') ?></th>
+                                <td colspan="2" class="noborder">
+                                    <select name='nthweekday'>
+                                        <?php
+                                        foreach ($nweekday as $n => $nweekday_data)
+                                        {                          
+                                        ?>
+                                            <option value="<?php echo $n ?>" <?php echo $nweekday_data['selected'] ?>><?php echo $nweekday_data['text'] ?></option>
+                                        <?php
+                                        }
+                                        ?>        
+                                    </select>
+                                </td>
+                          </tr>
+                        </table>
+                    </div>
+                    <div id="idSched7" class="forminput" style="margin-bottom:3px;">
+                        <table width='100%'>
+                            <tr>
+                                <th width='35%'><?php echo _('Frequency') ?></th>
+                                <td width='100%' style='text-align:center;' class='nobborder'>
+                                    <span style='margin-right:5px;'><?php echo _('Every') ?></span>
+                                        <select name='time_interval'>
+                                        <?php
+                                        foreach ($frequencies as $f => $f_data)
+                                        {                          
+                                        ?>
+                                            <option value="<?php echo $f ?>" <?php echo $f_data['selected'] ?>><?php echo $f ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                        </select>
+                                    <span id='days' style='margin-left:5px'><?php echo _('day(s)') ?></span>
+                                    <span id='weeks' style='margin-left:5px'><?php echo _('week(s)') ?></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="idSched2" class="forminput">
+                        <table width="100%">
+                            <tr>
+                                <th rowspan="2" align="right" width="35%"><?php echo _('Time') ?></td>
+                                <td align='right'><?php _("Hour") ?></td>
+                                <td align="left" class="noborder">
+                                    <select name="time_hour">
+                                        <?php
+                                        foreach ($hours as $h => $h_data)
+                                        {?>
+                                            <option value="<?php echo $h ?>" <?php echo $h_data['selected'] ?>><?php echo $h ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                                <td align='right'><?php echo _("Minutes")?></td>
+                                <td class='noborder' align='left'>
+                                    <select name='time_min'>
+                                        <?php
+                                        foreach ($minutes as $m => $m_data)
+                                        {?>
+                                            <option value="<?php echo $m ?>" <?php echo $m_data['selected'] ?>><?php echo $m ?></option>
+                                        <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+    	        <td class="madvanced">
+        	       <a class="section"><img id="advanced_arrow" border="0" align="absmiddle" src="../pixmaps/arrow_green.gif"><?php echo _("ADVANCED") ?></a></td>
+    	        <td>&nbsp;</td>
+    	    </tr>
+            <tr class='advanced'>
+                <td class='job_option'><?php echo _("SSH Credential:") ?></td>
+                <td style='text-align:left'>
+                    <select id='ssh_credential' name='ssh_credential'>
+                        <option value="">--</option>
+    			        <?php
+                        foreach ($ssh_arr as $c_key => $c_data)
+                        {?>
+                            <option value='<?php echo $c_key ?>' <?php echo $c_data['selected'] ?> ><?php echo $c_data['name'] ?></option>
+                        <?php
+                        }
+                        ?>
+                    </select></td>
+            </tr>
+            <tr class='advanced'>
+                <td class='job_option'><?php echo _("SMB Credential:") ?></td>
+                <td style='text-align:left'>
+                    <select id='smb_credential' name='smb_credential'>
+                        <option value=''>--</option>
+    			        <?php
+                        foreach ($smb_arr as $c_key => $c_data)
+                        {?>
+                            <option value='<?php echo $c_key ?>' <?php echo $c_data['selected'] ?> ><?php echo $c_data['name'] ?></option>
+                        <?php
+                        }
+                        ?>
+                    </select></td>
+            </tr>
+            <tr class="job_option advanced">
+                <td class="job_option"><?php echo _("Timeout:")?></td>
+                <td style="text-align:left;" nowrap>
+                    <input type='text' style='width:80px' name='timeout' value="<?php echo $timeout?>">
+                    <?php echo _("Max scan run time in seconds")?>
+                </td>
+            </tr>
+    	    <tr class='advanced'>
+        	    <td class='job_option'>
+            	    <?echo _("Send an email notification:")?>
+    	        </td>
+    	        <td style="text-align:left;">
+    	            <input type="radio" name="send_email" value="0" <?php echo $email_notification['no'] ?> /><?php echo _("No"); ?>
+    	            <input type="radio" name="send_email" value="1" <?php echo $email_notification['yes'] ?> /><?php echo _("Yes"); ?>
+    	        </td>
+    	    </tr>
+    	    <tr class='advanced'>
+                <td class='job_option'><?php _("Scan job visible for:")?></td>
+    			<td style='text-align: left'>
+    				<table cellspacing='0' cellpadding='0' class='transparent' style='margin: 5px 0px;'>
+    					<tr>
+    						<td class='nobborder'>
+        						<span style='margin-right:3px'><?php echo _('User:') ?></span>
+        				    </td>	
+    						<td class='nobborder'>				
+    							<select name='user' id='user' onchange="switch_user('user');return false;">
+        				        <option value='' style='text-align:center !important;'>-<?php echo _('Select one user')?>-</option>
+        				        <?php
+                                foreach ($users_to_assign as $u_key => $u_value)
+                                {?>
+                                    <option value='<?php echo $u_key ?>' <?php echo $users_to_assign[$u_key]['selected'] ?> ><?php echo $users_to_assign[$u_key]['name'] ?></option>
+                                <?php
+                                }
+                                ?>
+    				            </select>
+    						</td>
+                            <td style='text-align:center; border:none; !important'>
+                                <span style='padding:5px;'><?php echo _("OR") ?><span>
+                            </td>
+    			            <td class='nobborder'>
+    				            <span style='margin-right:3px'><?php echo _('Entity:')?></span>
+    				        </td>
+    						<td class='nobborder'>	
+    							<select name='entity' id='entity' onchange="switch_user('entity');return false;">
+    								<option value='' style='text-align:center !important;'>-<?php echo _('Select one entity')?>-</option>
+            				        <?php
+                                    foreach ($entities_to_assign as $e_key => $e_value)
+                                    {?>
+                                        <option value='<?php echo $e_key ?>' <?php echo $entities_to_assign[$e_key]['selected'] ?> ><?php echo $entities_to_assign[$e_key]['name'] ?></option>
+                                    <?php
+                                    }
+                                    ?>
+                				</select>
+    						</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+    	    <tr>
+        	    <td valign="top" width="15%" class="job_option noborder"><br>
+    	            <input onclick="toggle_scan_locally()" type="checkbox" id="hosts_alive" name="hosts_alive" value="1" <?php echo $hosts_alive_data['disabled'] . ' ' . $hosts_alive_data['checked'] ?>><?php echo _('Only scan hosts that are alive (greatly speeds up the scanning process)'); ?><br><br>
+        	        
+    	            <input type="checkbox" id="scan_locally" name="scan_locally" value="1" <?php echo $scan_locally_checked ?> /><?php echo _('Pre-Scan locally<br>(do not pre-scan from scanning sensor)');?><br><br>
+                    <input type="checkbox" id="not_resolve" name="not_resolve" value="1" <?php echo $resolve_names_checked ?>  /><?php echo _('Do not resolve names');?>
+                </td>
+                <td class="noborder" valign="top">
+                    <table width="100%" class="transparent" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td class="nobborder" style="vertical-align: top;text-align:left;padding:10px 0px 0px 0px;">
+                                <table class="transparent" cellspacing="4">
+                                    <tr>
+                                        <td class="nobborder" style="text-align:left;"><input class="greyfont" type="text" id="searchBox" value="<?php echo _("Type here to search assets")?>" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="nobborder">
+                                            <select id="targets" name="targets[]" multiple="multiple">
+                                            <?php
+                                            if (empty($select_targets) == FALSE)
+                                            {
+                                                foreach ($select_targets as $t_id => $t_name)
+                                                {?>
+                                                <option value='<?php echo $t_id ?>'><?php echo $t_name ?></option>
+                                                <?php
+                                                }
+                                            }
+                                            ?>
+                                            </select>
+                                        </td>
+                                 </tr>
+                                 <tr>
+                                     <td class="nobborder" style="text-align:right"><input type="button" value=" [X] " id="delete_target" class="av_b_secondary small"/>
+                                     <input type="button" style="margin-right:0px;"value="Delete all" id="delete_all" class="av_b_secondary small"/></td>
+                                 </tr>
+                                 </table>
+                            </td>
+                            <td class="nobborder" width="450px;" style="vertical-align: top;padding:0px 0px 0px 5px;">
+                                <div id="vtree" style="text-align:left;width:100%;"></div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <br/>
+        
+        <?php
+            
+        $button_text = ($action == 'edit_sched') ? _('UPDATE JOB') : _('NEW JOB');?>
+        
+        <div style="margin:0px auto;text-align: center">
+            <input type='button' id='mjob' value='<?php echo $button_text ?>' disabled='disabled' />
+            <span id="loading" style="display:none;margin:0px 0px 0px 10px;" ><?php echo _("Checking Job...") ?></span>
+        
+            <div id='sresult'></div>
+        </div>
+    </form>
+
 <?php
-   // echo "&nbsp;&nbsp;<input type=\"button\" name=\"simulate\" value=\""._("Simulate")."\" onClick=\"simulation();\" class=\"button\">&nbsp;<span id='ld'></span>";
-    echo "<br><br><div id='sresult'></div></center></form></div>";
 
+function submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $schedule_type, $not_resolve, $user, $entity, $targets, $scheduled_status,
+                     $hosts_alive, $sid, $send_email, $timeout, $scan_locally, $dayofweek, $dayofmonth, $ROYEAR, $ROMONTH, $ROday, $time_hour,
+                     $time_min, $time_interval, $sched_id, $biyear, $bimonth, $biday, $nthweekday, $tz, $daysMap, $ip_exceptions_list)
+{
+    $db     = new ossim_db();
+    $dbconn = $db->connect();
 
-   require_once 'footer.php';
-
-}
-
-function tab_reporting () {
-   $reporting = <<<EOT
-<table><tr valign="top"><td>
-<table class="noborder" >
-        <tr><td>No Advanced / Customized Reporting exists (At this Time).</td>
-        </tr>
-     </table></td></tr></table>
-EOT;
-   return $reporting;
-}
-
-function tab_discovery () {
-	 
-	 global $component, $uroles, $editdata, $scheduler, $username, $useremail, $dbconn, $disp,
-          $enScanRequestImmediate, $enScanRequestRecur, $timeout, $smethod,$SVRid, $sid, $ip_list, $ip_exceptions_list,
-          $schedule_type, $ROYEAR, $ROday, $ROMONTH, $time_hour, $time_min, $dayofweek, $dayofmonth,
-          $sname,$user,$entity,$hosts_alive,$scan_locally,$version,$nthweekday,$semail,$not_resolve,$time_interval,$ssh_credential,$smb_credential,$net_id,$scheduled_status, $biyear, $bimonth, $biday;
-          
-     global $pluginOptions, $enComplianceChecks, $profileid;
-     
-     $tz = Util::get_timezone();
-     
-     $conf = $GLOBALS["CONF"];
-	 
-	 $users    = Session::get_users_to_assign($dbconn);
-	 $entities_to_assign = Session::get_entities_to_assign($dbconn);
-     
-     $pre_scan_locally_status = $conf->get_conf("nessus_pre_scan_locally");
-
-     $user_selected = $user;
-     $entity_selected = $entity;
-          
-     $SVRid_selected = $SVRid;
-     
-     $sid_selected = ($sid!="") ? $sid : $editdata['meth_VSET'];
-
-     $timeout_selected = $editdata["meth_TIMEOUT"];
-     $ip_list_selected = str_replace("\\r\\n", "\n", str_replace(";;", "\n", $ip_list));
-     
-     if(count($ip_exceptions_list)>0)
-     {
-        $ip_list_selected .= "\n".implode("\n",$ip_exceptions_list);
-     }
-     
-     // date to fill "Begin in" field
-     
-     $today  = gmdate("Ymd",gmdate("U") + 3600*$tz);
-     
-     $tyear  = substr($today,0,4);
-     $nyear  = $tyear+1;
-     $tmonth = substr($today,4,2);
-     $tday   = substr($today,6,2);
-     
-     $sname_selected      = $sname;
-     
-     // The user has selected another date by using the form
-     
-     if ($schedule_type != '')
-     {
-         $run_once_year       = $ROYEAR;
-         $run_once_day        = $ROday;
-         $run_once_month      = $ROMONTH;
-         $time_hour_selected  = $time_hour;
-         $time_min_selected   = $time_min;
-         $dayofweek_selected  = $dayofweek;
-         $dayofmonth_selected = $dayofmonth;
-     }
-     else
-     {
-         if (is_numeric($editdata['next_CHECK']))
-         {
-             $nextscan = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime($editdata['next_CHECK']) + (3600*$tz));
-         }
-         else
-         {
-             $nextscan = gmdate("Y-m-d H:i:s",gmdate("U") + 3600*$tz);
-         }
-         
-         preg_match('/(\d+)\-(\d+)\-(\d+)\s(\d+):(\d+):(\d+)/', $nextscan, $found);
+    $credentials = $ssh_credential . '|' . $smb_credential;
     
-         $run_once_year       = $found[1];
-         $run_once_month      = $found[2];
-         $run_once_day        = ltrim($found[3], '0');
-         $dayofmonth_selected = $found[3];
-         $time_hour_selected  = ltrim($found[4], '0');
-         $time_min_selected   = ltrim($found[5], '0');
-         
-         
-         // date to fill "Begin in" field
-         
-         if (preg_match('/(\d{4})(\d{2})(\d{2})/', $editdata['begin'], $begin ))
-         {       
-            $biyear  = $begin[1];
-            $bimonth = ltrim($begin[2], '0');
-            $biday   = ltrim($begin[3], '0');
-         }
-         else
-         {
-            // select the current date
-            $biyear  = $tyear;
-            $bimonth = $tmonth;
-            $biday   = $tday;
-         }
-     }
+    $username = (valid_hex32($entity)) ? $entity : $user;
     
-    if(preg_match("/^[a-f\d]{32}$/i", $net_id)) { // Autofill new scan job from deployment
-        if (Asset_net::is_in_db($dbconn, $net_id)) {
-            $sname_selected  = Asset_net::get_name_by_id($dbconn, $net_id);
-            
-            $schedule_type   = "M";
-            
-            $ip_list         = array();
-
-            $nips = explode(",", Asset_net::get_ips_by_id($dbconn, $net_id));
-            foreach($nips as $nip) {
-                $ip_list []  = $net_id."#".trim($nip);
-            }
-        }
-    }
-
-     if($schedule_type!=""){
-        $editdata['schedule_type'] = $schedule_type;
-     }
-
-     $cquery_like = "";
-     if ( $component != "" ) { $cquery_like = " AND component='$component'"; }      
-     
-     #SET VALUES UP IF EDIT SCHEDULER
-     if ( isset($editdata['notify'] )) { $enotify = $editdata['notify']; } else { $enotify = "$useremail"; }
-     if ( isset($editdata['time'] )) {
-        list( $time_hour, $time_min, $time_sec) = preg_split('/:/', $editdata['time'] );
-        $time_hour = $time_hour + $tz;
-    }
-
-     $arrTypes = array( "N", "O", "D", "W", "M" , "NW");
-     foreach ( $arrTypes as $type ) {
-         $sTYPE[$type] = "";
-     }
-
-     $arrJobTypes = array( "C", "M", "R", "S" );
-     foreach ( $arrJobTypes as $type ) {
-         $sjTYPE[$type] = "";
-     }
-     
-     if ( isset($editdata['schedule_type'] )) {  
-        $sTYPE[$editdata['schedule_type']] = "selected='selected'"; 
-        if ($editdata['schedule_type']=='D') $ni=2;
-        elseif ($editdata['schedule_type']=='O') $ni=3;
-        elseif ($editdata['schedule_type']=='W') $ni=4;
-        elseif ($editdata['schedule_type']=='NW') $ni=6;
-        else $ni=5;
-        $show = "<br><script language=javascript>showLayer('idSched', $ni);</script>";
-     } else { 
-        if($enScanRequestImmediate) {
-           $sTYPE['N']  = "selected='selected'";
-           $show = "<br><script language=javascript>showLayer('idSched', 1);</script>";
-        } else {
-           $sTYPE['O'] = "selected='selected'";
-           $show = "<br><script language=javascript>showLayer('idSched', 3);</script>";
-        }
-     }
-     
-     if($schedule_type!="" ){
-        if ($schedule_type=="N") {
-             $show .= "<br><script language=javascript>showLayer('idSched', 1);</script>";
-            }
-        if ($schedule_type=="O") {
-             $show .= "<br><script language=javascript>showLayer('idSched', 3);</script>";
-            }
-        if ($schedule_type=="D") {
-             $show .= "<br><script language=javascript>showLayer('idSched', 2);</script>";
-            }
-        if ($schedule_type=="W") {
-             $show .= "<br><script language=javascript>showLayer('idSched', 4);</script>";
-            }
-        if ($schedule_type=="M") {
-             $show .= "<br><script language=javascript>showLayer('idSched', 5);</script>";
-            }
-        if ($schedule_type=="NW") {
-             $show .= "<br><script language=javascript>showLayer('idSched', 6);</script>";
-            }
-     }
-
-     if ( isset($editdata['job_TYPE'] )) {
-        $sjTYPE[$editdata['job_TYPE']] = "SELECTED";
-     } ELSE { 
-        $sjTYPE['M'] = "SELECTED";
-     }
-
-     if ( isset($editdata['day_of_month'] )) { $dayofmonth = $editdata['day_of_month']; }
-     if ( isset($editdata['day_of_week'])) { $day[$editdata['day_of_week']] = "SELECTED"; }
-     if ($dayofweek_selected!="") { $day[$dayofweek_selected] = "SELECTED";}
-     if (!$uroles['nessus']) {
-        $name = "sr-" . substr($username,0,6) . "-" . time();
-        $name = ($editdata['name'] == "") ? $name : $editdata['name'];
-	    $nameout = $name . "<input type=hidden style='width:210px' name='sname' value='$name'>";
-     } else {
-        $nameout = "<input type=text style='width:210px' name='sname' value='".(($sname_selected!="")? "$sname_selected":"$editdata[name]")."'>";
-     }
-    $discovery = "<input type=\"hidden\" name=\"save_scan\" value=\"1\">";
-    $discovery = "<input type=\"hidden\" name=\"status\" value=\"".intval($scheduled_status)."\">";
-    $discovery.= "<input type=\"hidden\" name=\"cred_type\" value=\"N\">";
-    $discovery.= "<table width=\"80%\" cellspacing=\"4\">";
-    $discovery.= "<tr>";
-    $discovery.= "<input type=\"hidden\" name=\"smethod\" value=\"$smethod\">";
-    $discovery.= "<td width=\"25%\" class='job_option'>".Util::strong(_("Job Name").":")."</td>";
-    $discovery.= "<td style=\"text-align:left;\">$nameout</td>";
-    $discovery.= "</tr>";
-    
-    list($sensor_list, $total) = Av_sensor::get_list($dbconn);         
-
-    $discovery .= "<tr>";
-    $discovery .= "<td class='job_option'>".Util::strong(_("Select Server").":")."</td>";
-    $discovery .= "<td style='text-align:left;'><select id='SVRid' style='width:212px' name='SVRid'>";
-    $discovery .= "<option value='Null'>"._("First Available Server-Distributed")."</option>";
-
-    foreach ($sensor_list as $_sensor_id => $sensor_data)
+    if (empty($username))
     {
-        if( intval($sensor_data['properties']['has_vuln_scanner']) == 1)
-        {
-            $discovery .= "<option value=\"$_sensor_id\" ";
-          
-            if ($editdata['email'] == $_sensor_id || $editdata['scan_ASSIGNED'] == $_sensor_id ) { $discovery .= " SELECTED"; }
-      
-            if ($SVRid_selected == $_sensor_id) $discovery .= " SELECTED";
-      
-            $discovery .= ">" . strtoupper($sensor_data['name']) . " [" . $sensor_data['ip'] . "] </option>";
-        }
+        $username = Session::get_session_user();
     }
-
-   $discovery .= <<<EOT
-      </select>
-    </td>
-  </tr>
-  <tr>
-EOT;
-    $discovery .="<td class='job_option'>".Util::strong(_("Profile").":")."</td>";
-    $discovery .="<td style='text-align:left;'><select name='sid'>";
-
-   $query = "";
-
-    if ($username == "admin" || Session::am_i_admin()) {
-        $query = "SELECT distinct(t1.id), t1.name, t1.description 
-                 FROM vuln_nessus_settings t1 WHERE deleted='0'
-                 ORDER BY t1.name";
-    }
-    else if( Session::is_pro() )
+    
+    $btime_hour = $time_hour;  // save local time
+    $btime_min  = $time_min;
+     
+    $bbiyear    = $biyear;
+    $bbimonth   = $bimonth;
+    $bbiday     = $biday;
+    
+    if($schedule_type == 'O')
     {
-        $users_and_entities = Acl::get_entities_to_assign($dbconn);  
-        
-        if ( Acl::am_i_proadmin() ) 
-        {
-            $users = Acl::get_my_users($dbconn, Session::get_session_user());
-            foreach ($users as $us) {
-                $users_and_entities[$us->get_login()] = $us->get_login();
-            }
-            
-            $owner_list['0'] = '0';
-            $owner_list      = array_keys($users_and_entities);
-            $owner_list      = implode("','", $owner_list);
-            
-            
-            $query = "SELECT distinct(t1.id), t1.name, t1.description FROM vuln_nessus_settings t1
-                      WHERE deleted = '0' and (name='Default' or owner in ('".$owner_list."')) ORDER BY t1.name";
-        }
-        else 
-        {
-            $owner_list['0']       = '0';
-            $owner_list[$username] = $username;
-            $owner_list            = array_keys($users_and_entities);
-            $owner_list[]          = Session::get_session_user();
-            $owner_list            = implode("','", $owner_list);
-            
-            $user_where = "owner in ('".$owner_list."')";
-            
-            $query = "SELECT distinct(t1.id), t1.name, t1.description FROM vuln_nessus_settings t1
-                      WHERE deleted = '0' and (name='Default' or $user_where) ORDER BY t1.name";
-        }
-    } 
-    else 
+        // date and time for run once
+        if (empty($ROYEAR))  $ROYEAR  = gmdate('Y');
+        if (empty($ROMONTH)) $ROMONTH = gmdate('m');
+        if (empty($ROday))   $ROday   = gmdate('d');
+         
+        list ($_y,$_m,$_d,$_h,$_u,$_s,$_time) = Util::get_utc_from_date($dbconn, "$ROYEAR-$ROMONTH-$ROday $time_hour:$time_min:00", $tz);
+         
+        $ROYEAR    = $_y;
+        $ROMONTH   = $_m;
+        $ROday     = $_d;
+        $time_hour = $_h;
+        $time_min  = $_u;
+    }
+    else if(in_array($schedule_type, array('D', 'W', 'M', 'NW')))
     {
-        $query = "SELECT distinct(t1.id), t1.name, t1.description FROM vuln_nessus_settings t1
-                     WHERE deleted = '0' and (name='Default' or owner in ('0','$username')) ORDER BY t1.name";
-    }                          
-    
-   $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-    
-   $result=$dbconn->execute($query);
-
-   $job_profiles = array();
-   $id_found = false;
-   $ipr = 0;
-   while (!$result->EOF) {
-        list($sid, $sname, $sdescription)=$result->fields;
-        
-        if($sid_selected==$sid) {
-            $id_found = true;
-        }
-        $job_profiles[$ipr]["sid"]           = $sid;
-        $job_profiles[$ipr]["sname"]         = $sname;
-        $job_profiles[$ipr]["sdescription"]  = $sdescription;
-
-        $ipr++;
-        $result->MoveNext();
-    }
-    
-    foreach($job_profiles as $profile_data) {
-        
-        $sid          = $profile_data["sid"];
-        $sname        = $profile_data["sname"];
-        $sdescription = $profile_data["sdescription"];
-        
-        $discovery .= "<option value=\"$sid\" ";
-      
-        if ( $sid_selected == $sid ){
-            if ($sdescription!="")
-                $discovery .= "selected>$sname - $sdescription</option>";
-            else
-                $discovery .= "selected>$sname</option>";
-        }
-        else {
-            if ($sdescription!="")
-                $discovery .= ((preg_match("/default/i", $sname) && !$id_found) ? 'selected="selected"': "").">$sname - $sdescription</option>";
-            else
-                $discovery .= ((preg_match("/default/i", $sname) && !$id_found) ? 'selected="selected"': "").">$sname</option>";
-        }
-    }
-    
-    $discovery .="</select>&nbsp;&nbsp;&nbsp<a href=\"".Menu::get_menu_url('settings.php', 'environment', 'vulnerabilities', 'scan_jobs')."\">["._("EDIT PROFILES")."]</a></td>";
-    $discovery .="</tr>";
-	
-        $discovery .= "<tr>";
-        $discovery .= "<td class='job_option' style='vertical-align: top;'><div>".Util::strong(_("Schedule Method").":")."</div></td>";
-		$discovery .= "<td style='text-align:left'><div><select name='schedule_type' id='scheduleM'>";
-        $discovery .= "<option value='N' $sTYPE[N]>"._("Immediately")."</option>";
-        $discovery .= "<option value='O' $sTYPE[O]>"._("Run Once")."</option>";
-        $discovery .= "<option value='D' $sTYPE[D]>"._("Daily")."</option>";
-        $discovery .= "<option value='W' $sTYPE[W]>"._("Day of the Week")."</option>";
-        $discovery .= "<option value='M' $sTYPE[M]>"._("Day of the Month")."</option>";
-        $discovery .= "<option value='NW' $sTYPE[NW]>"._("N<sup>th</sup> weekday of the month")."</option>";
-		$discovery .= "</select></div></tr>";
-        
-        $smethods = array("O", "D", "W", "M", "NW");
-
-        $smethodtr_display = (in_array($editdata['schedule_type'], $smethods)) ? "" : "style='display:none'";
-        $discovery .= "<tr $smethodtr_display id='smethodtr'><td>&nbsp;</td>";
-     $discovery .= <<<EOT
-    </td>
-    <td><div>
-      <div id="idSched1" class="forminput">
-      </div>
-EOT;
-     // div to select start day
-     $discovery .= "<div id=\"idSched8\" class=\"forminput\">";
-     $discovery .= "<table cellspacing=\"2\" cellpadding=\"0\" width=\"100%\">";
-     $discovery .= "<tr><th width='35%'>"._("Begin in")."</th><td class='noborder' nowrap='nowrap'>".gettext("Year")."&nbsp;<select name='biyear'>";
-     
-     for ($i=$tyear;$i<=$tyear+1;$i++)
-     {
-        $discovery .= "<option value='$i' ";
-        
-        if ($i==$biyear)
-        {
-            $discovery .= "selected='selected'";
-        }
-        
-        $discovery .= ">$i</option>";
-     }
-
-     $discovery .="</select>&nbsp;&nbsp;&nbsp;".gettext("Month")."&nbsp;<select name='bimonth'>";
-
-     for ($i=1;$i<=12;$i++) {
-        $discovery .= "<option value=\"$i\" ";
-        if ($i==$bimonth) $discovery .= "selected";
-        $discovery .= ">$i</option>";
-     }
-
-     $discovery .= "</select>&nbsp;&nbsp;&nbsp;".gettext("Day")."&nbsp;<select name=\"biday\">";
-     for ($i=1;$i<=31;$i++) {
-        $discovery .= "<option value=\"$i\" ";
-        if ($i==$biday) $discovery .= "selected";
-         $discovery .= ">$i</option>";
-     }
-     $discovery .= "</select></td>";
-     $discovery .= "</tr>";
-     $discovery .= "</table>";
-     $discovery .= "</div>";
-      
-     $discovery .= <<<EOT
-      <div id="idSched3" class="forminput">
-        <table cellspacing="2" cellpadding="0" width="100%">
-EOT;
-            $discovery .="<tr><th width='35%'>"._("Day")."</th><td colspan='6' class='noborder' nowrap='nowrap'>".gettext("Year")."&nbsp;<select name='ROYEAR'>";
-
-            $discovery .="<option value=\"$tyear\" ".(($run_once_year == '' || $run_once_year == $tyear)? "selected" : "").">$tyear</option>";
-            $discovery .="<option value=\"$nyear\" ".(($run_once_year ==  $nyear)? "selected" : "").">$nyear</option>";
-
-            $discovery .="</select>&nbsp;&nbsp;&nbsp;".gettext("Month")."&nbsp;<select name='ROMONTH'>";
-
-   for ($i=1;$i<=12;$i++) {
-      $discovery .= "<option value=\"$i\" ";
-      if ( $i == $run_once_month || $run_once_month == '') $discovery .= "selected";
-      $discovery .= ">$i</option>";
-   }
-   $discovery .= "</select>&nbsp;&nbsp;&nbsp;".gettext("Day")."&nbsp;<select name=\"ROday\">";
-   
-   for ($i=1;$i<=31;$i++)
-   {
-      $discovery .= "<option value=\"$i\" ";
-      
-      if ($i == $run_once_day || $run_once_day == '')
-      {
-          $discovery .= "selected";
-      }
-         $discovery .= ">$i</option>";
-   }
-            $discovery .= <<<EOT
-            </select></td>
-          </tr>
-        </table>
-      </div>
-      <div id="idSched4" class="forminput" > 
-        <table width="100%">
-          <tr>
-EOT;
-            $discovery .= "<th align=\"right\" width=\"35%\">"._("Weekly")."</th><td colspan=\"2\" class=\"noborder\">";
-            $discovery .= "<select name=\"dayofweek\">";
-            $discovery .= "<option value=\"Su\" SELECTED >".gettext("Select week day to run")."</option>";
-            $discovery .= "<option value=\"Su\" $day[Su] >".gettext("Sunday")."</option>";
-            $discovery .= "<option value=\"Mo\" $day[Mo] >".gettext("Monday")."</option>";
-            $discovery .= "<option value=\"Tu\" $day[Tu] >".gettext("Tuesday")."</option>";
-            $discovery .= "<option value=\"We\" $day[We] >".gettext("Wednesday")."</option>";
-            $discovery .= "<option value=\"Th\" $day[Th] >".gettext("Thursday")."</option>";
-            $discovery .= "<option value=\"Fr\" $day[Fr] >".gettext("Friday")."</option>";
-            $discovery .= "<option value=\"Sa\" $day[Sa] >".gettext("Saturday")."</option>";
-            $discovery .= "</select>";
-            $discovery .= "</td>";
-            $discovery .= <<<EOT
-          </tr>
-        </table>
-      </div>
-      <div id="idSched5" class="forminput">
-        <table width="100%">
-          <tr>
-EOT;
-            $discovery .= "<th width='35%'>".gettext("Select Day")."</td>";
-            $discovery .= <<<EOT
-            <td colspan="2" class="noborder"><select name="dayofmonth">"
-EOT;
-   for ($i=1;$i<=31;$i++) {
-      $discovery .= "<option value=\"$i\"";
-      if (($dayofmonth==$i && $dayofmonth_selected=="") || $dayofmonth_selected==$i) $discovery .= " selected";
-      $discovery .= ">$i</option>";
-   }
-
-            $discovery .= <<<EOT
-            </select></td>
-          </tr>
-        </table>
-      </div>
-      <div id="idSched6" class="forminput">
-        <table width="100%">
-          <tr>
-EOT;
-            $discovery .= "<th width=\"35%\">".gettext("Day of week")."</th><td colspan=\"2\" class=\"noborder\">";
-            $discovery .= "<select name=\"nthdayofweek\">";
-            $discovery .= "<option value=\"Su\" SELECTED >".gettext("Select week day to run")."</option>";
-            $discovery .= "<option value=\"Su\" $day[Su] >".gettext("Sunday")."</option>";
-            $discovery .= "<option value=\"Mo\" $day[Mo] >".gettext("Monday")."</option>";
-            $discovery .= "<option value=\"Tu\" $day[Tu] >".gettext("Tuesday")."</option>";
-            $discovery .= "<option value=\"We\" $day[We] >".gettext("Wednesday")."</option>";
-            $discovery .= "<option value=\"Th\" $day[Th] >".gettext("Thursday")."</option>";
-            $discovery .= "<option value=\"Fr\" $day[Fr] >".gettext("Friday")."</option>";
-            $discovery .= "<option value=\"Sa\" $day[Sa] >".gettext("Saturday")."</option>";
-            $discovery .= "</select>";
-            $discovery .= "</td>";
-            $discovery .= <<<EOT
-          </tr>
-        </table>
-        <br>
-        <table width="100%">
-          <tr>
-EOT;
-                $discovery .="<th align='right'>".gettext("N<sup>th</sup> weekday")."</th><td colspan='2' class='noborder'>";
-                $discovery .="<select name='nthweekday'>";
-                $discovery .="<option value='1'>".gettext("Select nth weekday to run")."</option>";
-                $discovery .="<option value='1'".(($dayofmonth==1) ? " selected":"").">".gettext("First")."</option>";
-                $discovery .="<option value='2'".(($dayofmonth==2) ? " selected":"").">".gettext("Second")."</option>";
-                $discovery .="<option value='3'".(($dayofmonth==3) ? " selected":"").">".gettext("Third")."</option>";
-                $discovery .="<option value='4'".(($dayofmonth==4) ? " selected":"").">".gettext("Fourth")."</option>";
-                $discovery .="<option value='5'".(($dayofmonth==5) ? " selected":"").">".gettext("Fifth")."</option>";
-                $discovery .="<option value='6'".(($dayofmonth==6) ? " selected":"").">".gettext("Sixth")."</option>"; 
-                $discovery .="<option value='7'".(($dayofmonth==7) ? " selected":"").">".gettext("Seventh")."</option>"; 
-                $discovery .="<option value='8'".(($dayofmonth==8) ? " selected":"").">".gettext("Eighth")."</option>"; 
-                $discovery .="<option value='9'".(($dayofmonth==9) ? " selected":"").">".gettext("Ninth")."</option>";
-                $discovery .="<option value='10'".(($dayofmonth==10) ? " selected":"").">".gettext("Tenth")."</option>"; 
-            $discovery .= <<<EOT
-              </select>
-            </td>
-          </tr>
-        </table>
-      </div>
-EOT;
-      $discovery .= "<div id='idSched7' class='forminput' style=margin-bottom:3px;>";
-      $discovery .= "<table width='100%'>";
-      $discovery .= "<tr>";
-      $discovery .= "<th width='35%'>"._("Frequency")."</th>";
-      $discovery .= "<td width='100%' style='text-align:center;' class='nobborder'>";
-      $discovery .= "<span style='margin-right:5px;'>"._("Every")."</span>";
-      $discovery .= "<select name='time_interval'>";
-      for ($itime = 1; $itime <= 30; $itime++) {
-        $discovery .= "<option value='".$itime."'".(($editdata['time_interval'] == $itime || $time_interval == $itime) ? " selected":"").">".$itime."</option>";
-      }
-      $discovery .= "</select>";
-      $discovery .= "<span id='days' style='margin-left:5px'>"._("day(s)")."</span><span id='weeks' style='margin-left:5px'>"._("week(s)")."</span>";
-      $discovery .= "</td>";
-      $discovery .= "</tr>";
-      $discovery .= "</table>";
-      $discovery .= "</div>";
-$discovery .= <<<EOT
-      <div id="idSched2" class="forminput">
-        <table width="100%">
-EOT;
-        $discovery .=  "<tr>";
-        $discovery .=  "<th rowspan='2' align='right' width='35%'>".gettext("Time")."</td>";
-        $discovery .=  "<td align='right'>".gettext("Hour")."</td>";
-            $discovery .= <<<EOT
-            <td align="left" class="noborder"><select name="time_hour">
-EOT;
-
-   for ($i=0;$i<=23;$i++){
-      $discovery .=  "<option value=\"$i\"";
-      if (($time_hour==$i && $time_hour_selected=="") || $time_hour_selected==$i) $discovery .= " selected";
-      $discovery .= ">$i</option>";
-   };
-            $discovery .= "</select></td><td align='right'>".gettext("Minutes")."</td>
-            <td class='noborder' align='left'><select name='time_min'>";
-               for ($i=0;$i<60;$i=$i+15){
-                    $discovery .= "<option value=\"$i\"";
-                    if (($time_min == $i && $time_min_selected=="") || $time_min_selected==$i) $discovery .= " selected";
-                    $discovery .= ">$i</option>";
-               };
-            $discovery .= <<<EOT
-            </select></td>
-          </tr>
-        </table>
-      </div>
-    </tr>
-    
-EOT;
-	$discovery .= "<tr>";
-	$discovery .= "		<td class='madvanced'><a class='section'><img id='advanced_arrow' border='0' align='absmiddle' src='../pixmaps/arrow_green.gif'>"._("ADVANCED")."</a></td>";
-	$discovery .= "		<td>&nbsp;</td>";
-	$discovery .= "</tr>";
-	
-	if ($_SESSION["scanner"]=="omp") {
-        $credentials = Vulnerabilities::get_credentials($dbconn, 'ssh');
-        
-        preg_match ("/(.*)\|(.*)/", $editdata["credentials"], $found);
-        
-        $discovery .= "<tr class='advanced'>";
-        $discovery .= "<td class='job_option'>".Util::strong(_("SSH Credential:"))."</td>";
-        $discovery .= "<td style='text-align:left'><select id='ssh_credential' name='ssh_credential'>";
-        $discovery .= "<option value=''>--</option>";
-        foreach ($credentials as $cred) 
-		{			
-			$login_text = $cred["login"];
-
-			if ( $cred["login"] == '0' ){
-				$login_text = _("All");	
-			}
-			elseif ( valid_hex32($cred["login"]) ) {
-				$login_text = Session::get_entity_name($dbconn, $cred["login"]);
-			}
-						
-            $selected = ( ($found[1] == $cred["name"]."#".$cred["login"]) || $cred["name"]."#".$cred["login"] == $ssh_credential ) ? " selected='selected'" : "";
-            $discovery .="<option value='".$cred["name"]."#".$cred["login"]."' $selected>".$cred["name"]." (".$login_text.")</option>";
-        }
-        $discovery .= "</select></td>";
-        $discovery .= "</tr>";
-        
-        $credentials = Vulnerabilities::get_credentials($dbconn, 'smb');
-        
-        $discovery .= "<tr class='advanced'>";
-        $discovery .= "<td class='job_option'>".Util::strong(_("SMB Credential:"))."</td>";
-        $discovery .= "<td style='text-align:left'><select id='smb_credential' name='smb_credential'>";
-        $discovery .= "<option value=''>--</option>";
-        
-		foreach ($credentials as $cred) 
-		{            
-			$login_text = $cred["login"];
-
-			if ( $cred["login"] == '0' ){
-				$login_text = _("All");	
-			}
-			elseif ( valid_hex32($cred["login"]) ) {
-				$login_text = Session::get_entity_name($dbconn, $cred["login"]);
-			}
-			
-			$selected   = ( $found[2] == $cred["name"]."#".$cred["login"] || $cred["name"]."#".$cred["login"] == $smb_credential ) ? " selected='selected'" : "";
-            $discovery .= "<option value='".$cred["name"]."#".$cred["login"]."' $selected>".$cred["name"]." (".$login_text.")</option>";
-        }
-		
-        $discovery .= "</select></td>";
-        $discovery .= "</tr>";
-    }
-    
-    $discovery .="<tr class='job_option advanced'>";
-    $discovery .="<td class='job_option'>".Util::strong(_("Timeout:"))."</td>";
-    $discovery .="<td style=\"text-align:left;\" nowrap><input type='text' style='width:80px' name='timeout' value='".(($timeout_selected=="")? "$timeout":"$timeout_selected")."'>";
-    $discovery .="<font color='black'>&nbsp;&nbsp;&nbsp;"._("Max scan run time in seconds")."&nbsp;&nbsp;&nbsp;</font></td>";
-    $discovery .="</tr>";
-	
-	$discovery .= "<tr class='advanced'><td class='job_option'>".Util::strong(_("Send an email notification:"));
-	$discovery .= "</td>";
-	$discovery .= "<td style=\"text-align:left;\">";
-	$discovery .= "<input type=\"radio\" name=\"semail\" value=\"0\"".(((count($editdata)<=1 && intval($semail)==0) || intval($editdata['meth_Wfile'])==0)? " checked":"")."/>"._("No");
-	$discovery .= "<input type=\"radio\" name=\"semail\" value=\"1\"".(((count($editdata)<=1 && intval($semail)==1) || intval($editdata['meth_Wfile'])==1)? " checked":"")."/>"._("Yes");
-	$discovery .= "</td></tr>";
-	
-	$discovery .= "<tr class='advanced'>
-						<td class='job_option'>".Util::strong(_("Scan job visible for:"))."</td>
-						<td style='text-align: left'>
-							<table cellspacing='0' cellpadding='0' class='transparent' style='margin: 5px 0px;'>
-								<tr>
-									<td class='nobborder'><span style='margin-right:3px'>"._('User:')."</span></td>	
-									<td class='nobborder'>				
-										<select name='user' id='user' onchange=\"switch_user('user');return false;\">";
-										
-										$num_users = 0;
-										foreach( $users as $k => $v )
-										{
-											$login = $v->get_login();
-											
-											$selected = ( $editdata["username"] == $login || $user_selected == $login ) ? "selected='selected'": "";
-											$options .= "<option value='".$login."' $selected>$login</option>\n";
-											$num_users++;
-										}
-										
-										if ($num_users == 0)
-											$discovery .= "<option value='' style='text-align:center !important;'>- "._("No users found")." -</option>";
-										else
-										{
-											$discovery .= "<option value='' style='text-align:center !important;'>- "._("Select one user")." -</option>\n";
-											$discovery .= $options;
-										}
-											
-				
-	$discovery .= "						</select>
-									</td>";
-								
-	if ( !empty($entities_to_assign) )
-	{ 
-		
-	$discovery .= "	    			<td style='text-align:center; border:none; !important'><span style='padding:5px;'>"._("OR")."<span></td>
-									<td class='nobborder'><span style='margin-right:3px'>"._("Entity:")."</span></td>
-									<td class='nobborder'>	
-										<select name='entity' id='entity' onchange=\"switch_user('entity');return false;\">
-											<option value='' style='text-align:center !important;'>-"._("Select one entity")."-</option>";
-						
-												foreach ( $entities_to_assign as $k => $v ) 
-												{
-													$selected = ( ( $editdata["username"] == $k || $entity_selected == $k ) ) ? "selected='selected'": "";
-													$discovery .= "<option value='$k' $selected>$v</option>";
-												}
-		
-		$discovery .= "					</select>
-									</td>";
-	}
-	
-	$discovery .= " 	    	</tr>
-							</table>
-						</td>
-					</tr>";
-	
-	$discovery .= "<tr><td valign=\"top\" width=\"15%\" class=\"job_option noborder\"><br>";
-	
-	// conditions to exclude IPs
-	
-	$condition1 = (count($editdata)<=1 && intval($hosts_alive)==1) ? TRUE : FALSE;
-	
-	$condition2 = preg_match('/'.EXCLUDING_IP2.'/', trim($editdata["meth_TARGET"]));
-	
-	$condition3 = (intval($editdata['meth_CRED']) == 1) ? TRUE : FALSE;
-	
-	$condition4 = (count($ip_exceptions_list) > 0) ? TRUE : FALSE;
-	
-	$host_alive_check  = ( $condition1 || $condition2 || $condition3  || $condition4 ) ? ' checked' : '';
-	
-	$host_alive_status = ($condition2 || $condition4) ? ' disabled=\"disabled\"' : '';
-	
-	$discovery .= "<input onclick=\"toggle_scan_locally()\" type=\"checkbox\" id=\"hosts_alive\" name=\"hosts_alive\" value=\"1\"" . $host_alive_check . $host_alive_status . ">".Util::strong(_("Only scan hosts that are alive"))."<br>(".Util::strong(_("greatly speeds up the scanning process")).")<br><br>";
-	$discovery .= "<input type=\"checkbox\" id=\"scan_locally\" name=\"scan_locally\" value=\"1\"".
-	  (($pre_scan_locally_status==0) ? " disabled=\"disabled\"":"").
-	  (($pre_scan_locally_status==1 && ( intval($editdata['authorized'])==1 || intval($scan_locally) == 1 ))? " checked":"").">".Util::strong(_("Pre-Scan locally")).
-	  "<br>(".Util::strong(_("do not pre-scan from scanning sensor")).")<br><br>";
-    $discovery .="<input type=\"checkbox\" id=\"not_resolve\" name=\"not_resolve\" value=\"1\" ".(($editdata['resolve_names']==="0" || $not_resolve=="1") ? "checked=\"checked\"":"")."/>".Util::strong(_("Do not resolve names"));
-
-	$discovery .= <<<EOT
-        </td>
-EOT;
-    $discovery .= '     <td class="noborder" valign="top">';
-    $discovery .= '         <table width="100%" class="transparent" cellspacing="0" cellpadding="0">';
-    $discovery .= '              <tr>';
-    $discovery .= '                  <td class="nobborder" style="vertical-align: top;text-align:left;padding:10px 0px 0px 0px;">';
-    $discovery .= '                     <table class="transparent" cellspacing="4">';
-    $discovery .= '                         <tr>';
-    $discovery .= '                             <td class="nobborder" style="text-align:left;"><input class="greyfont" type="text" id="searchBox" value="'._("Type here to search assets (Hosts/Networks)").'" /></td>';
-    $discovery .= '                         </tr>';
-    $discovery .= '                         <tr>';
-    $discovery .= '                             <td class="nobborder"><select id="targets" name="targets[]" multiple="multiple">';
-
-    if(!empty($editdata["meth_TARGET"])) {
-        $ip_list = explode("\n", trim($editdata["meth_TARGET"]));
-    }
-    if(!empty($ip_list)) {
-        foreach($ip_list as $asset) {
-            if(preg_match("/([a-f\d]+)#(.*)/i",$asset, $found)) {
-            	if(Asset_host::is_in_db($dbconn, $found[1]))
-            	{
-	            	$_asset_name = Asset_host::get_name_by_id($dbconn, $found[1]) ." (" .$found[2]. ")";
-            	}
-            	else
-            	{
-	            	$_asset_name = Asset_net::get_name_by_id($dbconn, $found[1]) ." (" .$found[2]. ")";
-            	}
-                $discovery .= '<option value="'.$asset.'">'.$_asset_name.'</option>';
-            }
-            else {
-                $discovery .= '<option value="'.$asset.'">'.$asset.'</option>';
-            }
-        }
-        
-        foreach($ip_exceptions_list as $asset)
-        {
-            $discovery .= '<option value="'.$asset.'">'.$asset.'</option>';   
-        }
-    }
-    $discovery .= '                             </select></td>';
-    $discovery .= '                         </tr>';
-    $discovery .= '                         <tr>';
-    $discovery .= '                             <td class="nobborder" style="text-align:right"><input type="button" value=" [X] " id="delete_target" class="av_b_secondary small"/>';
-    $discovery .= '                             <input type="button" style="margin-right:0px;"value="Delete all" id="delete_all" class="av_b_secondary small"/></td>';
-    $discovery .= '                         </tr>';
-    $discovery .= '                         </table>';
-    $discovery .= '                  </td>';
-    $discovery .= '                  <td class="nobborder" width="450px;" style="vertical-align: top;padding:0px 0px 0px 5px;">';
-    $discovery .= '                    <div id="vtree" style="text-align:left;width:100%;"></div>';
-    $discovery .= '                  </td>';
-    $discovery .= '              </tr>';
-    $discovery .= '         </table>';
-    $discovery .= '    </td>';
-    $discovery .= '</tr>';
-    $discovery .= '</table>';
-    $discovery .= '</tr></td></table>';
-   $discovery .= $show;
-   return $discovery;
-}
-
-function edit_schedule ( $sched_id ) {
-    global $uroles, $editdata, $scheduler, $username, $useremail, $dbconn;
-    
-    $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-
-    logAccess( "USER $username CHOSE EDIT SCHEDULE $sched_id" );
-
-    $sql_access = "";
-    if ( ! $uroles['admin'] ) { $sql_access = "AND username='$username'"; }
-
-    $query = "SELECT id, name, begin, username, fk_name, job_TYPE, schedule_type, day_of_week,
-                     day_of_month, time, email, meth_TARGET, meth_CRED, 
-                     meth_VSET, meth_Wcheck, meth_Wfile, meth_Ucheck, 
-		     meth_TIMEOUT, scan_ASSIGNED, resolve_names, time_interval, credentials, next_CHECK
-              FROM vuln_job_schedule 
-	      WHERE id = '$sched_id' $sql_access";
-    $result = $dbconn->execute($query);
-    $editdata = $result->fields;
-    $editdata['authorized'] = $editdata['meth_Ucheck'];
-
-    if ( $editdata['id'] == $sched_id ) {
-       main_page( $job_id, "editrecurring" );
-    } else {
-  //logAccess( "INVALID SCHEDULE $sched_id" );
-    }
-}
-
-function rerun ( $job_id ) {
-   global $uroles, $editdata, $scheduler, $username, $useremail, $dbconn;
-   
-   $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-
-    logAccess( "USER $username CHOSE TO RERUN SCAN $job_id" );
-
-    $sql_access = "";
-    if ( ! $uroles['admin'] ) { $sql_access = "AND username='$username'"; }    
-
-    $query = "SELECT * FROM vuln_jobs WHERE id = '$job_id' $sql_access";
-    $result = $dbconn->execute($query);
-    #list( $sname, $notify_email, $job_type, $schedule_type, $timeout, $SVRid, $sid, $targetlist ) = $result->fields;
-    $editdata = $result->fields;
-
-    if ( $editdata['id'] == $job_id ) {
-       main_page( $job_id, "rerun" );
-    } else {
-  //logAccess( "INVALID JOBID $job_id" );
-       echo "<p><font color=red>INVALID JOB ID</font></p>";
-    }
-
-}
-
-function getCredentialId ( $cred_type, $passstore, $credid, $acc, $domain, $accpass, $acctype, $passtype ) {
-   global $scheduler, $allowscan, $uroles, $username, $schedOptions, $adminmail, $mailfrom, $dbk, $dbconn;
-   
-   $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-
-    if ( $cred_type == "E" ) {
-      if ( $acc != "" && $accpass != "" && $acctype != "" && $passstore != "" ) {
-         if ( $domain == "" ) { $sdomain = "Null"; } else { $sdomain = "'$domain'"; }
-         $insert_time =  date("YmdHis");
-         if ($accpass!="" && !strstr($accpass,'ENC{')) {  // not encrypted
-            $cipher = mcrypt_module_open(MCRYPT_BLOWFISH,'','cbc','');
-            mcrypt_generic_init($cipher, $dbk,substr($dbk,12, 8));
-            $encrypted_val = mcrypt_generic($cipher,$accpass);
-            $accpass = "ENC{" . base64_encode($encrypted_val) . "}";
-            mcrypt_generic_deinit($cipher);
-         }
-
-         if ( $passstore == "O" ) {
-            $query = "SELECT t1.org_code 
-	              FROM vuln_orgs t1
-                        LEFT JOIN vuln_org_users t2 ON t1.id = t2.orgID
-                      WHERE t2.pn_uname = '$username'";
-                      
-            $result = $dbconn->execute($query);
-            list( $org ) = $result->fields;
-         }
-         $query = "INSERT INTO vuln_credentials ( pn_uname, account, password, domain, password_type, ACC_TYPE,
-              STORE_TYPE, ORG, select_key ) VALUES ( '$username', '$acc', '$accpass', $sdomain, 'Password',
-              '$acctype', '$passstore', '$org', '$insert_time' ) ";
-
-         if ($dbconn->execute($query) === false) {
-            echo "Error creating scan job: " .$dbconn->ErrorMsg();
-       //logAccess( "Error saving credentials $auname:" . $dbconn->ErrorMsg() );
-            $error = 1;
-            exit;
-         } else {
-            $query2 = "SELECT id FROM vuln_credentials WHERE pn_uname='$username' AND select_key='$insert_time'";
-            $result2 = $dbconn->execute($query2);
-            list( $tmpID ) = $result2->fields;
-            return "'$tmpID'";
-         }
-
-      }
-
-   } 
-
-   if ( $cred_type == "S" ) {
-      if ( $credid != "" ) {
-         return "'$credid'";
-      }
-   }
-
-   return;
-
-}
- 
-function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type, $ROYEAR, $ROMONTH, $ROday,
-     $time_hour, $time_min, $dayofweek, $dayofmonth, $timeout, $SVRid, $sid, $tarSel, $ip_list, $ip_exceptions_list,
-     $ip_start, $ip_end,  $named_list, $cidr, $subnet, $system, $cred_type, $credid, $acc, $domain,
-     $accpass, $acctype, $passtype, $passstore, $wpolicies, $wfpolicies, $upolicies, $custadd_type, $cust_plugins,
-     $is_enabled, $hosts_alive, $scan_locally, $nthweekday, $semail, $not_resolve, $time_interval, $biyear, $bimonth, $biday, $ssh_credential = '', $smb_credential = '', $scheduled_status = 1) {
-
-     
-     global $wdaysMap, $daysMap, $allowscan, $uroles, $username, $schedOptions, $adminmail, $mailfrom, $dbk, $dbconn;
-     
-     // credentials
-     
-     $credentials = $ssh_credential."|".$smb_credential;
-     
-     $btime_hour = $time_hour;  // save local time
-     $btime_min  = $time_min;
-     
-     $bbiyear    = $biyear;
-     $bbimonth   = $bimonth;
-     $bbiday     = $biday;
-     
-     $tz = Util::get_timezone();
-
-     if( $schedule_type == "O") {
-         // date and time for run once
-         if (empty($ROYEAR))  $ROYEAR   = gmdate("Y");
-         if (empty($ROMONTH)) $ROMONTH = gmdate("m");
-         if (empty($ROday))   $ROday     = gmdate("d");
+        // date and time for Daily, Day of Week, Day of month, Nth weekday of month
+        list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn, "$biyear-$bimonth-$biday $time_hour:$time_min:00", $tz);
          
-         list ($_y,$_m,$_d,$_h,$_u,$_s,$_time) = Util::get_utc_from_date($dbconn,"$ROYEAR-$ROMONTH-$ROday $time_hour:$time_min:00",$tz);
+        $biyear    = $b_y;
+        $bimonth   = $b_m;
+        $biday     = $b_d;
+        $time_hour = $b_h;
+        $time_min  = $b_u;
+    }
          
-         $ROYEAR    = $_y;
-         $ROMONTH   = $_m;
-         $ROday     = $_d;
-         $time_hour = $_h;
-         $time_min  = $_u;
-     }
-     else if($schedule_type == "D" || $schedule_type == "W" || $schedule_type == "M" || $schedule_type == "NW") {
-         // date and time for Daily, Day of Week, Day of month, Nth weekday of month
-         list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,"$biyear-$bimonth-$biday $time_hour:$time_min:00",$tz);
-         
-         $biyear    = $b_y;
-         $bimonth   = $b_m;
-         $biday     = $b_d;
-         $time_hour = $b_h;
-         $time_min  = $b_u;
-     }
-         
-     if($not_resolve=="1")  $resolve_names = 0;
-     else                   $resolve_names = 1;
-     
-     $notify_email = str_replace( ";", ",", $notify_email );
-     $requested_run = "";
-     $jobType="M";
-     $recurring = False;
-     $targets = array();
-     $time_value = "";
-     $profile_desc =  getProfileName( $sid );
-     $target_list = "";
-     $need_authorized = "";
-     $request="";
-     $plugs_list="NULL";
-     $fk_name="NULL";
-     $target_list="NULL";
-     $tmp_target_list="";
-     $jobs_names = array();
-     $sjobs_names = array();
-     
+    $resolve_names = ($not_resolve=='1') ? 0 : 1;
 
-     $I3crID = "";
-     
-	 if ( $hosts_alive == "1" ) { // option: Only scan hosts that are alive
-        $I3crID = "1";
-     }
-     else
-        $I3crID = "0";
-
-    if($schedule_type != "N") {
+    if($schedule_type != 'N') {
        // current datetime in UTC
        
        $arrTime = explode(":",gmdate('Y:m:d:w:H:i:s'));
@@ -1972,13 +1971,13 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
        
        $timenow = $hour.$min.$sec;
        
-       $run_wday = $wdaysMap[$dayofweek];
+       $run_wday = $daysMap[$dayofweek]['number'];
 
-       $run_time = sprintf("%02d%02d%02d",  $time_hour, $time_min, "00" );
-       $run_mday = $dayofmonth;     
+       $run_time   = sprintf('%02d%02d%02d',  $time_hour, $time_min, '00');
+       $run_mday   = $dayofmonth;     
        $time_value = "$time_hour:$time_min:00";  
 
-       $ndays = array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+       $ndays = array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
        
        $begin_in_seconds   = Util::get_utc_unixtime("$biyear-$bimonth-$biday $time_hour:$time_min:00") - 3600 * $tz;
        $current_in_seconds = gmdate('U');                // current datetime in UTC
@@ -1987,44 +1986,45 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
        if(strlen($biday)==1)   $biday   = '0' . $biday;
     }
 
-   switch($schedule_type) {
-   case "N":
+    switch($schedule_type)
+    {
+        case 'N':
 
-          $requested_run = gmdate("YmdHis");
-          $sched_message = "No reccurring Jobs Necessary";
+            $requested_run = gmdate('YmdHis');
 
-      break;
-   case "O":
+        break;
+        
+        case 'O':
    
-          $requested_run = sprintf("%04d%02d%02d%06d", $ROYEAR, $ROMONTH, $ROday, $run_time );
-          
-          $sched_message = "No reccurring Jobs Necessary";
+            $requested_run = sprintf('%04d%02d%02d%06d', $ROYEAR, $ROMONTH, $ROday, $run_time );
 
-          $recurring = True;
-          $reccur_type = "Run Once";
-
-      break;
-   case "D":
-          if( $begin_in_seconds > $current_in_seconds ) {
+        break;
+   
+        case 'D':
+            if($begin_in_seconds > $current_in_seconds)
+            {
                 $next_day = $biyear.$bimonth.$biday;  // selected date by user
-          }
-          else {
-                if ( $run_time > $timenow )
+            }
+            else
+            {
+                if ($run_time > $timenow)
+                {
                     $next_day = $year.$mon.$mday; // today
+                }
                 else
+                {
                     $next_day = gmdate("Ymd", strtotime("+1 day GMT",gmdate("U"))); // next day
-          }
+                }
+            }
           
-          $requested_run = sprintf("%08d%06d", $next_day, $run_time );
+            $requested_run = sprintf("%08d%06d", $next_day, $run_time );
+          
+        break;
+            
+        case 'W':
 
-          $recurring = True;
-          $sched_message = "Schedule Reccurring";
-          $reccur_type = "Daily";
-          
-      break;
-   case "W":
-   
             if( $begin_in_seconds > $current_in_seconds ) { // if it is a future date
+                
                 $wday  = date("w",mktime ( 0, 0, 0, $bimonth, $biday, $biyear)); // make week day for begin day
                 if ($run_wday == $wday) {
                     $next_day = $biyear.$bimonth.$biday;  // selected date by user
@@ -2044,101 +2044,111 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
                     $next_day = gmdate("Ymd", strtotime("next ".$ndays[$run_wday]." GMT",gmdate("U"))); // next week
                 }
             }
-          
+      
             preg_match("/(\d{4})(\d{2})(\d{2})/", $next_day, $found);
- 
+
+            list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." $btime_hour:$btime_min:00", $tz);
+            $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
+        break;
+   
+        case 'M':
+            if( $begin_in_seconds > $current_in_seconds )
+            { // if it is a future date
+                if ( $run_mday >= $biday)
+                {
+                    $next_day =  $biyear.$bimonth.($run_mday<10 ? "0" : "").$run_mday; // this month
+                }
+                else
+                {
+                    $next_day = sprintf("%06d%02d", gmdate("Ym", strtotime("next month GMT", mktime ( 0, 0, 0, $bimonth, $biday, $biyear))), $run_mday ) ;
+                }
+            }
+            else {
+                if ( $run_mday > $mday || ( $run_mday == $mday && $run_time > $timenow ))
+                {
+                    $next_day = $year.$mon.($run_mday<10 ? "0" : "").$run_mday; // this month
+                }
+                else
+                {
+                    $next_day = sprintf("%06d%02d", gmdate("Ym", strtotime("next month GMT", gmdate("U"))), $run_mday ) ;
+                }
+            }
+      
+            preg_match("/(\d{4})(\d{2})(\d{2})/", $next_day, $found);
+
             list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." $btime_hour:$btime_min:00",$tz);
             $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
+      
+        break;
             
-            $recurring = True;
-            $sched_message = "Schedule Reccurring";
-            $reccur_type = "Weekly";
-          
-      break;
-   case "M":
-          if( $begin_in_seconds > $current_in_seconds ) { // if it is a future date
-              if ( $run_mday >= $biday) {
-                  $next_day =  $biyear.$bimonth.($run_mday<10 ? "0" : "").$run_mday; // this month
-              } else {
-                  $next_day = sprintf("%06d%02d", gmdate("Ym", strtotime("next month GMT",mktime ( 0, 0, 0, $bimonth, $biday, $biyear))), $run_mday ) ;
-              }
-          }
-          else {
-              if ( $run_mday > $mday || ( $run_mday == $mday && $run_time > $timenow )) {
-                  $next_day = $year.$mon.($run_mday<10 ? "0" : "").$run_mday; // this month
-              } else {
-                  $next_day = sprintf("%06d%02d", gmdate("Ym", strtotime("next month GMT",gmdate("U"))), $run_mday ) ;
-              }
-          }
-          
-          preg_match("/(\d{4})(\d{2})(\d{2})/", $next_day, $found);
-
-          list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." $btime_hour:$btime_min:00",$tz);
-          $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
-          
-          $recurring = True;
-          $sched_message = "Schedule Reccurring";
-          $reccur_type = "Montly";
-          
-      break;
-   case "NW":
-        if( $begin_in_seconds > $current_in_seconds ) { // if it is a future date
-            $array_time = array('month'=> $bbimonth, 'day' => $bbiday, 'year' => $bbiyear);
-            $requested_run = weekday_month(strtolower($daysMap[$dayofweek]), $nthweekday, $btime_hour, $btime_min, $array_time);
-        }
-        else {
-            $requested_run = weekday_month(strtolower($daysMap[$dayofweek]), $nthweekday, $btime_hour, $btime_min);
-        }
+        case 'NW':
         
-          preg_match("/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/", $requested_run, $found);
-
-          list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." ".$found[4].":".$found[5].":00",$tz);
-          $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
+            if( $begin_in_seconds > $current_in_seconds )
+            {
+                // if it is a future date
+                $array_time = array('month'=> $bbimonth, 'day' => $bbiday, 'year' => $bbiyear);
+                
+                $requested_run = weekday_month(strtolower($daysMap[$dayofweek]['text']), $nthweekday, $btime_hour, $btime_min, $array_time);
+            }
+            else
+            {
+                $requested_run = weekday_month(strtolower($daysMap[$dayofweek]['text']), $nthweekday, $btime_hour, $btime_min);
+            }
         
-        $dayofmonth = $nthweekday;
-        
-        $recurring = True;
-        $sched_message = "Schedule Reccurring";
-        $reccur_type = "Nth weekday of the month";
-          
-      break;
-   default:
+            preg_match("/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/", $requested_run, $found);
 
-      break;
-   }
+            list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." ".$found[4].":".$found[5].":00",$tz);
+            $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
+        
+            $dayofmonth = $nthweekday;
+      
+            break;
+        default:
+
+        break;
+    }
    
-    $insert_time = gmdate("YmdHis");
+    $insert_time = gmdate('YmdHis');
 
-    if(!empty($_SESSION["_vuln_targets"]) && count($_SESSION["_vuln_targets"])>0) {
+    if(!empty($_SESSION['_vuln_targets']) && count($_SESSION['_vuln_targets'])>0)
+    {
         $arr_ctx = array();
         $sgr = array();
 
-        foreach( $_SESSION["_vuln_targets"] as $target_selected => $server_id ) {
+        foreach( $_SESSION['_vuln_targets'] as $target_selected => $server_id )
+        {
             $sgr[$server_id][] = $target_selected;
 
-            if(preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/i", $target_selected)) {
-                $related_ctxs      = array_values(Asset_net::get_id_by_ips($dbconn, $target_selected));
+            if(preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/i', $target_selected)) {
+            
+                $related_nets = array_values(Asset_net::get_closest_nets($dbconn, $target_selected));
 
-                if(is_array($related_ctxs) && count ($related_ctxs)>0) {
-                    $arr_ctx[$target_selected] = key(array_shift($related_ctxs));
+                $firs_net     = $related_nets[0];
+
+                $closetnet_id = $firs_net['id'];
+
+                if(valid_hex32($closetnet_id))
+                {
+                    $arr_ctx[$target_selected] = Asset_net::get_ctx_by_id($dbconn, $closetnet_id);
                 }
             }
-            else if(preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i", $target_selected)) {
+            else if(preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i', $target_selected)) {
 
-                $related_ctxs      = array_values(Asset_host::get_id_by_ips($dbconn, $target_selected));
+                $closetnet_id = key(Asset_host::get_closest_net($dbconn, $target_selected));
                 
-                if(is_array($related_ctxs) && count ($related_ctxs)>0) {
-                    $arr_ctx[$target_selected] = key(array_shift($related_ctxs)); // to assign a ctx for a IP
+                if(valid_hex32($closetnet_id))
+                {
+                    $arr_ctx[$target_selected] = Asset_net::get_ctx_by_id($dbconn, $closetnet_id);
                 }
             }
             else if(valid_hostname($target_selected) || valid_fqdns($target_selected)) {
             
                 $filters   = array('where' => "hostname like '$target_selected' OR fqdns like '$target_selected'");
-            
                 $_hosts_data = Asset_host::get_basic_list($dbconn, $filters);
+                
                 $host_list   = $_hosts_data[1];                
 
-                if( count($host_list) > 0) {
+                if (count($host_list) > 0) {
                     
                     $first_host = array_shift($host_list);
                     
@@ -2155,276 +2165,162 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
         }
         ossim_clean_error();
         
-        unset($_SESSION["_vuln_targets"]); // clean scan targets
+        unset($_SESSION['_vuln_targets']); // clean scan targets
         
-        $query = array();
+        $resolve_names = ($not_resolve == '1') ? 0 : 1 ;
+        
+        $queries = array();
         
         $IP_ctx = array();
 
-        foreach($arr_ctx as $aip => $actx) {
-            $IP_ctx[] = $actx."#".$aip;
-        }
-        
-        if (strlen($bbimonth) == 1 )
+        foreach($arr_ctx as $aip => $actx)
         {
-            $bbimonth = '0' . $bbimonth;
+            $IP_ctx[] = $actx . '#' . $aip;
         }
         
-        if (strlen($bbiday) == 1 )
+        $bbimonth = (strlen($bbimonth) == 1) ? '0' . $bbimonth : $bbimonth;
+        $bbiday   = (strlen($bbiday) == 1) ?   '0' . $bbiday   : $bbiday;
+        
+        $qc = 0;
+        
+        if($schedule_type == 'N')
         {
-            $bbiday = '0' . $bbiday;
-        }
-        
-        if ( $vuln_op == "editrecurring" && $sched_id > 0 ) {
-            $query[] = "DELETE FROM vuln_job_schedule WHERE id='$sched_id'";
-           
-            $i = 1;
-            foreach ($sgr as $notify_sensor => $targets) {
-                $target_list = implode("\n",$targets);
-                $target_list .= "\n".implode("\n",$ip_exceptions_list);
-                $query[] = "INSERT INTO vuln_job_schedule ( begin, name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, 
-                            time, email, meth_TARGET, meth_CRED, meth_VSET, meth_CUSTOM, meth_CPLUGINS, meth_Wfile, 
-                            meth_Ucheck, meth_TIMEOUT, next_CHECK, createdate, enabled, resolve_names, time_interval, IP_ctx, credentials) VALUES ('$bbiyear$bbimonth$bbiday', '$sname', '$username', '".Session::get_session_user()."', '$jobType',
-                            '$schedule_type', '$dayofweek', '$dayofmonth', '$time_value', '$notify_sensor', '$target_list',
-                            $I3crID, '$sid', '$custadd_type', $plugs_list, $semail, '$scan_locally',
-                            '$timeout', '$requested_run', '$insert_time', '" . intval($scheduled_status) . "', '$resolve_names' ,'$time_interval', '".implode("\n", $IP_ctx)."', '$credentials') ";
-                            
-                $sjobs_names [] = $sname.$i;
-                $i++;
-            }
-        }
-        elseif ( $recurring ) {
-                $i = 1;
-                foreach ($sgr as $notify_sensor => $targets) {
-                    $target_list = implode("\n",$targets);
-                    $target_list .= "\n".implode("\n",$ip_exceptions_list);
-                   $query[] = "INSERT INTO vuln_job_schedule ( begin, name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, 
-                                time, email, meth_TARGET, meth_CRED, meth_VSET, meth_CUSTOM, meth_CPLUGINS, meth_Wfile, 
-                                meth_Ucheck, meth_TIMEOUT, scan_ASSIGNED, next_CHECK, createdate, enabled, resolve_names, time_interval, IP_ctx, credentials) VALUES ('$bbiyear$bbimonth$bbiday', '$sname', '$username', '".Session::get_session_user()."', '$jobType',
-                                '$schedule_type', '$dayofweek', '$dayofmonth', '$time_value', '$notify_sensor', '$target_list',
-                                $I3crID, '$sid', '$custadd_type', $plugs_list, $semail, '$scan_locally',
-                                '$timeout', '$SVRid', '$requested_run', '$insert_time', '" . intval($scheduled_status) . "', '$resolve_names' , '$time_interval', '".implode("\n", $IP_ctx)."', '$credentials') ";
-                    
-                    $sjobs_names [] = $sname.$i;
-                    $i++;
-                }
-        } 
-        else {
-                $i = 1;
-                foreach ($sgr as $notify_sensor => $targets) {
-
-                    $target_list = implode("\n",$targets);
-                    $target_list .= "\n".implode("\n",$ip_exceptions_list);
-                    $query[] = "INSERT INTO vuln_jobs ( name, username, fk_name, job_TYPE, meth_SCHED, meth_TARGET,  meth_CRED,
-                        meth_VSET, meth_CUSTOM, meth_CPLUGINS, meth_Wfile, meth_TIMEOUT, scan_ASSIGNED,
-                        scan_SUBMIT, scan_next, scan_PRIORITY, status, notify, authorized, author_uname, resolve_names, credentials ) VALUES ( '$sname',
-                        '$username', '".Session::get_session_user()."', '$jobType', '$schedule_type', '$target_list', $I3crID, '$sid', '$custadd_type', $plugs_list,
-                         $semail, '$timeout', '$SVRid', '$insert_time', '$requested_run', '3',
-                        'S', '$notify_sensor', '$scan_locally', '".implode("\n",$IP_ctx)."', '$resolve_names' , '$credentials') ";
-                        
-                        // echo "$query1";
-                        // die();
-                    $jobs_names [] = $sname.$i;
-                    $i++;
-                }
-        }
-
-        $query_insert_time = gen_strtotime( $insert_time, "" );
-        foreach ($query as $sql) {
-            $error_updating = false;
-            $error_inserting = false;
-
-            if ($dbconn->execute($sql) === false) {
-                echo _("Error creating scan job").": " .$dbconn->ErrorMsg();
-                if($vuln_op == "editrecurring")
-                    $error_updating = true;
-                else
-                    $error_creating = true;
-            }
-            else {
-                $config_nt = array(
-                    'content' => "",
-                    'options' => array (
-                    'type'          => "nf_success",
-                    'cancel_button' => false),
-                    'style'   => 'width: 40%; margin: 20px auto; text-align: center;'
+            foreach ($sgr as $notify_sensor => $target_list)
+            {
+                $target_list = (!empty($ip_exceptions_list)) ? implode("\n", $target_list) . "\n" . implode("\n", $ip_exceptions_list) : implode("\n", $target_list);
+                
+                $params = array(
+                    $job_name,
+                    $username,
+                    Session::get_session_user(),
+                    $schedule_type,
+                    $target_list,
+                    $hosts_alive,
+                    $sid, 
+                    $send_email, 
+                    $timeout, 
+                    $SVRid, 
+                    $insert_time, 
+                    $requested_run, 
+                    '3',
+                    'S', 
+                    $notify_sensor, 
+                    $scan_locally, 
+                    implode("\n", $IP_ctx), 
+                    $resolve_names, 
+                    $credentials
                 );
-                if ( $vuln_op == "editrecurring" && !$error_updating ) {
-                    $config_nt["content"] = _("Successfully Updated Recurring Job");
-					$nt = new Notification('nt_1', $config_nt);
-                    $nt->show();
-                }
-                elseif ( !$error_creating ) {
-                    $config_nt["content"] = _("Successfully Submitted Job");
-					$nt = new Notification('nt_1', $config_nt);
-                    $nt->show();
-                    //logAccess( "Submitted Job [ $jid ] $request" );
-                    
-                    foreach ($jobs_names as $job_name){
-                        $infolog = array($job_name);
-                        Log_action::log(66, $infolog);
-                    }
-                    foreach ($sjobs_names as $job_name){
-                        $infolog = array($job_name);
-                        Log_action::log(67, $infolog);
-                    }
-                }
-                else {
-                    echo "<br><center>"._("Failed Job Creation")."</center>";
-                }
-                ?>
-                <script type="text/javascript">
-                //<![CDATA[                    
-                document.location.href='<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs');?>'; 
-                //]]>
-                </script>
-                <?php
+
+                $queries[$qc]['query'] = 'INSERT INTO vuln_jobs ( name, username, fk_name, meth_SCHED, meth_TARGET,  meth_CRED,
+                    meth_VSET, meth_Wfile, meth_TIMEOUT, scan_ASSIGNED,
+                    scan_SUBMIT, scan_next, scan_PRIORITY, status, notify, authorized, author_uname, resolve_names, credentials )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                
+                $queries[$qc]['params'] = $params;
+                
+                $qc++;
             }
         }
-    } // count($_SESSION["_vuln_targets"])>0
-   echo "</b></center>";
-
-}
-
-function process_requests($submit, $rids) {
-    global $uroles;
-
-//    echo "<Pre>Processing Request\n";
-//    echo "\$submit = $submit\n";
-//    echo "\$rids = ";
-//    print_r($rids);
-    if( $uroles['admin'] || $uroles['scanRequest']) {
-       if($submit == "Approve Requests") { 
-//          echo "approving requests\n";
-          $sub = "accept_request";
-       } elseif ($submit == "Reject Requests") {
-//          echo "rejecting requests\n";
-          $sub = "reject_request";
-       }
-       foreach ($rids as $rid) {
-//          echo "$sub($rid)\n";
-          $sub($rid);
-       }
-    }
-//    echo "</pre>";
-}
-
-function delete_scan( $job_id ) {
-     global $uroles, $username, $useremail, $mailfrom, $dbconn;
-     
-     $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-
-     if ( $uroles['admin'] ) {
-        $term_status = "Allowed";
-        //echo "Scan Terminated";
-        //echo "<br>";
-        $query = "SELECT name, id, scan_SERVER, report_id, status FROM vuln_jobs WHERE id='$job_id' LIMIT 1";
-        $result = $dbconn->execute($query);
-        list($job_name, $kill_id, $nserver_id, $report_id, $status) = $result->fields;
-
-        if($status=="R"){
-            $query = "UPDATE vuln_nessus_servers SET current_scans=current_scans-1 WHERE id='$nserver_id' and current_scans>0 LIMIT 1";
-            $result = $dbconn->execute($query);
+        else
+        {   
+            $params = array(
+                $bbiyear . $bbimonth . $bbiday,
+                $job_name,
+                $username,
+                Session::get_session_user(), 
+                $schedule_type,
+                $dayofweek,
+                $dayofmonth,
+                $time_value,
+                implode("\n", $targets),
+                $hosts_alive,
+                $sid,
+                $send_email,
+                $scan_locally,
+                $timeout,
+                $requested_run,
+                $insert_time ,
+                strval($scheduled_status),
+                $resolve_names,
+                $time_interval, 
+                implode("\n", $IP_ctx),
+                $credentials,
+                $SVRid
+            );
+            
+            if (isset($sched_id) && $sched_id >0)
+            {
+                $queries[$qc]['query']  = 'UPDATE vuln_job_schedule SET begin = ?, name = ?, username = ?, fk_name = ?, schedule_type = ?, day_of_week = ?, day_of_month = ?, 
+                        time = ?, meth_TARGET = ?, meth_CRED = ?, meth_VSET = ?, meth_Wfile = ?, 
+                        meth_Ucheck = ?, meth_TIMEOUT = ?, next_CHECK = ?, createdate = ?, enabled = ?, resolve_names = ?, time_interval = ?, IP_ctx = ?, credentials = ?, email = ?
+                        WHERE id = ?';
+                
+                $params[] = $sched_id;
+                
+                $queries[$qc]['params'] = $params;
+                
+                $qc++;
+            }
+            else
+            {
+                $queries[$qc]['query'] = 'INSERT INTO vuln_job_schedule ( begin, name, username, fk_name, schedule_type, day_of_week, day_of_month, time, meth_TARGET, meth_CRED, meth_VSET, meth_Wfile,  meth_Ucheck, meth_TIMEOUT, next_CHECK, createdate, enabled, resolve_names, time_interval, IP_ctx, credentials, email)
+                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ';
+                $queries[$qc]['params'] = $params;
+                
+                $qc++;
+            }
         }
-        //$query = "UPDATE vuln_jobs SET status='C' WHERE id='$kill_id' LIMIT 1";
-        //$result = $dbconn->execute($query);
+
+        $execute_errors = array();
+
+        foreach ($queries as $id => $sql_data)
+        {
+            $rs = $dbconn->execute($sql_data['query'], $sql_data['params']);
+            
+            if ($rs === FALSE)
+            {
+                $execute_errors[] = $dbconn->ErrorMsg();
+            }
+        }
         
-        $query = "DELETE FROM vuln_jobs WHERE id='$kill_id'";
-        $result = $dbconn->execute($query);
-
-        $query = "DELETE FROM vuln_nessus_reports WHERE report_id='$report_id'";
-        $result = $dbconn->execute($query);
+        if (empty($execute_errors) && $schedule_type != 'N')
+        {
+            // We have to update the vuln_job_assets
+            
+            if (intval($sched_id) == 0)
+            {
+                $query = ossim_query('SELECT LAST_INSERT_ID() as sched_id');
+                $rs    = $dbconn->Execute($query);
+                
+                if (!$rs)
+                {
+                    Av_exception::throw_error(Av_exception::DB_ERROR, $dbconn->ErrorMsg());
+                }
+                else
+                {
+                    $sched_id = $rs->fields['sched_id'];
+                }
+            }
+            
+            Vulnerabilities::update_vuln_job_assets($dbconn, 'insert', $sched_id, 0);
+        }
         
-        $query = "DELETE FROM vuln_nessus_report_stats WHERE report_id='$report_id'";
-        $result = $dbconn->execute($query);
-
-        $query = "DELETE FROM vuln_nessus_results WHERE report_id='$report_id'";
-        $result = $dbconn->execute($query);
-        
-        $infolog = array($job_name);
-        Log_action::log(65, $infolog);
-        
-        ?><script type="text/javascript">
-        //<![CDATA[
-        document.location.href='<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs') ?>';
-       //]]>
-        </script><?
-     } else {
-        $term_status = "Denied";
-     }
-}
-
-switch($disp) {
-
-   //case "auth_request":
-   //   auth_request ( $op, $submit, $process );
-   //break;
-
-   case "create":
-    if($error_message!=""){
         $config_nt = array(
-                'content' => $error_message,
-                'options' => array (
-                    'type'          => 'nf_error',
-                    'cancel_button' => false
-                ),
-                'style'   => 'width: 80%; margin: 20px auto; text-align: left;'
-            ); 
-                            
+            'content' => '',
+            'options' => array (
+            'type'          => 'nf_success',
+            'cancel_button' => FALSE),
+            'style'   => 'width: 40%; margin: 20px auto; text-align: center;'
+        );
+            
+        $config_nt['content'] = (empty($execute_errors)) ? _('Successfully Submitted Job') : _('Error creating scan job:') . implode('<br>', $execute_errors);
+        
         $nt = new Notification('nt_1', $config_nt);
         $nt->show();
-
-        main_page( $job_id, $vuln_op );
-    }
-    else 
-	{
-        if($entity!="" && $entity!="none") $username = $entity;
-        if($user!="" && $user!="none")    $username  = $user;
         
-        submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type, $ROYEAR,$ROMONTH, $ROday,
-        $time_hour, $time_min, $dayofweek, $dayofmonth, $timeout, $SVRid, $sid, $tarSel, $ip_list, $ip_exceptions_list,
-        $ip_start, $ip_end,  $named_list, $cidr, $subnet, $system, $cred_type, $credid, $acc, $domain,
-        $accpass, $acctype, $passtype, $passstore, $wpolicies, $wfpolicies, $upolicies, $custadd_type, $cust_plugins,
-        $is_enabled, $hosts_alive, $scan_locally, $nthweekday, $semail, $not_resolve, $time_interval, $biyear, $bimonth, $biday, $ssh_credential, $smb_credential, $scheduled_status);
+        $dbconn->close($conn);
     }
-   break;
-
-   case "edit_sched":
-      edit_schedule ( $sched_id );
-   break;
-
-   case "delete_scan":
-      delete_scan ( $job_id );
-   break;
-
-   case "rerun":
-      rerun ( $job_id );
-   break;
-   
-   default:
-      main_page( $job_id, $vuln_op );
-      break;
 }
-
-$db->close($conn);
-
-function createHiddenDiv($name, $num, $data) {
-   $text = "";
-   $style = "";
-   if($num == 0) {
-      $style = "style='display: block;'";
-   }
-   else { $style = "style='display: none;'"; }
-   $text = "<div id='section" . $num . "' name='$name' class='settings' $style>\n";
-   $text .= $data;
-   $text .= "</div>";
-   return $text;
-}
-
-//day   = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
-//$nth  = 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth' | 'ninth' | 'tenth' 
-//$h    = Local hours
-//$m    = Local minutes
 
 function weekday_month($day, $nth, $h, $m, $start_date = array())
 {
@@ -2463,6 +2359,68 @@ function weekday_month($day, $nth, $h, $m, $start_date = array())
     }
 
     return date('YmdHi', $date)."00";
+}
+
+function get_targets ($conn, $ip_list)
+{
+    $result = array();
+    
+    if (!empty($ip_list))
+    {
+        if (is_array($ip_list)==FALSE)
+        {
+            $ip_list = explode("\n", trim($ip_list));
+        }
+        
+        foreach ($ip_list as $asset)
+        {
+            $asset = trim($asset);
+            
+            if (preg_match('/^([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})$/i', $asset, $found))
+            { 
+            	$_asset_name = (Asset_net::is_in_db($conn, $found[1])) ? Asset_net::get_name_by_id($conn, $found[1]) : $found[2];
+
+            	$result[$asset] = $_asset_name;
+            }
+            else if (preg_match('/^([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i', $asset, $found))
+            {
+            	$_asset_name = (Asset_host::is_in_db($conn, $found[1])) ? Asset_host::get_name_by_id($conn, $found[1]) : $found[2];
+
+            	$result[$asset] = $_asset_name;
+            }
+            else if (preg_match('/^([a-f\d]{32})#hostgroup$/i', $asset, $found))
+            {
+                $result[$asset] = Asset_group::get_name_by_id($conn, $found[1]);
+            }
+            else if (preg_match('/^([a-f\d]{32})#netgroup$/i', $asset, $found))
+            {
+                $result[$asset] = Net_group::get_name_by_id($conn, $found[1]);
+            }            
+            else
+            {
+                $result[$asset] = $asset;
+            }
+        }
+    }
+
+    return $result;
+}
+
+function get_host_alive_attributes($value, $targets)
+{   
+    $result = array();
+    
+    $targets = (is_array($targets)) ? implode('|', $targets) : '';
+    
+	$condition1 = (intval($value)==1) ? TRUE : FALSE;
+	
+	$condition2 = preg_match('/' . EXCLUDING_IP2 . '/', $targets);
+	
+	$result['checked']  = ($condition1 || $condition2) ? ' checked="checked"' : '';
+	
+	$result['disabled'] = ($condition2) ? ' disabled="disabled"' : '';
+	
+	return $result;
 }
 
 ?>

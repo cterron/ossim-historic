@@ -1,6 +1,0 @@
-[properties]
-name=/etc/network/interfaces file
-description=Check for configuration issues in /etc/network/interfaces file
-category=network
-type=file
-filename=/etc/network/interfaces

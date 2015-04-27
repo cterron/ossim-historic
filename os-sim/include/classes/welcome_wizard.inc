@@ -53,7 +53,7 @@ require_once 'av_init.php';
 * @package    ossim-framework\Various
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Welcome_wizard
@@ -775,10 +775,10 @@ class Welcome_wizard
             $server += $_s;
             $net    += $_n;
         }
-        
+
         //Saving the hosts
-        $data = Scan::save_hosts_in_db($conn, $scan_results, $host_data);
-        
+        Scan::save_hosts_in_db($conn, $scan_results, $host_data);
+
         //Returning the stadistic info to show in the wizard:
         //Time elapsed, #server devices, #network devices
         $info = array(

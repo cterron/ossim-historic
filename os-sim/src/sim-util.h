@@ -35,11 +35,11 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <inttypes.h>
+#include <time.h>
 
 typedef struct _Plugin_PluginSid  Plugin_PluginSid;
 typedef struct _SimPortProtocol   SimPortProtocol;
 typedef struct _SimVersion        SimVersion;
-
 
 #include "sim-uuid.h"
 #include "sim-enums.h"
@@ -168,16 +168,14 @@ gchar *           sim_util_utf8_to_html                   (gchar               *
 gchar *           sim_string_substitute_with_string       (gchar               *src,
                                                            const gchar         *s_orig,
                                                            const gchar         *s_dest);
-gboolean          sim_cmp_list_gchar                      (GList               *list,
-                                                           gchar               *string);
-guint32           sim_string_to_hash                      (guchar              *key,
-                                                           size_t               key_len);
 gboolean          sim_util_block_signal                   (int                  sig);
 gboolean          sim_util_unblock_signal                 (int                  sig);
 gboolean          sim_util_check_ip_array                 (gchar              **array);
 void              sim_options                             (int argc, char **argv);
 void              sim_pid_init                            (void);
 gint              sim_get_current_date                    (void);
+void              sim_time_t_to_str                       (gchar outstr[TIMEBUF_SIZE],
+                                                           const time_t time);
 gchar *           sim_util_substite_problematic_chars     (const gchar         *p,
                                                            gsize                len);
 const gchar *     sim_backlog_event_str_from_type         (gint                 type);

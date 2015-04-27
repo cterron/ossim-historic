@@ -96,10 +96,6 @@ $all_sensors = Av_sensor::get_basic_list($conn, $filters);
 $db->close();
 
 $asset_value  = 2;
-$threshold_c  = 30;
-$threshold_a  = 30;
-
-
 
 $num_ips = REQUEST('ips');
 $msg     = GET('msg');
@@ -257,11 +253,6 @@ for ($i = 0; $i < $num_ips; $i++)
             #descr
             {
                 margin-bottom: 15px;
-            }
-
-            #threshold_c, #threshold_a
-            {
-                width: 30px !important;
             }
 
             #av_info
@@ -616,7 +607,7 @@ for ($i = 0; $i < $num_ips; $i++)
                     </tr>
 
 
-                    <!-- Asset value/External Asset and Thresholds/Scan Options -->
+                    <!-- Asset value/External Asset -->
                     <tr>
                         <td class="td_left">
                             <table>
@@ -624,11 +615,7 @@ for ($i = 0; $i < $num_ips; $i++)
                                     <td>
                                         <label for="asset_value"><?php echo _('Asset Value') . required();?></label>
                                     </td>
-                                    <td>
-                                        <span class="s_label" id="sl_external"><?php echo _('External Asset') . required();?></span>
-                                    </td>
                                 </tr>
-                                
                                 <tr>
                                     <td>
                                         <select name="asset_value" id="asset_value" class="vfield">
@@ -637,46 +624,29 @@ for ($i = 0; $i < $num_ips; $i++)
                                             {
                                                 $selected = ($asset_value == $i) ? "selected='selected'" : '';
                                                 echo "<option value='$i' $selected>$i</option>";
-                                            }    
+                                            }
                                             ?>
                                         </select>
                                     </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td class="td_right">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <span class="s_label" id="sl_external"><?php echo _('External Asset') . required();?></span>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td>
                                         <input type="radio" id="external_yes" name="external" class="vfield" value="1"/>
                                         <label for="external_yes"><?php echo _('Yes')?></label>
 
                                         <input type="radio" id="external_no" name="external" checked="checked" class="vfield" value="0"/>
-                                        <label for="external_no"><?php echo _('No')?></label>                                        
+                                        <label for="external_no"><?php echo _('No')?></label>
                                     </td>
                                 </tr>
-                            </table>
-                        </td>
-
-                        <td class="td_right">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <span class="s_label" id=""><?php echo _('Thresholds') . required();?></span>
-                                    </td>
-                                    <td>
-                                        <label for="nagios"><?php echo _('Scan_options');?></label>
-                                    </td>
-                                </tr>
-                                
-                                <tr>
-                                    <td>
-                                        <label for='threshold_c'><?php echo _("C") ?>:</label>
-                                        <input type="text" name="threshold_c" id="threshold_c" class="vfield" value="<?php echo $threshold_c?>"/>
-                                        &nbsp;
-                                        <label for='threshold_a'><?php echo _("A") ?>:</label>
-                                        <input type="text" name="threshold_a" id="threshold_a" class="vfield" value="<?php echo $threshold_a?>"/>
-
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="vfield" name="nagios" id="nagios" value="1"/>
-                                        <span><?php echo _('Availability Monitoring');?></span>
-                                    </td>
-                               </tr>
                             </table>
                         </td>
                     </tr>

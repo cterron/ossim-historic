@@ -845,23 +845,6 @@ function get_report_data($id = NULL)
         'access'        => Session::menu_perms('analysis-menu', 'EventsForensics'),
         'send_by_email' => 1
         );
-
-
-    $reports['metric_report'] = array('report_name' => _('Metric Report'),
-        'report_id'     => 'metric_report',
-        'type'          => 'pdf',
-        'subreports'    => array(
-            'title_page' => array('id'  => 'title_page',  'name' => _('Title Page'),   'report_file' => 'os_reports/Common/titlepage.php'),
-            'day'        => array('id' => 'day',          'name' => _('Day'),          'report_file' => 'os_reports/Metric/Day.php'),
-            'week'       => array('id' => 'week',         'name' => _('Week'),         'report_file' => 'os_reports/Metric/Week.php'),
-            'month'      => array('id' => 'month',        'name' => _('Month'),        'report_file' => 'os_reports/Metric/Month.php'),
-            'year'       => array('id' => 'year',         'name' => _('Year'),         'report_file' => 'os_reports/Metric/Year.php')
-         ),
-        'parameters'    => array(),
-        'access'        => Session::menu_perms('dashboard-menu', 'ControlPanelMetrics'),
-        'send_by_email' => 1
-    );
-
                 
     //Sensor list 
     $sensor_values[''] = array('text' => ' -- '._('Sensors no found').' -- ');  

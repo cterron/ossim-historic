@@ -321,7 +321,7 @@ $db->close();
 	
 	if ( $error == true ) 
 	{ 
-		$error_msg = "<div class='error_item' style='padding-left: 5px;'>"._("We found the following errors").":</div>
+		$error_msg = "<div class='error_item' style='padding-left: 5px;'>"._("The following errors occurred").":</div>
 				  <div class='error_item'>".implode($info_error, "</div><div class='error_item'>")."</div>";
 	?>
 		<div style='width:60%;margin:0 auto;'>

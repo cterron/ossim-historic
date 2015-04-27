@@ -129,7 +129,7 @@ function PrintPacketLookupBrowseButtons2($seq, $order_by_tmp, $where_tmp, $db, &
     $result2->baseFreeRows();
 }
 function showShellcodeAnalysisLink($id, $signature) {
-    $url = (!preg_match("/shellcode/i",$signature)) ? '' : '<a style="color:lightgray" href="shellcode.php?id=' . $id . '">'._("Shellcode Analysis").'</a>';
+    $url = (!preg_match("/shellcode/i",$signature)) ? '' : '<br><br><br><a class="greybox" href="shellcode.php?id=' . $id . '">'._("Shellcode Analysis").'</a>';
     return $url;
 }
 function PrintPacketLookupBrowseButtons($seq, $save_sql, $db, &$previous_button, &$next_button) {
@@ -432,13 +432,14 @@ if ($plugin_id == "" || $plugin_sid == "") {
     $result4->baseFreeRows();
     $detail = "";
 }
-else {
+else
+{
     /* Get sensor parameters: */
     $sensor_id = $myrow2['device_id'];
-    $sql4 = "SELECT s.name,s.ip,d.interface FROM alienvault_siem.device d, alienvault.sensor s WHERE d.sensor_id=s.id AND d.id=" . $sensor_id;
+    $sql4 = "SELECT s.name,inet6_ntoa(s.ip) as ip,d.interface,inet6_ntoa(d.device_ip) as device_ip FROM alienvault_siem.device d, alienvault.sensor s WHERE d.sensor_id=s.id AND d.id=" . $sensor_id;
     $result4 = $db->baseExecute($sql4);
     $myrow4 = $result4->baseFetchRow();
-	$sensor_ip   = @inet_ntop($myrow4['ip']);
+	$sensor_ip   = $myrow4['ip'];
 	$sensor_name = $myrow4['name'];
     $result4->baseFreeRows();
     $encoding = 1; # default base64=1
@@ -611,13 +612,15 @@ echo '
                         <th>' . _("Date") . '</th>
                         '.($tzcell ? '<th>'._("Event date").'</th>' : '').'
                         <th>' . gettext("AlienVault Sensor") . '</th>
+                        <th>' . gettext("Device IP") . '</th>
                         <th>' . gettext("Interface") . '</th>
 					</TR>
                     <TR>
                         <TD> ' .  Util::htmlentities($tzdate) . " " . $txtzone . '</TD>
                         '.($tzcell ? '<TD nowrap>'.$event_date.' '.Util::timezone($tzone).'</TD>' : '').'
-                       <TD>' .  Util::htmlentities( (@inet_ntop($myrow4["ip"])) ? $myrow4["name"]." [".inet_ntop($myrow4["ip"])."]" : _("Unknown")) . '</TD>
-                       <TD>' . (($myrow4["interface"] == "") ? "&nbsp;<I>-</I>&nbsp;" : $myrow4["interface"]) . '</TD>
+                       <TD>' .  Util::htmlentities( ($myrow4["ip"] != '') ? $myrow4["name"]." [".$myrow4["ip"]."]" : _("Unknown")) . '</TD>
+                       <TD>' . (($myrow4["device_ip"] == "") ? "&nbsp;<I>"._("N/A")."</I>&nbsp;" : $myrow4["device_ip"]) . '</TD>
+                       <TD>' . (($myrow4["interface"] == "") ? "&nbsp;<I>"._("N/A")."</I>&nbsp;" : $myrow4["interface"]) . '</TD>
 					</TR>
 				  </TABLE>
                   <br/>
@@ -1045,15 +1048,16 @@ echo '			</div>
 
 if ($is_snort) {
     echo '<br><div class="siem_detail_table">
-              <div class="siem_detail_section">'._("Payload").'
-              ';
+              <div class="siem_detail_section">'._("Payload");
     //echo ("<br>" . PrintCleanURL());
     //echo ("<br>" . PrintBinDownload($db, $eid));
     echo showShellcodeAnalysisLink($eid, $plugin_sid_name);
     echo "</div>";
 } else {
     echo '<br><div class="siem_detail_table">
-              <div class="siem_detail_section">'._("Raw Log").'</div>';
+              <div class="siem_detail_section">'._("Raw Log");
+    //echo showShellcodeAnalysisLink($eid, $plugin_sid_name);
+    echo '</div>';
     echo "<style type='text/css'>
     pre.nowrapspace { white-space: -moz-pre-wrap !important; white-space: -pre-wrap;white-space: -o-pre-wrap;white-space: pre-wrap;white-space: normal; min-height:20px; }
     </style>\n";

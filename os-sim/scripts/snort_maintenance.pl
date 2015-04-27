@@ -72,7 +72,7 @@ if ($ARGV[0] eq "repair") {
 if ($ARGV[0] eq "clear") {
 	my $snort_dsn = "dbi:" . $snort_type . ":" . $snort_name . ":" . $snort_host . ":" . $snort_port;
 	my $snort_conn = DBI->connect($snort_dsn, $snort_user, $snort_pass) or die "Can't connect to Database\n";
-	@querys = ("TRUNCATE acid_event","TRUNCATE device","TRUNCATE extra_data","TRUNCATE reputation_data","TRUNCATE idm_data","TRUNCATE ac_acid_event","TRUNCATE ah_acid_event");
+	@querys = ("TRUNCATE acid_event","TRUNCATE device","TRUNCATE extra_data","TRUNCATE reputation_data","TRUNCATE idm_data","TRUNCATE ac_acid_event","TRUNCATE po_acid_event");
 	foreach	$q (@querys) {
 		print "$q\n";
     	my $stm = $snort_conn->prepare($q);

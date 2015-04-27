@@ -195,7 +195,7 @@ if (!isset($_SESSION["knownmac"]))
     		echo "<tr $color>
     			<td>".$data['name']."</td>
     			<td class='td_mac'>".$data['mac']."<br><font style='font-size:10px'>".$data['vendor']."</font></td>
-    			<td class='td_ip_addr'><a target='main' class='HostReportMenu' id='".$data['ip'].";".$data['ip'].";".$data['id']."' href='".Menu::get_menu_url("../asset_details/index.php?id=".$data['id'], 'environment', 'assets', 'assets')."'>".$data['ip']."</a></td>
+    			<td class='td_ip_addr'><a target='main' class='HostReportMenu' id='".$data['ip'].";".$data['ip'].";".$data['id']."' href='".Menu::get_menu_url("../av_asset/common/views/detail.php?asset_id=".$data['id'], 'environment', 'assets', 'assets')."'>".$data['ip']."</a></td>
     			<td>".$data['type']."</td>
     			<td>".$data['encryption']."</td>
     			<td>".$data['encoding']."</td>

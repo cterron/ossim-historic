@@ -510,7 +510,6 @@ function get_otx_user ($data)
 }
 
 
-
 /*
 *
 * <------------------------   END OF THE FUNCTIONS   ------------------------>

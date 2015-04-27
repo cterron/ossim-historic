@@ -96,6 +96,7 @@ Description: Configuration package for MongoDB
 
 Package: alienvault-mysql
 Architecture: all
+Pre-Depends: ossim-utils, percona-server-server-5.6
 Depends: ${misc:Depends}
 Replaces: alienvault-mysql
 Description: Configuration package for MySQL
@@ -222,6 +223,7 @@ Description: AlienVault System Benchmark
 
 Package: alienvault-vpn
 Architecture: all
+Pre-Depends: alienvault-crypto, ossim-utils, alienvault-api-scripts, augeas-tools
 Depends: alienvault-firewall (>= ${source:Upstream-Version})
 Replaces: alienvault-vpn
 Description: Configuration package for vpn infraestructure

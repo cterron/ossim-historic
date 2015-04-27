@@ -97,7 +97,7 @@ EOF
 
 # Include known sensors
 my @sensor_db
-    = qx( echo 'SELECT name,INET6_NTOP(ip) FROM sensor;' | ossim-db | tail -n +2 );
+    = qx( echo 'SELECT name,INET6_NTOA(ip) FROM sensor;' | ossim-db | tail -n +2 );
 
 # the call to tail takes care the header
 # See https://en.wikipedia.org/wiki/Tail_(Unix) for an explanation

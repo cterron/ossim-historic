@@ -247,7 +247,7 @@ if ($in_charge != "")
 
 if ($error == true)
 {
-    $txt_error = "<div>"._("We Found the following errors").":</div><div style='padding:10px;'>".implode("<br/>", $message_error)."</div>";
+    $txt_error = "<div>"._("The following errors occurred").":</div><div style='padding:10px;'>".implode("<br/>", $message_error)."</div>";
     Util::print_error($txt_error);	
 
     $url = (!empty($action_id)) ? "actionform.php" : "action.php";

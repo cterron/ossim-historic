@@ -59,7 +59,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possibl
 
 #by mike cox
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Java Web Start Command Injection (.jar)"; flow:established,from_server; content:"http|3a| -J-jar -J|5C 5C 5C 5C|"; nocase; content:".launch("; nocase; pcre:"/http|3a| -J-jar -J\x5C\x5C\x5C\x5C\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\x5C\x5C[^\n]*\.jar/i"; reference:url,seclists.org/fulldisclosure/2010/Apr/119; reference:url,doc.emergingthreats.net/2011698; classtype:web-application-attack; sid:2011698; rev:5;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Java Web Start Command Injection (.jar)"; flow:established,from_server; content:"http|3a| -J-jar -J|5C 5C 5C 5C|"; nocase; content:".launch("; nocase; pcre:"/http\x3a -J-jar -J\x5C\x5C\x5C\x5C\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\x5C\x5C[^\n]*\.jar/i"; reference:url,seclists.org/fulldisclosure/2010/Apr/119; reference:url,doc.emergingthreats.net/2011698; classtype:web-application-attack; sid:2011698; rev:6;)
 
 #by kevin ross
 #
@@ -553,7 +553,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obf
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Obfuscated Javascript // ptth"; flow:from_server,established; content:"200"; http_stat_code; file_data; content:"//|3a|ptth"; classtype:bad-unknown; sid:2012325; rev:3;)
 
 #
- alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Obfuscated Javascript // ptth (escaped)"; flow:from_server,established; content:"200"; http_stat_code; content:"%2F%2F%3A%70%74%74%68"; classtype:bad-unknown; sid:2012326; rev:2;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Obfuscated Javascript // ptth (escaped)"; flow:from_server,established; content:"200"; http_stat_code; content:"%2F%2F%3A%70%74%74%68"; classtype:bad-unknown; sid:2012326; rev:3;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of replace Javascript Function % Encoding"; flow:established,to_client; content:"%72%65%70%6c%61%63%65%28"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; classtype:bad-unknown; sid:2012398; rev:2;)
@@ -893,4 +893,10 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Interne
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Android RCE via XSS and Play Store XFO"; flow:from_server,established; file_data; content:"|5c|u00"; byte_test:2,<,0x21,0,relative,string,hex; content:"javascript|3a|"; nocase; within:11; distance:2; content:"/store/apps/details?id="; nocase; fast_pattern:only; reference:url,1337day.com/exploit/22581; reference:cve,2014-6041; reference:url,github.com/rapid7/metasploit-framework/commit/7f2add2ce30f33e7787310d7abcb1781e8ea8f43; classtype:attempted-user; sid:2020393; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft Office RTF Stack Buffer Overflow"; flow:from_server,established; file_data; content:"|7b 5c|rt"; within:4; flowbits:set,ETPRO.RTF; flowbits:noalert; reference:cve,2010-3333; classtype:misc-activity; sid:2020699; rev:5;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Firefox Proxy Prototype RCE Attempt (CVE-2014-8636)"; flow:from_server,established; file_data; content:"chrome|3a 2f 2f|"; nocase; content:"open"; nocase; pcre:"/^\s*?\(\s*?[\x22\x27]chrome\x3a\/\//Ri"; content:"messageManager.loadFrameScript"; nocase; content:"Proxy.create"; nocase; reference:url,community.rapid7.com/community/metasploit/blog/2015/03/23/r7-2015-04-disclosure-mozilla-firefox-proxy-prototype-rce-cve-2014-8636; reference:cve,2014-8636; classtype:attempted-user; sid:2020756; rev:1;)
 

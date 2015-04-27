@@ -3,7 +3,7 @@
 * server.inc
 *
 * File server.inc is used to:
-*   - To manage Alienvault Servers
+*   - To manage AlienVault Servers
 *
 *
 * License:
@@ -768,7 +768,7 @@ class Server
     {
         Ossim_db::check_connection($conn);
         
-        $query = ossim_query("SELECT INET6_NTOP(ip) AS ip FROM server WHERE id=UNHEX(?)");
+        $query = ossim_query("SELECT INET6_NTOA(ip) AS ip FROM server WHERE id=UNHEX(?)");
         
         $rs = $conn->Execute($query,array($id));
         
@@ -862,7 +862,7 @@ class Server
         
         $where  = (empty($id))? '' : " AND e.id = UNHEX('$id') ";
         
-        $query = "SELECT HEX(e.id) AS engine_id, s.name, INET6_NTOP(s.ip) AS ip 
+        $query = "SELECT HEX(e.id) AS engine_id, s.name, INET6_NTOA(s.ip) AS ip 
                     FROM server s, acl_entities e 
                     WHERE 1=1 $where AND s.id = e.server_id AND e.entity_type='engine';";
         

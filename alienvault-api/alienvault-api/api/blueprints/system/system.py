@@ -30,7 +30,10 @@
 from flask import Blueprint, request, current_app
 from api.lib.utils import accepted_url
 from uuid import UUID
-from api.lib.common import make_ok, make_bad_request, make_error, document_using
+from api.lib.common import (make_ok,
+                            make_bad_request,
+                            make_error,
+                            document_using)
 from api.lib.auth import admin_permission
 import api_log
 from apimethods.system import system
@@ -41,7 +44,7 @@ from apimethods.system.system import asynchronous_update
 from apimethods.system.system import check_update_and_reconfig_status
 from apimethods.utils import is_valid_ipv4
 from apimethods.utils import is_json_boolean, is_json_true
-
+from apimethods.system.system import get_jobs_running
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -52,7 +55,8 @@ blueprint = Blueprint(__name__, __name__)
 def get_systems():
     (success, system_data) = system.get_all()
     if not success:
-        current_app.logger.error("system: get_systems error: " + str(system_data))
+        current_app.logger.error("system: get_systems error: " +
+                                 str(system_data))
         return make_error("Cannot retrieve systems info", 500)
 
     return make_ok(systems=system_data)
@@ -63,7 +67,8 @@ def get_systems():
 def get_local_info():
     success, system_data = system.get_local_info()
     if not success:
-        current_app.logger.error("system: get_local_info error: " + str(system_data))
+        current_app.logger.error("system: get_local_info error: " +
+                                 str(system_data))
         return make_error("Cannot retrieve local system info", 500)
 
     return make_ok(**system_data)
@@ -91,7 +96,8 @@ def add_system():
     if not is_valid_ipv4(request.form['system_ip']):
         return make_bad_request("Bad system_ip: %s" % request.form['system_ip'])
 
-    (success, system_data) = system.add_system_from_ip(request.form['system_ip'], request.form['password'])
+    (success, system_data) = system.add_system_from_ip(request.form['system_ip'],
+                                                       request.form['password'])
     if not success:
         current_app.logger.error("system: add_system error: " + str(system_data))
         return make_error(system_data, 500)
@@ -106,7 +112,9 @@ def add_system():
 def delete_system(system_id):
     (success, msg) = system.apimethod_delete_system(system_id)
     if not success:
-        return make_error("An error occurred while deleting the system <%s>: %s" % (system_id, msg), 500)
+        error_msg = "An error occurred while deleting the system <%s>" % system_id
+        error_msg = error_msg + ": %s" % msg
+        return make_error(error_msg, 500)
 
     return make_ok(message=msg)
 
@@ -123,7 +131,10 @@ def put_system_authenticate(system_id):
     success, msg = system.add_system(system_id, password)
     if not success:
         api_log.error(str(msg))
-        return make_error("Cannot add system %s. Please verify that the system is reachable and the password is correct." % system_id, 500)
+        error_msg = "Cannot add system %s" % system_id
+        error_msg = error_msg + ". Please verify that the system is reachable "
+        error_msg = error_msg + " and the password is correct."
+        return make_error(error_msg, 500)
 
     return make_ok(**msg)
 
@@ -173,12 +184,12 @@ def get_remote_software_status(system_id):
     if not is_json_boolean(no_cache):
         return make_error("Invalid value for the no_cache parameter", 500)
     no_cache = is_json_true(no_cache)
-    
+
     success, result = apimethod_get_remote_software_update(system_id, no_cache)
     if not success:
         api_log.error("Error: " + str(result))
         return make_error("Cannot retrieve packages status " + str(result), 500)
-        
+
     return make_ok(**result)
 
 
@@ -213,8 +224,10 @@ def put_system_update(system_id):
     """
     (success, job_id) = asynchronous_update(system_id, only_feed=False)
     if not success:
-        api_log.error("Cannot update system %s. %s" % (system_id, job_id))
-        return make_error("Cannot update system %s. Please verify that the system is reachable." % system_id, 500)
+        error_msg = "Cannot update system %s" % system_id
+        api_log.error(error_msg + ": %s" % job_id)
+        error_msg = error_msg + ". Please verify that the system is reachable."
+        return make_error(error_msg, 500)
 
     return make_ok(job_id=job_id)
 
@@ -250,8 +263,10 @@ def put_system_update_feed(system_id):
     """
     (success, job_id) = asynchronous_update(system_id, only_feed=True)
     if not success:
-        api_log.error("Cannot update system %s: %s" % (system_id, job_id))
-        return make_error("Cannot update system %s. Please verify that the system is reachable." % system_id, 500)
+        error_msg = "Cannot update system %s" % system_id
+        api_log.error(error_msg + ": %s" % job_id)
+        error_msg = error_msg + ". Please verify that the system is reachable."
+        return make_error(error_msg, 500)
 
     return make_ok(job_id=job_id)
 
@@ -291,7 +306,9 @@ def get_tasks(system_id):
     """
     success, tasks = check_update_and_reconfig_status(system_id)
     if not success:
-        return make_error("Cannot retrieve task status for system %s. Please verify that the system is reachable." % system_id, 500)
+        error_msg = "Cannot retrieve task status for system %s. " % system_id
+        error_msg = error_msg + "Please verify that the system is reachable."
+        return make_error(error_msg, 500)
 
     return make_ok(tasks=tasks)
 
@@ -350,6 +367,45 @@ def sync_asec_plugins():
             api_log.debug("Sync OK for plugin %s" % plugin)
 
     if not all_ok:
-        return make_error("ASEC plugins sync failed for plugins: %s" % ','.join(failed_plugins), 500)
+        error_msg = "ASEC plugins sync failed for plugins: "
+        error_msg = error_msg + "%s" % ','.join(failed_plugins)
+        return make_error(error_msg, 500)
 
     return make_ok(msg="ASEC plugins sync OK")
+
+
+@blueprint.route('/<system_id>/jobs', methods=['GET'])
+@admin_permission.require(http_exception=403)
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
+def get_jobs(system_id):
+    """
+    Blueprint to get the jobs running on a system
+
+    GET /av/api/1.0/system/<system_id>/jobs
+
+    Args:
+        system_id (str): String with system id (uuid) or local.
+
+    Returns:
+        data: JSON with job ID, job name and its start time, or error message
+
+        {
+            "status": "success",
+            "data": {
+                "jobs": [
+                    {
+                        "job_id": "9c83c664-5d8a-4daf-ac2c-532c0209a734",
+                        "name": "configuration_backup",
+                        "time_start": 1381734702
+                    },
+                    ...
+        }
+    """
+
+    success, jobs = get_jobs_running(system_id)
+    if not success:
+        error_msg = "Cannot retrieve jobs running for system %s. " % system_id
+        error_msg = error_msg + "Please verify that the system is reachable."
+        return make_error(error_msg, 500)
+
+    return make_ok(jobs=jobs)

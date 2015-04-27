@@ -33,6 +33,7 @@
 #include "sim-correlation.h"
 
 #include <math.h>
+#include <time.h>
 
 #include "os-sim.h"
 #include "sim-enums.h"
@@ -416,8 +417,8 @@ sim_correlation_new_directive_event (SimEvent     *event,
   /* Time */
   new_event->time = time (NULL);
   new_event->tzone = 0.0;
-  new_event->time_str = g_new0 (gchar, TIMEBUF_SIZE);
-  strftime (new_event->time_str, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", gmtime((time_t *) &new_event->time));
+  new_event->time_str = g_new (gchar, TIMEBUF_SIZE);
+  sim_time_t_to_str (new_event->time_str, new_event->time);
   sim_directive_update_backlog_first_last_ts(backlog, new_event);
 
   /* Not alarm */

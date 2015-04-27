@@ -102,7 +102,7 @@ sub config_profile_server() {
 
     # HA slave case
     if ($config{'ha_heartbeat_start'} eq 'yes' && $ha_ip =~ /\d+\.\d+\.\d+\.\d+/) {
-        my $current_uuid = `echo "select LOWER(CONCAT(LEFT(hex(id), 8), '-', MID(hex(id), 9,4), '-', MID(hex(id), 13,4), '-', MID(hex(id), 17,4), '-', RIGHT(hex(id), 12))) as uuid from alienvault.server where inet6_ntop(ip)='$ha_ip'" | ossim-db | tail -1 | tr -d '\n'`;
+        my $current_uuid = `echo "select LOWER(CONCAT(LEFT(hex(id), 8), '-', MID(hex(id), 9,4), '-', MID(hex(id), 13,4), '-', MID(hex(id), 17,4), '-', RIGHT(hex(id), 12))) as uuid from alienvault.server where inet6_ntoa(ip)='$ha_ip'" | ossim-db | tail -1 | tr -d '\n'`;
         $server_uuid = $current_uuid if ($current_uuid);
     }
 
@@ -354,7 +354,7 @@ sub configure_server_database(){
 
         verbose_log("Server Profile: no entry found for uuid $server_uuid in alienvault.server. Inserting");
         my $command
-            = "echo \"REPLACE INTO alienvault.server (name, ip, port, id) VALUES (\'$server_hostname\', inet6_pton(\'$config{'admin_ip'}\'), \'$server_port\', UNHEX(REPLACE(\'$server_uuid\',\'-\',\'\')));\" | ossim-db $stdout $stderr";
+            = "echo \"REPLACE INTO alienvault.server (name, ip, port, id) VALUES (\'$server_hostname\', inet6_aton(\'$config{'admin_ip'}\'), \'$server_port\', UNHEX(REPLACE(\'$server_uuid\',\'-\',\'\')));\" | ossim-db $stdout $stderr";
         debug_log($command);
         system($command);
         
@@ -434,7 +434,7 @@ sub configure_server_add_host(){
                 "Server Profile: Updating admin ip (old=$config_last{'admin_ip'} new=$config{'admin_ip'}) update alienvault.host table"
             );
             my $command
-                = "echo \"UPDATE alienvault.host_ip SET ip = inet6_pton(\'$config{'admin_ip'}\') WHERE inet6_ntop(ip) = \'$config_last{'admin_ip'}\'\" | ossim-db   $stdout $stderr ";
+                = "echo \"UPDATE alienvault.host_ip SET ip = inet6_aton(\'$config{'admin_ip'}\') WHERE inet6_ntoa(ip) = \'$config_last{'admin_ip'}\'\" | ossim-db   $stdout $stderr ";
             debug_log($command);
             system($command);
 
@@ -457,7 +457,7 @@ sub configure_server_add_host(){
                 if ( $nentry eq "0" && $profile_sensor == 0) {
                         verbose_log("Server Profile: Inserting into host, host_ip");
                         my $command
-                            = "echo \"SET \@uuid\:= UNHEX(REPLACE(UUID(),'-','')); INSERT IGNORE INTO alienvault.host (id,ctx,hostname,asset,threshold_c,threshold_a,alert,persistence,nat,rrd_profile,descr,lat,lon,av_component) VALUES (\@uuid,(SELECT UNHEX(REPLACE(value,'-','')) FROM alienvault.config WHERE conf = 'default_context_id'),\'$server_hostname\',\'2\',\'30\',\'30\',\'0\',\'0\',\'\',\'\',\'\',\'0\',\'0\',1); INSERT IGNORE INTO alienvault.host_ip (host_id,ip) VALUES (\@uuid,inet6_pton(\'$config{'admin_ip'}\'));\" | ossim-db $stdout $stderr ";
+                            = "echo \"SET \@uuid\:= UNHEX(REPLACE(UUID(),'-','')); INSERT IGNORE INTO alienvault.host (id,ctx,hostname,asset,threshold_c,threshold_a,alert,persistence,nat,rrd_profile,descr,lat,lon,av_component) VALUES (\@uuid,(SELECT UNHEX(REPLACE(value,'-','')) FROM alienvault.config WHERE conf = 'default_context_id'),\'$server_hostname\',\'2\',\'30\',\'30\',\'0\',\'0\',\'\',\'\',\'\',\'0\',\'0\',1); INSERT IGNORE INTO alienvault.host_ip (host_id,ip) VALUES (\@uuid,inet6_aton(\'$config{'admin_ip'}\'));\" | ossim-db $stdout $stderr ";
                         debug_log($command);
                         system($command);
                 }else{

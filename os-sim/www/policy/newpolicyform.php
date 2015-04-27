@@ -535,6 +535,14 @@ if (!$open_source)
 }
 
 $tooltip_sing_line = _('This policy cannot use Log Line Sign because the AlienVault Server only allows Log Block Sign. In order to use this option, you can modify the Log Sign method in Deployment -> Servers.');
+
+
+
+$paths = Asset::get_path_url(FALSE);
+
+$asset_form_url = $paths['asset']['views'] . 'asset_form.php';
+$net_form_url   = $paths['network']['views'] . 'net_form.php';
+
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -2347,7 +2355,7 @@ $tooltip_sing_line = _('This policy cannot use Log Line Sign because the AlienVa
 			<h2>
 				<div class='finished'>
 					<div class='div_left'><?php echo _("SOURCE") ?></div>
-					<div class='div_right'><img src="../pixmaps/tables/warning.png" class="imgsource img_rotate" /></div>
+					<div class='div_right'><img src="/ossim/pixmaps/tables/warning.png" class="imgsource img_rotate" /></div>
 				</div>
 			</h2>
 			<div id="cond-1">
@@ -2359,13 +2367,13 @@ $tooltip_sing_line = _('This policy cannot use Log Line Sign because the AlienVa
 									<tr>
 										<th style="background-position:top center"><?php echo _("Source") . required() ?><br/>
 											<span class='size10'>
-                                                <a href="/ossim/host/host_form.php" class="greybox">
-                                                    <?php echo _("Insert new host?") ?>
+                                                <a href="<?php echo $asset_form_url ?>" class="greybox">
+                                                    <?php echo _("Insert new asset?") ?>
                                                 </a>
                                             </span>
                                             </br>
                                             <span class='size10'>
-                                                <a href="/ossim/net/net_form.php?" class="greybox">
+                                                <a href="<?php echo $net_form_url ?>" class="greybox">
                                                     <?php echo _("Insert new net?") ?>
                                                 </a>
                                             </span>
@@ -2430,13 +2438,13 @@ $tooltip_sing_line = _('This policy cannot use Log Line Sign because the AlienVa
 									<tr>
 										<th style="background-position:top center"><?php echo _("Destination") . required() ?><br/>
                                             <span class='size10'>
-                                                <a href="/ossim/host/host_form.php" class="greybox">
-                                                    <?php echo _("Insert new host?") ?>
+                                                <a href="<?php echo $asset_form_url ?>" class="greybox">
+                                                    <?php echo _("Insert new asset?") ?>
                                                 </a>
                                             </span>
                                             </br>
                                             <span class='size10'>
-                                                <a href="/ossim/net/net_form.php?" class="greybox">
+                                                <a href="<?php echo $net_form_url ?>" class="greybox">
                                                     <?php echo _("Insert new net?") ?>
                                                 </a>
                                             </span>

@@ -43,14 +43,15 @@
 */
 
 
-class Pdf_report{
-    private $path='../tmp/';
+class Pdf_report
+{
+    private $path;
 
 
     private $pathHtml;
 
 
-	private $pathHtmlAux;
+    private $pathHtmlAux;
 
 
     private $pathDirResourcesHtml;
@@ -59,7 +60,7 @@ class Pdf_report{
     private $namePdf;
 
 
-    private $nameTemp;
+    private $originalName;
 
 
     private $orientation;
@@ -71,112 +72,102 @@ class Pdf_report{
     private $name;
 
 
-	private $errors;
+    private $errors;
 
 
-	private $extra_data;
+    private $extra_data;
 
 
-	private $font;
+    private $font;
 
 
-    public function __construct($name,$orientation="P",$paperformat="A4", $user = null, $data=array()) {
-		
-		$db          = new ossim_db();
-		$dbconn      = $db->connect();
-		
-		$this->errors = array();
-		$this->font   = 'Helvetica';
-		
-		if (!empty($name))
-		{
-			$this->setName($name);
-			$this->setNameTemp($name);  
-			$this->setNamePdf($this->getNameTemp());
-			
-			$user   = (empty($user)) ? Session::get_session_user() : $user;
-        
-			$this->path = "../tmp/".Session::get_secure_id($user)."/".$this->getName()."/";
-			
-			if (!is_dir($this->path))
-			{ 
-				mkdir($this->path, 0755, TRUE);
-			}
-			
-			if (!empty($data) && is_array($data))
-			{
-				if (preg_match("/ENTITY\:(\d+)/", $data['assets'], $fnd)) 
-				{
-					$entity_name         = Acl::get_entity_name($dbconn, $fnd[1]);
-					$data['assets_text'] = "ENTITY: ".$entity_name;
-				}
-				else
-				{
-					$data['assets_text'] = $data['assets'];
-				}
-				
-				$data_s           = serialize($data);
-				$this->extra_data = $data;
-				$res              = file_put_contents($this->path."/data_".$name.".ini", $data_s);
-				
-				if ($res === FALSE)
-				{
-					$this->errors["file_error"] = _("File Error: Could not create file ").$this->path;
-				}
-				else
-				{
-					$str_to_replace = array(" ", ":", ".", "#", "&");
-					$this->setNamePdf(str_replace($str_to_replace, "_", $this->getNameTemp())."_".str_replace($str_to_replace, "_", $this->extra_data['assets_text']));
-				}
-			}
-			else
-			{
-				if ($data == TRUE)
-				{
-					$path = $this->path."/data_".$name.".ini";
-					if (@file_exists($path))
-					{
-						$data_s = @file_get_contents($path);
-						$data   = @unserialize($data_s);
-						$this->extra_data = (is_array($data)) ? $data : null;
-					}
-				}
-				
-				
-				if ($data == FALSE || empty($data))
-				{
-					$this->extra_data = NULL;
-				}
-				else
-				{
-					$str_to_replace = array(" ", ":", ".", "#", "&");
-					$this->setNamePdf(str_replace($str_to_replace, "_", $this->getNameTemp())."_".str_replace($str_to_replace, "_", $this->extra_data['assets_text']));
-				}
-			}
-					
-			
-			$this->setpathHtml($this->path."/".$this->getName().".html");
-			$this->setpathDirResourcesHtml($this->path);
-			
-			$this->orientation = $orientation;
-			$this->paperformat = $paperformat;
-		}
-		else
-		{
-			$this->errors["empty_name"] = _("File Error: Name is empty");
-		}
-	}
-
-
-    public function setName($name)
+    public function __construct($name, $orientation = "P", $paperformat = "A4", $user = NULL, $data = array())
     {
-        $this->name=$name;
-    }
+        $db          = new ossim_db();
+        $dbconn      = $db->connect();
+
+        $this->path   = '../tmp/';
+
+        $this->errors = array();
+
+        $this->font   = 'Helvetica';
+
+        if (!empty($name))
+        {
+            $this->setName($name);
+            $this->setOriginalName($name);
+
+            $this->setNamePdf($this->getName());
+
+            $user = (empty($user)) ? Session::get_session_user() : $user;
+
+            $this->path = "../tmp/".Session::get_secure_id($user)."/".$this->getName()."/";
+
+            if (!is_dir($this->path))
+            {
+                mkdir($this->path, 0755, TRUE);
+            }
+
+            if (!empty($data) && is_array($data))
+            {
+                if (preg_match("/ENTITY\:(\d+)/", $data['assets'], $fnd))
+                {
+                    $entity_name         = Acl::get_entity_name($dbconn, $fnd[1]);
+                    $data['assets_text'] = "ENTITY: ".$entity_name;
+                }
+                else
+                {
+                    $data['assets_text'] = $data['assets'];
+                }
+
+                $data_s           = serialize($data);
+                $this->extra_data = $data;
+                $res              = file_put_contents($this->path."/data_".$this->getName().".ini", $data_s);
+
+                if ($res === FALSE)
+                {
+                    $this->errors['file_error'] = _("Error! PDF data could not be created");
+                }
+                else
+                {
+                    $this->setNamePdf($this->getName().'_'.$this->sanitize($this->extra_data['assets_text']));
+                }
+            }
+            else
+            {
+                if ($data == TRUE)
+                {
+                    $path = $this->path."/data_".$this->getName().".ini";
+
+                    if (@file_exists($path))
+                    {
+                        $data_s = @file_get_contents($path);
+                        $data   = @unserialize($data_s);
+                        $this->extra_data = (is_array($data)) ? $data : NULL;
+                    }
+                }
+
+                if (empty($data))
+                {
+                    $this->extra_data = NULL;
+                }
+                else
+                {
+                    $this->setNamePdf($this->getName().'_'.$this->sanitize($this->extra_data['assets_text']));
+                }
+            }
 
 
-    public function setNameTemp($name)
-    {
-        $this->nameTemp=$name;
+            $this->set_html_path($this->path.'/'.$this->getName().'.html');
+            $this->set_resource_path($this->path);
+
+            $this->orientation = $orientation;
+            $this->paperformat = $paperformat;
+        }
+        else
+        {
+            $this->errors["empty_name"] = _('Error! Name is empty');
+        }
     }
 
 
@@ -186,34 +177,33 @@ class Pdf_report{
     }
 
 
-    public function getNameTemp()
+    public function setName($name)
     {
-        return $this->nameTemp;
+        $this->name = $this->sanitize($name);
     }
 
 
-	public function setNamePdf($name)
-	{
-        $this->namePdf=$this->getActualDate().'-'.$name.'.pdf';
+    public function getOriginalName()
+    {
+        return $this->originalName;
     }
 
 
-	public function getNamePdf()
-	{
+    public function setOriginalName($name)
+    {
+        $this->originalName = $name;
+    }
+
+
+    public function setNamePdf($name)
+    {
+        $this->namePdf = $this->get_current_date().'-'.$name.'.pdf';
+    }
+
+
+    public function getNamePdf()
+    {
         return $this->namePdf;
-    }
-
-
-    private function setpathHtml($url)
-    {
-        $this->pathHtml=$url;
-		$this->pathHtmlAux=$url."_";
-    }
-
-
-    private function setpathDirResourcesHtml($url)
-    {
-        $this->pathDirResourcesHtml=$url;
     }
 
 
@@ -229,107 +219,73 @@ class Pdf_report{
     }
 
 
-    private function existHtml(){
-		
-		if (file_exists($this->pathHtml))
-		{
-			return TRUE;
-		}
-		
-		return FALSE;
-	}
-
-
-    private function getActualDate()
+    public function getExtraData($key)
     {
-        $date=getdate();
-
-        return $date['year'].$date['yday'].$date['hours'].$date['minutes'].$date['seconds'];
+        return ($key == '') ? $this->extra_data : $this->extra_data[$key];
     }
 
 
-	public function getExtraData($key)
-	{
-		return ($key == '') ? $this->extra_data : $this->extra_data[$key];
-	}
-
-
-	public function setExtraData($data)
-	{
-		return $this->extra_data = $data;
-	}
-
-
-    private function convertEntities()
+    public function setExtraData($data)
     {
-    	$file = @file($this->pathHtml);
-    	for ($i=0; $i<count($file); $i++) 
-		{
-    		if (preg_match('/&#(\d{4,5});/',$file[$i]) && !preg_match('/\/image/',$file[$i]))
-			{
-    			$file[$i]   = mb_convert_encoding($file[$i],'UTF-8','HTML-ENTITIES');
-				$this->font = 'ArialUnicodeMS';
-			}
-    		else
-    		{
-    			$file[$i] = mb_convert_encoding($file[$i],'UTF-8','ISO-8859-1');
-            }    
-            
-            $file[$i] = str_replace("##br##","<br/>",$file[$i]);
-    	}
-		
-		file_put_contents($this->pathHtmlAux,$file);
-		unset($file);
+        return $this->extra_data = $data;
+    }
+
+
+    public function setHtml($html)
+    {
+        file_put_contents($this->pathHtml, $html);
     }
 
 
     public function getPdf($output='navigator')
-    {     
-		if($this->existHtml())
-		{
-        	session_write_close();
-			$this->convertEntities();
-            require_once("classes/html2pdf/html2pdf.class.php");
-            $html2pdf = new HTML2PDF($this->orientation,$this->paperformat,'en', true, 'UTF-8',array(0,0,0,0));
+    {
+        if($this->html_exists())
+        {
+            session_write_close();
+            $this->convert_entities();
+            require_once "classes/html2pdf/html2pdf.class.php";
+
+            $html2pdf = new HTML2PDF($this->orientation, $this->paperformat, 'en', TRUE, 'UTF-8', array(0,0,0,0));
             $html2pdf->pdf->SetDisplayMode('real');
             $html2pdf->setTestTdInOnePage(FALSE);
             $html2pdf->setTestIsImage(FALSE);
+
             $pdf_content = file_get_contents($this->pathHtmlAux);
-			$html2pdf->setDefaultFont($this->font);
-            
-			//$html2pdf->setModeDebug();
+            $html2pdf->setDefaultFont($this->font);
+
+            //$html2pdf->setModeDebug();
             $html2pdf->WriteHTML($pdf_content);
-            
-			if($output == 'navigator') 
-			{
-			    $html2pdf->Output($this->namePdf,'D');
+
+            if($output == 'navigator')
+            {
+                $html2pdf->Output($this->getNamePdf(),'D');
             }
             elseif($output == 'server')
-			{
-                $html2pdf->Output($this->pathDirResourcesHtml.$this->namePdf, 'F');
-                return $this->pathDirResourcesHtml.$this->namePdf;
+            {
+                $html2pdf->Output($this->pathDirResourcesHtml.$this->getNamePdf(), 'F');
+
+                return $this->pathDirResourcesHtml.$this->getNamePdf();
             }
         }
-		else
-		{
-            echo "<div class='ossim_error' style='width:80%; text-align:center;'>"._('No data available')."</div>";
-		}
+        else
+        {
+            Av_exception::throw_error(Av_exception::USER_ERROR, _('No data available'));
+        }
     }
 
 
-    public function sendPdfEmail($title, $email, $pdfName=null, $dirUser=null, $body="") 
+    public function sendPdfEmail($title, $email, $pdfName = NULL, $dirUser = NULL, $body = '')
     {
-       
-        if($title == "") 
+        if($title == '')
         {
-            $subject = _('Report (')._("No title")._(') - OSSIM');
+            $subject = _('Report (')._('No title')._(') - OSSIM');
         }
-        else 
+        else
         {
             $subject = $title;
         }
-        
-        if($body == "") 
+
+        if($body == "")
         {
             $body ='<html>
                         <head>
@@ -338,13 +294,13 @@ class Pdf_report{
                     <body>
                     </body>
                 </html>';
-        }        
-        
-        $attachments = array();        
-        $file_name   = $this->getNamePdf();       
-		
+        }
+
+        $attachments = array();
+        $file_name   = $this->getNamePdf();
+
         if($pdfName == NULL)
-		{
+        {
             try
             {
                 // Get PDF
@@ -352,58 +308,58 @@ class Pdf_report{
                     "path" => $this->getPdf('server'),
                     "name" => $file_name
                );
-            } 
-			catch (Exception $e)
-			{
-				echo $e->getMessage(); //Boring error messages from anything else!
+            }
+            catch (Exception $e)
+            {
+                echo $e->getMessage(); //Boring error messages from anything else!
             }
         }
-		else
-		{
-            //It exists                                
+        else
+        {
+            //It exists
             $attachments[] = array(
                 "path" => '/usr/share/ossim/www/tmp/scheduler/'.$dirUser.'/'.$pdfName.'.pdf',
                 "name" => $file_name
-           );            
-		}
-                          
-        
+           );
+        }
+
+
         $db   = new ossim_db();
         $conn = $db->connect();
-        
-        $res = Util::send_email ($conn, $email, $subject, $body, $attachments); 
+
+        $res = Util::send_email($conn, $email, $subject, $body, $attachments);
         $db->close();
-        
-        return $res;        
+
+        return $res;
     }
 
 
-    public function getLinkPdf($extra_data=FALSE){
-        
-		$current_url = $_SERVER[SCRIPT_NAME].'?pdf=true&extra_data=true&'.$_SERVER[QUERY_STRING];
-		
-		$html='
+    public function getLinkPdf($extra_data = FALSE)
+    {
+        $current_url = $_SERVER[SCRIPT_NAME].'?pdf=true&extra_data=true&'.$_SERVER[QUERY_STRING];
+
+        $html='
             <script language="javascript">
-                             
+
                 function emailValidate(id)
                 {
                     if(/([\w+\.-]*@[\w+\.-]*[\.\w{2,3}])+/.test($("#email").val()))
-                    {                                           
+                    {
                         var id_form="#email_form";
-                        
+
                         $(id_form).attr("action","wizard_email.php?extra_data='.$extra_data.'&name='.base64_encode($this->getName()).'&format=email");
-                     	
+
                         GB_show_post("'.Util::js_entities(("Send PDF by e-mail")).'", id_form, "350", "600");
                     }
                     else
                     {
                         alert("'._("Please, add a valid e-mail").'");
-                        $(id).focus();                        
+                        $(id).focus();
                     }
-                    
+
                     return false;
                 }
-                                                
+
                 function toggleDivEmail(){
                     $("#iemail").toggle();
                 }
@@ -426,7 +382,7 @@ class Pdf_report{
                     <div style="margin-top:5px">
                         <input id="email" name="email" type="text" style="width:120px">
                         <input type="button" class="vsbutton small" onclick="emailValidate(\'#email\');" value="'._("Send").'"/>
-					</div>
+                    </div>
                 </form>
                 </div>
             ';
@@ -435,9 +391,73 @@ class Pdf_report{
     }
 
 
-    public function setHtml($html)
-    {       	
-		file_put_contents($this->pathHtml, $html);
+
+    /*************************************************
+     ************** Private functions ****************
+     *************************************************/
+
+    private function set_html_path($url)
+    {
+        $this->pathHtml    = $url;
+        $this->pathHtmlAux = $url."_";
+    }
+
+
+    private function set_resource_path($url)
+    {
+        $this->pathDirResourcesHtml = $url;
+    }
+
+
+    private function html_exists()
+    {
+        if (file_exists($this->pathHtml))
+        {
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+
+    private function get_current_date()
+    {
+        $date = getdate();
+
+        return $date['year'].$date['yday'].$date['hours'].$date['minutes'].$date['seconds'];
+    }
+
+
+    private function sanitize($data)
+    {
+        $str_to_replace = array(" ", ":", ".", "#", "&", "/");
+
+        return str_replace($str_to_replace, "_", $data);
+    }
+
+
+    private function convert_entities()
+    {
+        $file = @file($this->pathHtml);
+
+        for ($i = 0; $i < count($file); $i++)
+        {
+            if (preg_match('/&#(\d{4,5});/',$file[$i]) && !preg_match('/\/image/',$file[$i]))
+            {
+                $file[$i]   = mb_convert_encoding($file[$i],'UTF-8','HTML-ENTITIES');
+                $this->font = 'ArialUnicodeMS';
+            }
+            else
+            {
+                $file[$i] = mb_convert_encoding($file[$i],'UTF-8','ISO-8859-1');
+            }
+
+            $file[$i] = str_replace("##br##","<br/>",$file[$i]);
+        }
+
+        file_put_contents($this->pathHtmlAux, $file);
+
+        unset($file);
     }
 }
 

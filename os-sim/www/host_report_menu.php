@@ -45,6 +45,8 @@ if (!$noready)
     ?>
     <script type="text/javascript">
         
+        var __cfg = <?php echo Asset::get_path_url() ?>;
+        
         function load_inframe(url) 
         {
             if (typeof(top.av_menu) == 'object')
@@ -97,7 +99,6 @@ if (!$noready)
         			    if (aux[0] != '0.0.0.0' && aux[0].match(/^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$/))
         			    {
         			        $('#myMenu').enableContextMenu();
-        			        $('#myMenu').disableContextMenuItems('#detail');
         			        $(this).attr('disabled', true);
         			        $("#enableItems").attr('disabled', false);
         			    }
@@ -109,7 +110,7 @@ if (!$noready)
         			    }
 
            			// Disable 'Asset Detail' menu element when no Asset ID is found    
-        			    if (typeof aux[2] != 'undefined' && aux[2].match(/^[A-F0-9]{32}$/))
+        			    if (typeof aux[2] != 'undefined' && aux[2].match(/^[A-F0-9]{32}$/) && aux[2] != '00000000000000000000000000000000')
         			    {
         			        $('#myMenu').enableContextMenuItems('#detail');
         			        $(this).attr('disabled', true);
@@ -121,6 +122,12 @@ if (!$noready)
         			        $(this).attr('disabled', true);
         			        $("#enableItems").attr('disabled', false);
         			    }
+
+        			    // Disable lighbox mode links when already in lightbox
+        			    if (parent.is_lightbox_loaded(window.name))
+        		        {
+        			        $('#myMenu').disableContextMenuItems('#edit');
+        		        }
     				}
     			},
 				
@@ -209,17 +216,17 @@ if (!$noready)
                         
                         if (typeof(id) != 'undefined' && id.match(/[0-9A-Z]{32}/))
                         {
-                            var url     = "/ossim/host/host_form.php?id="+id;
-                            var caption = '<?php echo _("Modify Asset")?>';
+                            var url     = __cfg.asset.views + "asset_form.php?id=" + id + "&ip=" + ip + "&ctx=" + ctx;
+                            var caption = '<?php echo _("Edit Asset")?>';
                         }
                         else 
                         {
-                            var url     = "/ossim/host/host_form.php?ip="+ip+"&ctx="+ctx;
+                            var url     = __cfg.asset.views + "asset_form.php?ip=" + ip + "&ctx=" + ctx;
                             var caption = '<?php echo _("New Asset")?>';
                         }			
                                                                                                                  
                         var height  = '720';
-                        var width   = '700';    
+                        var width   = '850';
                 
                         load_greybox(caption, url, height, width);
 
@@ -293,7 +300,7 @@ if (!$noready)
 						var aux       = $(el).attr('id').split(/;/);
 						var asset_key = aux[2];
 						
-						var url  = "/ossim/asset_details/index.php?id="+asset_key;                        
+						var url  = "/ossim/av_asset/common/views/detail.php?asset_id="+asset_key;                        
                         
 					    url += "&"+ get_menu_query_string('environment', 'assets', 'assets');                
                     

@@ -2,6 +2,7 @@
 name=AlienVault API log
 description=Parses the API log to search for issues.
 category=alienvault,platform
+profiles=Server:>4.0
 type=file
 filename=/var/log/alienvault/api/api.log
 raw_limit=2000

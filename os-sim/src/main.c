@@ -460,6 +460,7 @@ main (int argc, char *argv[])
   {
     g_object_unref (ossim.user_auth);
   }
+  sim_idm_context_free();
 
 
   /* Log Free */

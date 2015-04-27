@@ -3,7 +3,7 @@ name=Database status
 description=Tests database health, searching for crashed processes or inefficient queries, among other issues.
 category=alienvault,database
 type=db
-host=localhost
+host=@dbhost@
 user=@dbuser@
 password=@dbpass@
 database=alienvault
@@ -36,7 +36,7 @@ advice=The database is designed for day to day operations, as well as limited ti
 
 [IDM entries in the SIEM]
 query=@pivot@:SELECT TABLE_ROWS FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'alienvault_siem' AND TABLE_NAME IN ('acid_event', 'idm_data');
-conditions=@float@:<20000000;@float@:<position[1]*3.0@or@==position[1]*3.0
+conditions=@float@:<200000000;@float@:<position[0]*3.0@or@==position[0]*3.0
 fail_if_empty=False
 severity=High
 warning=Too many IDM entries in the database

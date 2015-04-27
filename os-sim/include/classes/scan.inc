@@ -56,7 +56,7 @@ define('FTW_PING_OPTIONS', '-T3');
 * @package    ossim-framework\Asset
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Scan
@@ -886,7 +886,7 @@ class Scan
                 $ip = $s_ips[$i];
 
                 //There is a validation error (Host could not be saved)
-                ossim_valid($ip, OSS_IP_ADDR, 'illegal:' . _('IP address'));
+                ossim_valid($ip, OSS_IP_ADDR, 'illegal:' . _('IP Address'));
 
                 if (ossim_error())
                 {
@@ -915,7 +915,6 @@ class Scan
                 $hardware_cpes = $scan[$ip]['hardware_cpes'];
                 $software_cpes = $scan[$ip]['software_cpes'];
                 $services      = $scan[$ip]['services'];
-                $nagios        = $host_data['nagios'];
 
                 //Save host with new data
                 try
@@ -1057,11 +1056,11 @@ class Scan
 
                         if ($is_in_db == TRUE)
                         {
-                            $data['by_host'][$ip]['data'] = _('Host updated');
+                            $data['by_host'][$ip]['data'] = _('Asset saved');
                         }
                         else
                         {
-                            $data['by_host'][$ip]['data'] = _('New host inserted');
+                            $data['by_host'][$ip]['data'] = _('New asset inserted');
                         }
 
 
@@ -1092,7 +1091,7 @@ class Scan
                                     {
                                         $save_os = FALSE;
 
-                                        $warnings['os_error'] = _('OS could not be updated [More relevant OS was previously inserted]');
+                                        $warnings['os_error'] = _('OS could not be saved [More relevant OS was previously inserted]');
                                     }
                                 }
 
@@ -1105,20 +1104,6 @@ class Scan
                             catch(Exception $e)
                             {
                                 $warnings['os_error'] = _('Operating System could not be saved');
-                            }
-                        }
-
-
-                        //Insert Nagios (Only for new hosts)
-                        if ($is_in_db == FALSE && !empty($nagios))
-                        {
-                            try
-                            {
-                                Asset_host_scan::save_plugin_in_db($conn, $id, 2007);
-                            }
-                            catch(Exception $e)
-                            {
-                                $warnings['ng_error'] = _('Nagios could not be enabled');
                             }
                         }
 
@@ -1162,7 +1147,7 @@ class Scan
                                 }
                                 else
                                 {
-                                    $warnings['hd_error'] = _('Some hardware CPEs could not be updated [More relevant hardware CPEs were previously inserted]');
+                                    $warnings['hd_error'] = _('Some hardware CPEs could not be saved [More relevant hardware CPEs were previously inserted]');
                                 }
                             }
                         }
@@ -1191,7 +1176,7 @@ class Scan
                                 {
                                     $s_data = array(
                                         'cpe'        => $s_cpe,
-                                        'banner'     => '',
+                                        'banner'     => Asset_host_software::get_software_name_by_cpe($conn, $s_cpe),
                                         'source_id'  => 5,
                                         'extra'      => ''
                                     );
@@ -1207,7 +1192,7 @@ class Scan
                                 }
                                 else
                                 {
-                                    $warnings['sf_error'] = _('Some software CPEs could not be updated [More relevant software CPEs were previously inserted]');
+                                    $warnings['sf_error'] = _('Some software CPEs could not be saved [More relevant software CPEs were previously inserted]');
                                 }
                             }
                         }
@@ -1224,7 +1209,7 @@ class Scan
                             {
                                 //Inserting services with less relevance than current ones
                                 $filters = array(
-                                    'where' => "h.id = UNHEX('$id') AND host_services.host_ip = inet6_pton('$ip') AND host_source_reference.relevance > 7"
+                                    'where' => "h.id = UNHEX('$id') AND host_services.host_ip = inet6_aton('$ip') AND host_source_reference.relevance > 7"
                                 );
 
                                 list($previous_services, $total_services) = Asset_host_services::get_list($conn, $filters);
@@ -1244,7 +1229,7 @@ class Scan
                                         'protocol'  => $p_id,
                                         'version'   => $service['version'],
                                         'source_id' => 5,
-                                        'nagios'    => $nagios
+                                        'nagios'    => 0
                                     );
 
                                     try
@@ -1258,7 +1243,7 @@ class Scan
                                 }
                                 else
                                 {
-                                    $warnings['service_error'] = _('Some services could not be updated [More relevant services were previously inserted]');
+                                    $warnings['service_error'] = _('Some services could not be saved [More relevant services were previously inserted]');
                                 }
                             }
                         }
@@ -1273,7 +1258,7 @@ class Scan
                     else
                     {
                         $data['by_host'][$ip]['status'] = 'error';
-                        $data['by_host'][$ip]['data']   = array ('no_create_asset' => _('No permissions to create assets'));
+                        $data['by_host'][$ip]['data']   = array ('no_create_asset' => _('You do not have the correct permissions to create assets. Please contact system administrator with any questions'));
                     }
                 }
                 catch(Exception $e)

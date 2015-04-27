@@ -273,13 +273,13 @@ function time_can_use_ac($field)
             $second   = $time_criteria[7];
 
             if (($operator == '>' || $operator == '>=' || $operator == '=' || $operator == '!=')
-                    && ($hour > 0 || $minute > 0 || $second > 0))
+                    && ($minute > 0 || $second > 0))
             {
                 $use_ac = FALSE;
             }
 
             if (($operator == '<' || $operator == '<=')
-                    && ($hour != 23 || $minute != 59 || $second != 59))
+                    && ($minute != 59 || $second != 59))
             {
                 $use_ac = FALSE;
             }
@@ -738,29 +738,8 @@ function SaveCriteriaReportData($data) {
         $db->baseExecute($sql, $db);
     }
 }
-/********************************************************************************************/
-//function QuerySignature($q, $cmd) {
-//    GLOBAL $db;
-//    $ids = "";
-//    if (preg_match("/.* OR .*|.* AND .*/",$q)) {
-//        $or_str = ($cmd == "=") ? "' OR sig_name = '" : "%' OR sig_name LIKE '%";
-//        $and_str = ($cmd == "=") ? "' AND sig_name = '" : "%' AND sig_name LIKE '%";
-//        $q = str_replace(" OR ",$or_str,$q);
-//        $q = str_replace(" AND ",$and_str,$q);
-//    }
-//    $op = ($cmd == "=") ? "sig_name = '$q'" : "sig_name LIKE '%" . $q . "%'";
-//    $sql = "SELECT sig_id FROM signature WHERE $op";
-//    if ($result = $db->baseExecute($sql)) {
-//        while ($row = $result->baseFetchRow()) $ids.= $row[0] . ",";
-//    }
-//    $ids = preg_replace("/\,$/", "", $ids);
-//    $result->baseFreeRows();
-//    if ($ids == "") $ids = "0";
-//    return $ids;
-//}
-/********************************************************************************************/
-function QueryOssimSignature($q, $cmd, $cmp, $conn_aux) {
-    //GLOBAL $db;
+function QueryOssimSignature($q, $cmd, $cmp) {
+    global $db;
     $ids = "";
     
     /*
@@ -769,7 +748,7 @@ function QueryOssimSignature($q, $cmd, $cmp, $conn_aux) {
     * - escape_sql()
     */
     $q = html_entity_decode($q, ENT_QUOTES, 'ISO-8859-1');
-    $q = escape_sql($q, $conn_aux);
+    $q = escape_sql($q, $db->DB);
     
     if (preg_match("/.* OR .*|.* AND .*/",$q)) {
         $or_str = ($cmd == "=") ? "' OR plugin_sid.name = '" : "%' OR plugin_sid.name LIKE '%";
@@ -797,6 +776,45 @@ function QueryOssimSignature($q, $cmd, $cmp, $conn_aux) {
     $ids = preg_replace("/(OR|AND)$/", "", $ids);
     $result->baseFreeRows();
     return trim($ids);*/
+}
+function QueryOssimSignatureTmpTable($q, $cmd, $cmp) {
+    global $db;
+    $ids = "";
+    /*
+     * Prepare search string:
+    * - html_entity_decode() The string here is with htmlentities, chars like &quot; must be "
+    * - escape_sql()
+    */
+    $q = html_entity_decode($q, ENT_QUOTES, 'ISO-8859-1');
+    $q = escape_sql($q, $db->DB);
+    
+    if (preg_match("/.* OR .*|.* AND .*/",$q)) {
+        $or_str = ($cmd == "=") ? "' OR plugin_sid.name = '" : "%' OR plugin_sid.name LIKE '%";
+        $and_str = ($cmd == "=") ? "' AND plugin_sid.name = '" : "%' AND plugin_sid.name LIKE '%";
+        $q = str_replace(" OR ",$or_str, $q);
+        $q = str_replace(" AND ",$and_str, $q);
+    }
+    
+    $q = parenthesis_encode($q);
+    
+    $op = ($cmd == "=") ? "plugin_sid.name = '$q'" : "plugin_sid.name LIKE '%" . $q . "%'";
+    // apply ! operator
+    $op = str_replace(" = '!"," != '",$op);
+    $op = str_replace(" LIKE '%!"," NOT LIKE '%",$op);
+    
+    $_user = Session::get_session_user();
+    $db->DB->Execute('CREATE TABLE IF NOT EXISTS alienvault_siem.plugins_join (id int(11) NOT NULL, sid int(11) NOT NULL, login VARCHAR(64) NOT NULL, PRIMARY KEY (id,sid,login)) ENGINE=MEMORY');
+    $db->DB->Execute('DELETE FROM alienvault_siem.plugins_join WHERE login=?',array($_user));
+    $sql = "INSERT IGNORE INTO alienvault_siem.plugins_join SELECT plugin_id,sid,? FROM alienvault.plugin_sid WHERE $op";
+    if (file_exists('/tmp/debug_siem'))
+    {
+        error_log("TMP TABLE:$sql\n", 3, "/tmp/siem");
+    }
+    $db->DB->Execute($sql,array($_user));
+    
+    $plugin_join = " INNER JOIN alienvault_siem.plugins_join ON acid_event.plugin_id=plugins_join.id AND acid_event.plugin_sid=plugins_join.sid AND plugins_join.login='$_user'";
+
+    return $plugin_join;
 }
 /********************************************************************************************/
 function QueryOssimPluginGroup($pgid) {
@@ -878,9 +896,6 @@ function ProcessCriteria() {
     /* XXX-SEC */
     GLOBAL $cs,$timetz;
     
-    $db_aux   = new ossim_db();
-    $conn_aux = $db_aux->connect();
-
     /* the JOIN criteria */
     $ip_join_sql = " LEFT JOIN iphdr ON acid_event.sid=iphdr.sid AND acid_event.cid=iphdr.cid ";
     
@@ -892,10 +907,10 @@ function ProcessCriteria() {
     $rawip_join_sql = " LEFT JOIN iphdr ON acid_event.sid=iphdr.sid AND acid_event.cid=iphdr.cid ";
     $sig_join_sql= " LEFT JOIN alienvault.plugin_sid ON acid_event.plugin_id=plugin_sid.plugin_id AND acid_event.plugin_sid=plugin_sid.sid ";
     $sig_join = false;
+    $sig_join_tmp = "";
     //$data_join_sql = " LEFT JOIN extra_data ON acid_event.sid=extra_data.sid AND acid_event.cid=extra_data.cid ";
     $data_join_sql = "";
-    $ag_join_sql = " LEFT JOIN acid_ag_alert ON acid_event.sid=acid_ag_alert.ag_sid AND acid_event.cid=acid_ag_alert.ag_cid ";
-    //$sig_join_sql = "";
+    $ag_join_sql = " LEFT JOIN acid_ag_alert ON acid_event.sid=acid_ag_alert.ag_sid AND acid_event.cid=acid_ag_alert.ag_cid ";;
     //SQL_CALC_FOUND_ROWS 
     $sql = "SELECT acid_event.*, HEX(acid_event.ctx) AS ctx, HEX(acid_event.src_host) AS src_host, HEX(acid_event.dst_host) AS dst_host, HEX(acid_event.src_net) AS src_net, HEX(acid_event.dst_net) AS dst_net FROM acid_event";
     $where_sql = " WHERE ";
@@ -1013,7 +1028,7 @@ function ProcessCriteria() {
     {        
         $q_like         = ($userdata[1] == 'like') ? TRUE : FALSE;
         
-        $_q             = parenthesis_encode(escape_sql($userdata[2], $conn_aux, $q_like));
+        $_q             = parenthesis_encode(escape_sql($userdata[2], $db->DB, $q_like));
 
         $sql            = "SELECT acid_event.*, HEX(acid_event.ctx) AS ctx, HEX(acid_event.src_host) AS src_host, 
                                   HEX(acid_event.dst_host) AS dst_host, HEX(acid_event.src_net) AS src_net, 
@@ -1035,7 +1050,7 @@ function ProcessCriteria() {
     }     
     if ($idm_username[0] != '') // username in idm_data
     {
-        $_q = parenthesis_encode(escape_sql($idm_username[0], $conn_aux));
+        $_q = parenthesis_encode(escape_sql($idm_username[0], $db->DB));
         
         if ($idm_username[1] == "both")
         {
@@ -1049,7 +1064,7 @@ function ProcessCriteria() {
     }
     if ($idm_domain[0] != '') // domain in idm_data
     {
-        $_q = parenthesis_encode(escape_sql($idm_domain[0], $conn_aux));
+        $_q = parenthesis_encode(escape_sql($idm_domain[0], $db->DB));
 
         if ($idm_domain[1] == "both")
         {
@@ -1063,7 +1078,7 @@ function ProcessCriteria() {
     }    
     if ($idm_hostname[0] != '') // hostname in acid_event
     {
-        $_q = parenthesis_encode(escape_sql($idm_hostname[0], $conn_aux));
+        $_q = parenthesis_encode(escape_sql($idm_hostname[0], $db->DB));
         
         	if ($idm_hostname[1] == "both")
         {
@@ -1123,18 +1138,17 @@ function ProcessCriteria() {
     }
 
     /* Signature */
+    $sfilter = false;
     if ((isset($sig[0]) && $sig[0] != " " && $sig[0] != "") && (isset($sig[1]) && $sig[1] != "")) {
         if ($sig_type==1) { // sending sig[1]=plugin_id;plugin_sid
+            $sfilter = true;
             $pidsid = preg_split("/[\s;]+/",$sig[1]);
             $tmp_meta = $tmp_meta." AND (acid_event.plugin_id=".intval($pidsid[0])." AND acid_event.plugin_sid=".intval($pidsid[1]).")";
         } else { // free string
-            $sig_ids = QueryOssimSignature($sig[1], $sig[0], $sig[2], $conn_aux);
+            //$sig_join_tmp = QueryOssimSignatureTmpTable($sig[1], $sig[0], $sig[2]);
+            $sig_ids = QueryOssimSignature($sig[1], $sig[0], $sig[2], $db->DB);
             $sig_join = true;
             $tmp_meta = $tmp_meta . " AND ($sig_ids)";
-            //if ($sig_ids != "")
-            //  $tmp_meta = $tmp_meta . " AND ($sig_ids) ";
-            //else
-            //  $tmp_meta = $tmp_meta." AND (plugin_id=-1 AND plugin_sid=-1)";
         }
     } else $cs->criteria['sig']->Set("");
 
@@ -1177,7 +1191,7 @@ function ProcessCriteria() {
     if ($ossim_risk_a != " " && $ossim_risk_a != "" && $ossim_risk_a != "0") {
         if ($ossim_risk_a == "low") {
             //$tmp_meta = $tmp_meta." AND ossim_risk_a >= 1 AND ossim_risk_a <= 4 ";
-            $tmp_meta = $tmp_meta . " AND acid_event.ossim_risk_a < 1 ";
+            $tmp_meta = $tmp_meta . " AND acid_event.ossim_risk_a = 0 ";
             $use_ac = false;
         } else if ($ossim_risk_a == "medium") {
             //$tmp_meta = $tmp_meta." AND ossim_risk_a >= 5 AND ossim_risk_a <= 7 ";
@@ -1198,56 +1212,50 @@ function ProcessCriteria() {
 	
     $use_ac = (time_can_use_ac($real_time)) ? $use_ac : FALSE;
     
+    
     /* ********************** PERMS ************************ */
     // Allowed CTX's y Asset Filter
-    $perms_sql = "";
-    $domain = Session::get_ctx_where();
-    if ($domain != "") {
-        $perms_sql .= " AND acid_event.ctx in ($domain)";
-    }
-    // Asset filter
-    $host_perms = Session::get_host_where();
-    $net_perms = Session::get_net_where();
-    
-    if ($host_perms != "") {
-        $perms_sql .= " AND (acid_event.src_host in ($host_perms) OR acid_event.dst_host in ($host_perms)";
-        if ($net_perms != "") $perms_sql .= " OR acid_event.src_net in ($net_perms) OR acid_event.dst_net in ($net_perms))";
-        else                  $perms_sql .= ")";
-    }
-    elseif ($net_perms != "") {
-        $perms_sql .= " AND (acid_event.src_net in ($net_perms) OR acid_event.dst_net in ($net_perms))";
-    }
+    $perms_sql     = GetPerms();
+    $idfilter      = (!empty($perms_sql)) ? true : false;
     $criteria_sql .= $perms_sql;
 
     /* Host ID */
-    $op     = ($hostid[3] != '') ? $hostid[3] : 'IN';
-    $and_or = ($op == 'NOT IN') ? 'AND' : 'OR';
+    $op       = ($hostid[3] != '') ? $hostid[3] : 'IN';
+    $and_or   = ($op == 'NOT IN') ? 'AND' : 'OR';
     // src_host, dst_host fields
     if ($hostid[0] != "")
     {
         $hostwhere = "UNHEX('".implode("',UNHEX('",explode(",",$hostid[0]))."')";
+        if ($hostid[2] == "both")
+        {
+            $criteria_sql .= " AND (acid_event.src_host $op ($hostwhere) $and_or acid_event.dst_host $op ($hostwhere))";
+        }
+        else
+        {
+            $criteria_sql .= " AND acid_event.".$hostid[2]."_host $op ($hostwhere)";
+        }
+        $idfilter = true;
+    }
 
-        	if ($hostid[2] == "both")
-        {
-        		$criteria_sql .= " AND (acid_event.src_host $op ($hostwhere) $and_or acid_event.dst_host $op ($hostwhere))";
-        	}
-        	else
-        {
-        		$criteria_sql .= " AND acid_event.".$hostid[2]."_host $op ($hostwhere)";
-        	}
-    }         
     /* Network ID */
-    if ($netid[0]!="") { // src_net, dst_net fields
+    // src_net, dst_net fields
+    if ($netid[0]!="")
+    {
         $netwhere = "UNHEX('".implode("',UNHEX('",explode(",",$netid[0]))."')";
-    	if ($netid[2]=="both") {
-    		$criteria_sql .= " AND (acid_event.src_net in ($netwhere) OR acid_event.dst_net in ($netwhere))";
-    	} else {
-    		$criteria_sql .= " AND acid_event.".$netid[2]."_host in ($netwhere)";
-    	}
+        if ($netid[2]=="both")
+        {
+            $criteria_sql .= " AND (acid_event.src_net in ($netwhere) OR acid_event.dst_net in ($netwhere))";
+        }
+        else
+        {
+            $criteria_sql .= " AND acid_event.".$netid[2]."_host in ($netwhere)";
+        }
+        $idfilter = true;
     }         
     
     /* ********************** IP Criteria ********************************************** */
     /* IP Addresses */
+    $ipfilter = false;
     $tmp2 = "";
     for ($i = 0; $i < $ip_addr_cnt; $i++) {
         $tmp = "";
@@ -1290,9 +1298,10 @@ function ProcessCriteria() {
         if (($i > 0 && ($ip_addr[$i - 1][9] != 'OR' && $ip_addr[$i - 1][9] != 'AND') && $ip_addr[$i - 1][3] != "")) ErrorMessage("<B>" . gettext("Criteria warning:") . "</B> " . gettext("Multiple IP address criteria entered without a boolean operator (e.g. AND, OR) between IP Criteria") . " #$i and #" . ($i + 1) . ".");
     }
     if ($tmp2 != "") {
-    	BalanceBrackets($tmp2);
-    	$criteria_sql = $criteria_sql . " AND ( " . $tmp2 . " )";
-    	$use_ac = false;
+        BalanceBrackets($tmp2);
+        $criteria_sql = $criteria_sql . " AND ( " . $tmp2 . " )";
+        $ipfilter = true;
+        //$use_ac = false;
     }
     else {
     	$cs->criteria['ip_addr']->SetFormItemCnt(0);
@@ -1407,7 +1416,7 @@ function ProcessCriteria() {
     }
     /* ********************** Payload Criteria ***************************************** */
     //$tmp_payload = "";
-    if (DataRows2sql($data, $data_cnt, $data_encode, $tmp_payload, $conn_aux) == 0) $cs->criteria['data']->SetFormItemCnt(0);
+    if (DataRows2sql($data, $data_cnt, $data_encode, $tmp_payload, $db->DB) == 0) $cs->criteria['data']->SetFormItemCnt(0);
     else $use_ac = false;
 	//echo "<br><br><br>";
 	//print_r($data);
@@ -1428,15 +1437,18 @@ function ProcessCriteria() {
         $sql = preg_replace("/^SELECT/","SELECT DISTINCT",$sql);
     }
     if ($sig_join) $join_sql = $join_sql . $sig_join_sql;
+    //if ($sig_join_tmp) $join_sql = $join_sql . $sig_join_tmp;
     $join_sql = $join_sql . $data_join_sql;
     $csql[0] = $join_sql;
     
     // Ready to ac_acid_event
-    $criteria1_sql = $criteria_sql . preg_replace("/ \d\d:\d\d:\d\d/","",str_replace("timestamp","day",$real_time_meta));
+    //$criteria1_sql = $criteria_sql . preg_replace("/ \d\d:\d\d:\d\d/","",str_replace("timestamp","day",$real_time_meta));
+    $criteria1_sql = $criteria_sql . $real_time_meta;
     $criteria1_sql = preg_replace("/AND\s+\)/"," )",preg_replace("/OR\s+\)/"," )",$criteria1_sql));
 
     // Ready to ac_acid_event next day 
-    $criteria2_sql = $criteria_sql . preg_replace("/ \d\d:\d\d:\d\d/","",str_replace("timestamp","day",$time_meta));
+    //$criteria2_sql = $criteria_sql . preg_replace("/ \d\d:\d\d:\d\d/","",str_replace("timestamp","day",$time_meta));
+    $criteria2_sql = $criteria_sql . $time_meta;
     $criteria2_sql = preg_replace("/AND\s+\)/"," )",preg_replace("/OR\s+\)/"," )",$criteria2_sql));
 
     // to acid_event
@@ -1444,13 +1456,15 @@ function ProcessCriteria() {
     $criteria_sql = preg_replace("/AND\s+\)/"," )",preg_replace("/OR\s+\)/"," )",$criteria_sql));
     
     $csql[1] = $criteria_sql;
-    $csql[2] = $perms_sql . preg_replace("/ \d\d:\d\d:\d\d/","",str_replace("timestamp","day",$time_meta)); // $real_time_criteria
+    //$csql[2] = $perms_sql . preg_replace("/ \d\d:\d\d:\d\d/","",str_replace("timestamp","day",$time_meta)); // $real_time_criteria
+    $csql[2] = $perms_sql . $time_meta;
     $csql[3] = $use_ac; // true if we use ac_acid_event instead acid_event
     $csql[4] = $criteria1_sql;
     $csql[5] = $criteria2_sql;
-    
-    $db_aux->close();
-    
+    $csql[6] = $sfilter;
+    $csql[7] = $ipfilter;
+    $csql[8] = $idfilter;
+
     //print_r($csql);
     return $csql;
 }

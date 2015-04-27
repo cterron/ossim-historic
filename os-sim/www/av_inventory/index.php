@@ -33,7 +33,17 @@
 
 
 require_once 'av_init.php';
-Session::logcheck('configuration-menu', 'AlienVaultInventory');
+
+
+// Log check by s_type
+if (GET('s_type') == 'ocs')
+{
+    Session::logcheck('configuration-menu', 'AlienVaultInventory');
+}
+else
+{
+    Session::logcheck('environment-menu', 'AlienVaultInventory');
+}
 
 require_once '../conf/layout.php';
 
@@ -44,7 +54,7 @@ $name_layout = 'inventory_layout';
 $layout  = load_layout($name_layout, $category);
 $s_type  = (GET('s_type') == 'nmap' || GET('s_type') == 'ocs' || GET('s_type') == 'wmi') ? GET('s_type') : 'nmap';
 
-$_SESSION['av_inventory_type'] = $s_type; 
+$_SESSION['av_inventory_type'] = $s_type;
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -265,7 +275,7 @@ $_SESSION['av_inventory_type'] = $s_type;
         $('#button_apply').on('click', function()
         {
             <?php $back_url = preg_replace ('/([&|\?]msg\=)(\w+)/', '\\1', $_SERVER["REQUEST_URI"]);?>
-            document.location.href = '/ossim/conf/reload.php?what=tasks&back=<?php echo $back_url ?>';
+            document.location.href = '/ossim/conf/reload.php?what=tasks&back=<?php echo urlencode($back_url) ?>&s_type=<?php echo $s_type ?>';
         });
 		<?php
         if (Web_indicator::is_on("Reload_tasks"))
@@ -285,7 +295,7 @@ $_SESSION['av_inventory_type'] = $s_type;
 				{
 					case 'nmap':
 						$default = array(
-							'name'      => array(_('Title'),     160, 'false', 'left',   FALSE),
+							'name'      => array(_('Name'),      160, 'false', 'left',   FALSE),
 							'sensor'    => array(_('Sensor'),    250, 'false', 'left',   FALSE),
 							'param'     => array(_('Network'),   510, 'false', 'left',   FALSE),
 							'frequency' => array(_('Frequency'), 150, 'false', 'left',   FALSE),
@@ -295,7 +305,7 @@ $_SESSION['av_inventory_type'] = $s_type;
 					
 					case 'wmi':
 						$default = array(
-							'name'      => array(_('Title'),       160, 'false', 'left',    FALSE),
+							'name'      => array(_('Name'),        160, 'false', 'left',    FALSE),
 							'sensor'    => array(_('Sensor'),      200, 'false', 'left',    FALSE),
 							'param'     => array(_('Credentials'), 300, 'false', 'left',    FALSE),
 							'frequency' => array(_('Frequency'),   150, 'false', 'left',    FALSE),
@@ -305,7 +315,7 @@ $_SESSION['av_inventory_type'] = $s_type;
 					
 					default:
 						$default = array(
-							'name'      => array(_('Title'),     160, 'false', 'left',   FALSE),
+							'name'      => array(_('Name'),      160, 'false', 'left',   FALSE),
 							'sensor'    => array(_('Sensor'),    220, 'false', 'left',   FALSE),
 							'frequency' => array(_('Frequency'), 200, 'false', 'left',   FALSE),
 							'enable'    => array(_('Enabled'),   588, 'false', 'center', FALSE)

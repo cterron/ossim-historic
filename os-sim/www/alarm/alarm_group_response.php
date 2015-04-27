@@ -55,6 +55,7 @@ $sup    = $offset + $limit;
 $sensor_query  = POST('sensor_query');
 $src_ip        = POST('src_ip');
 $dst_ip        = POST('dst_ip');
+$asset_group   = POST('asset_group');
 $hide_closed   = POST('hide_closed');
 $from_date     = POST('date_from');
 $to_date       = POST('date_to');
@@ -81,12 +82,13 @@ $timestamp = preg_replace("/\s\d\d\:\d\d\:\d\d$/","",$timestamp);
 ossim_valid($sensor_query,   OSS_HEX, OSS_NULLABLE,                                       'illegal:' . _("Sensor_query"));
 ossim_valid($src_ip,         OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                             'illegal:' . _("Src_ip"));
 ossim_valid($dst_ip,         OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                             'illegal:' . _("Dst_ip"));
+ossim_valid($asset_group,    OSS_HEX, OSS_NULLABLE,                                       'illegal:' . _("Asset Group"));
 ossim_valid($hide_closed,    OSS_DIGIT, OSS_NULLABLE,                                     'illegal:' . _("Hide Close"));
 ossim_valid($from_date,      OSS_DIGIT, OSS_SCORE, OSS_NULLABLE, 				          'illegal:' . _("From_date"));
 ossim_valid($to_date,        OSS_DIGIT, OSS_SCORE, OSS_NULLABLE,                          'illegal:' . _("To_date"));
 ossim_valid($name,           OSS_DIGIT, OSS_ALPHA, OSS_PUNC_EXT, OSS_NULLABLE, '\>\<',    'illegal:' . _("Name"));
 ossim_valid($directive_id,   OSS_DIGIT, OSS_NULLABLE, 							          'illegal:' . _("Directive_id"));
-ossim_valid($tag,            OSS_DIGIT, OSS_NULLABLE,                                     'illegal:' . _("Label id"));
+ossim_valid($tag,            OSS_HEX, OSS_NULLABLE,                                       'illegal:' . _("Label id"));
 ossim_valid($num_events,     OSS_DIGIT, OSS_NULLABLE,                                     'illegal:' . _("Num_events"));
 ossim_valid($num_events_op,  OSS_ALPHA, OSS_NULLABLE,                                     'illegal:' . _("Num_events_op"));
 ossim_valid($no_resolv,      OSS_DIGIT, OSS_NULLABLE,                                     'illegal:' . _("No_resolv"));
@@ -135,8 +137,26 @@ if (Session::is_pro())
 $entity_types = Session::get_entity_types($conn, TRUE);
 $name         = ($name == _('Unknown Directive')) ? '' : $name;
 
+$criteria = array(
+    "sensor"        => $sensor_query,
+    "src_ip"        => $src_ip,
+    "dst_ip"        => $dst_ip,
+    "asset_group"   => $asset_group,
+    "hide_closed"   => $hide_closed,
+    "order"         => "",
+    "inf"           => $inf,
+    "sup"           => $sup,
+    "from_date"     => $from_date,
+    "to_date"       => $to_date,
+    "query"         => $name,
+    "group_id"      => "",
+    "directive_id"  => $directive_id,
+    "tag"           => $tag,
+    "num_events"    => $num_events,
+    "num_events_op" => $num_events_op
+);
 
-list($list, $total) = Alarm_groups::get_alarms($conn, $sensor_query, $src_ip, $dst_ip, $hide_closed, "", $inf, $sup, $from_date, $to_date, $name, "", $directive_id, $tag, TRUE, $num_events, $num_events_op);
+list($list, $total) = Alarm_groups::get_alarms($conn, $criteria, TRUE);
 
 
 $tz = Util::get_timezone();

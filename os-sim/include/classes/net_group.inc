@@ -179,6 +179,49 @@ class Net_group
         
         return $object;
     }
+    
+    /**
+    * Function is_in_db
+    *
+    * This function checks if net group exists into database
+    *
+    * @param object $conn Database access object
+    * @param string $id   Net group ID
+    *
+    * @accesa public
+    *
+    * @throws Av_exception If a connection error occurred
+    *
+    * @return boolean  TRUE if group is in DB
+    */
+    public static function is_in_db($conn, $id)
+    {
+        Ossim_db::check_connection($conn);
+
+        $res = FALSE;
+
+        if (!valid_hex32($id))
+        {
+            return $res;
+        }
+
+        $query  = 'SELECT count(*) AS found FROM net_group WHERE id = UNHEX(?)';
+        $params = array($id);
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if (intval($rs->fields['found']) > 0)
+        {
+            $res = TRUE;
+        }
+
+        return $res;
+    }
 
 
 	public static function get_list($conn, $where = '', $order = 'ORDER BY name', $cache = FALSE) 
@@ -233,6 +276,43 @@ class Net_group
         }
         
         return $list;
+    }
+    
+    /**
+     * Function get_vulnerabilities
+     *
+     * This function returns the net group vulnerabilities
+     *
+     * @param object   $conn     Database access object
+     * @param string   $tables   [Optional] Database tables separated by comma (Join with main table)
+     * @param array    $filters  [Optional] SQL statements (WHERE, LIMIT, ORDER BY ...)
+     * @param boolean  $cache    [Optional] Use cached information
+     *
+     * @access public
+     * @return array          List of vulnerabilities
+     * @throws Av_exception If a connection error occurred
+     */
+    public function get_vulnerabilities($conn, $tables = '', $filters = array(), $cache = FALSE)
+    {
+        $ag_tables = ', host_net_reference hnr, net_group_reference ngr';
+        
+        if (!empty($tables))
+        {
+            $ag_tables .= $tables;
+        }
+        
+        $where = " host_ip.host_id = hnr.host_id AND hnr.net_id = ngr.net_id AND ngr.net_group_id = UNHEX('" . $this->id . "')";
+        
+        if (!empty($filters['where']))
+        {
+            $filters['where'] = $where . ' AND ' . $filters['where'];
+        }
+        else
+        {
+            $filters['where'] = $where;
+        }
+        
+        return Vulnerabilities::get_vulnerabilities($conn, $ag_tables, $filters, $cache);
     }
 
 

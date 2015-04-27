@@ -268,7 +268,7 @@ if (empty($validation_errors))
         $errors = str_replace('"', '\"', $errors);
 
 
-        $content = "<div style='text-align: left; padding-left:5px;'>"._('We found the following errors').":</div>
+        $content = "<div style='text-align: left; padding-left:5px;'>"._('The following errors occurred').":</div>
                     <div style='padding-left:15px; text-align: left;'>$errors</div>";
 
 

@@ -175,7 +175,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Grendel W
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Grendel-Scan Web Application Security Scan Detected"; flow:to_server,established; content:"GET"; http_method; content:"/random"; nocase; http_uri; fast_pattern:only; pcre:"/\x2Frandom.+?\x2E(?:c(?:f[cm]|gi)|ht(?:ml?|r)|(?:ws|x)dl|a(?:sp|xd)|p(?:hp3|l)|bat|swf|vbs|do)/Ui"; threshold: type threshold, track by_dst, count 20, seconds 40; reference:url,www.grendel-scan.com; reference:url,doc.emergingthreats.net/2009481; classtype:attempted-recon; sid:2009481; rev:8;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Grendel-Scan Web Application Security Scan Detected"; flow:to_server,established; content:"GET"; http_method; content:"/random"; nocase; http_uri; fast_pattern:only; pcre:"/\x2Frandom\w+?\x2E(?:c(?:f[cm]|gi)|ht(?:ml?|r)|(?:ws|x)dl|a(?:sp|xd)|p(?:hp3|l)|bat|swf|vbs|do)/Ui"; threshold: type threshold, track by_dst, count 20, seconds 40; reference:url,www.grendel-scan.com; reference:url,doc.emergingthreats.net/2009481; classtype:attempted-recon; sid:2009481; rev:9;)
 
 #by JP Vossen and Safka : http://library.pantek.com/Mailing%20Lists/snort.org/snort-sigs/03/08/1120.html
 #
@@ -952,7 +952,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Gootkit S
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN FHScan core User-Agent Detect"; flow:to_server,established; content:"FHScan Core 1."; http_header; reference:url,www.tarasco.org/security/FHScan_Fast_HTTP_Vulnerability_Scanner/index.html; classtype:attempted-recon; sid:2014541; rev:4;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN Arachni Scanner Web Scan"; flow:established,to_server; content:"Arachni/"; http_header; pcre:"/User-Agent\x3a[^\r\n]+Arachni\/\d\.\d\.\d$/iH"; threshold: type threshold, track by_src, count 1, seconds 300; reference:url,arachni-scanner.com; reference:url,github.com/Zapotek/arachni; classtype:attempted-recon; sid:2014869; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN Arachni Scanner Web Scan"; flow:established,to_server; content:"Arachni/"; http_header; pcre:"/User-Agent\x3a[^\r\n]+Arachni\/\d\.\d\.\d$/iH"; threshold: type limit, track by_src, count 1, seconds 300; reference:url,arachni-scanner.com; reference:url,github.com/Zapotek/arachni; classtype:attempted-recon; sid:2014869; rev:3;)
 
 #
 #alert tcp [184.154.42.194,50.116.22.209,69.64.43.135,69.64.43.137,69.64.43.142,216.17.107.104,216.17.102.194,216.17.106.90,216.17.107.174,64.6.100.124,46.17.98.214] any -> $HOME_NET any (msg:"ET SCAN critical.io Scan"; flags:S; threshold: type limit, track by_src, seconds 3600, count 1; reference:url,critical.io/; classtype:network-scan; sid:2014893; rev:4;)
@@ -1031,4 +1031,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"ET SCAN SSH BruteForce Tool wi
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN Acunetix Accept HTTP Header detected scan in progress"; flow:established,to_server; content:"Accept|3a 20|acunetix"; http_header; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.acunetix.com/; classtype:attempted-recon; sid:2019963; rev:1;)
+
+#
+alert tcp any any -> $HOME_NET 1720 (msg:"ET SCAN H.323 Scanning device"; flow:established,to_server; content:"|40 04 00 63 00 69 00 73 00 63 00 6f|"; fast_pattern; offset:55; depth:12; threshold: type limit, track by_src, count 1, seconds 60; reference:url,videonationsltd.co.uk/2014/11/h-323-cisco-spam-calls/; classtype:network-scan; sid:2020853; rev:2;)
 

@@ -27,6 +27,12 @@
     - name: move the configuration to its folder
       action: shell mv /etc/openvpn/$target/*.conf /etc/openvpn/
 
+    - name: fire triggers
+      action: shell dpkg-trigger --no-await alienvault-network-vpn-net-client
+
+    - name: configure triggers
+      action: shell dpkg --pending --configure
+
     - name: clean directories
       action: shell rm -rf /tmp/etc 
 

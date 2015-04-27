@@ -7,3 +7,4 @@ interest alienvault-config-system-hostname
 interest alienvault-config-system-admin-ip
 interest alienvault-restart-mysql
 interest alienvault-mysql-set-grants
+interest alienvault-mysql-set-default-config

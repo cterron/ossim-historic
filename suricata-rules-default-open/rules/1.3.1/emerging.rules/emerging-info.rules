@@ -1024,3 +1024,6 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO WinHttpRequest (flow
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Microsoft Compact Office Document Format File Download"; flow:established,from_server; file_data; content:"|D0 CF 11 E0 A1 B1 1A E1|"; within:8; flowbits:set,et.MCOFF; flowbits:noalert; classtype:misc-activity; sid:2019834; rev:2;)
 
+#
+alert tls $HOME_NET any -> 195.22.26.192/26 443 (msg:"ET INFO invalid.cab domain in SNI"; flow:established,to_server; content:"|0b|invalid.cab"; fast_pattern:only; flowbits:set,ET.invalid.cab; flowbits:noalert; classtype:misc-activity; sid:2020888; rev:2;)
+

@@ -218,7 +218,7 @@ def dump_feed_timestamp(cursor):
 
 def getDataSrc(since, cursor):
 	data = {}
-	sql = "select count(a.ip_src) as total, a.plugin_id, a.plugin_sid, inet6_ntop(a.ip_src) as ip_src from alienvault_siem.acid_event a, alienvault_siem.reputation_data r, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and a.id = r.event_id and r.rep_act_src != '' and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and s.name not like '%ET RBN%' and s.name not like '%ET DROP%' and s.name not like '%ET TOR%' group by plugin_id,plugin_sid,a.ip_src order by total desc;"
+	sql = "select count(a.ip_src) as total, a.plugin_id, a.plugin_sid, inet6_ntoa(a.ip_src) as ip_src from alienvault_siem.acid_event a, alienvault_siem.reputation_data r, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and a.id = r.event_id and r.rep_act_src != '' and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and s.name not like '%ET RBN%' and s.name not like '%ET DROP%' and s.name not like '%ET TOR%' group by plugin_id,plugin_sid,a.ip_src order by total desc;"
 	cursor.execute(sql)
 	events =  cursor.fetchall()
 	if events:
@@ -236,7 +236,7 @@ def getDataSrc(since, cursor):
 
 def getDataSrc_total(since, cursor, condition):
 	data = {}
-	sql = "select count(a.ip_src) as total, a.plugin_id, a.plugin_sid, inet6_ntop(a.ip_src) as ip_src from alienvault_siem.acid_event a, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and ("+condition+") group by plugin_id,plugin_sid,a.ip_src order by total desc;"
+	sql = "select count(a.ip_src) as total, a.plugin_id, a.plugin_sid, inet6_ntoa(a.ip_src) as ip_src from alienvault_siem.acid_event a, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and ("+condition+") group by plugin_id,plugin_sid,a.ip_src order by total desc;"
 	cursor.execute(sql)
 	events =  cursor.fetchall()
 	if events:
@@ -254,7 +254,7 @@ def getDataSrc_total(since, cursor, condition):
 
 def getDataDst(since, cursor):
 	data = {}
-	sql = "select count(a.ip_dst) as total, a.plugin_id, a.plugin_sid, inet6_ntop(a.ip_dst) as ip_dst from alienvault_siem.acid_event a, alienvault_siem.reputation_data r, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and a.id = r.event_id and r.rep_act_dst != '' and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and s.name not like '%ET RBN%' and s.name not like '%ET DROP%' and s.name not like '%ET TOR%' group by plugin_id,plugin_sid,a.ip_dst order by total desc;"
+	sql = "select count(a.ip_dst) as total, a.plugin_id, a.plugin_sid, inet6_ntoa(a.ip_dst) as ip_dst from alienvault_siem.acid_event a, alienvault_siem.reputation_data r, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and a.id = r.event_id and r.rep_act_dst != '' and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and s.name not like '%ET RBN%' and s.name not like '%ET DROP%' and s.name not like '%ET TOR%' group by plugin_id,plugin_sid,a.ip_dst order by total desc;"
 	cursor.execute(sql)
 	events =  cursor.fetchall()
 	if events:
@@ -272,7 +272,7 @@ def getDataDst(since, cursor):
 
 def getDataDst_total(since, cursor, condition):
 	data = {}
-	sql = "select count(a.ip_dst) as total, a.plugin_id, a.plugin_sid, inet6_ntop(a.ip_dst) as ip_dst from alienvault_siem.acid_event a, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and ("+condition+") group by plugin_id,plugin_sid,a.ip_dst order by total desc;"
+	sql = "select count(a.ip_dst) as total, a.plugin_id, a.plugin_sid, inet6_ntoa(a.ip_dst) as ip_dst from alienvault_siem.acid_event a, alienvault.plugin_sid s where a.timestamp >= FROM_UNIXTIME("+str(since)+") and a.timestamp < UTC_TIMESTAMP() and s.plugin_id = a.plugin_id and s.sid = a.plugin_sid and ("+condition+") group by plugin_id,plugin_sid,a.ip_dst order by total desc;"
 	cursor.execute(sql)
 	events =  cursor.fetchall()
 	if events:

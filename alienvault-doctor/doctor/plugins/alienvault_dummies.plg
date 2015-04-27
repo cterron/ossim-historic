@@ -2,6 +2,7 @@
 name=Dummy packages
 description=Check the dummy packages
 category=alienvault,system
+strike_zone=True
 type=command
 command=dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw)' | awk '{ print $2 }'
 requires=@dpkg:alienvault-professional

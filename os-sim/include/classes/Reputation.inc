@@ -51,7 +51,7 @@
 * @package    ossim-framework\Reputation
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 *
 *
 * Usage:
@@ -758,9 +758,9 @@ class Reputation
             $target = '';
         }
 
-        $reptxt = _('IP Priority').": <img src='../forensics/bar2.php?value=".intval($prio).
+        $reptxt = _('IP Priority').": <img src='".AV_MAIN_PATH."/forensics/bar2.php?value=".intval($prio).
                   "&max=9&range=1' border='0' align='absmiddle'  style='width:14mm'><br/>"._('IP Reliability').
-                  ": <img src='../forensics/bar2.php?value=".intval($rel).
+                  ": <img src='".AV_MAIN_PATH."/forensics/bar2.php?value=".intval($rel).
                   "&max=9' border='0' align='absmiddle' style='width:14mm'><br/>".
                   _('IP Activity').': <b>'.Util::htmlentities(str_replace(';', ', ', $act)).'</b>';
 
@@ -771,17 +771,17 @@ class Reputation
         
         if ($prio <= 2)
         {
-            $lnk .= " src='../reputation/images/green.png'";
+            $lnk .= " src='".AV_MAIN_PATH."/reputation/images/green.png'";
         }
 
         elseif ($prio <= 6)
         {
-            $lnk .= " src='../reputation/images/yellow.png'";
+            $lnk .= " src='".AV_MAIN_PATH."/reputation/images/yellow.png'";
         }
 
         else
         {
-            $lnk .= " src='../reputation/images/red.png'";
+            $lnk .= " src='".AV_MAIN_PATH."/reputation/images/red.png'";
         }
 
         return $lnk.'/></a>';

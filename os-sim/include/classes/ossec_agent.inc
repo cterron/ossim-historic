@@ -51,7 +51,7 @@
 * @package    ossim-framework\Ossec
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Ossec_agent
@@ -61,7 +61,7 @@ class Ossec_agent
     *
     */
     const CONF_PATH = 'ossec/agent.conf';
-    
+
 
     /**
      * Class constructor
@@ -139,7 +139,7 @@ class Ossec_agent
     }
 
 
-    /**
+     /**
      * This function returns the last IP of OSSEC agent
      *
      * @param string  $sensor_id   Sensor ID (Table alienvault.sensor)
@@ -152,23 +152,26 @@ class Ossec_agent
     public static function get_last_ip($sensor_id, $agent)
     {
         $last_ip = (Asset_host_ips::valid_ip($agent['ip'])) ? $agent['ip'] : '';
-        
-        $agent_name = trim($agent['name']);
-        $agent_name = preg_replace("/[;' ]/", '', $agent_name);
 
-        $client   = new Alienvault_client();
-        $response = $client->sensor($sensor_id)->get_last_agent_ip($agent_name);
-        $response = @json_decode($response, TRUE);
-
-        if (!$response || $response['status'] == 'error')
+        if (empty($last_ip))
         {
-            $exp_msg = $client->get_error_message($response);
+            $agent_name = trim($agent['name']);
+            $agent_name = preg_replace("/[;' ]/", '', $agent_name);
 
-            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
-        }
-        else
-        {
-            $last_ip = $response['data']['check'];
+            $client   = new Alienvault_client();
+            $response = $client->sensor($sensor_id)->get_last_agent_ip($agent_name);
+            $response = @json_decode($response, TRUE);
+
+            if (!$response || $response['status'] == 'error')
+            {
+                $exp_msg = $client->get_error_message($response);
+
+                Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+            }
+            else
+            {
+                $last_ip = $response['data']['check'];
+            }
         }
 
         return $last_ip;
@@ -271,34 +274,25 @@ class Ossec_agent
             {
                 $params = array($host_id);
 
-                $query  = "SELECT hp.value, hp.last_modified, h.hostname, HEX(hi.mac) AS mac, INET6_NTOP(hi.ip) AS ip, HEX(hi.host_id) AS host_id
+                $query  = "SELECT hp.value, hp.last_modified, h.hostname, HEX(hi.mac) AS mac, INET6_NTOA(hi.ip) AS ip, HEX(hi.host_id) AS host_id
                     FROM host_properties hp, host h, host_ip hi
-                    WHERE h.id = hi.host_id AND hp.host_id = h.id AND hi.host_id = UNHEX(?) AND hp.property_ref = 8";
+                    WHERE h.id = hi.host_id AND hp.host_id = h.id AND hi.host_id = UNHEX(?) AND hp.property_ref = 8 ORDER BY last_modified DESC LIMIT 1";
 
                 $rs = $conn->Execute($query, $params);
-                
+
                 if (!$rs)
                 {
                     $db->close();
 
                     Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
-                
+
                 if (!$rs->EOF)
                 {
-                    $idm_data    = @json_decode($rs->fields['value'], TRUE);
-                    $user_domain = '';
+                    $idm_data = $rs->fields['value'];
 
-                    if (is_array($idm_data) && !empty($idm_data))
-                    {
-                        foreach ($idm_data as $user)
-                        {
-                            $c_user =  explode('|', $user);
-
-                            $user_domain .= (!empty($c_user[1]) ? $c_user[0].'@'.$c_user[1] : $c_user[0]);
-                            $user_domain .=  '<br/>';
-                        }
-                    }
+                    $c_user      =  explode('@', $idm_data);
+                    $user_domain = (!empty($c_user[1]) ? $c_user[0].'@'.$c_user[1] : $c_user[0]);
 
                     $idm = array(
                         'id'         => $rs->fields['host_id'],
@@ -309,8 +303,6 @@ class Ossec_agent
                         'date'       => $rs->fields['last_modified']
                    );
                 }
-
-                $db->close();
             }
         }
 
@@ -334,11 +326,11 @@ class Ossec_agent
         /************************************************************
         ******************** Create OSSEC Agent *********************
         *************************************************************/
-        
+
         $new_agent = array();
-        
-        $agent_ip = ($agent_ip == 'any') ? '0.0.0.0/0' : $agent_ip;        
-        
+
+        $agent_ip = ($agent_ip == 'any') ? '0.0.0.0/0' : $agent_ip;
+
         $client   = new Alienvault_client();
         $response = $client->sensor($sensor_id)->create_ossec_agent($agent_name, $agent_ip);
         $response = @json_decode($response, TRUE);
@@ -358,7 +350,7 @@ class Ossec_agent
         /*************************************************************
         ***** Add Agent IP/CIDR to asset inventory automatically *****
         **************************************************************/
-        
+
         if (Session::can_i_create_assets())
         {
             $db   = new ossim_db();
@@ -756,7 +748,7 @@ class Ossec_agent
         {
             $agent_ids = array_keys($agents);
             $size = count($agent_ids);
-            
+
             for ($i = $size; $i>=0; $i--)
             {
                 if (is_numeric($agent_ids[$i]))
@@ -787,9 +779,9 @@ class Ossec_agent
         if (preg_match('/Local$/', $agent['status']) == FALSE)
         {
             $key    = "<a id='_key##".$agent_id."'><img src='$path/key--arrow.png' align='absmiddle' class='action_info' alt='"._('Extract Key')."' title='"._('Extract Key')."'/></a>";
-            
+
             $delete = "<a id='_del##".$agent_id."'><img src='$path/delete.gif' align='absmiddle' class='action_info' alt='"._('Delete Agent')."' title='"._('Delete Agent')."'/></a>";
-            
+
             $w_installer = "<a id='_w_installer_##".$agent_id."'><img src='$path/download_windows.png' align='absmiddle' class='action_info' alt='"._("Download preconfigured agent for Windows")."' title='"._("Download preconfigured agent for Windows")."'/></a>";
 
             $u_installer = "<a id='_u_installer_##".$agent_id."'><img src='$path/download_linux.png' align='absmiddle' class='action_info' alt='"._('Download preconfigured agent for UNIX')."' title='"._('Download preconfigured agent for UNIX')."'/></a>";
@@ -799,7 +791,7 @@ class Ossec_agent
         else
         {
             $key    = "<span class='unbind'><img src='$path/key--arrow.png' align='absmiddle' class='action_info' alt='"._('Extract Key')."' title='"._('Extract Key')."'/></span>";
-              
+
             $delete = "<span class='unbind'><img src='$path/delete.gif' align='absmiddle' class='action_info' alt='"._('Delete Agent')."' title='"._('Delete Agent')."'/></span>";
 
             $w_installer = "<span class='unbind'><img src='$path/download_windows.png' align='absmiddle' class='action_info' alt='"._('Download not available')."' title='"._('Download not available')."'/></span>";
@@ -814,13 +806,13 @@ class Ossec_agent
         //Automatic deployment only for Non-local agents and IPs (No CIDR and any)
         if (preg_match('/Local$/', $agent['status']) == FALSE && Asset_host_ips::valid_ip($agent['ip']))
         {
-            
-            $w_deployment = "<a id='_w_deployment_##".base64_encode($agent['ip'].'###'.$agent['name'])."'><img src='$path/w_installer.png' align='absmiddle' class='action_info' alt='"._('Automatic deployment for Windows')."' title='"._("Automatic deployment for Windows")."'/></a>"; 
+
+            $w_deployment = "<a id='_w_deployment_##".base64_encode($agent['ip'].'###'.$agent['name'])."'><img src='$path/w_installer.png' align='absmiddle' class='action_info' alt='"._('Automatic deployment for Windows')."' title='"._("Automatic deployment for Windows")."'/></a>";
         }
         else
         {
             $info = _("Automatic deployment not available");
-            
+
             if (preg_match('/Local$/', $agent['status']))
             {
                 $info = _('Automatic deployment not available for Local agent');
@@ -845,7 +837,7 @@ class Ossec_agent
 
         return $restart.$check.$key.$mfiles.$mreg.$rchk.$w_installer.$w_deployment.$delete;
     }
-    
+
 
     /**
      * This function gets the agent configuration (agent.conf)
@@ -894,7 +886,7 @@ class Ossec_agent
      * @param string  $new_conf    New configuration
      *
      * @throws Exception  If an error occurred
-     *  
+     *
      * @return array
      */
     public static function set_configuration_file($sensor_id, $new_conf)

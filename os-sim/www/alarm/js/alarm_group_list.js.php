@@ -673,6 +673,7 @@ function toggle_group()
                 'tag'          : $('#tag').val(),
                 'src_ip'       : (g_data['g_ip_src'] != '' && g_data['g_ip_src'] != null) ? g_data['g_ip_src'] : $('#src_ip').val(),
                 'dst_ip'       : (g_data['g_ip_dst'] != '' && g_data['g_ip_dst'] != null) ? g_data['g_ip_dst'] : $('#dst_ip').val(),
+                'asset_group'  : $('#asset_group').val(),
                 'hide_closed'  : $('#hide_closed').prop('checked') ? 1 : 0,
                 'sensor_query' : $('#sensor_query').val(),
                 'date_from'    : $('#date_from').val(),

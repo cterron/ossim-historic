@@ -42,7 +42,7 @@ require_once 'ossim_sql.inc';
 
 function get_hosts($dbconn) {
     $hosts = array();
-    $query = "select distinct inet6_ntop(hi.ip),hex(h.ctx) from host h,host_ip hi where h.id=hi.host_id";
+    $query = "select distinct inet6_ntoa(hi.ip),hex(h.ctx) from host h,host_ip hi where h.id=hi.host_id";
     
     $dbconn->SetFetchMode(ADODB_FETCH_NUM);
     
@@ -209,7 +209,7 @@ function status ($arruser, $user) {
     
     echo "<center><table cellspacing=\"0\" style=\"margin-top:8px;\" class=\"headerpr_no_bborder\" cellpadding=\"0\" border=\"0\" width=\"90%\"><tr><td style=\"border:0;\">"._("Status")."</td></tr></table></center>";
     echo "<center><table cellspacing=\"2\" cellpadding=\"0\" border=\"0\" width=\"90%\">";
-    echo "<tr><th>"._("Running")."</th><th>"._("Scheduled")."</th><th>"._("Completed")."</th><th>"._("Failed")."</th><th>"._("Timed Out")."</th><th width='452'>"._("Scan Server Status")."</th></tr>";
+    echo "<tr><th>"._("Running")."</th><th>"._("Scheduled")."</th><th>"._("Completed")."</th><th>"._("Failed")."</th><th>"._("Timed Out")."</th><th width='452'>"._("Scan Sensor Status")."</th></tr>";
     echo "<tr>";
     if ($running==0){
         echo "<td class=\"nobborder\" style=\"text-align:center;\">$running</td>";
@@ -394,7 +394,7 @@ function stats_severity_services($type, $filter="", $graph="severity") {
     {
         $query = "SELECT count(lr.result_id) AS total, lr.risk
                   FROM vuln_nessus_latest_results lr, host, host_ip hi
-                  WHERE host.id=hi.host_id AND inet6_ntop(hi.ip)=lr.hostIP $perms_where $filter AND lr.falsepositive='N' GROUP BY lr.risk";             
+                  WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where $filter AND lr.falsepositive='N' GROUP BY lr.risk";             
     }
     else
     {
@@ -447,7 +447,7 @@ function stats_severity_services($type, $filter="", $graph="severity") {
     {
         $query = "SELECT count(lr.result_id) AS total, lr.port, lr.protocol, lr.app
                     FROM vuln_nessus_latest_results lr, host, host_ip hi
-                    WHERE host.id=hi.host_id AND inet6_ntop(hi.ip)=lr.hostIP $perms_where $filter AND lr.falsepositive='N'
+                    WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where $filter AND lr.falsepositive='N'
                     GROUP BY lr.port, lr.protocol, lr.app HAVING lr.port>0 ORDER BY total";
     }
     else
@@ -681,17 +681,18 @@ function stats_networks_hosts($type, $filter="", $graph="hosts") {
 
     if (!empty($perms_where))
     {
-        $query = "SELECT count(lr.result_id) as vulnerability, lr.hostip, HEX(lr.ctx) as ctx FROM 
-                vuln_nessus_latest_results lr, host, host_ip hi
-                WHERE host.id=hi.host_id AND inet6_ntop(hi.ip)=lr.hostIP $perms_where $queryf AND falsepositive='N'
-                GROUP BY hostip ORDER BY vulnerability DESC LIMIT 1000";
+        $query = "SELECT count(*) as vulnerability, vulns_list.hostip, HEX(vulns_list.ctx) as ctx FROM
+                  (SELECT DISTINCT HEX(lr.ctx) as ctx, lr.hostIP, lr.app, lr.service, lr.port, lr.protocol, lr.scriptid, lr.risk, lr.msg FROM
+                   vuln_nessus_latest_results lr, host, host_ip hi
+                   WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where $queryf AND falsepositive='N' LIMIT 1000) as vulns_list
+                   GROUP BY hostip ORDER BY vulnerability DESC";
     }
     else
     {
-        $query = "SELECT count(lr.result_id) as vulnerability, lr.hostip, HEX(lr.ctx) as ctx FROM 
-                vuln_nessus_latest_results lr
-                WHERE 1=1 $queryf AND falsepositive='N'
-                GROUP BY hostip ORDER BY vulnerability DESC LIMIT 1000";
+        $query = "SELECT count(*) as vulnerability, vulns_list.hostip, HEX(vulns_list.ctx) as ctx FROM
+                  (SELECT DISTINCT HEX(lr.ctx) as ctx, lr.hostIP, lr.app, lr.service, lr.port, lr.protocol, lr.scriptid, lr.risk, lr.msg FROM
+                   vuln_nessus_latest_results lr
+                   WHERE 1=1 $queryf AND falsepositive='N' LIMIT 1000) as vulns_list GROUP BY hostip ORDER BY vulnerability DESC";
     }
     
     $result = $dbconn->Execute($query);
@@ -1153,6 +1154,14 @@ function all_jobs($offset, $pageSize, $status=""){
                         $ttargets[] = preg_replace("/^([a-f\d]{32})#/i", "", $id_ip);
                     }
                 }
+                else if( preg_match("/^([a-f\d]{32})#hostgroup/i", $id_ip, $found)) {
+                    $hostgroup_name = Asset_group::get_name_by_id($dbconn, $found[1]);
+                    $ttargets[] = ($hostgroup_name == _('Unknown')) ? _('Unknown hostgroup') : $hostgroup_name;
+                }
+                else if( preg_match("/^([a-f\d]{32})#netgroup/i", $id_ip, $found)) {
+                    $netgroup_name  = Net_group::get_name_by_id($dbconn, $found[1]);
+                    $ttargets[] = ($netgroup_name == _('Unknown')) ? _('Unknown netgroup') : $netgroup_name;
+                }
                 else if(preg_match("/^([a-f\d]{32})#\d+\.\d+\.\d+\.\d+$/i", $id_ip, $found)) 
                 {
                     if(Asset_host::is_in_db($dbconn, $found[1])) {
@@ -1242,7 +1251,7 @@ function all_jobs($offset, $pageSize, $status=""){
                 }
                
                 if ($uroles['admin'] || $uroles['uadmin']) {
-                    $buttons = "<a href=\"sched.php?disp=delete_scan&job_id=$nid\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a>";
+                    $buttons = "<a href=\"sched.php?action=delete_scan&job_id=$nid\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a>";
                 }
             } 
             elseif ( $start_date ) 
@@ -1334,6 +1343,8 @@ function all_jobs($offset, $pageSize, $status=""){
             
             $sInfo .= "<tr bgcolor=\"$colorscan\">";
             $sInfo .= "<td class='job_detail'><div class='job_status'>" . $image . " ". $statuses[$nstatus]."</div><div class='job_messages'>" . $status_detail . "</div></td>";
+            
+            $meth_Wcheck = preg_replace('/Scan Server/', 'Scan Sensor', $meth_Wcheck); 
 
             if ($nstatus == "C") 
             {
@@ -1344,14 +1355,14 @@ function all_jobs($offset, $pageSize, $status=""){
                     $html_link = "";
                 }
           
-                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" $html_link title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a>";
+                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" $html_link title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Sensor").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a>";
                 $sInfo .= "</td>";
             }
             else if ($nstatus=="F") {
-                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a></td>";
+                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Sensor").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a></td>";
             }
             else { // $nstatus == "R"
-                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."</br>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a></td>";
+                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Sensor").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."</br>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a></td>";
             }
             
             $sInfo .= "<td>$submit_date</td>
@@ -1391,7 +1402,7 @@ function all_jobs($offset, $pageSize, $status=""){
                 $sInfo .= "<td>";
                 
                 if ($task_id=="") {
-                    $sInfo .= "<a href=\"sched.php?disp=delete_scan&job_id=$nid\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a>&nbsp;";
+                    $sInfo .= "<a href=\"sched.php?action=delete_scan&job_id=$nid\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a>&nbsp;";
                 }
                 else if ($tstatus["status"]!="Done" && $tstatus["status"]!="Stopped" && $tstatus["status"]!="")
                 {
@@ -1437,7 +1448,7 @@ function all_jobs($offset, $pageSize, $status=""){
                     if (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) 
                     {
                         if(!$vulns_in_report || $vulns!=-1) {
-                            $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?disp=rerun&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>&nbsp;";
+                            $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?action=rerun_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>&nbsp;";
                         }
                         else{
                             $sInfo.="<img align=\"absmiddle\" class= \"disabled\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Action not allowed")."\" alt=\""._("Action not allowed")."\"/>&nbsp;";
@@ -1483,7 +1494,7 @@ function all_jobs($offset, $pageSize, $status=""){
                     $sInfo.="($vulns)";
                 }
                 else if ($nstatus=="F") {
-                    $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?disp=rerun&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>";
+                    $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?action=rerun_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>";
                     $sInfo .= "<span style=\"font-size: 7pt;padding:0px 4px 0px 4px;\">["._("Scan failed")."]</span>";
                 }
                 
@@ -1526,7 +1537,7 @@ function all_jobs($offset, $pageSize, $status=""){
                     }
               
                     if (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) {
-                        $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?disp=rerun&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>&nbsp;$scan_info&nbsp;<a href=\"".Menu::get_menu_url('reshtml.php?disp=html&output=full&scantime='.$id_report.'&scantype=M', 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/html.png\" border=\"0\" title=\""._("View report")."\" alt=\""._("View report")."\"></a>&nbsp;";
+                        $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?action=rerun_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>&nbsp;$scan_info&nbsp;<a href=\"".Menu::get_menu_url('reshtml.php?disp=html&output=full&scantime='.$id_report.'&scantype=M', 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/html.png\" border=\"0\" title=\""._("View report")."\" alt=\""._("View report")."\"></a>&nbsp;";
                     }
                     
                     $sInfo.="<a href=\"respdf.php?scantime=$id_report&amp;key=$report_key&amp;scantype=M\" target=\"_blank\"><img align=\"absmiddle\" src=\"./images/pdf.png\" border=\"0\" title=\""._("View report")."\" alt=\""._("View report")."\"></a>&nbsp;";
@@ -1544,8 +1555,8 @@ function all_jobs($offset, $pageSize, $status=""){
                 }
                 else if ($nstatus=="F" && $meth_Wcheck=="") 
                 {
-                    $sInfo.="<td style=\"text-align:left;padding-left:15px;\"><a href=\"".Menu::get_menu_url('sched.php?disp=rerun&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>&nbsp;";
-                    $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?disp=delete_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a>&nbsp;";
+                    $sInfo.="<td style=\"text-align:left;padding-left:15px;\"><a href=\"".Menu::get_menu_url('sched.php?action=rerun_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\"><img align=\"absmiddle\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Rerun Scan")."\" alt=\""._("Rerun Scan")."\"></a>&nbsp;";
+                    $sInfo.="<a href=\"".Menu::get_menu_url('sched.php?action=delete_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a>&nbsp;";
                     $sInfo.="<span style=\"font-size: 7pt;\">["._("Scan failed")."]</span></td>";
                 }
                 else 
@@ -1555,7 +1566,7 @@ function all_jobs($offset, $pageSize, $status=""){
                         $sInfo .="<a href=\"javascript:;\" onclick=\"cancelScan('$scan_PID');\"><img align=\"absmiddle\" src=\"../pixmaps/cancel.png\" title=\""._("Cancel current scan job")."\" alt=\""._("Cancel current scan job")."\" border=0></a><span style='display:none' id='working'><img align=\"absmiddle\" src=\"../pixmaps/loading.gif\" width=16 border=0></span>";
                     }  
                     
-                    $sInfo .="<a href=\"".Menu::get_menu_url('sched.php?disp=delete_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a></td>";
+                    $sInfo .="<a href=\"".Menu::get_menu_url('sched.php?action=delete_scan&job_id='.$nid, 'environment', 'vulnerabilities', 'scan_jobs')."\" onclick=\"return confirmDelete();\"><img align=\"absmiddle\" src=\"images/delete.gif\" title=\""._("Delete")."\" alt=\""._("Delete")."\" border=0></a></td>";
                 }
             }
             $selenium_id++;
@@ -3127,7 +3138,7 @@ function cellprintlatest ($map, $data, $entry, $color, $image, $class, $random,$
 }
 
 function resolve_asset($conn, $asset, $without_ip = FALSE)
-{
+{    
 	if ($asset == '')
 	{
 	    return '-';
@@ -3143,6 +3154,16 @@ function resolve_asset($conn, $asset, $without_ip = FALSE)
 		{
 			$_asset_name = Asset_net::get_name_by_id($conn, $found[1]) . ((!$without_ip) ? " (" .$found[2]. ")" : '');
 		}
+        else if($found[2]=='hostgroup')
+        {
+            $_asset_name = Asset_group::get_name_by_id($conn, $found[1]);
+            $_asset_name = ($_asset_name == _('Unknown')) ? _('Unknown hostgroup') : $_asset_name;
+        }
+        else if($found[2]=='netgroup')
+        {
+            $_asset_name = Net_group::get_name_by_id($conn, $found[1]);
+            $_asset_name = ($_asset_name == _('Unknown')) ? _('Unknown netgroup') : $_asset_name;
+        }
 		else
 		{
 			$_asset_name = $found[2];
@@ -3177,8 +3198,8 @@ function exists_feed_tables($dbconn)
 }
 
 function extract_fields($description)
-{
-    $fields_regexp = "(Solution|Overview|Synopsis|Description|See also|Plugin output|References|Vulnerability Insight|Impact|Impact Level|Affected Software\/OS|Fix|Information about this scan)";
+{    
+    $fields_regexp = "(Summary|Solution|Overview|Synopsis|Description|See also|Plugin output|References|Vulnerability Detection|Vulnerability Insight|Impact|Impact Level|Affected Software\/OS|Fix|Information about this scan)";
 
     $results = array();
 
@@ -3191,7 +3212,7 @@ function extract_fields($description)
     $fields = explode('DELIMITER', $description);
     
     foreach ($fields as $field)
-    {
+    {        
         if (!empty($field))
         {
             preg_match('/^' . $fields_regexp . ':(.*)/', trim($field), $found);

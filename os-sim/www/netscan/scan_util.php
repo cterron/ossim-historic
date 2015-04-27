@@ -41,17 +41,18 @@ function scan2html($conn, $scan)
 {
     $count = 0;    
     
-    $text_hostname = "<div>"._('A valid hostname satisfy the following rules (according RFC 1123)').":</div>
+    $text_hostname = "<div>"._('A valid hostname must satisfy the following rules (according RFC 1123)').":</div>
                     <div>
                         <ul class='ul_tiptip'>
                             <li>"._("A hostname can start or end with a letter or a number [a-zA-z0-9]")."</li>
                             <li>"._("A hostname <strong>MUST NOT</strong> contain any '.' (dot)")."</li>
                             <li>"._("A hostname <strong>MUST NOT</strong> start or end with a '-' (hyphen)")."</li>
+                            <li>"._("A hostname <strong>MUST NOT</strong> contain a space")."</li>
                             <li>"._("A hostname can be up to 63 characters")."</li>
                         </ul>
                     </div>";
 
-    $text_fqdnrfc  = "<div>"._('A valid FQDN satisfy the following rules (according RFC 952, 1035, 1123 and 2181)').":</div>
+    $text_fqdnrfc  = "<div>"._('A valid FQDN must satisfy the following rules (according RFC 952, 1035, 1123 and 2181)').":</div>
                     <div>
                         <ul class='ul_tiptip'>
                             <li>"._("Hostnames are composed of a series of labels concatenated with dots. Each label is 1 to 63 characters long.")."</li>
@@ -63,7 +64,7 @@ function scan2html($conn, $scan)
                         </ul>
                     </div>";
 
-    $text_fqdn     = "<div>"._('If FQDN contains any dot, only the first label will be used')."</div>";
+    $text_fqdn     = "<div>"._('If a FQDN contains any dot, only the first label will be used')."</div>";
     
     $text_mac      = "<div>"._('Place the pointer over the MAC address to show MAC vendor')."</div>";
     

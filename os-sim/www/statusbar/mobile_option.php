@@ -318,7 +318,6 @@ $NUM_HOSTS = 5;
 <html>
     <head>
         <title>AV Console</title>
-        <link rel="Shortcut Icon" type="image/x-icon" href="../favicon.ico" />
         <link rel="apple-touch-icon" href="/ossim/statusbar/app-icon.png" />
         <!-- <link rel="apple-touch-startup-image" href="/ossim/statusbar/avconsole.jpg" /> -->
         <link rel="stylesheet" type="TEXT/CSS" href="../style/mobile.css" />

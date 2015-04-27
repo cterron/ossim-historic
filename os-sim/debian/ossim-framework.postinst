@@ -148,10 +148,11 @@ for apache in $webservers; do
     fi
 done
 
-# set apache perms to tmp
-#if [ ! -d /usr/share/ossim/www/tmp/ ]; then
-#       mkdir /usr/share/ossim/www/tmp/
-#fi
+# favicon.ico
+if [ -f /usr/share/ossim/www/favicon.ico ]; then
+        cp -f /usr/share/ossim/www/favicon.ico /var/www/favicon.ico
+fi
+
 chown -R www-data:www-data /usr/share/ossim/www/tmp/
 if [ ! -d /usr/share/ossim/www/tmp/scheduler ]; then
         mkdir /usr/share/ossim/www/tmp/scheduler

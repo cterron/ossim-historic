@@ -1,16 +1,16 @@
-ossim-cd-configs (4.15.2-0) stable; urgency=low
+ossim-cd-configs (5.0.0-0) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Thu, 05 Feb 2015 06:14:44 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:53:57 -0400
 
-ossim-cd-configs (4.15.1-0) stable; urgency=low
+ossim-cd-configs (5.0-0) unstable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:23:26 -0500
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:19:39 -0500
 
-ossim-cd-configs (4.15.0-0) unstable; urgency=low
+ossim-cd-configs (4.16-0) unstable; urgency=low
 
   * New release
 

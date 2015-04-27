@@ -7,22 +7,23 @@
 
 OSSIM_SETUP_CONF_FILE="/etc/ossim/ossim_setup.conf"
 PREPARE_DB_DONE_FILE="/etc/ossim/.prepare-db-done"
-DEBIAN_DB_FILE="/etc/mysql/debian.cnf"
 FRAMEWORKIP=$(grep ^framework_ip= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
 DBHOST=$(grep ^db_ip= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
 DBUSER=$(grep ^user= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
 DBPASS=$(grep ^pass= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
-DEBHOST=$(grep ^host "$DEBIAN_DB_FILE" | cut -f 2 -d "=" | cut -f 2 -d " " | head -1)
-DEBPASS=$(grep ^password "$DEBIAN_DB_FILE" | cut -f 2 -d "=" | cut -f 2 -d " " | head -1)
+
+# HACK to load libstdc++6 from Debian Wheezy
+LD_LIBRARY_PATH="/usr/lib/alienvault/percona_toku"
+export LD_LIBRARY_PATH
+export DEBIAN_FRONTEND=noninteractive
 
 stop_services(){
     /bin/echo -n "Stoping AlienVault services.."
     [ -f "/etc/init.d/monit" ] && /etc/init.d/monit stop >/dev/null 2>&1
     [ -f "/etc/init.d/cron" ] && /etc/init.d/cron stop >/dev/null 2>&1
-    [ -f "/etc/init.d/apache2" ] && /etc/init.d/apache2 stop >/dev/null 2>&1
+    [ -f "/etc/init.d/apache2" ] && (/etc/init.d/apache2 stop;rm -f /var/lib/php5/sess_*) >/dev/null 2>&1
     [ -f "/etc/init.d/alienvault-forward" ] && /etc/init.d/alienvault-forward stop >/dev/null 2>&1
     [ -f "/etc/init.d/ossim-server" ] && /etc/init.d/ossim-server stop >/dev/null 2>&1
-    [ -f "/etc/init.d/ossim-agent" ] && /etc/init.d/ossim-agent stop >/dev/null 2>&1
     [ -f "/etc/init.d/ossim-framework" ] && /etc/init.d/ossim-framework stop >/dev/null 2>&1
     [ -f "/etc/init.d/alienvault-api" ] && /etc/init.d/alienvault-api stop >/dev/null 2>&1
     /bin/echo "Done."
@@ -35,7 +36,6 @@ start_services(){
     [ -f "/etc/init.d/ossim-server" ] && /etc/init.d/ossim-server start >/dev/null 2>&1
     [ -f "/etc/init.d/ossim-framework" ] && /etc/init.d/ossim-framework start >/dev/null 2>&1
     [ -f "/etc/init.d/ossim-server" ] && /etc/init.d/ossim-server start >/dev/null 2>&1
-    [ -f "/etc/init.d/ossim-agent" ] && /etc/init.d/ossim-agent start >/dev/null 2>&1
     [ -f "/etc/init.d/alienvault-forward" ] && /etc/init.d/alienvault-forward start >/dev/null 2>&1
     [ -f "/etc/init.d/cron" ] && /etc/init.d/cron start >/dev/null 2>&1
     [ -f "/etc/init.d/monit" ] && /etc/init.d/monit start >/dev/null 2>&1
@@ -81,21 +81,27 @@ check_mysql(){
         (( i++ ))
         # Try to recovery mysql database
         /bin/echo -n "Failed!! Try to recovery MySQL.."
+
         stop_mysql
         killall -9 safe_mysqld mysqld >/dev/null 2>&1
         /bin/echo -n "."
+
+        mv -f /etc/mysql/my.cnf /etc/mysql/my.cnf-back
         rm -rf /var/lib/mysql/*
         /bin/echo -n "."
-        /usr/bin/mysql_install_db --force --skip-name-resolve >/dev/null 2>&1
+
+        echo PURGE | debconf-communicate percona-server-server-5.6 > /dev/null 2>&1
+        echo "percona-server-server       percona-server-server/root_password_again string $DBPASS" | debconf-set-selections
+        echo "percona-server-server       percona-server-server/root_password string $DBPASS" | debconf-set-selections
         /bin/echo -n "."
+
+        dpkg-reconfigure percona-server-server-5.6 > /dev/null 2>&1
+        /bin/echo -n "."
+
+        dpkg-reconfigure alienvault-mysql > /dev/null 2>&1
+        /bin/echo -n "."
+
         start_mysql
-        /bin/echo -n "."
-        /usr/bin/mysqladmin -u $DBUSER -h $DBHOST password "$DBPASS"
-        echo "GRANT ALL PRIVILEGES ON *.* TO '$DBUSER'@'127.0.0.1' IDENTIFIED BY '$DBPASS';GRANT ALL PRIVILEGES ON *.* TO '$DBUSER'@'localhost' IDENTIFIED BY '$DBPASS';GRANT ALL PRIVILEGES ON *.* TO '$DBUSER'@'$FRAMEWORKIP' IDENTIFIED BY '$DBPASS';GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'$DEBHOST' IDENTIFIED BY '$DEBPASS';FLUSH PRIVILEGES;" | ossim-db mysql
-        #
-        /bin/echo -n "."
-        service mysql restart >/dev/null 2>&1
-        sleep 10
         /usr/bin/mysql -A -u $DBUSER -h $DBHOST -p$DBPASS mysql -e exit &>/dev/null
     done
     /bin/echo "Done."
@@ -105,9 +111,18 @@ do_siem(){
     /bin/echo "Events Database restore in progress."
     stop_services
     check_mysql
+    dpkg --status alienvault-professional > /dev/null 2>&1 && is_pro=1 || is_pro=0
     # Drop and Create alienvault_siem bbdd
     echo "DROP DATABASE IF EXISTS alienvault_siem; CREATE DATABASE alienvault_siem DEFAULT CHARACTER SET utf8;" | ossim-db mysql 2> /dev/null
     zcat /usr/share/doc/ossim-mysql/contrib/00-create_alienvault_siem_tbls_mysql.sql.gz | ossim-db alienvault_siem 2> /dev/null
+    if [ $is_pro -eq 1 ]; then
+        echo "alter table acid_event engine=tokudb;" | ossim-db alienvault_siem 2> /dev/null
+        echo "alter table extra_data engine=tokudb;" | ossim-db alienvault_siem 2> /dev/null
+        echo "alter table idm_data engine=tokudb;" | ossim-db alienvault_siem 2> /dev/null
+        echo "alter table reputation_data engine=tokudb;" | ossim-db alienvault_siem 2> /dev/null
+        echo "alter table po_acid_event engine=tokudb;" | ossim-db alienvault_siem 2> /dev/null
+        echo "DROP TRIGGER IF EXISTS count_acid_event;" | ossim-db alienvault_siem 2> /dev/null
+    fi
     zcat /usr/share/doc/ossim-mysql/contrib/01-create_alienvault_siem_data.sql.gz | ossim-db alienvault_siem 2> /dev/null
     # Fill sig_reference tables
     [ -d "/etc/snort/rules" ] && /usr/bin/perl /usr/share/ossim/scripts/create_sidmap.pl /etc/snort/rules > /dev/null 2>&1
@@ -121,6 +136,7 @@ do_all(){
     stop_services
     check_mysql
     rm -f "$PREPARE_DB_DONE_FILE"
+    /bin/echo "Building AlienVault database."
     /etc/init.d/prepare-db.sh start
     /bin/echo "Restore Complete!"
     start_services

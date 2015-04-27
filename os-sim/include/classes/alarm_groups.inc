@@ -334,18 +334,35 @@ class Alarm_groups
     
     
     /* deprecated */
-	static function get_grouped_alarms($conn, $group_type, $show_options, $hide_closed, $from_date, $to_date, $ip_src="", $ip_dst="",
-	   $sensor="", $query="", $directive_id="", $intent = 0, $num_events="", $num_events_op="", $tag="", $limit="LIMIT 0,10", $cache=false) 
-   {
+	//static function get_grouped_alarms($conn, $group_type, $show_options, $hide_closed, $from_date, $to_date, $ip_src="", $ip_dst="",
+	//   $sensor="", $query="", $directive_id="", $intent = 0, $num_events="", $num_events_op="", $tag="", $limit="LIMIT 0,10", $cache=false)
+    static function get_grouped_alarms($conn, $params, $cache = FALSE)
+    {
+        $group_type    = $params['group_type'];
+        $show_options  = $params['show_options'];
+        $hide_closed   = $params['hide_closed'];
+        $from_date     = $params['from_date'];
+        $to_date       = $params['to_date'];
+        $ip_src        = $params['ip_src'];
+        $ip_dst        = $params['ip_dst'];
+        $asset_group   = $params['asset_group'];
+        $sensor        = $params['sensor'];
+        $query         = $params['query'];
+        $directive_id  = $params['directive_id'];
+        $intent        = intval($params['intent']);
+        $num_events    = $params['num_events'];
+        $num_events_op = $params['num_events_op'];
+        $tag           = $params['tag'];
+        $limit         = isset($params['limit']) ? $params['limit'] : 'LIMIT 0,10';
 	
-    	if (intval($show_options) == 0)
-    	{
-    	    $show_options = 1;
+        if (intval($show_options) == 0)
+        {
+            $show_options = 1;
         }
-    	if ($hide_closed =='')
-    	{
-    	    $hide_closed = 0;
-        }	
+        if ($hide_closed =='')
+        {
+            $hide_closed = 0;
+        }
         
 		$tz  = Util::get_timezone();
 		$tzc = Util::get_tzc($tz);
@@ -466,10 +483,10 @@ class Alarm_groups
 			$ev_where = " AND a.backlog_id in (select backlog_id from (SELECT count(*) as total_events,backlog_event.backlog_id FROM backlog_event, event WHERE event.id = backlog_event.event_id AND event.plugin_id<>1505 GROUP BY backlog_id having total_events $num_events_op $num_events) as bk)";
 		}
 		// Tags
-		if ($tag != "") 
+		if ($tag != "")
 		{			
-			$tag_join  = ",alarm_tags tg";
-			$tag_where = " AND a.backlog_id=tg.id_alarm AND tg.id_tag=$tag";
+			$tag_join  = ",component_tags tg";
+			$tag_where = " AND a.backlog_id=tg.id_component AND tg.id_tag=UNHEX('$tag')";
 		}
 
 
@@ -504,7 +521,17 @@ class Alarm_groups
             $ctx_where .= " AND a.backlog_id=ac.id_alarm AND ac.id_ctx in ($ctxs)";
             $ctx_join  .= " ,alarm_ctxs ac";
         }
-   
+        
+        // Asset Group
+        if ($asset_group != "" && valid_hex32($asset_group))
+        {
+            $ctx_where .= " AND ah.id_host in (SELECT host_id FROM host_group_reference WHERE host_group_id=UNHEX('$asset_group'))";
+            if (!preg_match("/alarm_hosts/", $ctx_join))
+            {
+                $ctx_join = " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm $ctx_join";
+            }
+        }
+        
         // Sensor filter
 		$sensor_join = "";
 		$sensor_where = "";
@@ -521,7 +548,7 @@ class Alarm_groups
         // Group by similar field
 		if ($group_type == "similar") 
 		{
-            $query = "SELECT SQL_CALC_FOUND_ROWS distinct a.similar AS group_id, IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), p.name) AS name, max(a.risk) as max_risk, count(distinct a.similar) as howmany
+            $query = "SELECT SQL_CALC_FOUND_ROWS distinct a.similar AS group_id, IF(a.plugin_id<>1505,p.name,IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), p.name)) AS name, max(a.risk) as max_risk, count(distinct a.similar) as howmany
                         FROM alarm a 
                         LEFT JOIN plugin_sid p ON a.plugin_id = p.plugin_id AND a.plugin_sid = p.sid
                         LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON a.plugin_sid=ta.sid AND a.corr_engine_ctx=ta.engine_id
@@ -545,7 +572,7 @@ class Alarm_groups
 			alarm_event.name AS name,		
 			max(alarm_event.risk) as max_risk
 			FROM (
-			(SELECT DISTINCT a.backlog_id, IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), IFNULL(p.name, '')) AS name, a.risk FROM alarm a 
+			(SELECT DISTINCT a.backlog_id, IF(a.plugin_id<>1505,IFNULL(p.name, ''),IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), IFNULL(p.name, ''))) AS name, a.risk FROM alarm a 
 			LEFT JOIN plugin_sid p ON a.plugin_id = p.plugin_id AND a.plugin_sid = p.sid
 			LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON a.plugin_sid=ta.sid AND a.corr_engine_ctx=ta.engine_id
             $ctx_join $sensor_join $directive_join $tag_join $groups_join
@@ -574,7 +601,7 @@ class Alarm_groups
     			max(alarm_event.risk) as max_risk,
     			DATE( alarm_event.timestamp ) AS day
     			FROM (
-    			(SELECT DISTINCT a.backlog_id, IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), IFNULL(p.name, '')) AS name, convert_tz(a.timestamp,'+00:00','$tzc') as timestamp,a.risk FROM alarm a 
+    			(SELECT DISTINCT a.backlog_id, IF(a.plugin_id<>1505,IFNULL(p.name, ''),IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), IFNULL(p.name, ''))) AS name, convert_tz(a.timestamp,'+00:00','$tzc') as timestamp,a.risk FROM alarm a 
     			LEFT JOIN plugin_sid p ON a.plugin_id = p.plugin_id AND a.plugin_sid = p.sid
     			LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON a.plugin_sid=ta.sid AND a.corr_engine_ctx=ta.engine_id
                 $ctx_join $sensor_join  $directive_join $tag_join $groups_join
@@ -601,12 +628,12 @@ class Alarm_groups
     			CONCAT( sha1( alarm_event.name ) , 
     			CONCAT( 'S', hex(alarm_event.src_ip), 'D', hex(alarm_event.dst_ip), DATE( alarm_event.timestamp ) ) ) AS group_id,
     			alarm_event.name,
-    			inet6_ntop( alarm_event.src_ip ) AS src_ip,
-                inet6_ntop( alarm_event.dst_ip ) AS dst_ip,
+    			inet6_ntoa( alarm_event.src_ip ) AS src_ip,
+                inet6_ntoa( alarm_event.dst_ip ) AS dst_ip,
     			max(alarm_event.risk) as max_risk,
     			DATE( alarm_event.timestamp ) AS day
     			FROM (
-    			(SELECT DISTINCT a.backlog_id, IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), IFNULL(p.name, '')) AS name ,a.src_ip,a.dst_ip,convert_tz(a.timestamp,'+00:00','$tzc') as timestamp,a.risk FROM alarm a 
+    			(SELECT DISTINCT a.backlog_id, IF(a.plugin_id<>1505,IFNULL(p.name, ''),IFNULL(CONCAT(ki.name,' &mdash; ',ca.name,' &mdash; ',ta.subcategory), IFNULL(p.name, ''))) AS name ,a.src_ip,a.dst_ip,convert_tz(a.timestamp,'+00:00','$tzc') as timestamp,a.risk FROM alarm a 
     			LEFT JOIN plugin_sid p ON a.plugin_id = p.plugin_id AND a.plugin_sid = p.sid
     			LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON a.plugin_sid=ta.sid AND a.corr_engine_ctx=ta.engine_id
                 $ctx_join $sensor_join $directive_join $tag_join $groups_join
@@ -626,7 +653,10 @@ class Alarm_groups
     			ORDER BY alarm_event.timestamp DESC $limit";
         }
 		
-        //echo Util::print_error($query);
+        if (file_exists("/tmp/debug_alarm"))
+        {
+            error_log("ALARM GROUP:$query\n",3,"/tmp/alarms");
+        }
 		
 		$ret = array();
 		$query = ossim_query($query);
@@ -669,13 +699,31 @@ class Alarm_groups
 	
 	    
     // $query parameter can be similar field or alarm name
-	static function get_alarms ($conn, $sensor, $src_ip, $dst_ip, $hide_closed, $order, $inf = null, $sup = null, $from_date = null,
-	$to_date = null, $query = "", $group_id = "", $directive_id ="", $tag = null, $cache=false, $num_events="", $num_events_op="") 
+	//static function get_alarms ($conn, $sensor, $src_ip, $dst_ip, $hide_closed, $order, $inf = null, $sup = null, $from_date = null,
+	//$to_date = null, $query = "", $group_id = "", $directive_id ="", $tag = null, $cache=false, $num_events="", $num_events_op="")
+	static function get_alarms ($conn, $params, $cache = FALSE)
 	{
-
-    	if ($hide_closed =='')
-    	{
-    	    $hide_closed = 0;
+        $sensor        = $params['sensor'];
+        $src_ip        = $params['src_ip'];
+        $dst_ip        = $params['dst_ip'];
+        $asset_group   = $params['asset_group'];
+        $hide_closed   = $params['hide_closed'];
+        $order         = $params['order'];
+        $inf           = isset($params['inf']) ? $params['inf'] : NULL;
+        $sup           = isset($params['sup']) ? $params['sup'] : NULL;
+        $from_date     = isset($params['from_date']) ? $params['from_date'] : NULL;
+        $to_date       = isset($params['to_date']) ? $params['to_date'] : NULL;
+        $query         = $params['query'];
+        $group_id      = $params['group_id'];
+        $directive_id  = $params['directive_id'];
+        $tag           = isset($params['tag']) ? $params['tag'] : NULL;
+        $num_events    = $params['num_events'];
+        $num_events_op = $params['num_events_op'];
+	    
+	    
+        if ($hide_closed =='')
+        {
+            $hide_closed = 0;
         }	
         	
         $tz  = Util::get_timezone();
@@ -819,6 +867,16 @@ class Alarm_groups
             $ctx_join .= " ,alarm_ctxs ac";
         }   
         
+        // Asset Group
+        if ($asset_group != "" && valid_hex32($asset_group))
+        {
+            $where[] = " ah.id_host in (SELECT host_id FROM host_group_reference WHERE host_group_id=UNHEX('$asset_group'))";
+            if (!preg_match("/alarm_hosts/", $ctx_join))
+            {
+                $ctx_join = " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm $ctx_join";
+            }
+        }
+        
         $sql_where = count($where) ? 'WHERE 1=1 AND ' . implode(" AND ", $where) : "WHERE 1=1";
         
         // Sensor filter
@@ -848,8 +906,8 @@ class Alarm_groups
 		$tag_join = "";
 		if ($tag != "") 
 		{
-			$tag_join = ",alarm_tags tg";
-			$sql_where .= " AND a.backlog_id=tg.id_alarm AND tg.id_tag=$tag";
+            $tag_join = ",component_tags tg";
+			$sql_where .= " AND a.backlog_id=tg.id_component AND tg.id_tag=UNHEX('$tag')";
 		}
 
         // Num Events        
@@ -915,7 +973,7 @@ class Alarm_groups
                 "similar"      => $rs->fields["similar"],
                 "csimilar"     => 1,
                 "removable"    => $rs->fields["removable"],
-                "taxonomy"     => array (
+                "taxonomy"     => ($rs->fields["plugin_id"] != 1505) ? array() : array (
 					                "id"           => $rs->fields["kid"],
 					                "kingdom"      => $rs->fields["kingdom"],
 					                "category"     => $rs->fields["category"],

@@ -606,7 +606,7 @@ alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call wi
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset TCP Shellcode"; flow:established; content:"|E8 00 00 00 00 8F|"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012088; rev:2;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset TCP Shellcode"; content:"|E8 00 00 00 00 8F|"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012089; rev:2;)
+alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset UDP Shellcode"; content:"|E8 00 00 00 00 8F|"; fast_pattern:only; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012089; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset TCP Shellcode"; flow:established; content:"|E8 00 00 00 00 0F 1A|"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012090; rev:2;)

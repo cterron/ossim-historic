@@ -59,7 +59,9 @@ class Doctor:
     self.__plugin_list = []
     self.__category_list = []
     self.__alienvault_config = {}
-    self.__summary = []
+    self.__system_summary = []
+    self.__summary = {}
+    self.__in_strike_zone = True
     self.__output_file = ''
     self.__rc = 0
 
@@ -83,12 +85,13 @@ class Doctor:
 
     (options, args) = parser.parse_args()
 
-    self.__sysinfo = Sysinfo()
-    self.__alienvault_config = self.__sysinfo.get_alienvault_config()
-
     # Disable normal output for 'ansible' and 'support' output options.
     if options.output_type in ['ansible', 'support']:
       Output.set_std_output (False)
+
+    # Get basic system info.
+    self.__sysinfo = Sysinfo()
+    self.__alienvault_config = self.__sysinfo.get_alienvault_config()
 
     Output.emphasized ('\nAlienVault Doctor version %s (%s)\n' % (default.version, default.nickname), ['AlienVault Doctor'], [GREEN])
 
@@ -139,7 +142,7 @@ class Doctor:
       Output.warning ('"%s" is not a valid output type, messages will be shown in stdout only' % options.output_type)
 
     # Show some system info.
-    self.__sysinfo.show_platform_info (extended=bool(options.verbose))
+    self.__system_summary = self.__sysinfo.show_platform_info (extended = bool(options.verbose))
 
     # Run a list of plugins or categories of plugins
     self.__plugin_list = options.plugin_list.split(',')
@@ -167,24 +170,31 @@ class Doctor:
 
     # Show summary only for screen output.
     if options.output_type == default.output_type:
-      if self.__summary != []:
+      if self.__summary != {}:
         Output.emphasized ('\nHooray! The Doctor has diagnosed you, check out the results...', ['Doctor'], [GREEN])
       else:
         Output.emphasized ('\nThe Doctor has finished, nothing to see here though', ['Doctor'], [GREEN])
 
-      for result in self.__summary:
-        plugin_name = result.get('plugin', None)
+      # Show if the system is in the 'Strike zone'
+      if not self.__in_strike_zone:
+        Output.emphasized ('\n  Be careful! Seems that you are not in the Strike Zone! Please check the output below.', ['Strike', 'Zone'], [RED])
+
+      # Show per plugin results.
+      for plugin_name, result in self.__summary.iteritems():
         plugin_description = result.get('description', None)
+        plugin_strike_zone = result.get('strike_zone', None)
 
         if (not 'checks' in result.keys()) and ('warning' in result.keys()):
           Output.emphasized ('\n     Plugin %s didn\'t run: %s' % (plugin_name, result['warning']), [plugin_name])
         else:
           checks = result['checks']
           header = '\n     Plugin: %s' % plugin_name
-          if plugin_description:
+          if plugin_description is not None:
             header += '\n             %s' % plugin_description
+          if plugin_strike_zone is not None:
+            header += '\n             In the Strike Zone?: %s' % str(plugin_strike_zone)
 
-          Output.emphasized (header, [plugin_name])
+          Output.emphasized (header, [plugin_name, 'In the Strike Zone?'])
           for (check_name, check_result) in checks.items():
             if check_result['result'] == False:
               if check_result['severity'] == 'High':
@@ -202,7 +212,9 @@ class Doctor:
             else:
               Output.emphasized ('%s[*] %s: All good' % ((' '*9), check_name), ['*', check_name], [GREEN, EMPH])
     elif options.output_type in ['file', 'support']:
-      output_data = plain_data = json.dumps(self.__summary, sort_keys=True, indent=4, separators=(',', ': ')) + '\n'
+      full_summary = dict(self.__system_summary, **self.__summary)
+      full_summary['strike_zone'] = self.__in_strike_zone
+      output_data = plain_data = json.dumps(full_summary, sort_keys=True, indent=4, separators=(',', ': ')) + '\n'
 
       # 'file' output mode will store the results in a plain file.
       # 'support' output mode will try to upload the encrypted and compressed file to a FTP server.
@@ -237,7 +249,9 @@ class Doctor:
             self.__rc = default.exit_codes['ftp_upload_failed']
 
     elif options.output_type == 'ansible':
-      output_fd.write (json.dumps(self.__summary, sort_keys=True, indent=4, separators=(',', ': ')) + '\n')
+      full_summary = dict(self.__system_summary, **self.__summary)
+      full_summary['strike_zone'] = self.__in_strike_zone
+      output_fd.write (json.dumps(full_summary, sort_keys=True, indent=4, separators=(',', ': ')) + '\n')
 
     print ''
     sys.exit (self.__rc)
@@ -253,18 +267,19 @@ class Doctor:
     try:
       plugin = Plugin (filename, self.__alienvault_config, self.__severity_list, verbose, raw)
       if (plugin.get_checks_len() > 0) and (plugin.check_category (self.__category_list)):
-        self.__summary.append (plugin.run ())
+        result = plugin.run()
+        self.__in_strike_zone &= result.get('strike_zone', True)
+        self.__summary[plugin.get_name()] = result
       else:
         del plugin
 
     except (PluginError, PluginConfigParserError, CheckError) as e:
       if verbose > 0:
         Output.warning (e.msg)
-      else:
-        self.__summary.append ({'plugin': e.plugin, 'warning': e.msg})
-    except Exception, msg:
-      print ''
-      Output.error ('Unknown error parsing plugin "%s": %s' % (filename, str(msg)))
+
+      self.__summary[e.plugin] = {'plugin': e.plugin, 'warning': e.msg}
+    except KeyError, msg:
+      Output.error ('Unknown error running plugin "%s": %s' % (filename, str(msg)))
 
   # Compress some data.
   def __compress__ (self, data):

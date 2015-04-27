@@ -256,7 +256,7 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
 
                     if ($_group_object != NULL)
                     {
-                        $_assets_aux = $_group_object->get_hosts($conn, array(), TRUE);
+                        $_assets_aux = $_group_object->get_hosts($conn, '', array(), TRUE);
 
                         foreach ($_assets_aux[0] as $_host_data)
                         {
@@ -330,7 +330,7 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
 
                         if (Asset_host_ips::valid_ip($sensor_ip))
                         {
-                            $filters = array('where' => "host.id = hi.host_id AND hi.ip = INET6_PTON('$sensor_ip')
+                            $filters = array('where' => "host.id = hi.host_id AND hi.ip = INET6_ATON('$sensor_ip')
                                 AND hi.host_id = hs.host_id AND hs.sensor_id = UNHEX('".$ri_data['asset_id']."')"
                             );
 
@@ -340,11 +340,11 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
                             {
                                 $ri_data['asset_id'] = key($hosts);
 
-                                $linked_url = Menu::get_menu_url("/ossim/asset_details/index.php?id=".$ri_data['asset_id'], 'environment', 'assets', 'assets');
+                                $linked_url = Menu::get_menu_url("/ossim/av_asset/common/views/detail.php?asset_id=".$ri_data['asset_id'], 'environment', 'assets', 'assets');
                             }
                             elseif ($total > 1)
                             {
-                                $linked_url = Menu::get_menu_url("/ossim/assets/index.php?filter_id=11&filter_value=$sensor_ip", 'environment', 'assets', 'assets');
+                                $linked_url = Menu::get_menu_url("/ossim/av_asset/asset/index.php?filter_id=11&filter_value=$sensor_ip", 'environment', 'assets', 'assets');
                             }
                         }
                     }
@@ -357,7 +357,7 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
                 {
                     //Special case 2: Net groups don't have detail view
 
-                    $_sm_option = 'assets_groups';
+                    $_sm_option = 'assets';
                     $_h_option  = 'network_groups';
 
                     $linked_url = Menu::get_menu_url("/ossim/netgroup/netgroup_form.php?id=".$ri_data['asset_id'], 'environment', $_sm_option, $_h_option);
@@ -371,16 +371,16 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
                     }
                     elseif ($ri_data['asset_type'] == 'host_group' || $ri_data['asset_type'] == 'hostgroup')
                     {
-                        $_sm_option = 'assets_groups';
-                        $_h_option  = 'host_groups';
+                        $_sm_option = 'assets';
+                        $_h_option  = 'asset_groups';
                     }
                     else
                     {
-                        $_sm_option = 'assets_groups';
+                        $_sm_option = 'assets';
                         $_h_option  = 'networks';
                     }
 
-                    $linked_url = Menu::get_menu_url("/ossim/asset_details/index.php?id=".$ri_data['asset_id'], 'environment', $_sm_option, $_h_option);
+                    $linked_url = Menu::get_menu_url("/ossim/av_asset/common/views/detail.php?asset_id=".$ri_data['asset_id'], 'environment', $_sm_option, $_h_option);
                 }
             }
             else
@@ -868,7 +868,7 @@ function get_assets($conn, $id, $type, $host_types)
             $what = 'id';
         }
 
-        $query  = "SELECT INET6_NTOP(ip) AS ip FROM $table WHERE $what = UNHEX(?) LIMIT 1";
+        $query  = "SELECT INET6_NTOA(ip) AS ip FROM $table WHERE $what = UNHEX(?) LIMIT 1";
         $params = array($id);
 
         $rs = $conn->Execute($query, $params);
@@ -956,7 +956,7 @@ function get_assets($conn, $id, $type, $host_types)
     }
     elseif ($type == 'host_group' || $type == 'hostgroup')
     {
-        $query = "SELECT hex(hg.host_id) as host_id, INET6_NTOP(hi.ip) AS ip FROM host_group_reference hg, host_ip hi
+        $query = "SELECT hex(hg.host_id) as host_id, INET6_NTOA(hi.ip) AS ip FROM host_group_reference hg, host_ip hi
             WHERE hi.host_id=hg.host_id AND hg.host_group_id = UNHEX(?)";
 
         $host_ids = array($id);

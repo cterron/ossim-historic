@@ -313,7 +313,7 @@ class FrameworkBaseServer(SocketServer.ThreadingTCPServer):
 #        Returns:
 #            True if address corresponds to a sensor, false otherwise.
 #        """
-#        query = 'select inet6_ntop(sensor.ip) as ip from sensor, system where sensor.id=system.sensor_id;'
+#        query = 'select inet6_ntoa(sensor.ip) as ip from sensor, system where sensor.id=system.sensor_id;'
 #        result = self.__myDB.exec_query(query)
 #        # Python doesn't support assignments in while statements...
 #        for r in result:

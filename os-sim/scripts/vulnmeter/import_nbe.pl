@@ -551,7 +551,7 @@ sub process_results {
                     $sql_insert = "INSERT INTO vuln_nessus_results ( report_id, scantime, hostip, ctx, hostname, record_type, service, port, protocol , app, scriptid, risk, msg, falsepositive )\nVALUES\n";
                     $sql_insert2 = "INSERT INTO vuln_nessus_latest_results ( username, sid, scantime, hostip, ctx, hostname, record_type, service, port, protocol , app, scriptid, risk, msg, falsepositive )\nVALUES\n";
                     #delete host_plugin_sid results
-                    $sql_delete = qq{ DELETE FROM host_plugin_sid WHERE host_ip = inet6_pton('$hostip') and ctx=UNHEX('$ctx') and plugin_id = 3001 };
+                    $sql_delete = qq{ DELETE FROM host_plugin_sid WHERE host_ip = inet6_aton('$hostip') and ctx=UNHEX('$ctx') and plugin_id = 3001 };
                     logwriter( $sql_delete, 5 );
                     $sth_del = $dbh->prepare( $sql_delete );
                     $sth_del->execute;
@@ -647,7 +647,7 @@ sub process_results {
         while ((my $scanid) = $sth_sel->fetchrow_array) {
             #logwriter( "Scan id: $scanid", 5 );
             # plugin_sid
-            $sql_update = qq{ INSERT IGNORE INTO host_plugin_sid (host_ip, ctx, plugin_id, plugin_sid) VALUES (inet6_pton('$hostip'), UNHEX('$ctx'), 3001, $scanid) }; 
+            $sql_update = qq{ INSERT IGNORE INTO host_plugin_sid (host_ip, ctx, plugin_id, plugin_sid) VALUES (inet6_aton('$hostip'), UNHEX('$ctx'), 3001, $scanid) }; 
             logwriter( $sql_update, 5 );
             $sth_update = $dbh->prepare( $sql_update );
             $sth_update->execute;
@@ -1346,7 +1346,7 @@ sub ip2hostname {
     my ( $sql, $sth_sel );
     my ( $hostname ) = "";
     
-    $sql = qq{ SELECT h.hostname FROM host h, host_ip hip WHERE h.id=hip.host_id and hip.ip = inet6_pton('$ip') and h.ctx=UNHEX('$ctx')};
+    $sql = qq{ SELECT h.hostname FROM host h, host_ip hip WHERE h.id=hip.host_id and hip.ip = inet6_aton('$ip') and h.ctx=UNHEX('$ctx')};
     $sth_sel = $dbh->prepare( $sql );
     $sth_sel->execute;
     $hostname = $sth_sel->fetchrow_array;
@@ -1364,12 +1364,12 @@ sub hostname2ip {
     my ( $sql, $sth_sel, $cmd );
     my ($ip) = "";
         
-    $sql = qq{ SELECT inet6_ntop(hip.ip) AS ip 
+    $sql = qq{ SELECT inet6_ntoa(hip.ip) AS ip 
                         FROM host h, host_ip hip, vuln_nessus_latest_reports vnlr
                         WHERE h.id = hip.host_id 
                         AND h.hostname = '$hostname'
                         AND h.ctx =UNHEX('$ctx')
-                        AND vnlr.hostIP = inet6_ntop(hip.ip)
+                        AND vnlr.hostIP = inet6_ntoa(hip.ip)
                         AND vnlr.ctx = UNHEX('$ctx') };
 
     $sth_sel = $dbh->prepare( $sql );
@@ -1377,7 +1377,7 @@ sub hostname2ip {
     $ip = $sth_sel->fetchrow_array;
     
     if(!defined($ip)) {
-        $sql = qq{ SELECT inet6_ntop(hip.ip) as ip 
+        $sql = qq{ SELECT inet6_ntoa(hip.ip) as ip 
                             FROM host h, host_ip hip
                             WHERE h.id=hip.host_id 
                             and h.hostname = '$hostname'
@@ -1415,7 +1415,7 @@ sub name_and_aliases_in_host {
     my ($sql_in_host, $sth_sel_in_host, $hostname, $fqdns);
     my @result = ();
     
-    $sql_in_host = qq{ SELECT h.hostname, h.fqdns FROM host h, host_ip hip WHERE h.id=hip.host_id and hip.ip = inet6_pton('$ip') and h.ctx=UNHEX('$ctx')};
+    $sql_in_host = qq{ SELECT h.hostname, h.fqdns FROM host h, host_ip hip WHERE h.id=hip.host_id and hip.ip = inet6_aton('$ip') and h.ctx=UNHEX('$ctx')};
     
     $sth_sel_in_host = $dbh->prepare( $sql_in_host );
     $sth_sel_in_host->execute;

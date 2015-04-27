@@ -28,7 +28,6 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-import json
 import hashlib
 
 from functools import wraps, partial
@@ -90,16 +89,35 @@ def use_cache(function=None, namespace=None, expire=600):
         if cache.connection is None:
             return function(*args, **kwargs)
 
-        # Key will be either a md5 hash or just pickle object,
-        # in the form of `function name`:`key`
-        if cache.hashkeys:
-            key = hashlib.md5(json.dumps(args)).hexdigest()
-        else:
-            key = json.dumps(args)
-        cache_key = '%s:%s' % (function.__name__, key)
+        # Clean kwargs. Remove no_cache and convert str to unicode
+        key_kwargs = kwargs.copy()
+        if 'no_cache' in kwargs:
+            key_kwargs.pop('no_cache')
+        for key in key_kwargs:
+            if isinstance(key_kwargs[key], str):
+                try:
+                    key_kwargs[key] = unicode(key_kwargs[key])
+                except Exception as e:
+                    api_log.warning("use_cache: %s" % str(e))
+        # Clean args. convert str to unicode
+        key_args = []
+        for arg in args:
+            if isinstance(arg, str):
+                unicode_arg = arg
+                try:
+                    unicode_arg = unicode(arg)
+                except Exception as e:
+                    api_log.warning("use_cache: %s" % str(e))
+                key_args.append(unicode_arg)
+            else:
+                key_args.append(arg)
 
+        # Use funtion name, args and kwargs for cache key
+        cache_key = hashlib.sha256(str(function.__name__) + str(key_args) + str(key_kwargs)).hexdigest()
         if 'no_cache' not in kwargs or not kwargs['no_cache']:
             try:
+                # Consider using pickle instead of json
+                # json can't store tuples
                 return cache.get_json(cache_key)
             except (ExpiredKeyException, CacheMissException):
                 pass

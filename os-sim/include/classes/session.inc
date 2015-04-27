@@ -54,7 +54,7 @@ require_once 'av_config.php';
 * @package    ossim-framework\Session
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 class Session
 {       
@@ -1616,7 +1616,7 @@ class Session
     *
     * @return boolean                
     */ 
-    public function login() 
+    public function login( $autologin = FALSE ) 
     {       
         $conf = $GLOBALS['CONF'];
         
@@ -1653,9 +1653,19 @@ class Session
         
         unset($query_1, $rs_1, $params1);        
                 
-        $query  = "SELECT *, HEX(uuid) AS uuid FROM users WHERE login = ? AND (pass = ? OR pass = ?)";
-        $params = array($login, $pass, $pass_sha);
-        $rs     = $conn->Execute($query, $params);        
+        if ($autologin)
+        {
+            $query  = "SELECT *, HEX(uuid) AS uuid FROM users WHERE login = ?";
+            $params = array($login);
+            $rs     = $conn->Execute($query, $params);
+        }
+        else
+        {
+            $query  = "SELECT *, HEX(uuid) AS uuid FROM users WHERE login = ? AND (pass = ? OR pass = ?)";
+            $params = array($login, $pass, $pass_sha);
+            $rs     = $conn->Execute($query, $params);
+        }
+
         
         //Case 1: Login method is 'pass' or external process(AV Report Scheduler or Remote Interface) are trying to log in the system
         if (($login_method != 'ldap' 
@@ -1702,11 +1712,11 @@ class Session
             $_SESSION['_exp_date']    = $_license['appliance']['expire'];
             $_SESSION['_max_devices'] = $_license['appliance']['devices'];
 
-
-            //Update Last login date
-            self::update_logon_try($login);            
-            
-            Session_activity::insert($conn);
+            if (!$autologin)
+            {
+                self::update_logon_try($login);
+                Session_activity::insert($conn);
+            }
             
             if($login == 'admin' || intval($rs->fields['is_admin']) == 1)
             {
@@ -1812,10 +1822,11 @@ class Session
             $_SESSION['_max_devices'] = $_license['appliance']['devices'];
 
             
-            //Update last login date
-            self::update_logon_try($login);            
-            
-            Session_activity::insert($conn);
+            if (!$autologin)
+            {
+                self::update_logon_try($login);
+                Session_activity::insert($conn);
+            }
             
             if($login == 'admin' || intval($rs->fields['is_admin']) == 1)
             {
@@ -1919,17 +1930,17 @@ class Session
         $ldapconn   = ldap_connect($serverconn, $ldap_port);
         
         if ($ldapconn == FALSE)
-        {            
+        {
             $log_msg = _('Could not connect to LDAP server');
             
             Av_exception::write_log(Av_exception::USER_ERROR, $log_msg);
             
             return FALSE;
-        }    
+        }
         
         ldap_set_option($ldapconn,LDAP_OPT_PROTOCOL_VERSION,3);
         ldap_set_option($ldapconn,LDAP_OPT_REFERRALS,0);
-            
+        
         if ($ldapconn) 
         {
             //Authentication
@@ -1958,15 +1969,11 @@ class Session
                                     
             if ($ldapbind) 
             {
-                $ret = TRUE;
-            } 
-            else
-            {
-                $ret = FALSE;
+                return TRUE;
             }
         }
-                
-        return $ret;
+
+        return FALSE;
     }
     
         
@@ -2953,7 +2960,7 @@ class Session
             return TRUE;
         }
                         
-        // Logical level
+        // User Host Perms
         $params = array($user, $asset_id);   
         $query  = "SELECT p.asset_id FROM alienvault.user_".$type."_perm p WHERE p.login = ? AND p.asset_id = UNHEX(?)";
                      
@@ -2970,6 +2977,29 @@ class Session
         {
             return TRUE;
         } 
+        
+        
+        // User Net Perms
+        if ($type == 'host')
+        {
+            $params = array($user, $asset_id);
+            $query  = "SELECT h.host_id FROM alienvault.user_net_perm p, alienvault.host_net_reference h WHERE h.net_id = p.asset_id AND p.login = ? AND h.host_id = UNHEX(?)";
+             
+            $rs = $conn->Execute($query, $params);
+            
+            if (!$rs)
+            {
+                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            
+                return FALSE;
+            }
+            
+            if (!$rs->EOF)
+            {
+                return TRUE;
+            }
+        }
+        
                         
         // CTX level
         $asset_perms = ($type == 'host') ? self::get_host_where($user) : self::get_net_where($user);
@@ -3090,7 +3120,7 @@ class Session
     
     
     /**
-    * This function returns TRUE if net with ID $net_id belongs to user scope ($user)
+    * This function returns TRUE if sensor with ID $sensor belongs to user scope ($user)
     *
     * @param string $sensor  Sensor ID (Hexadecimal ID) or sensor IP to search
     *
@@ -3337,49 +3367,19 @@ class Session
         
         return $_SESSION['_user_vision']['ctx_where'];
     }
-    
-    
-    /**
-    * This function returns a SQL query used in asset filter (hosts and nets) for logged user
-    * 
-    * @param string $user  [Optional] User login to search
-    *
-    * @return string                
-    */   
-    public static function get_asset_where($user = '') 
-    {
-        $user = (empty($user)) ? self::get_session_user() : $user;
-        
-        $where = '';
-        
-        if (count($_SESSION['_user_vision']['asset']['host']) > 0) 
-        {
-            $where = "SELECT asset_id FROM alienvault.user_host_perm WHERE login = '".$user."'";
-        }
-        
-        if (count($_SESSION['_user_vision']['asset']['net']) > 0) 
-        {
-            if ($where != '') 
-            { 
-                $where .= ' UNION '; 
-            }
-            
-            $where .= "SELECT asset_id FROM alienvault.user_net_perm WHERE login = '".$user."'";
-        }
-    }
-    
-    
+
+
     /**
     * This function returns a SQL query used in host filter for logged user
     * 
     * @param string $user  [Optional] User login to search
     *
-    * @return string                
+    * @return string
     */   
     public static function get_host_where($user = '') 
-    {        
+    {
         $user = (empty($user)) ? self::get_session_user() : $user;
-        
+
         return ($_SESSION['_user_vision']['host_where']) ? "SELECT asset_id FROM alienvault.user_host_perm WHERE login = '".$user."'" : '';
     }
     
@@ -4343,6 +4343,47 @@ class Session
     
     
     /**
+     * This function throws a 401 error when section is not allowed
+     *
+     * @param array|string $menu     Menu option
+     * @param array|string $submenu  Submenu option
+     *
+     * @see self::menu_perms()  function menu_perms($menu, $submenu)
+     *
+     * @return void
+     */
+    public static function logcheck_ajax($menu, $submenu)
+    {
+        if (!self::menu_perms($menu, $submenu))
+        {
+            $_error_msg = _("You don't have permission to see this page");
+            
+            Util::response_bad_request($_error_msg, 401);
+        }
+    }
+    
+    
+    /**
+     * This function checks if menu option/s is/are allowed for logged user by asset type, otherwise it print a info message
+     *
+     * If session user is inactive, logged user will be redirected to $login_location
+     *
+     * @param string  $asset_type  Asset type
+     * @param boolean $ajax_mode   True when calling from providers or controllers
+     *
+     * @return void
+     */
+    public static function logcheck_by_asset_type($asset_type, $ajax_mode = TRUE)
+    {
+        $method     = ($ajax_mode) ? 'logcheck_ajax' : 'logcheck';
+    
+        $subsection = ($asset_type == 'network' || $asset_type == 'net_group') ? 'PolicyNetworks' : 'PolicyHosts';
+    
+        self::$method('environment-menu', $subsection);
+    }
+    
+    
+    /**
     * This function checks if menu option/s is/are allowed for logged user, otherwise it print a info message
     *
     * If session user is inactive, logged user will be redirected to $login_location
@@ -4386,8 +4427,8 @@ class Session
             self::unallowed_section(NULL, 'noback', $menu, $submenu);
         }
     }
-    
-   
+  
+ 
     /**
     * This function print a predefined message for unallowed sections
     *
@@ -4436,7 +4477,7 @@ class Session
                       
             $db->close();
         }
-               
+
         if (empty($link))
         {
             $link = NULL;
@@ -4445,39 +4486,42 @@ class Session
         {
             $link =  "<a class='color: #00529B !important' href='/ossim/session/login.php?action=logout' title='"._('Logout')."'><span class='notice_link'>[ "._('Logout')." ]</span></a>";
         }
-                       
+
         //CSS styles
-        
+
         echo "<style type='text/css'>
-                
+
             a {text-decoration:none !important; outline: none !important;}
-            
-            .notice_link, .notice_link:link, .notice_link:hover, .notice_link:active, .notice_link:visited  { 
-                color: #00529B !important; 
-                font-weight: bold; 
+
+            .notice_link, .notice_link:link, .notice_link:hover, .notice_link:active, .notice_link:visited  {
+                color: #00529B !important;
+                font-weight: bold;
                 margin-left: 5px;
             }
-                                                    
-           
+
+
             input[type='button'], input[type='submit'], .button{
+                font-family: 'Lucida Sans','Lucida Grande',Lucida,sans-serif,Verdana;
                 color: white;
-                font-size: 11px;
-                font-family: \"Lucida Sans\",\"Lucida Grande\",Lucida,Verdana,sans-serif;
                 text-decoration: none;
+                text-transform: uppercase;
+                text-align: center;
                 border:none;
-                padding: 5px 10px;
-                position: relative;    
-                background: #34495E;
-                display: inline-block;    
-            }
-            
-            input[type='button']:hover, input[type='submit']:hover, .button:hover{
-                background: #3B5876;
+                padding: 6px 10px;
+                background: #16A7C9;
+                display: inline-block;
                 cursor: pointer;
-            }          
-                
+                border-radius: 2px;
+
+            }
+
+            input[type='button']:hover, input[type='submit']:hover, .button:hover{
+                background: #138FAC;
+                cursor: pointer;
+            }
+
             </style>";
-                      
+
         if ($section != '')
         {
             $data = $section;

@@ -107,7 +107,7 @@ if ($search != '')
         list($from, $to) = CIDR::expand_CIDR($cidr, 'SHORT', 'IP');
 
         $tables = ', host_ip hi ';
-        $filters['where'] = "host.id=hi.host_id AND hi.ip BETWEEN INET6_PTON('$from') AND INET6_PTON('$to') ";
+        $filters['where'] = "host.id=hi.host_id AND hi.ip BETWEEN INET6_ATON('$from') AND INET6_ATON('$to') ";
 
     }
     else
@@ -143,8 +143,8 @@ foreach($assets as $_id => $asset_data)
     $_os   = '';
     $_dev  = '';
 
-    $windows_os = preg_grep("/^windows/i", $os);
-    $linux_os   = preg_grep("/^linux/i", $os);
+    $windows_os = preg_grep("/^windows|microsoft/i", $os);
+    $linux_os   = preg_grep("/linux/i", $os);
 
     if (count($windows_os) > 0)
     {

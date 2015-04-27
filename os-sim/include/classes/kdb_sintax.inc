@@ -236,7 +236,7 @@ class KDB_Sintax
         
             '$SENSOR' => array(
                 'help' => _("The Sensor the log originated from") ,
-                'sample' => 'Alienvault'
+                'sample' => 'sensor'
             ),
             '$SRCIP' => array(
                 'help' => _("Source IP Address field in Event") ,

@@ -33,23 +33,23 @@
 
 
 /***************************************************************
- ******************* Alienvault Directories ********************
+ ******************* AlienVault Directories ********************
  ***************************************************************/
 
-//Alienvault Main Path
+//AlienVault Main Path
 define("AV_MAIN_PATH", '/ossim');
 
-//Alienvault Root Path
+//AlienVault Root Path
 define("AV_MAIN_ROOT_PATH", '/usr/share/ossim/www');
 
-//Alienvault Class Path
+//AlienVault Class Path
 define("AV_CLASS_PATH", '/usr/share/ossim/include');
 
 //Directory for temporary files
 define("AV_TMP_DIR", AV_MAIN_PATH.'/tmp');
 
 //Directory for uploads 
-define("AV_UPLOAD_DIR", AV_MAIN_PATH.'/uploads');
+define("AV_UPLOAD_DIR", '/usr/share/ossim/uploads');
 
 //Directory for logs
 define("AV_LOG_DIR", '/var/ossim/logs');

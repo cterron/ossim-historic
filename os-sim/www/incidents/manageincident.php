@@ -122,12 +122,12 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
 	
 	//Validation array
 	$validate_1 = array (
-			'title'                => array('validation' => "OSS_ALPHA, OSS_SPACE, OSS_PUNC_EXT, '\<\>'",              'e_message' => 'illegal:' . _('Title')),
+			'title'                => array('validation' => "OSS_ALPHA, OSS_SPACE, OSS_PUNC_EXT, '\<\>'",            'e_message' => 'illegal:' . _('Title')),
 			'priority'             => array('validation' => 'OSS_DIGIT',                                             'e_message' => 'illegal:' . _('Priority')),
 			'type'                 => array('validation' => 'OSS_ALPHA, OSS_PUNC_EXT, OSS_SPACE, OSS_SCORE',         'e_message' => 'illegal:' . _('Type')),
 			'transferred_user'     => array('validation' => 'OSS_USER_2, OSS_NULLABLE',                              'e_message' => 'illegal:' . _('User')),
 			'transferred_entity'   => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                 'e_message' => 'illegal:' . _('Entity')),
-			'submitter'            => array('validation' => 'OSS_USER, OSS_PUNC, OSS_NULLABLE',                      'e_message' => 'illegal:' . _('Submitter'))
+			'submitter'            => array('validation' => 'OSS_USER, OSS_PUNC, OSS_ALPHA, OSS_NULLABLE',           'e_message' => 'illegal:' . _('Submitter'))
 	);	
 	
 	
@@ -692,7 +692,7 @@ elseif ($action == 'newticket') /* Create a new ticket */
 		'priority'             => array('validation' => 'OSS_DIGIT',                    'e_message' => 'illegal:' . _('Priority')),
 		'prev_status'          => array('validation' => 'OSS_ALPHA',                    'e_message' => 'illegal:' . _('Status')),
 		'status'               => array('validation' => 'OSS_ALPHA',                    'e_message' => 'illegal:' . _('Status')),
-		'transferred_user'     => array('validation' => 'OSS_USER, OSS_NULLABLE',       'e_message' => 'illegal:' . _('User')),
+		'transferred_user'     => array('validation' => 'OSS_USER_2, OSS_NULLABLE',     'e_message' => 'illegal:' . _('User')),
 		'transferred_entity'   => array('validation' => 'OSS_HEX, OSS_NULLABLE',        'e_message' => 'illegal:' . _('Entity')),
 		'description'          => array('validation' => "OSS_ALL",				        'e_message' => 'illegal:' . _('Description')),
 		'action_txt'           => array('validation' => "OSS_ALL, OSS_NULLABLE", 	    'e_message' => 'illegal:' . _('Action')),
@@ -976,7 +976,7 @@ elseif ($action == 'e_subscription') /* Subscriptions Management */
 
 if (is_array($data['data']) && !empty($data['data']))
 {
-	$txt_error = "<div>"._('We found the following errors').":</div>
+	$txt_error = "<div>"._('The following errors occurred').":</div>
 						  <div style='padding:0px 3px 3px 15px;'>".implode("<br/>", $data['data'])."</div>";				
 					
 	$config_nt = array(

@@ -69,11 +69,11 @@ if(!$wizard instanceof Welcome_wizard)
 
 
 $tables             = ', host_properties hp';
-$filters_w['where'] = " hp.host_id=host.id AND hp.property_ref=3 AND hp.value LIKE '%\"windows%'";
+$filters_w['where'] = ' hp.host_id=host.id AND hp.property_ref=3 AND (hp.value LIKE "windows%" OR hp.value LIKE "microsoft%")';
 $filters_w['limit'] = '1';
 
 $filter_l           = $filters_w;
-$filters_l['where'] = " hp.host_id=host.id AND hp.property_ref=3 AND hp.value LIKE '%\"linux%'";
+$filters_l['where'] = " hp.host_id=host.id AND hp.property_ref=3 AND hp.value LIKE '%linux%'";
 
 
 try

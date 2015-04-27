@@ -51,7 +51,7 @@
 * @package    ossim-framework\Asset
 * @autor      AlienVault INC
 * @copyright  2007-2013 AlienVault
-* @link       https://www.alienvault.com/ Alienvault web page
+* @link       https://www.alienvault.com/ AlienVault web page
 */
 
 class Remote_scan
@@ -672,8 +672,6 @@ class Remote_scan
         // No sensor information
         if (count($s_agents) < 1)
         {
-            $last_socket_error = socket_strerror(socket_last_error($socket));
-
             $error_msg = _('Error! No sensor available');
 
             $this->set_error('error', $error_msg);
@@ -702,10 +700,11 @@ class Remote_scan
     * This function launches a scan and retrieves the results
     *
     * @param boolean $quiet  [Optional] Show results on screen
+    * @param boolean $idm    [Optional] Only launch an scan with idm option and finish
     *
     * @return boolean
     */
-    public function do_scan($quiet = TRUE)
+    public function do_scan($quiet = TRUE, $idm = FALSE)
     {
         session_write_close();
 
@@ -716,7 +715,6 @@ class Remote_scan
         {
             return FALSE;
         }
-
 
         $this->scan = '';
 
@@ -776,6 +774,12 @@ class Remote_scan
         {
             $in .= ' scan_ports="'.$this->ports.'"';
         }
+        
+        if ($idm)
+        {
+            $in .= ' idm="true"';
+        }
+        
         $in .= "\n";
 
         $out = '';
@@ -797,6 +801,13 @@ class Remote_scan
             return FALSE;
         }
 
+        if ($idm) // Finish after launch it
+        {
+            socket_close($socket);
+
+            return TRUE;
+        }
+        
         // Query until finish nmap job
         $in  = 'control action="nmap_status" id="'.$scanning_sensor_ip.'"' . "\n";
         $out = '';
@@ -1372,6 +1383,172 @@ class Remote_scan
             @unlink($this->xml_output);
         }
     }
+    
+    
+    /**
+    * This function get the scan status
+    *
+    * @param string $scanning_sensor_ip   Only launch an scan with idm option and finish
+    *
+    * @return string
+    */
+    public function get_scan_status( $scanning_sensor_ip )
+    {
+        session_write_close();
+
+        $socket = socket_create(AF_INET, SOCK_STREAM, 0);
+
+        if ($socket < 0)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Warning! Unable to create a connection with frameworkd. Reason:').' '.$last_socket_error;
+
+            socket_close($socket);
+
+            return $error_msg;
+        }
+
+        /* connect */
+        socket_set_block($socket);
+        socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->f_config['timeout']);
+        socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->f_config['timeout']);
+        $result = @socket_connect($socket, $this->f_config['address'], $this->f_config['port']);
+
+        if (!$result)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _("Warning! Can't connect with frameworkd").' ('.$this->f_config['address'].':'.$this->f_config['port'].')';
+            $error_msg .= ' '._('Reason').': '.$last_socket_error;
+
+            socket_close($socket);
+
+            return $error_msg;
+        }
+
+        
+        // Query until finish nmap job
+        $in  = 'control action="nmap_status" id="'.$scanning_sensor_ip.'"' . "\n";
+        $out = '';
+
+        socket_write($socket, $in, strlen($in));
+        $out = socket_read($socket, 2048, PHP_BINARY_READ);
+
+        if (!preg_match('/ack(end)?$/',$out))
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $out = (empty($out)) ? _('empty response') : $out;
+
+            $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+            socket_close($socket);
+
+            return $error_msg;
+        }
+
+        preg_match('/status=\"(.*?)\"/', $out, $found);
+
+        $status=($found[1] > 0) ? _("Running") : _("Available");
+
+        socket_close($socket);
+
+        return $status;
+    }
+
+    
+    /**
+    * This function return all selected assets
+    *
+    * @param  object  $conn  DB Connection 
+    * @param  string  $type  Asset type 
+    *
+    * @throws Exception  If there is any error on the procedure.
+    *
+    * @return  array.
+    */ 
+    public function get_selected_assets($conn, $type='asset')
+    {
+        Ossim_db::check_connection($conn);
+        
+        $sensors = array();
+        
+        $params  = array( Session::get_session_user() );
+        
+        if ($type == 'asset')
+        {
+            $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
+            $sql = "SELECT hex(hi.host_id) as id, INET6_NTOA(hi.ip) as ip,HEX(hsf.sensor_id) as sensor FROM user_component_filter uf, host h, host_ip hi, host_sensor_reference hsf WHERE uf.login=? AND h.id=hi.host_id AND uf.asset_id=hi.host_id AND hi.host_id=hsf.host_id AND uf.asset_type='asset' $host_perms_where";
+        }
+        elseif ($type == 'group')
+        {
+            $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
+            $sql = "SELECT hex(hi.host_id) as id, INET6_NTOA(hi.ip) as ip,HEX(hsf.sensor_id) as sensor FROM user_component_filter uf, host h, host_ip hi, host_sensor_reference hsf, host_group_reference hgr WHERE h.id=hi.host_id AND uf.login=? AND uf.asset_id=hgr.host_group_id AND hgr.host_id=hi.host_id AND hi.host_id=hsf.host_id AND uf.asset_type='group' $host_perms_where";
+        }
+        elseif ($type == 'network')
+        {
+            $net_perms_where  = Asset_net::get_perms_where('n.', TRUE);
+            $sql = "SELECT hex(n.id) as id, nc.cidr as ip,HEX(nsr.sensor_id) as sensor FROM user_component_filter uf, net n, net_cidrs nc, net_sensor_reference nsr WHERE uf.login=? AND uf.asset_id=n.id AND nsr.net_id=n.id AND n.id=nc.net_id AND uf.asset_type='network' $net_perms_where";
+        }
+        else
+        {
+            return array();
+        }
+
+        $rs = $conn->Execute($sql, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $sensors[$rs->fields['sensor']][$rs->fields['ip']] = $rs->fields['id'];
+
+            $rs->MoveNext();
+        }
+        
+        $rs->free();
+        
+        $connected = $this->get_sensors();
+        
+        $jobs    = array();
+        $already = array();
+        
+        // Sensor consolidation
+        foreach ($sensors as $sensor_id => $asset)
+        {
+            $sensor = Av_sensor::get_object($conn, $sensor_id);
+            $jobs[$sensor_id] = array(
+                "available" => $connected[$sensor_id] ? 1 : 0,
+                "status"    => $connected[$sensor_id] ? $this->get_scan_status( $sensor->get_ip() ) : _("Sensor not connected"),
+                "name"      => $sensor->get_name(),
+                "ip"        => $sensor->get_ip(),
+                "assets"    => array()
+            );
+            foreach ($asset as $ip => $id)
+            {
+                if (!$already[$ip][$id])
+                {
+                    $jobs[$sensor_id]["assets"][] = array(
+                        "ip" => $ip,
+                        "id" => $id
+                    );
+                    $already[$ip][$id]++;
+                }
+            }
+            if (empty($jobs[$sensor_id]["assets"]))
+            {
+                // Remove if there are no assets
+                unset($jobs[$sensor_id]);
+            }
+        }
+        
+        return $jobs;
+    }
+
 }
 
 /* End of file remote_scan.inc */

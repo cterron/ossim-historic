@@ -33,7 +33,7 @@ $_SESSION["_solera"] = ($conf->get_conf("solera_enable", FALSE)) ? true : false;
 //
 // Get Host names to translate IP -> Host Name
 require_once ("ossim_db.inc");
-$dbo = new ossim_db();
+$dbo = new ossim_db(true);
 // Multiple Database Server selector
 $conn = $dbo->connect();
 $database_servers = Databases::get_list($conn);
@@ -51,9 +51,14 @@ else
 }
 
 include_once ("$BASE_path/base_common.php");
-$sensors = $hosts = $ossim_servers = array();
+$sensors = $hosts = $ossim_servers = $sensor_names = array();
 
 $sensors                = Av_sensor::get_basic_list($conn, array(), TRUE);
+foreach ($sensors as $_sensor)
+{
+    $sensor_names[$_sensor['ip']] = $_sensor['name'];
+}
+
 list($hosts, $host_ids) = Asset_host::get_basic_list($conn, array(), TRUE);
 $entities               = Session::get_all_entities($conn);
 

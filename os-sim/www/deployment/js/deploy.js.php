@@ -91,7 +91,7 @@ function goto_help(id) {
 			caption = '<?php echo _("Vulnerabilities")?>';
 			
 			_net_id = $('#net_id_selected').val();
-			_opts   = '&smethod=schedule&hosts_alive=1&scan_locally=1&net_id='+_net_id;			
+			_opts   = '&action=create_scan&hosts_alive=1&scan_locally=1&net_id='+_net_id;			
 			link    = '<?php echo Menu::get_menu_url("../vulnmeter/sched.php", "environment", "vulnerabilities", "scan_jobs")?>'+_opts;
 			
 			break;	
@@ -100,7 +100,7 @@ function goto_help(id) {
 			
 			caption = '<?php echo _("Scheduler - NMAP")?>';
 			
-			link = '<?php echo Menu::get_menu_url("../av_inventory/index.php", "configuration", "deployment", "scheduler")?>';
+			link = '<?php echo Menu::get_menu_url("../av_inventory/index.php", "environment", "assets", "scheduler", "asset_discovery")?>';
 			
 			break;
 				

@@ -21,8 +21,10 @@ def after_install(options, home_dir):
         assert subprocess.call([os.path.abspath(join(home_dir, 'bin', 'pip')), 'install', '-r', 'requirements_wheezy.txt']) == 0, "pip fails to install requeriments.txt"
 
     # Install git packages (hopefully this will be gone soon)
-    #subprocess.call([os.path.abspath(join(home_dir, 'bin', 'pip')), 'install', '-I', 'git+git://github.com/hercules-team/python-augeas.git@fdb02831e2b3a362d0e60c8db7782bb6ac1967c7'])
-    subprocess.call([os.path.abspath(join(home_dir, 'bin', 'pip')), 'install', '-I', 'git+git://github.com/alien-dev/python-augeas.git@0.0.1'])
+    #subprocess.check_call([os.path.abspath(join(home_dir, 'bin', 'pip')), 'install', '-I', 'git+git://github.com/hercules-team/python-augeas.git@fdb02831e2b3a362d0e60c8db7782bb6ac1967c7'])
+    subprocess.check_call([os.path.abspath(join(home_dir, 'bin', 'pip')), 'install', '-I', 'git+git://github.com/alien-dev/python-augeas.git@0.0.1'])
+    subprocess.check_call([os.path.abspath(join(home_dir, 'bin', 'pip')), 'install', '-I', 'git+git://github.com/alien-dev/celerybeatredis.git'])
+    subprocess.check_call([os.path.abspath(join(home_dir, 'bin', 'pip')), 'install', '-I', 'git+git://github.com/alien-dev/celery-once.git'])
 """
 
 FILE_LIST_VAR = 'FILE_LIST'

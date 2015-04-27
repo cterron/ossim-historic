@@ -431,7 +431,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PH
 
 #From Erik Fichtner
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=)"; flow:to_server,established; content:"GET"; http_method; content:".php?"; nocase; http_uri; content:"cmd="; http_uri; nocase; pcre:"/cmd=[^\x28]*(cd|\;|echo|cat|perl|curl|wget|id|uname|t?ftp)/Ui"; reference:cve,2002-0953; reference:url,doc.emergingthreats.net/2010920; classtype:web-application-attack; sid:2010920; rev:7;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=)"; flow:to_server,established; content:"GET"; nocase; http_method; content:".php?"; nocase; http_uri; content:"cmd="; http_uri; fast_pattern; nocase; pcre:"/[&?]cmd=[^\x26\x28]*(?:cd|\;|echo|cat|perl|curl|wget|id|uname|t?ftp)/Ui"; reference:cve,2002-0953; reference:url,doc.emergingthreats.net/2010920; classtype:web-application-attack; sid:2010920; rev:8;)
 
 #by David Wharton
 #
@@ -448,10 +448,6 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PH
 #by David Wharton
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Generic Remote File Include Attempt (FTPS)"; flow:to_server,established; uricontent:".php"; nocase; uricontent:"=ftps\:/"; nocase; pcre:"/\x2Ephp\x3F.{0,300}\x3Dftp\x3A\x2F[^\x3F\x26]+\x3F/Ui"; reference:url,doc.emergingthreats.net/2009155; classtype:web-application-attack; sid:2009155; rev:8;)
-
-#by David Wharton
-#pcre updated to use \.php anchor  reduces load on average by about 10% still very expensive sig due to generic uricontent
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER PHP Remote File Inclusion (monster list http)"; flow:established,to_server; content:".php"; nocase; http_uri; content:"http"; nocase; http_uri;  pcre:"/\.php.+?(?:c(?:(?:onfi|f)g|alendar)|p(?:a(?:ge|th)|rog)|l(?:ang(uage)?|ib)|f(?:older|ile|ad)|d(?:omain|ir|f)|s(?:ettings|bp)|a(?:genda|uth)|i(?:con|ncl|d)|n(?:ame|ews)|r(?:oot|f)|gallery|type|ext|mod|[a-z](\[.*\])+?)\s*=\s*https?/Ui"; reference:url,www.sans.org/top20/; reference:url,doc.emergingthreats.net/2002997; classtype:web-application-attack; sid:2002997; rev:12;)
 
 #by Jared Braverman
 #
@@ -1333,7 +1329,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER open_based
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER auto_prepend_file PHP config option in uri"; flow:established,to_server; content:"auto_prepend_file"; http_uri; fast_pattern:only; pcre:"/\bauto_prepend_file\s*?=/U"; reference:url,seclists.org/fulldisclosure/2013/Jun/21; classtype:trojan-activity; sid:2016982; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Access to /phppath/php Possible Plesk 0-day Exploit June 05 2013"; flow:established,to_server; content:"/phppath/php"; http_uri; pcre:"/\/phppath\/php\b/Ui"; reference:url,seclists.org/fulldisclosure/2013/Jun/21; classtype:trojan-activity; sid:2016983; rev:2;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Access to /phppath/php Possible Plesk 0-day Exploit June 05 2013"; flow:established,to_server; content:"/phppath/php"; http_uri; pcre:"/\/phppath\/php\b/Ui"; reference:url,seclists.org/fulldisclosure/2013/Jun/21; classtype:attempted-admin; sid:2016983; rev:2;)
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER WebShell Generic - *.tar.gz in POST body"; flow:established,to_server; content:".tar.gz"; nocase; http_client_body; classtype:bad-unknown; sid:2016992; rev:2;)
@@ -1862,4 +1858,7 @@ alert http any any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER ATTACKER WebShell - 
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER WebShell - ASPyder - File Create - POST Structure"; flow:established,to_server; content:"POST"; http_method; content:"Fname="; http_client_body; depth:6; content:"&cmd="; http_client_body; classtype:trojan-activity; sid:2020572; rev:3;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET [9200,9292] (msg:"ET WEB_SERVER Possible CVE-2015-1427 Elastic Search Sandbox Escape Remote Code Execution Attempt"; flow:established,to_server; content:"POST /"; depth:6; content:"search"; distance:0; content:"script_fields"; distance:0; nocase; content:".class.forName"; nocase; distance:0; content:"java.lang.Runtime"; nocase; distance:0; reference:url,jordan-wright.github.io/blog/2015/03/08/elasticsearch-rce-vulnerability-cve-2015-1427; classtype:attempted-admin; sid:2020648; rev:2;)
 

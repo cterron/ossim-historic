@@ -99,6 +99,7 @@ $sql = "SELECT acid_event.ip_src, acid_event.ip_dst, acid_event.ip_proto, hex(ac
 /* Run the Query again for the actual data (with the LIMIT) */
 $qs->current_view = $submit;
 //echo "<br>$sql<br>\n";
+session_write_close();
 $result = $qs->ExecuteOutputQuery($sql, $db);
 
 $et->Mark("Retrieve Query Data");
@@ -198,11 +199,11 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
         qroPrintEntry('<FONT>'.$p_name.'</FONT>');
 
         $tmp = '<A HREF="base_stat_ports.php?port_type=2&amp;proto=' . $proto . $tmp_ip_criteria . '">';
-        qroPrintEntry($tmp . $num_unique_dport . '</A>');
+        qroPrintEntry($tmp . Util::number_format_locale($num_unique_dport,0) . '</A>');
         $tmp = '<A HREF="base_stat_alerts.php?foo=1' . $tmp_ip_criteria . '">';
-        qroPrintEntry($tmp . $num_unique . '</A>');
+        qroPrintEntry($tmp . Util::number_format_locale($num_unique,0) . '</A>');
         $tmp = '<A HREF="base_qry_main.php?new=1' . '&amp;num_result_rows=-1' . '&amp;submit=' . gettext("Query DB") . '&amp;current_view=-1' . $tmp_ip_criteria . '">';
-        qroPrintEntry($tmp . $num_occurances . '</A>');
+        qroPrintEntry($tmp . Util::number_format_locale($num_occurances,0) . '</A>');
         qroPrintEntryFooter();
     }
     $i++;

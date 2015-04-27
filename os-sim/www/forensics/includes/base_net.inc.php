@@ -124,7 +124,7 @@ function baseGetHostByAddr($ipaddr, $ctx, $db) {  //, $cache_lifetime) {
     if (!preg_match("/^\d+\.\d+\.\d+\.\d+$/",$ipaddr)) return $ipaddr;
     if ($_SESSION["_resolv"][$ipaddr] == "") {
     
-        $result = $db->baseExecute("SELECT h.fqdns FROM alienvault.host h,alienvault.host_ip hi WHERE h.id=hi.host_id AND hi.ip=inet6_pton('$ipaddr') and h.ctx=unhex('$ctx')");
+        $result = $db->baseExecute("SELECT h.fqdns FROM alienvault.host h,alienvault.host_ip hi WHERE h.id=hi.host_id AND hi.ip=inet6_aton('$ipaddr') and h.ctx=unhex('$ctx')");
     	$rs = $result->baseFetchRow();
     	if (trim($rs[0]) == '') {
         	$_SESSION["_resolv"][$ipaddr] = gethostbyaddr($ipaddr);

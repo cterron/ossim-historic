@@ -86,7 +86,7 @@ class ControlManager:
 
             # v3 backward compatibility
             if agent_id == "":
-                query = 'select task_inventory.task_name, host_source_reference.id as task_type, host_source_reference.name as task_type_name, task_inventory.task_period, host_source_reference.relevance as task_reliability, task_inventory.task_enable, task_inventory.task_params from host_source_reference, sensor inner join task_inventory on sensor.id = task_inventory.task_sensor where sensor.ip = inet6_pton(\'%s\') and host_source_reference.id=task_inventory.task_type;' % agent_ip
+                query = 'select task_inventory.task_name, host_source_reference.id as task_type, host_source_reference.name as task_type_name, task_inventory.task_period, host_source_reference.relevance as task_reliability, task_inventory.task_enable, task_inventory.task_params from host_source_reference, sensor inner join task_inventory on sensor.id = task_inventory.task_sensor where sensor.ip = inet6_aton(\'%s\') and host_source_reference.id=task_inventory.task_type;' % agent_ip
             else:
                 query = 'select task_inventory.task_name, host_source_reference.id as task_type, host_source_reference.name as task_type_name, task_inventory.task_period, host_source_reference.relevance as task_reliability, task_inventory.task_enable, task_inventory.task_params from host_source_reference, sensor inner join task_inventory on sensor.id = task_inventory.task_sensor where sensor.id = unhex("%s") and host_source_reference.id=task_inventory.task_type;' % agent_id.replace('-','')
 
@@ -126,7 +126,7 @@ class ControlManager:
         we need to know the one in the sensor table"""
         if not Util.isIPV4(requestor_ip):
             return requestor_ip
-        query="SELECT INET6_NTOP(ip) as ip FROM alienvault.system, alienvault.sensor WHERE sensor_id = sensor.id AND (admin_ip = INET6_PTON('%s') OR vpn_ip = INET6_PTON('%s') OR ha_ip = INET6_PTON('%s')) ORDER BY ha_name LIMIT 1;" % (requestor_ip, requestor_ip,requestor_ip)
+        query="SELECT INET6_NTOA(ip) as ip FROM alienvault.system, alienvault.sensor WHERE sensor_id = sensor.id AND (admin_ip = INET6_ATON('%s') OR vpn_ip = INET6_ATON('%s') OR ha_ip = INET6_ATON('%s')) ORDER BY ha_name LIMIT 1;" % (requestor_ip, requestor_ip,requestor_ip)
         if not self.__myDB_connected:
             self.__myDB_connected = self.__myDB.connect ()
         data = self.__myDB.exec_query(query)
@@ -146,10 +146,10 @@ class ControlManager:
 
         # v3 backward compatibility
         if agent_id == "":
-            query = 'select host.hostname as hostname,inet6_ntop(host_ip.ip) as ip,host.fqdns as fqdns from host,host_ip \
-                    where host.id=host_ip.host_id and host.id in (select host_id from sensor inner join host_sensor_reference on sensor.id = host_sensor_reference.sensor_id where sensor.ip = inet6_pton(\'%s\'));' % agent_ip
+            query = 'select host.hostname as hostname,inet6_ntoa(host_ip.ip) as ip,host.fqdns as fqdns from host,host_ip \
+                    where host.id=host_ip.host_id and host.id in (select host_id from sensor inner join host_sensor_reference on sensor.id = host_sensor_reference.sensor_id where sensor.ip = inet6_aton(\'%s\'));' % agent_ip
         else:
-            query = 'select host.hostname as hostname,inet6_ntop(host_ip.ip) as ip,host.fqdns as fqdns from host,host_ip \
+            query = 'select host.hostname as hostname,inet6_ntoa(host_ip.ip) as ip,host.fqdns as fqdns from host,host_ip \
                     where host.id=host_ip.host_id and host.id in (select host_id from host_sensor_reference where sensor_id=unhex("%s"));' % agent_id.replace('-','')
         
         tmp = self.__myDB.exec_query(query)

@@ -147,7 +147,7 @@ if (jQuery) (function ($) {
             {
                 left = trigger.offset().left + hOffset
             }
-            
+
             //Check the menu is not higher than the window size
             if ((top + d_height) > $(window).height())
             {

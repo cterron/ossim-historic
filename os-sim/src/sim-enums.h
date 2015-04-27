@@ -99,6 +99,9 @@ G_BEGIN_DECLS
 /* Remove backlogs time lapse in seconds */
 #define REMOVE_BACKLOGS_TIME_LAPSE 10
 
+/* Update vulnerabilities in assets time lapse in seconds */
+#define UPDATE_VULN_ASSETS_TIME_LAPSE 60
+
 /* Unconfigured sensors time lapse in seconds */
 #define UNCONFIGURED_SENSORS_TIME_LAPSE 60
 
@@ -149,7 +152,7 @@ G_BEGIN_DECLS
 //This is aproximately 20000 events in the line (they get insert into 7-8 tables more or less depending on the kind of event)
 #define MAX_STORAGE_LINES	    120000 
 
-#define TIMEBUF_SIZE                26
+#define TIMEBUF_SIZE                20
 
 #define GENERATOR_SPP_SPADE         104
 #define GENERATOR_SPP_SCAN2         117

@@ -32,20 +32,19 @@ import ansible.runner
 import ansible.playbook
 import ansible.constants as AnsibleConstants
 import ansible.callbacks as ans_callbacks
-import re
 
-from avconfig.ossimsetupconfig import AVOssimSetupConfigHandler
 
 # DEFAULT_ANSIBLE_CONFIGURATION_FILE = "/etc/ansible/ansible.cfg"
 PLAYBOOKS = {
     'REMOVE_OLD_FILES': '/etc/ansible/playbooks/maintenance/remove_files_older_than.yml',
-    'BACKUP': '/etc/ansible/playbooks/backups/do_backup.yml',
     'AGENT_STATS_PLAYBOOK': '/etc/ansible/playbooks/agent_stats.yml',
     'OSSEC_WIN_DEPLOY': '/etc/ansible/playbooks/ossec_win_deploy/main.yml',
     'UNTAR_VPN_AND_START': '/etc/ansible/playbooks/untar_vpn_and_start.yml',
     'SET_CRYPTO_FILES': '/etc/ansible/playbooks/auth/set_crypto_files.yml',
-    'ASYNC_RECONFIG':'/etc/ansible/playbooks/common/async_reconfig.yml',
-    'ASYNC_UPDATE':'/etc/ansible/playbooks/common/async_update.yml',
+    'ASYNC_RECONFIG': '/etc/ansible/playbooks/common/async_reconfig.yml',
+    'ASYNC_UPDATE': '/etc/ansible/playbooks/common/async_update.yml',
+    'ENABLE_TUNNEL': '/etc/ansible/playbooks/maintenance/reverse_tunnel.yml',
+    'DISABLE_TUNNEL': '/etc/ansible/playbooks/maintenance/reverse_tunnel_close.yml',
 }
 EVENTS = []
 CONFIG_FILE = "/etc/ossim/ossim_setup.conf"
@@ -73,7 +72,12 @@ class AVAnsibleCallbacks(object):
     # using same callbacks class for both runner and playbook
 
     def __init__(self):
+        self._lasterror = ''
         pass
+    
+    @property
+    def lasterror(self):
+        return self._lasterror
 
     def set_playbook(self, playbook):
         self.playbook = playbook
@@ -104,8 +108,10 @@ class AVAnsibleCallbacks(object):
 
     def on_task_start(self, name, is_conditional):
         EVENTS.append(['task start', [name, is_conditional]])
+        self._lasterror = ''
 
     def on_failed(self, host, results, ignore_errors):
+        self._lasterror = { host: results}
         EVENTS.append(['failed', [host, results, ignore_errors]])
 
     def on_ok(self, host, result):
@@ -176,8 +182,16 @@ class Ansible(object):
         data = runner.run()
         return data
 
-    def run_playbook(self, playbook, host_list=None, use_sudo=True, local=False, extra_vars={},
-                     ans_remote_user=AnsibleConstants.DEFAULT_REMOTE_USER, ans_remote_pass=AnsibleConstants.DEFAULT_REMOTE_PASS):
+    def run_playbook(self,
+                     playbook,
+                     host_list=None,
+                     use_sudo=True,
+                     local=False,
+                     extra_vars={},
+                     ans_remote_user=AnsibleConstants.DEFAULT_REMOTE_USER,
+                     ans_remote_pass=AnsibleConstants.DEFAULT_REMOTE_PASS,
+                     only_tags=None,
+                     skip_tags=None):
         """Runs an ansible playbook
 
         From ansible doc:
@@ -199,24 +213,31 @@ class Ansible(object):
         sudo:             if not specified per play, requests all plays use sudo mode
         inventory:        can be specified instead of host_list to use a pre-existing inventory object
         check:            don't change anything, just try to detect some potential changes
+
+        only_tags:        List of tags to include. Only run task of tasks in the include list.
+        skip_tags:        List of tags to skip. Run all task but tagged in the skip list.
         """
         use_transport = AnsibleConstants.DEFAULT_TRANSPORT
         if local:
             use_transport = "local"
             host_list = []
             host_list.append("127.0.0.1")
-        playbook = ansible.playbook.PlayBook(
-            playbook=playbook,
-            host_list=host_list if host_list != [] else self.__host_list,
-            stats=ans_callbacks.AggregateStats(),
-            callbacks=self.callbacks,
-            runner_callbacks=self.callbacks,
-            transport=use_transport,
-            sudo=use_sudo,
-            extra_vars=extra_vars,
-            remote_user=ans_remote_user,
-            remote_pass=ans_remote_pass
-        )
+        playbook = ansible.playbook.PlayBook(playbook=playbook,
+                                             host_list=host_list if host_list != [] else self.__host_list,
+                                             stats=ans_callbacks.AggregateStats(),
+                                             callbacks=self.callbacks,
+                                             runner_callbacks=self.callbacks,
+                                             transport=use_transport,
+                                             sudo=use_sudo,
+                                             extra_vars=extra_vars,
+                                             remote_user=ans_remote_user,
+                                             remote_pass=ans_remote_pass,
+                                             only_tags=only_tags,
+                                             skip_tags=skip_tags)
         playbook.SETUP_CACHE.clear()
         result = playbook.run()
+        # The result is a dict. I'm going to add
+        # The "alienvault" key with our "internal"
+        # values
+        result['alienvault'] = {'lasterror': self.callbacks.lasterror}
         return result

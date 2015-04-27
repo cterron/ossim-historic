@@ -264,7 +264,7 @@ my @sensors = ();
 #Load sensor to update profiles
 
 if ($binary_location =~ /omp\s*$/) {
-    $sql = qq{ select inet6_ntop(ip) as sIP, vns.port as port, vns.user, AES_DECRYPT(PASSWORD,'$uuid') as dpass, PASSWORD AS pass from sensor s, vuln_nessus_servers vns 
+    $sql = qq{ select inet6_ntoa(ip) as sIP, vns.port as port, vns.user, AES_DECRYPT(PASSWORD,'$uuid') as dpass, PASSWORD AS pass from sensor s, vuln_nessus_servers vns 
                 WHERE HEX(s.id)=vns.hostname AND vns.enabled=1 };
     $sth_sel=$dbh->prepare( $sql );
     $sth_sel->execute;

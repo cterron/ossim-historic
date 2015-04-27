@@ -63,6 +63,7 @@ from api.blueprints.system import license as avlicense
 from api.blueprints.system import config
 from api.blueprints.system import status as system_status
 from api.blueprints.system import otx
+from api.blueprints.system import support
 
 # Attach blueprints.
 
@@ -95,6 +96,7 @@ app.register_blueprint(network.blueprint, url_prefix=API_URL_BEGIN + 'system')
 app.register_blueprint(avlicense.blueprint, url_prefix=API_URL_BEGIN + 'system')
 app.register_blueprint(config.blueprint, url_prefix=API_URL_BEGIN + 'system')
 app.register_blueprint(otx.blueprint, url_prefix=API_URL_BEGIN + 'system')
+app.register_blueprint(support.blueprint, url_prefix=API_URL_BEGIN + 'system')
 
 # facts
 app.register_blueprint(system_status.blueprint, url_prefix=API_URL_BEGIN + 'system')

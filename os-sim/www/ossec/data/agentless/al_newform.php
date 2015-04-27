@@ -152,7 +152,7 @@ if (POST('ajax_validation_all') == TRUE || $step == 1)
 
         if (is_array($validation_errors) && !empty($validation_errors))
         {
-            $info_error = '<div>'._('We Found the following errors').':</div><div style="padding:10px;">'.implode('<br/>', $validation_errors).'</div>';
+            $info_error = '<div>'._('The following errors occurred').':</div><div style="padding:10px;">'.implode('<br/>', $validation_errors).'</div>';
         }
     }
 }

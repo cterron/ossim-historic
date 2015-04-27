@@ -143,7 +143,7 @@ switch ($type)
 		} 
 		else 
 		{
-			$link = ""; //Menu::get_menu_url("/ossim/policy/ocs_index.php", 'environment', 'assets', 'ocs_inventory');
+			$link = "";
 
 		    while (!$rg->EOF) 
 		    {			
@@ -180,7 +180,7 @@ switch ($type)
 		} 
 		else 
 		{
-			$link = ""; //Menu::get_menu_url("/ossim/policy/ocs_index.php", 'environment', 'assets', 'ocs_inventory');
+			$link = "";
 		    while (!$rg->EOF) 
 		    {
 		    

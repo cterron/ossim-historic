@@ -45,7 +45,7 @@ def get_server_stats (host, args = {}):
 
 def get_remote_server_id_from_server_ip(server_ip):
 
-    cmd = "echo \"select hex(id) from alienvault.server where server.ip=inet6_pton('%s')\" | ossim-db | tail -1" % server_ip
+    cmd = "echo \"select hex(id) from alienvault.server where server.ip=inet6_aton('%s')\" | ossim-db | tail -1" % server_ip
     response = ansible.run_module(host_list=[server_ip],
                                   module="shell",
                                   args=cmd)

@@ -329,7 +329,7 @@ class Software
         $models  = array();
 
         $query = "SELECT DISTINCT substring_index(cpe, ':', 4) as mcpe, name FROM software_cpe WHERE cpe LIKE ? AND plugin!='' GROUP BY mcpe ORDER BY name";
-        $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . '%' );
+        $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . ':%' );
 
         $rs = ($cache) ? $conn->CacheExecute($query, $param) : $conn->Execute($query, $param);
 
@@ -376,7 +376,7 @@ class Software
         $versions  = array();
 
         $query = "SELECT DISTINCT cpe, version FROM software_cpe WHERE cpe LIKE ? AND plugin!='' ORDER BY version";
-        $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . '%' );
+        $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . ':%' );
 
         $rs = ($cache) ? $conn->CacheExecute($query, $param) : $conn->Execute($query, $param);
 

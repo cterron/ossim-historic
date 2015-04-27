@@ -174,7 +174,7 @@ sim_uuid_new (void)
  * copies @str to it.
  */
 SimUuid *
-sim_uuid_new_from_bin (guchar * str)
+sim_uuid_new_from_bin (const guchar * str)
 {
   SimUuid *uuid;
   gint i;

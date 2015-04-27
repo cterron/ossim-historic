@@ -60,18 +60,49 @@ class Siem
 
     public $filters;
     
+    
+    public $tables;
+    
+    
+    public $joinable_tables;
+    
+    
+    public $perms_bypass;
+    
+    
     /**
     * Class constructor
     *
     * This function sets up the class
     */
-    public function __construct()
+    public function __construct($perms_bypass = FALSE)
     {
         $db            = new ossim_db();
         $this->conn    = $db->snort_connect();
         $this->av_conn = $db->connect();
         $this->geoloc  = new Geolocation('/usr/share/geoip/GeoLiteCity.dat');
         $this->filters = array();
+        $this->tables  = array();
+        
+        $this->joinable_tables = '/(alienvault\.plugin|alienvault\.plugin_sid|idm_data|extra_data|qry_tmp_[a-z0-9]+)/';
+        $this->left_join_rules = array(
+            'alienvault.plugin_sid' => 'LEFT JOIN alienvault.plugin_sid 
+                ON plugin_sid.plugin_id = acid_event.plugin_id AND plugin_sid.sid = acid_event.plugin_sid',
+            
+            'alienvault.plugin'     => 'LEFT JOIN alienvault.plugin
+                ON plugin.id = acid_event.plugin_id',
+                
+            'idm_data'              => 'LEFT JOIN idm_data
+                ON idm_data.event_id = acid_event.id'
+        );
+        
+        $this->perms_bypass = $perms_bypass;
+        
+        // Add asset perm filters for all queries
+        if (!$this->perms_bypass)
+        {
+            $this->process_perms();
+        }
     }
     
     /**
@@ -90,7 +121,8 @@ class Siem
         // Multiple
         if (is_array($field))
         {
-            for ($i = 0; $i < count($field); $i++) {
+            for ($i = 0; $i < count($field); $i++)
+            {
                 $_field   = $field[$i];
                 $_value   = (is_array($value)) ? $value[$i] : $value;
                 $_op      = (is_array($operator)) ? $operator[$i] : $operator;
@@ -105,6 +137,19 @@ class Siem
         
         $this->filters[] = $filter;
     }
+    
+    /**
+     * This function clears the current criteria, and reload the perms criteria if necessary
+     */
+    public function clear_criteria()
+    {
+        $this->filters = array();
+        
+        if (!$this->perms_bypass)
+        {
+            $this->process_perms();
+        }
+    }
 
     
     /**
@@ -116,8 +161,21 @@ class Siem
      */
     public function get_where_clause($field, $value, $operator = "=")
     {
+        // Set the JOIN table if needed
+        $this->set_join_table($field);
+        
+        // Joined fields
+        if ($this->is_joined($value))
+        {
+            $this->set_join_table($value);
+        }
+        // Subquery
+        elseif ($operator == 'IN')
+        {
+            $value = '('.$value.')';
+        }
         // When have to use binary conversion
-        if ($this->is_binary($field))
+        elseif ($this->is_binary($field))
         {
             $value = "UNHEX('$value')";
             // Common string
@@ -127,6 +185,36 @@ class Siem
             $value = "\"$value\"";
         }
         return "$field $operator $value";
+    }
+    
+    /**
+     * This function processes a criteria field or value to set the SQL joining tables
+     *
+     * @param string $field
+     */
+    public function set_join_table($field)
+    {
+        if (preg_match('/\./', $field))
+        {
+            $_field_sources = explode('.', $field);
+            $_database      = (count($_field_sources) > 2) ? $_field_sources[0] : '';
+            $_table         = (count($_field_sources) > 2) ? $_field_sources[1] : $_field_sources[0];
+            $join_table     = ($_database != '') ? $_database.'.'.$_table : $_table;
+            
+            if (preg_match($this->joinable_tables, $join_table))
+            {
+                if (!in_array($join_table, $this->tables))
+                {
+                    $this->tables[] = $join_table;
+                }
+            }
+            else
+            {
+                $_msg = _('The table is not allowed to join').': '.$join_table;
+                
+                Av_exception::throw_error(Av_exception::DB_ERROR, $_msg);
+            }
+        }
     }
     
     /**
@@ -153,6 +241,25 @@ class Siem
     }
     
     /**
+     * This function returns if the field is a joined value
+     *
+     * @param string $field
+     *
+     * @return bool
+     */
+    public function is_joined($value)
+    {
+        if (preg_match('/^qry_tmp/', $value))
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+    
+    /**
      * This function processes all filters (AND/OR) to get the SQL where sentence string
      *
      * @return string
@@ -167,164 +274,111 @@ class Siem
 
         return (count($ors) > 0) ? " AND ".implode(" AND ", $ors) : "";
     }
-
     
     /**
-    * This function returns join and where with a user perms
-    *
-    * @return string
-    */
-    public static function make_perms_where()
-    {
-        $where  = "";
-        $domain = Session::get_ctx_where();
-        // Asset filter
-        if ($domain != "")
-        {
-            $where .= " AND acid_event.ctx in ($domain)";
-        }
-        
-        // Asset filter
-        $host_perms = Session::get_host_where();
-        $net_perms  = Session::get_net_where();
-        
-        if ($host_perms != "")
-        {
-            $where .= " AND (acid_event.src_host in ($host_perms) OR acid_event.dst_host in ($host_perms)";
-            if ($net_perms != "") $where .= " OR acid_event.src_net in ($net_perms) OR acid_event.dst_net in ($net_perms))";
-            else                  $where .= ")";
-        }
-        elseif ($net_perms != "")
-        {
-            $where .= " AND (acid_event.src_net in ($net_perms) OR acid_event.dst_net in ($net_perms))";
-        }
-
-        return $where;
-    }
-    
-    /**
-    * This function returns true if current asset type has events
-    *
-    * @param object   $conn     Database access object
-    * @param string   $type     Asset type (host, network, group)
-    * @param string   $id       Host uuid (Hex value)
-    *
-    * @throws Exception  If a connection error occurred
-    *
-    * @return boolean
-    */
-    public static function has_events($conn, $type, $id)
-    {
-        Ossim_db::check_connection($conn);
-        
-        if ($type == "host")
-        {
-            $sql = "SELECT EXISTS(SELECT src_host as id FROM alienvault_siem.ac_acid_event WHERE src_host=UNHEX(?) AND cnt>0 UNION SELECT dst_host as id FROM alienvault_siem.ac_acid_event WHERE dst_host=UNHEX(?) AND cnt>0) as bool";
-        }
-        elseif ($type == "net")
-        {
-            $sql = "SELECT EXISTS(SELECT ac.src_host as id FROM alienvault_siem.ac_acid_event ac, alienvault.host_net_reference r WHERE ac.src_host=r.host_id AND r.net_id = UNHEX(?) AND ac.cnt>0 UNION SELECT ac.dst_host as id FROM alienvault_siem.ac_acid_event ac, alienvault.host_net_reference r WHERE ac.dst_host=r.host_id AND r.net_id = UNHEX(?) AND ac.cnt>0) as bool";
-        }
-        elseif ($type == "group")
-        {
-            // Using perms
-            $where = self::make_perms_where();
-            $sql   = "SELECT EXISTS(SELECT acid_event.src_host as id FROM alienvault_siem.ac_acid_event acid_event, alienvault.host_group_reference r WHERE acid_event.src_host=r.host_id AND r.host_group_id = UNHEX(?) AND acid_event.cnt>0 $where UNION SELECT acid_event.dst_host as id FROM alienvault_siem.ac_acid_event acid_event, alienvault.host_group_reference r WHERE acid_event.dst_host=r.host_id AND r.host_group_id = UNHEX(?) AND acid_event.cnt>0 $where) as bool";
-        }
-
-        $rs = $conn->Execute($sql, array($id, $id));
-
-        if (!$rs)
-        {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        }
-        // Total rows
-        return ($rs->fields["bool"]) ? TRUE : FALSE;
-    }
-
-    
-    /**
-     * This function executes the query to acid_event DB table and gets the events array and the total count
+     * This function processes all 'where' filters to get the SQL 'from' sentence string
      *
-     * @param int $from
-     * @param int $max
-     * 
-     * @return array(array, int)
+     * @return string
      */
-    public function get_events($from = 0, $max = 50, $order = "timestamp", $torder = "DESC")
+    public function get_filters_from()
     {
-        $where = $this->get_filters_where();
+        $join_string      = '';
+        $left_join_string = '';
         
-        $sql = "SELECT SQL_CALC_FOUND_ROWS * 
-            FROM acid_event  
-            LEFT JOIN alienvault.plugin_sid 
-            ON plugin_sid.plugin_id=acid_event.plugin_id AND plugin_sid.sid=acid_event.plugin_sid
-            LEFT JOIN idm_data
-            ON idm_data.event_id=acid_event.id 
-            LEFT JOIN alienvault.plugin
-            ON plugin.id = acid_event.plugin_id
-            WHERE 1 $where ORDER BY $order $torder LIMIT $from, $max";
-        
-        //echo "<br>QUERY: <b>$sql</b><br>";
-        
-        $foundrows = 0;
-        $list      = array();
-        
-        if (!$rs = $this->conn->Execute($sql))
+        foreach ($this->tables as $_table)
         {
-            Av_exception::write_log(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
-        }
-        else
-        {
-            if (!$rf = $this->conn->Execute("SELECT FOUND_ROWS() as total"))
+            if ($this->left_join_rules[$_table] != '')
             {
-                Av_exception::write_log(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+                $left_join_string .= ' '.$this->left_join_rules[$_table];
             }
             else
             {
-                $foundrows = $rf->fields["total"];
-            }
-
-            while (!$rs->EOF)
-            {
-                $list[] = $this->get_event_fields($rs->fields);
-                $rs->MoveNext();
+                $join_string .= ', '.$_table;
             }
         }
-
-        return array($list, $foundrows);
+        
+        return $left_join_string.$join_string;
+    }
+    
+    
+    private function process_perms()
+    {
+        $ctx_perms = Session::get_ctx_where();
+        
+        if ($ctx_perms != '')
+        {
+            $this->add_criteria('ctx', $ctx_perms, 'IN');
+        }
+        
+        $host_perms = Session::get_host_where();
+        $net_perms  = Session::get_net_where();
+        $_cr_keys   = array();
+        $_cr_vals   = array();
+        
+        if ($host_perms != '')
+        {
+            $_cr_keys[] = 'src_host';
+            $_cr_keys[] = 'dst_host';
+            $_cr_vals[] = $host_perms;
+            $_cr_vals[] = $host_perms;
+        }
+        
+        if ($net_perms != '')
+        {
+            $_cr_keys[] = 'src_net';
+            $_cr_keys[] = 'dst_net';
+            $_cr_vals[] = $net_perms;
+            $_cr_vals[] = $net_perms;
+        }
+        
+        if (!empty($_cr_keys))
+        {
+            $this->add_criteria($_cr_keys, $_cr_vals, 'IN');
+        }
     }
 
     
     /**
-     * This function executes the query to acid_event DB table and gets the events array
+     * This function executes the query to acid_event DB table and gets the events array and total
      *
-     * @param int $from
-     * @param int $max
+     * @param int    $from   [Optional]  Start limit of the query
+     * @param int    $max    [Optional]  To limit of the query
+     * @param string $order  [Optional]  Database field to order by
+     * @param string $torder [Optional]  Sorting direction
      *
-     * @return array
+     * @return array Event list and total of events in the query
      */
-    public function get_events_light($from = 0, $max = 50, $order = "timestamp", $torder = "DESC")
+    public function get_events($from = 0, $max = 50, $order = "timestamp", $torder = "DESC")
     {
+        // Look for special order fields and JOIN needed
+        if ($order != 'timestamp')
+        {
+            $_order_fields = explode(',', $order);
+            foreach ($_order_fields as $_order)
+            {
+                $this->set_join_table(trim($_order));
+            }
+        }
+        
         $where = $this->get_filters_where();
+        $joins = $this->get_filters_from();
     
-        $sql = "SELECT *
-            FROM acid_event
-            LEFT JOIN alienvault.plugin_sid
-            ON plugin_sid.plugin_id=acid_event.plugin_id AND plugin_sid.sid=acid_event.plugin_sid
-            LEFT JOIN idm_data
-            ON idm_data.event_id=acid_event.id
-            LEFT JOIN alienvault.plugin
-            ON plugin.id = acid_event.plugin_id
-            WHERE 1 $where ORDER BY $order $torder LIMIT $from, $max";
-    
-        //echo "<br>QUERY: <b>$sql</b><br>";
-    
+        $sql = "SELECT *, acid_event.id AS eid
+                FROM acid_event $joins
+                WHERE 1 $where 
+                ORDER BY $order $torder 
+                LIMIT $from, $max";
+        
+        if (file_exists('/tmp/debug_siem'))
+        {
+            error_log("Siem::get_events():$sql\n", 3, "/tmp/siem");
+        }
+        
         $list = array();
     
         if (!$rs = $this->conn->Execute($sql))
         {
-            Av_exception::write_log(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
         }
         else
         {
@@ -335,8 +389,105 @@ class Siem
                 $rs->MoveNext();
             }
         }
+        
+        $total = $this->get_events_total();
+        
+        return array($list, $total);
+    }
 
-        return $list;
+    /**
+     * This function get events from stored procedure
+     *
+     * @param string $id          asset uuid or tmp table name
+     * @param string $type        host, group or network
+     * @param int    $from        from to limit query
+     * @param int    $max         number of record to limit the query
+     * @param string $order       Database field to order by
+     * @param string $search_str  plugin sid name filter
+     *
+     * @return array
+     */
+    public function get_events_sp($id, $type, $from, $max, $order, $search_str)
+    {
+        $list = array();
+        
+        $total = $this->get_events_total_sp($id, $type, $search_str);
+        
+        if ($total == 0)
+        {
+            return array($list, 0);
+        }
+
+        $params = array(
+            $type,
+            $id,
+            $from,
+            $max,
+            $order,
+            $search_str
+        );
+        $rs = $this->conn->Execute("CALL alienvault_siem.get_events(?, ?, ?, ?, ?, ?)", $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+        }
+        else
+        {
+            $rows = array();
+            while (!$rs->EOF)
+            {
+                $rows[] = $rs->fields;
+                $rs->MoveNext();
+            }
+            $rs->free();
+            
+            foreach ($rows as $row)
+            {
+                $list[] = $this->get_event_fields($row);
+            }
+        }
+        
+        $total = $this->get_events_total_sp($id, $type, $search_str);
+
+        return array($list, $total);
+    }
+    
+    
+    /**
+     * This function get the total number of events from stored procedure
+     *
+     * @param string $id          asset uuid or tmp table name
+     * @param string $type        host, group or network
+     * @param string $search_str  plugin sid name filter
+     *
+     * @return integer
+     */
+    public function get_events_total_sp($id, $type, $search_str)
+    {
+        $total = 0;
+        
+        $params = array(
+            $type,
+            $id,
+            $search_str
+        );
+        $rs = $this->conn->Execute("CALL alienvault_siem.get_event_count(?, ?, ?)", $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+        }
+        else
+        {
+            if (!$rs->EOF)
+            {
+                $total = intval($rs->fields['events']);
+            }
+            $rs->free();
+        }
+        
+        return $total;
     }
     
     /**
@@ -348,6 +499,9 @@ class Siem
      *
      * @return array(array, int)
      */
+     /*****************************************************************************
+     *********************** This function is not being used yet ******************
+     *****************************************************************************/
     public function get_events_grouped($groupby = "signature", $from = 0, $max = 50)
     {
         $where = $this->get_filters_where();
@@ -367,13 +521,13 @@ class Siem
     
         if (!$rs = $this->conn->Execute($sql))
         {
-            Av_exception::write_log(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
         }
         else
         {
             if (!$rf = $this->conn->Execute("SELECT FOUND_ROWS() AS total"))
             {
-                Av_exception::write_log(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+                Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
             }
             else
             {
@@ -388,6 +542,56 @@ class Siem
         }
     
         return array($list, $foundrows);
+    }
+    
+    /**
+     *
+     * @param unknown_type $conn
+     * @param unknown_type $filters
+     * @return number
+     */
+    public function get_events_total()
+    {
+        $count  = 0;
+        $where  = '';
+        $use_ac = TRUE;
+        
+        $where  = $this->get_filters_where();
+        $joins  = $this->get_filters_from();
+    
+        if (preg_match('/ossim_risk_a/', $where))
+        {
+            $use_ac = FALSE;
+        }
+    
+        if ($use_ac)
+        {
+            $sql = "SELECT ifnull(sum(cnt),0) as total FROM ac_acid_event AS acid_event $joins WHERE 1 $where";
+        }
+        else
+        {
+            $sql = "SELECT count(acid_event.id) as total FROM acid_event $joins WHERE 1 $where";
+        }
+        
+        
+        if (file_exists('/tmp/debug_siem'))
+        {
+            error_log("Siem::get_events_total():$sql\n", 3, "/tmp/siem");
+        }
+        
+        
+        $rs = $this->conn->Execute($sql);
+    
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+        }
+        else
+        {
+            $count = $rs->fields["total"];
+        }
+        
+        return $count;
     }
 
     
@@ -433,7 +637,7 @@ class Siem
      * 
      * WARNING: $tmpconn and $where parameters must be removed
      */
-    public function get_graph_data($tmpconn, $where)
+    public function get_graph_data($tmpconn, $where, $ejoin='')
     {
         // Get the current timestamp filter in the Siem object
         list($date_from, $date_to) = $this->get_dates_by_filter();
@@ -460,6 +664,7 @@ class Siem
         $tax_join = (preg_match('/plugin_sid\./', $where)) ? 'LEFT JOIN alienvault.plugin_sid 
                 ON acid_event.plugin_id=plugin_sid.plugin_id 
                 AND acid_event.plugin_sid=plugin_sid.sid' : '';
+        $tax_join .= ($ejoin != '') ? $ejoin : '';
         
         // Join needed for reputation filters
         $rep_join = (preg_match('/reputation\_data\./', $where)) ? ', alienvault_siem.reputation_data' : '';
@@ -470,6 +675,25 @@ class Siem
         // Database selector to fix the 'device' filter
         $where = preg_replace('/FROM device/', 'FROM alienvault_siem.device', $where);
         
+        // Use ac_acid_event?
+        if ($extra_join == '' && $rep_join == '' && !preg_match("/idm_data|ip_proto|layer4|ossim_|_hostname|_mac/",$where))
+        {
+            $counter = 'SUM(acid_event.cnt)';
+            if (!preg_match("/ip_src|ip_dst/",$where))
+            {
+                $tables  = "alienvault_siem.ac_acid_event acid_event $tax_join";
+            }
+            else
+            {
+                $tables  = "alienvault_siem.po_acid_event acid_event $tax_join";
+            }
+        }
+        else
+        {
+            $counter = 'COUNT(acid_event.id)';
+            $tables  = "alienvault_siem.acid_event $tax_join $rep_join $extra_join";
+        }
+        
         // WARNING: remove alienvault_siem database selection from query when be posible
         // more than 1 month
         if ($diff > 2678400)
@@ -477,9 +701,9 @@ class Siem
             $jump = 0;
             $key  = "M Y";
             
-            $sqlgraph = "SELECT COUNT(acid_event.id) as num_events,
+            $sqlgraph = "SELECT $counter as num_events,
             DATE_FORMAT(convert_tz(timestamp,'+00:00','$tzc'), '%b %Y') as label
-            FROM alienvault_siem.acid_event $tax_join $rep_join $extra_join WHERE 1 $where GROUP BY label";
+            FROM $tables WHERE 1 $where GROUP BY label";
         }
         // more than 1 day
         elseif ($diff >= 86400)
@@ -487,9 +711,9 @@ class Siem
             $jump = 86400;
             $key  = "d M";
             
-            $sqlgraph = "SELECT COUNT(acid_event.id) as num_events,
+            $sqlgraph = "SELECT $counter as num_events,
             DATE_FORMAT(convert_tz(timestamp,'+00:00','$tzc'), '%d %b') as label
-            FROM alienvault_siem.acid_event $tax_join $rep_join $extra_join WHERE 1 $where GROUP BY label";
+            FROM $tables WHERE 1 $where GROUP BY label";
         }
         // less than 1 day
         elseif ($diff < 86400)
@@ -497,9 +721,9 @@ class Siem
             $jump = 3600;
             $key  = "G\h";
             
-            $sqlgraph = "SELECT COUNT(acid_event.id) as num_events,
+            $sqlgraph = "SELECT $counter as num_events,
             CONCAT(DATE_FORMAT(convert_tz(timestamp,'+00:00','$tzc'), '%k'), 'h') as label 
-            FROM alienvault_siem.acid_event $tax_join $rep_join $extra_join WHERE 1 $where GROUP BY label";
+            FROM $tables WHERE 1 $where GROUP BY label";
         }
         
         // Initialize the graph data
@@ -521,9 +745,12 @@ class Siem
                 $d += $jump; // next date
             }
         }
-        
-        //echo "<br>QUERY: <b>$sqlgraph</b><br>";
-    
+
+        if (file_exists('/tmp/debug_siem'))
+        {
+            error_log("Siem::get_graph_data():$sqlgraph\n", 3, "/tmp/siem");
+        }
+
         $rs = $tmpconn->Execute($sqlgraph);
 
         if (!$rs)
@@ -546,13 +773,80 @@ class Siem
     public function get_event_fields($row)
     {
         $fields = array();
+        $eid    = strtoupper(bin2hex($row['eid']));
+        
+        $fields["eid"] = $eid;
+        
+        // Extra Data
+        $sql   = "SELECT * FROM extra_data WHERE event_id = UNHEX(?)";
+        $rs    = $this->conn->Execute($sql, array($eid));
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+        }
+        else
+        {
+            if (!$rs->EOF)
+            {
+                $row['filename']  = $rs->fields['filename'];
+                $row['username']  = $rs->fields['username'];
+                $row['password']  = $rs->fields['password'];
+                $row['userdata1'] = $rs->fields['userdata1'];
+                $row['userdata2'] = $rs->fields['userdata2'];
+                $row['userdata3'] = $rs->fields['userdata3'];
+                $row['userdata4'] = $rs->fields['userdata4'];
+                $row['userdata5'] = $rs->fields['userdata5'];
+                $row['userdata6'] = $rs->fields['userdata6'];
+                $row['userdata7'] = $rs->fields['userdata7'];
+                $row['userdata8'] = $rs->fields['userdata8'];
+                $row['userdata9'] = $rs->fields['userdata9'];
+            }
+        }
+        
+        
+        // IDM Data
+        $srcud = array();
+        $dstud = array();
+        $sql   = "SELECT * FROM idm_data WHERE event_id = UNHEX(?)";
+        $rs    = $this->conn->Execute($sql, array($eid));
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+        }
+        else
+        {
+            if (!$rs->EOF)
+            {
+                $row["username"] = trim($rs->fields["username"]);
+                $row["domain"]   = trim($rs->fields["domain"]);
+                
+                if (!empty($row["username"]))
+                {
+                    $idm_u = $row["username"];
+                    $idm_d = ($row["domain"] != '') ? "@".$row["domain"] : '';
+                
+                    if (intval($row["from_src"]))
+                    {
+                        $srcud[] = Util::htmlentities($idm_u.$idm_d);
+                    }
+                    else
+                    {
+                        $dstud[] = Util::htmlentities($idm_u.$idm_d);
+                    }
+                }
+            }
+        }
+        
+        $fields["src_userdomain"] = implode(", ",$srcud);
+        $fields["dst_userdomain"] = implode(", ",$dstud);
+        
         
         // Signature
         $signature = _("Unknown Event");
         if ($row['plugin_id'] != "" && $row['plugin_sid'] != "")
         {
-            $sql = "SELECT name FROM alienvault.plugin_sid WHERE plugin_id=".$row['plugin_id']." AND sid=".$row['plugin_sid'];
-            $rs  = $this->conn->Execute($sql); 
+            $sql = "SELECT name FROM alienvault.plugin_sid WHERE plugin_id = ? AND sid = ?";
+            $rs  = $this->conn->Execute($sql, array($row['plugin_id'], $row['plugin_sid'])); 
             if (!$rs)
             {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
@@ -561,7 +855,7 @@ class Siem
             {
                 if (!$rs->EOF)
                 {
-                    $signature = $rs->fields['name'];
+                    $signature = $this->translate_signature($rs->fields['name'], $row);
                 }
             }
         }
@@ -572,8 +866,8 @@ class Siem
         $ds = _("Unknown DS");
         if ($row['plugin_id'] != "")
         {
-            $sql = "SELECT name FROM alienvault.plugin WHERE id=".$row['plugin_id'];
-            $rs  = $this->conn->Execute($sql);
+            $sql = "SELECT name FROM alienvault.plugin WHERE id = ?";
+            $rs  = $this->conn->Execute($sql, array($row['plugin_id']));
             if (!$rs)
             {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
@@ -641,6 +935,8 @@ class Siem
         {
             $source = $fields['src_name'];
         }
+        $source = Util::wordwrap($source, 30, '<br/>');
+        
         $fields['source']   = "<div class='HostReportMenu' id='".$fields['src_ip'].";".$fields['src_name'].";".$fields['src_host']."' style='".(($src_output['is_internal']) ? "font-weight:bold" : "")."'>"
                             .(($src_img != "") ? $src_img." ".$source : $source)."</div>";
         
@@ -661,6 +957,8 @@ class Siem
         {
             $destination = $fields['dst_name'];
         }
+        $destination = Util::wordwrap($destination, 30, '<br/>');
+        
         $fields['destination'] = "<div class='HostReportMenu' id='".$fields['dst_ip'].";".$fields['dst_name'].";".$fields['dst_host']."' style='".(($dst_output['is_internal']) ? "font-weight:bold" : "")."'>"
                                 .(($dst_img != "") ? $dst_img." ".$destination : $destination)."</div>";        
         
@@ -680,7 +978,8 @@ class Siem
             $risk = "L";
         }
         
-        $fields['risk'] = $risk;
+        $fields['risk']    = $risk;
+        $fields['maxrisk'] = $maxrisk;
         
         // Username@domain
         $fields['username'] = $row['idm_data.username'];
@@ -688,6 +987,118 @@ class Siem
         
         return $fields;
     }
+    
+    private function translate_signature($name, $arr)
+    {
+        $translations = array(
+            "/SRC_IP/"     => 'inet_ntop($arr["ip_src"])',
+            "/DST_IP/"     => 'inet_ntop($arr["ip_dst"])',
+            "/SRC_PORT/"   => '$arr["layer4_sport"]',
+            "/DST_PORT/"   => '$arr["layer4_dport"]',
+            "/PROTOCOL/"   => 'Protocol::get_protocol_by_number($arr["ip_proto"], TRUE)',
+            "/PLUGIN_ID/"  => '$arr["plugin_id"]',
+            "/PLUGIN_SID/" => '$arr["plugin_sid"]',
+            "/FILENAME/"   => 'Util::htmlentities($arr["filename"])',
+            "/USERNAME/"   => 'Util::htmlentities($arr["username"])',
+            "/USERDATA1/"  => 'Util::htmlentities($arr["userdata1"])',
+            "/USERDATA2/"  => 'Util::htmlentities($arr["userdata2"])',
+            "/USERDATA3/"  => 'Util::htmlentities($arr["userdata3"])',
+            "/USERDATA4/"  => 'Util::htmlentities($arr["userdata4"])',
+            "/USERDATA5/"  => 'Util::htmlentities($arr["userdata5"])',
+            "/USERDATA6/"  => 'Util::htmlentities($arr["userdata6"])',
+            "/USERDATA7/"  => 'Util::htmlentities($arr["userdata7"])',
+            "/USERDATA8/"  => 'Util::htmlentities($arr["userdata8"])',
+            "/USERDATA9/"  => 'Util::htmlentities($arr["userdata9"])'
+        );
+
+        foreach($translations as $k => $replacement)
+        {
+            $pattern = '$name = preg_replace("' . $k . '", %s, $name);';
+            $str = sprintf($pattern, $replacement);
+            eval($str);
+        }
+
+        return $name;
+    }
+    
+    
+    /********************************************************************
+     *********************** STATIC METHODS *****************************
+     *******************************************************************/
+    
+    /**
+     * This function returns join and where with a user perms
+     *
+     * @return string
+     */
+    public static function make_perms_where()
+    {
+        $where  = "";
+        $domain = Session::get_ctx_where();
+        // Asset filter
+        if ($domain != "")
+        {
+            $where .= " AND acid_event.ctx in ($domain)";
+        }
+    
+        // Asset filter
+        $host_perms = Session::get_host_where();
+        $net_perms  = Session::get_net_where();
+    
+        if ($host_perms != "")
+        {
+            $where .= " AND (acid_event.src_host in ($host_perms) OR acid_event.dst_host in ($host_perms)";
+            if ($net_perms != "") $where .= " OR acid_event.src_net in ($net_perms) OR acid_event.dst_net in ($net_perms))";
+            else                  $where .= ")";
+        }
+        elseif ($net_perms != "")
+        {
+            $where .= " AND (acid_event.src_net in ($net_perms) OR acid_event.dst_net in ($net_perms))";
+        }
+    
+        return $where;
+    }
+    
+    /**
+     * This function returns true if current asset type has events
+     *
+     * @param object   $conn     Database access object
+     * @param string   $type     Asset type (host, network, group)
+     * @param string   $id       Host uuid (Hex value)
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return boolean
+     */
+    public static function has_events($conn, $type, $id)
+    {
+        Ossim_db::check_connection($conn);
+    
+        if ($type == "host")
+        {
+            $sql = "SELECT EXISTS(SELECT src_host as id FROM alienvault_siem.ac_acid_event WHERE src_host=UNHEX(?) UNION SELECT dst_host as id FROM alienvault_siem.ac_acid_event WHERE dst_host=UNHEX(?)) as bool";
+        }
+        elseif ($type == "net")
+        {
+            $sql = "SELECT EXISTS(SELECT ac.src_host as id FROM alienvault_siem.ac_acid_event ac, alienvault.host_net_reference r WHERE ac.src_host=r.host_id AND r.net_id = UNHEX(?) UNION SELECT ac.dst_host as id FROM alienvault_siem.ac_acid_event ac, alienvault.host_net_reference r WHERE ac.dst_host=r.host_id AND r.net_id = UNHEX(?)) as bool";
+        }
+        elseif ($type == "group")
+        {
+            // Using perms
+            $where = self::make_perms_where();
+            $sql   = "SELECT EXISTS(SELECT acid_event.src_host as id FROM alienvault_siem.ac_acid_event acid_event, alienvault.host_group_reference r WHERE acid_event.src_host=r.host_id AND r.host_group_id = UNHEX(?) $where UNION SELECT acid_event.dst_host as id FROM alienvault_siem.ac_acid_event acid_event, alienvault.host_group_reference r WHERE acid_event.dst_host=r.host_id AND r.host_group_id = UNHEX(?) $where) as bool";
+        }
+    
+        $rs = $conn->Execute($sql, array($id, $id));
+    
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        // Total rows
+        return ($rs->fields["bool"]) ? TRUE : FALSE;
+    }
+    
 }
 
 /* End of file siem.inc */

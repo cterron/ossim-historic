@@ -96,7 +96,7 @@ update_proxy_port=disabled
 update_proxy_user=disabled
 
 [vpn]
-vpn_infraestructure=yes
+vpn_infraestructure=no
 vpn_net=10.67.68
 vpn_netmask=255.255.255.0
 vpn_port=33800

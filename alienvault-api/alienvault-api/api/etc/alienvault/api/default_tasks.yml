@@ -1,0 +1,267 @@
+# DO NOT MODIFY THIS FILE.
+# AlienVault static tasks.
+# This is provided by the alienvault-api package.
+
+- name: "check_ansible_components"
+  task: "celerymethods.tasks.system_tasks.check_ansible_components"
+  args: []
+  kwargs: {}
+  interval:
+    every: 5
+    period: "minutes"
+  signature: "3449bfdbf114d498774dee94a5075e9ca385e4f913fb7f87969c54d79eeaf878"
+  enabled: True
+
+- name: "run_triggers"
+  task: "celerymethods.tasks.system_tasks.run_triggers"
+  args: []
+  kwargs: {}
+  interval:
+    every: 5
+    period: "minutes"
+  signature: "88ba50d849994c232b31a928f6f79755c05fa7098fb53290ce3208741c6fb707"
+  enabled: True
+
+- name: "configuration_backup"
+  task: "celerymethods.tasks.backup_tasks.backup_configuration_all_systems"
+  args: []
+  kwargs: {}
+  crontab:
+    minute: 0
+    hour: 7
+    day_of_week: '*'
+    day_of_month: '*'
+    month_of_year: '*'
+  signature: "8f08c7021d4bac2714d20c53b4e9a3c9caad8556667a20d77046be05531815b8"
+  enabled: True
+
+- name: "logger_clean_up"
+  task: "celerymethods.tasks.maintenance.clean_old_loggger_entries"
+  args: []
+  kwargs: {}
+  crontab:
+    minute: 0
+    hour: 8
+    day_of_week: '*'
+    day_of_month: '*'
+    month_of_year: '*'
+  signature: "183f77ce06327a86d6f1d7c17a5494e7fccbc117a2a614ca256b140da2541bfb"
+  enabled: True
+
+- name: "celery_maintenance"
+  task: "celerymethods.tasks.celery_tasks.cleanup_db_celery_jobs"
+  args: []
+  kwargs: {}
+  crontab:
+    minute: 0
+    hour: 6
+    day_of_week: '*'
+    day_of_month: '*'
+    month_of_year: '*'
+  signature: "2a48776c87672aeec556dab1c52e6575b809bda52bab97bcede0f5532fe3fb6e"
+  enabled: True
+
+- name: "backup_maintenance"
+  task: "celerymethods.tasks.maintenance.remove_old_database_files"
+  args: []
+  kwargs: {}
+  interval:
+    every: 15
+    period: "minutes"
+  signature: "88163d421283f67ff1276639c663f3f45975357b7d4a213852ab88c28424aeec"
+  enabled: True
+
+- name: "system_cpu_load"
+  task: "celerymethods.tasks.monitor_tasks.monitor_system_cpu_load"
+  args: []
+  kwargs: {}
+  interval:
+    every: 15
+    period: "minutes"
+  signature: "9ce7c3eeaa768bb6e42b82d53720a6654a0fb2f9599f072454111615db6a4602"
+  enabled: True
+
+- name: "sensor_get_dropped_packages"
+  task: "celerymethods.tasks.monitor_tasks.monitor_sensor_dropped_packages"
+  args: []
+  kwargs: {}
+  interval:
+    every: 5
+    period: "minutes"
+  signature: "03bf2234aa2f7c57bc79d41996daee3884edc1045f4ea66db6da8cdc8ba367d5"
+  enabled: True
+
+- name: "asset_log_activity"
+  task: "celerymethods.tasks.monitor_tasks.monitor_asset_log_activity"
+  args: []
+  kwargs: {}
+  interval:
+    every: 1
+    period: "hours"
+  signature: "7d012d69b562f82768412ae3bd314e93c6dbc85d05940528e19143f1c1cbf713"
+  enabled: True
+
+- name: "monitor_system_disk_usage"
+  task: "celerymethods.tasks.monitor_tasks.monitor_system_disk_usage"
+  args: []
+  kwargs: {}
+  interval:
+    every: 15
+    period: "minutes"
+  signature: "8a53994862d0561973bc8d3795a089027cfa49cc9f4d552f8e8e098db518aa39"
+  enabled: True
+
+- name: "monitor_system_dns"
+  task: "celerymethods.tasks.monitor_tasks.monitor_system_dns"
+  args: []
+  kwargs: {}
+  interval:
+    every: 15
+    period: "minutes"
+  signature: "f3f5080f033228b0c7ed55a5154e888d8d873d97ab12bb5996cd0d1f857114b9"
+  enabled: True
+
+- name: "monitor_remote_certificates"
+  task: "celerymethods.tasks.monitor_tasks.monitor_remote_certificates"
+  args: []
+  kwargs: {}
+  interval:
+    every: 15
+    period: "minutes"
+  signature: "da28db0e440a2e45364d87603808a3f80283630709ed690c52eabdddb7155338"
+  enabled: True
+
+- name: "monitor_retrieves_remote_info"
+  task: "celerymethods.tasks.monitor_tasks.monitor_retrieves_remote_info"
+  args: []
+  kwargs: {}
+  interval:
+    every: 5
+    period: "minutes"
+  signature: "aed62a14ea411e11e2b8618cb9999d949e5216a0331dba941159ca7207a11f2b"
+  enabled: True
+
+- name: "monitor_plugins_version"
+  task: "celerymethods.tasks.monitor_tasks.monitor_plugins_version"
+  args: []
+  kwargs: {}
+  interval:
+    every: 1
+    period: "days"
+  signature: "b07d1bda018a3a06d7dd47b18dff2f0d01db796d2649780a296676d36e65dd15"
+  enabled: True
+
+- name: "sync_databases"
+  task: "celerymethods.tasks.system_tasks.sync_databases"
+  args: []
+  kwargs: {}
+  interval:
+    every: 2
+    period: "minutes"
+  signature: "56e132f70af2ba2198fcc346019c294ab888fff5b06b1fae489e7b022596d125"
+  enabled: True
+
+- name: "monitor_check_pending_updates"
+  task: "celerymethods.tasks.monitor_tasks.monitor_check_pending_updates"
+  args: []
+  kwargs: {}
+  interval:
+    every: 1
+    period: "days"
+  signature: "ab121b5041aef495e4733a11786b50316cef289933482ba785692265f9057cc9"
+  enabled: True
+
+- name: "launch_compliance"
+  task: "celerymethods.tasks.maintenance.launch_compliance_procedure"
+  args: []
+  kwargs: {}
+  interval:
+    every: 4
+    period: "hours"
+  signature: "f93d3b103318bbb38b8ef98d43666873ec616a57bf42882bbafc2e1114062bdc"
+  enabled: True
+
+- name: "monitor_plugin_integrity"
+  task: "celerymethods.tasks.monitor_tasks.monitor_check_plugin_integrity"
+  args: []
+  kwargs: {}
+  interval:
+    every: 1
+    period: "days"
+  signature: "e9b85c53c48965c95d4f100f85240627a4aee01a32a72829b6fa6808442f9b66"
+  enabled: True
+
+- name: "monitor_check_platform_telemetry_data"
+  task: "celerymethods.tasks.monitor_tasks.monitor_check_platform_telemetry_data"
+  args: []
+  kwargs: {}
+  crontab:
+    minute: 0
+    hour: 2
+    day_of_week: '0'
+    day_of_month: '*'
+    month_of_year: '*'
+  signature: "03ed23325381bdfb74aa60f77aae30557d99ddae21d7114abcc9ed11c3492883"
+  enabled: True
+
+- name: "check_mcserver_messages"
+  task: "celerymethods.tasks.monitor_tasks.monitor_download_mcserver_messages"
+  args: []
+  kwargs: {}
+  interval:
+    every: 60
+    period: "minutes"
+  signature: "d573b85ecf5ce253b6aadd6959e296d7e7a4b99319a99b4e315c2427751a98a1"
+  enabled: True
+
+- name: "monitor_system_check_db_is_innodb"
+  task: "celerymethods.tasks.monitor_tasks.monitor_system_check_db_is_innodb"
+  args: []
+  kwargs: {}
+  interval:
+    every: 60
+    period: "minutes"
+  signature: "abcaff2f78dd446de761b6b7f6c724fb2d063eb93cdede08f2d2dd578992e602"
+  enabled: True
+
+- name: "monitor_server_eps_stats"
+  task: "celerymethods.tasks.monitor_tasks.monitor_server_eps_stats"
+  args: []
+  kwargs: {}
+  interval:
+    every: 60
+    period: "minutes"
+  signature: "189f5e94e7c07cc9b8af0c8e1b1a1ed23940b868c41ecfe310d750f0febc98e3"
+  enabled: True
+
+- name: "monitor_web_ui_data"
+  task: "celerymethods.tasks.monitor_tasks.monitor_web_ui_data"
+  args: []
+  kwargs: {}
+  interval:
+    every: 60
+    period: "minutes"
+  signature: "2a5601ab3354d7849e4beac5f24a90e4b1f25616ba2ae978a1fe527afef3b902"
+  enabled: True
+
+- name: "monitor_support_tunnels"
+  task: "celerymethods.tasks.monitor_tasks.monitor_support_tunnels"
+  args: []
+  kwargs: {}
+  interval:
+    every: 60
+    period: "minutes"
+  signature: "29281c9515a976977e1f5f0c53879b926ec87b5040505f83ee169025128f3b7b"
+  enabled: True
+
+- name: "monitor_system_reboot_needed"
+  task: "celerymethods.tasks.monitor_tasks.monitor_system_reboot_needed"
+  args: []
+  kwargs: {}
+  interval:
+    every: 60
+    period: "minutes"
+  signature: "2f90d5ebfa8d40fed803eb9ec8c9a8299ecf43f4bf4ad950de2cb32a69af789a"
+  enabled: True
+
+

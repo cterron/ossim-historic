@@ -9,7 +9,6 @@
 *
 *
 1####Vulnerabilities Report####ossim/vulnmeter/index.php?m_opt=environment&sm_opt=vulnerabilities&widget_mode=1
-2####Risk Metrics####ossim/control_panel/global_score.php?range=day
 3####Risk Maps####ossim/risk_maps/view.php?m_opt=dashboard&sm_opt=riskmaps
 4####Alarms####ossim/alarm/alarm_console.php?m_opt=analysis&sm_opt=alarms&hide_closed=1
 5####Tickets####ossim/incidents/index.php?m_opt=analysis&sm_opt=tickets

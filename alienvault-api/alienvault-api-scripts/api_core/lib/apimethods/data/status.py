@@ -27,125 +27,123 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from sqlalchemy import desc, asc, or_
-from traceback import format_exc
 from apimethods.utils import get_bytes_from_uuid
-from apimethods.decorators import require_db
 
-import api_log
-import db
-from db.utils import paginate
-from db.models.alienvault_api import Current_Status, Status_Message, Status_Action
+from db.methods.data import (get_current_status_messages,
+                             set_current_status_message_as_viewed,
+                             set_current_status_message_as_suppressed,
+                             get_current_status_message_from_id,
+                             get_current_status_messages_stats)
 
-from sqlalchemy.orm import aliased
+from db.methods.data import (load_mcserver_messages,
+                             delete_messages,
+                             db_insert_current_status_message)
 
-@require_db
-def get_status_messages(component_id=None, level=None, orderby=None, page=None,
-                        page_row=None, order_desc=None, component_type=None, message_id=None):
+from db.methods.system import get_system_id_from_local
 
-    query = db.session.query(Current_Status)
-    if orderby is not None:
-        if orderby != 'level':
-            if order_desc is not None and order_desc != 'true':
-                query = query.order_by(asc(orderby))
-            else:
-                query = query.order_by(desc(orderby))
-        else:
-            # level case
-            alias = aliased(Status_Message)
-            if order_desc is not None and not order_desc != 'true':
-                query = query.join(alias, Status_Message).order_by(desc(alias.level))
-            else:
-                query = query.join(alias, Status_Message).order_by(asc(alias.level))
 
-    query = query.order_by(asc('viewed'))
+def get_status_messages(component_id=None,
+                        message_level=None,
+                        order_by=None,
+                        page=None,
+                        page_row=None,
+                        order_desc=None,
+                        component_type=None,
+                        message_id=None,
+                        message_type=None,
+                        search=None,
+                        only_unread=None,
+                        login_user=None,
+                        is_admin=False):
+    """Returns the list of current_status messages matching the given criteria.
+    Args:
+        component_id(UUID str): Component ID related with the message
+        level([str]): Message level
+        order_by(str): Current status field by which you want to sort the results.
+        page(int): Page number
+        page_row(int): Number of items per page
+        order_desc(Boolean or None): Specify whether you want to sort the results in descendig order or not.
+        component_type(str): Component Type related with the message
+        message_id(UUID str): The message ID you are looking for
+        message_type([str]): Kind of message you want to retrieve.
+        search(str): It's a free text to search for message title
+        only_unread(Boolean or None): If true, retrieve only unread messages
+        login_user (admin): logged user on the system
+    Returns:
+        A tuple (boolean,data) where the first argument indicates whether the operation went well or not,
+        and the second one contains the data, in case the operation went wll or an error string otherwise
 
-    if component_id is not None:
-        query = query.filter(Current_Status.component_id == get_bytes_from_uuid(component_id))
-    if message_id is not  None:
-        query  = query.filter(Current_Status.message_id == message_id)
-    if level is not None:
-        filter = [Current_Status.message.has(level=x) for x in level]
-        query = query.filter(or_(*filter))
+    """
+    success, data = get_current_status_messages(component_id, message_level, order_by, page, page_row, order_desc,
+                                                component_type, message_id, message_type, search, only_unread,
+                                                login_user, is_admin)
+    if not success:
+        return False, "Couldn't retrieve status messages from the database"
 
-    if component_type is not None:
-        query = query.filter(Current_Status.component_type == component_type)
+    return True, {'messages': data['messages'], 'total': data['total']}
 
-    msgs = {}
-    total = 0
-    try:
-        if page is None: #return all
-            data = query.all()
-            msgs = [x.serialize for x in data]
-            total = len(data)
-        else:
-            current_page = paginate(query, page, page_row, error_out=False)
-            msgs = [x.serialize for x in current_page['items']]
-            total = current_page['total']
 
-    except Exception as err:
-        api_log.error("status: get_status_messages: %s" % format_exc())
-        return False, "Internal error %s" % str(err)
+def get_status_messages_stats(search=None, only_unread=False, login_user=None, is_admin=False):
+    """
+    Retrieves a list of current status messages stats
+    :return: (bool, {stats, total})
+    """
+    success, data = get_current_status_messages_stats(search, only_unread, login_user, is_admin)
 
-    return True, {'messages': msgs, 'total': total}
+    if not success:
+        return False, "Couldn't retrieve status messages statistics from the database"
+    stats = data['stats']
+    return True, {'stats': stats, 'total': len(stats)}
 
-@require_db
-def put_status_message(message_id, component_id, viewed):
 
-    component_id_bin = get_bytes_from_uuid(component_id)
+def set_status_message_as_viewed(status_message_id, viewed):
+    """Sets the given status message as viewed"""
+    return set_current_status_message_as_viewed(status_message_id, viewed)
 
-    try:
-        status_message = db.session.query(Current_Status).filter(Current_Status.message_id == message_id,
-                                                                        Current_Status.component_id == component_id_bin).one()
-    except NoResultFound, msg:
-        api_log.error("No Result: %s" % str(msg))
-        return (False, "No result: Bad message_id, component_id")
-    except MultipleResultsFound, msg:
-        api_log.error("Multiple results: %s" % msg)
-        return (False, "Multiple Results: Bad message_id, component_id")
-    except Exception, msg:
-        db.session.rollback()
-        return (False, "Cannot retrieve status message")
 
-    status_message.viewed = viewed
+def set_status_message_as_suppressed(status_message_id, suppressed):
+    """Sets the current status message as suppressed"""
+    return set_current_status_message_as_suppressed(status_message_id, suppressed)
 
-    try:
-        db.session.begin()
-        db.session.merge(status_message)
-        db.session.commit()
-    except Exception, msg:
-        db.session.rollback()
-        api_log.error("message: put_status_message: Cannot commit status_message: %s" % str(msg))
-        return (False, "Cannot update status message")
 
-    return (True, None)
-
-@require_db
 def get_status_message_by_id(message_id, is_admin=False):
+    return get_current_status_message_from_id(message_id)
 
-    try:
-        status_message = db.session.query(Status_Message).filter(Status_Message.id == message_id).one()
-    except NoResultFound:
-        return (False, "No message found with id '%d'" % message_id)
-    except MultipleResultsFound:
-        return (False, "More than one message found with id '%d'" % message_id)
-    except Exception, msg:
-        db.session.rollback()
-        return (False, "Unknown error while querying for status message '%d': %s" % (message_id, str(msg)))
 
-    # Assign the action '0' when the user does not have an administrator role.
-    if not is_admin:
-        try:
-            action = db.session.query(Status_Action).filter(Status_Action.action_id == 0).one()
-        except NoResultFound, msg:
-            return (False, "No action found with id '0'")
-        except MultipleResultsFound, msg:
-            return (False, "More than one action found with id '0'")
-        except Exception, msg:
-            db.session.rollback()
-            return (False, "Unknown error while querying for status message '0': %s" % str(msg))
-        status_message.actions = [action]
+def load_external_messages_on_db(messages):
+    """Loads the downloaded messages into the database"""
+    message_list = []
+    messages_to_be_removed = []
+    for message in messages:
+        msg_id_binary = get_bytes_from_uuid(str(message['msg_id']))
+        if message['status'] == 'delete':
+            messages_to_be_removed.append(msg_id_binary)
+            continue
+        message_list.append(message)
+    success = True
+    data = ""
+    if len(message_list) > 0:
+        success, data = load_mcserver_messages(message_list)
+    success_remove = True
+    data_remove = ""
+    if len(messages_to_be_removed) > 0:
+        success_remove, data_remove = delete_messages(messages_to_be_removed)
+    return ((success and success_remove), {'loaded': data, 'removed': data_remove})
 
-    return (True, status_message.serialize)
+
+def insert_current_status_message(message_id, component_id, component_type, additional_info):
+    """Inserts a new notification on the system. The related message id should exists.
+    Args:
+        message_id (str:uuid string): Message id related with the notification
+        component_id(str:uuid string): Component id related with the notification (Could be none for external messages)
+        component_type(str): Component type. Allowed values: ('net','host','user','sensor','server','system','external')
+        additional_info (str:json): Additional information you want to store.
+    Returns:
+        success(bool): True if the operation went well, False otherwise
+        msg(str): A message string that will contain some kind of information in case of error"""
+
+    if component_id == "local":
+        success, component_id = get_system_id_from_local()
+        if not success:
+            return False, "Cannot retrieve the local system id"
+    return db_insert_current_status_message(message_id, component_id, component_type, additional_info)

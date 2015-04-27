@@ -1,6 +1,6 @@
 Source: alienvault-dummy-common
 Section: net
-Priority: extra
+Priority: standard
 Maintainer: AlienVault package developers <debian-devel@alienvault.com>
 Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.8.0
@@ -9,7 +9,7 @@ Homepage: http://www.alienvault.com
 Package: alienvault-dummy-common
 Architecture: all
 Pre-Depends: augeas-tools
-Depends: ${shlibs:Depends}, ${misc:Depends}, sudo, molly-guard, locales-all, bc, ntpdate, psmisc, libpcap, htop, munin, lynx, sysstat, libconfig-tiny-perl, libdbi-perl, debconf-utils, openvpn, openvpn-blacklist, screen, zip, unzip, liblwp-useragent-determined-perl, libnet-irc-perl, smartmontools, ethtool, libdbd-pg-perl, bash-completion, expect, snmp, snmpd, dialog, locate, vim, python-statgrab, wget, iptraf, rsync, ipcalc, binutils, netdiag, chkconfig, ifrename, iotop, lsof, tcpdump, less, irqbalance, multiarch-support, libgnutls-openssl27, libgnutls26, libgnutlsxx27, libp11-kit0, bsd-mailx,
+Depends: ${shlibs:Depends}, ${misc:Depends}, sudo, molly-guard, locales-all, bc, ntpdate, psmisc, libpcap, htop, munin, lynx, sysstat, libconfig-tiny-perl, libdbi-perl, debconf-utils, openvpn, openvpn-blacklist, screen, zip, unzip, liblwp-useragent-determined-perl, libnet-irc-perl, smartmontools, ethtool, libdbd-pg-perl, bash-completion, expect, snmp, snmpd, dialog, locate, vim, joe, python-statgrab, wget, iptraf, rsync, ipcalc, binutils, netdiag, chkconfig, ifrename, iotop, lsof, tcpdump, less, irqbalance, multiarch-support, libgnutls-openssl27, libgnutls26, libgnutlsxx27, libp11-kit0, bsd-mailx,
  ipmitool,
  munin-node,
 # We need the openvt binary for first-boot.sh / finish ami build scripts

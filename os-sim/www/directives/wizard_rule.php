@@ -642,6 +642,45 @@ function load_tree(filter)
 						key_can = k.replace(/(........)(....)(....)(....)(............)/, "$1-$2-$3-$4-$5");
 						addto(combo2,dtnode.data.val,key_can.toLowerCase());
 					}
+					// Click on asset group, fill box with its members
+					if (dtnode.data.key.match(/hostgroup_/))
+					{
+					    $.ajax({
+					        type: 'GET',
+					        url: "../tree.php",
+					        data: 'key=' + dtnode.data.key + ';4000',
+					        dataType: 'json',
+					        success: function(data)
+					        {
+						        if (data.length < 1)
+						        {
+						            var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+						            var msg = '<?php echo _('Unable to fetch the asset group members') ?>';
+						            show_notification('error_info', msg, 'nf_error', 0, 1, nf_style);
+						        }
+						        else
+						        {
+                                    // Group reached the 4000 top of page: show warning
+	                                var last_element = data[data.length - 1].key;
+
+	                                if (last_element.match(/hostgroup_/))
+	                                {
+	                                    var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+	                                    var msg = '<?php echo _('This asset group has more than 4000 assets, please try again with a smaller group') ?>';
+	                                    show_notification('error_info', msg, 'nf_warning', 0, 1, nf_style);
+	                                }
+	                                else
+	                                {
+                                        jQuery.each(data, function(i, group_member) {
+                                            var k = group_member.key.replace("host_","");
+                                            var key_can = k.replace(/(........)(....)(....)(....)(............)/, "$1-$2-$3-$4-$5");
+                                            addto(combo2, group_member.val, key_can.toLowerCase());
+                                        });
+	                                }
+						        }
+					        }
+					      });
+					}
 			},
 			onDeactivate: function(dtnode) {},
 			onLazyRead: function(dtnode){
@@ -671,6 +710,45 @@ function load_tree(filter)
 					k = k.replace("host_","");
 					key_can = k.replace(/(........)(....)(....)(....)(............)/, "$1-$2-$3-$4-$5");
 					addto(combo1,dtnode.data.val,key_can.toLowerCase());
+				}
+				// Click on asset group, fill box with its members
+				if (dtnode.data.key.match(/hostgroup_/))
+				{
+				    $.ajax({
+				        type: 'GET',
+				        url: "../tree.php",
+				        data: 'key=' + dtnode.data.key + ';4000',
+				        dataType: 'json',
+				        success: function(data)
+				        {
+					        if (data.length < 1)
+					        {
+					            var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+					            var msg = '<?php echo _('Unable to fetch the asset group members') ?>';
+					            show_notification('error_info', msg, 'nf_error', 0, 1, nf_style);
+					        }
+					        else
+					        {
+                                // Group reached the 4000 top of page: show warning
+                                var last_element = data[data.length - 1].key;
+
+                                if (last_element.match(/hostgroup_/))
+                                {
+                                    var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+                                    var msg = '<?php echo _('This asset group has more than 4000 assets, please try again with a smaller group') ?>';
+                                    show_notification('error_info', msg, 'nf_warning', 0, 1, nf_style);
+                                }
+                                else
+                                {
+                                    jQuery.each(data, function(i, group_member) {
+                                        var k = group_member.key.replace("host_","");
+                                        var key_can = k.replace(/(........)(....)(....)(....)(............)/, "$1-$2-$3-$4-$5");
+                                        addto(combo1, group_member.val, key_can.toLowerCase());
+                                    });
+                                }
+					        }
+				        }
+				      });
 				}
 			},
 			onDeactivate: function(dtnode) {},
@@ -987,6 +1065,9 @@ function onClickProtocol(id, level) {
 </script>
 </head>
 <body>
+
+<div id='error_info'></div>
+
 <form method="post" id="frule" name="frule" action="" style="height:100%">
 <input type="hidden" name="id" value="<?php echo $id; ?>" />
 <input type="hidden" name="directive_id" value="<?php echo $directive_id; ?>" />

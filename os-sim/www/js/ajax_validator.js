@@ -788,6 +788,10 @@ function Ajax_validator(new_config)
             {
                 parent.window.scrollTo(0,0);
             }
+            else
+            {
+                window.scrollTo(0,0);
+            }
 
             return errors;
         }

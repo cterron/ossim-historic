@@ -250,7 +250,7 @@ class Repository
         {
             $title    = "title LIKE \"%".escape_sql($search_str, $conn)."%\"";
             $keywords = "keywords LIKE \"%".escape_sql($search_str, $conn)."%\"";
-            $text     = "MATCH(text) AGAINST(\"".escape_sql($search_str, $conn)."\")"; // FULLTEXT search
+            $text     = "text LIKE \"%".escape_sql($search_str, $conn)."%\""; // FULLTEXT search
 
             if (preg_match("/AND/", $search_str)) 
             {
@@ -262,13 +262,12 @@ class Repository
                 {
                     $title    .= ($title == "" ? "" : " AND ") . "title LIKE \"%".escape_sql($clause, $conn)."%\"";
                     $keywords .= ($keywords == "" ? "" : " AND ") . "keywords LIKE \"%".escape_sql($clause, $conn)."%\"";
+                    $text     .= ($text == "" ? "" : " AND ") . "text LIKE \"%".escape_sql($clause, $conn)."%\"";
                 }
 
                 $title      = "($title)";
                 $keywords   = "($keywords)";
-                $search_str = preg_replace("/ AND /", " ", $search_str);
-                $search_str = preg_replace("/(\S+)/", "+\\1", $search_str);
-                $text       = "MATCH(text) AGAINST(\"".escape_sql($search_str, $conn)."\" IN BOOLEAN MODE)";
+                $text       = "($text)";
             }
             elseif (preg_match("/OR/", $search_str))
             {
@@ -280,12 +279,12 @@ class Repository
                 {
                     $title    .= ($title == "" ? "" : " OR ") . "title LIKE \"%".escape_sql($clause, $conn)."%\"";
                     $keywords .= ($keywords == "" ? "" : " OR ") . "keywords LIKE \"%".escape_sql($clause, $conn)."%\"";
+                    $text     .= ($text == "" ? "" : " OR ") . "$text LIKE \"%".escape_sql($clause, $conn)."%\"";
                 }
 
                 $title      = "($title)";
                 $keywords   = "($keywords)";
-                $search_str = preg_replace("/ OR /", " ", $search_str);
-                $text       = "MATCH(text) AGAINST(\"".escape_sql($search_str, $conn)."\")";
+                $text       = "($text)";
             }
 
             $queryall = "(SELECT id,title,text,date,creator,in_charge," . MAXREL . " as relevance FROM repository WHERE $title) UNION (SELECT id,title,text,date,creator,in_charge," . MAXREL . " as relevance FROM repository WHERE $keywords) UNION (SELECT id,title,text,date,creator,in_charge,$text as relevance FROM repository WHERE $text) ORDER BY $order $torder";
