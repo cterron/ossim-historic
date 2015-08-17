@@ -461,7 +461,7 @@ class Server
         // Create public key in local machine 
         if (!file_exists("/etc/ossim/framework/ssh/remotelogger.pub")) 
         {
-            system("ssh-keygen -q -t rsa -N '' -C remotelogger -f /etc/ossim/framework/ssh/remotelogger");
+            Util::execute_command("ssh-keygen -q -t rsa -N '' -C remotelogger -f /etc/ossim/framework/ssh/remotelogger");
         }
         
         $publickey_output = file("/etc/ossim/framework/ssh/remotelogger.pub");

@@ -329,6 +329,14 @@ class Provider_factory
             break;
 
 
+            // NMAP
+            case 'nmap':
+                require_once 'nmap.inc';
+
+                $result = new Nmap_provider($conn, $common_url);
+
+            break;
+
             // System
             case 'system':
                 require_once 'system.inc';

@@ -195,10 +195,10 @@ else if ($download == 2 || $download == 3)
     //$payload = (!empty($myrow2["data_payload"])) ? "-l '".base64_encode($myrow2["data_payload"])."'" : "";
     // Create .pcap
     $tmpfile = "/var/tmp/base_packet_" . $id . ".pcap";
-    $cmd = "/usr/share/ossim/scripts/snortlogtopcap.py -u ".escapeshellarg($binary)." -p ".escapeshellarg($tmpfile);
+    $cmd = "/usr/share/ossim/scripts/snortlogtopcap.py -u ? -p ?";
     // echo $cmd; exit;
     
-    system("$cmd > /dev/null 2>&1");
+    Util::execute_command("$cmd > /dev/null 2>&1", array($binary, $tmpfile));
     header('HTTP/1.0 200');
     header("Content-type: application/octet-stream");
     header("Content-Disposition: attachment; filename=packet_" . $id . ".pcap");

@@ -111,5 +111,5 @@ echo "var labels  = new Array();
     labels['delete_msg_down']  = '".Util::js_entities(_("The system you are trying to remove is not reachable so we will not be able to purge the remote configuration. Are you sure you want to remove this system?")).".';
     labels['delete_yes']       = '"._("Yes").".';
     labels['delete_no']        = '"._("No").".';
-    labels['unknown_error']    = '"._("Unknown error - Operation cannot be completed")."';
+    labels['unknown_error']    = '"._("Sorry, operation was not completed due to an error when processing the request")."';
     ";

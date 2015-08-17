@@ -497,8 +497,8 @@ function av_list()
         {
             var elem = $('[data-bind="msg-selection"]')
             
-            var text1 = "<?php echo _('You have selected ### assets.') ?>".replace('###', c_all);
-            var text2 = "<?php echo _('Select ### assets.') ?>".replace('###', this.number(f_all));
+            var text1 = "<?php echo _('You have selected ### assets on this page.') ?>".replace('###', c_all);
+            var text2 = "<?php echo _('Select all ### assets.') ?>".replace('###', this.number(f_all));
             
             $('span', elem).text(text1);
             $('a', elem).text(text2);

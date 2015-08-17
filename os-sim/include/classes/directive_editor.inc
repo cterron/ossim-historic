@@ -1664,7 +1664,7 @@ SYSTEM \''._MAIN_PATH.'/directives.dtd\'
     // DEPRECATED: Now using /conf/reload.php?what=directives
     static function restart_directives()
     {
-        exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+        Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
         
         Web_indicator::set_off("Reload_directives");
         

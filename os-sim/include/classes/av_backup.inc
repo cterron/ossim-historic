@@ -185,7 +185,7 @@ class Av_backup
         }
         elseif ($job_id != '' && $response['data']['job_result'][0] === FALSE)
         {
-            $exp_msg = _('An unexpected error occurred - backup could not be launched. Please try again.');
+            $exp_msg = _('An API error occurred - backup could not be launched. Please try again.');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }

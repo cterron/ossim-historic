@@ -410,7 +410,7 @@ if ($action != "" && $user_id != '')
 			elseif ($msg == 'unknown_error') 
 			{ 
 				?>
-				notify('<?php echo _('Unknown error - Operation cannot be completed')?>', 'nf_error', true);
+				notify('<?php echo _('Invalid action - Operation cannot be completed')?>', 'nf_error', true);
 				<?php 
 			} 
 			

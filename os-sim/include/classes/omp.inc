@@ -130,13 +130,15 @@ class Omp
             
             file_put_contents($file_omp_command, $command);
             
-            $ecommand = $latest_binary_location." -h $ip -p $port -u '$user' -w '$password' -iX - < ".$file_omp_command." > $tmpfile 2>&1";
+            $ecommand = "? -h ? -p ? -u ? -w ? -iX - < ? > ? 2>&1";
+            $params   = array($latest_binary_location, $ip, $port, $user, $password, $file_omp_command, $tmpfile);
         }
         else {
-            $ecommand = "$binary_location -h $ip -p $port -u '$user' -w '$password' -iX '$command' > $tmpfile 2>&1";
+            $ecommand = "? -h ? -p ? -u ? -w ? -iX ? > ? 2>&1";
+            $params   = array($binary_location, $ip, $port, $user, $password, $command, $tmpfile);
         }
         
-        system($ecommand); // execute OMP command
+        Util::execute_command($ecommand, $params); // execute OMP command
         
         if($sinput && file_exists($file_omp_command)) {
             unlink($file_omp_command);
@@ -294,6 +296,26 @@ class Omp
             }
         }
         return $config_id;
+    }
+    
+    
+    public function is_openvas8()
+    {
+        $result = FALSE;
+        
+        $xml = $this->execute_command("<help />");
+        
+        if($xml!==FALSE)
+        {
+            $xml_string = (string)$xml;
+            
+            if (!preg_match('/PAUSE_TASK/', $xml_string))
+            {
+                $result = TRUE;
+            }
+        }
+        
+        return $result;
     }
 
 

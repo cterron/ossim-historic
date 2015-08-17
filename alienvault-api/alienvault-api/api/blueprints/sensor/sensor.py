@@ -30,8 +30,7 @@ import api_log
 from uuid import UUID
 from flask import Blueprint, request, current_app, abort
 from db.methods.sensor import get_sensor_by_sensor_id, get_sensor_ip_from_sensor_id
-from db.methods.system import (get_systems_full,
-                               get_sensor_id_from_system_id)
+from db.methods.system import (get_sensor_id_from_system_id)
 from api.lib.common import (make_ok,
                             make_error,
                             make_bad_request,
@@ -41,6 +40,7 @@ from api.lib.utils import accepted_url
 from api.lib.auth import admin_permission, logged_permission
 from celerymethods.jobs.reconfig import alienvault_reconfigure
 from apimethods.sensor.sensor import set_sensor_context, add_sensor, get_service_status_by_id
+from apimethods.system.system import get_all_systems_with_ping_info
 from ansiblemethods.sensor.network import set_sensor_networks, get_sensor_networks
 from ansiblemethods.sensor.ossec import get_ossec_rule_filenames
 
@@ -51,22 +51,12 @@ blueprint = Blueprint(__name__, __name__)
 
 @blueprint.route('', methods=['GET'])
 @document_using('static/apidocs/sensors.html')
-@admin_permission.require(http_exception=403)
+@logged_permission.require(http_exception=401)
 def get_sensors():
-    ret, sensor_data = get_systems_full(system_type='Sensor')
-    if ret is True:
-        sensor_list = []
-        for sensor in sensor_data:
-            ret, sensor_id = get_sensor_id_from_system_id(sensor[0])
-            if ret:
-                sensor_list.append((sensor_id, {'admin_ip': sensor[1]['admin_ip'],
-                                                'hostname': sensor[1]['hostname'],
-                                                'system_id': sensor[1]['uuid']}))
-
-        return make_ok(sensors=dict(sensor_list))
-
-    current_app.logger.error("sensor: get_sensors error: " + str(sensor_data))
-    return make_error("Cannot retrieve sensors info", 500)
+    ret, sensor_data = get_all_systems_with_ping_info(system_type='Sensor')
+    if not ret:
+        return make_error("Error retrieving the list of reachable sensors",500)
+    return make_ok(sensors=dict(sensor_data))
 
 
 @blueprint.route('/<sensor_id>', methods=['GET'])

@@ -63,7 +63,7 @@ function Av_property_list(config)
         "delete_selected" : "<?php echo Util::js_entities(_('Are you sure you want to delete the selected properties?'))?>",
         "confirm_yes"     : "<?php echo _('Yes')?>",
         "confirm_no"      : "<?php echo _('No')?>",
-        "unknown_error"   : "<?php echo _('Unknown error - Operation cannot be completed. Please try again')?>"
+        "unknown_error"   : "<?php echo _('Sorry, operation was not completed due to an error when processing the request. Please try again')?>"
     };
 
     var __selection = {

@@ -7,8 +7,8 @@ ADMIN_IP=`grep ^admin_ip= /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`
 OK=`mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault server_forward_role | grep -c "server_forward_role"`
 #
 if [ $OK -eq 0 ]; then
-	echo "No values at server_forward_role."
-	exit;
+    echo "No values at server_forward_role."
+    exit;
 fi
 if [ ! -d /var/lib/alienvault-center/db/ ]; then
         echo "Needed target directory /var/lib/alienvault-center/db/ doesn't exists."
@@ -74,16 +74,16 @@ BEGIN
   REPEAT
     FETCH cur1 INTO engine_uuid;
     IF NOT done THEN
-		SET @engine = unhex(engine_uuid);
-		select s.name into @server from acl_entities a,server s where a.server_id=s.id and hex(a.id)=engine_uuid;
-		IF NOT EXISTS
-		  (SELECT id FROM tag WHERE hex(ctx)=engine_uuid)
-		THEN
-		    INSERT INTO tag (ctx,name,type,class) VALUES (@engine,@server,'alarm','av_tag_1');
-		ELSE
-			SELECT HEX(id) into @tag FROM tag WHERE hex(ctx)=engine_uuid;
-			UPDATE tag SET name=@server WHERE id=UNHEX(@tag);
-		END IF;
+        select s.name into @server from acl_entities a,server s where a.server_id=s.id and hex(a.id)=engine_uuid;
+        IF NOT EXISTS
+          (SELECT id FROM tag WHERE hex(ctx)=engine_uuid)
+        THEN
+            SET @uuid = replace(UUID(),'-','');
+            INSERT IGNORE INTO tag (id,ctx,name,type,class) VALUES (unhex(@uuid),unhex(engine_uuid),@server,'alarm','av_tag_1');
+        ELSE
+            SELECT HEX(id) into @tag FROM tag WHERE hex(ctx)=engine_uuid;
+            UPDATE tag SET name=@server WHERE id=UNHEX(@tag);
+        END IF;
     END IF;
   UNTIL done END REPEAT;
 
@@ -130,7 +130,7 @@ BEGIN
   REPEAT
     FETCH cur1 INTO _system_id, _admin_ip, _vpn_ip;
     IF NOT done THEN
-		UPDATE alienvault.system SET sensor_id=(SELECT sensor.id FROM sensor WHERE sensor.ip=inet6_aton(_admin_ip) OR sensor.ip=inet6_aton(_vpn_ip) LIMIT 1) WHERE id=UNHEX(_system_id);
+        UPDATE alienvault.system SET sensor_id=(SELECT sensor.id FROM sensor WHERE sensor.ip=inet6_aton(_admin_ip) OR sensor.ip=inet6_aton(_vpn_ip) LIMIT 1) WHERE id=UNHEX(_system_id);
     END IF;
   UNTIL done END REPEAT;
 

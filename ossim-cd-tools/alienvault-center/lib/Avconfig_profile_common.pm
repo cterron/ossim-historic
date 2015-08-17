@@ -377,22 +377,8 @@ EOF
         open RCLOCALFILE, "> $rclocal_file" or die "Error opening file $!";
         print RCLOCALFILE <<EOF;
 #!/bin/bash
-
+echo deadline > /sys/block/sda/queue/scheduler
 EOF
-
-        my @rc;
-        my @sensor_interfaces_arr = split( /,\s*/, $config{'sensor_interfaces'} );
-        push( @rc, "# Set interfaces @sensor_interfaces_arr\n" );
-        for my $ifinterface (@sensor_interfaces_arr) {
-            push( @rc, "ifconfig $ifinterface up\n" );
-            push( @rc, "ifconfig $ifinterface promisc\n" );
-            push( @rc, "ethtool -G $ifinterface rx 4096 tx 4096\n" );
-
-			push( @rc, "ethtool -K $ifinterface gro off\n" );
-        }
-
-        push( @rc, "echo deadline > /sys/block/sda/queue/scheduler\n");
-        print RCLOCALFILE "@rc";
         close(RCLOCALFILE);
 
         # /etc/issue
@@ -417,7 +403,7 @@ if ( -f "/etc/ossim/first_login" ){
     my $pname = `cat /etc/ossim/first_login` ; $pname =~ s/\n//g;
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.0 - \\m - \\l
+AlienVault USM 5.0.1 - \\m - \\l
 
 =========================================================================
 == #### First time instructions ####   
@@ -429,7 +415,7 @@ EOF
 }else{
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.0 - \\m - \\l
+AlienVault USM 5.0.1 - \\m - \\l
 
 EOF
 }

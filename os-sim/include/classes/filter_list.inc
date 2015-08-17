@@ -212,10 +212,10 @@ abstract class Filter_list
     public function empty_filter_search($conn)
     {
         //Deleting the host of the user logged in
-        $query  = 'DELETE FROM user_host_filter WHERE login=?';
+        $query  = 'DELETE FROM user_host_filter WHERE session_id=?';
         $params = array
         (
-            Session::get_session_user()
+            session_id()
         );
         
         $rs = $conn->Execute($query, $params);
@@ -457,12 +457,10 @@ abstract class Filter_list
     {
         Ossim_db::check_connection($conn);
         
-        $user   = Session::get_session_user();
-        
-        $query  = "SELECT COUNT(asset_id) AS total FROM user_component_filter WHERE login=? AND asset_type=?";
+        $query  = "SELECT COUNT(asset_id) AS total FROM user_component_filter WHERE session_id=? AND asset_type=?";
         
         $params = array(
-            $user,
+            session_id(),
             $type
         );
         
@@ -492,12 +490,10 @@ abstract class Filter_list
     {
         Ossim_db::check_connection($conn);
         
-        $user = Session::get_session_user();
-        
-        $query  = "DELETE FROM user_component_filter WHERE login=? AND asset_type=?";
+        $query  = "DELETE FROM user_component_filter WHERE session_id=? AND asset_type=?";
         
         $params = array(
-            $user,
+            session_id(),
             $type
         );
 
@@ -525,8 +521,6 @@ abstract class Filter_list
     {
         Ossim_db::check_connection($conn);
         
-        $user = Session::get_session_user();
-               
         self::clean_selection($conn, $asset_type);
         
         if (empty($assets))
@@ -534,14 +528,15 @@ abstract class Filter_list
             return 0;
         }
         
-        $sql = array(); 
+        $session = session_id();
+        $sql     = array(); 
+        
         foreach($assets as $asset) 
         {
-            $sql[] = "('$user', 0x$asset, '$asset_type')";
+            $sql[] = "('$session', 0x$asset, '$asset_type')";
         }
-        $sql    = implode(',', $sql);
-
         
+        $sql    = implode(',', $sql);
         $query  = "REPLACE INTO user_component_filter VALUES $sql";
         $params = array();
         
@@ -572,7 +567,6 @@ abstract class Filter_list
     {
         Ossim_db::check_connection($conn);
         
-        $user  = Session::get_session_user();
         
         $perms = Asset_host::get_perms_where('h.', TRUE);
 
@@ -612,7 +606,7 @@ abstract class Filter_list
         $query = "REPLACE INTO user_component_filter ($query)";
                   
         $params = array(
-            $user,
+            session_id(),
             $asset_id
         );
         
@@ -642,22 +636,20 @@ abstract class Filter_list
     public static function save_members_from_selection($conn, $asset_type)
     {
         Ossim_db::check_connection($conn);
-        
-        $user  = Session::get_session_user();
+
+        self::clean_selection($conn, 'asset');
         
         $perms = Asset_host::get_perms_where('h.', TRUE);
-        
-        self::clean_selection($conn, 'asset');
         
         if ($asset_type == 'group')
         {
             if ($perms)
             {
-                $query = "SELECT DISTINCT ?, g.host_id, 'asset' FROM host_group_reference g, user_component_filter f, host h WHERE g.host_group_id=f.asset_id AND f.login=? AND f.asset_type='group' AND h.id=g.host_id $perms";
+                $query = "SELECT DISTINCT ?, g.host_id, 'asset' FROM host_group_reference g, user_component_filter f, host h WHERE g.host_group_id=f.asset_id AND f.session_id=? AND f.asset_type='group' AND h.id=g.host_id $perms";
             }
             else
             {
-                $query = "SELECT DISTINCT ?, g.host_id, 'asset' FROM host_group_reference g, user_component_filter f WHERE g.host_group_id=f.asset_id AND f.login=? AND f.asset_type='group'";
+                $query = "SELECT DISTINCT ?, g.host_id, 'asset' FROM host_group_reference g, user_component_filter f WHERE g.host_group_id=f.asset_id AND f.session_id=? AND f.asset_type='group'";
             }
 
         }
@@ -665,11 +657,11 @@ abstract class Filter_list
         {
             if ($perms)
             {
-                $query = "SELECT DISTINCT ?, n.host_id, 'asset' FROM host_net_reference n, user_component_filter f, host h WHERE n.net_id=f.asset_id AND f.login=? AND f.asset_type='network' AND h.id=n.host_id $perms";
+                $query = "SELECT DISTINCT ?, n.host_id, 'asset' FROM host_net_reference n, user_component_filter f, host h WHERE n.net_id=f.asset_id AND f.session_id=? AND f.asset_type='network' AND h.id=n.host_id $perms";
             }
             else
             {
-                $query = "SELECT DISTINCT ?, n.host_id, 'asset' FROM host_net_reference n, user_component_filter f WHERE n.net_id=f.asset_id AND f.login=? AND f.asset_type='network'";
+                $query = "SELECT DISTINCT ?, n.host_id, 'asset' FROM host_net_reference n, user_component_filter f WHERE n.net_id=f.asset_id AND f.session_id=? AND f.asset_type='network'";
             }
         }
         else
@@ -680,8 +672,8 @@ abstract class Filter_list
         $query = "REPLACE INTO user_component_filter ($query)";
                   
         $params = array(
-            $user,
-            $user
+            session_id(),
+            session_id()
         );
         
         $rs = $conn->Execute($query, $params);
@@ -723,10 +715,8 @@ abstract class Filter_list
         $perms = array(
             'asset'   => "WHERE 1 $host_perms",
             'network' => "WHERE 1 $net_where",
-            'group'   => ", host_group_reference r, host h WHERE p.id=r.host_group_id AND r.host_id=h.id ".str_replace("p.","h.",$host_perms)
+            'group'   => ", host_group_reference r, host h WHERE p.id=r.host_group_id AND r.host_id=h.id ". str_replace("p.", "h.", $host_perms)
         );
-        
-        $user  = Session::get_session_user();
         
         //Storing All the Assets from a Filter
         if ($filter)
@@ -750,20 +740,20 @@ abstract class Filter_list
                 $query  = "REPLACE INTO user_component_filter ( SELECT ?, p.id, ? FROM $table p $perm )";
                 
                 $params = array(
-                    $user,
+                    session_id(),
                     $type
                 );
             }
             else
             {
-                $perm   = ($host_perms) ? ", host p WHERE t.login=? AND t.asset_id=p.id $host_perms" : " WHERE t.login=?";
+                $perm   = ($host_perms) ? ", host p WHERE t.session_id=? AND t.asset_id=p.id $host_perms" : " WHERE t.session_id=?";
                 
                 $query  = "REPLACE INTO user_component_filter ( SELECT ?, t.asset_id, ? FROM user_host_filter t $perm )";
                           
                 $params = array(
-                    $user,
+                    session_id(),
                     $type,
-                    $user
+                    session_id()
                 );
             } 
             

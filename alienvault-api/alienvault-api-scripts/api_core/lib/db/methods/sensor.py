@@ -30,8 +30,10 @@
 
 from uuid import UUID
 import json
+import os.path
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy import desc, asc, and_, or_, func
 
 import db
 from db.models.alienvault import (
@@ -374,3 +376,17 @@ def check_any_orphan_sensor():
         success = False
 
     return success, message
+
+
+@require_db
+def get_base_path(sensor_id):
+    """
+        Return the base PATH taking into account the ha configuration
+    """
+    try:
+        data = db.session.query(System).filter(or_(System.sensor_id == get_bytes_from_uuid(sensor_id), System.server_id == get_bytes_from_uuid(sensor_id))).order_by(asc(System.ha_name)).limit(1).one()
+        result = True, os.path.join("/var/alienvault/", data.serialize['uuid'])
+    except NoResultFound:
+        db.session.rollback()
+        result = False, "No sensor identified by " + sensor_id
+    return result

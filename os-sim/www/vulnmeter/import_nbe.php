@@ -92,40 +92,44 @@ if ($_FILES['nbe_file']['tmp_name']!="" && $_FILES['nbe_file']['size']>0)
 			
 			$db->close($conn);
 			
-			if(POST('submit')==_("Import & asset insertion"))
-			{
-				exec("/usr/share/ossim/scripts/vulnmeter/import_nbe.pl $dest ".base64_encode($report_name.";".$assignto)." 1 $tz $ctx $source", $output_arr);
-			}
-			else
-			{
-				exec("/usr/share/ossim/scripts/vulnmeter/import_nbe.pl $dest ".base64_encode($report_name.";".$assignto)." 0 $tz $ctx $source", $output_arr);
-				//error_log("/usr/share/ossim/scripts/vulnmeter/import_nbe.pl $dest ".base64_encode($report_name.";".$assignto)." 0 $tz $ctx", 3, "/tmp/debug.log");
-			}
-            
-            $db   = new ossim_db();
-            $conn = $db->connect();
-            
-            foreach($output_arr as $line) {
-                if(preg_match("/report id: (\d+)/i", trim($line), $found)) {
-                    $rid = $found[1];
-                    
-                    ?>
-                    <script type='text/javascript'> top.frames['main'].rname = "<?php echo $report_name ?>"; </script>
-                    <?php
+            $_mode  = (POST('submit')==_("Import & asset insertion")) ? '1' : '0';
+            $params = array($dest, base64_encode($report_name.";".$assignto), $_mode, $tz, $ctx, $source);
+            $cmd    = "/usr/share/ossim/scripts/vulnmeter/import_nbe.pl ? ? ? ? ? ?";
+            //error_log("/usr/share/ossim/scripts/vulnmeter/import_nbe.pl $dest ".base64_encode($report_name.";".$assignto)." 0 $tz $ctx", 3, "/tmp/debug.log");
+            try
+            {
+                $output_arr = Util::execute_command($cmd, $params, 'array');
+                
+                $db   = new ossim_db();
+                $conn = $db->connect();
+                
+                foreach($output_arr as $line)
+                {
+                    if(preg_match("/report id: (\d+)/i", trim($line), $found))
+                    {
+                        $rid = $found[1];
+                        ?>
+                        <script type='text/javascript'> top.frames['main'].rname = "<?php echo $report_name ?>"; </script>
+                        <?php
+                    }
                 }
-            }
-
-            if(intval($rid)>0) { // check the report id
-                if (!is_dir("/usr/share/ossim/uploads/nbe")) {
-                    mkdir("/usr/share/ossim/uploads/nbe", 0777, true);
+                
+                if(intval($rid)>0) { // check the report id
+                    if (!is_dir("/usr/share/ossim/uploads/nbe")) {
+                        mkdir("/usr/share/ossim/uploads/nbe", 0777, true);
+                    }
+                    copy($dest, "/usr/share/ossim/uploads/nbe/".$rid.".nbe");
                 }
-                copy($dest, "/usr/share/ossim/uploads/nbe/".$rid.".nbe");
+                preg_match_all("/skipping\shost\s\[(.*)\]/i", implode("\n", $output_arr), $n_founds);
+                unlink($dest);
+                $status = 2;
+                Util::memcacheFlush();
             }
-            preg_match_all("/skipping\shost\s\[(.*)\]/i", implode("\n", $output_arr), $n_founds);
-            unlink($dest);
-			$status = 2;
-            
-            Util::memcacheFlush();
+            catch(Exception $e)
+            {
+                $status = 1;
+                $error_importing =_("No valid results found in the uploaded file. Please check the NBE file syntax.");
+            }
 		}
 	}
 }

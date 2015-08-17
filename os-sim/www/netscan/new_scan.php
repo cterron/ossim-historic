@@ -36,14 +36,7 @@ require_once 'av_init.php';
 
 Session::logcheck('environment-menu', 'ToolsScan');
 
-$conf       = $GLOBALS['CONF'];
-$nmap_path  = $conf->get_conf('nmap_path');
-
-$nmap_exists  = (file_exists($nmap_path)) ? 1 : 0;
-
-$keytree = 'assets';
-
-$scan_modes = array(
+$scan_types = array(
     'ping'   => _('Ping'),
     'fast'   => _('Fast Scan'),
     'normal' => _('Normal'),
@@ -52,12 +45,12 @@ $scan_modes = array(
 );
 
 $time_templates = array(
-    '-T0' => _('Paranoid'),
-    '-T1' => _('Sneaky'),
-    '-T2' => _('Polite'),
-    '-T3' => _('Normal'),
-    '-T4' => _('Aggressive'),
-    '-T5' => _('Insane')
+    'T0' => _('Paranoid'),
+    'T1' => _('Sneaky'),
+    'T2' => _('Polite'),
+    'T3' => _('Normal'),
+    'T4' => _('Aggressive'),
+    'T5' => _('Insane')
 );
 
 
@@ -65,87 +58,95 @@ $time_templates = array(
 $db   = new ossim_db();
 $conn = $db->connect();
 
+
 /****************************************************
-************ Default scan configuration *************
-****************************************************/
+ ************ Default scan configuration ************
+ ****************************************************/
 
 $sensor            = 'local';
-$scan_mode         = 'fast';
-$ttemplate         = '-T3';
+$scan_type         = 'fast';
+$ttemplate         = 'T3';
 $scan_ports        = '1-65535';
-$autodetected      = 1;
-$rdns              = 1;
+$autodetected      = TRUE;
+$rdns              = TRUE;
 $disabled          = '';
 $validation_errors = '';
-$asset_type        = (GET('type')=='group') ? 'group' : ((GET('type')=='network') ? 'network' : 'asset');
+$asset_type        = (GET('type') == 'group') ? 'group' : ((GET('type') == 'network') ? 'network' : 'asset');
 
+$disable_scan = FALSE;
 
-$selected = Filter_list::get_total_selection($conn, $asset_type);
-
-if ($selected > Filter_list::MAX_NMAP_ITEMS)
+try
 {
-    $msg       = _('Asset scans can only be performed on %s assets at a time. Please select less assets and try again.');
-    $limit_msg = sprintf($msg, Util::number_format_locale(Filter_list::MAX_NMAP_ITEMS));
-}
-else
-{
-    $rscan = new Remote_scan('', 'normal', 'local');
-    $jobs  = $rscan->get_selected_assets($conn, $asset_type);
-    $close = false;
-    
-    if (GET('action')=='scan')
+    $explain_scan = Av_scan::explain_scan($conn, $asset_type);
+
+    $close = FALSE;
+
+    if (GET('action') == 'scan')
     {
-        $scan_mode       = GET('scan_mode');
+        $scan_type       = GET('scan_type');
         $timing_template = GET('timing_template');
         $custom_ports    = GET('custom_ports');
-        $autodetect      = (GET('autodetect') == '1') ? 1 : 0;
-        $rdns            = (GET('rdns') == '1') ? 1 : 0;
+        $autodetect      = (GET('autodetect') == 1) ? 'true' : 'false';
+        $rdns            = (GET('rdns') == 1)       ? 'true' : 'false';
         $custom_ports    = str_replace(' ', '', $custom_ports);
-        
-        ossim_valid($scan_mode,       OSS_ALPHA, OSS_SCORE, OSS_NULLABLE,                 'illegal:' . _('Full scan'));
-        ossim_valid($timing_template, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,                  'illegal:' . _('Timing_template'));
+
+        ossim_valid($scan_type,       OSS_ALPHA, OSS_SCORE, OSS_NULLABLE,                 'illegal:' . _('Full scan'));
+        ossim_valid($timing_template, OSS_TIMING_TEMPLATE,                                'illegal:' . _('Timing_template'));
         ossim_valid($custom_ports,    OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, ',', 'illegal:' . _('Custom Ports'));
-        
+
         if (ossim_error())
         {
-            $validation_errors = ossim_get_error_clean();
+            $e_msg = ossim_get_error_clean();
         }
         else
         {
             // Run remote nmap scans
             $targets = array();
-            foreach ($jobs as $sensor_id => $sdata)
+
+            foreach ($explain_scan as $sensor_id => $s_data)
             {
-                if ($sdata["available"])// Sensor available
+                //Sensor status: Idle(0), Running (1) or Down(2)
+                $code = $s_data['status']['code'];
+
+                if ($code == 0)
                 {
-                    foreach ($sdata["assets"] as $assets)
+                    foreach ($s_data['assets'] as $assets)
                     {
                         $targets[] = $assets['ip'];
                     }
-                    $scan = new Remote_scan(implode(' ',$targets), $scan_mode, $sensor_id, Session::get_session_user(), $timing_template, $autodetect, $rdns, $custom_ports);
-                    
-                    $scan->do_scan(TRUE, TRUE);
-                    
-                    $last_error = $scan->get_last_error();
-                    
-                    unset($scan);
-                    
-                    if (is_array($last_error) && !empty($last_error['data']))
-                    {
-                        $validation_errors = _('Scan could not be completed.  The following errors occurred').":\n".$last_error['data'];
-                        break;
-                    }
-                    else
-                    {
-                        $jobs[$sensor_id]['status'] = _("Running");
-                        $close = true;
-                    }
+
+                    $targets = implode(' ',$targets);
+
+                    $scan_options = array(
+                        'scan_type'       => $scan_type,
+                        'timing_template' => $timing_template,
+                        'autodetect_os'   => $autodetect,
+                        'reverse_dns'     => $rdns,
+                        'ports'           => $custom_ports,
+                        'idm'             => 'true'
+                    );
+
+                    $av_scan = new Av_scan($targets, $sensor_id, $scan_options);
+
+                    $res = $av_scan->run();
+
+                    $close = TRUE;
+
+                    unset($av_scan);
+
+                    $explain_scan[$sensor_id]['status'] = array(
+                        'code' => 1,
+                        'desc' => _('Running')
+                    );
                 }
             }
         }
     }
 }
-
+catch(Exception $e)
+{
+    $e_msg = $e->getMessage();
+}
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -154,23 +155,41 @@ else
     <title><?php echo _('OSSIM Framework');?></title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
     <meta http-equiv="Pragma" content="no-cache"/>
-    <script type="text/javascript" src="../js/jquery.min.js"></script>
-    <script type="text/javascript" src="../js/notification.js"></script>
-    <script type="text/javascript" src="../js/messages.php"></script>
-    <script type="text/javascript" src="../js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.cookie.js"></script>
-    <script type="text/javascript" src="../js/token.js"></script>
-    <script type="text/javascript" src="../js/jquery.tipTip.js"></script>
-    <script type="text/javascript" src="../js/utils.js"></script>
-    <script type="text/javascript" src="../js/av_scan.js.php"></script>
-    <script type="text/javascript" src="../js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-    <link rel="stylesheet" type="text/css" href="../style/environment/assets/asset_discovery.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/jquery-ui-1.7.custom.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/progress.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/tipTip.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/fancybox/jquery.fancybox-1.3.4.css"/>
+    <?php
+    //CSS Files
+    $_files = array(
+        array('src' => 'av_common.css?t='.Util::get_css_id(),           'def_path' => TRUE),
+        array('src' => 'tipTip.css',                                    'def_path' => TRUE),
+        array('src' => '/environment/assets/asset_discovery.css',       'def_path' => TRUE)
+    );
+
+    Util::print_include_files($_files, 'css');
+
+    //JS Files
+    $_files = array(
+        array('src' => 'jquery.min.js',                                  'def_path' => TRUE),
+        array('src' => 'notification.js',                                'def_path' => TRUE),
+        array('src' => 'utils.js',                                       'def_path' => TRUE),
+        array('src' => 'jquery.tipTip.js',                               'def_path' => TRUE),
+        array('src' => 'av_scan.js.php',                                 'def_path' => TRUE)
+    );
+
+    Util::print_include_files($_files, 'js');
+    ?>
+
+    <style type="text/css">
+        .c_actions
+        {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .t_adv_options
+        {
+            padding:7px 0px 0px 10px;
+        }
+    </style>
 
 
     <script type='text/javascript'>
@@ -184,7 +203,7 @@ else
 
             return false;
         }
-        
+
         function hide_window(msg, type)
         {
             if (typeof parent.GB_hide == 'function')
@@ -204,7 +223,7 @@ else
                 close_window(false);
             });
 
-            $("#assets_form").on( "keypress", function(e) 
+            $("#assets_form").on( "keypress", function(e)
             {
                 if (e.which == 13 )
                 {
@@ -218,19 +237,18 @@ else
 
             if ($(".more_info").length >= 1)
             {
-                $(".more_info").tipTip({maxWidth: "auto"});
+                $(".more_info").tipTip({maxWidth: "auto", attribute: 'data-title'});
             }
 
             bind_nmap_actions();
-            
-            <?php 
-            if ($close) 
-            { 
+
+            <?php
+            if ($close)
+            {
                 $msg = sprintf(_('Asset scan in progress for %s assets'), count($targets));
                 echo 'hide_window("'. $msg .'", "nf_success");';
-            } 
+            }
             ?>
-
         });
     </script>
 
@@ -242,17 +260,12 @@ else
 
 <div id='c_info'>
     <?php
-    if (!$nmap_exists)
+    if (!empty($e_msg))
     {
-        $error = new Av_error();
-        $error->set_message('NMAP_PATH');
-        $error->display();
-    }
+        $disable_scan = TRUE;
 
-    if ( !empty($validation_errors) )
-    {
         $txt_error = "<div>"._('The following errors occurred').":</div>
-                      <div style='padding: 10px;'>".$validation_errors."</div>";
+                      <div style='padding: 10px;'>".$e_msg."</div>";
 
         $config_nt = array(
             'content' => $txt_error,
@@ -260,13 +273,13 @@ else
                 'type'          =>  'nf_error',
                 'cancel_button' =>  FALSE
             ),
-            'style' =>  'width: 80%; margin: 20px auto; text-align: left;'
+            'style' => 'width: 80%; margin: 20px auto; text-align: left;'
         );
 
         $nt = new Notification('nt_1', $config_nt);
         $nt->show();
     }
-    elseif (GET('action')=='scan')
+    elseif (GET('action') == 'scan')
     {
         $config_nt = array(
             'content' => '<div>'._('Asset Scan successfully launched in background').'</div>',
@@ -286,7 +299,8 @@ else
 <div id='c_asset_discovery'>
 
     <form name="assets_form" id="assets_form">
-        <input type="hidden" name="action" value="scan">
+        <input type="hidden" name="action" value="scan"/>
+        <input type="hidden" name="type" value="<?php echo $asset_type?>"/>
 
         <table align="center" id='t_ad'>
 
@@ -304,81 +318,75 @@ else
                 <tr>
                     <td class='container nobborder'>
                         <?php
-                            if ( !empty($jobs) )
-                            {
+                        if (!empty($explain_scan))
+                        {
                             ?>
-                            
                             <table class="sensors">
-                                <th><?php echo _('Assets') ?></th>
-                                <th><?php echo _('Sensor') ?></th>
-                                <th><?php echo _('Status') ?></th>
-                            <?php
-                                $available = FALSE;
-                                foreach ($jobs as $sensor_id => $sdata)
+                                <thead>
+                                    <tr>
+                                        <th><?php echo _('Assets')?></th>
+                                        <th><?php echo _('Sensor')?></th>
+                                        <th><?php echo _('Status')?></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                <?php
+                                foreach ($explain_scan as $sensor_id => $s_data)
                                 {
-                                    echo "<tr>\n";
-                                    $first = $sdata["assets"][0];
-                                    $last  = $sdata["assets"][count($sdata["assets"])-1];
-                                    if (count($sdata["assets"])-1 == 0)
+                                    $first = $s_data['assets'][0];
+                                    $last  = $s_data['assets'][count($s_data['assets'])-1];
+
+                                    if (count($s_data['assets'])-1 == 0)
                                     {
                                         $asset = $first['ip'];
                                     }
                                     else
                                     {
-                                        $asset = $first['ip'] . " ... " . $last['ip'];
+                                        $asset = $first['ip']." ... ".$last['ip'];
                                     }
-                                    echo "<td>".$asset."</td>\n";
+                                    ?>
+                                    <tr>
+                                        <td><?php echo $asset?></td>
+                                        <td><?php echo $s_data['name'].' ['.$s_data['ip'].']'?></td>
+                                        <td>
+                                            <?php
+                                            $code = $s_data['status']['code'];
 
-                                    echo "<td>".$sdata['name']." [".$sdata['ip']."]</td>\n";
+                                            switch ($code)
+                                            {
+                                                //Idle
+                                                case 0:
+                                                    $icon         = "/ossim/pixmaps/tick.png";
+                                                    $disable_scan = FALSE;
+                                                break;
 
-                                    if ($sdata["available"])
-                                    {
-                                        if ($sdata['status'] == _("Running"))
-                                        {
-                                            $icon      = "../pixmaps/running.gif";
-                                        }
-                                        else
-                                        {
-                                            $icon      = "../pixmaps/tick.png";
-                                            $available = TRUE;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        $icon          = "../pixmaps/cross.png";
-                                    }
-                                    echo "<td><img src='$icon' class='more_info' title=\"".$sdata['status']."\" border=0></td>\n";
-                                    echo "</tr>\n";
+                                                //Running
+                                                case 1:
+                                                    $icon         = "../pixmaps/running.gif";
+                                                    $disable_scan = TRUE;
+                                                break;
+
+                                                //Down
+                                                case 2:
+                                                    $icon         = "/ossim/pixmaps/cross.png";
+                                                    $disable_scan = TRUE;
+                                                break;
+                                            }
+
+                                            echo "<img src='$icon' class='more_info' data-title='".$s_data['status']."'/>";
+                                            ?>
+                                        </td>
+                                    </tr>
+                                    <?php
                                 }
-                                
-                                if (!$available)
-                                {
-                                    $disabled = "disabled='disabled'";
-                                }
-                            ?>
-                            </table>
+                                ?>
+                            </tbody>
+                        </table>
                         <?php
-                        }
-                        else
-                        {
-                            if ($limit_msg)
-                            {
-                                $config_nt = array(
-                            		'content' => $limit_msg,
-                            		'options' => array (
-                            			'type'          => 'nf_error',
-                            			'cancel_button' => false
-                            		),
-                            		'style'   => 'width: 70%; margin: 5px auto 15px auto; text-align:center;'
-                            	);
-                            
-                            	$nt = new Notification('nt_1', $config_nt);
-                            	$nt->show();
-                        	}
-                        	
-                            $disabled = "disabled='disabled'";
-                        }
-                        ?>
+                    }
+                    ?>
                     </td>
                 </tr>
 
@@ -388,28 +396,28 @@ else
 
                 <!-- Full scan -->
                 <tr>
-                    <td colspan="2" style="padding:7px 0px 0px 10px">
+                    <td colspan="2">
 
                         <table id='t_adv_options'>
                             <!-- Full scan -->
                             <tr>
                                 <td class='td_label'>
-                                    <label for="scan_mode"><?php echo _('Scan type')?>:</label>
+                                    <label for="scan_type"><?php echo _('Scan type')?>:</label>
                                 </td>
                                 <td>
-                                    <select id="scan_mode" name="scan_mode" class="nmap_select vfield">
+                                    <select id="scan_type" name="scan_type" class="nmap_select vfield">
                                         <?php
-                                        foreach ($scan_modes as $sm_v => $sm_txt)
+                                        foreach ($scan_types as $st_v => $st_txt)
                                         {
-                                            $selected = ($scan_mode == $sm_v) ? 'selected="selected"' : '';
+                                            $selected = ($scan_type == $st_v) ? 'selected="selected"' : '';
 
-                                            echo "<option value='$sm_v' $selected>$sm_txt</option>";
+                                            echo "<option value='$st_v' $selected>$st_txt</option>";
                                         }
                                         ?>
                                     </select>
                                 </td>
                                 <td style='padding-left: 20px;'>
-                                    <span id="scan_mode_info"></span>
+                                    <span id="scan_type_info"></span>
                                 </td>
                             </tr>
 
@@ -451,7 +459,7 @@ else
                             <tr>
                                 <td colspan="3">
 
-                                    <?php $ad_checked = ($autodetected == 1) ? 'checked="checked"' : '';?>
+                                    <?php $ad_checked = ($autodetected == TRUE) ? 'checked="checked"' : '';?>
 
                                     <input type="checkbox" id="autodetect" name="autodetect" class='vfield' <?php echo $ad_checked?> value="1"/>
                                     <label for="autodetect"><?php echo _('Autodetect services and Operating System')?></label>
@@ -460,7 +468,7 @@ else
                             <tr>
                                 <td colspan="3">
 
-                                    <?php $rdns_checked = ($rdns == 1) ? 'checked="checked"' : '';?>
+                                    <?php $rdns_checked = ($rdns == TRUE) ? 'checked="checked"' : '';?>
 
                                     <input type="checkbox" id="rdns" name="rdns" class='vfield' <?php echo $rdns_checked?> value="1"/>
                                     <label for="rdns"><?php echo _('Enable reverse DNS Resolution')?></label>
@@ -472,26 +480,24 @@ else
             </tbody>
         </table>
 
-        <p align="center">
+        <div class="c_actions">
             <?php
-            if (!GET('action')=='scan' || !empty($validation_errors))
-            { ?>
-            <input type="button" class="av_b_secondary" id="close_button" value="<?php echo _('Cancel') ?>"/>
-            <input type="submit" id="scan_button" <?php echo $disabled ?> value="<?php echo _('Start Scan') ?>"/>
-            <?php 
-            } 
+            if (GET('action') != 'scan' || !empty($e_msg))
+            {
+                $disabled = ($disable_scan == TRUE) ? "disabled='disabled'" : '';
+                ?>
+                <input type="button" class="av_b_secondary" id="close_button" value="<?php echo _('Cancel') ?>"/>
+                <input type="submit" id="scan_button" <?php echo $disabled?> value="<?php echo _('Start Scan') ?>"/>
+                <?php
+            }
             else
             {
-            ?>
-            <input type="button" class="av_b_secondary" id="close_button" value="<?php echo _('Close') ?>"/>
-            <?php
+                ?>
+                <input type="button" class="av_b_secondary" id="close_button" value="<?php echo _('Close') ?>"/>
+                <?php
             }
             ?>
-        </p>
-
-        <div id='scan_result'></div>
-
-        <br/>
+        </div>
 
     </form>
 </div>
@@ -500,6 +506,5 @@ else
 //Close DB connection
 $db->close();
 ?>
-<!-- end of Asset form -->
 </body>
 </html>

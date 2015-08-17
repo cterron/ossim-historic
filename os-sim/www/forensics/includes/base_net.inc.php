@@ -47,7 +47,7 @@ function baseIP2long($IP_str) {
     return $tmp_long;
 }
 function baseIP2hex($IP_str) {
-    return bin2hex(inet_pton($IP_str));
+    return bin2hex(@inet_pton($IP_str));
 }
 /****************************************************************************
 *

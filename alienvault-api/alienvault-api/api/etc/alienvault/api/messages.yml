@@ -200,8 +200,8 @@ messages: [
      type: Deployment,
      message_role: "admin",
      action_role: "admin",
-     title: "A change has been detected in the configuration files of one or more plugins",
-     description: "The AlienVault Sensor detected that the configuration files of one or more plugins have been modified. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.",
+     title: "A change has been detected in the plugin configuration files for PLUGINS_CHANGED",
+     description: "The configuration files for PLUGINS_CHANGED have been changed. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update\n\nFile path for changed plugins: PATH_PLUGINS_CHANGED",
      actions: "",
      alternative_actions: "",
      source: "monitor"
@@ -212,8 +212,8 @@ messages: [
      type: Deployment,
      message_role: "admin",
      action_role: "admin",
-     title: "One or more plugin configuration files have been deleted",
-     description: "The AlienVault Sensor detected that the configuration files of one or more plugins have been manually deleted. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.",
+     title: "Configuration files for PLUGINS_REMOVED have been removed from your system",
+     description: "The configuration files for PLUGINS_REMOVED have been removed. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.\n\nFile path for removed plugins: PATH_PLUGINS_REMOVED",
      actions: "",
      alternative_actions: "",
      source: "monitor"
@@ -224,8 +224,8 @@ messages: [
      type: Deployment,
      message_role: "admin",
      action_role: "admin",
-     title: "One or more changes have been detected in the syslog processor configuration files",
-     description: "The syslog processor configuration files have been manually changed. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.",
+     title: "A change has been detected in the syslog processor configuration files for RSYSLOG_FILES_CHANGED",
+     description: "The configuration files for RSYSLOG_FILES_CHANGED have been changed. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.\n\nFile path for changed files: PATH_RSYSLOG_FILES_CHANGED",
      actions: "",
      alternative_actions: "",
      source: "monitor"
@@ -236,8 +236,8 @@ messages: [
      type: Deployment,
      message_role: "admin",
      action_role: "admin",
-     title: "Syslog processor configuration files have been deleted",
-     description: "The syslog processor configuration files have been manually deleted. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.",
+     title: "Syslog processor configuration files for RSYSLOG_FILES_REMOVED have been removed from your system",
+     description: "The configuration files for RSYSLOG_FILES_REMOVED have been removed. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.\n\nFile path for removed files: PATH_RSYSLOG_FILES_REMOVED",
      actions: "",
      alternative_actions: "",
      source: "monitor"

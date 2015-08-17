@@ -822,7 +822,7 @@ switch($disp) {
     case "kill":
         $schedid = intval($schedid);
         if ($schedid>0) {
-            system("sudo /usr/share/ossim/scripts/vulnmeter/cancel_scan.pl $schedid");
+            Util::execute_command("sudo /usr/share/ossim/scripts/vulnmeter/cancel_scan.pl ?", array($schedid));
         }
         break;
     case "play_task":

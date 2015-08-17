@@ -566,17 +566,17 @@ function RepairDBTables($db) {
     /* Launch schema directly
     $schema = "/usr/share/ossim/www/forensics/scripts/schema.sql";
     if (file_exists($schema)) {
-        system("/usr/bin/ossim-db alienvault_siem < $schema > /var/tmp/repair_snort_schema_log 2>&1");
+        Util::execute_command("/usr/bin/ossim-db alienvault_siem < $schema > /var/tmp/repair_snort_schema_log 2>&1");
         session_write_close();
-        exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+        Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
     }*/
     $db->baseCacheFlush();
 }
 function ClearDataTables($db) {
-    exec('/usr/bin/ossim-db alienvault_siem < /usr/share/ossim/scripts/forensics/truncate.sql > /dev/null 2>&1');    
+    Util::execute_command('/usr/bin/ossim-db alienvault_siem < /usr/share/ossim/scripts/forensics/truncate.sql > /dev/null 2>&1');    
     $db->baseCacheFlush();
     session_write_close();
-    exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+    Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
 }
 // vim:tabstop=2:shiftwidth=2:expandtab
 function CleanUnusedSensors($db) {

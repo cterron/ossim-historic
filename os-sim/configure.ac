@@ -218,7 +218,6 @@ www/java/images/Makefile
 www/js/Makefile
 www/js/rico/Makefile
 www/js/scriptaculous/Makefile
-www/netscan/Makefile
 www/upgrade/Makefile
 www/userlog/Makefile
 scripts/Makefile

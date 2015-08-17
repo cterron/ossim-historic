@@ -50,7 +50,7 @@ require 'navigator.php';
 We need to use the timezone of the box in orther to keep synchronized the PHP and the NfSen.
 This is needed after upgrading to PHP 5.4 (The PHP timezone is UTC by default and it might not match with the machine's timezone)
 */
-$machine_tz = `head -1 /etc/timezone | tr -d '\n'`;
+$machine_tz = Util::execute_command("head -1 /etc/timezone | tr -d '\n'", FALSE, 'string');
 
 if ($machine_tz != '')
 {

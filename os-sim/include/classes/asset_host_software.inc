@@ -414,7 +414,7 @@ class Asset_host_software
 
         $query = "REPLACE INTO $tmptable (host_id, cpe, banner, last_modified, source_id, extra)
                         SELECT uf.asset_id, ?, ?, ?, ?, ? FROM user_component_filter uf, host h
-                        WHERE uf.login=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
+                        WHERE uf.session_id=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
 
         $extra = (is_array($s_data['extra'])) ? json_encode($s_data['extra']) : '';
 
@@ -424,7 +424,7 @@ class Asset_host_software
             gmdate('Y-m-d H:i:s'),
             $s_data['source_id'],
             $extra,
-            Session::get_session_user()
+            session_id()
         );
 
         $rs = $conn->Execute($query, $params);
@@ -532,12 +532,12 @@ class Asset_host_software
 
         $params = array(
             $cpe,
-            Session::get_session_user()
+            session_id()
         );
 
         $tmptable = Util::create_tmp_table($conn, 'id binary(16) NOT NULL, cpe varchar(255) NOT NULL, PRIMARY KEY ( id, cpe )');
 
-        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id, hs.cpe FROM user_component_filter uf, host h, host_software hs WHERE h.id=hs.host_id AND hs.cpe = ? AND uf.login=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
+        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id, hs.cpe FROM user_component_filter uf, host h, host_software hs WHERE h.id=hs.host_id AND hs.cpe = ? AND uf.session_id=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
 
         $query  = "DELETE hs FROM host_software hs, $tmptable tmp WHERE hs.host_id=tmp.id AND hs.cpe=tmp.cpe";
 
@@ -617,12 +617,12 @@ class Asset_host_software
         $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
 
         $params = array(
-            Session::get_session_user()
+            session_id()
         );
 
         $tmptable = Util::create_tmp_table($conn, 'id binary(16) NOT NULL, PRIMARY KEY ( id )');
 
-        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id FROM user_component_filter uf, host h WHERE uf.login=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
+        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id FROM user_component_filter uf, host h WHERE uf.session_id=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
 
         $query  = "DELETE hs FROM host_software hs, $tmptable tmp WHERE hs.host_id=tmp.id";
 
@@ -846,7 +846,7 @@ class Asset_host_software
         $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
 
         $params = array(
-            Session::get_session_user(),
+            session_id(),
             $total_selection
         );
 
@@ -875,7 +875,7 @@ class Asset_host_software
 
         $query = ossim_query("SELECT $cnt hs.cpe, hs.banner, hs.extra, count(distinct hs.host_id) as total, hsf.id AS source_id, hsf.name AS source_name
                               FROM host_software hs, user_component_filter uf, host h, host_source_reference hsf
-                              WHERE h.id=uf.asset_id AND uf.login=? AND hs.host_id=uf.asset_id AND hsf.id=hs.source_id AND uf.asset_type='asset' $q_where
+                              WHERE h.id=uf.asset_id AND uf.session_id=? AND hs.host_id=uf.asset_id AND hsf.id=hs.source_id AND uf.asset_type='asset' $q_where
                               GROUP BY hs.cpe
                               HAVING total = ?
                               $q_order

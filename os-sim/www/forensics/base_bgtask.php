@@ -29,7 +29,7 @@ if ($_SESSION["deletetask"] != "")
     
     if (!$rs)
     {
-        echo _('Unknown error in database');
+        echo _('Error in database');
     }
     else
     {

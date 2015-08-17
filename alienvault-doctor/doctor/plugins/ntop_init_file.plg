@@ -2,6 +2,7 @@
 name=Ntop init file
 description=Parses /var/lib/ntop/init.cfg searching for errors
 category=network,platform
+profiles=Sensor:>4.0
 type=file
 filename=/var/lib/ntop/init.cfg
 raw_limit=100

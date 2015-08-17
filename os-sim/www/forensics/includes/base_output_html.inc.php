@@ -1282,7 +1282,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             }
             function show_notification (msg, container, nf_type, style)
             {
-                var nt_error_msg = (msg == '')   ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : msg;
+                var nt_error_msg = (msg == '')   ? '<?php echo _('Sorry, operation was not completed due to an error when processing the request')?>' : msg;
                 var style        = (style == '' ) ? 'width: 80%; text-align:center; padding: 5px 5px 5px 22px; margin: 20px auto;' : style;
 
                 var config_nt = { content: nt_error_msg,
@@ -1307,7 +1307,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             	}
             
             // bgtask check
-            <?php if ($_SESSION["deletetask"] != "") echo "if (!__timeout) bgtask();\n"; else echo "// Not running"; ?>
+            <?php if ($_SESSION["deletetask"] != "") echo "if (typeof __timeout == 'undefined' || !__timeout) bgtask();\n"; else echo "// Not running"; ?>
             
             $('document').ready(function()
             {                                

@@ -64,8 +64,8 @@ validate_network_interfaces_file() {
 
 
 restart_interface(){
-
     ifdown --force $1
+    ip addr flush dev $1
     if [ $? = 0 ]; then
         ifup --force $1
     else
@@ -74,6 +74,11 @@ restart_interface(){
 }
 
 restart_all_interfaces(){
+    for interface in $(grep iface "$NETWORK_INTERFACES_FILE_BACKUP" | cut -d' ' -f2)
+    do
+        ifdown -i $NETWORK_INTERFACES_FILE_BACKUP --force $interface
+        ip addr flush dev $interface
+    done
     for interface in $(grep iface "$NETWORK_INTERFACES_FILE" | cut -d' ' -f2)
     do
         restart_interface $interface
@@ -279,8 +284,7 @@ update_admin_netmask(){
     save
     quit
 EOF
-    
-    
+
     validate_network_interfaces_file
     NEEDS_INTERFACE_RESTART="new"
 }
@@ -301,11 +305,53 @@ update_admin_dns() {
     NEEDS_INTERFACE_RESTART="new"
 }
 
+update_sensor_interfaces() {
+    AUG_INTERFACES_PATH="/files/etc/network/interfaces/iface"
+    ADMIN_INTERFACE=$(grep "^interface=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2)
+    SENSOR_INTERFACES=$(grep "^interfaces=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 | tr ',' '\n')
+    NETWORK_INTERFACES=$(augtool match /files/etc/network/interfaces/iface | awk '{ print $3 }' | grep -v lo  || true)
+
+    UNCONFIGURED_INTERFACES=$(echo "$SENSOR_INTERFACES" | grep -Fv "$NETWORK_INTERFACES" || true)
+    DELETED_INTERFACES=$(echo "$NETWORK_INTERFACES" | grep -Fv "$SENSOR_INTERFACES" | grep -v "$ADMIN_INTERFACE" || true)
+
+    for UIFACE in $UNCONFIGURED_INTERFACES; do
+        augtool << EOF
+set /files/etc/network/interfaces/auto[last()+1]/1 ${UIFACE}
+set /files/etc/network/interfaces/iface[last()+1] ${UIFACE}
+set /files/etc/network/interfaces/iface[.='${UIFACE}']/family inet
+set /files/etc/network/interfaces/iface[.='${UIFACE}']/method manual
+set /files/etc/network/interfaces/iface[.='${UIFACE}']/up[1] "ifconfig \$IFACE 0.0.0.0 up"
+set /files/etc/network/interfaces/iface[.='${UIFACE}']/up[2] "ip link set \$IFACE promisc on"
+set /files/etc/network/interfaces/iface[.='${UIFACE}']/down[1] "ip link set \$IFACE promisc off"
+set /files/etc/network/interfaces/iface[.='${UIFACE}']/down[2] "ifconfig \$IFACE down"
+save
+quit
+EOF
+        ifup --force $UIFACE
+    done
+
+    for DIFACE in $DELETED_INTERFACES; do
+        ifdown --force $DIFACE
+        augtool <<EOF
+rm /files/etc/network/interfaces/iface[.='${DIFACE}']
+rm /files/etc/network/interfaces/auto[child::1 = '${DIFACE}']
+save
+quit
+EOF
+        ifconfig $DIFACE down
+    done
+
+    # Get rid of the old configuration, just in case.
+    sed -i '/\(ifconfig\|eth\)/d' /etc/rc.local
+}
+
 
 case "$1" in
     configure)
         validate_network_interfaces_file
-        echo "Successful installation"
+
+        # Fix updates that move interfaces to the right place.
+        dpkg-trigger --no-await alienvault-config-sensor-interfaces
     ;;
 
     triggered)
@@ -337,6 +383,9 @@ case "$1" in
                     if [ "$NEW_INTERFACE" = "$OLD_INTERFACE" ]; then
                         update_admin_dns
                     fi
+                    ;;
+                alienvault-config-sensor-interfaces)
+                    update_sensor_interfaces
                     ;;
                 *)
                     echo "postinst called with unknown trigger \`$2'">&2

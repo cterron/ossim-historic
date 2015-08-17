@@ -185,8 +185,8 @@ function BuildSigByPlugin($plugin_id, $plugin_sid, $db) {
 function TranslateSignature($name, $arr)
 {
     $translations = array(
-        '/SRC_IP/' => 'inet_ntop($arr["ip_src"])',
-        "/DST_IP/" => 'inet_ntop($arr["ip_dst"])',
+        "/SRC_IP/" => '@inet_ntop($arr["ip_src"])',
+        "/DST_IP/" => '@inet_ntop($arr["ip_dst"])',
         "/SRC_PORT/" => '$arr["layer4_sport"]',
         "/DST_PORT/" => '$arr["layer4_dport"]',
         "/PROTOCOL/" => 'Protocol::get_protocol_by_number($arr["ip_proto"], TRUE)',

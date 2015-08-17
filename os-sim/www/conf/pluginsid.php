@@ -264,13 +264,7 @@ $back_url = urlencode(preg_replace ('/([&|\?]msg\=)(\w+)/', '\\1', $_SERVER["REQ
             ?>
                 notify('<?php echo _("Event type successfully updated")?>', 'nf_success');
             <?php 
-            }
-            elseif (GET('msg') == "unknown_error") 
-            { 
-            ?>
-                notify('<?php echo _("Sorry, operation was not completed due to an unexpected error")?>', 'nf_error');
-            <?php 
-            } 			
+            }		
             ?>
             
             //Remove search filter url

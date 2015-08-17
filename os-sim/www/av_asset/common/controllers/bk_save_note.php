@@ -98,7 +98,7 @@ if ($data['status'] != 'error')
         $db   = new ossim_db();
         $conn = $db->connect();
 
-        Notes::bulk_insert($conn, $asset_type, gmdate("Y-m-d H:i:s"), Session::get_session_user(), $note);
+        Notes::bulk_insert($conn, $asset_type, gmdate("Y-m-d H:i:s"), $note);
 
         $num_assets = Filter_list::get_total_selection($conn, $asset_type);
 

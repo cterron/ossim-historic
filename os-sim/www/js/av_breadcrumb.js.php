@@ -35,10 +35,10 @@ header("Content-type: text/javascript");
 
 ?>
 
-(function($) 
-{                   
-    /*********   PROGRESS BAR   ********/  
-    $.fn.AVbreadcrumb = function(o) 
+(function($)
+{
+    /*********   Breadcrumb   ********/
+    $.fn.AVbreadcrumb = function(o)
     {
         o = $.extend(
         {
@@ -66,12 +66,15 @@ header("Content-type: text/javascript");
         var i = 1;
         $.each( o.items, function(k, item) 
         {
+            //Encoding title as HTML entities
+            var title = $('<div>').html(item.title).text();
+
             if (i != steps)
             {
                 $('<div>', 
                 {
                     "class" : "av_breadcrumb_item av_link",
-                    "text"  : item.title,
+                    "text"  : title,
                     "click" : function ()
                     {
                         if (typeof item.action == 'function')
@@ -96,24 +99,23 @@ header("Content-type: text/javascript");
             }
             else
             {
-                $('<div>', 
+                $('<div>',
                 {
                     "class" : "av_breadcrumb_item last",
-                    "text"  : item.title
+                    "text"  : title
                 }).appendTo(__bc);
             }
             
             i++;
-        });       
+        });
         
         $('<div>', 
         {
             "class": "clear_layer"
         }).appendTo(__bc);
-        
+
 
         return this;
-            
     }
 
 })(jQuery);

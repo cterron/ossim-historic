@@ -413,7 +413,6 @@ function GetOssimHostsFromHostGroups($hostgroup)
 function GetDatesWithEvents($db) {
     $dates = array();
     $temp_sql = "SELECT distinct(date(timestamp)) FROM ac_acid_event WHERE 1";
-	//$temp_sql = "SELECT distinct(DATE_FORMAT(timestamp, '%Y-%m-%d')) FROM acid_event";
     $tmp_result = $db->baseExecute($temp_sql);
     while ($myrow = $tmp_result->baseFetchRow()) {
     

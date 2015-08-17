@@ -128,12 +128,11 @@ if (preg_match("/^\!?[A-F0-9]{32}$/i",$_GET["sensor"]))
     
     /*
      * Resolve Sensor ID -> Device ID
-     * Must match device IP with real sensor IP (This will discard Device IPs not present in alienvault.sensor)
      * When multiple device_id1,device_id2,device_id3 GetSensorName will resolve the first one
      */
     $sids = $conn_aux->GetOne("SELECT GROUP_CONCAT(device.id SEPARATOR ',') as id
-                               FROM alienvault_siem.device, alienvault.sensor
-                               WHERE device.sensor_id=UNHEX(?) AND device.device_ip=sensor.ip
+                               FROM alienvault_siem.device
+                               WHERE device.sensor_id=UNHEX(?)
                                ORDER BY device.id", array(str_replace('!','',$_GET["sensor"])));
     
     if (empty($sids))
@@ -183,6 +182,11 @@ if ($_GET["search_str"] != "" && in_array($_GET["submit"], $host_submit) && !pre
 $db_aux->close();
 
 if ($_SESSION['view_name_changed']) { $_GET['custom_view'] = $_SESSION['view_name_changed']; $_SESSION['view_name_changed'] = ""; $_SESSION['norefresh'] = 1; }
+// Background delete in progress in grouped by view
+elseif ($_SESSION["deletetask"] != "" && preg_match("/base_stat_(alerts|sensor)\.php/", $_SERVER['SCRIPT_NAME']))
+{
+    $_SESSION['norefresh'] = "1";
+}
 else $_SESSION['norefresh'] = "";
 
 $custom_view = $_GET['custom_view'];
@@ -254,7 +258,7 @@ if ($_GET['time_range'] != "") {
         $_GET['time_range']     = "all";
         $_SESSION['time_range'] = "all";
     } else {
-        if (isset($_SESSION['time'])) {
+        if (isset($_SESSION['time']) && is_array($_SESSION['time'])) {
         	// Secure assign to session time
 	    	$_GET['time'][0][1] = $valid_operator[$_SESSION['time'][0][1]];
 

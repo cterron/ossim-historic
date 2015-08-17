@@ -52,6 +52,7 @@ alienvault-suricata
 alienvault-sysctl
 alienvault-system-benchmark
 alienvault-vmware-aio-6x1gb
+alienvault-vmware-aio-6x1gb-lite
 alienvault-vmware-logger-standard
 alienvault-vmware-sensor-remote
 alienvault-vmware-sensor-standard-6x1gb
@@ -99,6 +100,7 @@ coreutils
 cpio
 cron
 curl
+daemon
 daq
 dash
 dbconfig-common
@@ -111,6 +113,8 @@ debsums
 defoma
 dialog
 diffutils
+discover
+discover-data
 dmidecode
 dmsetup
 dnsutils
@@ -178,6 +182,7 @@ initramfs-tools
 initscripts
 insserv
 install-info
+installation-report
 intltool-debian
 iotop
 ipcalc
@@ -194,6 +199,7 @@ joe
 kbd
 keyboard-configuration
 klibc-utils
+laptop-detect
 less
 libacl1
 libaio1
@@ -269,6 +275,7 @@ libdbi0
 libdevel-symdump-perl
 libdevmapper1.02.1
 libdigest-sha1-perl
+libdiscover2
 libdns69
 libdrm-intel1
 libdrm-nouveau1
@@ -520,6 +527,7 @@ mongodb-clients
 mongodb-server
 monit
 mount
+mpt-status
 mrtg
 multiarch-support
 munin

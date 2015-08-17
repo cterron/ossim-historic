@@ -183,6 +183,7 @@ gboolean          sim_session_is_web                          (SimSession  *sess
 void              sim_session_update_last_data_timestamp      (SimSession  *session);
 time_t            sim_session_get_last_data_timestamp         (SimSession  *session);
 time_t            sim_session_get_last_event_timestamp        (SimSession * session);
+gboolean          sim_session_is_loopback                     (SimSession * session);
 
 G_END_DECLS
 

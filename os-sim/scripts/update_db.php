@@ -43,17 +43,18 @@ function execute_sql($path_file_log, $sql_file, $upgrade)
     if (preg_match("/\.gz$/", $sql_file))
     {
         // Gzipped .sql.gz
-        $cmd = "zcat $sql_file | ossim-db > $path_file_log 2>&1";
+        $cmd = "zcat ? | ossim-db > ? 2>&1";
     }
     else
     {
         // Normal .sql
-        $cmd = "ossim-db < $sql_file > $path_file_log 2>&1";
+        $cmd = "ossim-db < ? > ? 2>&1";
     }
-    system($cmd, $ret);
-
-    if (!$ret)
+    
+    try
     {
+        Util::execute_command($cmd, array($sql_file, $path_file_log), 'array'); // Array mode to catch errors
+
         $php_file = str_replace("_mysql.sql", ".php", $sql_file);
         $php_file = preg_replace("/\.gz$/", "", $php_file); // Clean .gz
         if (file_exists($php_file))
@@ -61,9 +62,14 @@ function execute_sql($path_file_log, $sql_file, $upgrade)
             echo "\t Done\nExecuting: ".$sql_file."...";
             return execute_php($php_file, $upgrade, $path_file_log);
         }
+        
+        return 0;
+    }
+    catch (Exception $e)
+    {
+        return 1;
     }
 
-    return $ret;
 }
 
 function execute_php($php_file, $upgrade, $path_file_log) 
@@ -117,9 +123,9 @@ foreach($upgrade->get_needed() as $act)
         echo "\nFailed to apply SQL schema upgrade file '$file'\n";
         if (file_exists($path_file_log))
         {
-           $cmd="cat $path_file_log";
            echo "\nError Description: \n";
-           system($cmd);
+           $_error_output = Util::execute_command('cat ?', array($path_file_log), 'string');
+           echo $_error_output;
         }
         echo "\n\nStatus: Upgrade Failed\n\n\n"; 
         exit();

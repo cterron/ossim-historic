@@ -139,7 +139,10 @@ function delete_all_alarms($conn)
 	$file = Alarm::delete_all_backlog($conn);
 
 	//Executing the sql for deleting the queries in background
-	@system("php /usr/share/ossim/scripts/alarms/bg_alarms.php $user $file > /dev/null 2>&1 &");
+	$cmd    = 'php /usr/share/ossim/scripts/alarms/bg_alarms.php ? ? > /dev/null 2>&1 &';
+	$params = array($user, $file);
+	
+	Util::execute_command($cmd, $params);
 
 
 	$return['error'] = FALSE;
@@ -164,7 +167,10 @@ function close_all_alarms()
 	$file = Alarm::close_all();
 
 	//Executing the sql for closing the queries in background
-	@system("php /usr/share/ossim/scripts/alarms/bg_alarms.php $user $file > /dev/null 2>&1 &");
+	$cmd    = 'php /usr/share/ossim/scripts/alarms/bg_alarms.php ? ? > /dev/null 2>&1 &';
+	$params = array($user, $file);
+	
+	Util::execute_command($cmd, $params);
 
 
 	$return['error'] = FALSE;
@@ -229,8 +235,9 @@ function check_bg_tasks($conn)
 	//If the pid is not empty, then we check if the process is still running
 	if($pid != '')
 	{
-    	//Launching a ps with the pid stored
-		@exec("ps $pid", $process_state);
+        //Launching a ps with the pid stored
+        $process_state = Util::execute_command('ps ?', array(intval($pid)), 'array');
+		
 	    $bg = (count($process_state) >= 2); //If the count is >= 2 then there is a process running
 
 	    //If the process is not running any longer, then we delete the pid from db

@@ -107,6 +107,10 @@ ChallengeResponseAuthentication no
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
 
+# Ping clients if data is not received after a while
+ClientAliveCountMax 3
+ClientAliveInterval 15
+
 Subsystem sftp /usr/lib/openssh/sftp-server
 
 # Set this to 'yes' to enable PAM authentication, account processing,

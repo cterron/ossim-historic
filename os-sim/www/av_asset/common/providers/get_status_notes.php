@@ -78,14 +78,14 @@ try
     $db   = new Ossim_db();
     $conn = $db->connect();
 
-    if (isset($_POST['asset_id']) && isset($_POST['asset_type']))
+    if ($asset_id && $asset_type)
     {
         if (!array_key_exists($asset_type, $asset_types))
         {
             Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Invalid Asset Type'));
         }
 
-        $class_name = $asset_types[$_POST['asset_type']];
+        $class_name = $asset_types[$asset_type];
 
         // Check Asset Permission
         if (method_exists($class_name, 'is_allowed') && !$class_name::is_allowed($conn, $asset_id))
@@ -116,7 +116,7 @@ catch(Exception $e)
     Util::response_bad_request($e->getMessage());
 }
 
-$tooltip = sprintf(_("There are %d notes on this %s."), $total, ucfirst($asset_type));
+$tooltip = sprintf(_("This %s has %s note(s)."), ucfirst($asset_type), $total);
 
 
 $data = array(

@@ -692,8 +692,8 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                         
                         if (cnd_1 || cnd_2)
                         {                        
-                            var error_msg = (cnd_1 == true) ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : data.data
-                            
+                            var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an error when processing the request')?>' : data.data
+
                             netflow_notification(error_msg, 'nf_error', 10000, true);
                             
                             $('#netflow_hdr').html(status_info);
@@ -772,8 +772,9 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                             $('#netflow_hdr').html(status_info);
                             
                             hide_loading_box();
-                                                        
-                            var error_msg = (cnd_1 == true) ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : data.data
+
+                            var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an error when processing the request')?>' : data.data
+
                             netflow_notification(error_msg, 'nf_error', 10000, true);
                         }
                         else
@@ -830,9 +831,8 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                     var cnd_2 = (typeof(data) != 'undefined' && data != null && data.status != 'success');                    
                     
                     if (cnd_1 || cnd_2)
-                    {                        
-                        var error_msg = (cnd_1 == true) ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : data.data
-                        
+                    {
+                        var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an error when processing the request')?>' : data.data
                         netflow_notification(error_msg, 'nf_error', 10000, true);
                     }
                     else

@@ -613,7 +613,7 @@ switch($action)
                     }
                     else
                     {
-                        Asset_host_services::delete_all_from_db($conn, $asset_id);
+                        Asset_host_services::delete_all_from_db($conn, $asset_id, TRUE);
                     }
                 }
                 catch(Exception $e)

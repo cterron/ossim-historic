@@ -29,7 +29,7 @@ foreach ($targets as $target)
 
 $exception_list = (!empty($exceptions)) ? ';' . implode(';', $exceptions) : '';
 
-exec('/usr/bin/php /usr/share/ossim/www/vulnmeter/simulate.php ' . $sched_id, $output);
+$output = Util::execute_command('/usr/bin/php /usr/share/ossim/www/vulnmeter/simulate.php ?', array($sched_id), 'array');
 
 $data = @json_decode(implode('', $output), TRUE);
 

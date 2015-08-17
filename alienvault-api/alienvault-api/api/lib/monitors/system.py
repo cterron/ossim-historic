@@ -41,6 +41,7 @@ import traceback
 import celery.utils.log
 import time
 import datetime
+import os
 from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
 from ansiblemethods.system.system import (
     get_root_disk_usage,
@@ -88,6 +89,7 @@ from apimethods.system.system import (
     get as system_get,
     apimethod_get_update_info,
     system_is_trial,
+    system_is_professional,
     get_license_devices
 )
 from apimethods.system.support import status_tunnel
@@ -536,7 +538,14 @@ class MonitorSystemCheckDB(Monitor):
         if not success:
             api_log.error("Can't get local system_id")
             return False
+
         self.remove_monitor_data()
+
+        # OSSIM must not tell to migrate the DB
+        rc, pro = system_is_professional(system_id)
+        if not pro:
+            return True
+
         (success, result) = check_any_innodb_tables()
         mresult = False
         if success:
@@ -633,25 +642,37 @@ class MonitorWebUIData(Monitor):
             trial_expires_7days = False
             trial_expires_2days = False
             if not success:
-                api_log.error(message)
+                rc, pro = system_is_professional()
+                if rc:
+                    if pro:
+                        # OK, we have an error here
+                        api_log.error(message)
+                    else:
+                        pass
             else:
                 # expire=9999-12-31
                 expiration_date = expires.split('=')[1]
-                mktime_expression = datetime.datetime.strptime(expiration_date,
-                                                               "%Y-%m-%d").timetuple()
-                expires = int(time.mktime(mktime_expression))
+                if expiration_date:
+                    mktime_expression = datetime.datetime.strptime(expiration_date,
+                                                                   "%Y-%m-%d").timetuple()
+                    expires = int(time.mktime(mktime_expression))
 
-                one_week_left = now - 604800
-                two_days_left = now - 172800
+                    one_week_left = now - 604800
+                    two_days_left = now - 172800
 
-                if expires < one_week_left:
-                    trial_expires_7days = True
-                elif expires < two_days_left:
-                    trial_expires_2days = True
-                elif expires < now:
-                    trial_expired = True
+                    if expires < one_week_left:
+                        trial_expires_7days = True
+                    elif expires < two_days_left:
+                        trial_expires_2days = True
+                    elif expires < now:
+                        trial_expired = True
+                    else:
+                        pass
                 else:
-                    pass
+                    if os.path.isfile("/etc/ossim/ossim.lic"):
+                        api_log.warning("Valid license but no web admin user found!")
+                    else:
+                        api_log.debug("Expiration date can't be determined: License file not found")
 
             monitor_data[self.__WEB_MESSAGES["MESSAGE_TRIAL_EXPIRED"]] = {'trial_checked': success,
                                                                           'trial_expired': trial_expired}
@@ -689,7 +710,7 @@ class MonitorWebUIData(Monitor):
                            self.get_json_message(monitor_data))
 
         except Exception as err:
-            api_log.error("Something wrong happened while running WebUIData monitor %s" % str(err))
+            api_log.error("Error processing WebUIData monitor information: %s" % str(err))
             return False
         return True
 

@@ -20,7 +20,7 @@ include_once ("$BASE_path/base_db_common.php");
 include_once ("$BASE_path/base_qry_common.php");
 include_once ("$BASE_path/base_stat_common.php");
 
-if ($_SESSION['_siem_current_query_graph']=="" || $_SESSION['_siem_ip_query']=="") {
+if ($_SESSION['_siem_current_query_graph']=="" || $_SESSION['_siem_ip_query']=="" || $_SESSION["deletetask"] != "") {
     echo "-##-##-";
     die();
 }

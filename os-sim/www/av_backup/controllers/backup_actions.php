@@ -108,7 +108,7 @@ switch($action)
             }
             catch(Exception $e)
             {
-                Util::response_bad_request(_('An unexpected error occurred - backup could not be deleted. Please try again.'));
+                Util::response_bad_request(_('An API error occurred - backup could not be deleted. Please try again.'));
             }
         }
 
@@ -154,7 +154,7 @@ switch($action)
             }
             catch(Exception $e)
             {
-                Util::response_bad_request(_('An unexpected error occurred - backup could not be launched. Please try again.'));
+                Util::response_bad_request(_('An API error occurred - backup could not be launched. Please try again.'));
             }
         }
 
@@ -202,7 +202,7 @@ switch($action)
             }
             catch(Exception $e)
             {
-                Util::response_bad_request(_('An unexpected error occurred - backup could not be downloaded. Please try again.'));
+                Util::response_bad_request(_('An API error occurred - backup could not be downloaded. Please try again.'));
             }
         }
     

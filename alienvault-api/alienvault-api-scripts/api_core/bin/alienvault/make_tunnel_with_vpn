@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     success, data = make_tunnel_with_vpn(options.system,options.password)
     if not success:
-        print "An error occurred while building the vpn tunnel: %s" % data
+        print "An error occurred while establishing the vpn tunnel: %s" % data
         exit(-1)
     print data
     exit(0)

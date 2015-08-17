@@ -18,6 +18,12 @@ case "$1" in
     upgrade)
         # Clean up .py[co]
         find /usr/share/alienvault/api/ -name "*.py[co]" -exec rm -f {} \; || true
+
+        # Backup old configuration files, if needed.
+        DEFAULT_TASKS_FILE="/etc/alienvault/api/default_tasks.yml"
+        CUSTOM_TASKS_FILE="/etc/alienvault/api/custom_tasks.yml"
+        [ -f "$DEFAULT_TASKS_FILE" ] && cp "$DEFAULT_TASKS_FILE" "$DEFAULT_TASKS_FILE"_old
+        [ -f "$CUSTOM_TASKS_FILE" ] && cp "$CUSTOM_TASKS_FILE" "$CUSTOM_TASKS_FILE"_old
     ;;
 
     install|abort-upgrade)

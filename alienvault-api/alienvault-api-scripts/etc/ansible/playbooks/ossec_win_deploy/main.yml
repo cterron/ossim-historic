@@ -88,24 +88,14 @@
       action: shell executable=/bin/bash echo '{{PROGRAM_FILES.stdout}}' | cut -d':' -f 1
       register: PROGRAM_FILES_DRIVE
 
-    - name: Get agent ID to later delete it if it exists
+    - name: Get agent ID
       action: shell executable=/bin/bash echo 'L'$'\n'$'\n''Q'$'\n' | {{osser_server_manage}} | grep ' {{agent_name}}, IP' | awk '{print $2}' | cut -f 1 -d','
       register: AGENT_ID
       sudo: yes
 
-    - name: Delete agent if it exists
-      action: shell executable=/bin/bash echo 'R'$'\n'{{item}}$'\n''y'$'\n''Q'$'\n' | {{osser_server_manage}}
-      when: AGENT_ID.stdout != ''
-      with_items: AGENT_ID.stdout.split('\n')
-      sudo: yes
-
-    - name: Add agent to server
-      action: shell executable=/bin/bash echo -e 'A''\n''{{agent_name}}''\n'{{windows_ip}}'\n''\n''y''\n''Q''\n' | {{osser_server_manage}}
-      sudo: yes
-
-    - name: Restart server
-      action: service name=ossec state=restarted
-      sudo: yes
+    - name: Cannot get agent ID
+      fail: msg='Cannot retrieve the agent ID'
+      when: AGENT_ID.stdout == ''
 
     - name: Send agent installer
       action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file}} --configfile={{smb_winexec_config_file}} --command='lcd {{downloads_dir}}; put {{ossec_agent_binary_file}}'
@@ -114,7 +104,6 @@
       action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net stop OssecSvc > nul 2>&1'
       register: stop_result
       ignore_errors: True
-
 
     - name: Kill the manager if it is working. When the manager is working the install process doesn't work
       action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c taskkill /IM win32ui.exe /F > nul 2>&1'

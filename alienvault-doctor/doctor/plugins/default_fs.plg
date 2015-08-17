@@ -4,11 +4,11 @@ description=Check the mounted file systems.
 category=system
 strike_zone=True
 type=command
-requires=@files:/bin/mount
+requires=@dpkg:alienvault-professional;@files:/bin/mount
 command=mount
 raw_limit=100
 
-[Default file systems]
+[Verify whether the file systems mounted are standard]
 pattern=^.*type\s+(\S*)\s
 conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/default_fs.list
 warning=Some mounted file systems are not standard

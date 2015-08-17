@@ -2181,6 +2181,21 @@ function submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $sched
         $bbimonth = (strlen($bbimonth) == 1) ? '0' . $bbimonth : $bbimonth;
         $bbiday   = (strlen($bbiday) == 1) ?   '0' . $bbiday   : $bbiday;
         
+        // Delete scheduled jobs if "Inmeditely" scheduled method is selected
+        
+        if (isset($sched_id) && $sched_id >0 && $schedule_type == 'N')
+        {
+            $query  = 'DELETE FROM vuln_job_schedule WHERE id = ?';
+            $params = array($sched_id);
+    
+            $rs = $dbconn->Execute($query, $params);
+    
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+        }
+        
         $qc = 0;
         
         if($schedule_type == 'N')

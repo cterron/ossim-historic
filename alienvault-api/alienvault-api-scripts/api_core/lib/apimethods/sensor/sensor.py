@@ -30,6 +30,7 @@
 from db.methods.sensor import get_sensor_ip_from_sensor_id
 from db.methods.system import get_system_id_from_local
 from db.methods.sensor import get_system_id_from_sensor_id
+from db.methods.sensor import get_base_path
 from apimethods.utils import  get_base_path_from_system_id
 from ansiblemethods.system.system import set_av_config, ansible_add_system
 from ansiblemethods.sensor.detector import get_sensor_detectors_from_yaml
@@ -90,10 +91,11 @@ def get_base_path_from_sensor_id(sensor_id):
             return False, "Can't retrieve the system id"
         return True, get_base_path_from_system_id(system_id)
 
-    rt, system_id = get_system_id_from_sensor_id(sensor_id)
-    if not rt:
-        return False, "Can't retrieve the system id"
-    return True, get_base_path_from_system_id(system_id)
+    # rt, system_id = get_system_id_from_sensor_id(sensor_id)
+    # if not rt:
+    #    return False, "Can't retrieve the system id"
+    # return True, get_base_path_from_system_id(system_id)
+    return get_base_path(sensor_id)
 
 
 @use_cache(namespace="sensor_plugins")

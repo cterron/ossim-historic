@@ -31,6 +31,7 @@ import subprocess
 import MySQLdb
 import re
 import json
+import traceback
 
 from os import path
 
@@ -119,6 +120,7 @@ class Plugin:
         self.__name = ''
         self.__description = ''
         self.__type = ''
+        self.__exclude = ''
         self.__category = []
         self.__requires = []
         self.__profiles = []
@@ -128,6 +130,8 @@ class Plugin:
 
         # 'file' type properties.
         self.__filename = ''
+        self.__file_must_exist = False
+        self.__check_force_true = False
 
         # 'command' type properties.
         self.__command = ''
@@ -185,6 +189,19 @@ class Plugin:
             # Check for the 'strike_zone' option
             if self.__config_file.has_option('properties', 'strike_zone'):
                 self.__strike_zone = self.__config_file.getboolean('properties', 'strike_zone')
+
+            # Check for the 'file_must_exist' option
+            if self.__config_file.has_option('properties', 'file_must_exist'):
+                self.__file_must_exist = self.__config_file.getboolean('properties', 'file_must_exist')
+
+            # Check for the 'exclude' option
+            if self.__config_file.has_option('properties', 'exclude'):
+                self.__exclude = self.__config_file.get('properties', 'exclude').split(',')
+                for excluding_profile in self.__exclude:
+                    excluding_profile = excluding_profile.strip()
+                    if excluding_profile in self.__alienvault_config['hw_profile']:
+                        raise PluginError('Plugin cannot be executed in %s' % self.__alienvault_config['hw_profile'],
+                                          self.__name)
 
             # Check for the 'limit' option (in kbytes), used in combination with the raw data output. '0' means no limit.
             if self.__raw and self.__config_file.has_option('properties', 'raw_limit'):
@@ -244,7 +261,8 @@ class Plugin:
             raise
 
         except Exception, msg:
-            raise PluginError('Cannot initialize plugin: %s' % str(msg), filename)
+            raise PluginError('%s' % traceback.format_exc(), filename)
+            # raise PluginError('Cannot initialize plugin: %s' % str(msg), filename)
 
     # Check for plugin requirements.
     # Currently, requirement types could be 'modules', 'files', 'dpkg', 'hardware'.
@@ -300,6 +318,11 @@ class Plugin:
             fp = open(self.__filename, 'r')
             self.__data = fp.read()
             self.__data_len = len(self.__data)
+        except IOError as e:
+            if e.strerror == "No such file or directory" and not self.__file_must_exist:
+                self.__check_force_true = True
+            else:
+                raise PluginError('Cannot parse file "%s": %s' % (self.__filename, e), self.__name)
         except Exception as e:
             raise PluginError('Cannot parse file "%s": %s' % (self.__filename, e), self.__name)
 
@@ -399,7 +422,12 @@ class Plugin:
 
         for check in self.__checks:
             total += 1
-            result, msg = check.run()
+            result = False
+            msg = ''
+            if self.__check_force_true:
+                result = True
+            else:
+                result, msg = check.run()
 
             if not result:
                 if self.__verbose == 2:

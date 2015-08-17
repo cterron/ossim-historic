@@ -1192,6 +1192,17 @@ sim_idm_entry_get_username (SimIdmEntry *entry)
   return entry->_priv->username_raw;
 }
 
+void
+sim_idm_entry_clear_username (SimIdmEntry *entry)
+{
+  g_return_if_fail (SIM_IS_IDM_ENTRY (entry));
+
+  g_hash_table_remove_all (entry->_priv->username);
+
+  g_free (entry->_priv->username_raw);
+  entry->_priv->username_raw = NULL;
+}
+
 const gchar *
 sim_idm_entry_get_hostname (SimIdmEntry *entry)
 {

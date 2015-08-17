@@ -36,13 +36,14 @@ require_once 'av_init.php';
 
 Session::logcheck('environment-menu', 'PolicyHosts');
 
+//Scan object
+$user             = Session::get_session_user();
+$scan_report_file = AV_TMP_DIR.'/last_scan_report-'. md5($user);
 
 
 /****************************************************
 ****************** AJAX Validation ******************
 *****************************************************/
-
-
 
 //Validation array
 
@@ -228,34 +229,33 @@ if ($data['status'] == 'error')
 }
 else
 {
-    $db   = new ossim_db();
-    $conn = $db->connect();
-
-    //Scan results
-
-    $scan         = new Scan();
-    $scan_results = $scan->get_results();
+    $scan_report = file_get_contents($scan_report_file);
+    $scan_report = unserialize($scan_report);
 
     //Sensor context
-    $ctx = $scan_results['sensor']['ctx'];
+    $ctx = $scan_report['sensor']['ctx'];
 
     session_write_close();
 
-    $data = Scan::save_hosts_in_db($conn, $scan_results, $_POST);
+    $db   = new ossim_db();
+    $conn = $db->connect();
+
+
+    $data = Av_scan::save_scan_report_in_db($conn, $scan_report, $_POST);
 
     //Check general status
 
     if (count($data['general']['hosts_in_group']) == 0)
     {
         $data['general']['status'] = 'error';
-        $data['general']['data']   = _('Error! Assets could not be saved');
+        $data['general']['data']   = _('Error! Assets could not be updated');
     }
     else
     {
         if (count($data['general']['hosts_in_group']) == $data['general']['total_hosts'])
         {
             $data['general']['status'] = 'success';
-            $data['general']['data']   = _('Assets successfully saved');
+            $data['general']['data']   = _('Asset information succesfully updated');
 
 
             foreach($data['by_host'] as $h_key => $h_data)
@@ -263,7 +263,7 @@ else
                 if ($h_data['status'] == 'warning')
                 {
                     $data['general']['status'] = 'warning';
-                    $data['general']['data']   = _('Assets saved with warnings');
+                    $data['general']['data']   = _('Asset information succesfully updated');
 
                     break;
                 }
@@ -272,7 +272,7 @@ else
         else
         {
             $data['general']['status'] = 'warning';
-            $data['general']['data']   = _('Warning! Some assets could not be saved');
+            $data['general']['data']   = _('Warning! Some assets could not be updated');
         }
 
         //Create a Asset Group
@@ -293,12 +293,12 @@ else
     }
 
 
-/*
+    /*
     echo '<pre style="white-space: pre;">';
         print_r($data);
-        print_r($scan_results);
+        print_r($scan_report);
     echo '</pre>';
-*/
+    */
 
     //Showing scan results
     ?>
@@ -334,7 +334,7 @@ else
 
             <tbody>
             <?php
-            $host_info = $scan_results['scanned_ips'];
+            $host_info = $scan_report['scanned_ips'];
 
             foreach($data['by_host'] as $host_key => $host_data)
             {
@@ -457,21 +457,21 @@ else
             "fnRowCallback": function(nRow, aData, iDrawIndex, iDataIndex) {
 
                 $('.td_details img', nRow).off('click').on('click', function() {
-    
+
                     if ($(this).hasClass('show'))
-                    {  
+                    {
                         //Close details
-                        $(this).removeClass('show').addClass('hide');                        			
+                        $(this).removeClass('show').addClass('hide');
                         dt.fnClose(nRow);
                     }
                     else
-                    {       
-                        /* Open this row */ 
+                    {
+                        /* Open this row */
                         $(this).removeClass('hide').addClass('show')
-                                                                
-                        var details = $(this).parents('tr').find('.td_details .details_info').html();                               
-                        var status  = $(this).parents('tr').find('.td_status span').text();  
-                        
+
+                        var details = $(this).parents('tr').find('.td_details .details_info').html();
+                        var status  = $(this).parents('tr').find('.td_status span').text();
+
                         if (status  == 'Warning')
                         {
                             var tt_class = 'tt_warning';
@@ -482,16 +482,16 @@ else
                             var tt_class = 'tt_error';
                             var hd_class = 'host_details_e';
                         }
-                        
+
                         var html_details = '<div class="tray_container">' +
                            '<div class="tray_triangle ' + tt_class +'"></div>' +
                                 details +
                             '</div>';
-                                                
+
                         dt.fnOpen(nRow, html_details, hd_class);
-                        
+
                     }
-                });                   
+                });
             }
         });
     </script>
@@ -502,9 +502,7 @@ else
 
     if (count($data['general']['hosts_in_group']) > 0)
     {
-        $scan_object = new Scan();
-
-        $scan_object->delete_data();
+        @unlink($scan_report_file);
     }
 
     $db->close();

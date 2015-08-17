@@ -1797,10 +1797,6 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ET TROJAN Dropper-497 (Yuma
 #
 alert tcp $EXTERNAL_NET 1024: -> $HOME_NET any (msg:"ET TROJAN Dropper-497 Yumato Reply from server"; flow:established,from_server; content:"YUMATO|0d 0a|1234"; depth:12; reference:url,doc.emergingthreats.net/bin/view/Main/TrojanDropper497; classtype:trojan-activity; sid:2007919; rev:2;)
 
-#discovered by victor julien, sigs by matt jonkman, interesting one. Uses an html-like tag language on 8181
-#
-alert tcp $EXTERNAL_NET [1024:7989,7991:] -> $HOME_NET any (msg:"ET TROJAN Dropper-497 (Yumato) Status Reply from server"; flow:established,from_server; dsize:4; content:"|32 31 0d 0a|"; depth:4; reference:url,doc.emergingthreats.net/bin/view/Main/TrojanDropper497; classtype:trojan-activity; sid:2007920; rev:4;)
-
 #matt jonkman, Dropper.Win32.VB.on
 #Might be able to http_client_body these matches - but can't tell without pcap....
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Dropper.Win32.VB.on Keylog/System Info Report via HTTP"; flow:established,to_server; content:"post================================"; content:"=====|0d 0a|Resource Name "; distance:0; content:"|0d 0a|User Name/Value "; distance:0; content:"*************STEAM PASSWORDS**********"; distance:0; content:"Number of procesor|3a|"; distance:0; reference:url,doc.emergingthreats.net; classtype:trojan-activity; sid:2007987; rev:4;)
@@ -2470,7 +2466,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET TROJAN Possible Infection R
 #They're pretty bland, other than they almost always use the Indy Mail lib. So the mail is slightly unique
 #This sig should catch them outbound
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET TROJAN Possible Infection Report Mail - Indy Mail lib and Nome do Computador in Body"; flow:established,to_server; content:"|0d 0a|X-Library|3a| Indy "; content:"Nome do Computador......."; nocase; distance:0; reference:url,doc.emergingthreats.net/2007950; classtype:trojan-activity; sid:2007950; rev:4;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET [25,587] (msg:"ET TROJAN Possible Infection Report Mail - Indy Mail lib and Nome do Computador in Body"; flow:established,to_server; content:"|0d 0a|X-Library|3a| Indy "; content:"Nome do Computador.."; nocase; distance:0; reference:url,doc.emergingthreats.net/2007950; classtype:trojan-activity; sid:2007950; rev:6;)
 
 #by Marcus of Unsober
 #ref: 0ad5f61380dba645bd1eaa965a78a8d1
@@ -4789,9 +4785,6 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Trojan Inte
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Backdoor.Esion CnC Checkin"; flow:established,to_server; content:"/bot/gate.php"; http_uri; fast_pattern:only; reference:url,us.norton.com/security_response/writeup.jsp?docid=2011-052510-1535-99&tabid=2; classtype:trojan-activity; sid:2013211; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Backdoor.Meciv Checkin"; flow:established,to_server; content:"/trandocs/netstat"; nocase; http_uri; reference:url,us.norton.com/security_response/writeup.jsp?docid=2011-070516-5325-99&tabid=2; reference:url,www.secureworks.com/research/threats/sindigoo/; classtype:trojan-activity; sid:2013212; rev:2;)
-
-#
 alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Gh0st Remote Access Trojan Encrypted Session To CnC Server"; flow:established,to_server; content:"GhOst"; depth:5; reference:url,www.scribd.com/doc/13731776/Tracking-GhostNet-Investigating-a-Cyber-Espionage-Network; reference:url,www.symantec.com/connect/blogs/inside-back-door-attack; classtype:trojan-activity; sid:2013214; rev:2;)
 
 #
@@ -6010,7 +6003,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN FakeAV Land
 alert tcp $EXTERNAL_NET !6661:6668 -> $HOME_NET any (msg:"ET TROJAN IRC Bot Download http Command"; flow:established,from_server; content:"JOIN |3a|#"; nocase; content:"dl|20|http|3a 2f 2f|"; distance:0; content:"|2e|exe"; distance:0; reference:md5,fa6ae89b101a0367cc98798c7333e3a4; classtype:trojan-activity; sid:2014439; rev:4;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Andromeda Checkin"; flow:established,to_server; content:"POST"; nocase; http_method; content:"User-Agent|3a| Mozilla/4.0|0d 0a|"; fast_pattern:12,13; http_header; pcre:"/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})([\r\n](?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4}))?$/Pi"; reference:md5,50a538221e015d77cf4794ae78978ce2; classtype:trojan-activity; sid:2016223; rev:6;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Andromeda Checkin"; flow:established,to_server; content:"POST"; nocase; http_method; content:"User-Agent|3a| Mozilla/4.0|0d 0a|"; fast_pattern:12,13; http_header; pcre:"/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})([\r\n](?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4}))?$/Pi"; reference:md5,41c33fdb9a95353a3b109393543f90dd; classtype:trojan-activity; sid:2016223; rev:7;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN LuckyCat/TROJ_WIMMIE Checkin"; flow:established,to_server; content:"POST"; nocase; http_method; content:".php?m="; http_uri; content:"&n="; http_uri; within:4; content:"_"; http_uri; distance:0; content:"@"; http_uri; distance:0; pcre:"/\.php\?m=\w&n=\w+_\w+(@|@.c|@.t)$/U"; reference:url,blog.trendmicro.com/luckycat-redux-inside-an-apt-campaign/; reference:url,trendmicro.com/cloud-content/us/pdfs/security-intelligence/white-papers/wp_luckycat_redux.pdf; classtype:trojan-activity; sid:2014462; rev:2;)
@@ -8314,7 +8307,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Backdoor.Win32/PcCl
 alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Backdoor family PCRat/Gh0st CnC traffic (OUTBOUND) 20"; flow:to_server,established; dsize:>11; content:"|7d 99|"; offset:8; byte_jump:4,-10,relative,little,from_beginning,post_offset -1; isdataat:!1,relative; pcre:"/^[\x20-\x7e]+?.{8}\x7d\x99/s"; reference:url,www.securelist.com/en/descriptions/10155706/Trojan-GameThief.Win32.Magania.eogz; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Backdoor%3AWin32/PcClient.ZR&ThreatID=-2147325231; reference:md5,a037b3241c0b957efe6037b25570292f; classtype:trojan-activity; sid:2018054; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Upatre Binary Download Jan 02 2014"; flow:established,from_server; file_data; content:"ZZP|00|"; within:4; classtype:trojan-activity; sid:2018055; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Upatre Binary Download Jan 02 2014"; flow:established,from_server; content:"Content-Type|3a 20|text/plain|0d 0a|"; http_header; file_data; content:"ZZP|00|"; within:4; classtype:trojan-activity; sid:2018055; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Backdoor family PCRat/Gh0st CnC traffic (OUTBOUND) 21"; flow:to_server,established; dsize:>11; content:"|70 94|"; offset:8; byte_jump:4,-10,relative,little,from_beginning,post_offset -1; isdataat:!1,relative; pcre:"/^.{8}\x70\x94[\x20-\x7e]/s"; reference:url,www.securelist.com/en/descriptions/10155706/Trojan-GameThief.Win32.Magania.eogz; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Backdoor%3AWin32%2FPcClient.ZR&ThreatID=-2147325231; reference:md5,3ae76f6b76e743fd8063e1831236ce24; classtype:trojan-activity; sid:2018057; rev:4;)
@@ -8992,7 +8985,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Possible An
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Possible Andromeda download with fake Zip header (2)"; flow:to_client,established; file_data; content:"PK|03 04|"; within:4; byte_test:1,>,20,1,relative; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2018576; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Neutrino Checkin"; flow:to_server,established; content:"POST"; http_method; content:!"Referer|3a|"; http_header; content:"getcmd="; http_client_body; fast_pattern:only; content:"serial="; http_client_body; content:"nat="; http_client_body; content:"quality="; http_client_body; content:"av="; http_client_body; reference:md5,bef57db893b54c5605d0e3e7d50d6d70; reference:md5,bf555378d935de805f39c2d2d965a888; reference:url,securitykitten.github.io/an-evening-with-n3utrino/; classtype:trojan-activity; sid:2018580; rev:2;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Neutrino Checkin"; flow:to_server,established; content:"POST"; http_method; content:!"Referer|3a|"; http_header; content:"cmd="; http_client_body; content:"version="; http_client_body; content:"quality="; http_client_body; fast_pattern:only; content:"av="; http_client_body; reference:md5,bef57db893b54c5605d0e3e7d50d6d70; reference:md5,bf555378d935de805f39c2d2d965a888; reference:url,securitykitten.github.io/an-evening-with-n3utrino/; classtype:trojan-activity; sid:2018580; rev:3;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Single char EXE direct download likely trojan (multiple families)"; flow:to_server,established; content:".exe"; nocase; fast_pattern:only; http_uri; pcre:"/\/[a-z0-9A-Z]\.exe$/Ui"; classtype:trojan-activity; sid:2018581; rev:1;)
@@ -9119,9 +9112,6 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN CyberGate R
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/Zemot Config Download"; flow:established,to_server; content:"GET"; http_method; content:"/soft"; http_uri; content:".dll"; http_uri; fast_pattern:only; pcre:"/\/soft(?:32|64)\.dll$/Ui"; content:"Accept|3a 20|*/*|0d 0a|Connection|3a 20|Close|0d 0a|"; depth:32; http_header; content:"User-Agent|3a|"; http_header; content:!"Referer"; http_header; reference:md5,5a99a6a6cd8600ea88a8fcc1409b82f4; classtype:trojan-activity; sid:2018661; rev:2;)
-
-#
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Enfal.F Checkin via HTTP Post 7"; flow:established,to_server; content:"POST"; http_method; content:"/cgi-bin/Owpp4.cgi"; fast_pattern:only; http_uri; content:!"User-Agent|3a|"; content:!"Referer|3a 20|"; pcre:"/^[^\r\n]{15}\x5f[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}/m"; reference:url,blog.cassidiancybersecurity.com/post/2014/07/The-Eye-of-the-Tiger2; classtype:trojan-activity; sid:2018665; rev:3;)
 
 #
 alert udp any 53 -> $HOME_NET any (msg:"ET TROJAN Possible Zeus P2P Variant DGA NXDOMAIN Responses July 11 2014"; byte_test:1,&,128,2; byte_test:1,&,1,3; byte_test:1,&,2,3; content:"|00 01 00 00 00 01|"; offset:4; depth:6; pcre:"/^..[\x0d-\x20](?=\d{0,27}[a-z])(?=[a-z]{0,27}\d)[a-z0-9]{21,28}(?:\x03(?:biz|com|net|org))\x00\x00\x01\x00\x01/Rs"; threshold: type both, track by_dst, count 12, seconds 120; reference:url, blog.malcovery.com/blog/breaking-gameover-zeus-returns; reference:md5,5e5e46145409fb4a5c8a004217eef836; classtype:trojan-activity; sid:2018666; rev:4;)
@@ -9976,7 +9966,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN W32/Symmi.2
 alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN TorrentLocker DNS Lookup"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|server4love|02|ru|00|"; nocase; fast_pattern:only; reference:md5,8d2e901583b60631dc333d4b396e158b; classtype:trojan-activity; sid:2019396; rev:2;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Possible Bedep Connectivity Check"; flow:established,to_server; content:"POST"; http_method; content:"/stats/eurofxref/eurofxref-hist-90d.xml"; http_uri; fast_pattern:19,20; content:"Host|3a 20|www.ecb.europa.eu|0d 0a|"; http_header; content:"Content-Length|3a 20|0"; http_header; content:!"User-Agent|3a|"; http_header; content:!"Referer|3a|"; http_header; content:!"Accept|3a|"; http_header; classtype:trojan-activity; sid:2019400; rev:2;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Possible Bedep Connectivity Check"; flow:established,to_server; content:"POST"; http_method; content:"/stats/eurofxref/eurofxref-hist-90d.xml"; http_uri; fast_pattern:19,20; content:"Host|3a 20|www.ecb.europa.eu|0d 0a|"; http_header; content:"Content-Length|3a 20|0|0d 0a|"; http_header; content:!"Referer|3a|"; http_header; classtype:trojan-activity; sid:2019400; rev:3;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN W32/BlackEnergy Dirconf CnC Beacon"; flow:established,to_server; content:"/dirconf/check.php"; http_uri; fast_pattern:only; pcre:"/^Host\x3a\x20\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?:\x3a\d{1,5})?\r?$/Hmi"; reference:url,www.f-secure.com/weblog/archives/00002721.html; classtype:trojan-activity; sid:2019412; rev:1;)
@@ -10198,7 +10188,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Sofacy HTTP
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Sofacy HTTP Request symanttec.org"; flow:established,to_server; content:"Host|3a 20|symanttec.org|0d 0a|"; http_header; reference:url,fireeye.com/resources/pdfs/apt28.pdf; classtype:trojan-activity; sid:2019583; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN CORESHELL Malware Response from server"; flow:from_server,established; file_data; content:"O|00|K|00 00|"; within:5; reference:url,www.fireeye.com/resources/pdfs/apt28.pdf; classtype:trojan-activity; sid:2019584; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN CORESHELL Malware Response from server"; flow:from_server,established; file_data; content:"O|00|K|00 00|"; within:5; pcre:"/^\x00(?:(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4}))?$/R"; reference:url,www.fireeye.com/resources/pdfs/apt28.pdf; classtype:trojan-activity; sid:2019584; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Sofacy HTTP Request msonlinelive.com"; flow:established,to_server; content:"Host|3a 20|msonlinelive.com|0d 0a|"; http_header; reference:url,fireeye.com/resources/pdfs/apt28.pdf; classtype:trojan-activity; sid:2019585; rev:1;)
@@ -11173,7 +11163,7 @@ alert tcp $HOME_NET any -> $HOME_NET [139,445] (msg:"ET TROJAN Skeleton Key File
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Brontok User-Agent Detected (Rivest)"; flow:established,to_server; content:"User-Agent|3a| Rivest|0d 0a|"; http_header; nocase; reference:md5,c83b55ab56f3deb60858cb25d6ded8c4; classtype:trojan-activity; sid:2020179; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN WIN32/KOVTER.B Checkin"; flow:established,to_server; content:"POST"; http_method; content:".php"; fast_pattern:only; http_uri; content:!"Referer"; http_header; content:" MSIE "; http_header; content:!"|0d 0a|Accept"; http_header; content:"Content-Type|3a 20|application/x-www-form-urlencoded|0d 0a|User-Agent|3a 20|"; http_header; depth:61; pcre:"/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/P"; pcre:"/User-Agent\x3a[^\r\n]+\r\nHost\x3a[^\r\n]+\r\nContent-Length\x3a[^\r\n]+\r\n(?:Cache-Control|Pragma)\x3a[^\r\n]+\r\n(?:\r\n)?$/H"; reference:md5,7943a103d7b79f87843655e6b2f8e80c; classtype:trojan-activity; sid:2020181; rev:6;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN WIN32/KOVTER.B Checkin"; flow:established,to_server; content:"POST"; http_method; content:".php"; fast_pattern:only; http_uri; content:!"Referer"; http_header; content:!"|0d 0a|Accept"; http_header; content:"Content-Type|3a 20|application/x-www-form-urlencoded|0d 0a|User-Agent|3a 20|"; http_header; depth:61; pcre:"/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/P"; pcre:"/User-Agent\x3a[^\r\n]+(?: MSIE |rv\x3a11)[^\r\n]+\r\nHost\x3a[^\r\n]+\r\nContent-Length\x3a[^\r\n]+\r\n(?:Cache-Control|Pragma)\x3a[^\r\n]+\r\n(?:\r\n)?$/H"; reference:md5,7943a103d7b79f87843655e6b2f8e80c; classtype:trojan-activity; sid:2020181; rev:7;)
 
 #
 alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN Cryptowall 3.0 .onion Proxy Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|paytoc4gtpn5czl2"; nocase; distance:0; fast_pattern; reference:url,malware.dontneedcoffee.com/2015/01/guess-whos-back-again-cryptowall-30.html; classtype:trojan-activity; sid:2020182; rev:1;)
@@ -11512,6 +11502,15 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN ArcDoor Int
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Dropper YABROD Downloading Files"; flow:from_client,established; urilen:11; content:"/Yabrod.pdf"; content:"User-Agent|3a 20|n1|0d 0a|"; fast_pattern:12,4; content:!"Referer|3a 20|"; http_header; content:!"|0d 0a|Accept"; http_header; reference:md5,44df02ac28d80deb45f5c7c48b56a858; reference:url,fireeye.com/content/dam/fireeye-www/global/en/current-threats/pdfs/rpt-behind-the-syria-conflict.pdf; classtype:trojan-activity; sid:2020346; rev:1;)
 
 #
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN BePush/Kilim Checkin"; flow:established,to_server; content:"GET"; http_method; content:"/ok.txt"; http_uri; content:"User-Agent|3a 20|AutoHotkey"; http_header; fast_pattern:2,20; content:!"Referer|3a 20|"; http_header; content:!"Accept"; http_header; pcre:"/\/ok\.txt$/U"; flowbits:set,ET.FB.troj; reference:url,seclists.org/fulldisclosure/2015/Jan/131; reference:md5,cdcc132fad2e819e7ab94e5e564e8968; classtype:trojan-activity; sid:2020348; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN BePush/Kilim Checkin response"; flow:established,from_server; file_data; content:"Server_ok"; depth:9; flowbits:isset,ET.FB.troj; reference:url,seclists.org/fulldisclosure/2015/Jan/131; reference:md5,cdcc132fad2e819e7ab94e5e564e8968; classtype:trojan-activity; sid:2020349; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN BePush/Kilim payload retrieval"; flow:established,to_server; content:"GET"; http_method; content:"/app.exe"; http_uri; fast_pattern:only; content:"User-Agent|3a 20|Wget"; http_header; content:!"Accept-"; http_header; content:!"Referer|3a 20|"; http_header; pcre:"/\/app\.exe$/U"; reference:url,seclists.org/fulldisclosure/2015/Jan/131; reference:md5,cdcc132fad2e819e7ab94e5e564e8968; classtype:trojan-activity; sid:2020350; rev:3;)
+
+#
 alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN Critroni Variant .onion Proxy Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|sgqjml3dstgmarn3"; nocase; distance:0; fast_pattern; classtype:trojan-activity; sid:2020357; rev:1;)
 
 #
@@ -11722,7 +11721,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN SuperFish C
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN SuperFish CnC Beacon 2"; flow:established,to_server; content:"GET"; http_method; content:"/verify.php?version="; http_uri; fast_pattern:only; content:"&GUID=|7b|"; http_uri; content:"User-Agent|3a 20|Mozilla/4.0|0d 0a|"; http_header; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; reference:url,blog.erratasec.com/2015/02/extracting-superfish-certificate.html; reference:url,myce.com/news/lenovo-laptops-come-with-preinstalled-advertisement-injecting-adware-74290/; classtype:trojan-activity; sid:2020490; rev:2;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Possible Bedep Connectivity Check (2)"; flow:established,to_server; content:"POST"; http_method; urilen:13; content:"/timezone/0/0"; http_uri; fast_pattern:only; content:"Host|3a 20|www.earthtools.org|0d 0a|"; http_header; content:"Content-Length|3a 20|0|0d 0a|"; http_header; content:!"User-Agent|3a|"; http_header; content:!"Referer|3a|"; http_header; content:!"Accept|3a|"; http_header; reference:url,malware-traffic-analysis.net/2014/09/09/index.html; classtype:trojan-activity; sid:2020491; rev:4;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Possible Bedep Connectivity Check (2)"; flow:established,to_server; content:"POST"; http_method; urilen:13; content:"/timezone/0/0"; http_uri; fast_pattern:only; content:"Host|3a 20|www.earthtools.org|0d 0a|"; http_header; content:"Content-Length|3a 20|0|0d 0a|"; http_header; content:!"Referer|3a|"; http_header; reference:url,malware-traffic-analysis.net/2014/09/09/index.html; classtype:trojan-activity; sid:2020491; rev:5;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET TROJAN SuperFish Possible SSL Cert CnC Traffic"; flow:established,from_server; content:"|55 04 0a|"; content:"|0e|Superfish Inc."; distance:1; within:15; content:"|55 04 03|"; distance:0; content:"|19|*.best-deals-products.com"; distance:1; within:26; reference:url,blog.erratasec.com/2015/02/extracting-superfish-certificate.html; reference:url,myce.com/news/lenovo-laptops-come-with-preinstalled-advertisement-injecting-adware-74290/; classtype:trojan-activity; sid:2020492; rev:1;)
@@ -11908,7 +11907,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/Agent
 alert udp any any -> any 53 (msg:"ET TROJAN 9002 RAT C&C DNS request"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|cache|05|dnsde|03|com|00|"; fast_pattern; nocase; distance:0; classtype:trojan-activity; sid:2020713; rev:1;)
 
 #
-#alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN HOMEUNIX/9002 CnC Beacon"; flow:established,to_server; dsize:48; content:!"|00 00 00|"; offset:1; depth:3; byte_extract:3,1,xor_key; byte_test:3,=,xor_key,9; byte_test:3,=,xor_key,13; byte_extract:1,1,same_test; byte_test:1,!=,same_test,8; pcre:!"/^[a-zA-Z0-9+/=\r\n]+$/"; reference:md5,256438747bae78c9101c9a0d4efe5572; classtype:trojan-activity; sid:2020714; rev:5;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET ![25,465,587] (msg:"ET TROJAN HOMEUNIX/9002 CnC Beacon"; flow:established,to_server; dsize:48; content:!"|00 00 00|"; offset:1; depth:3; byte_extract:3,1,xor_key; byte_test:3,=,xor_key,9; byte_test:3,=,xor_key,13; byte_extract:1,1,same_test; byte_test:1,!=,same_test,8; byte_test:1,!=,same_test,33; pcre:!"/^[a-zA-Z0-9+/=\r\n]+$/"; reference:md5,256438747bae78c9101c9a0d4efe5572; classtype:trojan-activity; sid:2020714; rev:7;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/Teslacrypt Ransomware HTTP CnC Beacon M1"; flow:established,to_server; content:"GET"; http_method; content:"/state"; http_uri; fast_pattern:only; content:".php?"; http_uri; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; pcre:"/\/state[^\x2f]*\.php\?[A-Za-z0-9+/]*={0,2}$/U"; reference:md5,c075fa8484d52c3978826c2f07ce9a9c; classtype:trojan-activity; sid:2020717; rev:3;)
@@ -11941,7 +11940,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/Troja
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/TrojanProxy.JpiProx.B CnC Beacon 2"; flow:established,to_server; content:"GET"; http_method; content:"/sync"; depth:5; http_uri; content:"ext="; http_uri; content:"&pid="; http_uri; content:"&country="; http_uri; content:"&regd="; http_uri; fast_pattern:only; content:!"Referer|3a|"; http_header; classtype:trojan-activity; sid:2020738; rev:1;)
 
 #
-alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN Unknown Trojan DNS Query to .onion proxy Domain (l7gbml27czk3kvr5)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|l7gbml27czk3kvr5"; fast_pattern; distance:0; nocase; reference:md5,83c0b99427c026aad36b0d8204377702; classtype:trojan-activity; sid:2020739; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN Chanitor .onion Proxy Domain (l7gbml27czk3kvr5)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|l7gbml27czk3kvr5"; fast_pattern; distance:0; nocase; reference:md5,83c0b99427c026aad36b0d8204377702; classtype:trojan-activity; sid:2020739; rev:2;)
 
 #
 alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN CryptoLocker .onion Proxy Domain (iezqmd4s2fflmh7n)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|iezqmd4s2fflmh7n"; fast_pattern; distance:0; nocase; reference:md5,1d578c11069c7446ca6d05ff7623a972; classtype:trojan-activity; sid:2020740; rev:1;)
@@ -12196,7 +12195,7 @@ alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN TinyLoader.B Sendin
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN CryptoWall Check-in M2"; flow:established,to_server; urilen:<90; content:!"|0d 0a|Accept-"; nocase; http_header; pcre:"/[\/=][a-z0-9]{8,}$/U"; content:!"Referer|3a|"; http_header; content:"="; offset:1; depth:1; http_client_body; pcre:"/^[a-z]=[a-f0-9]{80,}$/P"; content:" rv|3a|11.0"; fast_pattern; http_header; content:"Accept|3a 20|*/*|0d 0a|Content-Type|3a 20|application/x-www-form-urlencoded|0d 0a|"; depth:62; http_header; reference:md5,3c53c9f7ab32a09de89bb44e5f91f9af; classtype:trojan-activity; sid:2020855; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Malicious Office Doc CnC Beacon"; flow:established,to_server; content:"GET"; http_method; content:"/image.php?id="; http_uri; fast_pattern:only; content:!"Referer|3a|"; http_header; content:"MSOffice"; http_header; content:!"Outlook"; http_header; pcre:"/\/image\.php\?id=\d+$/U"; reference:md5,27cd0a3db18fbb6d316fb4542c3a51f3; classtype:trojan-activity; sid:2020860; rev:4;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Malicious Office Doc CnC Beacon"; flow:established,to_server; content:"GET"; http_method; content:"/im"; http_uri; content:"g"; distance:0; http_uri; content:".php?id="; http_uri; fast_pattern:only; content:!"Referer|3a|"; http_header; content:"MSOffice"; http_header; content:!"Outlook"; http_header; pcre:"/\/im(?:age|g)\.php\?id=\d+$/U"; reference:md5,27cd0a3db18fbb6d316fb4542c3a51f3; classtype:trojan-activity; sid:2020860; rev:5;)
 
 #
 alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS CnC)"; flow:from_server,established; content:"|55 04 03|"; content:"|04|gu2m"; distance:1; within:5; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2020864; rev:1;)
@@ -12260,4 +12259,280 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN CoinVault C
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/Ruckguv.A Requesting Payload"; flow:established,to_server; content:"GET"; http_method; content:"/id.exe"; http_uri; fast_pattern:only; content:!"Referer|3a|"; http_header; content:"MSIE"; http_header; reference:md5,227365242cc97fa611fdac295b732d82; reference:md5,b9eec5be1d2f5d0007bd94fdd8c7ea57; reference:url,kernelmode.info/forum/viewtopic.php?f=16&t=3801; classtype:trojan-activity; sid:2020910; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET !80 (msg:"ET TROJAN W32/Farfli.BHQ!tr Dropper CnC Beacon 2"; flow:established,to_server; content:"GET /do.asp?search="; depth:19; content:"|20|HTTP/1."; distance:0; content:!"Referer|3a|"; distance:0; content:"Host|3a 20|"; distance:0; pcre:"/^\d{1,3}\x2E\d{1,3}\x2E\d{1,3}\x2E\d{1,3}\x3A\d{1,5}\r?$/Rmi"; reference:md5,93be88ad3816c19d74155f8cd3aae1d2; classtype:trojan-activity; sid:2020913; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN CryptoLocker .onion Proxy Domain (33p5mqkaj22irv4z)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|33p5mqkaj22irv4z"; fast_pattern; distance:0; nocase; reference:md5,1c6269fe48cba5f830a64a50bdf4ffe5; reference:url,www.bleepingcomputer.com/forums/t/547708/torrentlocker-ransomware-cracked-and-decrypter-has-been-made/page-13; classtype:trojan-activity; sid:2020915; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN FighterPOS CnC Beacon 1"; flow:established,to_server; content:"GET"; http_method; content:"/command.php?id="; http_uri; fast_pattern:only; content:"&os="; http_uri; content:"&com="; http_uri; content:"&ver="; http_uri; content:!"User-Agent|3a|"; http_header; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; reference:md5,b0416d389b0b59776fe4c4ddeb407239; reference:url,trendmicro.com/cloud-content/us/pdfs/security-intelligence/reports/wp-fighterpos.pdf; classtype:trojan-activity; sid:2020918; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN FighterPOS CnC Beacon 2"; flow:established,to_server; content:"GET"; http_method; content:"/log.php?id=|5b|"; http_uri; fast_pattern; content:"|7c|"; distance:0; http_uri; content:"|5d|"; distance:0; http_uri; content:!"User-Agent|3a|"; http_header; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; reference:md5,b0416d389b0b59776fe4c4ddeb407239; reference:url,trendmicro.com/cloud-content/us/pdfs/security-intelligence/reports/wp-fighterpos.pdf; classtype:trojan-activity; sid:2020919; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN FighterPOS CnC Beacon 3"; flow:established,to_server; content:"GET"; http_method; content:"/keylogger.php?id="; http_uri; fast_pattern:only; content:"&com="; http_uri; content:"&key="; http_uri; content:!"User-Agent|3a|"; http_header; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; reference:md5,b0416d389b0b59776fe4c4ddeb407239; reference:url,trendmicro.com/cloud-content/us/pdfs/security-intelligence/reports/wp-fighterpos.pdf; classtype:trojan-activity; sid:2020920; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Sysget/HelloBridge HTTP GET CnC Beacon"; flow:established,to_server; content:"GET"; http_method; content:".php?fn="; http_uri; fast_pattern:only; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; pcre:"/&(?:uid|name|file)=[a-f0-9]+$/U"; reference:url,researchcenter.paloaltonetworks.com/2015/04/unit-42-identifies-new-dragonok-backdoor-malware-deployed-against-japanese-targets/; classtype:trojan-activity; sid:2020921; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Sysget/HelloBridge HTTP POST CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:".php?fn="; http_uri; fast_pattern:only; content:!"Accept-"; http_header; content:!"Referer|3a|"; http_header; content:"name=|22|file|22|"; http_client_body; content:"name=|22|path|22|"; distance:0; http_client_body; content:"name=|22|submit|22|"; distance:0; http_client_body; reference:url,researchcenter.paloaltonetworks.com/2015/04/unit-42-identifies-new-dragonok-backdoor-malware-deployed-against-japanese-targets/; classtype:trojan-activity; sid:2020922; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Unit42 PoisonIvy Keepalive to CnC"; flow:established,to_server; dsize:48; content:"|b8 98 30 04 e8 10 e5 8c e4 06 39 1b e0 51 96 40|"; offset:16; depth:16; reference:url,researchcenter.paloaltonetworks.com/2015/04/unit-42-identifies-new-dragonok-backdoor-malware-deployed-against-japanese-targets/; classtype:trojan-activity; sid:2020923; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Zacom/NFlog HTTP POST Connectivity Check"; flow:established,to_server; content:"POST"; http_method; content:"/STTip.asp"; http_uri; fast_pattern; content:!"Accept-"; http_header; content:!"Referer|3a|"; http_header; content:!"Content-Type|3a|"; http_header; content:"Content-Length|3a 20|0|0d 0a|"; http_header; reference:url,researchcenter.paloaltonetworks.com/2015/04/unit-42-identifies-new-dragonok-backdoor-malware-deployed-against-japanese-targets/; classtype:trojan-activity; sid:2020924; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Zacom/NFlog HTTP POST Fake UA CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:".asp"; http_uri; content:!"Accept-"; http_header; content:!"Referer|3a|"; http_header; content:!"Content-Type|3a|"; http_header; content:"User-Agent|3a| Mozilla/4.0 (compatible|3b| MSIE 6.0|3b| Windows NT 5.0|3b| .NET CLR 1.1.4322|29 0d 0a|"; http_header; fast_pattern:63,20; reference:url,researchcenter.paloaltonetworks.com/2015/04/unit-42-identifies-new-dragonok-backdoor-malware-deployed-against-japanese-targets/; classtype:trojan-activity; sid:2020925; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET 443 (msg:"ET TROJAN FormerFirstRAT HTTP POST CnC Beacon"; flow:established,to_server; content:"POST / HTTP/1."; depth:14; content:!"Accept-"; distance:0; content:!"Referer|3a|"; distance:0; content:!"Content-Type|3a|"; distance:0; content:"User-Agent|3a| Mozilla/4.0 (compatible|3b| MSIE 6.0|3b| Windows NT 5.0|3b| .NET CLR 1.1.4322)|0d 0a|"; distance:0; fast_pattern:63,20; content:"|3a|443|0d 0a|"; content:"|0d 0a 0d 0a|"; distance:0; pcre:"/^[\x20-\x7e\r\n]{0,20}[^\x20-\x7e\r\n]/R"; reference:url,researchcenter.paloaltonetworks.com/2015/04/unit-42-identifies-new-dragonok-backdoor-malware-deployed-against-japanese-targets/; classtype:trojan-activity; sid:2020926; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Bioazih RAT Checkin"; flow:to_server,established; content:"User-Agent|3a| Pass|3a|"; http_header; content:"Hostname|3a|"; http_header; content:"Ip|3a|"; http_header; content:"Os|3a|"; http_header; content:"Proxy|3a|"; fast_pattern:only; http_header; content:"Vm|3a|"; http_header; reference:md5,7bc5451341a684aca80a59a463bad973; reference:md5,5443cf2b6c010c57cf740356c9167b77; reference:url,blogs.technet.com/b/mmpc/archive/2015/04/13/bioazih-rat-how-clean-file-metadata-can-help-keep-you-safe.aspx; classtype:trojan-activity; sid:2020927; rev:4;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Zacom/NFlog Checkin"; flow:to_server,established; content:"POST"; http_method; nocase; content:".asp?HostID="; fast_pattern:only; http_uri; content:"Windows NT 5.0|3b| .NET CLR 1.1.4322|29 0d 0a|"; http_header; pcre:"/\?HostID=([A-F0-9]{2}(?:-|<>)){5}[A-F0-9]{2}$/U"; reference:md5,e397a68bf4fbb7a9b4d1b6da1fe2172b; reference:url,researchcenter.paloaltonetworks.com/2015/04/unit-42-identifies-new-dragonok-backdoor-malware-deployed-against-japanese-targets/; classtype:trojan-activity; sid:2020928; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Possible Dalexis downloader encrypted binary (1)"; flow:established,to_client; file_data; content:"|fc 6e 8e d1 0a 7a be 86|"; within:2048; classtype:trojan-activity; sid:2020929; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Possible Dalexis downloader encrypted binary (2)"; flow:established,to_client; file_data; content:"|35 8c 0c 43 e2 1c f7 e4|"; distance:40; within:8; classtype:trojan-activity; sid:2020930; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Possible Dalexis downloader encrypted binary (3)"; flow:established,to_client; file_data; content:"|fc 6e 8e d1 0a 7a be 86|"; distance:32; within:8; classtype:trojan-activity; sid:2020931; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS CnC)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|10 58 85 8a 21 5a 27 a4 1f be 8f a1 3a f0 13 c5 94|"; within:40; content:"|55 04 03|"; distance:0; content:"|13|www.tennomewerto.ru"; distance:1; within:20; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2020932; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Dalexis CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:".php"; http_uri; content:"Content-Type|3a| multipart/form-data|3b| boundary="; http_header; content:!"Referer|3a|"; http_header; content:!"|0d 0a|Accept"; nocase; http_header; content:"name=|22|uploaded|22 3b 20|filename=|22|"; http_client_body; fast_pattern:only; content:".jpg"; http_client_body; classtype:trojan-activity; sid:2020933; rev:3;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN PunkeyPOS HTTP CnC Beacon Fake UA"; flow:established,to_server; content:"User-Agent|3a 20|Mozilla Firefox/4.0|0d 0a|"; http_header; fast_pattern:13,20; content:!"Referer|3a|"; http_header; reference:url,trustwave.com/Resources/SpiderLabs-Blog/New-POS-Malware-Emerges---Punkey/; reference:md5,43c277dd56f9c6de4b8dc249e12039df; classtype:trojan-activity; sid:2020934; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN PunkeyPOS HTTP CnC Beacon 1"; flow:established,to_server; content:"POST"; http_method; content:!"Accept|3a|"; http_header; content:!"Referer|3a|"; http_header; content:"key="; depth:4; http_client_body; fast_pattern; pcre:"/^key=[A-Z]+$/P"; reference:url,trustwave.com/Resources/SpiderLabs-Blog/New-POS-Malware-Emerges---Punkey/; reference:md5,43c277dd56f9c6de4b8dc249e12039df; classtype:trojan-activity; sid:2020935; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN PunkeyPOS HTTP CnC Beacon 2"; flow:established,to_server; content:"POST"; http_method; content:!"Accept|3a|"; http_header; content:!"Referer|3a|"; http_header; content:"version="; depth:8; http_client_body; fast_pattern; pcre:"/^version=\d{4}-\d{1,2}-\d{1,2}$/P"; reference:url,trustwave.com/Resources/SpiderLabs-Blog/New-POS-Malware-Emerges---Punkey/; reference:md5,43c277dd56f9c6de4b8dc249e12039df; classtype:trojan-activity; sid:2020936; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN PunkeyPOS HTTP CnC Beacon 3"; flow:established,to_server; content:"POST"; http_method; content:!"Accept|3a|"; http_header; content:!"Referer|3a|"; http_header; content:"bit="; depth:4; http_client_body; fast_pattern; pcre:"/^bit=(?:32|64)$/P"; reference:url,trustwave.com/Resources/SpiderLabs-Blog/New-POS-Malware-Emerges---Punkey/; reference:md5,43c277dd56f9c6de4b8dc249e12039df; classtype:trojan-activity; sid:2020937; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN PunkeyPOS HTTP CnC Beacon 4"; flow:established,to_server; content:"POST"; http_method; content:"/"; offset:1; http_uri; content:!"Accept|3a|"; http_header; content:!"Referer|3a|"; http_header; content:"unkey="; depth:6; http_client_body; fast_pattern; content:!"&"; distance:0; http_client_body; pcre:"/\/$/U"; reference:url,trustwave.com/Resources/SpiderLabs-Blog/New-POS-Malware-Emerges---Punkey/; reference:md5,43c277dd56f9c6de4b8dc249e12039df; classtype:trojan-activity; sid:2020938; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN PunkeyPOS HTTP CnC Beacon 5"; flow:established,to_server; content:"GET"; http_method; content:"/?bit="; http_uri; fast_pattern:only; content:"&version="; http_uri; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; pcre:"/\/\?bit=(?:32|64)&version=\d{4}-\d{1,2}-\d{1,2}$/U"; reference:url,trustwave.com/Resources/SpiderLabs-Blog/New-POS-Malware-Emerges---Punkey/; reference:md5,b1fe4120e3b38784f9fe57f6bb154517; classtype:trojan-activity; sid:2020939; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN PunkeyPOS HTTP CnC Beacon 6"; flow:established,to_server; content:"GET"; http_method; content:"/?check"; http_uri; fast_pattern:only; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; content:"User-Agent|3a 20|Example|0d 0a|"; http_header; pcre:"/\/\?check$/U"; reference:url,trustwave.com/Resources/SpiderLabs-Blog/New-POS-Malware-Emerges---Punkey/; reference:md5,b1fe4120e3b38784f9fe57f6bb154517; classtype:trojan-activity; sid:2020940; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN Win32/Filecoder Ransomware Variant .onion Proxy Domain (tkj3higtqlvohs7z)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|tkj3higtqlvohs7z"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2020942; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN  Win32/Tesch.B CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:".php"; http_uri; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; content:"User-Agent|3a 20|Internet  Explorer|0d 0a|"; http_header; fast_pattern:4,20; pcre:"/^[a-f0-9]+(?:\x20[a-f0-9]+)+$/P"; reference:md5,0032395c3a980e09c511b6b41ab3da48; classtype:trojan-activity; sid:2020945; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/Spy.Zbot.YW CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:!"Accept-"; http_header; content:!"Content-Type|3a|"; http_header; content:!"Referer|3a|"; http_header; content:!"Content-Length|3a 20|0|0d 0a|"; http_header; pcre:"/^[\x20-\x7e\r\n]{0,20}[^\x20-\x7e\r\n]/P"; content:"/ HTTP/1.1|0d 0a|Accept|3a 20|*/*|0d 0a|User-Agent|3a 20|Mozilla/6."; fast_pattern:27,20; pcre:"/^[^\r\n]+\r\nHost\x3a[^\r\n]+\r\nContent-Length\x3a\x20\d+\r\nConnection\x3a\x20Keep-Alive\r\n(?:Cache-Control|Pragma)\x3a\x20no-cache\r\n\r\n/Rmi"; reference:md5,97369af278cc004ce390f68ae94013b6; classtype:trojan-activity; sid:2020944; rev:6;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/Spy.Zbot.YW CnC Beacon 2"; flow:established,to_server; content:"POST"; http_method; content:!"Accept-"; http_header; content:!"Content-Type|3a|"; http_header; content:!"Referer|3a|"; http_header; content:!"Content-Length|3a 20|0|0d 0a|"; http_header; pcre:"/^[\x20-\x7e\r\n]{0,20}[^\x20-\x7e\r\n]/P"; content:"/ HTTP/1.1|0d 0a|Accept|3a 20|*/*|0d 0a|User-Agent|3a 20|Mozilla/7."; fast_pattern:27,20; pcre:"/^[^\r\n]+\r\nHost\x3a[^\r\n]+\r\nContent-Length\x3a\x20\d+\r\nConnection\x3a\x20Keep-Alive\r\n(?:Cache-Control|Pragma)\x3a\x20no-cache\r\n\r\n/Rmi"; reference:md5,97369af278cc004ce390f68ae94013b6; classtype:trojan-activity; sid:2020946; rev:4;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32/StreamFlaw.A Checkin"; flow:established,to_server; content:"POST"; http_method; urilen:1; content:"User-Agent|3a 20|Mozilla/6.0 (compatible|3b 20|MSIE 6.0"; http_header; fast_pattern:25,20; content:!"Referer|3a|"; http_header; reference:md5,981672cd969fe8cb1f887d0526b1ecf2; classtype:trojan-activity; sid:2020947; rev:3;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN Neutrino Bot Fake 404 Checkin Response"; flow:to_client,established; content:"404"; http_stat_code; file_data; content:"<!--"; distance:0; content:"NCMD|3a|"; within:6; reference:url,blog.fortinet.com/post/hiding-malicious-traffic-under-the-http-404-error; classtype:trojan-activity; sid:2020949; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN CryptoLocker .onion Proxy Domain (pf3tlgkpks7pu7yr)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|pf3tlgkpks7pu7yr"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2020952; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN CryptoLocker .onion Proxy Domain (v7lfogalalzc2c4d)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|v7lfogalalzc2c4d."; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2020953; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Windows nbtstat -a Microsoft Windows DOS prompt command exit OUTBOUND"; flow:established,to_server; content:"NetBIOS Remote Machine Name Table"; fast_pattern; content:"Name"; distance:0; content:"Type"; content:"Status"; distance:0; classtype:trojan-activity; sid:2020954; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Windows nbtstat -r Microsoft Windows DOS prompt command exit OUTBOUND"; flow:established,to_server; content:"NetBIOS Names Resolution and Registration Statistics"; fast_pattern; content:"Name"; distance:0; content:"Type"; distance:0; content:"Status"; distance:0; classtype:trojan-activity; sid:2020956; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Windows nbtstat -s Microsoft Windows DOS prompt command exit OUTBOUND"; flow:established,to_server; content:"NetBIOS Connection Table"; fast_pattern; content:"Local Name"; distance:0; content:"State"; distance:0; content:"In/Out"; distance:0; content:"Remote Host"; distance:0; content:"Input"; distance:0; content:"Output"; distance:0; classtype:trojan-activity; sid:2020957; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Windows nbtstat -n Microsoft Windows DOS prompt command exit OUTBOUND"; flow:established,to_server; content:"NetBIOS Local Name Table"; fast_pattern; content:"Name"; distance:0; content:"Type"; content:"Status"; distance:0; classtype:trojan-activity; sid:2020955; rev:2;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN CryptoLocker .onion Proxy Domain (zoqowm4kzz4cvvvl)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|zoqowm4kzz4cvvvl"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2020958; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN CryptoWall .onion Proxy Domain (7oqnsnzwwnm6zb7y)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|7oqnsnzwwnm6zb7y"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2020959; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Possible Graftor Downloading Dridex"; flow:established,to_server; content:".exe"; http_uri; fast_pattern:only; content:"MSIE"; http_header; content:"Host|3a|"; depth:5; http_header; content:"Connection|3a 20|close|0d 0a|"; http_header; content:!"Referer|3a 20|"; http_header; pcre:"/^\/\d+\/\d+\.exe$/U"; pcre:"/^Host\x3a[^\r\n]+\r\nAccept-Language\x3a[^\r\n]+\r\nAccept\x3a[^\r\n]+\r\nAccept-Encoding\x3a[^\r\n]+\r\nConnection\x3a\x20close\r\nUser-Agent\x3a[^\r\n]+\r\n(?:\r\n)?$/H"; reference:md5,5d9d5b9089ad464e51ff391b14da1953; classtype:trojan-activity; sid:2020960; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS CnC)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 c0 15 80 14 58 47 62 12|"; within:35; fast_pattern; content:"|55 04 0A|"; distance:0; content:"|18|Internet Widgits Pty Ltd"; distance:1; within:25; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2020961; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN CozyDuke APT HTTP Checkin"; flow:established,to_server; content:"GET"; http_method; content:".php?"; http_uri; fast_pattern:only; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; content:"User-Agent|3a 20|"; depth:12; http_header; pcre:"/\.php\?$/U"; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,98a6484533fa12a9ba6b1bd9df1899dc; classtype:trojan-activity; sid:2020962; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN CozyDuke APT HTTP GET CnC Beacon"; flow:established,to_server; content:"GET"; http_method; content:".php?"; http_uri; fast_pattern:only; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; content:"User-Agent|3a 20|"; depth:12; http_header; pcre:"/[A-Z]{100}(?:&\w+=[a-zA-Z0-9/+=]+){0,2}$/U"; flowbits:set,ET.CozyDuke.HTTP; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,98a6484533fa12a9ba6b1bd9df1899dc; classtype:trojan-activity; sid:2020963; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN CozyDuke APT HTTP POST CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:".php?"; http_uri; fast_pattern:only; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; content:"Content-Type|3a 20|application/x-www-form-urlencoded|0d 0a|User-Agent|3a 20|"; depth:61; http_header; pcre:"/\.php\?$/U"; pcre:"/^\w+=(?:[a-zA-Z0-9/+=]{1,30}&\w+=)?[a-zA-Z0-9+/]{0,13}[A-Z]{200}/P"; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,98a6484533fa12a9ba6b1bd9df1899dc; classtype:trojan-activity; sid:2020964; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT HTTP CnC Beacon Response"; flow:established,from_server; file_data; content:"<--"; within:3; pcre:"/^[A-F0-9]{8,12}/R"; content:"-->|0a|<"; fast_pattern; within:5; flowbits:isset,ET.CozyDuke.HTTP; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,98a6484533fa12a9ba6b1bd9df1899dc; classtype:trojan-activity; sid:2020965; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 1"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|02 31 d5|"; distance:9; within:20; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02 2d 2d|"; distance:1; within:3; content:"|55 04 08|"; distance:0; content:"|09|SomeState"; distance:1; within:10; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,d5a82520ebf38a0c595367ff0ca89fae; classtype:trojan-activity; sid:2020966; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 2"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|02 65 5d|"; distance:9; within:20; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02 2d 2d|"; distance:1; within:3; content:"|55 04 08|"; distance:0; content:"|09|SomeState"; distance:1; within:10; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,859f167704b5c138ed9a9d4d3fdc0723; classtype:trojan-activity; sid:2020967; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 3"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|02 1b 3c|"; distance:9; within:20; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02 2d 2d|"; distance:1; within:3; content:"|55 04 08|"; distance:0; content:"|09|SomeState"; distance:1; within:10; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,181a88c911b10d0fcb4682ae552c0de3; classtype:trojan-activity; sid:2020968; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 4"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|02 0f 0d|"; distance:9; within:20; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02 2d 2d|"; distance:1; within:3; content:"|55 04 08|"; distance:0; content:"|09|SomeState"; distance:1; within:10; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,0e0182694c381f8b68afc5f3ff4c4653; classtype:trojan-activity; sid:2020969; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 5"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|02 03 5f|"; distance:9; within:20; content:"|55 04 0a|"; distance:0; content:"|1b|*.corp.utilitytelephone.com"; distance:1; within:28; fast_pattern; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,4121414c63079b7fa836be00f8d0a93b; classtype:trojan-activity; sid:2020970; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 6"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|02 09 a9|"; distance:9; within:20; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02 2d 2d|"; distance:1; within:3; content:"|55 04 08|"; distance:0; content:"|09|SomeState"; distance:1; within:10; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,1dde02ff744fa4e261168e2008fd613a; classtype:trojan-activity; sid:2020971; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 7"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|02 2c 2f|"; distance:9; within:20; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02 2d 2d|"; distance:1; within:3; content:"|55 04 08|"; distance:0; content:"|09|SomeState"; distance:1; within:10; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; reference:md5,9ad55b83f2eec0c19873a770b0c86a2f; classtype:trojan-activity; sid:2020972; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN CozyDuke APT Possible SSL Cert 8"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|02 5f 31|"; distance:0; content:"|55 04 06|"; distance:0; content:"|02|--"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|08|SomeCity"; distance:1; within:9; content:"|0d 01 09 01|"; distance:0; content:"|1a|root@localhost.localdomain"; fast_pattern; distance:1; within:27; reference:md5,f58a4369b8176edbde4396dc977c9008; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-030500-0430-99; reference:url,securelist.com/blog/69731/the-cozyduke-apt/; classtype:trojan-activity; sid:2020974; rev:3;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET 8000 (msg:"ET TROJAN DDoS.Win32.Agent.bay Variant Covert Channel (VERSONEX)"; flow:established,to_server; content:"VERSONEX|3a|5|7c|"; fast_pattern; depth:11; reference:md5,f80af2735fdad5fe14defc4f1df1cc30; classtype:trojan-activity; sid:2020978; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET [25,587] (msg:"ET TROJAN Email Contains InternetOpen WinInet API Call - Potentially Dridex MalDoc 1"; flow:established,to_server; content:"SW50ZXJuZXRPcGVu"; fast_pattern; classtype:trojan-activity; sid:2021006; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET [25,587] (msg:"ET TROJAN Email Contains InternetOpen WinInet API Call - Potentially Dridex MalDoc 2"; flow:established,to_server; content:"ludGVybmV0T3Blb"; fast_pattern; classtype:trojan-activity; sid:2021007; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET [25,587] (msg:"ET TROJAN Email Contains InternetOpen WinInet API Call - Potentially Dridex MalDoc 3"; flow:established,to_server; content:"JbnRlcm5ldE9wZW"; fast_pattern; classtype:trojan-activity; sid:2021008; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET [25,587] (msg:"ET TROJAN Email Contains wininet.dll Call - Potentially Dridex MalDoc 1"; flow:established,to_server; content:"d2luaW5ldC5kbG"; fast_pattern; classtype:trojan-activity; sid:2021009; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET [25,587] (msg:"ET TROJAN Email Contains wininet.dll Call - Potentially Dridex MalDoc 2"; flow:established,to_server; content:"dpbmluZXQuZGxs"; fast_pattern; classtype:trojan-activity; sid:2021010; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET [25,587] (msg:"ET TROJAN Email Contains wininet.dll Call - Potentially Dridex MalDoc 3"; flow:established,to_server; content:"3aW5pbmV0LmRsb"; fast_pattern; classtype:trojan-activity; sid:2021011; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Backdoor family PCRat/Gh0st CnC traffic (OUTBOUND) 100"; flow:to_server,established; dsize:>11; content:"|78 9c|"; offset:13; depth:2; byte_jump:4,-15,relative,little,from_beginning,post_offset -1; isdataat:!1,relative; pcre:"/^.{8}[\x20-\x7e]{5}\x78\x9c/s"; reference:url,www.securelist.com/en/descriptions/10155706/Trojan-GameThief.Win32.Magania.eogz; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Backdoor%3AWin32/PcClient.ZR&ThreatID=-2147325231; reference:md5,db1c4342f617798bcb2ba5655d32bf67; classtype:trojan-activity; sid:2021012; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET TROJAN Likely Dridex Generic SSL Cert"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|09 00|"; within:30; content:"|55 04 0a|"; distance:0; content:"|0f|Global Security"; distance:1; within:16; fast_pattern; content:"|55 04 0b|"; distance:0; content:"|0d|IT Department"; distance:1; within:14; content:"|55 04 03|"; distance:0; content:"|0b|example.com"; distance:1; within:12; classtype:trojan-activity; sid:2021013; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET TROJAN TorrentLocker SSL Cert"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 ea a3 3c b6 6e 62 16 33|"; within:35; fast_pattern; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; reference:md5,8b2b618a463b906a1005ff1ed7d5f875; classtype:trojan-activity; sid:2021014; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET TROJAN Win32/Ruckguv.A SSL Cert"; flow:established,from_server; content:"|10 05 86 8b f3 dc 2c ad 1f 00 dd ad fa 27 3c ea d0|"; content:"|55 04 03|"; distance:0; content:"|12|thewinesteward.com"; distance:1; within:19; reference:md5,331bec58cb113999f83c866de4976b62; classtype:trojan-activity; sid:2021015; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Ransomware CnC)"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 bf 88 cb e4 d5 79 99 98|"; within:35; fast_pattern; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021016; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Dalexis Downloading EXE"; flow:established,to_server; content:".jpg"; http_uri; pcre:"/\.jpg$/U"; content:"User-Agent|3a 20|Mozilla/4.0 (compatible|3b| MSIE 7.0|3b| Windows NT 6.0|29 0d 0a|"; http_header; fast_pattern:44,20; content:!"Accept"; http_header; content:!"Referer"; http_header; content:"Connection|3a 20|Close|0d 0a|"; http_header; classtype:trojan-activity; sid:2021017; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN MewsSpy/NionSpy .onion Proxy Domain (z3mm6cupmtw5b2xx)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|z3mm6cupmtw5b2xx"; nocase; distance:0; fast_pattern; reference:url,blogs.mcafee.com/mcafee-labs/taking-a-close-look-at-data-stealing-nionspy-file-infector; classtype:trojan-activity; sid:2021019; rev:1;)
+
+#
+alert udp any 53 -> $HOME_NET any (msg:"ET TROJAN Team Cymru Sinkhole DNS Reply"; content:"|00 01 00 01|"; content:"|00 04 26 E5 46 04|"; distance:4; within:6; classtype:trojan-activity; sid:2021020; rev:1;)
+
+#
+alert udp any 53 -> $HOME_NET any (msg:"ET TROJAN Kaspersky Sinkhole DNS Reply"; content:"|00 01 00 01|"; content:"|00 04 5F D3 AC 8F|"; distance:4; within:6; classtype:trojan-activity; sid:2021021; rev:1;)
+
+#
+alert udp any 53 -> $HOME_NET any (msg:"ET TROJAN Wapack Labs Sinkhole DNS Reply"; content:"|00 01 00 01|"; content:"|00 04 17 FD 2E 40|"; distance:4; within:6; classtype:trojan-activity; sid:2021022; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32.Excute Checkin"; flow:to_server,established; content:"GET"; http_method; urilen:7; content:"/dw/gtk"; http_uri; fast_pattern:only; content:"Host|3a|"; http_header; depth:5; content:!"Referer|3a|"; http_header; content:!"User-Agent|3a|"; http_header; reference:url,pwc.blogs.com/cyber_security_updates/2015/04/attacks-against-israeli-palestinian-interests.html; classtype:trojan-activity; sid:2021028; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Win32.Excute Checkin 2"; flow:to_server,established; urilen:>107; content:"GET"; http_method; content:"/setup/"; http_uri; fast_pattern:only; content:"Host|3a|"; http_header; depth:5; content:!"User-Agent|3a|"; http_header; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; pcre:"/\/setup\/[a-zA-Z0-9!-]{100,}$/U"; reference:url,pwc.blogs.com/cyber_security_updates/2015/04/attacks-against-israeli-palestinian-interests.html; classtype:trojan-activity; sid:2021029; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN BePush/Kilim CnC Beacon"; flow:established,to_server; content:"GET"; http_method; content:".php?type="; http_uri; fast_pattern:only; content:!"Accept-"; http_header; content:!"Referer|3a|"; http_header; pcre:"/\.php\?type=(?:update_hash|js|key|arsiv_(?:hash|link))$/U"; reference:md5,dad57ec2d5d99b725acc726b0a644c00; reference:url,seclists.org/fulldisclosure/2015/Jan/131; classtype:trojan-activity; sid:2021030; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN Malicious SSL Cert (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|0f|terriblekira.su"; distance:1; within:16; reference:md5,f752cfdc6aa1d3eac013201357ada0f6; classtype:trojan-activity; sid:2021031; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN Malicious SSL Cert (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|0b|lidline.com"; distance:1; within:112; reference:md5,f752cfdc6aa1d3eac013201357ada0f6; classtype:trojan-activity; sid:2021032; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN Teerac/CryptoFortress .onion Proxy Domain (cld7vqwcvn2bii67)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|cld7vqwcvn2bii67"; fast_pattern; distance:0; nocase; reference:url,www.hybrid-analysis.com/sample/650d5a7d247fbe9c7f4d92e901319fec8c83fd07d4f5291f23c30f338a2e2974?environmentId=2#extracted-strings; reference:md5,4a20784de661675d281edbd48a6e2485; classtype:trojan-activity; sid:2021041; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ET TROJAN Linux/DDoS.Sotdas Checkin"; flow:to_server,established; dsize:296; content:"|72 8D 90 89 7E D6|"; offset:224; depth:6; fast_pattern; content:"|b6 b6 b6 b6 b6 b6 b6 b6 b6 b6 b6 b6 b6 b6 b6 b6|"; reference:md5,f7556d9ede5d988400b1edbb1a172634; classtype:trojan-activity; sid:2021049; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Linux.Trojan.IptabLex Variant Checkin"; flow:to_server,established; dsize:157; content:"|77|"; depth:1; pcre:"/^[\x01\x03\x08\x09\x0b]\x00/R"; content:"|20 40 20|"; distance:0; content:"Hz"; nocase; within:15; reference:md5,019765009f7142a89af15aaaac7400cc; reference:url,blog.malwaremustdie.org/2014/06/mmd-0025-2014-itw-infection-of-elf.html; classtype:trojan-activity; sid:2021050; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Linux.Mumblehard Initial Checkin"; flow:to_server,established; content:"GET"; http_method; urilen:1; content:"User-Agent|3a 20|Mozilla/5.0 (Windows NT 6.1|3b| rv|3a|7.0.1) Gecko/20100101 Firefox/7.0.1"; fast_pattern:59,20; pcre:"/^Host\x3a (\d{1,3}\.){3}\d{1,3}\r\nUser-Agent\x3a[^\r\n]+?\r\nAccept\x3a[^\r\n]+?\r\nAccept-Language\x3a[^\r\n]+?\r\nAccept-Encoding\x3a[^\r\n]+?\r\nAccept-Charset\x3a[^\r\n]+?\r\nConnection\x3a close(?:\r\n)*$/Hi"; reference:url,www.welivesecurity.com/wp-content/uploads/2015/04/mumblehard.pdf; reference:md5,86f0b0b74fe8b95b163a1b31d76f7917; classtype:trojan-activity; sid:2021051; rev:3;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Linux.Mumblehard Command Status CnC"; flow:to_server,established; content:"GET"; http_method; urilen:1; content:"User-Agent|3a 20|Mozilla/5.0 (Windows NT 6.1|3b| rv|3a|7.0.1) Gecko/"; fast_pattern:37,20; pcre:"/^\d{1,5}\.[2-5]0[0-5]\.\d+? Firefox\/7\.0\.1/Ri"; pcre:"/^Host\x3a (\d{1,3}\.){3}\d{1,3}\r\nUser-Agent\x3a[^\r\n]+?\r\nAccept\x3a[^\r\n]+?\r\nAccept-Language\x3a[^\r\n]+?\r\nAccept-Encoding\x3a[^\r\n]+?\r\nAccept-Charset\x3a[^\r\n]+?\r\nConnection\x3a close(?:\r\n)*$/Hi"; reference:url,www.welivesecurity.com/wp-content/uploads/2015/04/mumblehard.pdf; reference:md5,86f0b0b74fe8b95b163a1b31d76f7917; classtype:trojan-activity; sid:2021052; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET TROJAN Linux.Mumblehard Spam Command CnC"; flow:to_server,established; content:"POST / HTTP/1."; depth:14; content:"|0d 0a 0d 0a 0f 0f|"; pcre:"/^\d{1,3}[0-2]/R"; reference:url,www.welivesecurity.com/wp-content/uploads/2015/04/mumblehard.pdf; reference:md5,86f0b0b74fe8b95b163a1b31d76f7917; classtype:trojan-activity; sid:2021053; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Carbon FormGrabber/Retgate.A/Rombertik Checkin"; flow:established,to_server; content:"POST"; http_method; content:".php"; http_uri; content:!"Referer|3a|"; http_header; content:"name="; http_client_body; content:"&host="; http_client_body; content:"&browser="; http_client_body; content:"&post="; http_client_body; fast_pattern:only; pcre:"/\.php$/U"; reference:url,symantec.com/connect/blogs/european-automobile-businesses-fall-prey-carbon-grabber; reference:md5,72bab43e406c9e325e49e27b22853b60; reference:url,blogs.cisco.com/security/talos/rombertik; reference:md5,f504ef6e9a269e354de802872dc5e209; classtype:trojan-activity; sid:2021055; rev:3;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Dyre Downloading Mailer 2"; flow:established,to_server; content:"GET"; http_method; content:".tar"; http_uri; content:!"Accept"; content:!"Connection|3a|"; http_header; content:!"Referer|3a|"; content:"User-Agent|3a 20|Mozilla/5.0 (Windows NT 6.1|3b 20|WOW64|3b 20|Trident/7.0|3b 20|SLCC2|3b 20|.NET CLR 2.0.50727|3b 20|.NET CLR 3.5.30729|3b 20|.NET CLR 3.0.30729|3b 20|Media Center PC 6.0|3b 20|.NET4.0E|3b 20|.NET4.0C|3b 20|rv|3a|11.0) like Gecko|0d 0a|Host|3a|"; http_header; depth:195; pcre:"/^Host\x3a[^\r\n]+\r\n(?:\r\n)?$/Hmi"; pcre:"/\.tar$/U"; reference:url,www.seculert.com/blog/2015/04/new-dyre-version-evades-sandboxes.html; reference:md5,999bc5e16312db6abff5f6c9e54c546f; classtype:trojan-activity; sid:2021056; rev:3;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET !80 (msg:"ET TROJAN njRAT Variant Outbound CnC Beacon"; flow:established,to_server; content:"|7c|nj-q8"; isdataat:!1,relative; classtype:trojan-activity; sid:2021057; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET TROJAN Ursnif SSL Cert"; flow:established,from_server; content:"|55 04 03|"; content:"|16|athereforeencourage.pw"; distance:1; within:23; classtype:trojan-activity; sid:2021061; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Ransomware CnC)"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 8d 3d d5 97 44 08 33 d8|"; within:35; fast_pattern; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021063; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET TROJAN Backdoor family PCRat/Gh0st CnC traffic (OUTBOUND) 101"; flow:to_server,established; dsize:>11; content:"|71 9e|"; offset:8; byte_jump:4,-10,relative,little,from_beginning,post_offset -1; isdataat:!1,relative; pcre:"/^[\x20-\x7e]+?.{8}\x71\x9e/s"; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Backdoor%3AWin32/PcClient.ZR&ThreatID=-2147325231; reference:md5,8776e617b59da52bcac43b380a354aa0; classtype:trojan-activity; sid:2021065; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN TeslaCrypt/AlphaCrypt Variant .onion Proxy Domain (is6xsotjdy4qtgur)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|is6xsotjdy4qtgur"; fast_pattern; distance:0; nocase; reference:url,www.malware-traffic-analysis.net/2015/05/06/index.html; reference:url,www.hybrid-analysis.com/sample/99fc04d82877aea0247286d41186b985ab773b19c8cef8786ffc1fa50e35af29?environmentId=1; reference:md5,a08784f5691a0a8ce6249e1981dea82c; classtype:trojan-activity; sid:2021077; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Enfal CnC POST"; flow:to_server,established; content:"POST"; http_method; content:".cgi"; fast_pattern:only; http_uri; pcre:"/\.cgi$/U"; content:!"User-Agent|3a|"; http_header; content:!"Referer|3a|"; http_header; content:!"Content-Type|3a|"; http_header; pcre:"/^Host\x3a[^\r\n]+\r\nContent-Length\x3a\x20\d+\r\n(?:Cache-Control|Pragma)\x3a\x20no-cache\r\n(?:\r\n)?$/Hmi"; reference:md5,f1b341d3383b808ecfacfa22sudo dcbe9196; classtype:trojan-activity; sid:2021079; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET TROJAN Enfal CnC GET"; flow:to_server,established; content:"GET"; http_method; content:"docs/"; http_uri; fast_pattern:only; pcre:"/^\/(?:tran|http)docs\//U"; content:!"User-Agent|3a|"; http_header; content:!"Referer|3a|"; http_header; pcre:"/^Host\x3a[^\r\n]+\r\n(?:Cache-Control|Pragma)\x3a\x20no-cache\r\n(?:\r\n)?$/Hmi"; reference:md5,f1b341d3383b808ecfacfa22dcbe9196; classtype:trojan-activity; sid:2021080; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN TeslaCrypt/AlphaCrypt Variant .onion Proxy Domain (iq3ahijcfeont3xx)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|iq3ahijcfeont3xx"; fast_pattern; distance:0; nocase; reference:md5,c3e567e9f45d0b4c1396f3d646598204; classtype:trojan-activity; sid:2021084; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET TROJAN Cryptolocker .onion Proxy Domain (24u4jf7s4regu6hn)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|24u4jf7s4regu6hn"; fast_pattern; distance:0; nocase; reference:md5,36095572717aee2399b6bdacef936e22; classtype:trojan-activity; sid:2021085; rev:1;)
 

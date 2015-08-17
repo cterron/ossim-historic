@@ -4,6 +4,7 @@ description=Checks the AV server status
 category=alienvault
 type=command
 command=wget http://127.0.0.1:40009/server/status -O - -q
+requires=@dpkg:alienvault-professional
 profiles=Server:>4.0
 
 [Backlogs opened]

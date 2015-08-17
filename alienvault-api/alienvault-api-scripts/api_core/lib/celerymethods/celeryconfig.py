@@ -41,6 +41,7 @@ CELERY_IMPORTS = ("celerymethods.tasks.monitor_tasks",
                   "celerymethods.tasks.celery_tasks",
                   "celerymethods.jobs.reconfig",
                   "celerymethods.jobs.system",
+                  "celerymethods.jobs.nmap",
                   "celerymethods.tasks.maintenance")
 CELERYBEAT_LOG_LEVEL = "DEBUG"
 CELERY_TASK_SERIALIZER = 'json'

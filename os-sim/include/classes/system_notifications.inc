@@ -202,50 +202,123 @@ class System_notifications
         $component_type  = $message['component_type'];
         $additional_info = $message['additional_info'];
 
-
         // Format creation_time
         $message['creation_time'] = $date;
 
-
         // Format title
-        if (is_array($additional_info) && array_key_exists('over_assets', $additional_info) && $additional_info['over_assets'])
+        if (is_array($additional_info) && array_key_exists('00000000000000000000000000010024', $additional_info))
         {
-            $message['message_title'] = str_replace(array('NUM_ASSETS'), array($additional_info['exceeding_assets']), $message['message_title']);
-        }
+            $target_key = $additional_info['00000000000000000000000000010024'];
 
+            if (array_key_exists('over_assets', $target_key) && $target_key['over_assets'])
+            {
+                $message['message_title'] = str_replace(array('NUM_ASSETS'), array($target_key['exceeding_assets']), $message['message_title']);
+            }
+        }
 
         // Format message_description
         $message['message_description'] = str_replace(array('TIMESTAMP'), array($date), $message['message_description']);
 
-        if (is_array($additional_info) && array_key_exists('plugins_changed', $additional_info))
+        // Format based in additional info
+        if (is_array($additional_info))
         {
-            $plugins_changed                = implode(', ', $additional_info['plugins_changed']);
-            $message['message_description'] .= "\n\n".'Plugins changed: '.$plugins_changed;
-        }
-
-        $system_name = 'Unknown';
-
-        if (is_array($additional_info) && array_key_exists('system_id', $additional_info))
-        {
-            $db   = new Ossim_db();
-            $conn = $db->connect();
-
-            try
+            // PLUGINS CHANGED
+            if (array_key_exists('plugins_changed', $additional_info))
             {
-                $system_info = Av_center::get_system_info_by_id($conn, $additional_info['system_id']);
+                $plugins_changed_names = array();
 
-                if (!empty($system_info['data']['name']))
+                foreach ($additional_info['plugins_changed'] as $plugin_changed)
                 {
-                    $system_name = $system_info['data']['name'];
+                    $plugins_changed_names[] = array_pop(explode('/', $plugin_changed));
                 }
-            }
-            catch (Exception $e)
-            {
-                ;
+
+                // Show plugin names in message title and message description and plugin path in message description
+                $message['message_title'] = str_replace(
+                    array('PLUGINS_CHANGED'), array(implode(', ', $plugins_changed_names)), $message['message_title']);
+
+                $message['message_description'] = str_replace(
+                    array('PATH_PLUGINS_CHANGED', 'PLUGINS_CHANGED'), array(implode(', ', $additional_info['plugins_changed']), implode(', ', $plugins_changed_names)), $message['message_description']);
             }
 
-            $db->close();
+            // PLUGINS_REMOVED
+            if (array_key_exists('plugins_removed', $additional_info))
+            {
+                $plugins_removed_names = array();
+
+                foreach ($additional_info['plugins_removed'] as $plugin_changed)
+                {
+                    $plugins_removed_names[] = array_pop(explode('/', $plugin_changed));
+                }
+
+                // Show plugin names in message title and message description and plugin path in message description
+                $message['message_title'] = str_replace(
+                    array('PLUGINS_REMOVED'), array(implode(', ', $plugins_removed_names)), $message['message_title']);
+
+                $message['message_description'] = str_replace(
+                    array('PATH_PLUGINS_REMOVED', 'PLUGINS_REMOVED'), array(implode(', ', $additional_info['plugins_removed']), implode(', ', $plugins_removed_names)), $message['message_description']);
+            }
+
+            // RSYSLOG_FILES_REMOVED
+            if (array_key_exists('rsyslog_files_removed', $additional_info))
+            {
+                $rsyslog_files_removed_names = array();
+
+                foreach ($additional_info['rsyslog_files_removed'] as $plugin_changed)
+                {
+                    $rsyslog_files_removed_names[] = array_pop(explode('/', $plugin_changed));
+                }
+
+                // Show plugin names in message title and message description and plugin path in message description
+                $message['message_title'] = str_replace(
+                    array('RSYSLOG_FILES_REMOVED'), array(implode(', ', $rsyslog_files_removed_names)), $message['message_title']);
+
+                $message['message_description'] = str_replace(
+                    array('PATH_RSYSLOG_FILES_REMOVED', 'RSYSLOG_FILES_REMOVED'), array(implode(', ', $additional_info['rsyslog_files_removed']), implode(', ', $rsyslog_files_removed_names)), $message['message_description']);
+            }
+
+            // RSYSLOG_FILES_CHANGED
+            if (array_key_exists('rsyslog_files_changed', $additional_info))
+            {
+                $rsyslog_files_changed_names = array();
+
+                foreach ($additional_info['rsyslog_files_changed'] as $plugin_changed)
+                {
+                    $rsyslog_files_changed_names[] = array_pop(explode('/', $plugin_changed));
+                }
+
+                // Show plugin names in message title and message description and plugin path in message description
+                $message['message_title'] = str_replace(
+                    array('RSYSLOG_FILES_CHANGED'), array(implode(', ', $rsyslog_files_changed_names)), $message['message_title']);
+
+                $message['message_description'] = str_replace(
+                    array('PATH_RSYSLOG_FILES_CHANGED', 'RSYSLOG_FILES_CHANGED'), array(implode(', ', $additional_info['rsyslog_files_changed']), implode(', ', $rsyslog_files_changed_names)), $message['message_description']);
+            }
+
+            // SYSTEM_NAME
+            if (array_key_exists('system_id', $additional_info))
+            {
+                $db   = new Ossim_db();
+                $conn = $db->connect();
+
+                try
+                {
+                    $system_info = Av_center::get_system_info_by_id($conn, $additional_info['system_id']);
+
+                    if (!empty($system_info['data']['name']))
+                    {
+                        $system_name = $system_info['data']['name'];
+                    }
+                }
+                catch (Exception $e)
+                {
+                    ;
+                }
+
+                $db->close();
+            }
         }
+
+        $system_name = empty($system_name) ? 'Unknown' : $system_name;
 
         $message['message_description'] = str_replace(array('SYSTEM_NAME'), array($system_name), $message['message_description']);
 

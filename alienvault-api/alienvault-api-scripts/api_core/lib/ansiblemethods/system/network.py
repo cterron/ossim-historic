@@ -33,7 +33,6 @@ import os
 import re
 import traceback
 import ipaddress
-import time
 from xml.dom.minidom import parseString
 
 import api_log
@@ -44,7 +43,6 @@ from ansiblemethods.helper import read_file, \
 from ansiblemethods.sensor.network import get_sensor_interfaces,\
     set_sensor_interfaces
 from ansiblemethods.system.system import get_av_config, set_av_config
-from ansiblemethods.system.system import ansible_run_async_reconfig
 
 ansible = Ansible()
 
@@ -348,6 +346,7 @@ def set_conf_iface(system_ip,iface,ipaddr=None,netmask=None,gateway=None):
         msg = "Can't configure interface: " + str(traceback.format_exc ())
     return (rc, msg)
 
+
 def delete_conf_iface(system_ip,iface,ifacepath=None):
     """ Delte a iface in /etc/network/interfaces
     """
@@ -374,6 +373,7 @@ def delete_conf_iface(system_ip,iface,ifacepath=None):
     else:
         return (True,"iface %s deleted from /etc/network/interfaces" % iface)
 
+
 def resolve_dns_name(system_ip, dns_name):
     """
     @param system_ip: The system IP
@@ -390,192 +390,245 @@ def resolve_dns_name(system_ip, dns_name):
     data = (response['contacted'][system_ip]['rc'] == 0)
     return (True, data)
 
+
+def show_vpn_offline_instructions(node_configuration_path, remote_system_ip):
+    offline_info = """
+    Currently there is no connectivity with  the remote AlienVault appliance. The steps to deploy the VPN client manually are the following:
+     * A new VPN configuration file has been created for the remote AlienVault appliance at: {0}.
+     * Copy this configuration file to the remote AlienVault appliance
+     * Extract the configuration file: /bin/tar zxf {2} -C /tmp/
+     * Move the VPN client configuration file to the OpenVPN folder:  cp -arf /tmp/etc/openvpn/nodes/* /etc/openvpn/;  mv /etc/openvpn/{1}/*.conf /etc/openvpn/
+     * Fire the configuration triggers: dpkg-trigger --no-await alienvault-network-vpn-net-client; dpkg --pending --configure
+     * Clean up: rm -rf /tmp/etc
+     * Finally, once the VPN connection has been established, please add the remote AlienVault appliance from the Configuration > Deployment menu option on the web UI
+    """.format(node_configuration_path, remote_system_ip,  os.path.basename(node_configuration_path))
+
+    return offline_info
+
+
 def make_tunnel(system_ip, local_server_id, password=""):
     """
-    Make a tunnel with system_ip
+    Builds the vpn node configuration for the given system ip.
+    When possible, it tries to deploy the given configuration on the remote node.
+    Args:
+        system_ip: The VPN node you want to configure
+        local_server_id: The local server id.
+        password: The VPN node password
     """
     host = '127.0.0.1'
-    src='/etc/openvpn/nodes/%s.tar.gz' % system_ip
-    dst='/tmp/'
+    src = '/etc/openvpn/nodes/%s.tar.gz' % system_ip
+    dst = '/tmp/'
     rt = True
-    end_points = None
     try:
         end_points = {}
         if not os.path.exists(src):
             response = ansible.run_module(host_list=[host],
                                           module='av_vpn',
-                                          args={'system_ip':system_ip})
+                                          args={'system_ip': system_ip})
             # 1 - Create the server configuration
-            print "Creating node vpn configuration..."
+            print "Building the VPN node configuration..."
             success, msg = ansible_is_valid_response(host, response)
             if not success:
-                return False, msg
+                api_log.error("[make_tunnel] Cannot create the VPN node configuration. %s" % str(msg))
+                return False, "Cannot create the VPN node configuration"
             end_points = response['contacted'][host]['data']
-        else:#VPN configuration for the given node already exists
+        else:
+            # VPN configuration for the given node already exists
             with open("/etc/openvpn/ccd/%s" % system_ip, "r") as client_file:
                 for line in client_file.readlines():
-                    matchobj = re.match("ifconfig-push (?P<client_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) (?P<client_ip2>)\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", line)
+                    matchobj = re.match(
+                        "ifconfig-push (?P<client_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) (?P<client_ip2>)\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
+                        line)
                     if matchobj is not None:
                         end_points['client_end_point1'] = matchobj.groupdict()['client_ip']
                         end_points['client_end_point2'] = matchobj.groupdict()['client_ip2']
         if 'client_end_point1' not in end_points:
-            return False, "End points are empty"
-            _
-        # Restart the openvpn server
-        print "Restarting openvpn server..."
+            api_log.error("[make_tunnel] end_points %s" % str(end_points))
+            return False, "Cannot retrieve the end points information"
+
+        # Restart the OpenVPN server
+        print "Restarting OpenVPN server..."
         response = ansible.run_module(host_list=[host], module="service", args="name=openvpn state=restarted")
         success, msg = ansible_is_valid_response(host, response)
         if not success:
-            return False, msg
+            api_log.error("[make_tunnel] %s" % str(msg))
+            return False, "Cannot restart the OpenVPN server"
+
         print "Retrieving the local vpn server ip..."
-        # 2- Retrieve the openvpn server ip
-        response = ansible.run_module(host_list=[host],module="av_system_info",args="")
-        success,msg = ansible_is_valid_response(host, response)
+        # 2- Retrieve the OpenVPN server ip
+        response = ansible.run_module(host_list=[host], module="av_system_info", args="")
+        success, msg = ansible_is_valid_response(host, response)
         if not success:
-            return False, "[make_tunnel] Cannot retrieve the current vpn server ip: %s" % str(msg)
-        server_vpn_ip = None
-        frameworkd_vpn_ip = None
+            api_log.error("[make_tunnel] Cannot retrieve the current vpn server ip: %s" % str(msg))
+            return False, "Cannot retrieve the VPN server ip"
+
         try:
             server_vpn_ip = response['contacted'][host]['data']['vpn_ip']
-            frameworkd_vpn_ip = server_vpn_ip
-        except:
-            return False,"[make_tunnel] tun0 doesn't exists. <%s>" % str(response)
+        except Exception as error:
+            api_log.error("[make_tunnel] tun0 doesn't exists. <%s>" % str(error))
+            return False, "Cannot retrieve the VPN server ip"
+
         # 3 - Copy the cliente configuration to its destination
-        print "Copying the openvpn configuration to the node "
+        print "Trying to deploy the VPN configuration on the remote AlienVault appliance..."
         args = {'src': src, 'dest': dst}
-        response = ansible.run_module(host_list=[system_ip], module='copy',args=args, ans_remote_pass=password, ans_remote_user="root")
+        response = ansible.run_module(host_list=[system_ip], module='copy', args=args,
+                                      ans_remote_pass=password,
+                                      ans_remote_user="root",
+                                      use_sudo=True)
         success, msg = ansible_is_valid_response(system_ip, response)
         if not success:
-            return False, msg
-        print "Uncompress the node configuration..."
+            return False, show_vpn_offline_instructions(src, system_ip)
+
+        print "Extracting the remote AlienVault appliance VPN configuration..."
         evars = {"tar_file": "%s.tar.gz" % system_ip,
                  "target": "%s" % system_ip}
-        response =  ansible.run_playbook(playbook=PLAYBOOKS['UNTAR_VPN_AND_START'],
-                                    host_list=[system_ip],
-                                    extra_vars=evars,
-                                    ans_remote_pass=password, ans_remote_user="root")
+        response = ansible.run_playbook(playbook=PLAYBOOKS['UNTAR_VPN_AND_START'],
+                                        host_list=[system_ip],
+                                        extra_vars=evars,
+                                        ans_remote_pass=password,
+                                        ans_remote_user="root",
+                                        use_sudo=True)
 
-        success, msg = ansible_is_valid_playbook_response(system_ip,response)
+        success, msg = ansible_is_valid_playbook_response(system_ip, response)
         if not success:
-            return False, msg
+            return False, "Cannot extract the OpenVPN configuration in the remote AlienVault appliance"
 
-        # 4 - Set the ossim_setup.conf variables
-        #ossim_setup_values = {'server_server_ip':server_vpn_ip,
-        #                      'framework_framework_ip':frameworkd_vpn_ip}
-        #print "Setting the server_ip and framework ip node values..."
-        #success, msg = set_av_config(system_ip,ossim_setup_values)
-        #if not success:
-        #    return False, "Error setting the vpn values on the remote host: %s" % msg
-        #print "Reconfiguring the node..."
-        ## 5 - Run alienvault reconfig in a asynchrnous way
-        #success, msg = ansible_run_async_reconfig(system_ip)
-
-        #if not success:
-        #    return False, "Error running alienvault-reconfigure after the vpn changes %s" % str(msg)
-        print "Restarting remote openvpn service..."
-        response = ansible.run_module(host_list=[system_ip], module="service", args="name=openvpn state=restarted",ans_remote_pass=password , ans_remote_user="root")
+        print "Restarting remote OpenVPN service..."
+        response = ansible.run_module(host_list=[system_ip], module="service", args="name=openvpn state=restarted",
+                                      ans_remote_pass=password, ans_remote_user="root", use_sudo=True)
         success, msg = ansible_is_valid_response(system_ip, response)
         if not success:
-            return False, msg
+            return False, "Cannot restart OpenVPN service in the remote AlienVault appliance"
         # Retrieve remote system information. We need to know the remote system profile
-        response = ansible.run_module(host_list=[system_ip], module="av_system_info", args="",ans_remote_pass=password, ans_remote_user="root")
+        response = ansible.run_module(host_list=[system_ip], module="av_system_info", args="", ans_remote_pass=password,
+                                      ans_remote_user="root", use_sudo=True)
         success, msg = ansible_is_valid_response(system_ip, response)
         if not success:
-            return False, msg
+            return False, "Cannot retrieve the remote AlienVault appliance configuration"
         try:
             remote_profiles = response['contacted'][system_ip]['data']['profile']
             remote_server_id = None
-            if 'server_id' in response['contacted'][system_ip]['data'] and response['contacted'][system_ip]['data']['server_id'] is not None:
+            if 'server_id' in response['contacted'][system_ip]['data'] and \
+                            response['contacted'][system_ip]['data']['server_id'] is not None:
+
                 remote_server_id = response['contacted'][system_ip]['data']['server_id']
-                remote_server_id = remote_server_id.replace('-','')
+                remote_server_id = remote_server_id.replace('-', '')
 
         except Exception as err:
-            return False, "Error getting the remote profile:  %s" % str(err)
+            api_log.error("Error getting the remote profile:  %s" % str(err))
+            return False, "Cannot retrieve the remote AlienVault appliance configuration"
 
         # UPDATE LOCAL SERVER TABLE: Set the local vpn ip
-        cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
+        cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (
+        server_vpn_ip, local_server_id.upper())
         response = ansible.run_module(host_list=[host], module="shell", args=cmd)
         success, msg = ansible_is_valid_response(host, response)
         if not success:
-            return False, msg
-        if response['contacted'][host]['rc'] !=0:
-            return False, response['contacted'][host]['stderr']
-
+            api_log.error("Cannot update the local server information in the database. %s" % msg)
+            return False, "Cannot update the local server information in the database"
+        if response['contacted'][host]['rc'] != 0:
+            api_log.error("Cannot update the local server information in the database. %s" % str(response))
+            return False, "Cannot update the local server information in the database"
 
         if "server" in remote_profiles:
             # IF SERVER PROFILE, UPDATE LOCAL SERVER TABLE AS WELL
-            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
+            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'], remote_server_id.upper())
             response = ansible.run_module(host_list=[host], module="shell", args=cmd)
             success, msg = ansible_is_valid_response(host, response)
             if not success:
-                return False, msg
+                api_log.error("Cannot configure the remote server information in the local database {0}".format(str(msg)))
+                return False, "Cannot configure the remote server information in the local database"
 
-            if response['contacted'][host]['rc'] !=0:
-                return False, response['contacted'][host]['stderr']
-            
+            if response['contacted'][host]['rc'] != 0:
+                api_log.error("Cannot configure the remote server information in the local database {0}".format(str(response)))
+                return False, "Cannot configure the remote server information in the local database"
+
             # UPDATE REMOTE SERVER TABLE
             print "Remote profile server found... configuring it"
-            print "Set vpn server ip on remote db..."
-            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
-            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
+            print "Set VPN server ip oin remote db..."
+            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (
+            server_vpn_ip, local_server_id.upper())
+            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd, ans_remote_pass=password,
+                                          ans_remote_user="root", use_sudo=True)
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
-                return False, msg
+                api_log.error("Cannot configure the VPN server ip in the remote AlienVault appliance {0}".format(str(response)))
+                return False, "Cannot configure the VPN server ip in the remote AlienVault appliance"
 
-            if response['contacted'][system_ip]['rc'] !=0:
-                return False, response['contacted'][system_ip]['stderr']
-            print "Set local vpn ip on remote db ..."
-            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
-            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
+            if response['contacted'][system_ip]['rc'] != 0:
+                api_log.error("Cannot configure the VPN server ip in the remote AlienVault appliance {0}".format(str(response)))
+                return False, "Cannot configure the VPN server ip in the remote AlienVault appliance"
+
+            print "Set local server VPN ip in remote db ..."
+            cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (
+            end_points['client_end_point1'], remote_server_id.upper())
+            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd, ans_remote_pass=password,
+                                          ans_remote_user="root", use_sudo=True)
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
-                return False, msg
+                api_log.error("Cannot set the local server VPN ip in the remote DB {0}".format(str(msg)))
+                return False, "Cannot set the local server VPN ip in the remote DB"
 
-            if response['contacted'][system_ip]['rc'] !=0:
-                return False, response['contacted'][system_ip]['stderr']
+            if response['contacted'][system_ip]['rc'] != 0:
+                api_log.error("Cannot set the local server VPN ip in the remote DB {0}".format(str(msg)))
+                return False, "Cannot set the local server VPN ip in the remote DB"
 
 
             # UPDATE REMOTE SYSTEM TABLE
-            cmd = """echo \"update alienvault.system set vpn_ip=inet6_aton('%s') where server_id=unhex('%s');\" | ossim-db""" % (server_vpn_ip,local_server_id.upper())
-            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
+            cmd = """echo \"update alienvault.system set vpn_ip=inet6_aton('%s') where server_id=unhex('%s');\" | ossim-db""" % (server_vpn_ip, local_server_id.upper())
+            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd, ans_remote_pass=password,
+                                          ans_remote_user="root", use_sudo=True)
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
-                return False, msg
+                api_log.error("Cannot update the system information in the database. {0}".format(str(msg)))
+                return False, "Cannot update the system information in the database."
 
-            if response['contacted'][system_ip]['rc'] !=0:
-                return False, response['contacted'][system_ip]['stderr']
+            if response['contacted'][system_ip]['rc'] != 0:
+                api_log.error("Cannot update the system information in the database. {0}".format(str(msg)))
+                return False, "Cannot update the system information in the database."
 
             print "Set local vpn ip on remote db (systems)..."
-            cmd = """echo \"update alienvault.system set vpn_ip=inet6_aton('%s') where server_id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'],remote_server_id.upper())
-            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd,ans_remote_pass=password, ans_remote_user="root")
+            cmd = """echo \"update alienvault.system set vpn_ip=inet6_aton('%s') where server_id=unhex('%s');\" | ossim-db""" % (end_points['client_end_point1'], remote_server_id.upper())
+            response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd, ans_remote_pass=password,
+                                          ans_remote_user="root", use_sudo=True)
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
-                return False, msg
+                api_log.error("Cannot update the system information in the database. {0}".format(str(msg)))
+                return False, "Cannot update the system information in the database."
 
-            if response['contacted'][system_ip]['rc'] !=0:
-                return False, response['contacted'][system_ip]['stderr']
+            if response['contacted'][system_ip]['rc'] != 0:
+                api_log.error("Cannot update the system information in the database. {0}".format(str(msg)))
+                return False, "Cannot update the system information in the database."
 
             # RESTART SERVICES ON REMOTE: ossim-server and alienvault-forward
             print "Restarting remote alienvault-forward service..."
-            response = ansible.run_module(host_list=[system_ip], module="service", args="name=alienvault-forward state=restarted",ans_remote_pass=password, ans_remote_user="root")
+            response = ansible.run_module(host_list=[system_ip], module="service",
+                                          args="name=alienvault-forward state=restarted", ans_remote_pass=password,
+                                          ans_remote_user="root", use_sudo=True)
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
-                return False, msg
+                api_log.error("Cannot restart the alienvault-forward service in the remote AlienVault appliance. {0}".format(str(msg)))
+                return False, "Cannot restart the alienvault-forward service in the remote AlienVault appliance."
+
             print "Restarting remote ossim-server service..."
-            response = ansible.run_module(host_list=[system_ip], module="service", args="name=ossim-server state=restarted",ans_remote_pass=password, ans_remote_user="root")
+            response = ansible.run_module(host_list=[system_ip], module="service",
+                                          args="name=ossim-server state=restarted", ans_remote_pass=password,
+                                          ans_remote_user="root", use_sudo=True)
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
-                return False, msg
+                api_log.error("Cannot restart the ossim-server service in the remote AlienVault appliance. {0}".format(str(msg)))
+                return False, "Cannot restart the ossim-server service in the remote AlienVault appliance."
 
         print "Restarting ossim-server"
         response = ansible.run_module(host_list=[host], module="service", args="name=ossim-server state=restarted")
         success, msg = ansible_is_valid_response(host, response)
         if not success:
-            return False, msg
-
+            api_log.error("Cannot restart the ossim-server service. {0}".format(str(msg)))
+            return False, "Cannot restart the ossim-server service"
 
     except Exception as err:
-        return rt, "Something wrong happened while building the vpn tunnel! %s" % str(err)
+        api_log.error("Something wrong happened while building the vpn tunnel! %s" % str(err))
+        return False, "Cannot deploy the VPN tunnel"
 
     return True, end_points
 

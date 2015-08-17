@@ -888,7 +888,7 @@ $conn = $db->connect();
 
 //Default values for the response.
 $response['error'] = TRUE ;
-$response['msg']   = _('Unknown Error');
+$response['msg']   = _('Error');
 
 
 //checking if it is an ajax request

@@ -60,7 +60,9 @@ fclose($fh);
 //file_put_contents($tmp, bin2hex($myrow2[1]));
 
 $tmpout = tempnam("/tmp", "bin");
-shell_exec('sctest -Sgs 1000000 < ' . $tmp . ' > ' . $tmpout);
+
+Util::execute_command("sctest -Sgs 1000000 < ? > ?", array($tmp, $tmpout));
+
 $types = array(
     "int",
     "short",
@@ -102,8 +104,8 @@ else
     $output_file = '/tmp/shellcode.png';
     $tmp2 = tempnam("/tmp", "dot");
     @unlink($output_file);
-    shell_exec('sctest -Sgs 1000000 -G ' . $tmp2 . ' < ' . $tmp);
-    shell_exec('dot -Tpng -Gcharset=latin1 -Gsize="400,300" ' . $tmp2 . ' -o '. $output_file);
+    Util::execute_command('sctest -Sgs 1000000 -G ? < ?', array($tmp2, $tmp));
+    Util::execute_command('dot -Tpng -Gcharset=latin1 -Gsize="400,300" ? -o ?', array($tmp2, $output_file));
     if (file_exists($output_file))
     {
         $img = 'data:image/png;base64,' . base64_encode(file_get_contents($output_file));

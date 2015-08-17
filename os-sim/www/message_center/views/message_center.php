@@ -98,7 +98,7 @@ $message_types  = array('Update', 'Deployment', 'Information', 'AlienVault'/*, '
 
         <div id='filter_search' class="filter_section">
             <div class="filter_element">
-                <input type="search" id="nf_search" name="nf_search" placeholder="Search by subject" maxlength="30"/>
+                <input type="search" id="nf_search" name="nf_search" placeholder="<?php echo _('Search') ?>" maxlength="30"/>
             </div>
         </div>
 

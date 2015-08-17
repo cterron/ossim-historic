@@ -182,7 +182,7 @@ binary-arch: build install
 #	dh_installpam
 #	dh_installmime
 	dh_installinit --restart-after-upgrade
-	dh_installinit --name=ossim-framework --no-restart-on-upgrade --no-start
+	dh_installinit --name=ossim-framework --restart-after-upgrade
 	dh_installcron
 #	dh_installinfo
 	dh_installman debian/ossim-server.8 debian/ossim-framework.8

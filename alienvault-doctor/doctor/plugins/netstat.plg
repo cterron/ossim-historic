@@ -3,7 +3,7 @@ name=Network services
 description=Tries to detect common network service related problems.
 category=network
 type=command
-command=netstat -putean
+command=netstat -putean | grep -v '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\:22.*[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\:[0-9]\{1,\}.*ESTABLISHED'
 
 # Check if some processes rx/tx queues are overused.
 [RX and TX queues]

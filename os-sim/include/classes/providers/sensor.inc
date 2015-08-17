@@ -783,4 +783,25 @@ class Sensor_provider extends Provider
 
         return $response;
     }
+
+
+
+    /*********************************************************
+     ***************** GENERIC INFORMATION  ******************
+     *********************************************************/
+
+
+    /**
+     * This method returns the sensor list
+     *
+     * @return string in JSON format
+     */
+    public function get_list()
+    {
+        $params = array();
+
+        $response = $this->conn->do_request('/sensor', $params);
+
+        return $response;
+    }
 }

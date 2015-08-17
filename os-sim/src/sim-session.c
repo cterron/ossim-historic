@@ -133,6 +133,9 @@ struct _SimSessionPrivate {
 	GHashTable	*hashSensors;
 	time_t last_data_timestamp;
   time_t last_event_timestamp;
+  // to signal that we has "changed" the IP 
+  gboolean is_loopback;
+
 };
 
 SIM_DEFINE_TYPE (SimSession, sim_session, G_TYPE_OBJECT, NULL)
@@ -261,6 +264,7 @@ sim_session_instance_init (SimSession *session)
 	session->_priv->default_scan_fn = sim_command_get_default_scan ();
 	session->type = SIM_SESSION_TYPE_NONE;
 	session->_priv->hashSensors = g_hash_table_new_full (g_str_hash,g_str_equal,g_free,NULL);
+  session->_priv->is_loopback = FALSE;
 }
 
 /* Public Methods */
@@ -445,6 +449,7 @@ sim_session_set_socket (SimSession *session, GTcpSocket *socket)
       if (SIM_IS_INET (session->_priv->ia))
         g_object_unref (session->_priv->ia);
 	    session->_priv->ia = sim_inet_new (aux, SIM_INET_HOST);
+      session->_priv->is_loopback = TRUE;
       gnet_inetaddr_unref (aux);
 
 			if (session->_priv->ip_str)
@@ -607,6 +612,31 @@ sim_session_cmd_connect (SimSession  *session,
     break;
   case SIM_SESSION_TYPE_WEB:
     session->type = SIM_SESSION_TYPE_WEB;
+    if (command->data.connect.sensor_id)
+    {
+      /* This can be an API session */
+      /* Only accept if src_ip == 127.0.0.1 */
+      if ((sensor = sim_container_get_sensor_by_id (ossim.container, command->data.connect.sensor_id)) != NULL)
+      {
+        /* Check the localhost */
+        session->_priv->sensor = sensor;
+        if (!sim_session_is_loopback (session))
+        {   
+          g_message("API trying to connect from outside. Drop session");
+          sim_session_close (session);
+          return;
+        }
+        g_message ("Plain session with client %s successfully created (type API)", session->_priv->ip_str);   
+      }
+      else
+      {
+        g_message("API trying to connect with unknown sensor. Close session");
+        sim_session_close (session);
+        return;
+      }
+    }
+    else
+      g_message ("Plain session with client %s successfully created (type web)", session->_priv->ip_str); 
     break;
   default:
     session->type = SIM_SESSION_TYPE_NONE;
@@ -3505,7 +3535,15 @@ sim_session_read (SimSession  *session)
         sim_session_cmd_agent_ping (session,cmd);
 				break;
       case SIM_COMMAND_TYPE_IDM_EVENT:
-	      sim_session_cmd_idm_event(session,cmd);
+        /* Discard IDM events if we don't have session->sensor */
+        if (session->_priv->sensor)
+        {
+	        sim_session_cmd_idm_event(session,cmd);
+        }
+        else
+        {
+           g_message("Discarting idm event: The session has not been set correctly");
+        } 
 	      break;
 	    case SIM_COMMAND_TYPE_RELOAD_POST_CORRELATION_SIDS:
   	    sim_session_cmd_reload_post_correlation_sids (session,cmd);
@@ -4222,6 +4260,10 @@ sim_session_get_last_event_timestamp (SimSession * session)
   return (session->_priv->last_event_timestamp);
 }
 
+gboolean sim_session_is_loopback(SimSession * session)
+{
+  return session->_priv->is_loopback;
+}
 
 // vim: set tabstop=2 sts=2 noexpandtab:
 

@@ -11,6 +11,7 @@ requires=@dpkg:alienvault-professional
 [check dpkg.log looking for different package versions]
 pattern=^.*(?:ossim-server|ossim-agent)\s(\S+):\S
 conditions=@string@:=="10"
+fail_if_empty=False
 warning=There has been un upgrade from a free version
 advice=Upgrading an OSSIM free installation is not supported.
 

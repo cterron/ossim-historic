@@ -64,7 +64,7 @@ if (!Session::am_i_admin())
 
 if(!$wizard instanceof Welcome_wizard)
 {
-    throw new Exception('There was an unexpected error');
+    throw new Exception("There was an error, the Welcome_wizard object doesn't exist");
 }
 
 $interfaces = array();

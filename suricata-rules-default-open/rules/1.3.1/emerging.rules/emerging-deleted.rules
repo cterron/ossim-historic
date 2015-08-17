@@ -489,6 +489,16 @@
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"ET DELETED Mercury v4.01a IMAP RENAME Buffer Overflow"; flow:established,to_server; flowbits:isset,mercury.imap.401a; content:"a001 RENAME"; pcre:"/[0-9A-Z]{240,}/smi"; reference:url,www.pmail.com/whatsnew/m32401.htm; reference:url,metasploit.com/projects/Framework/exploits.html#mercury_imap; reference:bugtraq,11775; reference:url,doc.emergingthreats.net/bin/view/Main/2002390; classtype:misc-attack; sid:2002390; rev:5;)
 
+#### EOF BSD BIND SHELL ######
+### BSD REVERSE SHELL #######
+#BSD Reverse Shell - ENCODE: PexFnstenvSub
+#
+##alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED METASPLOIT BSD Reverse shell (PexFnstenvSub Encoded 2)"; content:"|83 eb fc e2 f4|"; reference:url,doc.emergingthreats.net/2010408; classtype:shellcode-detect; sid:2010408; rev:3;)
+
+#BSD Reverse Shell - ENCODE: PexFnstenvMov
+#
+##alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED METASPLOIT BSD Reverse shell (PexFnstenvMov Encoded 2)"; content:"|83 eb fc e2 f4|"; reference:url,doc.emergingthreats.net/2010422; classtype:shellcode-detect; sid:2010422; rev:3;)
+
 #### EOF BSD SPARC Reverse Shell ####
 #Erik Fichtner
 #
@@ -2544,6 +2554,10 @@
 #by jerry
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Trojan Downloader Win32/Small.CBA download"; flow:established,to_server; content:"popjs.asp?uid="; nocase; http_uri; content:"&tid="; nocase; http_uri; content:"&l="; nocase; http_uri; content:"&c="; http_uri; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=TrojanDownloader%3AWin32%2FSmall.CBA&ThreatID=-2147372177; reference:url,doc.emergingthreats.net/2010569; classtype:trojan-activity; sid:2010569; rev:6;)
+
+#discovered by victor julien, sigs by matt jonkman, interesting one. Uses an html-like tag language on 8181
+#
+#alert tcp $EXTERNAL_NET [1024:7989,7991:] -> $HOME_NET any (msg:"ET DELETED Dropper-497 (Yumato) Status Reply from server"; flow:established,from_server; dsize:4; content:"|32 31 0d 0a|"; depth:4; reference:url,doc.emergingthreats.net/bin/view/Main/TrojanDropper497; classtype:trojan-activity; sid:2007920; rev:4;)
 
 #matt jonkman
 #
@@ -4725,6 +4739,9 @@
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Win32.Hooker Checkin Message"; flow:established,to_server; content:"&lg="; http_uri; content:"&ntime="; http_uri; content:"&repeatip="; http_uri; content:"&rtime="; http_uri; content:"&sin="; http_uri; classtype:trojan-activity; sid:2013205; rev:3;)
 
 #
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Backdoor.Meciv Checkin"; flow:established,to_server; content:"/trandocs/netstat"; nocase; http_uri; reference:url,us.norton.com/security_response/writeup.jsp?docid=2011-070516-5325-99&tabid=2; reference:url,www.secureworks.com/research/threats/sindigoo/; classtype:trojan-activity; sid:2013212; rev:3;)
+
+#
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED W32/Alworo CnC Checkin"; flow:established,to_server; content:".php?userid="; nocase; http_uri; content:"&time="; nocase; http_uri; content:"&msg="; nocase; http_uri; content:"&ver="; nocase; http_uri; content:"&pauid="; nocase; http_uri; content:"&checkId="; nocase; http_uri; reference:url,us.norton.com/security_response/writeup.jsp?docid=2011-062909-5644-99&tabid=2; classtype:trojan-activity; sid:2013215; rev:3;)
 
 #
@@ -6462,6 +6479,9 @@
 ##alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Blackhole try eval prototype string splitting evasion Jul 24 2012"; flow:established,from_server; file_data; content:"try{eval(|22|p"; fast_pattern; content:"|3b|}catch("; within:30; classtype:trojan-activity; sid:2015525; rev:4;)
 
 #
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED g01pack Exploit Kit Landing Page"; flow:established,to_server; urilen:>2; content:"/ HTTP/1."; pcre:"/^\/[a-z]+\/$/U"; content:".dyndns"; http_header; nocase; fast_pattern:only; classtype:trojan-activity; sid:2015548; rev:7;)
+
+#
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED g01pack Exploit Kit Landing Page 2"; flow:established,to_server; urilen:5; content:"/mix/"; http_uri; content:".dyndns"; http_header; nocase; fast_pattern:only; classtype:trojan-activity; sid:2015549; rev:5;)
 
 #
@@ -6997,6 +7017,9 @@
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED food.com compromise hostile JavaScript gate"; flow:established,to_server; content:".html?0."; http_uri; fast_pattern:only; pcre:"/\/[a-z]{1,6}\.html\?0\.[0-9]+[a-z]?$/U"; classtype:trojan-activity; sid:2018505; rev:6;)
+
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Enfal.F Checkin via HTTP Post 7"; flow:established,to_server; content:"POST"; http_method; content:"/cgi-bin/Owpp4.cgi"; http_uri; fast_pattern:only; content:!"User-Agent|3a|"; content:!"Referer|3a 20|"; pcre:"/^[^\r\n]{15}\x5f[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}/m"; reference:url,blog.cassidiancybersecurity.com/post/2014/07/The-Eye-of-the-Tiger2; classtype:trojan-activity; sid:2018665; rev:4;)
 
 #
 #alert ssh $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED LibSSH2 Based SSH Connection - Often used as a BruteForce Tool"; flow:established,to_server; ssh.softwareversion:"libssh2_"; threshold: type limit, track by_src, count 1, seconds 30;  classtype:misc-activity; sid:2018689; rev:3;)

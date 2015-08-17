@@ -245,20 +245,19 @@ class Notes
      * @param object $conn
      * @param string $type
      * @param string $date
-     * @param string $user
      * @param string $asset_id
      * @param string $txt
      * 
      * @return boolean
      */
-    public static function insert($conn, $type, $date, $user, $asset_id, $txt) 
+    public static function insert($conn, $type, $date, $asset_id, $txt) 
     {
         Ossim_db::check_connection($conn);
         
         $params = array(
             $type,
             $date,
-            $user,
+            Session::get_session_user(),
             $asset_id,
             strip_tags($txt)
         );
@@ -289,13 +288,11 @@ class Notes
      * @param object $conn
      * @param string $type
      * @param string $date
-     * @param string $user
-     * @param string $asset_id
      * @param string $txt
      * 
      * @return boolean
      */
-    public static function bulk_insert($conn, $type, $date, $user, $txt) 
+    public static function bulk_insert($conn, $type, $date, $txt) 
     {
         Ossim_db::check_connection($conn);
         
@@ -304,13 +301,13 @@ class Notes
         $params = array(
             $ntype,
             $date,
-            $user,
+            Session::get_session_user(),
             strip_tags($txt),
             $type,
-            $user
+            session_id()
         );
         
-        $query = "INSERT INTO notes (type, date, user, asset_id, note) SELECT ?, ?, ?, asset_id, ? FROM user_component_filter WHERE asset_type=? AND login=?";
+        $query = "INSERT INTO notes (type, date, user, asset_id, note) SELECT ?, ?, ?, asset_id, ? FROM user_component_filter WHERE asset_type=? AND session_id=?";
 
         if (!$rs = $conn->Execute($query, $params))
         {

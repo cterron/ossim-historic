@@ -36,6 +36,7 @@ def get_support_info (system_id, ticket):
     args = {}
     args['output_type'] = 'support'
     args['output_raw'] = 'True'
+    args['verbose'] = 2
     args['output_file_prefix'] = ticket
 
     (success, ip) = get_system_ip_from_system_id(system_id)

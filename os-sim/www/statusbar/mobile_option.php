@@ -37,10 +37,19 @@ Session::useractive();
 
 set_time_limit(180);
 
+// Login parameter probably deprecated
+$login = GET('login');
 
-if (Mobile::is_mobile_device() && isset($_GET['login'])) 
-{ 
-    $_POST['login'] = $_GET['login'] ;
+ossim_valid($login, OSS_USER, 'illegal:' . _("Login"));
+
+if (ossim_error())
+{
+    die(ossim_error());
+}
+
+if (Mobile::is_mobile_device() && isset($login)) 
+{
+    $_POST['login'] = $login ;
 }
 
 
@@ -691,16 +700,16 @@ $NUM_HOSTS = 5;
             			    	<table cellpadding='2' cellspacing='0' border='0'>
                 			    	<tr>
                     			    	<td class="legendLabel<?=($range==1) ? " underline" : ""?>"> 
-                    			    	Last  <a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST["login"])?>&screen=alarms&range=1');" href="javascript:;"><b><?=_("day")?></b></a>
+                    			    	Last  <a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=alarms&range=1');" href="javascript:;"><b><?=_("day")?></b></a>
                     			    	</td>
                     			    	<td>|</td>
-                    			    	<td class="legendLabel<?=($range==7) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST["login"])?>&screen=alarms&range=7');" href="javascript:;"><b><?=_("week")?></b></a>
+                    			    	<td class="legendLabel<?=($range==7) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=alarms&range=7');" href="javascript:;"><b><?=_("week")?></b></a>
                     			    	</td>
                     			    	<td>|</td>
-                    			    	<td class="legendLabel<?=($range==31) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST["login"])?>&screen=alarms&range=31');" href="javascript:;"><b><?=_("month")?></b></a>
+                    			    	<td class="legendLabel<?=($range==31) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=alarms&range=31');" href="javascript:;"><b><?=_("month")?></b></a>
                     			    	</td>
                     			    	<td>|</td>
-                    			    	<td class="legendLabel<?=($range==365) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST["login"])?>&screen=alarms&range=365');" href="javascript:;"><b><?=_("year")?></b></a>
+                    			    	<td class="legendLabel<?=($range==365) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=alarms&range=365');" href="javascript:;"><b><?=_("year")?></b></a>
                     			    	</td>
                 			    	</tr>
             			    	</table>
@@ -1124,10 +1133,10 @@ $NUM_HOSTS = 5;
         			    <tr><td align="center"> 
         			        <b><?php echo _("Top $topue Unique Security Events") ?></b>
         			    	<table cellpadding='2' cellspacing='0' border='0'><tr>
-        			    	<td class="legendLabel<?=($range==1) ? " underline" : ""?>"> Last  <a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST['login'])?>&screen=unique_siem&range=1');" href="javascript:;"><b><?=_("day")?></b></a></td><td>|</td>
-        			    	<td class="legendLabel<?=($range==2) ? " underline" : ""?>"> Last  <a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST['login'])?>&screen=unique_siem&range=2');" href="javascript:;"><b><?=_("two days")?></b></a></td><td>|</td>
-        			    	<td class="legendLabel<?=($range==7) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST['login'])?>&screen=unique_siem&range=7');" href="javascript:;"><b><?=_("week")?></b></a></td><td>|</td>
-        			    	<td class="legendLabel<?=($range==31) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo Util::htmlentities($_REQUEST['login'])?>&screen=unique_siem&range=31');" href="javascript:;"><b><?=_("month")?></b></a></td>
+        			    	<td class="legendLabel<?=($range==1) ? " underline" : ""?>"> Last  <a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=unique_siem&range=1');" href="javascript:;"><b><?=_("day")?></b></a></td><td>|</td>
+        			    	<td class="legendLabel<?=($range==2) ? " underline" : ""?>"> Last  <a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=unique_siem&range=2');" href="javascript:;"><b><?=_("two days")?></b></a></td><td>|</td>
+        			    	<td class="legendLabel<?=($range==7) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=unique_siem&range=7');" href="javascript:;"><b><?=_("week")?></b></a></td><td>|</td>
+        			    	<td class="legendLabel<?=($range==31) ? " underline" : ""?>"><a onclick="$('#ajax').load('mobile_option.php?login=<?php echo $login?>&screen=unique_siem&range=31');" href="javascript:;"><b><?=_("month")?></b></a></td>
         			    	</tr></table>
         			    </td></tr>
         			    

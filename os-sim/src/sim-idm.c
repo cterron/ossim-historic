@@ -237,6 +237,8 @@ sim_idm_process (SimSensor *sensor, SimCommand *command)
 
     changes.host_id = TRUE;
     changes.ip = ! !(sim_idm_entry_get_ip (entry_new));
+    if (! command->data.idm_event.is_login)
+      sim_idm_entry_clear_username (entry_new);
     changes.username = ! !(sim_idm_entry_get_username (entry_new));
     if (!sim_idm_entry_get_hostname (entry_new))
     {

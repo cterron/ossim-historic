@@ -162,7 +162,7 @@ if($what == 'tasks')
 // 2-. Server daemon hard restart mode
 elseif ($what == 'directives' || $what == 'plugins')
 {
-    exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+    Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
 }
 // 3-. Server socket mode
 else

@@ -1603,6 +1603,34 @@ class Av_sensor extends Av_component
      *************************************************/
 
 
+    /**
+     * This function returns default sensor ID
+     *
+     * @param object  $conn   Database access object
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return string
+     */
+    public static function get_default_sensor($conn)
+    {
+        Ossim_db::check_connection($conn);
+
+        $local_system_id = Util::get_system_uuid();
+        $res             = Av_center::get_system_info_by_id($conn, $local_system_id);
+
+        if ($res['status'] == 'success')
+        {
+            $sensor_id = $res['data']['sensor_id'];
+
+            return $sensor_id;
+        }
+
+        $exp_msg = _('Error! Sensor not found');
+
+        Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+    }
+
 
     /**
     * This function checks if sensor could be deleted

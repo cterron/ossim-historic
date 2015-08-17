@@ -88,20 +88,12 @@ then
         echo "www-data ALL=NOPASSWD: /opt/nessus/sbin/nessus-update-plugins" >> /etc/sudoers
 fi
 
-if ! [ `grep -c "nmap" /etc/sudoers` -ne 0 ]
-then
-        echo "www-data ALL=NOPASSWD: /usr/bin/nmap" >> /etc/sudoers
-fi
-
-if ! [ `grep -c "stop_nmap" /etc/sudoers` -ne 0 ]
-then
-        echo "www-data ALL=NOPASSWD: /usr/share/ossim/scripts/stop_nmap.sh" >> /etc/sudoers
-fi
-
 if ! [ `grep -c "cancel_scan" /etc/sudoers` -ne 0 ]
 then
         echo "www-data ALL=NOPASSWD: /usr/share/ossim/scripts/vulnmeter/cancel_scan.pl" >> /etc/sudoers
 fi
+
+sed -i '/nmap/d' /etc/sudoers
 
 if ! [ `grep -c "framework-restart" /etc/sudoers` -ne 0 ]
 then

@@ -504,34 +504,6 @@ sub config_profile_sensor() {
         }
     }
 
-    #verbose_log("Sensor Profile: Update logrotate");
-    #	#my @detector_plugins_list;
-    #	my @files=`ls /etc/ossim/agent/plugins/`;
-    #	sub getprop3 {
-    #		   my $section  = shift;
-    #			my $property = shift;
-    #
-    #			return $pars_conf->{$section}->{$property};
-    #	}
-    #
-    #	my %logrotateconfig;
-    #
-    #	foreach my $file (@files) {
-    #
-    #			my $ConfigAgentPluginFile      = Config::Tiny->new();
-    #			$ConfigAgentPluginFile = Config::Tiny->read($file);
-    #			$logrotateconfig{'source'} = getprop( "config", "source" );
-    #			$logrotateconfig{'location'} = getprop( "config", "location" );
-    #
-    #			if ($logrotateconfig{'source'} eq "log"){
-    #				push(@files_log,"$logrotateconfig{'location'}");
-    #
-    #			}
-    #
-    #    		#@plug=split( /\./,$file);
-    #   			#push(@detector_plugins_list,"$plug[0]") if $file !~ m/-monitor/o ;
-    #	}
-
     # fprobe
 
     my $dg            = system ('dpkg -l | grep alienvault-10g-tools > /dev/null');

@@ -3,7 +3,8 @@ name=AlienVault Server profile connections
 description=Test the connections established to the AV Server
 category=alienvault,network
 type=command
-profiles=Server:>4.0
+profiles=Server:>4.0,Sensor:>4.0
+requires=@dpkg:alienvault-professional
 command=netstat -putn | grep "\:40001.*ossim\-server\|\:40004.*python"
 
 [Server remote connections]

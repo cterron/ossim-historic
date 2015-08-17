@@ -85,7 +85,7 @@ else
                 else
                 {
                     $response['status']  = 'error';
-                    $response['message'] = _('Unknown error restoring backup events');
+                    $response['message'] = _('Sorry, operation was not completed due to an error when restoring events');
                 }
             }
             else
@@ -116,7 +116,7 @@ else
                 else 
                 {
                     $response['status']  = 'error';
-                    $response['message'] = _('Unknown error while database events purging');
+                    $response['message'] = _('Sorry, operation was not completed due to an error when purging events');
                 }
             }
             else

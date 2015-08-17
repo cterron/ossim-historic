@@ -7,7 +7,6 @@ SUBDIRS= action \
 	java \
 	js \
 	nagios \
-	netscan \
 	ntop \
 	panel \
 	policy \

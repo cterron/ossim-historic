@@ -103,7 +103,7 @@ if ($icon != '')
 {
     $image = @imagecreatefromstring($icon);
 
-    if (!$image)
+    if (!$image || imagesx($image) > 400 || imagesy($image) > 400)
     {
         $validation_errors['icon'] = _('Image format is not allowed.');
     }
@@ -210,7 +210,7 @@ else
         {
             <?php
             $config_nt = array(
-                'content' => _('Unknown error - Operation cannot be completed'),
+                'content' => _('Invalid action - Operation cannot be completed'),
                 'options' => array (
                     'type'          => 'nf_error',
                     'cancel_button' => FALSE

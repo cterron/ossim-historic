@@ -455,41 +455,6 @@ class Asset_net extends Asset
 
 
     /**
-    * This function returns the number of network vulnerabilities
-    *
-    * @param object  $conn   Database access object
-    * @param string  $ctx    Context (Hex value)
-    * @param string  $id     Network uuid (Hex value)
-    *
-    * @throws Exception  If a connection error occurred
-    *
-    * @return integer
-    */
-    public static function get_vulnerability_number($conn, $id)
-    {
-        Ossim_db::check_connection($conn);
-
-        //No info
-        $count = -1;
-
-        $sql = "SELECT COUNT(lr.hostIP) as counter FROM alienvault.host h, alienvault.net n, alienvault.host_net_reference r, alienvault.host_ip hi, alienvault.vuln_nessus_latest_results lr WHERE hi.host_id=r.host_id AND hi.host_id=h.id AND hi.ip=inet6_aton(lr.hostIP) AND h.ctx=lr.ctx AND r.net_id=n.id AND n.ctx=h.ctx AND r.net_id=UNHEX(?)";
-
-        $rs = $conn->Execute($sql, array($id));
-
-        if (!$rs)
-        {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        }
-        else
-        {
-            $count = $rs->fields['counter'];
-        }
-
-        return $count;
-    }
-
-
-    /**
      * Function get_vulnerabilities
      *
      * This function returns the net vulnerabilities
@@ -2036,7 +2001,7 @@ class Asset_net extends Asset
 
         // Create tmp table
         $tmp_table = Util::create_tmp_table($conn,"net_id binary(16) NOT NULL, PRIMARY KEY (net_id)");
-        $user      = Session::get_session_user();
+        $session   = session_id();
 
         //Populate tmp table adding filtered networks which are not included in policies
         $join    = 'LEFT JOIN policy_net_reference pnr ON pnr.net_id = net.id';
@@ -2044,7 +2009,7 @@ class Asset_net extends Asset
 
         //Network Selected
         $join    .= ', user_component_filter uc';
-        $q_where .= " AND uc.asset_id = net.id AND uc.asset_type='network' AND uc.login = '$user'";
+        $q_where .= " AND uc.asset_id = net.id AND uc.asset_type='network' AND uc.session_id = '$session'";
 
 
         $query = ossim_query("INSERT INTO $tmp_table (net_id) SELECT id

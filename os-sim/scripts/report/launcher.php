@@ -212,8 +212,8 @@ function newFolder($name)
     else
     {
         @mkdir($name, 0755, true);
-        system("chown www-data:www-data ".dirname($name));
-        system("chown www-data:www-data $name");
+        Util::execute_command("chown www-data:www-data ?", array(dirname($name)));
+        Util::execute_command("chown www-data:www-data ?", array($name));
         return true;
     }
 }
@@ -279,9 +279,9 @@ $conn = $db->connect();
 $info_text  = array( _('Wrong User & Password'), _('Invalid address'), _('No assets found') );
 
 
-$server     = trim(`grep ^admin_ip /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`);
+$server     = trim(Util::execute_command('grep ^admin_ip /etc/ossim/ossim_setup.conf | cut -f 2 -d "="', FALSE, 'string'));
 if ($server == "")  {
-    $server = trim(`grep ^framework_ip /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`);
+    $server = trim(Util::execute_command('grep ^framework_ip /etc/ossim/ossim_setup.conf | cut -f 2 -d "="', FALSE, 'string'));
 }
 $https      = "yes";
 $urlPdf     = '/usr/share/ossim/www/tmp/scheduler';
@@ -291,7 +291,7 @@ $server     = 'http'.(($https=="yes") ? "s" : "").'://'.$server.'/ossim';
 $cookieName = date('YmdHis').rand().'.txt';
 
 
-system("clear");
+Util::execute_command("clear");
 $to_text .= "\n\n"._('Date (UTC)').': '.gmdate('Y-m-d H:i:s', gmdate('U'))."\n\n";
 $to_text .= _('Starting Report Scheduler')."...\n\n";
 
@@ -366,7 +366,7 @@ if ($i == 0)
 $db->close($conn);
 
 echo "\n\n";
-system("rm -f /var/tmp/logscheduler_err");
+Util::execute_command("rm -f /var/tmp/logscheduler_err");
 
 foreach ( $scheduled_reports as $value )
 {
@@ -374,6 +374,7 @@ foreach ( $scheduled_reports as $value )
     $output   = null;
     $to_text  = null;
 
+    
 
     // Login
     $user         = $value['user'];
@@ -392,7 +393,21 @@ foreach ( $scheduled_reports as $value )
 
     $db->close($conn);
 
-    $step1 = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /var/tmp/logscheduler_err',$output);
+    $cmd_login    = 'wget -U ? -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies=? --post-data=? ? -O - 2>> /var/tmp/logscheduler_err';
+    $params_login = array(
+            'AV Report Scheduler ['.$id_sched.']',
+            $cookieName,
+            'login='.$login,
+            $server.'/index.php'
+    );
+    $cmd_logout    = 'wget -U ? -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies=? ? -O /dev/null 2>> /var/tmp/logscheduler_err';
+    $params_logout = array(
+            'AV Report Scheduler ['.$id_sched.']',
+            $cookieName,
+            $server.'/session/login.php?action=logout'
+    );
+    
+    $output = Util::execute_command($cmd_login, $params_login, 'array');
 
     $result = searchString($output,$info_text[0]);
 
@@ -486,8 +501,13 @@ foreach ( $scheduled_reports as $value )
     $params .= ( $value['date_range'] == 'NULL' ) ? '&date_from='.$value['date_from'].'&date_to='.$value['date_to'].'&date_range=custom' : '&date_range='.$value['date_range'];
 
     // Run Report
-    $output  = null;
-    $step2   = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/report/wizard_run.php?run='.$value['id_report'].'&'.$params.'" -O - 2>> /var/tmp/logscheduler_err', $output);
+    $cmd    = 'wget -U ? -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies=? ? -O - 2>> /var/tmp/logscheduler_err';
+    $params = array(
+            'AV Report Scheduler ['.$id_sched.']',
+            $cookieName,
+            $server.'/report/wizard_run.php?run='.$value['id_report'].'&'.$params
+    );
+    $output = Util::execute_command($cmd, $params, 'array');
 
 
     // Generate PDF
@@ -505,10 +525,19 @@ foreach ( $scheduled_reports as $value )
     }
     else
     {
-        exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /var/tmp/logscheduler_err');
-        exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /var/tmp/logscheduler_err');
+        Util::execute_command($cmd_logout, $params_logout, 'array');
+        Util::execute_command($cmd_login,  $params_login,  'array');
 
-        $step3 = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/report/wizard_run.php?pdf=true&extra_data=true&run='.$value['id_report'].'" -O '.$dirUserPdf.$pdfName.'.pdf 2>> /var/tmp/logscheduler_err', $output);
+        
+        $cmd    = 'wget -U ? -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies=? ? -O ? 2>> /var/tmp/logscheduler_err';
+        $params = array(
+                'AV Report Scheduler ['.$id_sched.']',
+                $cookieName,
+                $server.'/report/wizard_run.php?pdf=true&extra_data=true&run='.$value['id_report'],
+                $dirUserPdf.$pdfName.'.pdf'
+                );
+        
+        $output = Util::execute_command($cmd, $params, 'array');
 
         // Send PDF by email
 
@@ -523,14 +552,20 @@ foreach ( $scheduled_reports as $value )
 
             echo $to_text;
 
-            $output   = null;
-
-            exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /var/tmp/logscheduler_err');
-            exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /var/tmp/logscheduler_err');
+            Util::execute_command($cmd_logout, $params_logout, 'array');
+            Util::execute_command($cmd_login,  $params_login,  'array');
 
             foreach($listEmails as $value2)
             {
-                $step4  = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' --post-data="email='.$value2.'&pdfName='.$pdfName.'&pdfDir='.$dirUser.'&subject='.$subject_email.'&body='.$body_email.'" "'.$server.'/report/wizard_email_scheduler.php?format=email&run='.$pdfNameEmail.'" -O - 2>> /var/tmp/logscheduler_err',$output);
+                $cmd = 'wget -U ? -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies=? --post-data=? ? -O - 2>> /var/tmp/logscheduler_err';
+                $params = array(
+                        'AV Report Scheduler ['.$id_sched.']',
+                        $cookieName,
+                        'email='.$value2.'&pdfName='.$pdfName.'&pdfDir='.$dirUser.'&subject='.$subject_email.'&body='.$body_email,
+                        $server.'/report/wizard_email_scheduler.php?format=email&run='.$pdfNameEmail
+                );
+                
+                $output = Util::execute_command($cmd, $params, 'array');
 
                 $result = searchString($output,$info_text[1]);
 
@@ -552,7 +587,7 @@ foreach ( $scheduled_reports as $value )
         }
 
         // Set appropiate permissions
-        $step5    = exec('chown -R "www-data" '.$dirUserPdf);
+        Util::execute_command('chown -R "www-data" ?', array($dirUserPdf));
 
         $text     = _('Report processed');
         $to_text  = sprintf("\n%s", $text);
@@ -564,7 +599,7 @@ foreach ( $scheduled_reports as $value )
     }
 
     // Logout
-    exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /var/tmp/logscheduler_err');
+    Util::execute_command($cmd_logout, $params_logout);
 
 }
 

@@ -383,12 +383,6 @@ alert tcp any any -> any any (msg:"ET SHELLCODE Rothenburg Shellcode"; flow:esta
 #
 #alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE METASPLOIT BSD Reverse shell (PexFnstenvSub Encoded 1)"; content:"|c9 83 e9 ef d9 ee d9 74 24 f4 5b 81 73 13|"; reference:url,doc.emergingthreats.net/2010407; classtype:shellcode-detect; sid:2010407; rev:3;)
 
-#### EOF BSD BIND SHELL ######
-### BSD REVERSE SHELL #######
-#BSD Reverse Shell - ENCODE: PexFnstenvSub
-#
-#alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE METASPLOIT BSD Reverse shell (PexFnstenvSub Encoded 2)"; content:"|83 eb fc e2 f4|"; reference:url,doc.emergingthreats.net/2010408; classtype:shellcode-detect; sid:2010408; rev:3;)
-
 #BSD Reverse Shell - ENCODE: Countdown
 #
 #alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE METASPLOIT BSD Reverse shell (Countdown Encoded 1)"; content:"|6a 43 59 e8 ff ff ff ff c1 5e 30 4c 0e 07 e2 fa 6b 63 5b 9d|"; reference:url,doc.emergingthreats.net/2010409; classtype:shellcode-detect; sid:2010409; rev:3;)
@@ -440,10 +434,6 @@ alert tcp any any -> any any (msg:"ET SHELLCODE Rothenburg Shellcode"; flow:esta
 #BSD Reverse Shell - ENCODE: PexFnstenvMov
 #
 #alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE METASPLOIT BSD Reverse shell (PexFnstenvMov Encoded 1)"; content:"|6a 11 59 d9 ee d9 74 24 f4 5b 81 73 13|"; reference:url,doc.emergingthreats.net/2010421; classtype:shellcode-detect; sid:2010421; rev:3;)
-
-#BSD Reverse Shell - ENCODE: PexFnstenvMov
-#
-#alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE METASPLOIT BSD Reverse shell (PexFnstenvMov Encoded 2)"; content:"|83 eb fc e2 f4|"; reference:url,doc.emergingthreats.net/2010422; classtype:shellcode-detect; sid:2010422; rev:3;)
 
 #BSD Reverse Shell - ENCODE: JmpCallAditive
 #

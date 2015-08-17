@@ -117,13 +117,17 @@ try
     }
 
     // If selected_from_filter, calculate tags marked
-    if ('true' == $select_from_filter)
+    if ($select_from_filter == 'true')
     {
         // Get tag with some selected component
         $query  = 'SELECT hex(c.id_tag) AS id, count(c.id_tag) AS total FROM component_tags c, user_component_filter u, tag t
-                    WHERE t.id = c.id_tag AND c.id_component = u.asset_id AND t.type = "'.$tag_type.'" AND u.login = "'.Session::get_session_user().'" GROUP BY c.id_tag;';
+                    WHERE t.id = c.id_tag AND c.id_component = u.asset_id AND t.type = ? AND u.session_id = ? GROUP BY c.id_tag;';
 
-        $params = array();
+        $params = array
+        (
+            $tag_type,
+            session_id()
+        );
         $rs = $conn->Execute($query, $params);
 
         if (!$rs)
@@ -141,9 +145,14 @@ try
         }
 
         // Get total selected components by tag
-        $query  = 'SELECT * from user_component_filter WHERE asset_type = "'.$tag_type.'" AND login = "'.Session::get_session_user().'"';
+        $query  = 'SELECT * from user_component_filter WHERE asset_type = ? AND session_id = ?';
 
-        $params = array();
+        $params = array
+        (
+            $tag_type,
+            session_id()
+        );
+        
         $rs = $conn->Execute($query, $params);
 
         if (!$rs)

@@ -1,8 +1,4 @@
 alienvault-ami-aio-6x1gb
-alienvault-ami-usm-standard
-alienvault-ami-sensor-remote
-alienvault-ami-sensor-standard-6x1gb
-alienvault-ami-logger-standard
 alienvault-hw-aio-6x1gb
 alienvault-hw-aio-extended
 alienvault-hw-aio-niap
@@ -17,6 +13,7 @@ alienvault-hw-sensor-enterprise-ids-2x10gb
 alienvault-hw-logger-standard
 alienvault-hw-logger-enterprise
 alienvault-vmware-aio-6x1gb
+alienvault-vmware-aio-6x1gb-lite
 alienvault-vmware-usm-standard
 alienvault-vmware-sensor-remote
 alienvault-vmware-sensor-standard-6x1gb

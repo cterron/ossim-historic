@@ -38,7 +38,7 @@ from celery.utils.log import get_logger
 from celery.task.control import inspect
 from celerymethods import celeryconfig
 from celerybeatredis.schedulers import PeriodicTask
-
+from celery.task.control import revoke
 from ansiblemethods.system.system import ansible_get_process_pid
 logger = get_logger("celery")
 
@@ -469,3 +469,19 @@ def get_running_tasks(system_ip):
         logger.error(error_msg)
         return False, {}
     return (True, tasks)
+
+
+def stop_running_task(task_id, force=True):
+    """Terminates the given task
+    Args:
+        task_id(str): The task id you want to stop
+        force(boolean): You want to force the stop
+    """
+    try:
+        if force:
+            revoke(task_id, terminate=True, signal='SIGKILL')
+        else:
+            revoke(task_id, terminate=True)
+    except Exception as e:
+        return False, str(e)
+    return True, ""

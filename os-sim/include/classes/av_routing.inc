@@ -105,7 +105,7 @@ class Av_routing
             'params'       => array(
                 'action'    => 'custom_scan',
                 'sensor'    => 'automatic',
-                'scan_mode' => 'fast'
+                'scan_type' => 'fast'
             )
         ),
         'SN_MESSAGE_WARNING_24_HOURS_WITHOUT_EVENTS_3'    => array(

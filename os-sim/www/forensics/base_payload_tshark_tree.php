@@ -50,9 +50,9 @@ $tl_error = utf8_encode(_("Error in pcap format!"));
 $pcapfile = "/var/tmp/base_packet_" . $id . ".pcap";
 $pdmlfile = "/var/tmp/base_packet_" . $id . ".pdml";
 // TSAHRK: show packet in web page
-$cmd = "tshark -V -r '$pcapfile' -T pdml > '$pdmlfile'";
+$cmd = "tshark -V -r ? -T pdml > ?";
 //echo $cmd;
-system($cmd);
+Util::execute_command($cmd, array($pcapfile, $pdmlfile));
 //echo "<h2>pcap File:</h2><ul>\n";
 //echo $pdmlfile;
 

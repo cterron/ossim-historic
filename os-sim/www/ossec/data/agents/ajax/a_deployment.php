@@ -41,7 +41,7 @@ $validate = array (
     'sensor_id'  => array('validation' => 'OSS_HEX',                                              'e_message' => 'illegal:' . _('Sensor ID')),
     'agent_ip'   => array('validation' => 'OSS_IP_CIDR_0',                                        'e_message' => 'illegal:' . _('Agent IP')),
     'agent_name' => array('validation' => 'OSS_SCORE, OSS_LETTER, OSS_DIGIT, OSS_DOT',            'e_message' => 'illegal:' . _('Agent Name')),
-    'user'       => array('validation' => 'OSS_USER_2',                                           'e_message' => 'illegal:' . _('User')),
+    'user'       => array('validation' => 'OSS_USER',                                             'e_message' => 'illegal:' . _('User')),
     'pass'       => array('validation' => 'OSS_PASSWORD',                                         'e_message' => 'illegal:' . _('Password')),
     'domain'     => array('validation' => 'OSS_NOECHARS, OSS_ALPHA, OSS_PUNC_EXT, OSS_NULLABLE',  'e_message' => 'illegal:' . _('Domain'))
 );

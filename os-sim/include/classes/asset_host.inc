@@ -1369,7 +1369,7 @@ class Asset_host extends Asset
 
                 if ($form_field == 'longitude')
                 {
-                    $asset_data[$form_field] .= (!empty($asset_data['zoom'])) ? ';' . $asset_data['zoom'] : 4;
+                    $asset_data[$form_field] .= (!empty($asset_data['zoom'])) ? ';' . $asset_data['zoom'] : ';' . 4;
                 }
 
                 $query_data[$query_data_key] = $asset_data[$form_field];
@@ -1380,7 +1380,7 @@ class Asset_host extends Asset
         {
             $geoloc = new Geolocation();
 
-            list ($country_code, $country_name) = $geoloc->get_country_by_coordinates($location['lat'], $location['lon']);
+            list ($country_code, $country_name) = $geoloc->get_country_by_coordinates($asset_data['latitude'], $asset_data['longitude']);
             $geoloc->close();
 
             $country = $country_code . ';' . $country_name;
@@ -1400,9 +1400,9 @@ class Asset_host extends Asset
             // host table update
 
             $query = "UPDATE host h, user_component_filter uf SET " . implode(', ', array_keys($query_data)) .
-                     " WHERE uf.login=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
+                     " WHERE uf.session_id=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
 
-            $query_data[] = Session::get_session_user();
+            $query_data[] = session_id();
 
             $rs = $conn->Execute($query, array_values($query_data));
 
@@ -1543,6 +1543,8 @@ class Asset_host extends Asset
      */
     public function get_availability($conn)
     {
+        Ossim_db::check_connection($conn);
+
         $nagios_status = '';
 
         $sql = "SELECT ha.status FROM alienvault.host h
@@ -1759,15 +1761,16 @@ class Asset_host extends Asset
     public function add_to_groups($conn)
     {
         Ossim_db::check_connection($conn);
-
+        
+        
         $query = "REPLACE INTO host_group_reference (
                     SELECT f.asset_id, UNHEX(?)
                         FROM user_component_filter f, host h
-                        WHERE f.login=? AND f.asset_type='group')";
+                        WHERE f.session_id=? AND f.asset_type='group')";
 
         $params = array(
             $this->id,
-            Session::get_session_user()
+            session_id()
         );
 
         Util::memcacheFlush();
@@ -1775,6 +1778,36 @@ class Asset_host extends Asset
         if ($conn->Execute($query, $params) === FALSE)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        // Get affected groups to update history
+        $group_ids = array();
+        
+        $query = "SELECT HEX(f.asset_id) AS group_id
+                      FROM user_component_filter f
+                      WHERE f.session_id=? AND f.asset_type='group'";
+        
+        $params = array(session_id());
+        
+        $rs = $conn->Execute($query, $params);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $group_ids[] = $rs->fields['group_id'];
+        
+            $rs->MoveNext();
+        }
+        
+        foreach ($group_ids as $group_id)
+        {
+            $_group_obj = new Asset_group($group_id);
+            
+            $_group_obj->save_history($conn, 'add', array($this->id));
         }
     }
 
@@ -1795,13 +1828,14 @@ class Asset_host extends Asset
     public function delete_from_groups($conn)
     {
         Ossim_db::check_connection($conn);
-
+        
+        
         $query = "DELETE hgr FROM host_group_reference hgr, user_component_filter f, host h
-            WHERE hgr.host_id = UNHEX(?) AND hgr.host_group_id=f.asset_id AND f.login=? AND f.asset_type='group'";
+            WHERE hgr.host_id = UNHEX(?) AND hgr.host_group_id=f.asset_id AND f.session_id=? AND f.asset_type='group'";
 
         $params = array(
             $this->id,
-            Session::get_session_user()
+            session_id()
         );
 
         Util::memcacheFlush();
@@ -1811,6 +1845,36 @@ class Asset_host extends Asset
         if ($rs === FALSE)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        // Get affected groups to update history
+        $group_ids = array();
+        
+        $query = "SELECT HEX(f.asset_id) AS group_id
+                      FROM user_component_filter f
+                      WHERE f.session_id=? AND f.asset_type='group'";
+        
+        $params = array(session_id());
+        
+        $rs = $conn->Execute($query, $params);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $group_ids[] = $rs->fields['group_id'];
+        
+            $rs->MoveNext();
+        }
+        
+        foreach ($group_ids as $group_id)
+        {
+            $_group_obj = new Asset_group($group_id);
+        
+            $_group_obj->save_history($conn, 'remove', array($this->id));
         }
     }
 
@@ -2318,7 +2382,7 @@ class Asset_host extends Asset
         //Create tmp table
 
         $tmp_table = Util::create_tmp_table($conn, "host_id binary(16) NOT NULL, ctx binary(16) NOT NULL, PRIMARY KEY (host_id)");
-        $user      = Session::get_session_user();
+        $session   = session_id();
 
         //Populate tmp table adding filtered hosts which are not included in policies
         $join    = 'LEFT JOIN policy_host_reference phr ON phr.host_id=h.id';
@@ -2326,7 +2390,7 @@ class Asset_host extends Asset
 
         //Asset Selected
         $join    .= ', user_component_filter uc';
-        $q_where .= " AND uc.asset_id = h.id AND uc.asset_type='asset' AND uc.login = '$user'";
+        $q_where .= " AND uc.asset_id = h.id AND uc.asset_type='asset' AND uc.session_id = '$session'";
 
         //Adding Permissions
         $perms_where = self::get_perms_where('h.', TRUE);
@@ -2360,7 +2424,7 @@ class Asset_host extends Asset
 
 
         $tables           .= ', user_component_filter hc';
-        $filters['where'] .= " AND hc.asset_id = host.id AND hc.asset_type='asset'  AND hc.login = '$user'";
+        $filters['where'] .= " AND hc.asset_id = host.id AND hc.asset_type='asset'  AND hc.session_id = '$session'";
 
         $_host_list            = self::get_list($conn, $tables, $filters);
 
@@ -2614,10 +2678,10 @@ class Asset_host extends Asset
 
         $host_perms_where = self::get_perms_where('h.', TRUE);
 
-        $params = array(Session::get_session_user(), 'asset');
+        $params = array(session_id());
 
         $query  = "SELECT DISTINCT SQL_CALC_FOUND_ROWS HEX(h.ctx) AS ctx FROM user_component_filter uf, host h
-                        WHERE uf.login = ? AND uf.asset_type = ? AND h.id=uf.asset_id $host_perms_where LIMIT 2";
+                        WHERE uf.session_id = ? AND uf.asset_type = 'asset' AND h.id=uf.asset_id $host_perms_where LIMIT 2";
 
         $rs = $conn->Execute($query, $params);
 

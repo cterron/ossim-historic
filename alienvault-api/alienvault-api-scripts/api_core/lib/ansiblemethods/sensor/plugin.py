@@ -31,6 +31,7 @@
 import api_log
 import re
 import json
+import os
 from ansiblemethods.ansiblemanager import Ansible
 from ansiblemethods.helper import ansible_is_valid_response
 
@@ -235,23 +236,36 @@ def ansible_check_plugin_integrity(system_ip):
             'plugins_removed': []
         }
 
+        AGENT_PLUGINS_PATH = "/etc/ossim/agent/plugins/"
+        RSYSLOG_FILES_PATH = "/etc/rsyslog.d/"
         agent_rsyslog_dict = json.loads(data['data'].strip())['Agent rsyslog configuration files integrity']
         agent_plugins_dict = json.loads(data['data'].strip())['Agent plugins integrity']
         if not agent_rsyslog_dict['checks']['Default agent rsyslog files integrity']['result']:
             output['rsyslog_integrity_check_passed'] = False
-            output['rsyslog_files_changed'] = pattern.findall(agent_rsyslog_dict['checks']['Default agent rsyslog files integrity']['detail'])
+            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['Default agent rsyslog files integrity']['detail'])
+            for rsyslog_file in rsyslog_files:
+                output['rsyslog_files_changed'].append(os.path.normpath(RSYSLOG_FILES_PATH + rsyslog_file))
 
         if not agent_rsyslog_dict['checks']['Default agent rsyslog files installed']['result']:
             output['all_rsyslog_files_installed'] = False
-            output['rsyslog_files_removed'] = pattern.findall(agent_rsyslog_dict['checks']['Default agent rsyslog files installed']['detail'])
+            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['Default agent rsyslog files installed']['detail'])
+            for rsyslog_file in rsyslog_files:
+                output['rsyslog_files_removed'].append(os.path.normpath(RSYSLOG_FILES_PATH + rsyslog_file))
 
         if not agent_plugins_dict['checks']['Default agent plugins integrity']['result']:
             output['plugins_integrity_check_passed'] = False
-            output['plugins_changed'] = pattern.findall(agent_plugins_dict['checks']['Default agent plugins integrity']['detail'])
+            plugins_changed = pattern.findall(agent_plugins_dict['checks']['Default agent plugins integrity']['detail'])
+            for plugin in plugins_changed:
+                output['plugins_changed'].append(os.path.normpath("/" + plugin))
 
         if not agent_plugins_dict['checks']['Default agent plugins installed']['result']:
             output['all_plugins_installed'] = False
-            output['plugins_removed'] = pattern.findall(agent_plugins_dict['checks']['Default agent plugins installed']['detail'])
+            plugins_removed = pattern.findall(agent_plugins_dict['checks']['Default agent plugins installed']['detail'])
+            for plugin in plugins_removed:
+                if AGENT_PLUGINS_PATH in plugin:
+                    output['plugins_removed'].append(os.path.normpath(plugin))
+                else:
+                    output['plugins_removed'].append(os.path.normpath(AGENT_PLUGINS_PATH + plugin))
 
     except Exception, e:
         response = "Error checking agent plugins and agent rsyslog files integrity: %s" % str(e)

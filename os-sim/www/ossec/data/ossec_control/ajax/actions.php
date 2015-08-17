@@ -198,7 +198,7 @@ catch(Exception $e)
 
     if (empty($data['data']))
     {
-        $data['data'] = _('Unknown error - Operation cannot be completed');
+        $data['data'] = _('Sorry, operation was not completed due to an error when processing the request');
     }
 }
 

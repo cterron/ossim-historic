@@ -74,23 +74,22 @@ if($tab == '#tab1')
     {
         $conf_data = Ossec::get_configuration_file($sensor_id);
 
-        $command =  'egrep "<[[:space:]]*include[[:space:]]*>.*xml<[[:space:]]*/[[:space:]]*include[[:space:]]*>" '.$conf_data['path'];
-        exec($command, $output, $ret);
-
+        $command =  'egrep "<[[:space:]]*include[[:space:]]*>.*xml<[[:space:]]*/[[:space:]]*include[[:space:]]*>" ?';
+        $output  = Util::execute_command($command, array($conf_data['path']), 'array');
+        
         $rules_enabled = array();
 
-        if ($ret === 0)
+        
+        foreach($output as $k => $v)
         {
-            foreach($output as $k => $v)
+            if (preg_match("/^<\s*include\s*>(.*)<\s*\/include\s*>/", trim($v), $match))
             {
-                if (preg_match("/^<\s*include\s*>(.*)<\s*\/include\s*>/", trim($v), $match))
-                {
-                    $rules_enabled[] = $match[1];
-                }
+                $rules_enabled[] = $match[1];
             }
-
-            sort($rules_enabled);
         }
+
+        sort($rules_enabled);
+        
 
         $all_rules = Ossec::get_rule_files($sensor_id);
 

@@ -161,13 +161,38 @@ function search_plugin(q) {
 	//alert(str);
 }
 //Plugin mode toggle
-function change_event_type(type, step) {
-	if (type == 0) {
+function change_event_type(type, step)
+{
+    // Taxonomy -> Event Type
+	if (type == 0)
+	{
+	    if (step == 'id')
+		{
+	        $(".multiselect_product").multiselect('selectNone');
+		}
+		else if (step == 'sid')
+		{
+		    $('#category').val('');
+		    $('#subcategory').val('');
+		}
+
 		$('#txn_'+step).hide();
 		$('#dsg_'+step).show();
-	} else {
+	}
+	// Event Type -> Taxonomy
+	else
+	{
+	    if (step == 'id')
+		{
+		    $('#plugin_id').val('');
+		}
+		else if (step == 'sid')
+		{
+		    $(".multiselect_sids").multiselect('selectNone');
+		}
+		
 		$('#dsg_'+step).hide();
-		$('#txn_'+step).show();	
+		$('#txn_'+step).show();
 	}
 }
 //Taxonomy product types multiselect

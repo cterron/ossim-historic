@@ -132,11 +132,11 @@ if($tab == '#tab1')
             }
         }
 
-        exec("egrep \"<[[:space:]]*rule[[:space:]]*>.*<[[:space:]]*/[[:space:]]*rule[[:space:]]*>\" ".$conf_data['path'], $rule_xml);
-        exec("egrep \"<[[:space:]]*rule_dir[[:space:]]*>.*<[[:space:]]*/[[:space:]]*rule_dir[[:space:]]*>\" ".$conf_data['path'], $rule_dir_xml);
-        exec("egrep \"<[[:space:]]*decode[[:space:]]*>.*<[[:space:]]*/[[:space:]]*decode[[:space:]]*>\" ".$conf_data['path'], $decode_xml);
-        exec("egrep \"<[[:space:]]*decode_dir[[:space:]]*>.*<[[:space:]]*/[[:space:]]*decode_dir[[:space:]]*>\" ".$conf_data['path'], $decode_dir_xml);
-
+        $rule_xml       = Util::execute_command("egrep \"<[[:space:]]*rule[[:space:]]*>.*<[[:space:]]*/[[:space:]]*rule[[:space:]]*>\" ?", array($conf_data['path']), 'array');
+        $rule_dir_xml   = Util::execute_command("egrep \"<[[:space:]]*rule_dir[[:space:]]*>.*<[[:space:]]*/[[:space:]]*rule_dir[[:space:]]*>\" ?", array($conf_data['path']), 'array');
+        $decode_xml     = Util::execute_command("egrep \"<[[:space:]]*decode[[:space:]]*>.*<[[:space:]]*/[[:space:]]*decode[[:space:]]*>\" ?", array($conf_data['path']), 'array');
+        $decode_dir_xml = Util::execute_command("egrep \"<[[:space:]]*decode_dir[[:space:]]*>.*<[[:space:]]*/[[:space:]]*decode_dir[[:space:]]*>\" ?", array($conf_data['path']), 'array');
+        
         if (is_array($rule_xml) && !empty($rule_xml))
         {
             foreach ($rule_xml as $k => $v)

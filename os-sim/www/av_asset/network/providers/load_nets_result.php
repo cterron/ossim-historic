@@ -114,8 +114,8 @@ switch($order)
 $torder  = ($torder == 1) ? 'ASC' : 'DESC';
 //Limit
 $maxrows = ($maxrows > 50) ? 50 : $maxrows;
-//User
-$user    = Session::get_session_user();
+//Session ID
+$session = session_id();
 
 
 //list params
@@ -128,7 +128,7 @@ $filters['limit']    = $from . ', ' . $maxrows;
 if (!$all_list)
 {
     $tables = ', user_host_filter hf';
-    $filters['where'] = "hf.asset_id=net.id AND hf.login='$user'";
+    $filters['where'] = "hf.asset_id=net.id AND hf.session_id='$session'";
 }
 
 try
@@ -162,8 +162,11 @@ foreach($nets as $_id => $net_data)
     $alarms_icon = ($alarms) ? "<img src='". AV_PIXMAPS_DIR ."/assets_tick_gray.png'/>" : '-';
 
     // Vulns
-    $vulns       = Asset_net::get_vulnerability_number($conn, $_id);
-    $vulns_icon  = ($vulns > 0) ? "<img src='". AV_PIXMAPS_DIR ."/assets_tick_gray.png'/>" : '-';
+    
+    $net                      = Asset_net::get_object($conn, $_id);
+    list($vulns_list, $vulns) = $net->get_vulnerabilities($conn);
+    
+    $vulns_icon               = ($vulns > 0) ? "<img src='". AV_PIXMAPS_DIR ."/assets_tick_gray.png'/>" : '-';
 
     // Events
     $events      = Asset_net::has_events($conn, $_id);

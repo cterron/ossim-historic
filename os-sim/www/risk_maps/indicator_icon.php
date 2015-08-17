@@ -99,7 +99,7 @@ if (isset($_POST['upload']))
                 case UPLOAD_ERR_FORM_SIZE:
                     $error_msg = _('Exceeded filesize limit');
                 default:
-                    $error_msg = _('Unexpected error');
+                    $error_msg = _('An error when processing the request');
             }
 
             $validation_errors['icon_file'] = _('Icon could not be uploaded. Reason').': '.$error_msg;

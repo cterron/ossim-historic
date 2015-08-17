@@ -159,7 +159,7 @@ switch($action)
                 
                 $asset_type = $type_tr[$asset_type];
                 
-                $note_id    = Notes::insert($conn, $asset_type, gmdate('Y-m-d H:i:s'), Session::get_session_user(), $asset_id, $txt);
+                $note_id    = Notes::insert($conn, $asset_type, gmdate('Y-m-d H:i:s'), $asset_id, $txt);
 
                 $db->close();
                 

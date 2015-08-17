@@ -231,7 +231,7 @@ switch ($msg)
         break;
         
     case 'unknown_error':
-        $msg_text  = _('Sorry, operation was not completed due to an unexpected error');
+        $msg_text  = _('Invalid action - Operation cannot be completed');
         $msg_class = 'nf_error';
         break;
         

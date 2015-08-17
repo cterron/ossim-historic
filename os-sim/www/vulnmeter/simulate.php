@@ -258,10 +258,9 @@ $_list_data = Av_sensor::get_list($conn);
 $all_sensors = $_list_data[0];
 
 // Remote nmap
-$rscan = new Remote_scan();
 
 $ids = array();
-$agents = $rscan->get_sensors();
+$agents = Av_scan::get_scanning_sensors();
 
 if (is_array($agents) && !empty($agents))
 {

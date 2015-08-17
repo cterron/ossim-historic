@@ -5,12 +5,14 @@ category=alienvault,platform
 strike_zone=True
 profiles=Sensor:>4.0
 type=command
-command=grep \.cfg /etc/ossim/agent/config.yml /etc/ossim/agent/config.cfg | grep -v '\_eth'
+command=for plugin in $([[ -f '/etc/ossim/agent/config.yml' ]] && grep -e '\.cfg' -e '\.cfg\.local' /etc/ossim/agent/config.yml /etc/ossim/agent/config.cfg | grep -v '\_eth' | cut -d'=' -f2 || grep -e '\.cfg' -e '\.cfg\.local' /etc/ossim/agent/config.cfg | grep -v '\_eth'| cut -d'=' -f2); do if [ ! -f $plugin ]; then echo $plugin does not exist; fi; done
 
-# Plugin files must exist
-[Plugin files]
-pattern=^.*(\/etc\/ossim\/agent\/plugins\/[a-zA-Z0-9\_\-]+\.cfg)
-fail_if_empty=True
-conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/agent_plugins.list
-warning=Some plugins not found
-advice=There at least one reference from configuration files to a plugin file which doesn't exist
+# Plugin files exist for enabled plugins
+[Verify the existance of plugin files for all enabled plugins]
+pattern=^(\S+)\sdoes\snot\sexist
+fail_if_empty=False
+conditions=@string@:==""
+severity=High
+warning=One or more configuration files for enabled plugins does not exist
+advice=Make sure you have the configuration files for all of the enabled plugins under /etc/ossim/agent/plugins/ 
+

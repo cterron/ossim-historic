@@ -1206,7 +1206,7 @@ class SensorCriteria extends SingleElementCriteria {
         $tmp = "";
         //if ($this->criteria != " " && $this->criteria != "") $tmp = $tmp . gettext("Sensor") . ' = [' . Util::htmlentities($this->criteria, ENT_COMPAT, "UTF-8") . '] (' . GetSensorName($this->criteria, $this->db) .')'. $this->cs->GetClearCriteriaString($this->export_name) . '<BR>';
         $criteria = ($this->param) ? substr($this->criteria,1) : $this->criteria;
-        if ($criteria != " " && $criteria != "") $tmp = $this->cs->GetClearCriteriaString2($this->export_name) . ($this->param ? "<b>NOT</b> " : "") . GetSensorName($criteria, $this->db);
+        if ($criteria != " " && $criteria != "") $tmp = $this->cs->GetClearCriteriaString2($this->export_name) . ($this->param ? "<b>NOT</b> " : "") . GetSensorName($criteria, $this->db, FALSE);
         return $tmp;
     }
     
@@ -2100,15 +2100,18 @@ class DataCriteria extends MultipleElementCriteria {
         $human_fields["NOT LIKE"] = gettext("does not contain");
         $human_fields[""] = "";
         $tmp = "";
-        if ($this->data_encode[0] != " " && $this->data_encode[1] != " ")
+        if (!empty($this->data_encode[0]) && !empty($this->data_encode[1]))
         {
-            $tmp = $tmp . ' (' . gettext("data encoded as") . ' ' . $this->data_encode[0];
-            $tmp = $tmp . ' => ' . (($this->data_encode[1] == "") ? "ascii" : $this->data_encode[1]);
-            $tmp = $tmp . ')<BR>';
-        }
-        else
-        {
-        $tmp = $tmp . ' ' . gettext("(no data conversion, assuming criteria in DB native encoding)") . '<BR>';
+            if ($this->data_encode[0] != " " && $this->data_encode[1] != " ")
+            {
+                $tmp = $tmp . ' (' . gettext("data encoded as") . ' ' . $this->data_encode[0];
+                $tmp = $tmp . ' => ' . (($this->data_encode[1] == "") ? "ascii" : $this->data_encode[1]);
+                $tmp = $tmp . ')<BR>';
+            }
+            else
+            {
+                $tmp = $tmp . ' ' . gettext("(no data conversion, assuming criteria in DB native encoding)") . '<BR>';
+            }
         }
         for ($i = 0; $i < $this->criteria_cnt; $i++)
         {
@@ -2123,11 +2126,14 @@ class DataCriteria extends MultipleElementCriteria {
         $human_fields["NOT LIKE"] = gettext("does not contain");
         $human_fields[""] = "";
         $tmp = "";
-        if ($this->data_encode[0] != " " && $this->data_encode[1] != " ") {
-            $tmp = $tmp . ' (' . gettext("data encoded as") . ' ' . $this->data_encode[0];
-            $tmp = $tmp . ' => ' . (($this->data_encode[1] == "") ? "ascii" : $this->data_encode[1]);
-            $tmp = $tmp . ')<BR>';
-        } else $tmp = $tmp . ' ' . gettext("(no data conversion, assuming criteria in DB native encoding)") . '<BR>';
+        if (!empty($this->data_encode[0]) && !empty($this->data_encode[1]))
+        {
+            if ($this->data_encode[0] != " " && $this->data_encode[1] != " ") {
+                $tmp = $tmp . ' (' . gettext("data encoded as") . ' ' . $this->data_encode[0];
+                $tmp = $tmp . ' => ' . (($this->data_encode[1] == "") ? "ascii" : $this->data_encode[1]);
+                $tmp = $tmp . ')<BR>';
+            } else $tmp = $tmp . ' ' . gettext("(no data conversion, assuming criteria in DB native encoding)") . '<BR>';
+        }
         for ($i = 0; $i < $this->criteria_cnt; $i++) {
             if ($this->criteria[$i][1] != " " && $this->criteria[$i][2] != "") $tmp = $tmp . $this->criteria[$i][0] . $human_fields[$this->criteria[$i][1]] . ' "' .  Util::htmlentities($this->criteria[$i][2]) . '" ' . $this->criteria[$i][3] . ' ' . $this->criteria[$i][4] . ' ';
         }

@@ -302,6 +302,6 @@ if($update_status == TRUE)
 
 echo json_encode($data);
 
-shell_exec('/usr/bin/sudo /usr/share/ossim/scripts/framework-restart > /dev/null 2>/dev/null &');
+Util::execute_command('/usr/bin/sudo /usr/share/ossim/scripts/framework-restart > /dev/null 2>/dev/null &');
 
 $db->close();

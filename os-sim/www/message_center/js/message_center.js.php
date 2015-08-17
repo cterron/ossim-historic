@@ -404,7 +404,7 @@ $(document).ready(function ()
             'sInfoFiltered'  : '(<?php echo _('filtered from _MAX_ total messages') ?>)',
             'sInfoPostFix'   : '',
             'sInfoThousands' : ',',
-            'sSearch'        : '<?php echo _('Search by subject') ?>:',
+            'sSearch'        : '<?php echo _('Search') ?>:',
             'sUrl'           : '',
             'oPaginate'      : {
                 'sFirst'   : '<?php echo _('First')?>',

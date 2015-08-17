@@ -136,7 +136,7 @@ def rsync(local_ip, src, dest):
 
     ssh_key_file = '/var/ossim/ssl/local/private/cakey_avapi.pem'
     # Use -i option to know if the file has changed
-    rsync_command = 'rsync -aizPe "ssh -i %s" %s %s' % (ssh_key_file, src, dest)
+    rsync_command = 'rsync -aizPe "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i %s" %s %s' % (ssh_key_file, src, dest)
 
     # Rsync pull remote file
     try:

@@ -36,15 +36,10 @@ require_once 'av_init.php';
 
 Session::logcheck('environment-menu', 'ToolsScan');
 
-$conf       = $GLOBALS['CONF'];
-$nmap_path  = $conf->get_conf('nmap_path');
-
-$nmap_exists  = (file_exists($nmap_path)) ? 1 : 0;
-
 
 $keytree = 'assets';
 
-$scan_modes = array(
+$scan_types = array(
     'ping'   => _('Ping'),
     'fast'   => _('Fast Scan'),
     'normal' => _('Normal'),
@@ -53,13 +48,34 @@ $scan_modes = array(
 );
 
 $time_templates = array(
-    '-T0' => _('Paranoid'),
-    '-T1' => _('Sneaky'),
-    '-T2' => _('Polite'),
-    '-T3' => _('Normal'),
-    '-T4' => _('Aggressive'),
-    '-T5' => _('Insane')
+    'T0' => _('Paranoid'),
+    'T1' => _('Sneaky'),
+    'T2' => _('Polite'),
+    'T3' => _('Normal'),
+    'T4' => _('Aggressive'),
+    'T5' => _('Insane')
 );
+
+
+//Scan files
+
+$user = Session::get_session_user();
+
+$scan_file        = 'last_asset_object-'.md5($user);
+$scan_report_file = AV_TMP_DIR.'/last_scan_report-'.md5($user);
+
+
+/****************************************************
+ ************ Default scan configuration ************
+ ****************************************************/
+
+$host_id      = '';
+$sensor       = 'local';
+$scan_type    = 'fast';
+$ttemplate    = 'T3';
+$scan_ports   = '1-65535';
+$autodetected = 1;
+$rdns         = 1;
 
 
 //Database connection
@@ -80,6 +96,7 @@ $sensor_list = Av_sensor::get_list($conn, $filters);
 $sensor_list = $sensor_list[0];
 
 
+
 /****************************************************
 ******************** Search Box ********************
 ****************************************************/
@@ -93,30 +110,35 @@ $assets            = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 ******************** Clear Scan ********************
 ****************************************************/
 
+
 //Results will be deleted when a custom scan is executed or when an user forces it
 if (intval($_REQUEST['clearscan']) == 1 || $_REQUEST['action'] == 'custom_scan')
 {
-    $scan = new Scan();
-    $scan->delete_data();
+    try
+    {
+        //Delete scan task from Redis
+        $av_scan = Av_scan::get_object_from_file($scan_file);
+
+        if (is_object($av_scan) && !empty($av_scan))
+        {
+            $av_scan->delete_scan();
+
+            //Delete local scan files
+            Cache_file::remove_file($scan_file);
+        }
+
+        //Delete report scan information
+        @unlink($scan_report_file);
+    }
+    catch(Exception $e)
+    {
+        ;
+    }
 }
 
 
-/****************************************************
-************ Default scan configuration *************
-****************************************************/
-
-$host_id      = '';
-$sensor       = 'local';
-$scan_mode    = 'fast';
-$ttemplate    = '-T3';
-$scan_ports   = '1-65535';
-$autodetected = 1;
-$rdns         = 1;
-
-
-
 /*******************************************************************
-***  Custom scan (From Asset Detail or from an Suggestion Link)  ***
+***  Custom scan (From Asset Detail or from a Suggestion Link)   ***
 ********************************************************************/
 
 if ($_REQUEST['action'] == 'custom_scan')
@@ -126,18 +148,17 @@ if ($_REQUEST['action'] == 'custom_scan')
         //It's necessary to validate properly
         $_POST = $_GET;
         $_POST['timing_template'] = $ttemplate;
-        $_POST['autodetected'] = $autodetected;
-        $_POST['rdns'] = $rdns;
+        $_POST['autodetected']    = $autodetected;
+        $_POST['rdns']            = $rdns;
     }
 
     $validate = array (
         'host_id'         => array('validation' => 'OSS_HEX',                    'e_message' => 'illegal:' . _('Host ID')),
         'sensor'          => array('validation' => 'OSS_LETTER',                 'e_message' => 'illegal:' . _('Sensor')),
-        'scan_mode'       => array('validation' => 'OSS_LETTER',                 'e_message' => 'illegal:' . _('Scan Mode')),
-        'timing_template' => array('validation' => '"-",OSS_LETTER, OSS_DIGIT',  'e_message' => 'illegal:' . _('Timing Template')),
+        'scan_type'       => array('validation' => 'OSS_LETTER',                 'e_message' => 'illegal:' . _('Scan Mode')),
+        'timing_template' => array('validation' => 'OSS_TIMING_TEMPLATE',        'e_message' => 'illegal:' . _('Timing Template')),
         'autodetected'    => array('validation' => 'OSS_BINARY',                 'e_message' => 'illegal:' . _('Autodetected services and OS')),
         'rdns'            => array('validation' => 'OSS_BINARY',                 'e_message' => 'illegal:' . _('Reverse DNS '))
-
     );
 
     $validation_errors = validate_form_fields('POST', $validate);
@@ -146,15 +167,15 @@ if ($_REQUEST['action'] == 'custom_scan')
 
     if (empty($validation_errors))
     {
-        if (!array_key_exists(POST('scan_mode'), $scan_modes))
+        if (!array_key_exists(POST('scan_type'), $scan_types))
         {
             $validation_errors['status']    = 'error';
-            $validation_errors['scan_mode'] = _('Error! Scan mode not allowed');
+            $validation_errors['scan_type'] = _('Error! Scan type not allowed');
         }
 
         if (!array_key_exists(POST('timing_template'), $time_templates))
         {
-            $validation_errors['status']    = 'error';
+            $validation_errors['status']          = 'error';
             $validation_errors['timing_template'] = _('Error! Timing template not allowed');
         }
 
@@ -164,7 +185,7 @@ if ($_REQUEST['action'] == 'custom_scan')
             $_hostname    = Asset_host::get_name_by_id($conn, $host_id);
             $_host_ips    = Asset_host_ips::get_ips_to_string($conn, $host_id);
             $sensor       = POST('sensor');
-            $scan_mode    = POST('scan_mode');
+            $scan_type    = POST('scan_type');
             $ttemplate    = POST('timing_template');
             $autodetected = POST('autodetected');
             $rdns         = POST('rdns');
@@ -183,27 +204,41 @@ $db->close();
     <title><?php echo _('OSSIM Framework');?></title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
     <meta http-equiv="Pragma" content="no-cache"/>
-    <script type="text/javascript" src="../js/combos.js"></script>
-    <script type="text/javascript" src="../js/jquery.min.js"></script>
-    <script type="text/javascript" src="../js/notification.js"></script>
-    <script type="text/javascript" src="../js/messages.php"></script>
-    <script type="text/javascript" src="../js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.cookie.js"></script>
-    <script type="text/javascript" src="../js/jquery.dynatree.js"></script>
-    <script type="text/javascript" src="../js/jquery.autocomplete.pack.js"></script>
-    <script type="text/javascript" src="../js/token.js"></script>
-    <script type="text/javascript" src="../js/jquery.tipTip.js"></script>
-    <script type="text/javascript" src="../js/utils.js"></script>
-    <script type="text/javascript" src="../js/av_scan.js.php"></script>
-    <script type="text/javascript" src="../js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-    <link rel="stylesheet" type="text/css" href="../style/jquery-ui-1.7.custom.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css">
-    <link rel="stylesheet" type="text/css" href="../style/tree.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/progress.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/tipTip.css"/>
-    <link rel="stylesheet" type="text/css" href="../style/fancybox/jquery.fancybox-1.3.4.css"/>
+    <?php
+    //CSS Files
+    $_files = array(
+        array('src' => 'av_common.css?t='.Util::get_css_id(),           'def_path' => TRUE),
+        array('src' => 'jquery-ui-1.7.custom.css',                      'def_path' => TRUE),
+        array('src' => 'jquery.autocomplete.css',                       'def_path' => TRUE),
+        array('src' => 'tree.css',                                      'def_path' => TRUE),
+        array('src' => 'progress.css',                                  'def_path' => TRUE),
+        array('src' => 'tipTip.css',                                    'def_path' => TRUE),
+        array('src' => 'fancybox/jquery.fancybox-1.3.4.css',            'def_path' => TRUE)
+    );
+
+    Util::print_include_files($_files, 'css');
+
+    //JS Files
+    $_files = array(
+
+        array('src' => 'jquery.min.js',                                  'def_path' => TRUE),
+        array('src' => 'jquery-ui.min.js',                               'def_path' => TRUE),
+        array('src' => 'combos.js',                                      'def_path' => TRUE),
+        array('src' => 'notification.js',                                'def_path' => TRUE),
+        array('src' => 'messages.php',                                   'def_path' => TRUE),
+        array('src' => 'jquery.cookie.js',                               'def_path' => TRUE),
+        array('src' => 'jquery.dynatree.js',                             'def_path' => TRUE),
+        array('src' => 'jquery.autocomplete.pack.js',                    'def_path' => TRUE),
+        array('src' => 'token.js',                                       'def_path' => TRUE),
+        array('src' => 'jquery.tipTip.js',                               'def_path' => TRUE),
+        array('src' => 'utils.js',                                       'def_path' => TRUE),
+        array('src' => 'av_scan.js.php',                                 'def_path' => TRUE),
+        array('src' => 'fancybox/jquery.fancybox-1.3.4.pack.js',         'def_path' => TRUE)
+    );
+
+    Util::print_include_files($_files, 'js');
+    ?>
 
 
     <script type='text/javascript'>
@@ -212,16 +247,17 @@ $db->close();
 
         function show_notification (msg, container, nf_type, style)
         {
-            var nt_error_msg = (msg == '')   ? '<?php echo _('Unknown error - Operation cannot be completed')?>' : msg;
+            var nt_error_msg = (msg == '')   ? '<?php echo _('Sorry, operation was not completed due to an error when processing the request')?>' : msg;
             var style        = (style == '') ? 'width: 80%; text-align:center; padding: 5px 5px 5px 22px; margin: 20px auto;' : style;
 
-            var config_nt = { content: nt_error_msg,
-                    options: {
-                        type: nf_type,
-                        cancel_button: true
-                    },
-                    style: style
-                };
+            var config_nt = {
+                content: nt_error_msg,
+                options: {
+                    type: nf_type,
+                    cancel_button: true
+                },
+                style: style
+            };
 
             var nt_id         = 'nt_ns';
             var nt            = new Notification(nt_id, config_nt);
@@ -237,122 +273,8 @@ $db->close();
          ****************** Scan functions ******************
          ****************************************************/
 
-        function show_process_status()
-        {
-            $.ajax({
-                type: 'GET',
-                url: 'get_state.php',
-                dataType: 'json',
-                success: function(data){
-                    $('#scan_result').html('');
-
-                    var s_array = ['remote_scan_in_progress', 'local_scan_in_progress', 'local_search_in_progress', 'launching_local_scan'];
-
-                    if (typeof(data) == 'undefined' || data == null)
-                    {
-                        clearTimeout(timer);
-                        $.fancybox.close();
-                        show_notification('<?php echo _('Error retrieving state')?>', 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: center;');
-                    }
-                    else if (jQuery.inArray(data.state, s_array) != -1)
-                    {
-                        show_state_box(data.state, data.message, data.progress);
-                        timer = setTimeout('show_process_status()', 6000);
-
-                        if(data.state == 'launching_local_scan')
-                        {
-                            timer = setTimeout('show_process_status()', 4000);
-                        }
-                    }
-                    else if (data.state == 'finished' || data.state == 'finished_with_errors')
-                    {
-                        clearTimeout(timer);
-
-                        get_results();
-                    }
-                    else
-                    {
-                        clearTimeout(timer);
-                        $.fancybox.close();
-                    }
-                }
-            });
-        }
-
-        function get_results()
-        {
-            $.ajax({
-                type: 'GET',
-                url: 'get_results.php',
-                dataType: 'json',
-                error: function(data){
-
-                    //Check expired session
-                    var session = new Session(data, '');
-
-                    if (session.check_session_expired() == true)
-                    {
-                        session.redirect();
-                        return;
-                    }
-
-                    $.fancybox.close();
-
-                    var error_msg = '<?php _('Scan could not be completed due to an unknown error')?>';
-
-                    show_notification(error_msg, 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
-                },
-                success: function(data)
-                {
-                    $.fancybox.close();
-
-                    var cnd_1 = (typeof(data) == 'undefined' || data == null);
-                    var cnd_2 = (typeof(data) != 'undefined' && data != null && data.status != 'success');
-
-                    if (cnd_1 || cnd_2)
-                    {
-                        if (cnd_1)
-                        {
-                            var error_msg = '<?php _('Scan could not be completed due to an unknown error')?>';
-
-                            show_notification(error_msg, 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
-                        }
-                        else
-                        {
-                            if (data.status == 'warning')
-                            {
-                                show_notification(data.data, 'c_info', 'nf_warning', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
-                            }
-                            else
-                            {
-                                show_notification(data.data, 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Remove old info
-                        $('.sel_nmap_info').remove();
-
-                        if (typeof(data.debug_info) != 'undefined' && data.debug_info != '')
-                        {
-                            $('body').append("<div class='sel_nmap_info' data-nmap='" + data.debug_info + "'></div>");
-                        }
-
-                        $('#scan_result').html(data.data);
-
-                        var offset = $("#scan_result").offset();
-                        parent.window.scrollTo(0, offset.top);
-                    }
-                }
-           });
-        }
-
-
         function check_target_number()
         {
-            var num_host = 0;
-
             if(getcombotext("assets").length < 1)
             {
                 av_alert('<?php echo Util::js_entities(_('You must choose at least one asset'))?>');
@@ -361,7 +283,7 @@ $db->close();
             }
             else
             {
-                var ip_count = 0;
+                var num_targets = 0;
 
                 selectall("assets");
 
@@ -382,56 +304,179 @@ $db->close();
                     if (ip_cidr.match(/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))$/))
                     {
                         var res = ip_cidr.split('/');
-                        ip_count += 1 << (32 - res[1]);
+                        num_targets += 1 << (32 - res[1]);
                     }
                     else
                     {
-                        ip_count++;
+                        num_targets++;
                     }
                 }
 
-                if (ip_count > 256)
+                if (num_targets > 256)
                 {
-                    var msg_confirm = '<?php echo Util::js_entities(_("You are about to scan a big number of hosts (#HOSTS# hosts). This scan could take a long time depending on your network and the number of assets that are up, are you sure you want to continue?"))?>';
+                    var msg_confirm = '<?php echo Util::js_entities(_("You are about to scan a big number of assets (#TARGETS# assets). This scan could take a long time depending on your network and the number of assets that are up, are you sure you want to continue?"))?>';
 
-                    msg_confirm = msg_confirm.replace("#HOSTS#", ip_count);
+                    msg_confirm = msg_confirm.replace("#TARGETS#", num_targets);
 
                     var keys = {"yes": "<?php echo _('Yes') ?>","no": "<?php echo _('No') ?>"};
 
                     av_confirm(msg_confirm, keys).fail(function(){
                         return false;
                     }).done(function(){
-                        start_scan();
+                        run_scan();
                     });
                 }
                 else
                 {
-                    start_scan();
+                    run_scan();
                 }
             }
         }
 
 
-        function start_scan()
+        function check_scan_status()
+        {
+            var scan_data = {
+               "token"  : Token.get_token("assets_form"),
+               "action" : "scan_status"
+            }
+
+            return $.ajax({
+                type: 'POST',
+                url: 'scan_actions.php',
+                data: scan_data,
+                dataType: 'json'
+            });
+        }
+
+
+        function show_progress_box()
+        {
+            check_scan_status().done(function(data) {
+
+                var allowed_status = new Array();
+                    allowed_status[1] = '<?php echo _('Searching assets')?>';
+                    allowed_status[2] = '<?php echo _('Search finished')?>';
+                    allowed_status[3] = '<?php echo _('Scanning assets')?>';
+                    allowed_status[4] = '<?php echo _('Scan finished')?>';
+                    allowed_status[5] = '<?php echo _('Failed')?>';
+
+                try
+                {
+                    var scan_status   = parseInt(data.data.status.code);
+                    var scan_info     = data.data.message;
+                    var scan_progress = data.data.progress;
+
+                    /*
+                    console.log('Status: ' + scan_status);
+                    console.log('Message: ' + scan_info);
+                    console.log('Progress: ' + scan_progress.current + '/' + scan_progress.current + ' Percent: ' + scan_progress.percent + '%');
+                    console.log('Remaining Time:' + scan_progress.time)
+                    */
+
+                    //Asset scan is running or it has finished
+                    if (scan_status > 0 && scan_status < 5)
+                    {
+                        //Scan has finished
+                        if (scan_status == 4)
+                        {
+                            clearTimeout(timer);
+
+                            get_scan_report();
+                        }
+                        else
+                        {
+                            show_state_box(scan_status, scan_info, scan_progress);
+                            time = (scan_status == 1) ? 4000 :  6000;
+
+                            timer = setTimeout(function(){
+                                show_progress_box();
+                            }, time);
+                        }
+                    }
+                }
+                catch (Err)
+                {
+                    //console.log(Err);
+
+                    var __error_msg = '<?php echo _('Asset scan cannot be launched.  Please try again')?>';
+
+                    var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
+                    show_notification(__error_msg, 'c_info', 'nf_error', __style);
+
+                    clearTimeout(timer);
+                    $.fancybox.close();
+                }
+
+            }).fail(function(xhr) {
+
+                delete_scan();
+
+                //Check expired session
+                var session = new Session(xhr.responseText, '');
+
+                if (session.check_session_expired() == true)
+                {
+                    session.redirect();
+                    return;
+                }
+
+                var __error_msg = av_messages['unknown_error'];
+
+                if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
+                {
+                    __error_msg = xhr.responseText;
+                }
+
+                var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
+                show_notification(__error_msg, 'c_info', 'nf_error', __style);
+
+                clearTimeout(timer);
+                $.fancybox.close();
+            });
+        }
+
+
+        function run_scan()
         {
             parent.window.scrollTo(0, 0);
 
             selectall("assets");
 
+            var scan_data  = $('#t_ad .vfield').serialize();
+                scan_data += '&action=run_scan&token=' + Token.get_token("assets_form");
+
             $.ajax({
                 type: "POST",
-                url: 'do_scan.php',
-                data: $('#assets_form').serialize(),
+                url: 'scan_actions.php',
+                data: scan_data,
                 dataType: 'json',
-                async: false,
-                beforeSend: function( xhr ) {
+                beforeSend: function(xhr) {
+
                     $('#c_info').html('');
                     $('#scan_result').html('');
+
+                    /*
+                    var __style   = "width: 350px; left: 50%; position: absolute; margin-left: -180px;";
+                    var __message = '<?php echo _('Sending data')?> ...';
+                    show_loading_box('c_asset_discovery', __message, __style);
+                    */
+
+                    var scan_status   = 0;
+                    var scan_info     = '<?php echo _('Requesting data, please wait')?> ...';
+                    var scan_progress = null;
+
+                    show_state_box(scan_status, scan_info, scan_progress);
                 },
-                error: function(bc_data){
+                error: function(xhr){
+
+                    //hide_loading_box();
+
+                    clearTimeout(timer);
+                    $.fancybox.close();
 
                     //Check expired session
-                    var session = new Session(bc_data, '');
+                    var session = new Session(xhr.responseText, '');
 
                     if (session.check_session_expired() == true)
                     {
@@ -439,46 +484,65 @@ $db->close();
                         return;
                     }
 
-                    var error_msg = '<?php _('Scan could not be launched due to an unknown error')?>';
+                    var __error_msg = av_messages['unknown_error'];
 
-                    show_notification(error_msg, 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
+                    if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
+                    {
+                        __error_msg = xhr.responseText;
+                    }
 
+                    var __nf_class = 'nf_error';
+                    if (__error_msg.match(/^Warning/))
+                    {
+                        var __nf_class = 'nf_warning';
+                    }
+
+                    var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
+                    show_notification(__error_msg, 'c_info', __nf_class, __style);
                 },
                 success: function(data){
 
-                    var cnd_1 = (typeof(data) == 'undefined' || data == null);
-                    var cnd_2 = (typeof(data) != 'undefined' && data != null && data.status == 'error');
-
-                    if (cnd_1 || cnd_2)
-                    {
-                        var error_msg = (cnd_1 == true ) ? '' : data.data;
-                        show_notification(error_msg, 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
-                    }
-                    else
-                    {
-                        if (data.status == 'warning')
-                        {
-                            show_notification(data.data, 'c_info', 'nf_warning', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
-                        }
-                        else
-                        {
-                            show_process_status();
-                        }
-                    }
+                    timer = setTimeout(function(){
+                        //hide_loading_box();
+                        show_progress_box();
+                    }, 3000);
                 }
             });
         }
 
-        function stop_nmap()
+
+        function delete_scan()
         {
+            var scan_data = {
+               "token"  : Token.get_token("assets_form"),
+               "action" : "delete_scan"
+            }
+
+            return $.ajax({
+                type: 'POST',
+                url: 'scan_actions.php',
+                data: scan_data,
+                dataType: 'json'
+            });
+        }
+
+
+        function stop_scan()
+        {
+            var scan_data = {
+               "token"  : Token.get_token("assets_form"),
+               "action" : "stop_scan"
+            }
+
             $.ajax({
                 type: "POST",
-                url: "do_scan.php?only_stop=1",
+                url: 'scan_actions.php',
+                data: scan_data,
                 dataType: 'json',
-                error: function(bc_data){
+                error: function(xhr){
 
                     //Check expired session
-                    var session = new Session(bc_data, '');
+                    var session = new Session(xhr.responseText, '');
 
                     if (session.check_session_expired() == true)
                     {
@@ -486,9 +550,15 @@ $db->close();
                         return;
                     }
 
-                    var error_msg = '<?php _('Unknown error - Operation cannot be completed')?>';
+                    var __error_msg = av_messages['unknown_error']
 
-                    show_notification(error_msg, 'c_info', 'nf_error', 'padding: 3px; width: 90%; margin: auto; text-align: left;');
+                    if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
+                    {
+                        __error_msg = xhr.responseText;
+                    }
+
+                    var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
+                    show_notification(__error_msg, 'c_info', 'nf_error', __style);
                 },
                 success: function(msg){
 
@@ -496,12 +566,124 @@ $db->close();
 
                     clearTimeout(timer);
 
-                    get_results();
+                    get_scan_report();
 
                     $.fancybox.close();
                 }
             });
         }
+
+
+        function show_scan_report()
+        {
+            var scan_data = {
+               "token"  : Token.get_token("assets_form"),
+               "action" : "show_scan_report"
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: 'scan_actions.php',
+                data: scan_data,
+                dataType: 'json',
+                error: function(xhr){
+
+                    //Check expired session
+                    var session = new Session(xhr.responseText, '');
+
+                    if (session.check_session_expired() == true)
+                    {
+                        session.redirect();
+                        return;
+                    }
+
+                    var __error_msg = av_messages['unknown_error'];
+
+                    if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
+                    {
+                        __error_msg = xhr.responseText;
+                    }
+
+                    var __nf_class = 'nf_error';
+                    if (__error_msg.match(/^Warning/))
+                    {
+                        var __nf_class = 'nf_warning';
+                    }
+                    else if (__error_msg.match(/finish/))
+                    {
+                        var __nf_class = 'nf_info';
+                    }
+
+                    var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
+                    show_notification(__error_msg, 'c_info', __nf_class, __style);
+
+                    $.fancybox.close();
+                },
+                success: function(data)
+                {
+                    $.fancybox.close();
+
+                    if (data != null && typeof(data.data) != 'undefined' && data.data != '')
+                    {
+                        $('#scan_result').html(data.data);
+                    }
+
+                    var offset = $("#scan_result").offset();
+                    parent.window.scrollTo(0, offset.top);
+                }
+           });
+        }
+
+
+        function get_scan_report()
+        {
+            var scan_data = {
+               "token"  : Token.get_token("assets_form"),
+               "action" : "download_scan_report"
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: 'scan_actions.php',
+                data: scan_data,
+                dataType: 'json',
+                error: function(xhr){
+
+                    //Check expired session
+                    var session = new Session(xhr.responseText, '');
+
+                    if (session.check_session_expired() == true)
+                    {
+                        session.redirect();
+                        return;
+                    }
+
+                    var __error_msg = av_messages['unknown_error'];
+
+                    if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
+                    {
+                        __error_msg = xhr.responseText;
+                    }
+
+                    var __nf_class = 'nf_error';
+                    if (__error_msg.match(/^Warning/))
+                    {
+                        var __nf_class = 'nf_warning';
+                    }
+
+                    var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
+                    show_notification(__error_msg, 'c_info', __nf_class, __style);
+
+                    $.fancybox.close();
+                },
+                success: function(data)
+                {
+                    show_scan_report();
+                }
+           });
+        }
+
+
 
         /****************************************************
          *************** Searchbox functions ****************
@@ -589,20 +771,20 @@ $db->close();
                                                 // Split for multiple IP
                                                 var member_keys = group_member.val.split(",");
                                                 var member_id   = group_member.key.replace("host_","");
-                                                
+
                                                 for (k = 0; k < member_keys.length; k++)
                                                 {
                                                     var item = member_keys[k];
-    
+
                                                     var asset_text  = ''
                                                     var asset_value = '';
-                                                    
+
                                                     if (item.match(/\d+\.\d+\.\d+\.\d+/) !== null)
                                                     {
                                                         //IP
                                                         Regexp = /(\d+\.\d+\.\d+\.\d+)/;
                                                         match  = Regexp.exec(item);
-    
+
                                                         if (group_member.val.match(/,/) !== null)
                                                         {
                                                             Regexp_name = /\((.+)\)/;
@@ -615,7 +797,7 @@ $db->close();
                                                         }
                                                         asset_value = member_id + '#' + match[1] + '/32';
                                                     }
-                                                    
+
                                                     if(asset_value != '' && asset_text != '')
                                                     {
                                                         addto ("assets", asset_text, asset_value);
@@ -636,16 +818,16 @@ $db->close();
                             for (var i = 0; i < keys.length; i++)
                             {
                                 var item = keys[i];
-    
+
                                 var asset_text  = ''
                                 var asset_value = '';
-    
+
                                 if (item.match(/\d+\.\d+\.\d+\.\d+\/\d+/) !== null)
                                 {
                                     //CIDR
                                     Regexp = /(\d+\.\d+\.\d+\.\d+\/\d+)/;
                                     match  = Regexp.exec(item);
-    
+
                                     asset_text  = dtnode.data.val;
                                     asset_value = asset_id + '#' + match[1];
                                 }
@@ -654,11 +836,11 @@ $db->close();
                                     //IP
                                     Regexp = /(\d+\.\d+\.\d+\.\d+)/;
                                     match  = Regexp.exec(item);
-    
+
                                     asset_text  = dtnode.data.tooltip;
                                     asset_value = asset_id + '#' + match[1] + '/32';
                                 }
-    
+
                                 if(asset_value != '' && asset_text != '')
                                 {
                                     addto ("assets", asset_text, asset_value);
@@ -763,6 +945,7 @@ $db->close();
                 $("#searchbox").val('<?php echo _('Type here to search assets')?>');
             });
 
+
             $('#searchbox').keydown(function(event) {
 
                 if (event.which == 13)
@@ -801,7 +984,7 @@ $db->close();
 
 
             /****************************************************
-             ****************** NMAP functions  *****************
+             ****************** Scan functions  *****************
              ****************************************************/
 
             bind_nmap_actions();
@@ -834,10 +1017,17 @@ $db->close();
                 add_asset(assets_to_scan);
                 <?php
             }
+
+
+            if (file_exists($scan_report_file))
+            {
+                ?>
+                show_scan_report();
+                <?php
+            }
+
             ?>
-
-            show_process_status();
-
+            show_progress_box();
         });
     </script>
 
@@ -849,14 +1039,6 @@ $db->close();
 
 <div id='c_info'>
     <?php
-    if (!$nmap_exists)
-    {
-        $error = new Av_error();
-        $error->set_message('NMAP_PATH');
-        $error->display();
-    }
-
-
     if (is_array($validation_errors) && !empty($validation_errors))
     {
         $txt_error = '<div>'._('The following errors occurred').":</div>
@@ -904,7 +1086,7 @@ $db->close();
                                     <table class="transparent" cellspacing="0">
                                         <tr>
                                             <td class="nobborder">
-                                                <select id="assets" name="assets[]" multiple="multiple"></select>
+                                                <select id="assets" class="vfield" name="assets[]" multiple="multiple"></select>
                                             </td>
                                         </tr>
                                         <tr>
@@ -936,10 +1118,10 @@ $db->close();
                                     <?php
                                     $sl_checked = ($sensor == 'local' || empty($sensor_list)) ? 'checked="checked"' : '';
                                     ?>
-                                    <input type="radio" name="sensor" id="lsensor" <?php echo $sl_checked?> value="local"/>
+                                    <input class="vfield" type="radio" name="sensor" id="lsensor" <?php echo $sl_checked?> value="local"/>
                                     <label for="lsensor">
                                         <span><span class="bold"><?php echo _('Local')?></span> <?php echo _('sensor')?></span>
-                                        <span class="small"> <?php echo _('Launch scan from the framework machine')?></span>
+                                        <span class="small"> <?php echo _('Launch scan from the local sensor')?></span>
                                     </label>
                                 </td>
                             </tr>
@@ -954,7 +1136,7 @@ $db->close();
                                         $sl_checked = ($sensor == 'automatic') ? 'checked="checked"' : '';
                                         ?>
 
-                                        <input type="radio" name="sensor" id="asensor" <?php echo $sl_checked?> value="auto"/>
+                                        <input type="radio" class="vfield" name="sensor" id="asensor" <?php echo $sl_checked?> value="auto"/>
                                         <label for="asensor">
                                             <span><span class="bold"><?php echo _('Automatic')?></span> <?php echo _('sensor')?></span>
                                             <span class="small"> <?php echo _('Launch scan from the first available sensor')?></span>
@@ -992,7 +1174,7 @@ $db->close();
                                     ?>
                                     <tr>
                                         <td class="nobborder">
-                                            <input type="radio" name="sensor" id="sensor<?php echo $sensor_id;?>" value="<?php echo $_sensor_id ?>">
+                                            <input type="radio" class="vfield" name="sensor" id="sensor<?php echo $sensor_id;?>" value="<?php echo $_sensor_id ?>">
                                             <label for="sensor<?php echo $sensor_id;?>"><?php echo $sensor['name'] . " [" . $sensor['ip'] . "]"?></label>
                                         </td>
                                     </tr>
@@ -1019,22 +1201,22 @@ $db->close();
                             <!-- Full scan -->
                             <tr>
                                 <td class='td_label'>
-                                    <label for="scan_mode"><?php echo _('Scan type')?>:</label>
+                                    <label for="scan_type"><?php echo _('Scan type')?>:</label>
                                 </td>
                                 <td>
-                                    <select id="scan_mode" name="scan_mode" class="nmap_select vfield">
+                                    <select id="scan_type" name="scan_type" class="nmap_select vfield">
                                         <?php
-                                        foreach ($scan_modes as $sm_v => $sm_txt)
+                                        foreach ($scan_types as $st_v => $st_txt)
                                         {
-                                            $selected = ($scan_mode == $sm_v) ? 'selected="selected"' : '';
+                                            $selected = ($scan_type == $st_v) ? 'selected="selected"' : '';
 
-                                            echo "<option value='$sm_v' $selected>$sm_txt</option>";
+                                            echo "<option value='$st_v' $selected>$st_txt</option>";
                                         }
                                         ?>
                                     </select>
                                 </td>
                                 <td style='padding-left: 20px;'>
-                                    <span id="scan_mode_info"></span>
+                                    <span id="scan_type_info"></span>
                                 </td>
                             </tr>
 

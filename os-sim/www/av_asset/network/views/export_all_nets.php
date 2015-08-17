@@ -53,11 +53,11 @@ if (isset($_GET['get_data']))
     //Export a filtered list
 	
 	$filters = array();
-	$user    = Session::get_session_user();
+	$session = session_id();
 
     $tables  = ', user_component_filter f';
     $filters = array(
-        'where'    => "f.asset_id=net.id AND f.asset_type='network' AND f.login = '$user'",
+        'where'    => "f.asset_id=net.id AND f.asset_type='network' AND f.session_id = '$session'",
         'order_by' => 'net.name ASC'
     );
         

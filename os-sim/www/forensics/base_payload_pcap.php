@@ -18,9 +18,9 @@ include_once ("$BASE_path/includes/base_include.inc.php");
 //
 // Generate .pcap
 $tmpfile = "/var/tmp/base_packet_" . $eid . ".pcap";
-$cmd = "/usr/share/ossim/scripts/snortlogtopcap.py -u '$binary' -p '$tmpfile'";
+$cmd = "/usr/share/ossim/scripts/snortlogtopcap.py -u ? -p ?";
 //error_log("$cmd\n",3,"/tmp/pcaps");
-system("$cmd >> /dev/null 2>&1");
+Util::execute_command("$cmd >> /dev/null 2>&1", array($binary, $tmpfile));
 #
 ?>
 <div class='siem_detail_subsection_payload'><?php echo _("pcap File") . ":&nbsp;&nbsp;" . PrintPcapDownload($db, $eid) ?></div>

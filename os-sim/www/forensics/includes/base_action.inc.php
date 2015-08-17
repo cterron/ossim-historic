@@ -357,8 +357,8 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
             else if ($context == PAGE_STAT_SENSOR)
             {
                 $tmp  = (!isset($process_list[$j])) ? -1 : $process_list[$j];
-                $sql  = "SELECT hex(acid_event.id) as id FROM acid_event WHERE device_id='$tmp'";
-                $sql2 = "SELECT count(acid_event.id) FROM acid_event WHERE device_id='$tmp'";
+                $sql  = "SELECT hex(acid_event.id) as id " . $action_sql . " AND device_id='$tmp'";
+                $sql2 = "SELECT count(acid_event.id) " . $action_sql . " AND device_id='$tmp'";
             }
             /* Unique Classification listing DEPRECATED NO USE */
             else if ($context == PAGE_STAT_CLASS)
@@ -455,7 +455,8 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 $f = fopen($deltmp, "a");
                 
                 fputs($f, "INSERT IGNORE INTO del_$rnd ".str_replace("hex(acid_event.id) as id","acid_event.id,DATE_FORMAT(acid_event.timestamp, '%Y-%m-%d %H:00:00')",$sql).";\n");
-                fputs($f, "CREATE TEMPORARY TABLE tmp_delete (id binary(16) NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY;\n");
+                fputs($f, "SELECT min(timestamp),max(timestamp) FROM del_$rnd INTO @date_from,@date_to;\n");
+		fputs($f, "CREATE TEMPORARY TABLE tmp_delete (id binary(16) NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY;\n");
                 fputs($f, "SET AUTOCOMMIT=0;\n");
                 
                 for ($k = 0; $k < $total_aux; $k += $block)
@@ -487,7 +488,6 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 fputs($f, "DELETE aux FROM idm_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "DELETE aux FROM reputation_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "DELETE aux FROM extra_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
-                fputs($f, "SELECT min(timestamp),max(timestamp) FROM del_$rnd INTO @date_from,@date_to;\n");
                 fputs($f, "CALL fill_tables(DATE_FORMAT(@date_from, '%Y-%m-%d %H:00:00'),DATE_FORMAT(@date_to, '%Y-%m-%d %H:59:59'));\n");
                 fputs($f, "TRUNCATE TABLE del_$rnd;\nDROP TABLE tmp_delete;\n");
                 fputs($f, "COMMIT;\n");
@@ -590,12 +590,12 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
         fputs($f, "UPDATE deletetmp SET perc='100' WHERE id='$rnd';\nCOMMIT;\n");
         fclose($f);
         
-        $cmd = "/usr/share/ossim/scripts/forensics/bg_purge_from_siem.sh del_$rnd > /var/tmp/latest_siem_events_purge.log 2>&1 &";
+        $cmd = "/usr/share/ossim/scripts/forensics/bg_purge_from_siem.sh ? > /var/tmp/latest_siem_events_purge.log 2>&1 &";
         if (file_exists('/tmp/debug_siem'))
         {
             error_log("Action [$action] background delete ($action_cnt events):$cmd\n", 3, "/tmp/siem");
         }
-        shell_exec($cmd);
+        Util::execute_command($cmd, array("del_$rnd"));
         echo "<script>bgtask();</script>\n";
     }
     

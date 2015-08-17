@@ -40,17 +40,17 @@ require_once 'av_init.php';
 function show_info(type, subtype)
 {
     var info = new Array();
-        info["scan_mode"]       = new Array()
+        info["scan_type"]       = new Array()
         info["timing_template"] = new Array();
 
-        info["scan_mode"]["fast"] = "<?php echo '<strong>'._('Fast mode').'</strong> '._('will scan fewer ports than the default scan');?>";
-        info["scan_mode"]["full"] = "<?php echo '<strong>'._('Full mode').'</strong> '._('will be much slower but will include OS, services, service versions and MAC address into the inventory');?>"
+        info["scan_type"]["fast"] = "<?php echo '<strong>'._('Fast mode').'</strong> '._('will scan fewer ports than the default scan');?>";
+        info["scan_type"]["full"] = "<?php echo '<strong>'._('Full mode').'</strong> '._('will be much slower but will include OS, services, service versions and MAC address into the inventory');?>"
 
 
-        info["timing_template"]["-T0"] = "<?php echo '<strong>'._('Paranoid').'</strong> '._('mode is for IDS evasion');?>";
-        info["timing_template"]["-T1"] = "<?php echo '<strong>'._('Sneaky').'</strong> '._('mode is for IDS evasion');?>";
-        info["timing_template"]["-T4"] = "<?php echo '<strong>'._('Aggressive').'</strong> '._('mode speed up the scan (fast and reliable networks)');?>";
-        info["timing_template"]["-T5"] = "<?php echo '<strong>'._('Insane').'</strong> '._('mode speed up the scan (fast and reliable networks)');?>";
+        info["timing_template"]["T0"] = "<?php echo '<strong>'._('Paranoid').'</strong> '._('mode is for IDS evasion');?>";
+        info["timing_template"]["T1"] = "<?php echo '<strong>'._('Sneaky').'</strong> '._('mode is for IDS evasion');?>";
+        info["timing_template"]["T4"] = "<?php echo '<strong>'._('Aggressive').'</strong> '._('mode speed up the scan (fast and reliable networks)');?>";
+        info["timing_template"]["T5"] = "<?php echo '<strong>'._('Insane').'</strong> '._('mode speed up the scan (fast and reliable networks)');?>";
 
 
     var show_in_tooltip = ($('.img_help_info').length > 0) ? true : false;
@@ -81,9 +81,9 @@ function show_info(type, subtype)
 }
 
 
-function change_scan_mode()
+function change_scan_type()
 {
-    var value = $('#scan_mode').val();
+    var value = $('#scan_type').val();
 
     if (value == "custom")
     {
@@ -108,9 +108,13 @@ function bind_nmap_actions()
     // Ping scan doesn't work with "Autodetect services and Operating System" option. Force Fast scan
     $("#autodetect").on("click",  function(event)
     {
-        if($("#autodetect").is(":checked") && $('#scan_mode').val() == 'ping')
+        if($("#autodetect").is(":checked") && $('#scan_type').val() == 'ping')
         {
-            $('#scan_mode').val('fast');
+            $('#scan_type').val('fast');
+
+            var s_value = $('#scan_type').val();
+
+            show_info('scan_type', s_value);
         }
     });
 
@@ -124,13 +128,13 @@ function bind_nmap_actions()
 
 
     // Show and change scan information
-    $('#scan_mode').on('change', function(){
+    $('#scan_type').on('change', function(){
 
-        var s_value = $('#scan_mode').val();
+        var s_value = $('#scan_type').val();
 
-        show_info('scan_mode', s_value);
+        show_info('scan_type', s_value);
 
-        change_scan_mode();
+        change_scan_type();
     });
 
 
@@ -148,7 +152,7 @@ function bind_nmap_actions()
     $(".info").tipTip({maxWidth: 'auto'});
 
 
-    $('#scan_mode').trigger('change');
+    $('#scan_type').trigger('change');
 
     $('#timing_template').trigger('change');
 }
@@ -163,7 +167,7 @@ function scan_host(id)
         '<input type="hidden" name="action" value="custom_scan"/>' +
         '<input type="hidden" name="host_id" value="'+id+'"/>' +
         '<input type="hidden" name="sensor" value="automatic"/>' +
-        '<input type="hidden" name="scan_mode" value="fast"/>' +
+        '<input type="hidden" name="scan_type" value="fast"/>' +
         '<input type="hidden" name="timing_template" value="-T5"/>' +
         '<input type="hidden" name="autodetected" value="1"/>' +
         '<input type="hidden" name="rdns" value="1"/>' +
@@ -174,103 +178,112 @@ function scan_host(id)
     $("#f_scan_host").submit();
 }
 
-// show fancybox to diplay the scan state
-
-function show_state_box(state, message, progress)
+//Show fancybox to diplay the scan state
+function show_state_box(status_code, subtitle, progress)
 {
-    var box_content = '';
-    var action      = null;
-    var stop_div    = '<div class="box_single_button"><input type="button" id="stop_scan" class="small" onclick="stop_nmap()" value="<?php echo _('Stop Scan') ?>"></div>';
+    var allowed_status = new Array();
+        allowed_status[0] = '<?php echo _('Initializing scanning')?>';
+        allowed_status[1] = '<?php echo _('Searching Hosts')?>';
+        allowed_status[2] = '<?php echo _('Search finished')?>';
+        allowed_status[3] = '<?php echo _('Scanning Hosts')?>';
+        allowed_status[4] = '<?php echo _('Scan finished')?>';
 
+    var box_content  = '';
+    var box_title    = "<div class='box_title'>" + allowed_status[status_code] + "</div>";
+    var box_subtitle = "<div class='box_subtitle'>" + subtitle + "</div>";
+    var box_action   = '<div class="box_single_button"><input type="button" id="stop_scan" class="small" onclick="stop_scan()" value="<?php echo _('Stop Scan')?>"></div>';
+    var box_bar      = '';
 
-    if(state == 'launching_local_scan')
+    if (status_code == 0)
     {
-        box_content = "<div class='box_title'></div>" +
-                      "<div class='box_subtitle'><?php echo _('Launching local scan...')?></div>";
-        action = 'insert';
+        box_bar     = "<div id='activitybar' class='av_activitybar activitybar_1'><div class='stripes'></div></div>";
+        box_content = box_title + box_subtitle + box_bar;
     }
-    else if ((state == 'local_search_in_progress' || state == 'remote_scan_in_progress') && $('#activitybar').length == 0)
+    else if (status_code == 1 || status_code == 2)
     {
-        var box_title = (state == 'local_search_in_progress') ? '<?php echo _('Searching Hosts') ?>' : '<?php echo _('Scanning Hosts') ?>';
-
-        box_content = "<div class='box_title'>" + box_title + "</div>" +
-                      "<div class='box_subtitle'>" + message +"</div>" +
-                      "<div id='activitybar' class='av_activitybar'>" +
-                           "<div class='stripes'></div>" +
-                      "</div>";
-
-        // we can stop the local search
-
-        if (state == 'local_search_in_progress')
-        {
-            box_content = box_content + stop_div;
-        }
-
-        action = 'insert';
-     }
-    else if (state =='local_scan_in_progress' && $('#progressbar').length == 0)
+        box_bar     = "<div id='activitybar' class='av_activitybar activitybar_2'><div class='stripes'></div></div>";
+        box_content = box_title + box_subtitle + box_bar + box_action;
+    }
+    else
     {
-        box_content = "<div class='box_title'><?php echo _('Scanning Hosts')?></div>" +
-                      "<div class='box_subtitle'>" + message +"</div>" +
-                      "<div id='progressbar' class='av_progressbar'>" +
-                           "<div class='stripes'></div>" +
-                              "<span class='bar-label'>" + progress.percent + "%</span>" +
-                           "<div id='progress_legend'>" +
-                           "<span id='progress_current'>" + progress.current + "</span>/<span id='progress_total'>" + progress.total +  "</span> <?php echo _('Hosts') ?>" +
-                          " (<span id='progress_remaining'>" + progress.time + "</span>)" +
-                          "</div>" +
+        box_bar = "<div id='progressbar' class='av_progressbar'>" +
+                       "<div class='stripes'></div>" +
+                       "<span class='bar-label'>" + progress.percent + "%</span>" +
+                       "<div id='progress_legend'>" +
+                            "<span id='progress_current'>" + progress.current + "</span>/<span id='progress_total'>" + progress.total +  "</span> <?php echo _('Hosts') ?>" +
+                            " (<span id='progress_remaining'>" + progress.time + "</span>)" +
                        "</div>" +
-                       stop_div;
+                    "</div>";
 
-        action = 'insert';
-    }
-    else if (typeof(progress) != 'undefined' && progress !=null)
-    {
-        action = 'update';
+        box_content = box_title + box_subtitle + box_bar + box_action;
     }
 
-    if (action == 'insert')
-    {
-        if($('#box-content').length == 0)
-        {
-            $.fancybox({
-                'modal': true,
-                'width': 450,
-                'height': 205,
-                'autoDimensions': false,
-                'centerOnScroll': true,
-                'content': '<div id="box-content">' + box_content + '</div>',
-                'overlayOpacity': 0.07,
-                'overlayColor': '#000'
-            });
-        }
-        else
-        {
-            $('#box-content').html(box_content);
-        }
 
-        if (state == 'local_search_in_progress' || state == 'remote_scan_in_progress')
+    if($('#box-content').length == 0)
+    {
+        //Create fancybox
+
+        $.fancybox({
+            'modal': true,
+            'width': 520,
+            'height': 220,
+            'autoDimensions': false,
+            'centerOnScroll': true,
+            'content': '<div id="box-content">' + box_content + '</div>',
+            'overlayOpacity': 0.07,
+            'overlayColor': '#000'
+        });
+
+
+        //Animate activity bar
+        if (status_code >= 0 && status_code <= 2)
         {
             activityBar();
         }
-
+        else
+        {
+            if (typeof(progress.percent) != 'undefined' && progress.percent != null)
+            {
+                progressBar(progress.percent, $('#progressbar'));
+            }
+        }
     }
-    else if (action == 'update')
+    else
     {
-        $('#progress_current').html(progress.current);
-        $('#progress_total').html(progress.total);
-        $('#progress_remaining').html(progress.time);
-    }
+        //Update fancybox
 
-    // update progress bar percent
+        if ($('.activitybar_1').length > 0 && (status_code == 1 || status_code == 2))
+        {
+            //From initial activity bar to activity bar
+            $('.box_title').html(allowed_status[status_code]);
+            $('.box_subtitle').html(subtitle);
 
-    if (state == 'local_scan_in_progress')
-    {
-        progressBar(progress.percent, $('#progressbar'));
+            $('#activitybar').removeClass('activitybar_1').addClass('activitybar_2');
+            $('#activitybar').after(box_action);
+        }
+        else if ($('#activitybar').length > 0 && (status_code == 3 || status_code == 4))
+        {
+            //From activity bar to progress bar
+            $('#box-content').html(box_content);
+        }
+
+        if (status_code == 3 || status_code == 4)
+        {
+            //Update progressbar percent
+            if (typeof(progress.percent) != 'undefined' && progress.percent != null)
+            {
+                $('#progress_current').html(progress.current);
+                $('#progress_total').html(progress.total);
+                $('#progress_remaining').html(progress.time);
+
+                progressBar(progress.percent, $('#progressbar'));
+            }
+        }
     }
 }
 
 var __width = 0;
+
 
 function activityBar()
 {
@@ -279,6 +292,7 @@ function activityBar()
     $('.stripes', $('#activitybar')).animate({ width: activityBarWidth }, 400);
     animate_right($('.stripes', $('#activitybar')));
 }
+
 
 function animate_right(elem)
 {
@@ -298,6 +312,7 @@ function animate_right(elem)
     });
 }
 
+
 function animate_left(elem)
 {
     $(elem).animate({opacity:1},{
@@ -315,6 +330,7 @@ function animate_left(elem)
         }
     });
 }
+
 
 function progressBar(percent, element)
 {

@@ -1077,7 +1077,7 @@ class Util
     */
     public static function get_unixtime_utc()
     {
-        return strtotime(trim(`date -u -R`));
+        return strtotime(trim(self::execute_command('date -u -R', FALSE, 'string')));
     }
 
     /**
@@ -1296,7 +1296,7 @@ class Util
 
     public static function get_system_uuid()
     {
-        $uuid = strtoupper(trim(`/usr/bin/alienvault-system-id`));
+        $uuid = strtoupper(trim(self::execute_command('/usr/bin/alienvault-system-id', FALSE, 'string')));
 
         if (!valid_uuid($uuid))
         {
@@ -1324,12 +1324,12 @@ class Util
             if (file_exists("/etc/ossim/framework/db_encryption_key"))
             {
                 $uuid = @trim(
-                    `grep "^key=" /etc/ossim/framework/db_encryption_key | awk 'BEGIN { FS = "=" } ; {print $2}'`
+                    self::execute_command('grep "^key=" /etc/ossim/framework/db_encryption_key | awk \'BEGIN { FS = "=" } ; {print $2}\'', FALSE, 'string')
                 );
             }
             else
             {
-                $uuid = @trim(`sudo dmidecode -s system-uuid`);
+                $uuid = @trim(self::execute_command('sudo dmidecode -s system-uuid', FALSE, 'string'));
             }
         }
 
@@ -1992,7 +1992,7 @@ class Util
     // Memcache Flush
     public static function memcacheFlush($cache_files = TRUE)
     {
-        system('echo "flush_all" | /bin/nc -q 2 127.0.0.1 11211 > /dev/null 2>&1');
+        self::execute_command('echo "flush_all" | /bin/nc -q 2 127.0.0.1 11211 > /dev/null 2>&1');
 
         if ($cache_files == TRUE)
         {
@@ -2011,9 +2011,14 @@ class Util
     // Asset dump
     public static function resend_asset_dump($what = '')
     {
-        $param = ($what == 'servers') ? 'restart' : '';
-
-        @system("/usr/share/ossim/scripts/assets_sync.sh $param > /var/tmp/latest_assec_sync 2>&1 &");
+        if ($what == 'servers')
+        {
+            self::execute_command("/usr/share/ossim/scripts/assets_sync.sh ? > /var/tmp/latest_assec_sync 2>&1 &", array('restart'));
+        }
+        else
+        {
+            self::execute_command("/usr/share/ossim/scripts/assets_sync.sh > /var/tmp/latest_assec_sync 2>&1 &");
+        }
     }
 
     /**
@@ -2387,13 +2392,11 @@ class Util
         if (file_exists('/etc/ossim/ossim_setup.conf'))
         {
             $command = 'grep ^admin_ip /etc/ossim/ossim_setup.conf | cut -f 2 -d "=" | head -1';
-            $ret     = 0;
+            $output  = self::execute_command($command, FALSE, 'string');
 
-            exec($command, $output, $ret);
-
-            if ($ret === 0 && Asset_host_ips::valid_ip($output[0]))
+            if (Asset_host_ips::valid_ip($output))
             {
-                $admin_ip = trim($output[0]);
+                $admin_ip = trim($output);
             }
         }
 
@@ -2637,7 +2640,7 @@ class Util
     public static function get_packages_version()
     {
 
-        $version = @`dpkg -l | grep ossim-cd-tools | awk '{print $3}' | awk -F '-' '{print $1}'`;
+        $version = self::execute_command('dpkg -l | grep ossim-cd-tools | awk \'{print $3}\' | awk -F \'-\' \'{print $1}\'', FALSE, 'string');
 
         return $version;
 
@@ -2708,7 +2711,7 @@ class Util
                     break;
 
                 default:
-                    $error_msg = _('Unexpected Error Found') . " [$exp_msg]." . _('Please Try Again Later.');
+                    $error_msg = _('Sorry, operation was not completed due to an error when processing the request') . " [$exp_msg]." . _('Please Try Again Later.');
 
             }
 
@@ -2754,6 +2757,12 @@ class Util
         {
             $conn->Execute("SET @disable_calc_perms=NULL");
             $rs = $conn->Execute("CALL update_all_users()");
+
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+
             $rs->Close();
         }
 
@@ -2794,6 +2803,104 @@ class Util
     {
         return floor($from / $limit) + 1;
     }
+    
+    
+    /**
+     * Function to execute a bash command
+     * 
+     * @param string   $cmd                          Command to execute
+     * @param array    $inputarr        [Optional]   Parameters into the command
+     * @param string   $output_mode     [Optional]   Type of output of the command execution
+     * @param boolean  $throw_exception [Optional]   Enable or disable exception throwing
+     * @param int      $return_var      [Optional]   Return code of execution when mode is 'array'
+     * 
+     * @return Output of command execution depending on $output_mode
+     *         - $output_mode = FALSE:    Last line. system() call
+     *         - $output_mode = 'string': Entire output into a string. shell_exec() call
+     *         - $output_mode = 'array':  Entire output into an array. exec() call
+     */
+    public static function execute_command($cmd, $inputarr = FALSE, $output_mode = FALSE, $throw_exception = TRUE, &$return_var = FALSE)
+    {
+        if ($inputarr)
+        {
+            if (!is_array($inputarr))
+            {
+                $inputarr = array($inputarr);
+            }
+            
+            $_cmdarr  = explode('?', $cmd);
+            $_nparams = sizeof($_cmdarr) - 1;
+            
+            if ($_nparams != count($inputarr))
+            {
+                Av_exception::throw_error(Av_exception::USER_ERROR, _('Unable to execute command'));
+            }
+            
+            $cmd = $_cmdarr[0];
+            
+            for ($i = 0; $i < $_nparams; $i++)
+            {
+                $cmd .= escapeshellarg($inputarr[$i]);
+                
+                $cmd .= $_cmdarr[$i + 1];
+            }
+        }
+        
+        
+        // Debug
+        if (file_exists('/tmp/debug_cmd'))
+        {
+            error_log("$cmd\n", 3, "/tmp/cmd");
+        }
+        
+        
+        // Command output in string
+        if ($output_mode == 'string')
+        {
+            $output = shell_exec($cmd);
+        }
+        // Command output in array
+        elseif ($output_mode == 'array')
+        {
+            exec($cmd, $output, $return_var);
+            
+            if ($return_var > 1)
+            {
+                if ($throw_exception)
+                {
+                    Av_exception::throw_error(Av_exception::USER_ERROR, _('Error executing command'));
+                }
+                else
+                {
+                    Av_exception::write_log(Av_exception::USER_ERROR, _('Error executing command'));
+                }
+            }
+            elseif ($return_var > 0)
+            {
+                Av_exception::write_log(Av_exception::USER_ERROR, _('Warning executing command, return value = 1'));
+            }
+        }
+        // Only execute
+        else
+        {
+            $output = system($cmd);
+            
+            if ($output === FALSE)
+            {
+                if ($throw_exception)
+                {
+                    Av_exception::throw_error(Av_exception::USER_ERROR, _('Error executing command'));
+                }
+                else
+                {
+                    Av_exception::write_log(Av_exception::USER_ERROR, _('Error executing command'));
+                }
+            }
+        }
+        
+        return $output;
+    }
+    
 }
 
 /* End of file Util.inc */

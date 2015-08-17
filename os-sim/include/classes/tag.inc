@@ -283,7 +283,7 @@ class Tag
             $this->get_class()
         );
 
-        $query = 'REPLACE INTO tag (id, name, ctx, type, class) VALUES (UNHEX(?), ?, ?, ?, ?)';
+        $query = 'REPLACE INTO tag (id, name, ctx, type, class) VALUES (UNHEX(?), ?, UNHEX(?), ?, ?)';
         $rs    = $conn->Execute($query, $params);
 
         if (!$rs)
@@ -378,11 +378,11 @@ class Tag
         $query = "REPLACE INTO component_tags (
                     SELECT f.asset_id, UNHEX(?)
                         FROM user_component_filter f, host h
-                        WHERE f.login=? AND f.asset_type='asset' AND h.id=f.asset_id $perms)";
+                        WHERE f.session_id=? AND f.asset_type='asset' AND h.id=f.asset_id $perms)";
 
         $params = array(
             $this->get_id(),
-            Session::get_session_user()
+            session_id()
         );
 
         Util::memcacheFlush();
@@ -415,11 +415,11 @@ class Tag
         $query = "DELETE FROM component_tags WHERE id_component IN (
                         SELECT f.asset_id
                             FROM user_component_filter f, host h
-                            WHERE f.login=? AND f.asset_type='asset' AND h.id=f.asset_id $perms)
+                            WHERE f.session_id=? AND f.asset_type='asset' AND h.id=f.asset_id $perms)
                       AND id_tag = (UNHEX(?))";
 
         $params = array(
-            Session::get_session_user(),
+            session_id(),
             $this->get_id()
         );
 
@@ -643,7 +643,7 @@ class Tag
      * @return array
      * @throws Exception  If a connection error occurred
      */
-    public static function  get_list($conn, $tables = '', $filters = array())
+    public static function get_list($conn, $tables = '', $filters = array())
     {
         Ossim_db::check_connection($conn);
 

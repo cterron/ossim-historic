@@ -4,14 +4,24 @@ description=Parses the Agent log to search for errors.
 category=alienvault,platform
 profiles=Sensor:>4.0
 type=command
-command=sed '/Connected to ALIENVAULT-SERVER/q' /var/log/alienvault/agent/agent.log  | grep "ERROR" | grep "Can't connect to server, retrying" | wc -l; sed '/Connected to ALIENVAULT-SERVER/q' /var/log/alienvault/agent/agent.log | grep -v "connecting to server" | grep -v "connect to server"; sed -n '/Connected to ALIENVAULT-SERVER/,$ p' /var/log/alienvault/agent/agent.log
+command=$(dpkg -l ossim-server > /dev/null 2>&1); [[ $? == 0 ]] && echo Server || echo Sensor-only; sed '/Connected to ALIENVAULT-SERVER/q' /var/log/alienvault/agent/agent.log  | grep "ERROR" | grep "Can't connect to server, retrying" | wc -l; sed '/Connected to ALIENVAULT-SERVER/q' /var/log/alienvault/agent/agent.log | grep -v "connecting to server" | grep -v "connect to server"; sed -n '/Connected to ALIENVAULT-SERVER/,$ p' /var/log/alienvault/agent/agent.log
 raw_limit=2000
 
-[Number of server connection errors before connecting to server]
-pattern=^(\d)$
+[Verify number of server connection errors before connecting to server (server profile included)]
+pattern=Server\n^(\d+)$
 conditions=@int@:<10
-warning=Too many connection errors found before connecting to server
-advice=It is necessary for the agent to establish a correct connection with a server
+fail_if_empty=False
+severity=Low
+warning=Too many agent connection errors found before connecting to a server
+advice=Make sure the sensor is connected to a proper server
+
+[Verify number of server connection errors before connecting to server (sensor-only profile)]
+pattern=Sensor-only\n^(\d+)$
+conditions=@int@:<720
+fail_if_empty=False
+severity=Low
+warning=Too many agent connection errors found before connecting to a server 
+advice=Make sure the sensor is connected to a proper server
 
 [Errors in agent.log]
 pattern=Alienvault\-Agent\[ERROR\]\:\s(.*)$

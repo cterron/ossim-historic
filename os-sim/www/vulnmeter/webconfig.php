@@ -161,9 +161,18 @@ else if( $action == "create" ) // Create credentials
 						            
 			if ( @move_uploaded_file( $_FILES['public_key']['tmp_name'], $tmp_public_key) !== false )
             {
-				exec("ssh-keygen -lf $tmp_public_key", $arr_out);
-			
-				if ( @filesize($tmp_public_key)==0 || preg_match("/is not a public key/", implode(" ", $arr_out)) ) {
+                try
+                {
+                    $arr_out = Util::execute_command("ssh-keygen -lf ?", array($tmp_public_key), 'array');
+                }
+                catch (Exception $e)
+                {
+                    // When error, the execution is not giving details for security reasons
+                    $arr_out = FALSE;
+                }
+			    
+				if ( @filesize($tmp_public_key)==0 || $arr_out === FALSE )
+				{
 					$error_message .= _("A valid public key is required")."<br/>";
 					unlink($tmp_public_key);
 				}

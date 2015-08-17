@@ -434,7 +434,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO JAVA - docume
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Revoked Adobe Code Signing Certificate Seen"; flow:established,to_client; content:"|30 82|"; content:"|a0 03 02 01 02 02 10 15 e5 ac 0a 48 70 63 71 8e 39 da 52 30 1a 04 88 30 0d 06 09 2a 86 48 86 f7 0d 01 01 05 05 00|"; distance:6; within:38; content:"|1e 17 0d|101215000000Z|17 0d|121214235959Z0"; distance:184; within:32; content:"Adobe Systems Incorporated"; distance:66; within:26; reference:url,www.adobe.com/support/security/advisories/apsa12-01.html; classtype:policy-violation; sid:2015743; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO EXE IsDebuggerPresent (Used in Malware Anti-Debugging)"; flow:established,to_client;  flowbits:isset,ET.http.binary; content:"IsDebuggerPresent"; classtype:misc-activity; sid:2015744; rev:2;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO EXE IsDebuggerPresent (Used in Malware Anti-Debugging)"; flow:established,to_client;  flowbits:isset,ET.http.binary; content:"IsDebuggerPresent"; content:!"|0d 0a|x-avast"; http_header; classtype:misc-activity; sid:2015744; rev:3;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO EXE CheckRemoteDebuggerPresent (Used in Malware Anti-Debugging)"; flow:established,to_client; file_data; flowbits:isset,ET.http.binary; content:"CheckRemoteDebuggerPresent"; classtype:misc-activity; sid:2015745; rev:1;)
@@ -581,7 +581,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET INFO Generic H
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Generic HTTP EXE Upload Outbound"; flow:established,to_server; content:"POST"; http_method; nocase; content:"MZ"; http_client_body; content:"|00 00 00 00|"; http_client_body; distance:0; content:"PE|00 00|"; http_client_body; fast_pattern; distance:0; classtype:misc-activity; sid:2016775; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a *.pw domain"; flow:to_server,established; content:".pw"; nocase; fast_pattern; http_header; content:"|0d 0a|"; http_header; within:8; pcre:"/^Host\x3a[^\r\n]+?\.pw(\x3a\d{1,5})?\r$/Hmi"; classtype:bad-unknown; sid:2016777; rev:10;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a *.pw domain"; flow:to_server,established; content:".pw"; nocase; fast_pattern; http_header; content:"|0d 0a|"; http_header; within:8; content:!"|20|u.pw|0d 0a|"; http_header; pcre:"/^Host\x3a[^\r\n]+?\.pw(\x3a\d{1,5})?\r$/Hmi"; classtype:bad-unknown; sid:2016777; rev:11;)
 
 #
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DNS Query to a *.pw domain - Likely Hostile"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|02|pw|00|"; fast_pattern; nocase; distance:0; content:!"|01|u|02|pw|00|"; nocase; classtype:bad-unknown; sid:2016778; rev:4;)
@@ -1016,7 +1016,7 @@ alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO Session Traversal Uti
 alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO Session Traversal Utilities for NAT (STUN Binding Request obsolete rfc 3489 CHANGE-REQUEST attribute change IP flag true change port flag true)"; dsize:28; content:"|00 01 00 08|"; depth:4; content:"|00 03 00 04 00 00 00 06|"; fast_pattern; distance:16; within:8; threshold: type limit, track by_dst, count 1, seconds 120; reference:url,tools.ietf.org/html/rfc3489; classtype:protocol-command-decode; sid:2018907; rev:5;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Session Traversal Utilities for NAT (STUN Binding Response)"; content:"|01 01 00 44|"; depth:4; content:"|00 01 00 08|"; distance:16; within:4; reference:url,tools.ietf.org/html/rfc5389; classtype:protocol-command-decode; sid:2018908; rev:1;)
+alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Session Traversal Utilities for NAT (STUN Binding Response)"; content:"|01 01 00 44|"; depth:4; content:"|00 01 00 08|"; distance:16; within:4; threshold:type limit, track by_src, count 1, seconds 60; reference:url,tools.ietf.org/html/rfc5389; classtype:protocol-command-decode; sid:2018908; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO WinHttpRequest (flowbits no alert)"; flow:established,to_server; content:"WinHttp.WinHttpRequest"; http_header; fast_pattern; content:!".microsoft.com|0d 0a|"; http_header; content:!".qq.com|0d 0a|"; http_header; flowbits:set,et.WinHttpRequest; flowbits:noalert; classtype:trojan-activity; sid:2019821; rev:6;)
@@ -1026,4 +1026,40 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Microsoft Com
 
 #
 alert tcp $HOME_NET any -> 195.22.26.192/26 443 (msg:"ET INFO invalid.cab domain in SNI"; flow:established,to_server; content:"|0b|invalid.cab"; fast_pattern:only; flowbits:set,ET.invalid.cab; flowbits:noalert; classtype:misc-activity; sid:2020888; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Possible ThousandEyes User-Agent Outbound"; flow:established,to_server; content:"User-Agent|3a 20|Mozilla/5.0 AppleWebKit/999.0 (KHTML, like Gecko) Chrome/99.0 Safari/999.0|0d 0a|"; http_header; fast_pattern:68,20; reference:url,thousandeyes.com; classtype:misc-activity; sid:2021025; rev:1;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET INFO Possible ThousandEyes User-Agent Inbound"; flow:established,to_server; content:"User-Agent|3a 20|Mozilla/5.0 AppleWebKit/999.0 (KHTML, like Gecko) Chrome/99.0 Safari/999.0|0d 0a|"; http_header; fast_pattern:68,20; reference:url,thousandeyes.com; classtype:misc-activity; sid:2021026; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M1 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|1"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x201\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021067; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M2 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|2"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x202\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021068; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M3 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|3"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x203\d{0,1}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021069; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M4 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|4"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x204\d{0,1}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021070; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M5 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|5"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x205\d{0,1}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021071; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M6 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|6"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x206\d{0,1}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021072; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M7 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|7"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x207\d{0,1}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021073; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M8 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|8"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x208\d{0,1}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021074; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad Host M9 (noalert)"; flowbits:set,http.dottedquadhost; flowbits:noalert; flow:to_server,established; content:"Host|3a 20|9"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x209\d{0,1}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r$/Hm"; classtype:bad-unknown; sid:2021075; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Dotted Quad Host MZ Response"; flow:established,to_client; flowbits:isset,http.dottedquadhost; file_data; content:"MZ"; within:2; content:"PE|00 00|"; distance:0; classtype:bad-unknown; sid:2021076; rev:1;)
 

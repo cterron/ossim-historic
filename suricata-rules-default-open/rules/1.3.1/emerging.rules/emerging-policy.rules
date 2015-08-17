@@ -717,7 +717,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Myspace Log
 #by Kevin Ross
 #cleaned up distance use - duc
 #
-alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET POLICY Nessus Vulnerability Scanner Plugins Update"; flow:to_client,established; content:"plugins.nessus.org"; content:"https|3a|//www.thawte.com/repository/index.html"; offset:432; depth:88; reference:url,www.nessus.org/nessus/; reference:url,www.nessus.org/plugins/; reference:url,doc.emergingthreats.net/2009706; classtype:misc-activity; sid:2009706; rev:5;)
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET POLICY Nessus Vulnerability Scanner Plugins Update"; flow:to_client,established; content:"plugins.nessus.org"; content:"https|3a|//www.thawte.com/repository/index.html"; offset:432; depth:88; reference:url,www.nessus.org/nessus/; reference:url,www.nessus.org/plugins/; reference:url,doc.emergingthreats.net/2009706; classtype:policy-violation; sid:2009706; rev:6;)
 
 #by Will Metcalf, Netflix on demand UA
 #
@@ -1577,7 +1577,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Data POST to an im
 #by Jaime Blasco, updates by evilghost
 #these sigs are intended to catch post data to images. This is suspicious and often trojan or spyware
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Data POST to an image file (jpg)"; flow:to_server,established; content:"POST"; http_method; content:".jpg"; http_uri; pcre:"/\.jpg$/U"; pcre:"/POST\s[^\r\n]+?\.jpg HTTP\/1\./"; reference:url,doc.emergingthreats.net/2010067; classtype:trojan-activity; sid:2010067; rev:9;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Data POST to an image file (jpg)"; flow:to_server,established; content:"POST"; http_method; content:".jpg"; http_uri; content:!"upload.wikimedia.org"; http_uri; pcre:"/\.jpg$/U"; reference:url,doc.emergingthreats.net/2010067; classtype:trojan-activity; sid:2010067; rev:10;)
 
 #by Jaime Blasco, updates by evilghost
 #these sigs are intended to catch post data to images. This is suspicious and often trojan or spyware
@@ -2856,4 +2856,10 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 #
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (wh47f2as19.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|wh47f2as19|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020869; rev:1;)
+
+#
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Exe32Pack Packed Executable Download"; flow:established,to_client; file_data; content:"Packed by exe32pack"; content:"SteelBytes All rights reserved"; distance:0; reference:md5,93be88ad3816c19d74155f8cd3aae1d2; classtype:policy-violation; sid:2020914; rev:2;)
+
+#
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Petite Packed Binary Download"; flow:to_client,established; flowbits:isnotset,ET.http.binary; file_data; content:"MZ"; within:2; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; content:"|43 6F 6D 70 72 65 73 73 65 64 20 62 79 20 50 65 74 69 74 65 20 28 63 29 31 39 39 39 20 49 61 6E 20 4C 75 63 6B 2E 00 00|"; distance:-44; flowbits:set,ET.http.binary; reference:md5,fa2c0e8b486c879f4baee1d5bebdf0a2; classtype:trojan-activity; sid:2020973; rev:5;)
 

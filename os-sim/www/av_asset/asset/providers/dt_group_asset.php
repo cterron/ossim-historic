@@ -94,7 +94,6 @@ try
     //Filters
     $filters  = array();
     $where    = array();
-    $tables   = 'host_group_reference hr';
 
     $filters['order_by'] = $order . ' ' . $torder;
     $filters['limit']    = $from . ', ' . $maxrows;
@@ -113,7 +112,7 @@ try
     $filters['where'] = (count($where) > 0) ? implode(' AND ', $where) : '';
 
     // Get Groups
-    list($groups, $total) = Asset_group::get_list($conn, $tables, $filters);
+    list($groups, $total) = Asset_group::get_list($conn, '', $filters);
 
     $results = array();
 

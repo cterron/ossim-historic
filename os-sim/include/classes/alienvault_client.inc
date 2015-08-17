@@ -50,9 +50,9 @@
 * <pre>
 * <code>
 * Example usage:
-* 
+*
 * $client = new Alienvault_client('admin', '127.0.0.1', 40011);
-* 
+*
 * </code>
 * </pre>
 *
@@ -74,25 +74,25 @@ class Alienvault_client
     * @access private
     * @var object
     *
-    */ 
+    */
     private $conn;
-    
+
     /**
     * providers list
     * @access private
     * @var object
     *
-    */  
+    */
     private $providers;
-    
+
     /**
     * common url to do the request
     * @access private
     * @var string
     *
-    */ 
+    */
     private $common_url;
-    
+
     /**
     * The class constructor
     *
@@ -102,12 +102,12 @@ class Alienvault_client
     * @param string $password Rest API password
     * @param string $host Rest server IP
     * @param string $port Rest server listening port
-    * 
+    *
     */
     public function __construct($username = NULL, $host = NULL, $port = NULL, $log = FALSE)
     {
         $this->conn       = new Alienvault_conn($username, $host, $port, $log);
-        
+
         $this->providers  = new Provider_registry();
 
         $this->common_url = '';
@@ -123,8 +123,8 @@ class Alienvault_client
      */
     public function get_error_message($response)
     {
-        $error_msg = _('Unknown error - Operation cannot be completed');
-        
+        $error_msg = _('API error - Operation cannot be completed');
+
         if (!empty($response))
         {
             if ($response['message'] != '')
@@ -207,7 +207,7 @@ class Alienvault_client
 
 
     /**
-     * This function returns "Sensor" provider 
+     * This function returns "Sensor" provider
      *
      * @return "Sensor" object provider
      */
@@ -242,6 +242,19 @@ class Alienvault_client
         $this->providers->set($this->conn, 'jobs', $this->common_url.'/job');
 
         return $this->providers->get('jobs');
+    }
+
+
+    /**
+     * This function returns "Nmap" provider
+     *
+     * @return "Nmap" object provider
+     */
+    public function nmap()
+    {
+        $this->providers->set($this->conn, 'nmap', $this->common_url.'/nmap');
+
+        return $this->providers->get('nmap');
     }
 
 

@@ -63,14 +63,14 @@ try
     $db   = new Ossim_db();
     $conn = $db->connect();
 
-    if (isset($_POST['asset_id']) && isset($_POST['asset_type']))
+    if ($asset_id && $asset_type)
     {
         if (!array_key_exists($asset_type, $asset_types))
         {
             Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Invalid Asset Type'));
         }
 
-        $class_name = $asset_types[$_POST['asset_type']];
+        $class_name = $asset_types[$asset_type];
 
         // Check Asset Permission
         if (method_exists($class_name, 'is_allowed') && !$class_name::is_allowed($conn, $asset_id))
@@ -88,7 +88,7 @@ try
         {
             $alarm_level = 0;
         }        
-        elseif ($alarms_risk >= 8)  //High Alarms
+        elseif ($alarms_risk > 5)  //High Alarms
         {
             $alarm_level = 3;
         }
@@ -120,7 +120,7 @@ switch ($alarm_level)
     break;
     
     case 3:
-        $tooltip = _("%s contains alarms with risk greater than 6.");
+        $tooltip = _("%s contains alarms with risk greater than 5.");
     break;
     
     default:

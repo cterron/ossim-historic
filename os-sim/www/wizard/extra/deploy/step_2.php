@@ -37,7 +37,7 @@ Session::useractive();
 
 if ($step != 2)
 {
-    $msg = _('An unexpected error happened. Try again later');
+    $msg = _('An error happened, the step is wrong. Try again later');
     
     include 'step_error.php';
     

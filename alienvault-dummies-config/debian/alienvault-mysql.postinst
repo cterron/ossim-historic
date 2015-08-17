@@ -43,6 +43,7 @@ stop_mysql() {
             echo "Stopping MySQL..."
             killall -15 mysqld > /dev/null 2>&1
         fi
+        sleep 10
         retry=$(( $retry + 1 ))
     done
 
@@ -63,9 +64,9 @@ start_mysql() {
             /etc/init.d/mysql start
         else
             echo "Starting MySQL..."
-            /usr/bin/mysqld_safe > /dev/null 2>&1 &
+            LD_LIBRARY_PATH="/usr/lib/alienvault/percona_toku" /usr/bin/mysqld_safe > /dev/null 2>&1 &
         fi
-        sleep 5
+        sleep 10
         mysqlcheck -h $db_ip -p$db_pass -u $db_user --auto-repair mysql 2>> /tmp/err
         retry=$(( $retry + 1 ))
     done
@@ -219,11 +220,14 @@ EOF
     fi
 
     # Is MySQL running?
-    MYSQL_NOT_RUNNING=$(mysqladmin ping 2>&1 | grep "mysqld is running" || true)
+    start_mysql
+
+    mysqladmin ping > /dev/null 2>&1
+    IS_MYSQL_RUNNING=$?
 
     MD5_POS=`md5sum "$MYSQL_CONF_FILE" | awk '{print $1}'`
 
-    if [ "$MD5_PRE" != "$MD5_POS" ] && [ -z "$MYSQL_NOT_RUNNING" ]; then
+    if [ "$MD5_PRE" != "$MD5_POS" ] && [ $IS_MYSQL_RUNNING -eq 0 ]; then
         # Set MySQL to restart.
         RESTART_MYSQL=1
     fi
@@ -233,10 +237,12 @@ set_grants() {
     # If exists ossim_setup.conf_last set the last config from it
     # If not exists set the last config equals to actual config
     # If exists and the connection not works set the last config equals to actual config
+    start_mysql
 
-    MYSQL_NOT_RUNNING=$(mysqladmin ping 2>&1 | grep "mysqld is running" || true)
+    mysqladmin ping > /dev/null 2>&1
+    IS_MYSQL_RUNNING=$?
 
-    if [ -z "$MYSQL_NOT_RUNNING" ]; then
+    if [ $IS_MYSQL_RUNNING -eq 0 ]; then
         set +e
 
         echo "Setting DB grants..."
@@ -267,7 +273,7 @@ set_grants() {
         fi
 
         mysql -uroot -p$last_pass -e \
-        "UPDATE mysql.user SET host=LOWER(host);
+        "UPDATE IGNORE mysql.user SET host=LOWER(host);
         GRANT USAGE ON *.* TO root@'$last_framework_ip';
         DROP USER root@'$last_framework_ip';
         GRANT USAGE ON *.* TO ocs@'$last_framework_ip';
@@ -377,6 +383,7 @@ case "$1" in
         do
             case "$trigger" in
                 alienvault-mysql-set-default-config)
+                    CHANGED_IF_GRANTS=1
                     SET_DEFAULT_CONFIG=1
                     ;;
                 alienvault-config-server-server-ip)
@@ -390,7 +397,7 @@ case "$1" in
                     CHANGED_IF_GRANTS=1
                     ;;
                 alienvault-config-ha-ha-heartbeat-start|alienvault-config-ha-ha-role)
-                    configure_mysql
+                    SET_DEFAULT_CONFIG=1
                     ;;
                 alienvault-mysql-set-grants|alienvault-config-database-pass|alienvault-config-system-hostname|alienvault-config-system-admin-ip)
                     CHANGED_IF_GRANTS=1

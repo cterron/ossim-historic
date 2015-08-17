@@ -183,7 +183,7 @@ switch($action)
         catch(Exception $e)
         {
             $data['status']  = 'error';
-            $data['data']    = _('Unknown error - Operation cannot be completed');
+            $data['data']    = _( $e->getMessage() );
         }        
     
     break;

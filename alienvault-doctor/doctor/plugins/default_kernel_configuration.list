@@ -43,8 +43,12 @@ kernel.unknown_nmi_panic = 0
 kernel.nmi_watchdog = 0
 kernel.panic_on_unrecovered_nmi = 0
 kernel.panic_on_io_nmi = 0
+**** USM Enterprise Logger ****
 kernel.bootloader_type = 112
 kernel.bootloader_version = 0
+*******************************
+kernel.bootloader_type = 114
+kernel.bootloader_version = 2
 kernel.kstack_depth_to_print = 12
 kernel.io_delay_type = 0
 kernel.randomize_va_space = 2
@@ -491,7 +495,9 @@ net.ipv4.tcp_abc = 0
 net.ipv4.tcp_mtu_probing = 0
 net.ipv4.tcp_base_mss = 512
 net.ipv4.tcp_workaround_signed_windows = 0
+**** USM Remote Sensor ****
 net.ipv4.tcp_dma_copybreak = 4096
+***************************
 net.ipv4.tcp_dma_copybreak = 262144
 net.ipv4.tcp_slow_start_after_idle = 1
 net.ipv4.tcp_available_congestion_control = cubic reno

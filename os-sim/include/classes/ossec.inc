@@ -385,7 +385,7 @@ class Ossec
         {
             $pattern = "<[[:space:]]*include[[:space:]]*>av_.*<[[:space:]]*/[[:space:]]*include[[:space:]]*>";
 
-            exec("egrep \"$pattern\" $conf_file", $rules);
+            $rules = Util::execute_command("egrep ? ?", array($pattern, $conf_file), $rules, 'array');
 
             if (is_array($rules) && !empty($rules))
             {

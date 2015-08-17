@@ -56,11 +56,11 @@ if (isset($_GET['get_data']))
 	//Export a filtered list
 	
 	$filters = array();
-	$user    = Session::get_session_user();
+	$session = session_id();
 	
     $tables  = ', user_component_filter hc';
     $filters = array(
-        'where'    => "hc.asset_id=host.id AND hc.asset_type='asset' AND hc.login = '$user'",
+        'where'    => "hc.asset_id=host.id AND hc.asset_type='asset' AND hc.session_id = '$session'",
         'order_by' => 'host.hostname ASC'
     );
         

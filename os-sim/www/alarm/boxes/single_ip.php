@@ -104,7 +104,7 @@ if (is_array($net) && !empty($net))
 	
 	if ($net['icon'] != '')
     {
-		$location = "<img src='data:image/png;base64,".base64_encode($net['icon'])."' border='0'> ";
+		$location = "<img class='asset_icon w16' src='data:image/png;base64,".base64_encode($net['icon'])."' border='0'> ";
 	}
 
 	$location .= '<strong>'.strtoupper($net['name']).'</strong> ('.$net['ips'].')';

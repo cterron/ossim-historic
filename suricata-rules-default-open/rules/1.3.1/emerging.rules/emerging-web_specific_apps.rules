@@ -20903,3 +20903,9 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SPECIFIC_APPS FancyBo
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Possible Netscaler SQLi bypass (cookie)"; flow:established,to_server; content:"Content-Type|3a 20|application"; http_raw_header; content:"Content-Type|3a 20|"; distance:0; http_raw_header; pcre:"/(?:(?:S(?:HOW (?:C(?:UR(?:DAT|TIM)E|HARACTER SET)|(?:VARI|T)ABLES)|ELECT (?:FROM|USER))|U(?:NION SELEC|PDATE SE)T|DELETE FROM|INSERT INTO)|S(?:HOW.+(?:C(?:HARACTER.+SET|UR(DATE|TIME))|(?:VARI|T)ABLES)|ELECT.+(?:FROM|USER))|U(?:NION.+SELEC|PDATE.+SE)T|DELETE.+FROM|INSERT.+INTO)/Cmi";  reference:url,seclists.org/fulldisclosure/2015/Mar/95; classtype:attempted-dos; sid:2020733; rev:2;)
 
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Vulnerable Magento Adminhtml Access"; flow:established,to_server; content:"Adminhtml"; http_uri; nocase; content:!"|2f|admin|2f|"; nocase; http_uri; reference:url,blog.checkpoint.com/2015/04/20/analyzing-magento-vulnerability; classtype:attempted-admin; sid:2021005; rev:2;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS WP Jetpack/Twentyfifteen Possible XSS Request"; flow:to_server,established; content:"/genericons/example.html"; http_uri; fast_pattern:only; pcre:"/\/genericons\/example\.html$/U"; reference:url,blog.sucuri.net/2015/05/jetpack-and-twentyfifteen-vulnerable-to-dom-based-xss.html; classtype:web-application-attack; sid:2021062; rev:2;)
+

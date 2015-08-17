@@ -120,7 +120,7 @@ switch($order)
 $maxrows  = ($maxrows > 50) ? 50 : $maxrows;
 $torder   = ($torder == 1) ? 'ASC' : 'DESC';
 $to       = $maxrows;
-$user     = Session::get_session_user();
+$session  = session_id();
 
 //Get list params
 $filters  = array();
@@ -133,7 +133,7 @@ $filters['where']    = '';
 if (!$all_list)
 {
     $tables = ', user_host_filter hf';
-    $filters['where'] = "hf.asset_id=host.id AND hf.login='$user'";
+    $filters['where'] = "hf.asset_id=host.id AND hf.session_id='$session'";
 }
 
 try

@@ -55,9 +55,7 @@ foreach($port_list as $port)
     $ports[$port->get_port_number()." - ".$port->get_protocol_name()] = $port->get_service();
 }
 
-
-$_services = shell_exec("egrep 'tcp|udp' /etc/services | awk '{print $1 $2 }'");
-$lines     = preg_split("/[\n\r]/", $_services);
+$lines = Util::execute_command("egrep 'tcp|udp' /etc/services | awk '{print $1 $2 }'", FALSE, 'array');
 
 foreach($lines as $line)
 {

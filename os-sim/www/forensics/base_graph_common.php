@@ -585,14 +585,17 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
             ErrorMessage("ERROR: with \$IP2CC = \"" . $IP2CC . "\"<BR>\n");
             return 0;
         }
-        $cmd = $IP2CC . " " . $address_with_dots;
-        unset($lastline);
+        $cmd = $IP2CC . " ?";
+        
         unset($output);
-        unset($rv);
-        $lastline = exec($cmd, $output, $rv);
-        if ($rv != 0) {
+        
+        try
+        {
+            $output = Util::execute_command($cmd, array($address_with_dots), 'array');
+        }
+        catch (Exception $e)
+        {
             ErrorMessage("ERROR with " . $cmd . "<BR>\n");
-            print "\$rv = " . $rv . "<BR>\n";
             print_r($output);
             return 0;
         }

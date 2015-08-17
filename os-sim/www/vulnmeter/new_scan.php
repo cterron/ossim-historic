@@ -277,14 +277,14 @@ if (!$limit_msg && in_array ($action, array ('create_scan', 'save_scan')))
         
         if ($type == 'asset' || $type == 'network')
         {
-            $params = array(Session::get_session_user(), Session::get_session_user());
+            $params = array(session_id());
         
             if ($type == 'asset')
             {
                 $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
 
                 $sql = "SELECT hex(hi.host_id) as id, INET6_NTOA(hi.ip) as ip FROM user_component_filter uf, host h, host_ip hi
-                WHERE uf.login=? AND h.id=hi.host_id AND uf.asset_id=hi.host_id AND uf.asset_type='asset' $host_perms_where";
+                WHERE uf.session_id=? AND h.id=hi.host_id AND uf.asset_id=hi.host_id AND uf.asset_type='asset' $host_perms_where";
 
             }
             else
@@ -292,7 +292,7 @@ if (!$limit_msg && in_array ($action, array ('create_scan', 'save_scan')))
                 $net_perms_where  = Asset_net::get_perms_where('n.', TRUE);
         
                 $sql = "SELECT hex(n.id) as id, nc.cidr as ip FROM user_component_filter uf, net n, net_cidrs nc
-                WHERE uf.login=? AND uf.asset_id=n.id AND n.id=nc.net_id AND uf.asset_type='network' $net_perms_where";
+                WHERE uf.session_id=? AND uf.asset_id=n.id AND n.id=nc.net_id AND uf.asset_type='network' $net_perms_where";
             }
             
             $rs = $conn->Execute($sql, $params);
@@ -317,9 +317,9 @@ if (!$limit_msg && in_array ($action, array ('create_scan', 'save_scan')))
             // load assets groups
             
             $sql = "SELECT hex(uf.asset_id) as gid FROM user_component_filter uf
-                    WHERE uf.login=? AND uf.asset_type='group'";
+                    WHERE uf.session_id=? AND uf.asset_type='group'";
             
-            $params = array(Session::get_session_user());
+            $params = array(session_id());
             
             $rs = $conn->Execute($sql, $params);
     
@@ -337,9 +337,9 @@ if (!$limit_msg && in_array ($action, array ('create_scan', 'save_scan')))
             
             // load group assets
             
-            $sql = "SELECT hex(hi.host_id) as id, INET6_NTOA(hi.ip) as ip FROM user_component_filter uf, host h, host_ip hi, host_group_reference hgr WHERE h.id=hi.host_id AND uf.login=? AND uf.asset_id=hgr.host_group_id AND hgr.host_id=hi.host_id AND uf.asset_type='group' $host_perms_where";
+            $sql = "SELECT hex(hi.host_id) as id, INET6_NTOA(hi.ip) as ip FROM user_component_filter uf, host h, host_ip hi, host_group_reference hgr WHERE h.id=hi.host_id AND uf.session_id=? AND uf.asset_id=hgr.host_group_id AND hgr.host_id=hi.host_id AND uf.asset_type='group' $host_perms_where";
             
-            $params = array(Session::get_session_user());
+            $params = array(session_id());
             
             $rs = $conn->Execute($sql, $params);
     

@@ -149,11 +149,13 @@ $layout      = load_layout($name_layout, $category);
 				notify('<?php echo _("Reference has been updated successfully")?>', 'nf_success');
 				<?php 
 			}
-			elseif ( GET('msg') == "unknown_error" ) 
+			elseif ( GET('msg') == "error" ) 
 			{ 
 				?>
-				notify('<?php echo _("Unknown error - Operation cannot be completed")?>', 'nf_error');
-				<?php 
+				notify('<?php echo  Util::htmlentities($_SESSION['av_latest_error']) ?>', 'nf_error');
+				<?php
+    				
+                unset($_SESSION['av_latest_error']);
 			} 			
 			?>
 			

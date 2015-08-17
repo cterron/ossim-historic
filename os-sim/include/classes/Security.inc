@@ -155,8 +155,8 @@ define('OSS_MAIL_MESSAGE', OSS_ALPHA . OSS_PUNC . OSS_SCORE . OSS_AT . OSS_NL . 
 define('OSS_MAIL_USER', 'regex:^[a-zA-Z0-9_\-\.+@]+$');
 define('OSS_BASE64', 'regex:[a-zA-Z0-9\+\=\/]+');
 define('OSS_TELEPHONE', 'regex:[+\-\s\d]+');
-define('OSS_TIMING_TEMPLATE', 'regex:\-T[0-5]');
-define('OSS_ERROR', _("Unknown error")); // default error message
+define('OSS_TIMING_TEMPLATE', 'regex:T[0-5]');
+define('OSS_ERROR', _("Validation error")); // default error message
 define('OSS_SQL', 'illegal:(select |union |update |delete |insert)');
 define('OSS_URL_ADDRESS', 'func:valid_url');
 define('OSS_FILENAME', 'func:valid_filename');

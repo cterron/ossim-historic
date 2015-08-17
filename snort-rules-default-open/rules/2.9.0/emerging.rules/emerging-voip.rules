@@ -105,3 +105,6 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP Modified Sipvicious 
 #
 alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP Possible Inbound VOIP Scan/Misuse With User-Agent Zoiper"; content:"|0d 0a|User-Agent|3A| Zoiper"; nocase; fast_pattern:only; threshold: type limit, count 1, seconds 60, track by_src; reference:url,blog.sipvicious.org/2010/12/11-million-euro-loss-in-voip-fraud-and.html; classtype:attempted-recon; sid:2012297; rev:1;)
 
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP Possible Misuse Call from Cisco ooh323"; flow:to_server,established; content:"|28 06|cisco|00|"; offset:14; depth:8; content:"|b8 00 00 27 05|ooh323|06|"; distance:0; within:60; reference:url,videonationsltd.co.uk/2015/04/h-323-cisco-spam-calls/; classtype:misc-attack; sid:2021066; rev:1;)
+

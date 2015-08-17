@@ -277,7 +277,7 @@ $conn = $db->connect();
 
 //Default values for the response.
 $response['error'] = TRUE ;
-$response['msg']   = _('Unknown Error');
+$response['msg']   = _('Error');
 
 //checking if it is an ajax request
 if($action != '' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
@@ -296,7 +296,7 @@ if($action != '' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SER
     	if ($filters === FALSE && $action != 'restart_search' && $action != 'cancel_filter_list')
     	{
         	$response['error'] = TRUE ;
-        	$response['msg']   = _('An Unexpected Error Occurred. Please Restart the Search');
+        	$response['msg']   = _('Sorry, operation was not completed due to an error when processing the request. Please Restart the Search');
 
         	echo json_encode($response);
 

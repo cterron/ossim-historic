@@ -36,7 +36,7 @@ case "$1" in
 
     stop)
     
-    	echo "Stoping Open Source Security Information Management: OSSIM"
+    	echo "Stopping Open Source Security Information Management: OSSIM"
     	if [ "`pidof $OSSIM_SERVER`" ] ; then
 	
             kill -TERM `pidof $OSSIM_SERVER`

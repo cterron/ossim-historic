@@ -3664,7 +3664,7 @@ class Incident
 
     public static function insert_incident_tag($conn, $incident_id, $tag_id)
     {
-        $query  = "INSERT INTO incident_tag(tag_id, incident_id) VALUES (?,?)";
+        $query  = "INSERT IGNORE INTO incident_tag(tag_id, incident_id) VALUES (?,?)";
         $params = array($tag_id, $incident_id);
 
         if (!$conn->Execute($query, $params))

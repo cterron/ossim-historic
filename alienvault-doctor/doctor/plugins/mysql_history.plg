@@ -16,7 +16,7 @@ warning=Data in the DB has been modified manually
 advice=Adding, updating or deleting data from the DB manually is not supported. Please check where this changes come from
 
 [DB schema manually modified]
-pattern=((?i)(?:create|drop).+)
+pattern=(^(?:(?i)(?:(?<!show)(?:\\040|\s)*(?:create|drop).+))|;[^\n]?(?:\\040|\s)*(?:(?i)(?:(?:create|drop).+)))
 conditions=@string@:==""
 fail_if_empty=False
 warning=Someone has created or dropped tables in the database

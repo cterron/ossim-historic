@@ -38,19 +38,6 @@ Session::logcheck('environment-menu', 'PolicyHosts');
 
 
 /****************************************************
- **************** Configuration Data ****************
- ****************************************************/
-
-$conf = $GLOBALS['CONF'];
-
-if (!$conf)
-{
-    $conf = new Ossim_conf();
-    $GLOBALS['CONF'] = $conf;
-}
-
-
-/****************************************************
  ******************** Scan Data *********************
  ****************************************************/
 
@@ -58,30 +45,16 @@ if (!$conf)
 $db    = new ossim_db();
 $conn  = $db->connect();
 
-//Scan results
 
-$scan         = new Scan();
-$scan_results = $scan->get_results();
+$ctx = POST('sensor_ctx');
 
-$sensor = $scan_results['sensor'];
+ossim_valid($ctx, OSS_HEX,   'illegal:' . _('CTX'));
 
-
-if(!empty($sensor['ctx']))
-{
-    $ctx = $sensor['ctx'];
-}
-else
+if (ossim_error())
 {
     echo ossim_error(_('Error! Scan results not found'));
     exit();
 }
-
-/*
-echo '<pre style="white-space: pre;">';
-    print_r($_SESSION['_scan']);
-echo '</pre>';
-*/
-
 
 //All sensors
 
@@ -107,9 +80,9 @@ if (ossim_error())
     echo ossim_error();
     exit();
 }
-        
+
 $ips = array();
-   
+
 for ($i = 0; $i < $num_ips; $i++)
 {
     if (ossim_valid(POST("ip_$i"), OSS_IP_ADDR, 'illegal:' . _('IP address')))
@@ -131,7 +104,7 @@ for ($i = 0; $i < $num_ips; $i++)
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
         <meta http-equiv="Pragma" content="no-cache"/>
-        
+
         <script type="text/javascript" src="../js/jquery.min.js"></script>
         <script type="text/javascript" src="../js/jquery-ui.min.js"></script>
         <script type="text/javascript" src="../js/notification.js"></script>
@@ -178,7 +151,7 @@ for ($i = 0; $i < $num_ips; $i++)
             }
 
             #scan_container table
-            { 
+            {
                 border-collapse: collapse;
                 border-spacing: 0px;
                 border: none;
@@ -203,7 +176,7 @@ for ($i = 0; $i < $num_ips; $i++)
                 width: 100%;
             }
 
-            #t_container td 
+            #t_container td
             {
                 text-align: left;
                 vertical-align: top;
@@ -249,7 +222,7 @@ for ($i = 0; $i < $num_ips; $i++)
             {
                 width: 60px !important;
             }
-            
+
             #descr
             {
                 margin-bottom: 15px;
@@ -263,7 +236,7 @@ for ($i = 0; $i < $num_ips; $i++)
 
 
             /* Scan Summary*/
-            
+
             #summary_container
             {
                 width:  800px;
@@ -275,19 +248,19 @@ for ($i = 0; $i < $num_ips; $i++)
             {
                 color: #D8000C !important;
             }
-            
+
             .warning
             {
                 color: #9F6000 !important;
             }
-            
+
             .success
             {
                 color: #4F8A10 !important;
             }
-            
+
             #summary_container #t_sm_container
-            { 
+            {
                 border-collapse: collapse;
                 border: none;
                 background: none;
@@ -299,13 +272,13 @@ for ($i = 0; $i < $num_ips; $i++)
             {
                 width: 40px;
             }
-            
+
             #t_sm_container .td_details img
             {
                 cursor: pointer;
             }
-            
-            .dataTables_wrapper .dt_header div.dt_title 
+
+            .dataTables_wrapper .dt_header div.dt_title
             {
                 top:6px;
                 left: 0px;
@@ -313,43 +286,43 @@ for ($i = 0; $i < $num_ips; $i++)
                 margin: auto;
                 text-align: center;
             }
-            
+
             .details_info
             {
                 display:none;
             }
-            
+
             .host_details_w, .host_details_w:hover
             {
                color: #9F6000 !important;
                background-color: #FEEFB3 !important;
             }
-            
+
             .table_data  > tbody > tr:hover > td.host_details_w
             {
-                background-color: #FEEFB3 !important; 
+                background-color: #FEEFB3 !important;
             }
-            
+
             .host_details_e, .host_details_e:hover
             {
                 background: #FFBABA !important;
                 color: #D8000C !important;
             }
-            
+
             .table_data  > tbody > tr:hover > td.host_details_e
             {
                 background: #FFBABA !important;
             }
 
             .tray_container
-            {   
+            {
                 border: 0px;
                 background-color: inherit;
                 position:relative;
                 height:100%;
                 margin: 2px 5px;
-            }      
-                      
+            }
+
             .tray_triangle
             {
                 position: absolute;
@@ -362,32 +335,32 @@ for ($i = 0; $i < $num_ips; $i++)
                 border-style: solid;
                 border-width: 7px;
             }
-            
+
             .tt_error
             {
                  border-color: transparent transparent #FFBABA transparent;
             }
-            
+
             .tt_warning
             {
                  border-color: transparent transparent #FEEFB3 transparent;
             }
-            
+
             .tray_container ul
             {
                 text-align: left;
                 padding: 10px 0px 10px 20px;
             }
-            
+
             .tray_container ul li
             {
                 text-align: left;
                 list-style-type: square;
                 color: inherit;
             }
-            
+
         </style>
-        
+
         <script type='text/javascript'>
 
 
@@ -401,7 +374,7 @@ for ($i = 0; $i < $num_ips; $i++)
                /***************************************************
                 *********************** Token *********************
                 ***************************************************/
-                
+
                 Token.add_to_forms();
 
 
@@ -430,14 +403,14 @@ for ($i = 0; $i < $num_ips; $i++)
 
                 ajax_validator = new Ajax_validator(av_config);
 
-                $('#send').click(function() { 
-                    
+                $('#send').click(function() {
+
                     var msg = "<?php echo _('The information in the inventory will be overwritten with the results of the active asset discovery. Would you like to continue?')?>";
-                    
+
                     if(confirm(msg))
                     {
                         if (ajax_validator.check_form() == true)
-                        {   
+                        {
                             $.ajax({
                                 type: "POST",
                                 url: 'save_scan.php',
@@ -446,7 +419,7 @@ for ($i = 0; $i < $num_ips; $i++)
 
                                     $('#av_info').html('');
 
-                                    show_loading_box('scan_container', '<?php echo _('Saving scanned hosts')?>...', '');
+                                    show_loading_box('scan_container', '<?php echo _('Saving scanned assets')?>...', '');
                                 },
                                 error: function(data){
 
@@ -456,10 +429,10 @@ for ($i = 0; $i < $num_ips; $i++)
                                     if (session.check_session_expired() == true)
                                     {
                                         session.redirect();
-                                        
+
                                         return;
-                                    }  
-                                    
+                                    }
+
                                     hide_loading_box();
 
                                     var config_nt = { content: av_messages['unknown_error'],
@@ -491,26 +464,26 @@ for ($i = 0; $i < $num_ips; $i++)
                                     hide_loading_box();
 
                                     $('body').html(data);
-                                    
+
                                     window.scrollTo(0,0);
                                 }
                             });
                         }
                     }
                 });
-                
-                
-                $('#cancel').click(function() { 
+
+
+                $('#cancel').click(function() {
                     $('.av_b_back').trigger('click');
                 });
-                
-                
-                
+
+
+
                /****************************************************
                 ********************** Tooltips ********************
                 ****************************************************/
-                
-                $(".info").tipTip({maxWidth: '380px'}); 
+
+                $(".info").tipTip({maxWidth: '380px'});
 
 
                /****************************************************
@@ -526,11 +499,11 @@ for ($i = 0; $i < $num_ips; $i++)
 
         </script>
     </head>
-    
+
     <body>
 
         <div class="c_back_button">
-            <input type='button' class="av_b_back" onclick="javascript:history.go(-1);"/> 
+            <input type='button' class="av_b_back" onclick="javascript:history.go(-1);"/>
         </div>
 
         <div id="av_info">
@@ -538,13 +511,13 @@ for ($i = 0; $i < $num_ips; $i++)
             if ($msg == 'saved')
             {
                 $config_nt = array(
-                    'content' => _('Hosts saved successfully'),
+                    'content' => _('Assets saved successfully'),
                     'options' => array (
                         'type'          => 'nf_success',
                         'cancel_button' => TRUE
                    ),
                     'style'   => 'width: 80%; margin: auto; text-align:center;'
-                ); 
+                );
 
                 $nt = new Notification('nt_1', $config_nt);
                 $nt->show();
@@ -555,13 +528,13 @@ for ($i = 0; $i < $num_ips; $i++)
         <div id="scan_container">
 
             <p>
-               <?php echo _("Please, fill these global properties about the hosts you've scanned");?>
+               <?php echo _("Please, fill these global properties about the assets you've scanned");?>
             </p>
 
             <div class="legend">
                 <?php echo _('Values marked with (*) are mandatory');?>
             </div>
-   
+
             <form method="POST" name="scan_form" id="scan_form" action="save_scan.php" enctype="multipart/form-data">
 
                 <?php
@@ -570,9 +543,9 @@ for ($i = 0; $i < $num_ips; $i++)
                     echo "<input type='hidden' class='vfield' name='ips[]' id='ip_$i' value='".$ips[$i]."'/>";
                 }
 
-                foreach ($_POST as $k => $v) 
+                foreach ($_POST as $k => $v)
                 {
-                    if(preg_match("/^fqdn/", $k) == TRUE) 
+                    if(preg_match("/^fqdn/", $k) == TRUE)
                     {
                         ?>
                         <input type="hidden" class='vfield' name="<?php echo Util::htmlentities($k) ?>" value="<?php echo Util::htmlentities($v) ?>"/>
@@ -580,15 +553,15 @@ for ($i = 0; $i < $num_ips; $i++)
                     }
                 }
                 ?>
-                
+
                 <table id="t_container">
-                    
+
                     <!-- Group name and Description labels-->
                     <tr>
                         <td class="td_left">
                             <label for="group_name"><?php echo _('Optional group name')?></label>
                         </td>
-                        
+
                         <td class="td_right">
                             <label for="descr"><?php echo _('Description')?></label>
                         </td>
@@ -600,7 +573,7 @@ for ($i = 0; $i < $num_ips; $i++)
                         <td class="td_left">
                             <input type="text" name="group_name" id="group_name" class='vfield'/>
                         </td>
-                        
+
                         <td class="td_right">
                             <textarea name="descr" id="descr" class="vfield"><?php echo $descr;?></textarea>
                         </td>
@@ -650,7 +623,7 @@ for ($i = 0; $i < $num_ips; $i++)
                             </table>
                         </td>
                     </tr>
-                    
+
 
                     <!-- Sensor labels -->
                     <tr>
@@ -658,8 +631,8 @@ for ($i = 0; $i < $num_ips; $i++)
                             <span class="s_label" id="sl_sboxs[]"><?php echo _('Sensors') . required();?></span>
                         </td>
                     </tr>
-                    
-                    
+
+
                     <!-- Sensors -->
                     <?php
                     $s_chks     = array();
@@ -667,7 +640,7 @@ for ($i = 0; $i < $num_ips; $i++)
 
                     //Current CTX
                     $c_ctx = $ctx;
-                    
+
                     if (empty($c_ctx) && !Session::is_pro())
                     {
                         $c_ctx = Session::get_default_ctx();
@@ -682,7 +655,7 @@ for ($i = 0; $i < $num_ips; $i++)
                                 'cancel_button' => FALSE
                             ),
                             'style'   => 'width: 80%; margin: 25px auto; text-align: left; font-size: 11px;'
-                        ); 
+                        );
 
                         $nt         = new Notification('nt_1', $config_nt);
                         $no_sensors = $nt->show(FALSE);
@@ -690,8 +663,8 @@ for ($i = 0; $i < $num_ips; $i++)
                     else
                     {
                         $i = 1;
-                        
-                        foreach($all_sensors as $s_id => $s_data) 
+
+                        foreach($all_sensors as $s_id => $s_data)
                         {
                             $s_name = $s_data['name'];
                             $s_ip   = $s_data['ip'];
@@ -708,10 +681,10 @@ for ($i = 0; $i < $num_ips; $i++)
                             $s_chks[] = '<input type="checkbox" name="sboxs[]" '.$s_chk_opt.' value="'.$s_id.'"/>'.$s_chk_label;
 
                             $i++;
-                        } 
+                        }
                     }
-                    ?>  
-                    
+                    ?>
+
                     <tr>
                         <td class="td_left" colspan="2">
                             <?php
@@ -750,10 +723,10 @@ for ($i = 0; $i < $num_ips; $i++)
                     </tr>
 
                 </table>
-            
+
             </form>
-            
+
         </div>
-    
+
     </body>
 </html>

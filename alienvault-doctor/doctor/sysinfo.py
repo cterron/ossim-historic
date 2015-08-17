@@ -130,44 +130,6 @@ class Sysinfo (object):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = proc.communicate()
 
-        # Find hardware profile.
-        available_hw_packages = ['alienvault-ami-usm-standard',
-                                 'alienvault-ami-aio-6x1gb',
-                                 'alienvault-ami-logger-standard',
-                                 'alienvault-ami-sensor-standard',
-                                 'alienvault-ami-sensor-remote',
-                                 'alienvault-vmware-usm-standard',
-                                 'alienvault-vmware-aio-6x1gb',
-                                 'alienvault-vmware-aio-6x1gb-lite',
-                                 'alienvault-vmware-logger-standard',
-                                 'alienvault-vmware-sensor-standard-6x1gb',
-                                 'alienvault-vmware-sensor-remote',
-                                 'alienvault-vmware-sensor-remote-lite',
-                                 'alienvault-hw-usm-standard',
-                                 'alienvault-hw-usm-enterprise',
-                                 'alienvault-hw-usm-database',
-                                 'alienvault-hw-logger-standard',
-                                 'alienvault-hw-logger-enterprise',
-                                 'alienvault-hw-aio-6x1gb',
-                                 'alienvault-hw-aio-extended',
-                                 'alienvault-hw-aio-niap',
-                                 'alienvault-hw-sensor-standard',
-                                 'alienvault-hw-sensor-remote',
-                                 'alienvault-hw-sensor-enterprise',
-                                 'alienvault-hw-sensor-enterprise-ids-2x10gb',
-                                 'alienvault-hw-sensor-enterprise-ids-6x1gb']
-
-        hw_profiles = list(set(re.findall('^ii\s+(%s)\s+' % '|'.join(available_hw_packages), output, re.MULTILINE)))
-        if len(hw_profiles) != 1:
-            Output.error('No hardware profile package or more than one installed, detection may be inaccurate')
-        self.__alienvault_config['hw_profile'] = hw_profiles[0] if hw_profiles else 'UNKNOWN'
-
-        # Find the version.
-        versions = list(set(re.findall('^ii\s+(?:ossim-server|ossim-agent|ossim-framework|ossim-mysql)\s+(?:1|10):(?P<version>\S+)-\S+\s+', output, re.MULTILINE)))
-        if len(versions) != 1:
-            Output.error('Essential packages %s have different versions' % ', '.join(cmd[2:]))
-        self.__alienvault_config['version'] = versions[0] if versions else ''
-
         # Find version type (Free, Trial, Pro) and license.
         if os.path.isfile(default.ossim_license_file):
             with open(default.ossim_license_file, 'r') as f:
@@ -177,6 +139,47 @@ class Sysinfo (object):
                 self.__alienvault_config['license'] = license[0] if len(license) > 0 else 'None'
         else:
             self.__alienvault_config['versiontype'] = 'FREE'
+
+        # Find hardware profile.
+        if self.__alienvault_config['versiontype'] != 'FREE':
+            available_hw_packages = ['alienvault-ami-usm-standard',
+                                     'alienvault-ami-aio-6x1gb',
+                                     'alienvault-ami-logger-standard',
+                                     'alienvault-ami-sensor-standard',
+                                     'alienvault-ami-sensor-remote',
+                                     'alienvault-vmware-usm-standard',
+                                     'alienvault-vmware-aio-6x1gb',
+                                     'alienvault-vmware-aio-6x1gb-lite',
+                                     'alienvault-vmware-logger-standard',
+                                     'alienvault-vmware-sensor-standard-6x1gb',
+                                     'alienvault-vmware-sensor-remote',
+                                     'alienvault-vmware-sensor-remote-lite',
+                                     'alienvault-hw-usm-standard',
+                                     'alienvault-hw-usm-enterprise',
+                                     'alienvault-hw-usm-database',
+                                     'alienvault-hw-logger-standard',
+                                     'alienvault-hw-logger-enterprise',
+                                     'alienvault-hw-aio-6x1gb',
+                                     'alienvault-hw-aio-extended',
+                                     'alienvault-hw-aio-niap',
+                                     'alienvault-hw-sensor-standard',
+                                     'alienvault-hw-sensor-remote',
+                                     'alienvault-hw-sensor-enterprise',
+                                     'alienvault-hw-sensor-enterprise-ids-2x10gb',
+                                     'alienvault-hw-sensor-enterprise-ids-6x1gb']
+
+            hw_profiles = list(set(re.findall('^ii\s+(%s)\s+' % '|'.join(available_hw_packages), output, re.MULTILINE)))
+            if len(hw_profiles) != 1:
+                Output.error('No hardware profile package or more than one installed, detection may be inaccurate')
+            self.__alienvault_config['hw_profile'] = hw_profiles[0] if hw_profiles else 'UNKNOWN'
+        else:
+            self.__alienvault_config['hw_profile'] = "UNKNOWN"
+
+        # Find the version.
+        versions = list(set(re.findall('^ii\s+(?:ossim-server|ossim-agent|ossim-framework|ossim-mysql)\s+(?:1|10):(?P<version>\S+)-\S+\s+', output, re.MULTILINE)))
+        if len(versions) != 1:
+            Output.error('Essential packages %s have different versions' % ', '.join(cmd[2:]))
+        self.__alienvault_config['version'] = versions[0] if versions else ''
 
         # Find ip address, hostname and domain configured in ossim_setup.conf
         try:
@@ -291,7 +294,13 @@ class Sysinfo (object):
             cpuinfo = f.read()
             self.__hardware_config['is_vm'] = (re.findall(r'hypervisor', cpuinfo) != [])
 
-        self.__hardware_config['cpu'] = platform.processor() or 'Unknown'
+        # self.__hardware_config['cpu'] = platform.processor() or 'Unknown'
+
+        cpuinfo = self.cpuinfo()
+        self.__hardware_config['cpu'] = "%s Family %s Model %s Stepping %s" % (cpuinfo['proc0']['model name'],
+                                                                               cpuinfo['proc0']['cpu family'],
+                                                                               cpuinfo['proc0']['model'],
+                                                                               cpuinfo['proc0']['stepping'])
         self.__hardware_config['cores'] = psutil.NUM_CPUS
         self.__hardware_config['mem'] = round(psutil.TOTAL_PHYMEM / 1073741824.0, 1)
 
@@ -336,12 +345,15 @@ class Sysinfo (object):
                     eps_log_lst_filtered.sort()
                     eps_log_lst_filtered_len = len(eps_log_lst_filtered)
                     middle = eps_log_lst_filtered_len // 2
-                    if eps_log_lst_filtered_len == 1:
-                        self.__system_status['server_eps_median'] = eps_log_lst_filtered[0]
-                    elif eps_log_lst_filtered_len % 2:
-                        self.__system_status['server_eps_median'] = (eps_log_lst_filtered[middle] + eps_log_lst_filtered[middle + 1]) // 2
+                    if eps_log_lst_filtered:
+                        if eps_log_lst_filtered_len == 1:
+                            self.__system_status['server_eps_median'] = eps_log_lst_filtered[0]
+                        elif eps_log_lst_filtered_len % 2:
+                            self.__system_status['server_eps_median'] = (eps_log_lst_filtered[middle] + eps_log_lst_filtered[middle + 1]) // 2
+                        else:
+                            self.__system_status['server_eps_median'] = eps_log_lst_filtered[middle]
                     else:
-                        self.__system_status['server_eps_median'] = eps_log_lst_filtered[middle]
+                            self.__system_status['server_eps_median'] = 0
 
     # Get up & running network interfaces.
     # Credits to:
@@ -444,8 +456,50 @@ class Sysinfo (object):
             if 'Sensor' in self.__alienvault_config['sw_profile']:
                 platform_info = dict(platform_info, **platform_info_sensor)
 
+        first_params_displayed = ['Admin IP address', 'Hostname', 'AlienVault version', 'License',
+                                  'Software profile', 'Hardware profile', 'Last updated',
+                                  'CPU type', 'Number of cores', 'Kernel version', 'Installed memory',
+                                  'Operating system', 'Architecture', 'Appliance type',
+                                  'Uptime', 'Load']
+
+        for param in first_params_displayed:
+            if not extended and param in platform_info_extended.keys():
+                continue
+            rjustify = 80 - len(param)
+            Output.emphasized('     %s: %s' % (param, platform_info[param].rjust(rjustify, ' ')), [platform_info[param]])
+
         for (field, value) in platform_info.iteritems():
+            if field in first_params_displayed:
+                continue
             rjustify = 80 - len(field)
             Output.emphasized('     %s: %s' % (field, value.rjust(rjustify, ' ')), [value])
 
         return platform_info
+
+    def cpuinfo(self):
+        '''
+        Return the information in /proc/cpuinfo
+        as a dictionary in the following format:
+        cpu_info['proc0']={...}
+        cpu_info['proc1']={...}
+        '''
+
+        cpuinfo = {}
+        procinfo = {}
+
+        nprocs = 0
+        with open('/proc/cpuinfo') as f:
+            for line in f:
+                if not line.strip():
+                    # end of one processor
+                    cpuinfo['proc%s' % nprocs] = procinfo
+                    nprocs = nprocs+1
+                    # Reset
+                    procinfo = {}
+                else:
+                    if len(line.split(':')) == 2:
+                        procinfo[line.split(':')[0].strip()] = line.split(':')[1].strip()
+                    else:
+                        procinfo[line.split(':')[0].strip()] = ''
+
+        return cpuinfo

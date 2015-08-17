@@ -37,6 +37,15 @@ from api.blueprints.auth import auth
 # system
 from api.blueprints.system import system
 from api.blueprints.system import network
+from api.blueprints.system import backup
+from api.blueprints.system import doctor
+from api.blueprints.system import email
+from api.blueprints.system import license as avlicense
+from api.blueprints.system import config
+from api.blueprints.system import status as system_status
+from api.blueprints.system import otx
+from api.blueprints.system import support
+
 # sensor
 from api.blueprints.sensor import sensor
 from api.blueprints.sensor import ossec_win_deploy
@@ -55,15 +64,9 @@ from api.blueprints.data import host
 # job
 from api.blueprints.job import common
 from api.blueprints.job import reconfig
+
 # Apps
-from api.blueprints.system import backup
-from api.blueprints.system import doctor
-from api.blueprints.system import email
-from api.blueprints.system import license as avlicense
-from api.blueprints.system import config
-from api.blueprints.system import status as system_status
-from api.blueprints.system import otx
-from api.blueprints.system import support
+from api.blueprints.apps import nmap
 
 # Attach blueprints.
 
@@ -108,3 +111,6 @@ app.register_blueprint(host.blueprint, url_prefix=API_URL_BEGIN + 'data/host')
 # jobs
 app.register_blueprint(reconfig.blueprint, url_prefix=API_URL_BEGIN + 'job')
 app.register_blueprint(common.blueprint, url_prefix=API_URL_BEGIN + 'job')
+
+# apps
+app.register_blueprint(nmap.blueprint, url_prefix=API_URL_BEGIN + 'nmap')

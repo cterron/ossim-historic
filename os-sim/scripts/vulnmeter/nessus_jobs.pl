@@ -742,7 +742,7 @@ sub run_job {
         #generate_email ( $job_id, "start" );	    #ie MANUAL/REQUESTS
     }
 
-    my $enddate = setup_scan( $job_id, $Jname, $juser, $Jtype, $host_list, $Jvset, $jtimout, $sensor_id, $meth_CRED, $scan_locally, $resolve_names);
+    my $enddate = setup_scan( $job_id, $Jname, $juser, $Jtype, $host_list, $Jvset, $jtimout, $sensor_id, $meth_CRED, $scan_locally, $resolve_names, $creator);
 
     if ( $notify_by_email ) {
         #generate_email ( $job_id, "finish" );	    #ie MANUAL/REQUESTS
@@ -754,7 +754,7 @@ sub run_job {
 #build hostlist, remove exceptions, call scanlite, load results,  
 sub setup_scan {
     # VER: 1.0 MODIFIED: 3/29/07 13:03
-    my ( $job_id, $Jname, $juser, $Jtype, $target, $Jvset, $timeout, $fk_name, $meth_CRED, $scan_locally, $resolve_names) = @_;
+    my ( $job_id, $Jname, $juser, $Jtype, $target, $Jvset, $timeout, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator) = @_;
 
     my ( $sql, $sth_sel, $sth_upd, $sth_ins );
     my ( $targetinfo, @results, $job_title, $nessusok, $scantime, $already_marked );
@@ -837,7 +837,7 @@ sub setup_scan {
     #MAKE IT GLOBAL FOR USE WITH INCIDENT TRACKER
     @vuln_nessus_plugins = get_plugins( $Jvset, $job_id );
 
-    @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $Jname, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names);
+    @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $Jname, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator);
     
     $scantime = getCurrentDateTime();
 
@@ -1130,6 +1130,7 @@ sub run_nessus {
     my ($meth_CRED)     = $_[10];
     my ($scan_locally)  = $_[11];
     my ($resolve_names) = $_[12];
+    my ($creator)       = $_[13];
     
     logwriter("Run Job Id=$job_id",4);
 
@@ -1198,15 +1199,15 @@ sub run_nessus {
 
     open(TARGET,">>$targetfile") or die "Failed to create $targetfile: $!\n";
 
-    logwriter("resolve_names: $resolve_names meth_CRED: $meth_CRED scan_locally: $scan_locally fk_name: $fk_name ", 4);
+    logwriter("resolve_names: $resolve_names, meth_CRED: $meth_CRED, scan_locally: $scan_locally, sensor_id: $fk_name, creator: $creator", 4);
     
     if($resolve_names eq "1") {
         disconn_db($dbh);
         if ($meth_CRED eq "1") {
             if ($scan_locally eq "1") {
-                $targets = scan_discover($targets,"");
+                $targets = scan_discover($targets, $creator, 'local');
             } elsif ($fk_name ne "") {
-                $targets = scan_discover($targets,$fk_name);
+                $targets = scan_discover($targets, $creator, $fk_name);
             }
         }
         $dbh = conn_db();
@@ -5095,6 +5096,7 @@ sub get_varhex_from_ip {
 
 sub scan_discover {
     my $targets = shift;
+    my $user    = shift;
     my $sensor = shift;
     my @test_hosts = split /\n/, $targets;
     my $result = "";
@@ -5108,7 +5110,7 @@ sub scan_discover {
     	# need name if ip format found
     #	$sensor = get_sensor_name($sensor);
     #}
-    my $cmd = qq{/usr/bin/php /usr/share/ossim/scripts/vulnmeter/remote_nmap.php '$hn' '$sensor' 'vulnscan'};
+    my $cmd = qq{/usr/bin/php /usr/share/ossim/scripts/vulnmeter/remote_nmap.php '$hn' '$sensor' '$user' 'ping' '1'};
     logwriter("Run nmap for targets:'$hn' remote:$sensor ...", 4);
     open(NMAP,"$cmd 2>&1 |") or die "failed to fork :$!\n";
     while(<NMAP>){

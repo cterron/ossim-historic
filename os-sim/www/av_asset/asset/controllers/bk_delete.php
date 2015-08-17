@@ -55,10 +55,9 @@ $conn = $db->connect();
 
 try
 {
-    $host_perm_where = Asset_host::get_perms_where();
-    $net_perm_where  = Asset_net::get_perms_where();
+    $perm_add  = Session::can_i_create_assets();
 
-    if (!empty($host_perm_where) || !empty($net_perm_where))
+    if (!$perm_add)
     {
         $db->close();
 

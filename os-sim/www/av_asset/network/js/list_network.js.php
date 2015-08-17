@@ -577,7 +577,7 @@ function GB_onhide(url, params)
     }
     else if (cond_notes)
     {   
-        var msg = "<?php echo Util::js_entities(_('Your note has been added to the assets in the selected networks.')) ?> ";
+        var msg = "<?php echo Util::js_entities(_('Your note has been added to the selected networks.')) ?> ";
         
         show_notification('asset_notif', msg, 'nf_success', 15000, true);
     }

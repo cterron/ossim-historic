@@ -37,7 +37,7 @@ echo "var av_messages = new Array();
 			av_messages['required_fields']      = '"._("The following fields are required:")."';
 			av_messages['error_header']         = '"._("The following errors occurred:")."';
 			av_messages['submit_text']          = '"._("Updating")."...';
-			av_messages['unknown_error']        = '"._("Unknown error - Operation cannot be completed. Please try again").".';
+			av_messages['unknown_error']        = '"._("Sorry, operation was not completed due to an error when processing the request. Please try again").".';
 			av_messages['submit_checking']      = '"._("Update")."';\n\n";
 			
 			

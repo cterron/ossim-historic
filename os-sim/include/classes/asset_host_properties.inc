@@ -442,7 +442,7 @@ class Asset_host_properties
         $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
 
         $params = array(
-            Session::get_session_user(),
+            session_id(),
             $total_selection
         );
 
@@ -473,7 +473,7 @@ class Asset_host_properties
 
         $query    = "SELECT $cnt $query_select
                      FROM host_properties hp, user_component_filter uf, host h, host_property_reference hpr, host_source_reference hsf
-                     WHERE uf.login=? AND hp.host_id=uf.asset_id AND uf.asset_type='asset' AND hp.property_ref=hpr.id
+                     WHERE uf.session_id=? AND hp.host_id=uf.asset_id AND uf.asset_type='asset' AND hp.property_ref=hpr.id
                      AND hp.source_id = hsf.id AND h.id=uf.asset_id $q_where
                      GROUP BY hp.property_ref, hp.value
                      HAVING total = ?
@@ -648,11 +648,11 @@ class Asset_host_properties
 
         $tmptable = Util::create_tmp_table($conn, 'host_id binary(16) NOT NULL, property_ref int(11) NOT NULL, source_id int(11) DEFAULT NULL, value text NOT NULL, PRIMARY KEY (host_id, property_ref, value (255))');
 
-        $query = "REPLACE INTO $tmptable (host_id, property_ref, source_id, value)
+        $query  = "REPLACE INTO $tmptable (host_id, property_ref, source_id, value)
                         SELECT uf.asset_id, ?, ?, ? FROM user_component_filter uf, host h
-                        WHERE uf.login=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
+                        WHERE uf.session_id=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
 
-        $params = array($p_type, $source_id, $value, Session::get_session_user());
+        $params = array($p_type, $source_id, $value, session_id());
 
         $rs = $conn->Execute($query, $params);
 
@@ -758,12 +758,12 @@ class Asset_host_properties
         $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
 
         $params = array(
-            Session::get_session_user()
+            session_id()
         );
 
         $tmptable = Util::create_tmp_table($conn, 'id binary(16) NOT NULL, PRIMARY KEY ( id )');
 
-        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id FROM user_component_filter uf, host h WHERE uf.login=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
+        $conn->Execute("REPLACE INTO $tmptable SELECT asset_id FROM user_component_filter uf, host h WHERE uf.session_id=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where", $params);
 
         $query  = "DELETE hp FROM host_properties hp, $tmptable tmp WHERE hp.host_id=tmp.id";
 
@@ -891,7 +891,7 @@ class Asset_host_properties
         $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
 
         $params = array(
-            Session::get_session_user(),
+            session_id(),
             $p_type
         );
 
@@ -903,7 +903,7 @@ class Asset_host_properties
             $tmptable = Util::create_tmp_table($conn, 'id binary(16) NOT NULL, property_ref int(11) NOT NULL, value text NOT NULL, PRIMARY KEY (id, property_ref, value (255))');
 
             $query = "REPLACE INTO $tmptable SELECT asset_id, property_ref, value FROM user_component_filter uf, host h, host_properties hp WHERE h.id=hp.host_id
-                AND uf.login=? AND h.id=uf.asset_id AND uf.asset_type='asset' AND hp.property_ref=? AND hp.value=? $host_perms_where";
+                AND uf.session_id=? AND h.id=uf.asset_id AND uf.asset_type='asset' AND hp.property_ref=? AND hp.value=? $host_perms_where";
 
             $rs = $conn->Execute($query, $params);
 
@@ -925,7 +925,7 @@ class Asset_host_properties
         {
             $tmptable = Util::create_tmp_table($conn, 'id binary(16) NOT NULL, property_ref int(11) NOT NULL, PRIMARY KEY (id, property_ref)');
 
-            $query = "REPLACE INTO $tmptable SELECT asset_id, property_ref FROM user_component_filter uf, host h, host_properties hp WHERE h.id=hp.host_id AND uf.login=?
+            $query = "REPLACE INTO $tmptable SELECT asset_id, property_ref FROM user_component_filter uf, host h, host_properties hp WHERE h.id=hp.host_id AND uf.session_id=?
                 AND h.id=uf.asset_id AND uf.asset_type='asset' AND hp.property_ref=? $host_perms_where";
 
             $rs = $conn->Execute($query, $params);

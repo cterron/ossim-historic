@@ -2,6 +2,7 @@
 name=Redis dump.rdb size
 description=Checking Redis Health Status by computing /var/lib/redis/dump.rdb size
 category=alienvault,system
+requires=@dpkg:redis-server
 type=command
 command=stat -c%s /var/lib/redis/dump.rdb
 

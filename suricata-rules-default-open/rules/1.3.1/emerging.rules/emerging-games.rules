@@ -108,7 +108,7 @@ alert tcp $EXTERNAL_NET 6112 -> $HOME_NET any (msg:"ET GAMES Battle.net failed a
 
 #All by Ron Bowes. Many thanks Ron
 #
-alert tcp $EXTERNAL_NET 6112 -> $HOME_NET any (msg:"ET GAMES Battle.net connection reset (possible IP-Ban)"; flags:R,12; reference:url,doc.emergingthreats.net/bin/view/Main/2002117; classtype:policy-violation; sid:2002117; rev:6;)
+alert tcp $EXTERNAL_NET 6112 -> $HOME_NET !443 (msg:"ET GAMES Battle.net connection reset (possible IP-Ban)"; flags:R,12; reference:url,doc.emergingthreats.net/bin/view/Main/2002117; classtype:policy-violation; sid:2002117; rev:7;)
 
 #All by Ron Bowes. Many thanks Ron
 #

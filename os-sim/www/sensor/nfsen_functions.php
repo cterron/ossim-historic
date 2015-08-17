@@ -158,7 +158,7 @@ function reconfig_system()
         {
             $exp_msg = $client->get_error_message($response);
             $data['status'] = 'error';
-            $data['data']   = _('Error! Nfsen Reconfig was not executed due to an unexpected error.') . ' (' . $exp_msg . ')';
+            $data['data']   = _('Error! Nfsen Reconfig was not executed due to an API error.') . ' (' . $exp_msg . ')';
         }
         else
         {
@@ -177,22 +177,20 @@ function nfsen_start()
     
     $lines = array();
     //Stopping NfSen
-	exec("sudo $nfsen_bin stop");
+	Util::execute_command('sudo ? stop', array($nfsen_bin));
 	//Starting NfSen
-	exec("sudo $nfsen_bin start 2>&1", $lines, $status);
-	
-	if ($status == 0)
+	try
 	{
-    	$data['status'] = 'success';
-    	$data['data']   = _('NfSen restarted successfully.');
+	    Util::execute_command('sudo ? start 2>&1', array($nfsen_bin), 'array'); // Array mode to check return value of exec()
+	    
+	    $data['status'] = 'success';
+	    $data['data']   = _('NfSen restarted successfully.');
 	}
-	else
+	catch(Exception $e)
 	{
-    	$data['status'] = 'error';
-    	$data['data']   = implode("\n", $lines);
+	    $data['status'] = 'error';
+	    $data['data']   = _('NfSen restart failed.');
 	}
-	
-	
 	
 	return $data;
 }
@@ -202,9 +200,9 @@ function nfsen_reset()
 {
     include '/usr/share/ossim/www/nfsen/conf.php';
     
-    $cmd = "echo y | sudo $nfsen_bin reconfig > /var/tmp/nfsen.log 2>&1";
+    $cmd = 'echo y | sudo ? reconfig > /var/tmp/nfsen.log 2>&1';
 	
-	system($cmd);    
+	Util::execute_command($cmd, array($nfsen_bin));
 }
 
 

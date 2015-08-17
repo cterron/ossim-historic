@@ -6,6 +6,7 @@
 ### END INIT INFO
 
 OSSIM_SETUP_CONF_FILE="/etc/ossim/ossim_setup.conf"
+OSSIM_SETUP_LAST_CONF_FILE="/etc/ossim/ossim_setup.conf_last"
 PREPARE_DB_DONE_FILE="/etc/ossim/.prepare-db-done"
 FRAMEWORKIP=$(grep ^framework_ip= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
 DBHOST=$(grep ^db_ip= "$OSSIM_SETUP_CONF_FILE" | cut -f 2 -d "=")
@@ -17,8 +18,15 @@ LD_LIBRARY_PATH="/usr/lib/alienvault/percona_toku"
 export LD_LIBRARY_PATH
 export DEBIAN_FRONTEND=noninteractive
 
+update_ossim_setup_last_file()
+{
+    if [ -f ${OSSIM_SETUP_LAST_CONF_FILE} ]; then
+        cp -f ${OSSIM_SETUP_CONF_FILE} ${OSSIM_SETUP_LAST_CONF_FILE}
+    fi
+}
+
 stop_services(){
-    /bin/echo -n "Stoping AlienVault services.."
+    /bin/echo -n "Stopping AlienVault services.."
     [ -f "/etc/init.d/monit" ] && /etc/init.d/monit stop >/dev/null 2>&1
     [ -f "/etc/init.d/cron" ] && /etc/init.d/cron stop >/dev/null 2>&1
     [ -f "/etc/init.d/apache2" ] && (/etc/init.d/apache2 stop;rm -f /var/lib/php5/sess_*) >/dev/null 2>&1
@@ -31,6 +39,7 @@ stop_services(){
 
 start_services(){
     dpkg --configure --pending
+    update_ossim_setup_last_file
     /bin/echo -n "Starting AlienVault services.."
     [ -f "/etc/init.d/apache2" ] && /etc/init.d/apache2 start >/dev/null 2>&1
     [ -f "/etc/init.d/ossim-server" ] && /etc/init.d/ossim-server start >/dev/null 2>&1

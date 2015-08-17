@@ -41,6 +41,7 @@ use Switch;
 use strict;
 use warnings;
 use POSIX qw(strftime);
+use HTML::Entities;
 
 $| = 1;
 
@@ -166,6 +167,13 @@ sub get_results_from_file {
         my ($host, $domain, $scan_id, $description, $service, $app, $port, $proto, $rec_type, $risk_type ) = "";
         ( $rec_type, $domain, $host, $service, $scan_id, $risk_type, $description )=split(/\|/,$_);
         
+        # Validation
+        if ( defined($domain)    && $domain  !~ m/^[a-z\-\_\d\.\s]+$/i) { next; }
+        if ( defined($host)      && $host    !~ m/^[a-z\-\_\d\.\s]+$/i) { next; }
+        if ( defined($scan_id)   && $scan_id !~ m/^[\d\.\s]+$/) { next; }
+        if ( defined($service)   && $service !~ m/^[a-z\-\_\(\d\)\/\s]+$/i) { next; }
+        if ( defined($risk_type) && $risk_type !~ m/^[a-z\-\_\d\s]+$/i) { next; }
+                
         # to import .nbe from OMP scans
         
         my $risk_factor = "";
@@ -567,8 +575,9 @@ sub process_results {
                 }
                 $i += 1;
                 $fp = (defined($host_fp{$scanid}{$service}) && $host_fp{$scanid}{$service} == 1) ? 'Y' : 'N';
-                $sql_insert .= " ('$report_id', '$scantime', '$hostip', UNHEX('$ctx'), '$hostname', '$record_type', '$service', '$port', '$proto', '$app', '$scanid', '$risk', '$desc', '$fp' ),\n";
-                $sql_insert2 .= " ('$username', '$sid', '$scantime', '$hostip', UNHEX('$ctx'), '$hostname', '$record_type', '$service', '$port', '$proto', '$app', '$scanid', '$risk', '$desc', '$fp' ),\n";
+                my $descE = encode_base64($desc);
+                $sql_insert .= " ('$report_id', '$scantime', '$hostip', UNHEX('$ctx'), '$hostname', '$record_type', '$service', '$port', '$proto', '$app', '$scanid', '$risk', FROM_BASE64('$descE'), '$fp' ),\n";
+                $sql_insert2 .= " ('$username', '$sid', '$scantime', '$hostip', UNHEX('$ctx'), '$hostname', '$record_type', '$service', '$port', '$proto', '$app', '$scanid', '$risk', FROM_BASE64('$descE'), '$fp' ),\n";
                     
                 if ( $i >= 100 ) {
                     chop($sql_insert);
@@ -894,6 +903,9 @@ sub pop_hosthash {
         #MEANS TO TRACK FILTER ON THE REPORTS
         if ( $scanid >= 60000 ) { $record_type = "C"; } else { $record_type = "N"; }
 
+        $port = htmlspecialchars($port);
+        $app = htmlspecialchars($app);
+        $proto = htmlspecialchars($proto);
         $service = htmlspecialchars($service);
         $desc = htmlspecialchars($desc);
 
@@ -1159,12 +1171,12 @@ sub resolve_host {
 sub htmlspecialchars {
     # VER: 1.0 MODIFIED: 3/29/07 13:03
     my $tmpSTRmsg = $_[0];
-    $tmpSTRmsg =~ s/&/&amp;/g;
-    $tmpSTRmsg =~ s/\'/&#039;/g;
-    $tmpSTRmsg =~ s/\"/&quot;/g;
-    $tmpSTRmsg =~ s/</&lt;/g;
-    $tmpSTRmsg =~ s/>/&gt;/g;
-    return $tmpSTRmsg;
+    #$tmpSTRmsg =~ s/&/&amp;/g;
+    #$tmpSTRmsg =~ s/\'/&#039;/g;
+    #$tmpSTRmsg =~ s/\"/&quot;/g;
+    #$tmpSTRmsg =~ s/</&lt;/g;
+    #$tmpSTRmsg =~ s/>/&gt;/g;
+    return encode_entities($tmpSTRmsg);
 }
 
 #is this a num

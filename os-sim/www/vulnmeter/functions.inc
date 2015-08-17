@@ -684,15 +684,15 @@ function stats_networks_hosts($type, $filter="", $graph="hosts") {
         $query = "SELECT count(*) as vulnerability, vulns_list.hostip, HEX(vulns_list.ctx) as ctx FROM
                   (SELECT DISTINCT HEX(lr.ctx) as ctx, lr.hostIP, lr.app, lr.service, lr.port, lr.protocol, lr.scriptid, lr.risk, lr.msg FROM
                    vuln_nessus_latest_results lr, host, host_ip hi
-                   WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where $queryf AND falsepositive='N' LIMIT 1000) as vulns_list
-                   GROUP BY hostip ORDER BY vulnerability DESC";
+                   WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where $queryf AND falsepositive='N') as vulns_list
+                   GROUP BY hostip ORDER BY vulnerability DESC LIMIT 1000";
     }
     else
     {
         $query = "SELECT count(*) as vulnerability, vulns_list.hostip, HEX(vulns_list.ctx) as ctx FROM
                   (SELECT DISTINCT HEX(lr.ctx) as ctx, lr.hostIP, lr.app, lr.service, lr.port, lr.protocol, lr.scriptid, lr.risk, lr.msg FROM
                    vuln_nessus_latest_results lr
-                   WHERE 1=1 $queryf AND falsepositive='N' LIMIT 1000) as vulns_list GROUP BY hostip ORDER BY vulnerability DESC";
+                   WHERE 1=1 $queryf AND falsepositive='N') as vulns_list GROUP BY hostip ORDER BY vulnerability DESC LIMIT 1000";
     }
     
     $result = $dbconn->Execute($query);
@@ -1675,7 +1675,8 @@ function check_host ( $eval_hostname, $eval_hostip ) {
 	$bip_resolve = true;
 	$balive = false;
 	
-	$res=`nslookup -timeout=1 -retry=0 $eval_hostname`;
+	$res = Util::execute_command("nslookup -timeout=1 -retry=0 ?", array($eval_hostname), 'string');
+	
  	if (preg_match('/\nName:(.*)\n/', $res, $out)) {
    		$lookup_hostname =  trim($out[1]);
  	} else {

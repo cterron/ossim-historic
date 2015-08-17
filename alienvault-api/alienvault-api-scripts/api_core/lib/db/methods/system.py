@@ -63,7 +63,7 @@ def db_get_hostname(system_id):
         system = db.session.query(System).filter(System.id == system_id_bin).one()
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error while querying for system with id '%s'" % system_id)
+        return (False, "Error while querying for system with id '%s': %s" % (system_id, str(msg)))
     return (True, system.name)
 
 
@@ -687,12 +687,12 @@ def check_any_innodb_tables():
     result = []
     for table in tables:
         try:
-            (schema,t) = table.split(".")
+            (schema, t) = table.split(".")
             query = """SELECT  table_schema,table_name FROM INFORMATION_SCHEMA.TABLES""" \
                     """ WHERE engine = 'innodb' AND """ \
-                    """ table_schema = '%s' AND table_name = '%s'""" % (schema,t)
+                    """ table_schema = '%s' AND table_name = '%s'""" % (schema, t)
             databases = db.session.connection(mapper=System).execute(query)
-            result = result + [(row[0],row[1]) for row in databases.fetchall()]
+            result = result + [(row[0], row[1]) for row in databases.fetchall()]
         except NoResultFound:
             pass
         except Exception, msg:
@@ -750,7 +750,11 @@ def get_trial_expiration_date():
     success = True
     try:
         result = db.session.query(Config).filter(Config.conf == 'license').one()
-        expires = str(result.value).split()[-1]
+        if result.value:
+            params = [param for param in str(result.value).split() if "expire=" in param]
+            expires = params[0] if params else "expire="
+        else:
+            expires = "expire="
         message = ""
     except NoResultFound:
         success = False

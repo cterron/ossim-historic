@@ -97,7 +97,7 @@ if ($icon != '')
 {
     $image = @imagecreatefromstring($icon);
 
-    if (!$image)
+    if (!$image || imagesx($image) > 400 || imagesy($image) > 400)
     {
         $validation_errors['icon'] = _('Image format is not allowed');
     }

@@ -1961,6 +1961,102 @@ void sim_container_load_protocols (SimContainer * container)
   struct protoent proto;
   struct protoent *result;
   char **aliases = NULL;
+  guint i;
+
+  // protocols in nmap-protocols but not in /etc/protocols
+  struct nmap_protocols_type { gchar *name; gint proto; } nmap_protocols[] = {
+    { "cbt"             ,7},   // CBT
+    { "bbn-rcc-mon"     ,10},  // BBN RCC Monitoring
+    { "nvp-ii"          ,11},  // Network Voice Protocol
+    { "argus"           ,13},  // ARGUS
+    { "emcon"           ,14},  // EMCON
+    { "xnet"            ,15},  // Cross Net Debugger
+    { "chaos"           ,16},  // Chaos
+    { "mux"             ,18},  // Multiplexing
+    { "dcn-meas"        ,19},  // DCN Measurement Subsystems
+    { "prm"             ,21},  // Packet Radio Measurement
+    { "trunk-1"         ,23},  // Trunk-1
+    { "trunk-2"         ,24},  // Trunk-2
+    { "leaf-1"          ,25},  // Leaf-1
+    { "leaf-2"          ,26},  // Leaf-2
+    { "irtp"            ,28},  // Internet Reliable Transaction
+    { "netblt"          ,30},  // Bulk Data Transfer Protocol
+    { "mfe-nsp"         ,31},  // MFE Network Services Protocol
+    { "merit-inp"       ,32},  // MERIT Internodal Protocol
+    { "3pc"             ,34},  // Third Party Connect Protocol
+    { "idpr"            ,35},  // Inter-Domain Policy Routing Protocol
+    { "tp++"            ,39},  // TP+
+    { "il"              ,40},  // IL Transport Protocol
+    { "sdrp"            ,42},  // Source Demand Routing Protocol
+    { "mhrp"            ,48},  // Mobile Host Routing Protocol
+    { "bna"             ,49},  // BNA
+    { "i-nlsp"          ,52},  // Integrated Net Layer Security  TUBA
+    { "swipe"           ,53},  // IP with Encryption
+    { "narp"            ,54},  // NBMA Address Resolution Protocol
+    { "mobile"          ,55},  // IP Mobility
+    { "tlsp"            ,56},  // Transport Layer Security Protocol using Kryptonet key management
+    { "anyhost"         ,61},  // any host internal protocol
+    { "cftp"            ,62},  // CFTP
+    { "anylocalnet"     ,63},  // any local network
+    { "sat-expak"       ,64},  // SATNET and Backroom EXPAK
+    { "kryptolan"       ,65},  // Kryptolan
+    { "rvd"             ,66},  // MIT Remote Virtual Disk Protocol
+    { "ippc"            ,67},  // Internet Pluribus Packet Core
+    { "anydistribfs"    ,68},  // any distributed file system
+    { "sat-mon"         ,69},  // SATNET Monitoring
+    { "visa"            ,70},  // VISA Protocol
+    { "ipcv"            ,71},  // Internet Packet Core Utility
+    { "cpnx"            ,72},  // Computer Protocol Network Executive
+    { "wsn"             ,74},  // Wang Span Network
+    { "pvp"             ,75},  // Packet Video Protocol
+    { "br-sat-mon"      ,76},  // Backroom SATNET Monitoring
+    { "sun-nd"          ,77},  // SUN ND PROTOCOL-Temporary
+    { "wb-mon"          ,78},  // WIDEBAND Monitoring
+    { "wb-expak"        ,79},  // WIDEBAND EXPAK
+    { "iso-ip"          ,80},  // ISO Internet Protocol
+    { "secure-vmtp"     ,82},  // SECURE-VMTP
+    { "vines"           ,83},  // VINES
+    { "ttp"             ,84},  // TTP
+    { "nsfnet-igp"      ,85},  // NSFNET-IGP
+    { "dgp"             ,86},  // Dissimilar Gateway Protocol
+    { "tcf"             ,87},  // TCF
+    { "sprite-rpc"      ,90},  // Sprite RPC Protocol
+    { "larp"            ,91},  // Locus Address Resolution Protocol
+    { "mtp"             ,92},  // Multicast Transport Protocol
+    { "micp"            ,95},  // Mobile Internetworking Control Pro.
+    { "scc-sp"          ,96},  // Semaphore Communications Sec.
+    { "gmtp"            ,100}, // GMTP
+    { "ifmp"            ,101}, // Ipsilon Flow Management Protocol
+    { "pnni"            ,102}, // PNNI over IP
+    { "aris"            ,104}, // ARIS
+    { "scps"            ,105}, // SCPS
+    { "qnx"             ,106}, // QNX
+    { "a/n"             ,107}, // Active Networks
+    { "snp"             ,109}, // Sitara Networks Protocol
+    { "compaq-peer"     ,110}, // Compaq Peer Protocol
+    { "ipx-in-ip"       ,111}, // IPX in IP
+    { "pgm"             ,113}, // PGM Reliable Transport Protocol
+    { "any0hop"         ,114}, // any 0-hop protocol
+    { "ddx"             ,116}, // D-II Data Exchange (
+    { "iatp"            ,117}, // Interactive Agent Transfer Protocol
+    { "stp"             ,118}, // Schedule Transfer Protocol
+    { "srp"             ,119}, // SpectraLink Radio Protocol
+    { "uti"             ,120}, // UTI
+    { "smp"             ,121}, // Simple Message Protocol
+    { "sm"              ,122},
+    { "ptp"             ,123}, // Performance Transparency Protocol
+    { "fire"            ,125},
+    { "crtp"            ,126}, // Combat Radio Transport Protocol
+    { "crudp"           ,127}, // Combat Radio User Datagram
+    { "sscopmce"        ,128},
+    { "iplt"            ,129},
+    { "sps"             ,130}, // Secure Packet Shield
+    { "pipe"            ,131}, // Private IP Encapsulation within IP
+    { "rsvp-e2e-ignore" ,134},
+    { "experimental1"   ,253}, // Use for experimentation and testing
+    { "experimental2"   ,254}  // Use for experimentation and testing
+  };
+
   /* Init */
   memset (&proto, 0, sizeof (struct protoent));
   /* Must be defined _BSD_SOURCE || _SVID_SOURCE */
@@ -2010,12 +2106,20 @@ void sim_container_load_protocols (SimContainer * container)
         g_hash_table_insert (container->_priv->proto_by_name, g_strdup (*aliases), GINT_TO_POINTER (proto.p_proto));
         aliases++;
       }
-      g_hash_table_insert (container->_priv->proto_by_number,GINT_TO_POINTER (proto.p_proto), g_strdup (proto.p_name));
+      g_hash_table_insert (container->_priv->proto_by_number, GINT_TO_POINTER (proto.p_proto), g_strdup (proto.p_name));
     }
     
     
   
   }while (0);
+
+  // Fill the gaps of protocols without "protocol name" (from nmap-protocols)
+  for (i = 0; i < G_N_ELEMENTS (nmap_protocols); i++)
+  {
+    g_hash_table_insert (container->_priv->proto_by_name, g_strdup (nmap_protocols[i].name), GINT_TO_POINTER (nmap_protocols[i].proto));
+    g_hash_table_insert (container->_priv->proto_by_number, GINT_TO_POINTER (nmap_protocols[i].proto), g_strdup (nmap_protocols[i].name));
+  }
+
   if (err == -1)
     g_warning ("Can't load protocols info");
   g_free (buf);

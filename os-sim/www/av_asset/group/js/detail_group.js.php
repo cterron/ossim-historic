@@ -254,6 +254,7 @@ function av_group_detail(o)
                 __self.reload_asset_indicators();
                 __self.load_map();
                 __self.load_environment_info();
+                __self.reload_section('history');
             }
         }
     }
@@ -329,6 +330,7 @@ function av_group_detail(o)
                                 __self.reload_asset_indicators();
                                 __self.load_map();
                                 __self.load_environment_info();
+                                __self.reload_section('history');
                             }
                         });
                     }

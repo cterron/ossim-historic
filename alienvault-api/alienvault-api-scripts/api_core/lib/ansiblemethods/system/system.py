@@ -43,7 +43,6 @@ from ansiblemethods.helper import (
     ansible_is_valid_playbook_response,
     copy_file,
     remove_file)
-from ansiblemethods.ansibleinventory import AnsibleInventoryManager
 
 ansible = Ansible()
 
@@ -347,6 +346,7 @@ def set_av_config(system_ip, path_dict):
 
 def ansible_add_ip_to_inventory(system_ip):
     try:
+        from ansiblemethods.ansibleinventory import AnsibleInventoryManager
         aim = AnsibleInventoryManager()
         aim.add_host(system_ip)
         aim.save_inventory()
@@ -361,6 +361,7 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
     Add a new system.
     Create and set the crypto files and update the ansible inventory manager
     """
+    from ansiblemethods.ansibleinventory import AnsibleInventoryManager
     result = False
     response = None
 
@@ -382,7 +383,8 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
                                     host_list=[remote_system_ip],
                                     extra_vars=evars,
                                     ans_remote_user="root",
-                                    ans_remote_pass=password)
+                                    ans_remote_pass=password,
+                                    use_sudo=True)
 
     if response[remote_system_ip]['unreachable'] == 0 and \
        response[remote_system_ip]['failures'] == 0:

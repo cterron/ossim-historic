@@ -61,9 +61,9 @@ if (!is_dir($outdir))
 	mkdir($outdir);
 }
 
-$user     = trim(`grep ^ossim_user= /etc/ossim/framework/ossim.conf | cut -f 2 -d "="`);
-$password = trim(`grep ^ossim_pass= /etc/ossim/framework/ossim.conf | cut -f 2 -d "="`);
-$host     = trim(`grep ^ossim_host= /etc/ossim/framework/ossim.conf | cut -f 2 -d "="`);
+$user     = trim(Util::execute_command('grep ^ossim_user= /etc/ossim/framework/ossim.conf | cut -f 2 -d "="', FALSE, 'string'));
+$password = trim(Util::execute_command('grep ^ossim_pass= /etc/ossim/framework/ossim.conf | cut -f 2 -d "="', FALSE, 'string'));
+$host     = trim(Util::execute_command('grep ^ossim_host= /etc/ossim/framework/ossim.conf | cut -f 2 -d "="', FALSE, 'string'));
 
 // event table backup
 for ($t=$time; $t<time(); $t+=86400) 
@@ -81,7 +81,7 @@ for ($t=$time; $t<time(); $t+=86400)
     {
             echo "Gzip $file.\n";
             
-            system("pigz '$file'");
+            Util::execute_command('pigz ?', array($file));
             
             continue;
     } 
@@ -91,65 +91,75 @@ for ($t=$time; $t<time(); $t+=86400)
     }
 
     // event    
-    $where = "id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
-    $cmd   = "/usr/bin/mysqldump alienvault event -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault event -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd);
+    Util::execute_command($cmd, $params);
 
     // extra_data    
-    $where = "event_id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
-    $cmd   = "/usr/bin/mysqldump alienvault extra_data -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "event_id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault extra_data -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd);
+    Util::execute_command($cmd, $params);
         
     // idm_data
-    $where = "event_id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
-    $cmd   = "/usr/bin/mysqldump alienvault idm_data -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "event_id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault idm_data -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd);
+    Util::execute_command($cmd, $params);
 
     // backlog_event
-    $where = "backlog_id in (SELECT backlog_event.backlog_id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
-    $cmd   = "/usr/bin/mysqldump alienvault backlog_event -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "backlog_id in (SELECT backlog_event.backlog_id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault backlog_event -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd);
+    Util::execute_command($cmd, $params);
 
     // backlog
-    $where = "id in (SELECT backlog_id as id FROM alarm WHERE timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
-    $cmd   = "/usr/bin/mysqldump alienvault backlog -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "id in (SELECT backlog_id as id FROM alarm WHERE timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault backlog -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd);    
+    Util::execute_command($cmd, $params);
     
     // alarm
-    $where = "timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59'";
-    $cmd   = "/usr/bin/mysqldump alienvault alarm -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59'";
+    $cmd    = "/usr/bin/mysqldump alienvault alarm -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd);       
+    Util::execute_command($cmd, $params);
 
     // component_tags, _ctxs, _hosts, _nets
-    $where = "id_component in (SELECT backlog_id FROM alarm WHERE timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
-    $cmd   = "/usr/bin/mysqldump alienvault component_tags -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "id_component in (SELECT backlog_id FROM alarm WHERE timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault component_tags -h ? -u ? -p? -c -n -t -f --hex-blob --skip-triggers --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd); 
+    Util::execute_command($cmd, $params);
       
-    $where = "id_alarm in (SELECT backlog_id as id FROM alarm WHERE timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
-    $cmd = "/usr/bin/mysqldump alienvault alarm_ctxs -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $where  = "id_alarm in (SELECT backlog_id as id FROM alarm WHERE timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault alarm_ctxs -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
     
-    system ($cmd);  
+    Util::execute_command($cmd, $params);
      
      
-    $cmd = "/usr/bin/mysqldump alienvault alarm_nets -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $cmd = "/usr/bin/mysqldump alienvault alarm_nets -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    // Same params
     
-    system ($cmd);   
+    Util::execute_command($cmd, $params);
     
     
-    $cmd = "/usr/bin/mysqldump alienvault alarm_hosts -h $host -u $user -p$password -c -n -t -f --hex-blob --skip-comments --no-autocommit --single-transaction --quick  --insert-ignore -w \"$where\"  >> $file 2>/dev/null";
+    $cmd = "/usr/bin/mysqldump alienvault alarm_hosts -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    // Same params
     
-    system ($cmd);    
+    Util::execute_command($cmd, $params);
     
     
     // GZIP CURRENT
-    system("pigz '$file'");
+    Util::execute_command('pigz ?', array($file));
 }
 
 

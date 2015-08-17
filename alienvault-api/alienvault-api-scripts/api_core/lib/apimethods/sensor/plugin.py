@@ -36,13 +36,15 @@ import shutil
 
 
 import api_log
-from ansiblemethods.sensor.plugin import get_plugin_package_info, ansible_check_plugin_integrity
+from ansiblemethods.sensor.plugin import (get_plugin_package_info,
+                                          ansible_check_plugin_integrity)
 from ansiblemethods.system.util import fetch_if_changed
-from ansiblemethods.system.system import  install_debian_package
+from ansiblemethods.system.system import install_debian_package
 from apimethods.system.system import check_update_and_reconfig_status
 from db.methods.sensor import get_sensor_ip_from_sensor_id
-from db.methods.system import (get_system_id_from_local, get_system_ip_from_local,
-                              get_system_ip_from_system_id)
+from db.methods.system import (get_system_id_from_local,
+                               get_system_ip_from_local,
+                               get_system_ip_from_system_id)
 from db.methods.sensor import get_newest_plugin_system
 
 
@@ -57,7 +59,7 @@ def get_plugin_package_info_from_sensor_id(sensor_id):
         if not success:
             result = (False, "Can't get plugins version/md5 information")
         else:
-            if info <> '':
+            if info != '':
                 result = (True, info)
             else:
                 result = (False, "Can't obtain version information")
@@ -111,9 +113,9 @@ def check_plugin_integrity(system_id="local"):
 
     return True, data
 
-def  get_plugin_sids_package(system_id, md5):
+def get_plugin_sids_package(system_id, md5):
     """
-        Check the :system_id: system if its alienvault-plugin-sids 
+        Check the :system_id: system if its alienvault-plugin-sids
         package has md5 sum of :md5:. Download the package from remote system.
         check if not reconfig / update is running. Install package
     """
@@ -123,7 +125,7 @@ def  get_plugin_sids_package(system_id, md5):
     try:
         result, info = get_plugin_package_info_from_system_id(system_id)
         if not result:
-            raise Exception("Can't obtain alienvault-plugin-sid info for system %s : %s" % (system_id,str(info)))
+            raise Exception("Can't obtain alienvault-plugin-sid info for system %s : %s" % (system_id, str(info)))
         if info['md5'] != md5:
             raise Exception("md5 provided doesn't match with stored md5")
         # Use ansible to download file to temp directory
@@ -134,20 +136,22 @@ def  get_plugin_sids_package(system_id, md5):
         if not result:
             raise Exception("Can't obtain local system ip")
         result, idlocal = get_system_id_from_local()
-        if  not result:
+        if not result:
             raise Exception("Can't obtain local system id")
             # Create a temp file
         temp = NamedTemporaryFile(delete=True)
         tempname = temp.name
         plugin_package = "alienvault-plugin-sids_" + info['version'] + "_all.deb"
         remote_path = "/var/cache/apt/archives"
-        result, emsg = fetch_if_changed(ipremote, os.path.join(remote_path, plugin_package), \
-            iplocal, tempname)
+        result, emsg = fetch_if_changed(ipremote,
+                                        os.path.join(remote_path, plugin_package),
+                                        iplocal,
+                                        tempname)
         if not result:
             raise Exception("Can't copy remote from %s file name %s Error: %s" % (ipremote, os.path.join(remote_path, plugin_package), emsg))
         shutil.copy(tempname, remote_path)
         # Atomic rename
-        os.rename(os.path.join(remote_path, os.path.basename(tempname)), \
+        os.rename(os.path.join(remote_path, os.path.basename(tempname)),
                   os.path.join(remote_path, plugin_package))
         # Check if we're not updaing / configuring
         result, status = check_update_and_reconfig_status(idlocal)
@@ -170,6 +174,7 @@ def  get_plugin_sids_package(system_id, md5):
         rt = False
     return (rt, emsg)
 
+
 def update_newest_plugin_sids():
     """
         Update plugins in the local system
@@ -180,7 +185,7 @@ def update_newest_plugin_sids():
         # Get the local system_id
         result, local_system_id = get_system_id_from_local()
         if not result:
-            raise Exception ("Can't obtain the local system_id")
+            raise Exception("Can't obtain the local system_id")
         remote_system_id, md5 = get_newest_plugin_system()
         if remote_system_id is None or local_system_id == remote_system_id:
             raise Exception('Nothing to update')

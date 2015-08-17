@@ -147,15 +147,13 @@ $f_legend = Filter_list::get_filter_legends();
 
 
 // Getting Permissions:
-$perm_host = Asset_host::get_perms_where();
-$perm_net  = Asset_net::get_perms_where();
 $perm_add  = Session::can_i_create_assets();
 
 
 // Getting Permissions:
 $perms     = array
 (
-    'create'          => empty($perm_host) && empty($perm_net),
+    'create'          => $perm_add,
     'delete'          => $perm_add,
     'vulnerabilities' => Session::logcheck_bool('environment-menu', 'EventsVulnerabilitiesScan'),
     'alarms'          => Session::logcheck_bool('analysis-menu', 'ControlPanelAlarms'),

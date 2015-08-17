@@ -568,10 +568,15 @@ if (valid_hex32($myrow2['src_host']))
             if (floatval($coordinates['lon']) != 0) $src_longitude = floatval($coordinates['lon']);
     }
 }
-if (!$src_latitude && !$src_longitude && $record->latitude!=0 && $record->longitude!=0)
+if (!$src_latitude && !$src_longitude)
 {
-    $src_latitude  = $record->latitude;
-    $src_longitude = $record->longitude;
+    $record = $geoloc->get_location_from_file($current_sip);
+    
+    if ($record->latitude != 0 && $record->longitude != 0)
+    {
+        $src_latitude  = $record->latitude;
+        $src_longitude = $record->longitude;
+    }
 }
 
 // Destination
@@ -592,10 +597,15 @@ if (valid_hex32($myrow2['dst_host']))
             if (floatval($coordinates['lon']) != 0) $dst_longitude = floatval($coordinates['lon']);
     }
 }
-if (!$dst_latitude && !$dst_longitude && $record->latitude!=0 && $record->longitude!=0)
+if (!$dst_latitude && !$dst_longitude)
 {
-    $dst_latitude  = $record->latitude;
-    $dst_longitude = $record->longitude;
+    $record = $geoloc->get_location_from_file($current_dip);
+    
+    if ($record->latitude != 0 && $record->longitude != 0)
+    {
+        $dst_latitude  = $record->latitude;
+        $dst_longitude = $record->longitude;
+    }
 }
 
 $dbo->close($_conn);
@@ -1152,7 +1162,7 @@ if ($is_snort) {
 		// snort rule detection
 	    //
 	    echo '<div><div class="siem_detail_snorttitle"><img src="../pixmaps/snort.png" border="0" align="absmiddle"> &nbsp; '._("Snort rule Detection").'</div>';
-		$result = exec("grep -n 'sid:$plugin_sid;' /etc/snort/rules/*.rules");
+		$result = Util::execute_command("grep -n ? /etc/snort/rules/*.rules", array("sid:$plugin_sid;"), 'string');
 		// format: /etc/snort/rules/ddos.rules:53:alert tcp $EXTERNAL_NET any -> $HOME_NET 15104 (msg:"DDOS mstream client to handler"; flow:stateless; flags:S,12; reference:arachnids,111; reference:cve,2000-0138; classtype:attempted-dos; sid:249; rev:8;)
 		preg_match("/(.*?):\d+:(.*?) \((.*?);\)/",$result,$found);
 		if (trim($result)=="" || count($found)<=1) {

@@ -62,21 +62,21 @@ $frequencies = array(
     'Monthly' => 2419200
 );
 
-$scan_modes = array(
+$scan_types = array(
     'ping'   => _('Ping'),
     'fast'   => _('Fast Scan'),
-    'normal' => _('Normal'), 
+    'normal' => _('Normal'),
     'full'   => _('Full Scan'),
     'custom' => _('Custom')
 );
 
 $time_templates = array(
-    '-T0' => _('Paranoid'),
-    '-T1' => _('Sneaky'), 
-    '-T2' => _('Polite'), 
-    '-T3' => _('Normal'), 
-    '-T4' => _('Aggressive'),
-    '-T5' => _('Insane')
+    'T0' => _('Paranoid'),
+    'T1' => _('Sneaky'),
+    'T2' => _('Polite'),
+    'T3' => _('Normal'),
+    'T4' => _('Aggressive'),
+    'T5' => _('Insane')
 );
 
 
@@ -89,7 +89,7 @@ $validate = array (
 );
 
 
-if ($_SESSION['av_inventory_type'] == 'nmap') 
+if ($_SESSION['av_inventory_type'] == 'nmap')
 {
 	if (GET('task_params') != '') 
 	{
@@ -102,7 +102,7 @@ if ($_SESSION['av_inventory_type'] == 'nmap')
 	}
 
 	$validate['task_params']     = array('validation' => 'OSS_IP_CIDR',                                        'e_message' => 'illegal:' . _('Network'));
-	$validate['scan_mode']       = array('validation' => 'OSS_ALPHA, OSS_SCORE, OSS_NULLABLE',                 'e_message' => 'illegal:' . _('Scan type'));
+	$validate['scan_type']       = array('validation' => 'OSS_ALPHA, OSS_SCORE, OSS_NULLABLE',                 'e_message' => 'illegal:' . _('Scan type'));
     $validate['timing_template'] = array('validation' => 'OSS_TIMING_TEMPLATE',                                'e_message' => 'illegal:' . _('Timing_template'));
     $validate['custom_ports']    = array('validation' => "OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, ','", 'e_message' => 'illegal:' . _('Custom Ports'));
     $validate['rdns']            = array('validation' => 'OSS_DIGIT, OSS_NULLABLE',                            'e_message' => 'illegal:' . _('Reverse DNS resolution option'));
@@ -118,7 +118,7 @@ if (GET('ajax_validation') == TRUE)
 	$data['status'] = 'OK';
 	
 	$validation_errors = validate_form_fields('GET', $validate);
-	if (is_array($validation_errors) && !empty($validation_errors))	 
+	if (is_array($validation_errors) && !empty($validation_errors))
 	{
 		$data['status'] = 'error';
 		$data['data']   = $validation_errors;
@@ -164,7 +164,7 @@ if (GET('ajax_validation') == TRUE)
 				}
 			}
 		}
-				
+
 		if ($_GET['name'] == 'task_period')
 		{
 			$task_period = intval(GET($_GET['name']));
@@ -177,7 +177,7 @@ if (GET('ajax_validation') == TRUE)
 		}
 	}
 	
-	echo json_encode($data);	
+	echo json_encode($data);
 	exit();
 }
 else
@@ -320,16 +320,16 @@ else if (POST('mode') == 'insert' || POST('mode') == 'update')
 	
 		$nmap_options     = array();
 	
-		$scan_mode        = POST('scan_mode');
+		$scan_type        = POST('scan_type');
 	    $timing_template  = POST('timing_template');
-	    $custom_ports     = POST('custom_ports');
+        $custom_ports     = POST('custom_ports');
 	    $rdns             = (POST('rdns') == '1') ? 1 : 0;
 	    $autodetect       = (POST('autodetect') == '1') ? 1 : 0;
 	    
-	    $nmap_options[]   = $timing_template;
+	    $nmap_options[]   = '-'.$timing_template;
 	    
 	    // Append Autodetect
-	    if ($autodetect) 
+	    if ($autodetect)
 	    {
 	    	$nmap_options[] = '-A';
 	    }
@@ -339,19 +339,19 @@ else if (POST('mode') == 'insert' || POST('mode') == 'update')
 	    	$nmap_options[] = '-n';
 	    }
 	    
-	    if ($scan_mode == 'fast') 
+	    if ($scan_type == 'fast')
 		{
 	        $nmap_options[] = '-sS -F';
 	    } 
-		elseif ($scan_mode == 'custom')
+        elseif ($scan_type == 'custom')
 	    {
 	    	$nmap_options[] = "-sS -p $custom_ports";
 	    }
-		elseif ($scan_mode == 'normal') 
+		elseif ($scan_type == 'normal')
 		{
 	    	$nmap_options[] = '-sS';
 	    }
-		elseif ($scan_mode == 'full') 
+		elseif ($scan_type == 'full')
 		{
 	    	$nmap_options[] = '-sS -p 1-65535';
 	    }
@@ -362,11 +362,11 @@ else if (POST('mode') == 'insert' || POST('mode') == 'update')
 	    
 	    $params = $nets.'#'.implode(' ', $nmap_options);
     }
-    else if ($s_type == 'wmi') 
+    else if ($s_type == 'wmi')
     {
     	preg_match('/wmipass:(.*)/', $params, $found);
 		
-		if ($found[1] != '' && preg_match('/^\*+$/', $found[1]) && $_SESSION['wmi_pass'] != '') 
+		if ($found[1] != '' && preg_match('/^\*+$/', $found[1]) && $_SESSION['wmi_pass'] != '')
 		{
 			$params = preg_replace('/wmipass:(.*)/', '', $params);
 			$params = $params . 'wmipass:' . $_SESSION['wmi_pass'];
@@ -825,19 +825,19 @@ $sensors = Av_sensor::get_basic_list($conn);
 					$title = _('You can type one unique CIDR (x.x.x.x/xx) or a CIDR list separated by commas: CIDR1, CIDR2, CIDR3...');
 					
 					// Default values
-					$ttemplate        = '-T3';
+					$ttemplate        = 'T3';
 					$aggressive_scan  = TRUE;
 					$rdns             = TRUE;
-					$scan_mode        = 'fast';
+					$scan_type        = 'fast';
 					$scan_ports       = '';
 					
-					if($params != '') 
-					{					
+					if($params != '')
+					{
 						$tmp_data  = explode('#', $params);
 						
 						// get timing template
 					
-						preg_match('/(\-T[0-5])/', $tmp_data[1], $found);
+						preg_match('/(T[0-5])/', $tmp_data[1], $found);
 					
 						$ttemplate = ($found[1] != '') ? $found[1]: '';
 						
@@ -857,24 +857,24 @@ $sensors = Av_sensor::get_basic_list($conn);
 						
 						if(preg_match('/-sS -F/', $tmp_data[1])) 
 						{
-							$scan_mode = 'fast'; 							    
+							$scan_type = 'fast';
 	        			}
 						elseif (preg_match('/\-sS \-p 1\-65535/', $tmp_data[1])) 
 						{
-							$scan_mode = 'full';
+							$scan_type = 'full';
 					    }
 						elseif (preg_match('/\-sS \-p (\d+\-\d+)/', $tmp_data[1], $found))
 					    {
-					    	$scan_mode  = 'custom';
-					    	$scan_ports = $found[1];
+                            $scan_type  = 'custom';
+                            $scan_ports = $found[1];
 					    }
 						elseif (preg_match('/\-sS/', $tmp_data[1])) 
 						{
-							$scan_mode = 'normal';
+							$scan_type = 'normal';
 					    }
-					    else 
+					    else
 						{
-							$scan_mode = 'ping';
+							$scan_type = 'ping';
 							$aggressive_scan = FALSE;
 					    } 
 			
@@ -889,13 +889,13 @@ $sensors = Av_sensor::get_basic_list($conn);
 					$nets = str_replace(' ', ', ', $nets);
 					?>
 					<tr>
-						<th>						
+						<th>
     						<label for="task_params"><?php echo _('Network to scan') . required();?></label>    
 						</th>
 						<td class="left">
 							<div style="position:relative; width: 99%;">
                                 <div class="r_loading"></div>
-                            </div>							
+                            </div>
 							<input type='text' name='task_params' id='task_params' title='<?php echo $title ?>' class='vfield info' value="<?php echo $nets?>"/>
 						</td>
 					</tr>
@@ -910,33 +910,33 @@ $sensors = Av_sensor::get_basic_list($conn);
                                 <!-- Full scan -->
                                 <tr>
                                     <td class='td_label'>
-                                        <label for="scan_mode"><?php echo _('Scan type')?>:</label>        
-                                    </td>
-                                    <td>                                       
-                                        <select id="scan_mode" name="scan_mode" class="nmap_select vfield">
-    										<?php
-    										foreach ($scan_modes as $sm_v => $sm_txt)
-    										{
-    											$selected = ($scan_mode == $sm_v) ? 'selected="selected"' : '';
-    											
-    											echo "<option value='$sm_v' $selected>$sm_txt</option>";								
-    										}
-    										?>								
-    									</select>
-    									<span id="scan_mode_info"><img class='img_help_info' src="../pixmaps/helptip_icon.gif"/></span>							
-                                    </td>                       
-                                </tr>                           
-                                
-                                <!-- Specific ports -->
-                                <tr id='tr_cp'>                                    
-                                    <td class='td_label'>
-                                        <label for="custom_ports"><?php echo _('Specify Ports')?>:</label>        
+                                        <label for="scan_type"><?php echo _('Scan type')?>:</label>
                                     </td>
                                     <td>
-                                        <?php 
+                                        <select id="scan_type" name="scan_type" class="nmap_select vfield">
+                                        <?php
+                                        foreach ($scan_types as $st_v => $st_txt)
+                                        {
+                                            $selected = ($scan_type == $st_v) ? 'selected="selected"' : '';
+
+                                            echo "<option value='$st_v' $selected>$st_txt</option>";
+                                        }
+                                        ?>
+                                        </select>
+                                        <span id="scan_type_info"><img class='img_help_info' src="../pixmaps/helptip_icon.gif"/></span>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Specific ports -->
+                                <tr id='tr_cp'>
+                                    <td class='td_label'>
+                                        <label for="custom_ports"><?php echo _('Specify Ports')?>:</label>
+                                    </td>
+                                    <td>
+                                        <?php
                                             $scan_ports = ($scan_ports == '') ? '1-65535' : $scan_ports;
                                         ?>
-                                        <input class="greyfont vfield" type="text" id="custom_ports" name="custom_ports" value="<?php echo $scan_ports?>"/>      
+                                        <input class="greyfont vfield" type="text" id="custom_ports" name="custom_ports" value="<?php echo $scan_ports?>"/>
                                     </td>
                                 </tr>
                                 

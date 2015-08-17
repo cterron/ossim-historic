@@ -255,7 +255,7 @@ function change_interface_mode(in_dialog)
             else
             {
                 $.fancybox.close();
-                show_notification('wizard_notif', "<?php echo Util::js_entities(_('Unknown Error Found')) ?>", 'nf_error', 5000);
+                show_notification('wizard_notif', "<?php echo Util::js_entities(_('Sorry, operation was not completed due to an error when processing the request')) ?>", 'nf_error', 5000);
             }
 
 		},
@@ -398,7 +398,6 @@ function load_handler_step_discovery()
 
             insert_new_host(ip, name, type);
         }
-
     });
 
 
@@ -416,7 +415,6 @@ function load_handler_step_discovery()
        {
            $('#add_host').prop('disabled', true);
        }
-
     });
 
 
@@ -428,12 +426,12 @@ function load_handler_step_discovery()
     $('#launch_scan').on('click', function()
     {
         params = {
-            caption : "<?php echo Util::js_entities(_('Scan Networks')) ?>", 
-            url     : '/wizard/extra/scan/select_nets.php', 
+            caption : "<?php echo Util::js_entities(_('Scan Networks')) ?>",
+            url     : '/wizard/extra/scan/select_nets.php',
             height  : 700,
             width   : 1000
         };
-        
+
         LB_show(params);
     });
 
@@ -442,12 +440,12 @@ function load_handler_step_discovery()
     $('#import_host_csv #import_csv').on('click', function()
     {
         params = {
-            caption : "<?php echo Util::js_entities(_('Import Assets from CSV')) ?>", 
-            url     : __asset_cfg.asset.views + 'import_all_hosts.php?import_type=welcome_wizard_hosts', 
+            caption : "<?php echo Util::js_entities(_('Import Assets from CSV')) ?>",
+            url     : __asset_cfg.asset.views + 'import_all_hosts.php?import_type=welcome_wizard_hosts',
             height  : 600,
             width   : 900
         };
-        
+
         LB_show(params);
     });
 
@@ -1005,7 +1003,7 @@ function modify_scan_networks()
             }
             else
             {
-                show_notification('wizard_notif', "<?php echo Util::js_entities(_('An unexpected error happened. Try again later')) ?>", 'nf_error', 5000);
+                show_notification('wizard_notif', "<?php echo Util::js_entities(_('Sorry, operation was not completed due to an error when processing the request. Try again later')) ?>", 'nf_error', 5000);
             }
 
 		},
@@ -1154,7 +1152,7 @@ function modify_deploy_hosts()
         {
             var msg = "<?php echo Util::js_entities(_('To deploy HIDS, please fill Username and Password.')) ?>";
         }
-        
+
         show_notification('wizard_notif', msg, 'nf_error', 5000);
 
         return false;
@@ -1165,12 +1163,12 @@ function modify_deploy_hosts()
     data['hosts']    = __host_selected;
     data['username'] = name;
     data['password'] = pass;
-    
+
     if (__os == 'windows')
     {
         data['domain'] = domain;
     }
-    
+
 
     var ctoken = Token.get_token("welcome_wizard");
 
@@ -1197,7 +1195,7 @@ function modify_deploy_hosts()
             }
             else
             {
-                show_notification('wizard_notif', "<?php echo Util::js_entities(_('An unexpected error happened. Try again later')) ?>", 'nf_error', 5000);
+                show_notification('wizard_notif', "<?php echo Util::js_entities(_('Sorry, operation was not completed due to an error when processing the request. Try again later')) ?>", 'nf_error', 5000);
             }
 
 		},
@@ -1396,7 +1394,7 @@ function show_section_software()
     });
 
     clearTimeout(__timeout);
-    
+
     change_button_status('next_step', 0);
 }
 
@@ -1404,24 +1402,24 @@ function show_section_software()
 function show_section_plugins()
 {
     draw_active_device_table();
-    
+
     var active = $('#log_devices_list > tbody > tr.enabled_plugin').length
-        
+
     $('#prev_step').hide();
     $('#prev_screen').show();
-    
+
 
     $('#first_screen').hide();
     $('#screen_1_subtitle').hide();
 
     $('#second_screen').show("slide", { direction: "right" }, 600);
-    
+
     if (active > 0)
     {
         $('#screen_2_subtitle').show();
         $('#screen_2_subtitle_empty').hide();
         $('#log_devices_list').show();
-        
+
         net_devices_activity();
     }
     else
@@ -1432,12 +1430,12 @@ function show_section_plugins()
     }
 
 }
-    
+
 function draw_active_device_table()
 {
 
     var device_table = $('#log_devices_list > tbody');
-    
+
     device_table.empty();
 
     $('#net_devices_list > tbody > tr').each(function()
@@ -1503,7 +1501,7 @@ function draw_active_device_table()
 function apply_plugin_callback(data)
 {
     $('#w_apply').removeClass('av_b_processing');
-    
+
     if (typeof data != 'undefined' && data != null)
 	{
 		if (data.error)
@@ -1520,7 +1518,7 @@ function apply_plugin_callback(data)
     }
     else
     {
-        show_notification('wizard_notif', "<?php echo Util::js_entities(_('An unexpected error happened. Try again later')) ?>", 'nf_error', 5000);
+        show_notification('wizard_notif', "<?php echo Util::js_entities(_('Sorry, operation was not completed due to an eSorry, operation was not completed due to an error when processing the requestuest. Try again later')) ?>", 'nf_error', 5000);
     }
 }
 
@@ -1639,7 +1637,7 @@ function net_devices_activity()
 		}
 	});
 }
-   
+
 
 function draw_led(type)
 {
@@ -1715,17 +1713,17 @@ function load_handler_step_otx()
             title: 'otxwindow'
         })
     });
-    
+
     $('#otx_data_link').on('click', function()
     {
         params = {
-            caption : "<?php echo Util::js_entities(_('Open Threat Exchange Sample Data')) ?>", 
-            url     : '/wizard/extra/otx_data.php', 
+            caption : "<?php echo Util::js_entities(_('Open Threat Exchange Sample Data')) ?>",
+            url     : '/wizard/extra/otx_data.php',
             height  : 500,
             width   : 750
         };
-        
-        LB_show(params); 
+
+        LB_show(params);
     });
 
 }
@@ -1786,7 +1784,7 @@ function get_otx_user()
 
             		return false;
         		}
-                
+
                 $('#wizard_notif').empty();
                 show_otx_step_2(false);
             }

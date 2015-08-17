@@ -519,7 +519,7 @@ if (ossim_error())
 
 //Default values for the response.
 $response['error'] = TRUE ;
-$response['msg']   = _('Unknown Error');
+$response['msg']   = _('Error when processing the request');
 
 //checking if it is an ajax request
 if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
@@ -568,7 +568,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
                     
                     if ($response === FALSE)
                     {
-                        throw new Exception(_('An unexpected error happened. Try again later'));
+                        throw new Exception(_('Sorry, operation was not completed due to an error when processing the request. Try again later'));
                     }
                 
                 }
@@ -586,7 +586,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
             {
                 $response['error']    = TRUE ;
                 $response['critical'] = TRUE;
-                $response['msg']      = _('An unexpected error happened. Try again later');
+                $response['msg']      = _('Sorry, operation was not completed due to an error when processing the request. Try again later');
             }
             
         }

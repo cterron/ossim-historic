@@ -45,11 +45,10 @@ session_write_close();
 $t_name  = "<div>"._('A valid hostname must satisfy the following rules (according RFC 1123)').":</div>
             <div>
                 <ul class='ul_tiptip'>
-                    <li>"._("A hostname can start or end with a letter or a number [a-zA-z0-9]")."</li>
-                    <li>"._("A hostname <strong>MUST NOT</strong> contain any '.' (dot)")."</li>
-                    <li>"._("A hostname <strong>MUST NOT</strong> start or end with a '-' (dash)")."</li>
-                    <li>"._("A hostname <strong>MUST NOT</strong> contain a space")."</li>
-                    <li>"._("A hostname can be up to 63 characters")."</li>
+                    <li>"._("Hostname may contain ASCII letters a-z (not case sensitive), digits, and/or hyphens ('-')")."</li>
+                    <li>"._("Hostname <strong>MUST NOT</strong> contain a '.' (period) or '_' (underscore)")."</li>
+                    <li>"._("Hostname <strong>MUST NOT</strong> contain a space")."</li>
+                    <li>"._("Hostname can be up to 63 characters")."</li>
                 </ul>
             </div>";
 
@@ -138,7 +137,7 @@ $db->close();
 
                 <td class="td_right">
                     <label for="icon"><?php echo _('Icon')?></label>
-                    <span class="img_format"><?php echo _('Allowed format: PNG, JPG or GIF image')?></span>
+                    <span class="img_format"><?php echo _('Allowed format: Up to 400x400 PNG, JPG or GIF image')?></span>
                 </td>
             </tr>
 

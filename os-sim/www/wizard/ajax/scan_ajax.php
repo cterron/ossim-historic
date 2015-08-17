@@ -70,11 +70,12 @@ function modify_scan_networks($conn, $wizard, $data)
 
     if ($step == 1 || $step == 2)
     {
-        $response['error'] = TRUE ;
-        $response['msg']   = _('There is a NMAP scan running, you have to wait until it completes.');
+        $response['error'] = TRUE;
+        $response['msg']   = _('There is a Asset scan running, you have to wait until it completes.');
 
         return $response;
     }
+
 
     $ids = array_keys($data['nets']);
 
@@ -132,94 +133,94 @@ function modify_scan_networks($conn, $wizard, $data)
 }
 
 
-function do_ping($wizard)
+function do_scan($wizard)
 {
-    $step = intval($wizard->get_step_data('scan_step'));
-
-    if ($step == 0)
+    try
     {
-        $nets = $wizard->get_step_data('scan_nets');
+        $next_step = 1;
+        $data = array('finish' => FALSE);
 
-        if (count($nets) < 1)
+        //File to cache scan object
+        $user      = Session::get_session_user();
+        $scan_file = 'last_asset_object-'.md5($user);
+
+        $step = intval($wizard->get_step_data('scan_step'));
+
+        if ($step == 0)
         {
-            $msg = _('Invalid networks selected to scan');
-            set_scan_error_message($wizard, $msg);
-
-            $response['error'] = TRUE;
-
-            return $response;
+            @unlink($scan_file);
         }
 
-        $nets = implode(' ', $nets);
+        $obj = Av_scan::get_object_from_file($scan_file);
 
-        $obj  = new Scan($nets);
-
-        // ping scan
-        $obj->search_hosts();
-
-        $wizard->set_step_data('scan_step', 1);
-    }
-    else
-    {
-        $obj = new Scan();
-    }
-
-
-    $data   = array();
-
-    $status = $obj->get_status();
-
-
-    if ($status == 'Searching Hosts')
-    {
-        $data['finish'] = FALSE;
-    }
-    elseif ($status == 'Search Finished')
-    {
-        $total = $obj->get_num_of_hosts();
-
-        if ($total == 0)
+        if (!is_object($obj) || empty($obj))
         {
-            $next_step = 3;
+            $nets = $wizard->get_step_data('scan_nets');
 
-            $obj->delete_data();
-        }
-        else
-        {
-            $res = $obj->launch_scan();
-
-            if ($res === FALSE)
+            if (count($nets) < 1)
             {
-                $msg = _('Impossible to launch NMAP scan');
-                set_scan_error_message($wizard, $msg);
-
-                $response['error'] = TRUE;
-
-                return $response;
+                $e_msg = _('Invalid networks selected to scan');
+                Av_exception::throw_error(Av_exception::USER_ERROR, $e_msg);
             }
 
-            $next_step = 2;
+            $nets = implode(' ', $nets);
+
+            $scan_options = array(
+                'scan_type'     => 'fast',
+                'scan_timing'   => 'T3',
+                'autodetect_os' => 'true',
+                'reverse_dns'   => 'true',
+                'scan_ports'    => '',
+                'idm'           => 'false'
+            );
+
+            $obj = new Av_scan($nets, 'local', $scan_options);
+            $obj->run();
+
+            Av_scan::set_object_in_file($obj, $scan_file);
         }
 
-        $wizard->set_step_data('scan_hosts', $total);
+        $aux_status = $obj->get_status();
+
+        $status = $aux_status['status']['code'];
+        $total  = $aux_status['number_of_targets'];
+
+        switch($status)
+        {
+            case Av_scan::ST_SEARCH_FINISHED:
+            case Av_scan::ST_SCANNING_HOSTS:
+            case Av_scan::ST_SCAN_FINISHED:
+
+                $next_step = ($total > 0) ? 2 : 3;
+
+                $wizard->set_step_data('scan_hosts', $total);
+
+                $data = array('finish' => TRUE);
+
+            break;
+        }
+
+
         $wizard->set_step_data('scan_step', $next_step);
 
-        $data['finish'] = TRUE;
+        //error_log("Step: $step\n", 3, '/tmp/test_wizard');
+        //error_log("Next Step: $next_step\n", 3, '/tmp/test_wizard');
+        //error_log(var_export($aux_status, TRUE)."\n", 3, '/tmp/test_wizard');
+
+        $response['error'] = FALSE;
+        $response['data']  = $data;
+
+        $wizard->save_status();
     }
-    else
+    catch(Exception $e)
     {
-        $msg = _("Invalid NMAP status ($status). Expecting 'Searching Hosts' or 'Search Finished'");
+        //error_log("Error: ".$e->getMessage()."\n", 3, '/tmp/test_wizard');
+
+        $msg = _('Error! Asset scan cannot be completed.  Please try again');
         set_scan_error_message($wizard, $msg);
 
         $response['error'] = TRUE;
-
-        return $response;
     }
-
-    $response['error'] = FALSE;
-    $response['data']  = $data;
-
-    $wizard->save_status();
 
     return $response;
 }
@@ -227,65 +228,77 @@ function do_ping($wizard)
 
 function check_scan_progress($conn, $wizard)
 {
-    $data   = array();
+    //File to cache scan object
+    $user      = Session::get_session_user();
+    $scan_file = 'last_asset_object-'.md5($user);
 
-    $obj    = new Scan();
+    $data = array();
 
-    $status = $obj->get_status();
-
-    //Get status
-    if ($status == 'Scan Finished')
+    try
     {
-        //Scanning has finished properly
-        $info = array();
+        $obj = Av_scan::get_object_from_file($scan_file);
 
-        $result = $obj->get_results();
+        //Get status
+        $aux_status = $obj->get_status();
+        $status     = $aux_status['status']['code'];
 
-        $obj->delete_data();
-
-        $info = Welcome_wizard::format_result_scan($conn, $result);
-
-        $wizard->set_step_data('scan_step', 3);
-        $wizard->set_step_data('scan_info', $info);
-
-        $data['finish'] = TRUE;
-    }
-    elseif ($status == 'Scanning Hosts')
-    {
-        $progress = $obj->get_progress();
-
-        $percent  = ($progress['hosts_scanned'] / $progress['total_hosts']) * 100;
-
-
-        $data['finish']  = FALSE;
-        $data['percent'] = round($percent);
-        $data['current'] = $progress['hosts_scanned'];
-        $data['total']   = $progress['total_hosts'];
-
-        if ($progress['remaining'] == -1)
+        if ($status == Av_scan::ST_SCAN_FINISHED)
         {
-            $data['time'] = _('Calculating Remaining Time');
+            //Scanning has finished properly
+            $info = array();
+
+            $scan_report = $obj->download_scan_report();
+
+            //Delete scan
+            $obj->delete_scan();
+            Cache_file::remove_file($scan_file);
+
+            //Parsing scan report
+            $nmap_parser = new Nmap_parser();
+            $scan_report = $nmap_parser->parse_json($scan_report, $obj->get_sensor());
+
+            // Add summary 
+            $scan_report['nmap_data']['elapsed'] = $aux_status['elapsed_time'];
+
+            $info = Welcome_wizard::format_result_scan($conn, $scan_report);
+
+            $wizard->set_step_data('scan_step', 3);
+            $wizard->set_step_data('scan_info', $info);
+
+            $data['finish'] = TRUE;
         }
         else
         {
-            $data['time'] = Welcome_wizard::format_time($progress['remaining']) . ' ' . _('remaining');
+            $percent  = ($aux_status['scanned_targets'] / $aux_status['number_of_targets']) * 100;
+
+            $data['finish']  = FALSE;
+            $data['percent'] = round($percent);
+            $data['current'] = $aux_status['scanned_targets'];
+            $data['total']   = $aux_status['number_of_targets'];
+
+            if ($aux_status['remaining_time'] == -1)
+            {
+                $data['time'] = _('Calculating Remaining Time');
+            }
+            else
+            {
+                $data['time'] = Welcome_wizard::format_time($aux_status['remaining_time']) . ' ' . _('remaining');
+            }
         }
+
+
+        $response['error'] = FALSE;
+        $response['data']  = $data;
+
+        $wizard->save_status();
     }
-    else
+    catch(Exception $e)
     {
-        $msg = _("Invalid NMAP status ($status). Expecting 'Scanning Hosts' or 'Scan Finished'");
+        $msg = _('Error! Asset scan cannot be completed.  Please try again');
         set_scan_error_message($wizard, $msg);
 
         $response['error'] = TRUE;
-
-        return $response;
     }
-
-    $response['error'] = FALSE;
-    $response['data']  = $data;
-
-    $wizard->save_status();
-
 
     return $response;
 }
@@ -293,25 +306,30 @@ function check_scan_progress($conn, $wizard)
 
 function cancel_scan($wizard)
 {
+    //File to cache scan object
+    $user      = Session::get_session_user();
+    $scan_file = 'last_asset_object-'.md5($user);
+
     $step = intval($wizard->get_step_data('scan_step'));
 
-    if ($step == 1 || $step ==2)
+    if ($step == 1 || $step == 2)
     {
-        $obj = new Scan();
+        $obj = Av_scan::get_object_from_file($scan_file);
 
         $obj->stop();
 
-        $obj->delete_data();
+        $obj->delete_scan();
+
+        Cache_file::remove_file($scan_file);
     }
 
     $wizard->clean_step_data();
 
     $wizard->save_status();
 
-    $response['error'] = FALSE ;
+    $response['error'] = FALSE;
 
     return $response;
-
 }
 
 
@@ -323,7 +341,7 @@ function schedule_scan($conn, $wizard, $data)
     if ($step != 3 || count($nets) < 1)
     {
         $response['error'] = TRUE ;
-        $response['msg']   = _('NMAP Scan not valid to schedule');
+        $response['msg']   = _('Asset Scan not valid to schedule');
 
         return $response;
     }
@@ -357,8 +375,7 @@ function schedule_scan($conn, $wizard, $data)
         $period = 2419200;
     }
 
-    $sensor_ip = Util::get_default_admin_ip();
-    $sensor_id = Av_sensor::get_id_by_ip($conn, $sensor_ip);
+    $sensor_id = Av_sensor::get_default_sensor($conn);
     $name      = _('Default_wizard_scan');
     $type      = 5;
     $enable    = 1;
@@ -377,7 +394,7 @@ function schedule_scan($conn, $wizard, $data)
     }
 
     $targets   = implode(' ', $targets);
-    $params    = $targets .'#-T5 -A -sS -F';
+    $params    = $targets .'#-T3 -A -sS -F';
 
     Inventory::insert($conn, $sensor_id, $name, $type, $period, $params, $enable, $targets);
 
@@ -419,7 +436,7 @@ if (ossim_error())
 
 //Default values for the response.
 $response['error'] = TRUE ;
-$response['msg']   = _('Unknown Error');
+$response['msg']   = _('Error when processing the request');
 
 //checking if it is an ajax request
 if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
@@ -437,7 +454,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
         (
             'scan_networks'   => array('name' => 'modify_scan_networks',  'params' => array('conn', 'wizard', 'data')),
             'scan_progress'   => array('name' => 'check_scan_progress',   'params' => array('conn', 'wizard')),
-            'do_ping'         => array('name' => 'do_ping',               'params' => array('wizard')),
+            'do_scan'         => array('name' => 'do_scan',               'params' => array('wizard')),
             'cancel_scan'     => array('name' => 'cancel_scan',           'params' => array('wizard')),
             'schedule_scan'   => array('name' => 'schedule_scan',         'params' => array('conn', 'wizard', 'data'))
         );
@@ -451,8 +468,8 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
 
             if (is_object($wizard))
             {
-                $db     = new ossim_db();
-                $conn   = $db->connect();
+                $db   = new ossim_db();
+                $conn = $db->connect();
 
                 //Now we translate the params list to a real array with the real parameters
                 $params = array();
@@ -468,7 +485,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
 
                     if ($response === FALSE)
                     {
-                        throw new Exception(_('An unexpected error happened. Try again later'));
+                        throw new Exception(_('Sorry, operation was not completed due to an error when processing the request. Try again later'));
                     }
                 }
                 catch(Exception $e)
@@ -484,7 +501,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
             {
                 $response['error']    = TRUE;
                 $response['critical'] = TRUE;
-                $response['msg']      = _('An unexpected error happened. Try again later');
+                $response['msg']      = _('Sorry, operation was not completed due to an error when processing the request. Try again later');
             }
         }
         else

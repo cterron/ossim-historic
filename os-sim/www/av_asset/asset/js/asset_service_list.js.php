@@ -65,7 +65,7 @@ function Av_service_list(config)
         'monitoring_disabled' : "<?php echo Util::js_entities(_('Availability monitoring will be disabled for selected services/ports. Do you want to continue?'))?>",
         "confirm_yes"         : "<?php echo _('Yes')?>",
         "confirm_no"          : "<?php echo _('No')?>",
-        "unknown_error"       : "<?php echo _('Unknown error - Operation cannot be completed. Please try again')?>"
+        "unknown_error"       : "<?php echo _('Sorry, operation was not completed due to an error when processing the request. Please try again')?>"
     };
 
 

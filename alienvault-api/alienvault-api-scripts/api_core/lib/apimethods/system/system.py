@@ -28,9 +28,10 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-#pylint: disable=F0401
+# pylint: disable=F0401
 # Generics
 import api_log
+import os
 from subprocess import call, Popen, PIPE
 from ast import literal_eval
 from ConfigParser import RawConfigParser, NoOptionError
@@ -158,13 +159,16 @@ def get_local_info():
                     "the local system info"
         return False, error_msg
 
-
-def get_all_systems_with_ping_info():
+@use_cache(namespace="system")
+def get_all_systems_with_ping_info(system_type=None):
     """
     get all the registered systems and ping information
     """
 
-    success, system_list = ret = get_systems_full()
+    if system_type is None:
+        success, system_list = ret = get_systems_full()
+    else:
+        success, system_list = ret = get_systems_full(system_type=system_type)
     if not success:
         return ret
 
@@ -341,6 +345,9 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
     system_info['sensor_id'] = sensor_id
 
     if not system_info['admin_ip']:
+        system_info['admin_ip'] = system_ip
+    if system_info['admin_ip'] != system_ip: 
+        # We're natted
         system_info['admin_ip'] = system_ip
     if add_to_database:
         profile_str = ','.join(system_info['profile'])
@@ -1130,7 +1137,7 @@ def system_is_professional(system_id='local'):
         return False, error_msg
 
     success, version_data = get_alienvault_version(system_ip)
-    if success and '' in version_data:
+    if success and 'ALIENVAULT' in version_data:
         return True, True
 
     return True, False
@@ -1238,17 +1245,22 @@ def get_license_devices():
         0 if an error occurs
         1000000 if 'devices' is not specified in the ossim.lic file
     """
+    rc, pro = system_is_professional()
     devices = 0
-    config = RawConfigParser()
-    try:
-        license_file = config.read('/etc/ossim/ossim.lic')
-    except Exception:
-        api_log.error("There is no ossim.lic file in the current system")
-        devices = 0
+    if rc and pro:
+        if os.path.isfile("/etc/ossim/ossim.lic"):
+            try:
+                config = RawConfigParser()
+                license_file = config.read('/etc/ossim/ossim.lic')
+                devices = config.getint('appliance', 'devices')
+            except NoOptionError:
+                devices = 1000000
 
-    try:
-        devices = config.getint('appliance', 'devices')
-    except NoOptionError:
+        else:
+            api_log.debug("License devices can't be determined: License file not found")
+            devices = 0
+
+    else:
         devices = 1000000
 
     return devices

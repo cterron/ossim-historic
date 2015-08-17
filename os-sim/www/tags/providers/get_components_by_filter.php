@@ -56,12 +56,10 @@ $conn = $db->connect();
 
 try
 {
-    $user = Session::get_session_user();
-
-    $query  = 'SELECT hex(asset_id)as id FROM user_component_filter WHERE login=?';
+    $query  = 'SELECT hex(asset_id)as id FROM user_component_filter WHERE session_id=?';
 
     $params = array(
-        $user
+        session_id()
     );
 
     $rs = $conn->Execute($query, $params);

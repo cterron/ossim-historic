@@ -593,6 +593,16 @@ $CONFIG = array(
                 'advanced' => 1 ,
                 'section' => 'users'
             ),
+            'login_ldap_tls' => array(
+                'type' => array(
+                    'yes' => _('Yes'),
+                    'no' => _('No')
+                ),
+                'help' => _('use LDAP server with TLS?'),
+                'desc' => _('LDAP server TLS'),
+                'advanced' => 1 ,
+                'section' => 'users'
+            ),
             'login_ldap_baseDN' => array(
                 'type' => 'text',
                 'help' => 'Example: dc=local,dc=domain,dc=net' ,
@@ -603,7 +613,7 @@ $CONFIG = array(
             'login_ldap_filter_to_search' => array(
                 'type' => 'text',
                 'help' => _('Filter to search the users for ossim in LDAP<br />Example for LDAP:<br/> (&(cn=%u)(objectClass=account)) <b>or</b> (uid=%u) <b>or</b> (&(cn=%u)(objectClass=OrganizationalPerson))<br/>Example for AD:<br/> (&(sAMAccountName=%u)(objectCategory=person)) <b>or</b> (userPrincipalName=%u) %u is the user'),
-                'desc' => _('Ldap server filter for LDAP users'),
+                'desc' => _('LDAP server filter for LDAP users'),
                 'advanced' => 1 ,
                 'section' => 'users'
             ),

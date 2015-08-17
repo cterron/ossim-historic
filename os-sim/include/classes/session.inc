@@ -1722,7 +1722,9 @@ class Session
             {
                 $this->check_all_user_accounts($conn);
             }
-
+            
+            self::delete_orphan_asset_selections();
+            
             return TRUE;
         }
         
@@ -1739,7 +1741,7 @@ class Session
                 if($conf->get_conf('login_ldap_require_a_valid_ossim_user') == 'no')
                 {
                     //Create the user with default perms
-                    $timezone = trim(`head -1 /etc/timezone`);
+                    $timezone = trim(Util::execute_command('head -1 /etc/timezone', FALSE, 'string'));
                                                             
                     if (preg_match('/pro|demo/i',$version))
                     {
@@ -1833,6 +1835,8 @@ class Session
                 $this->check_all_user_accounts($conn);
             }
             
+            self::delete_orphan_asset_selections();
+            
             return TRUE;
         }
                         
@@ -1913,6 +1917,7 @@ class Session
         $ldap_filter = $conf->get_conf('login_ldap_filter_to_search');
         $ldap_bindDN = $conf->get_conf('login_ldap_bindDN');
         $ldap_pass   = $conf->get_conf('login_ldap_valid_pass');
+        $ldap_tls    = ($conf->get_conf('login_ldap_tls')=='yes') ? 1 : 0;
 
         
         $password1 = utf8_encode($password);
@@ -1940,6 +1945,15 @@ class Session
         
         ldap_set_option($ldapconn,LDAP_OPT_PROTOCOL_VERSION,3);
         ldap_set_option($ldapconn,LDAP_OPT_REFERRALS,0);
+        
+        if ($ldap_tls && !ldap_start_tls($ldapconn))
+        {
+            $log_msg = _('Unable to start TLS');
+            
+            Av_exception::write_log(Av_exception::USER_ERROR, $log_msg);
+            
+            return FALSE;
+        }
         
         if ($ldapconn) 
         {
@@ -2150,6 +2164,16 @@ class Session
     public function update_logon_try($login) 
     {
         $this->conn->Execute("UPDATE users SET last_logon_try = NOW() WHERE login = ?", array($login));
+    }
+    
+    
+    /**
+    * This function remove the orphan entries in the filter tables.
+    *
+    */
+    public function delete_orphan_asset_selections() 
+    {
+        Util::execute_command('echo "CALL host_filter_delete_selections();" | ossim-db 2>&1');
     }
        
       

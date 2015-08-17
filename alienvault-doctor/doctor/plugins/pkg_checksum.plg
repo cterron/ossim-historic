@@ -5,6 +5,7 @@ category=alienvault,system
 type=command
 strike_zone=True
 command=debsums ossim-server ossim-agent ossim-framework alienvault-plugins
+profiles=Server:>4.0,Sensor:>4.0
 requires=@dpkg:debsums
 
 [ossim_checks]

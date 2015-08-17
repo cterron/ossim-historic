@@ -483,11 +483,11 @@ class Asset_group
         $query = "REPLACE INTO host_group_reference (
                     SELECT UNHEX(?), f.asset_id
                         FROM user_component_filter f, host h
-                        WHERE f.login=? AND f.asset_type='asset' AND h.id=f.asset_id $perms)";
+                        WHERE f.session_id=? AND f.asset_type='asset' AND h.id=f.asset_id $perms)";
 
         $params = array(
             $this->id,
-            Session::get_session_user()
+            session_id()
         );
 
         Util::memcacheFlush();
@@ -496,6 +496,31 @@ class Asset_group
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
+        
+        // Get affected assets to update history
+        $asset_list = array();
+        
+        $query = "SELECT HEX(f.asset_id) AS asset_id
+                    FROM user_component_filter f, host h
+                    WHERE f.session_id=? AND f.asset_type='asset' AND h.id=f.asset_id $perms";
+        
+        $params = array(session_id());
+        
+        $rs = $conn->Execute($query, $params);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $asset_list[] = $rs->fields['asset_id'];
+        
+            $rs->MoveNext();
+        }
+        
+        $this->save_history($conn, 'add', $asset_list);
     }
 
 
@@ -536,6 +561,8 @@ class Asset_group
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
+        
+        $this->save_history($conn, 'add', $asset_list);
     }
 
 
@@ -739,12 +766,12 @@ class Asset_group
         $perms = Asset_host::get_perms_where('h.', TRUE);
 
         $query = "DELETE hgr FROM host_group_reference hgr, user_component_filter f, host h
-            WHERE hgr.host_group_id = UNHEX(?) AND hgr.host_id=f.asset_id AND f.login=? AND f.asset_type='asset'
+            WHERE hgr.host_group_id = UNHEX(?) AND hgr.host_id=f.asset_id AND f.session_id=? AND f.asset_type='asset'
             AND h.id=f.asset_id $perms";
 
         $params = array(
             $this->id,
-            Session::get_session_user()
+            session_id()
         );
 
         Util::memcacheFlush();
@@ -755,6 +782,31 @@ class Asset_group
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
+        
+        // Get affected assets to update history
+        $asset_list = array();
+        
+        $query = "SELECT HEX(f.asset_id) AS asset_id
+                  FROM user_component_filter f, host h
+                  WHERE f.session_id=? AND f.asset_type='asset' AND h.id=f.asset_id $perms";
+        
+        $params = array(session_id());
+        
+        $rs = $conn->Execute($query, $params);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $asset_list[] = $rs->fields['asset_id'];
+        
+            $rs->MoveNext();
+        }
+        
+        $this->save_history($conn, 'remove', $asset_list);
     }
 
 
@@ -938,49 +990,6 @@ class Asset_group
         return SIEM::has_events($conn, 'group', $this->id);
     }
 
-
-    /**
-    * This function returns the number of group vulnerabilities
-    *
-    * @param object $conn  Database access object
-    * @param string $id    Host Group uuid (Hex value)
-    *
-    * @access public
-    *
-    * @throws Av_exception If a connection error occurred
-    *
-    * @return integer  Number of vulnerabilities
-    */
-    public function get_vulnerability_number($conn, $id)
-    {
-        Ossim_db::check_connection($conn);
-
-        //No info
-        $count = 0;
-
-        $perms = Asset_host::get_perms_where('h.', TRUE);
-
-        $query = "SELECT COUNT(lr.hostIP) AS counter
-                    FROM host h, host_group_reference hr, host_ip hi, vuln_nessus_latest_results lr
-                    WHERE hi.host_id = hr.host_id AND hi.host_id=h.id AND hi.ip = INET6_ATON(lr.hostIP) AND h.ctx = lr.ctx
-                    AND hr.host_group_id = UNHEX(?) $perms";
-
-        $params = array($id);
-
-        $rs = $conn->Execute($query, $params);
-
-        if (!$rs)
-        {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        }
-        else
-        {
-            $count = $rs->fields['counter'];
-        }
-
-        return $count;
-    }
-
     /**
      * Function get_vulnerabilities
      *
@@ -997,6 +1006,8 @@ class Asset_group
      */
     public function get_vulnerabilities($conn, $tables = '', $filters = array(), $cache = FALSE)
     {
+        Ossim_db::check_connection($conn);
+        
         $ag_tables = ', host_group_reference hgr';
 
         if (!empty($tables))
@@ -1685,13 +1696,13 @@ class Asset_group
     * @param string $action  new, add or remove
     * @param array  $assets  [Optional] List of membership uuid
     *
-    * @access private
+    * @access public
     *
     * @throws Av_exception If a connection error occurred
     *
     * @return boolean   False if not correct action supplied
     */
-    private function save_history($conn, $action, $assets = array())
+    public function save_history($conn, $action, $assets = array())
     {
         Ossim_db::check_connection($conn);
 
@@ -1723,7 +1734,8 @@ class Asset_group
             foreach ($assets as $asset_id)
             {
                 $hostname = Asset_host::get_name_by_id($conn, $asset_id);
-                $msg      = $hostname . ' ' . $_msg;
+                $hostip   = Asset_host_ips::get_ips_to_string($conn, $asset_id);
+                $msg      = $hostname . ' [' . $hostip . '] - ' . $_msg;
 
                 $query = 'REPLACE INTO host_group_history (host_group_id,date,login,action) VALUES (UNHEX(?), utc_timestamp(), ?, ?)';
 
@@ -1804,6 +1816,8 @@ class Asset_group
      */
     public function get_events($conn, $from = 0, $maxrows = 50, $order = 'timestamp', $torder = 'DESC', $search_str = '')
     {
+        Ossim_db::check_connection($conn);
+        
         $siem  = new Siem(TRUE); // Perms byPass TRUE
         
         // Create temporary table with inner assets
@@ -2019,7 +2033,7 @@ class Asset_group
 
         // Create tmp table
         $tmp_table = Util::create_tmp_table($conn, "group_id binary(16) NOT NULL, PRIMARY KEY (group_id)");
-        $user      = Session::get_session_user();
+        $session   = session_id();
 
         //Populate tmp table adding filtered groups which are not included in policies
         $join    = 'LEFT JOIN policy_host_group_reference phgr ON phgr.host_group_id = g.id';
@@ -2027,7 +2041,7 @@ class Asset_group
 
         //Group Selected
         $join    .= ', user_component_filter uc';
-        $q_where .= " AND uc.asset_id = g.id AND uc.asset_type='group' AND uc.login = '$user'";
+        $q_where .= " AND uc.asset_id = g.id AND uc.asset_type='group' AND uc.session_id = '$session'";
 
         $query = ossim_query("INSERT INTO $tmp_table (group_id) SELECT id
             FROM host_group g $join WHERE $q_where");

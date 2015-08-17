@@ -139,9 +139,9 @@ if (empty($validation_errors))
     {
         $image = @imagecreatefromstring($icon);
 
-        if (!$image || imagesx($image) > 16 || imagesy($image) > 16)
+        if (!$image || imagesx($image) > 400 || imagesy($image) > 400)
         {
-            $validation_errors['icon'] = _('Image format is not allowed. Allowed only 16x16 PNG images');
+            $validation_errors['icon'] = _('Image format is not allowed');
         }
     }
 

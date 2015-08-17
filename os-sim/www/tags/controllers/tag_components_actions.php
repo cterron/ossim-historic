@@ -177,7 +177,7 @@ catch (\Exception $e)
 
     if (empty($error_msg))
     {
-        $error_msg = _('Unknown error - Operation cannot be completed');
+        $error_msg = _('Sorry, operation was not completed due to an error when processing the request');
     }
 
     $response['status'] = 'error';

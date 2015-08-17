@@ -367,7 +367,7 @@ class Reputation
         }
         else
         {
-            $this->rep_file = trim(`grep "reputation" /etc/ossim/server/config.xml | perl -npe 's/.*\"(.*)\".*/$1/'`);
+            $this->rep_file = trim(Util::execute_command("grep 'reputation' /etc/ossim/server/config.xml | perl -npe 's/.*\"(.*)\".*/$1/'", FALSE, 'string'));
         }
         
         $this->rep_file_stats = $this->rep_file.'.stats';
@@ -492,7 +492,8 @@ class Reputation
             return array('', '', '');
         }
 
-        $line = `grep '^$ip#' '$this->rep_file'`;
+        $params = array("^$ip#", $this->rep_file);
+        $line   = Util::execute_command('grep ? ?', $params, 'string');
 
         if (preg_match('/(\d+\.\d+\.\d+\.\d+)#([^#]*)#([^#]*)#([^#]*)#([^#]*)#([^#]*)#([^#]*)#([^#]*)/', trim($line), $fnd))
         {

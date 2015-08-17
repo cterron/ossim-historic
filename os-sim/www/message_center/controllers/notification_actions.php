@@ -158,7 +158,7 @@ else
 
         if (empty($error_msg))
         {
-            $error_msg = _('Unknown error - Operation cannot be completed. Please try again.');
+            $error_msg = _('Sorry, operation was not completed due to an error when processing the request. Please try again.');
         }
 
         Util::response_bad_request($error_msg);

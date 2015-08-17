@@ -44,11 +44,10 @@ function scan2html($conn, $scan)
     $text_hostname = "<div>"._('A valid hostname must satisfy the following rules (according RFC 1123)').":</div>
                     <div>
                         <ul class='ul_tiptip'>
-                            <li>"._("A hostname can start or end with a letter or a number [a-zA-z0-9]")."</li>
-                            <li>"._("A hostname <strong>MUST NOT</strong> contain any '.' (dot)")."</li>
-                            <li>"._("A hostname <strong>MUST NOT</strong> start or end with a '-' (hyphen)")."</li>
-                            <li>"._("A hostname <strong>MUST NOT</strong> contain a space")."</li>
-                            <li>"._("A hostname can be up to 63 characters")."</li>
+                            <li>"._("Hostname may contain ASCII letters a-z (not case sensitive), digits, and/or hyphens ('-')")."</li>
+                            <li>"._("Hostname <strong>MUST NOT</strong> contain a '.' (period) or '_' (underscore)")."</li>
+                            <li>"._("Hostname <strong>MUST NOT</strong> contain a space")."</li>
+                            <li>"._("Hostname can be up to 63 characters")."</li>
                         </ul>
                     </div>";
 
@@ -198,6 +197,7 @@ function scan2html($conn, $scan)
 ?>
    	
 	<form method="POST" action="scan_form.php" name="scan_form" id="scan_form">		
+		<input type="hidden" name="sensor_ctx" value='<?php echo $s_ctx?>'/>
 		<input type="hidden" name="ips" value='<?php echo $count?>'/>
 		
 		<div class='results_title'><?php echo _('Scan Results')?></div>

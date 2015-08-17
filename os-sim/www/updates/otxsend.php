@@ -64,13 +64,13 @@ if ($send > 0)
 {
 	$cmd = "python /usr/share/ossim/scripts/send_reputation_feedback.py";
 	
-	system($cmd);	
+	Util::execute_command($cmd);	
 	
 }
 else
 {
     $cmd          = "python /usr/share/ossim/scripts/send_reputation_feedback.py --preview 2>/dev/null";
-    $current_info = explode("\n", `$cmd`);
+    $current_info = Util::execute_command($cmd, FALSE, 'array');
 }
 
 

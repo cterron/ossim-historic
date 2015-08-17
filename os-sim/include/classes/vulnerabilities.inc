@@ -236,11 +236,10 @@ class Vulnerabilities
                     fwrite($hfile, $cdata["password"]);
                     fclose($hfile);
 
-                    $command = 'sshpass -f ' . $pass_file . ' ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" '.$cdata["login"]. '@' . $host_ip . ' "echo \"ok\";exit"';
+                    $command = 'sshpass -f ? ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" ? "echo \"ok\";exit"';
+                    $params  = array($pass_file, $cdata["login"]. '@' . $host_ip);
 
-                    $arr_out = array();
-
-                    exec($command, $arr_out);
+                    $arr_out = Util::execute_command($command, $params, 'array', FALSE); // Don't throw exceptions
 
                     $out = implode("\n",$arr_out);
 
@@ -292,18 +291,20 @@ class Vulnerabilities
 
                     if (file_exists('/usr/bin/winexe'))
                     {
-                        $command = 'winexe -A '.$pass_file.' //'.$host_ip.' "ipconfig" 2>&1 | grep ERROR';
+                        $command = 'winexe -A ? ? "ipconfig" 2>&1 | grep ERROR';
+                        $params  = array($pass_file, '//'.$host_ip);
                     }
                     else
                     {
-                        $command = 'smbclient -A '.$pass_file.' -L '.$host_ip.' \\\\\\\\'.$host_ip.'\\\\';
+                        $command = 'smbclient -A ? -L ? ?';
+                        $params  = array($pass_file, $host_ip, '\\\\\\\\'.$host_ip.'\\\\');
                     }
 
                     $arr_out = array();
 
                     $return_var = 0;
 
-                    exec($command, $arr_out, $return_var);
+                    $arr_out = Util::execute_command($command, $params, 'array', FALSE, $return_var); // Don't throw exceptions
 
                     $out = implode(" ",$arr_out);
 
@@ -338,10 +339,10 @@ class Vulnerabilities
                 else if($cdata["login"]!= '' && file_exists($cdata["private_key_file"]))
                 {
                     // check ssh credential with login/private key
-                    $command = 'chmod 600 '.$cdata["private_key_file"].' && ssh -q -o "BatchMode=yes" -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -i '.$cdata["private_key_file"].' '.$cdata["login"].'@'.$host_ip.' "echo 2>&1" && echo "OK" || echo "NOK"';
+                    $command = 'chmod 600 ? && ssh -q -o "BatchMode=yes" -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -i ? ? "echo 2>&1" && echo "OK" || echo "NOK"';
+                    $params  = array($cdata["private_key_file"], $cdata["private_key_file"], $cdata["login"].'@'.$host_ip);
 
-                    $arr_out = array();
-                    exec($command, $arr_out);
+                    $arr_out = Util::execute_command($command, $params, 'array');
 
                     @unlink($cdata["private_key_file"]);
 
@@ -359,7 +360,7 @@ class Vulnerabilities
                     }
                     else
                     {
-                        exec("nmap -sn -PE ".$host_ip, $arr_out);
+                        $arr_out = Util::execute_command("nmap -sn -PE ?", array($host_ip), 'array');
 
                         $out = implode(" ",$arr_out);
 
@@ -686,6 +687,8 @@ class Vulnerabilities
                         $omp = new Omp($sensor_object->get_ip(), $port, $user, $password);
 
                         $tstatus = $omp->get_task_status($nid);
+                        
+                        $is_openvas8 = $omp->is_openvas8();
                     }
                 }
 
@@ -798,24 +801,27 @@ class Vulnerabilities
                 {
                     $task_status = $tstatus["status"];
 
-                    // pause button
-                    if($task_status == "Running" || $task_status == "Requested" && !preg_match("/.*\srequested/i", $task_status))
+                    if ($is_openvas8 == FALSE)
                     {
-                        $sInfo .= "<img align='absmiddle' class='manageJob' id='pause_task#$nid' title='"._("Pause current scan job")."' alt='"._("Pause current scan job")."' src='./images/pause_task.png'  border='0'>";
-                    }
-                    else
-                    {
-                        $sInfo .= "<img align='absmiddle' class='bdisabled' src='./images/pause_task.png' border=0></a>";
-                    }
-
-                    // resume button
-                    if( preg_match("/^pause.*/i", $task_status) && !preg_match("/.*\srequested/i", $task_status))
-                    {
-                        $sInfo .= "<img align='absmiddle' class='manageJob' id='resume_task#$nid' title='"._("Resume scan job")."' alt='"._("Resume scan job")."' src='./images/resume_task.png'  border='0'>";
-                    }
-                    else
-                    {
-                        $sInfo .= "<img align='absmiddle' class='bdisabled' src='./images/resume_task.png'  border='0'></a>";
+                        // pause button
+                        if($task_status == "Running" || $task_status == "Requested" && !preg_match("/.*\srequested/i", $task_status))
+                        {
+                            $sInfo .= "<img align='absmiddle' class='manageJob' id='pause_task#$nid' title='"._("Pause current scan job")."' alt='"._("Pause current scan job")."' src='./images/pause_task.png'  border='0'>";
+                        }
+                        else
+                        {
+                            $sInfo .= "<img align='absmiddle' class='bdisabled' src='./images/pause_task.png' border=0></a>";
+                        }
+    
+                        // resume button
+                        if( preg_match("/^pause.*/i", $task_status) && !preg_match("/.*\srequested/i", $task_status))
+                        {
+                            $sInfo .= "<img align='absmiddle' class='manageJob' id='resume_task#$nid' title='"._("Resume scan job")."' alt='"._("Resume scan job")."' src='./images/resume_task.png'  border='0'>";
+                        }
+                        else
+                        {
+                            $sInfo .= "<img align='absmiddle' class='bdisabled' src='./images/resume_task.png'  border='0'></a>";
+                        }
                     }
 
                     // stop button
@@ -2305,6 +2311,7 @@ class Vulnerabilities
                 {
                     $id          = $rs->fields['h_id'];
                     $ip          = $rs->fields['hostIP'];
+                    $ctx         = $rs->fields['ctx'];
                     $app         = $rs->fields['app'];
                     $service     = $rs->fields['service'];
                     $port        = $rs->fields['port'];

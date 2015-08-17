@@ -1870,3 +1870,6 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Web
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET [9200,9292] (msg:"ET WEB_SERVER Possible CVE-2015-1427 Elastic Search Sandbox Escape Remote Code Execution Attempt"; flow:established,to_server; content:"POST /"; depth:6; content:"search"; distance:0; content:"script_fields"; distance:0; nocase; content:".class.forName"; nocase; distance:0; content:"java.lang.Runtime"; nocase; distance:0; reference:url,jordan-wright.github.io/blog/2015/03/08/elasticsearch-rce-vulnerability-cve-2015-1427; classtype:attempted-admin; sid:2020648; rev:2;)
 
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible IIS Integer Overflow DoS (CVE-2015-1635)"; flow:established,to_server; content:"18446744073709551615"; http_header; fast_pattern:only; content:"Range|3a|"; nocase; http_header; pcre:"/^Range\x3a[^\r\n]*?18446744073709551615/Hmi"; reference:cve,2015-1635; classtype:web-application-attack; sid:2020912; rev:1;)
+

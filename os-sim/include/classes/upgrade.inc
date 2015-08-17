@@ -132,7 +132,8 @@ class Upgrade
                 {
                     echo '<span style="color: #FF3333; padding-left: 5px;">Upgrade failure</span>';
                     echo '<br/><br/><span>';
-                    system("cat $file");
+                    $output = Util::execute_command("cat ?", array($file), 'string');
+                    echo $output;
                     echo "</span>";
                 }
             }

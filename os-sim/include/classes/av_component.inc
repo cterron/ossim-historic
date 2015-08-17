@@ -501,7 +501,7 @@ abstract class Av_component
             if (Session::show_entities())
             {
                 // Restart ossim-server
-                exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+                Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
             }
             
             
@@ -524,7 +524,7 @@ abstract class Av_component
         elseif ($asset_type == 'servers')
         {
             // Restart ossim-server
-            exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+            Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
         }	
     }
 

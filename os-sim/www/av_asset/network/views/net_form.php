@@ -526,7 +526,7 @@ $db->close();
 
                 <td class="td_right">
                     <label for="icon"><?php echo _('Icon') ?></label>
-                    <span class="img_format"><?php echo _('Allowed format: PNG, JPG or GIF image')?></span>
+                    <span class="img_format"><?php echo _('Allowed format: Up to 400x400 PNG, JPG or GIF image')?></span>
                 </td>
             </tr>
 

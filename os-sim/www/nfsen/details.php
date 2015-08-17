@@ -2165,7 +2165,6 @@ if( $_SESSION["detail_opts"]["linegraph"] != "" ) {?>
 			$titcol  = get_tit_col($run);
 			$cmd_out = nfsend_query("run-nfdump", $cmd_opts);
 
-
 			if ( !is_array($cmd_out) ) {
 				ShowMessages();
 			} else {
@@ -2262,7 +2261,7 @@ if( $_SESSION["detail_opts"]["linegraph"] != "" ) {?>
 				
 				# parse command line
                 #2009-12-09 17:08:17.596    40.262 TCP        192.168.1.9:80    ->   217.126.167.80:51694 .AP.SF   0       70   180978        1    35960   2585     1
-                $list = (preg_match("/ extended /",$cmd_out['arg'])) ? 1 : 0;
+                $list = (preg_match("/\-o extended/",$cmd_out['arg'])) ? 1 : 0;
                 $regex = ($list) ? "/(\d\d\d\d\-.*?\s.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+->\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?\s*[KMG]?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*)/" : "/(\d\d\d\d\-.*?\s.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?\s*[KMGT]?)\s+(.*?)\s+(.*?)\s+(.*)/";
                 echo '<div class="nfsen_list_title">'._('Flows Info').'</div>';
                 echo "<table class='table_list'>";

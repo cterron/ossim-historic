@@ -605,7 +605,7 @@ class Ossec_agentless
         {
             if($status != 2)
             {
-                exec("touch /var/tmp/.reload_$sensor_id");
+                Util::execute_command('touch ?', array('/var/tmp/.reload_'.$sensor_id));
             }
         }
         else
@@ -661,7 +661,7 @@ class Ossec_agentless
             
             self::delete_from_config($sensor_id, $ip);
             
-            exec("touch /var/tmp/.reload_$sensor_id");
+            Util::execute_command('touch ?', array('/var/tmp/.reload_'.$sensor_id));
         }
        
         return TRUE;
@@ -1519,7 +1519,7 @@ class Ossec_agentless
         
         if($flag_apply)
         {
-            exec("touch /var/tmp/.reload_$sensor_id");
+            Util::execute_command('touch ?', array('/var/tmp/.reload_'.$sensor_id));
         } 
         
         $agentless = self::get_object($conn, $sensor_id, $ip);
@@ -1581,7 +1581,7 @@ class Ossec_agentless
         {
             $sensor_id = $agentless->get_sensor();
             
-            exec("touch /var/tmp/.reload_$sensor_id"); 
+            Util::execute_command('touch ?', array('/var/tmp/.reload_'.$sensor_id)); 
             
             if ($agentless->get_status() != 0)
             {
@@ -1625,7 +1625,7 @@ class Ossec_agentless
         {
             $sensor_id = $agentless->get_sensor();
             
-            exec("touch /var/tmp/.reload_$sensor_id");
+            Util::execute_command('touch ?', array('/var/tmp/.reload_'.$sensor_id));
             
             if ($agentless->get_status() != 0)
             {

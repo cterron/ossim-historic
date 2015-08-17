@@ -135,15 +135,18 @@ try
     $error = Plugin_reference::new_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2);
 }
 catch(Exception $e)
-{
+{   
+    $_SESSION['av_latest_error'] = _($e->getMessage());
+    
     $error = 1;
 }
 
-$msg   = ($error) ? 'unknown_error' : 'created';
+$msg   = ($error) ? 'error' : 'created';
 
 $db->close();
 ?>
-<script type='text/javascript'>document.location.href="pluginref.php?msg=<?php echo $msg?>"</script>  
+
+<script type='text/javascript'>document.location.href="pluginref.php?msg=<?php echo urlencode($msg) ?>"</script>
 
 </body>
 </html>

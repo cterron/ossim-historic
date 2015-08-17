@@ -41,6 +41,7 @@ case "$1" in
         OSSEC_RULES_FILE="/var/ossec/rules/ossec_rules.xml"
         SYSLOG_RULES_FILE="/var/ossec/rules/syslog_rules.xml"
         AV_DS_RULES_FILE="/var/ossec/rules/alienvault-directory-service_rules.xml"
+	MSAUTH_RULES_FILE="/var/ossec/rules/msauth_rules.xml"
 
         configure_ossec_tzone
         remove_old_ossec_files
@@ -51,6 +52,14 @@ case "$1" in
         fi
 
         MD5_PRE=`md5sum $OSSEC_CONF|awk '{print $1}'`
+        if [ -d "/var/ossec/.ssh" ]; then
+            chown ossec:ossec /var/ossec/.ssh
+            chmod 700  /var/ossec/.ssh
+            if [ -f "/var/ossec/.ssh/config" ]; then
+                chown ossec:ossec /var/ossec/.ssh/config
+                chmod 600 /var/ossec/.ssh/config
+            fi
+        fi
 
         if [ -f "$OSSEC_CONF" ]; then
             # Common configuration for Ossec
@@ -89,6 +98,13 @@ case "$1" in
                 sed -i "$OSSEC_CONF" \
                     -e "s#<syscheck>#&\n    <alert_new_files>yes</alert_new_files>#"
             fi
+        fi
+
+	# Msauth changes
+        if [ -f "$MSAUTH_RULES_FILE" ]; then
+                sed -i "$MSAUTH_RULES_FILE" \
+                        -e "s/<id>\^539$|\^4625$<\/id>/<id>\^539$<\/id>/" \
+                        -e "s/<id>\^529$<\/id>/<id>\^529$\|\^4625$<\/id>/"
         fi
 
         # Change alert level for new files

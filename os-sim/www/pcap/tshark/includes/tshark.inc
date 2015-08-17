@@ -76,8 +76,8 @@ class Tshark {
     {
         $this->put_file_pcap($file);
         $this->put_filter($filter);
-        $cmd    = "capinfos ".$file." 2>&1 1> /dev/null";
-        $output = shell_exec($cmd);
+        $cmd    = "capinfos ? 2>&1 1> /dev/null";
+        $output = Util::execute_command($cmd, array($file), 'string');
         
         if (!filesize($file)){
             $this->put_error(_("This traffic capture is empty"));

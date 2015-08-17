@@ -70,11 +70,11 @@ try
     
     if ($action == 'enable')
     {
-        $success = $_class_name::bulk_enable_monitoring($conn, Session::get_session_user());
+        $success = $_class_name::bulk_enable_monitoring($conn);
     }
     else
     {   
-        $success = $_class_name::bulk_disable_monitoring($conn, Session::get_session_user());
+        $success = $_class_name::bulk_disable_monitoring($conn);
     }
     
     if ($success == FALSE)

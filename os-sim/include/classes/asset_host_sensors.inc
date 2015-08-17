@@ -471,12 +471,12 @@ class Asset_host_sensors
         $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
         
         $params = array(
-            Session::get_session_user()
+            session_id()
         );
 
         //Delete all sensors
         $query  = "DELETE hsr FROM host_sensor_reference hsr, user_component_filter uf, host h
-                        WHERE uf.login=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where";
+                        WHERE uf.session_id=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where";
                         
 
         $rs = $conn->Execute($query, $params);
@@ -488,14 +488,14 @@ class Asset_host_sensors
         
         $query = "REPLACE INTO host_sensor_reference (host_id, sensor_id)
                     SELECT uf.asset_id, UNHEX(?) FROM user_component_filter uf, host h
-                    WHERE uf.login=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
+                    WHERE uf.session_id=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
 
             
         foreach($sensors as $sensor_id)
         {         
             $params = array(
                 $sensor_id,
-                Session::get_session_user()
+                session_id()
             );
 
             $conn->Execute($query, $params);

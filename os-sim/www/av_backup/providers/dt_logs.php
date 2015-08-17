@@ -95,14 +95,32 @@ switch($status)
 }
 
 
-$grep_ignore_frm = "| grep -v 'password' | grep -v 'Checking' | grep -v 'Reloading Backup Configuration'";
-
-
 $f_api = fopen($file_log_api, "r");
 $f_frm = fopen($file_log_frm, "r");
 
-exec("cat ".$file_log_api." | grep '".$status_grep_api."' | tail -n ".$maxrows, $array_result_api, $flag_error_api);
-exec("cat ".$file_log_frm." | grep '".$status_grep_frm."' $grep_ignore_frm | tail -n ".$maxrows, $array_result_frm, $flag_error_frm);
+try
+{
+    $cmd              = "cat ? | grep ? | tail -n ?";
+    $params           = array($file_log_api, $status_grep_api, $maxrows);
+    $array_result_api = Util::execute_command($cmd, $params, 'array');
+    $flag_error_api   = FALSE;
+}
+catch(Exception $e)
+{
+    $flag_error_api = TRUE;
+}
+
+try
+{
+    $cmd              = "cat ? | grep ? | grep -v 'password' | grep -v 'Checking' | grep -v 'Reloading Backup Configuration' | tail -n ?";
+    $params           = array($file_log_frm, $status_grep_frm, $maxrows);
+    $array_result_frm = Util::execute_command($cmd, $params, 'array');
+    $flag_error_frm   = FALSE;
+}
+catch(Exception $e)
+{
+    $flag_error_frm = TRUE;
+}
 
 $array_result_frm = array_reverse($array_result_frm);
 $array_result_api = array_reverse($array_result_api);

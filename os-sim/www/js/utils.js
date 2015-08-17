@@ -91,8 +91,7 @@ Message.show_loading_spinner = function(id, config){
 
 //Show loading box
 function show_loading_box(container, content, style)
-{
-     
+{     
     var ch  = $('#'+container).height()+'px'; // Container height
     var st  = $(window).scrollTop(); // Scroll
     var wh  = $.getDocHeight(); // Window height

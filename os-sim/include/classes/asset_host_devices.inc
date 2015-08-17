@@ -471,9 +471,9 @@ class Asset_host_devices
 
             $query = "REPLACE INTO $tmptable (host_id, type, subtype)
                             SELECT uf.asset_id, ?, ? FROM user_component_filter uf, host h
-                            WHERE uf.login=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
+                            WHERE uf.session_id=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
             
-            $params = array($type, $subtype, Session::get_session_user());
+            $params = array($type, $subtype, session_id());
 
             $rs = $conn->Execute($query, $params);
 

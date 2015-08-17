@@ -90,7 +90,7 @@ $qs->AddValidAction("del_alert");
 $qs->AddValidActionOp(gettext("Insert into DS Group"));
 $qs->AddValidActionOp(gettext("Delete Selected"));
 $qs->AddValidActionOp(gettext("Delete ALL on Screen"));
-$qs->SetActionSQL($from . $where);
+$qs->SetActionSQL($from1 . $where);
 ($debug_time_mode >= 1) ? $et->Mark("Initialization") : '';
 $qs->RunAction($submit, PAGE_STAT_ALERTS, $db);
 ($debug_time_mode >= 1) ? $et->Mark("Alert Action") : '';
@@ -326,7 +326,14 @@ if (!$export)
     		success: function(msg) {
                 var res = msg.split(/##/);
                 $('#le'+pid).html(res[0]);
-                eval(res[1]);
+                if (res[1] == '-')
+                {
+                    $('#plotarea'+pid).html(res[1]);
+                }
+                else
+                {
+                    eval(res[1]);
+                }
                 setTimeout('load_content()',10);
     		}
     	});

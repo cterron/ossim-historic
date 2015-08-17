@@ -222,7 +222,7 @@ alert tcp any [21,1024:] -> $HOME_NET any (msg:"ET ATTACK_RESPONSE Unusual FTP S
 
 #by josh smith
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET ATTACK_RESPONSE Matahari client"; flow:to_server,established; content:"Accept-Encoding|3a| identity"; http_header; content:"Next|2d|Polling"; http_header; content:"Content|2d|Salt|3a| "; http_header; pcre:"/Content\x2dSalt\x3a\x20[0-9\.\-]+\x0d\x0a/Hi"; reference:url,doc.emergingthreats.net/2010795; classtype:trojan-activity; sid:2010795; rev:11;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET ATTACK_RESPONSE Matahari client"; flow:to_server,established; content:"Accept-Encoding|3a| identity"; http_header; content:"Next|2d|Polling"; http_header; fast_pattern:only; content:"Content|2d|Salt|3a| "; http_header; pcre:"/Content\x2dSalt\x3a\x20[0-9\.\-]+\x0d\x0a/Hi"; reference:url,doc.emergingthreats.net/2010795; classtype:trojan-activity; sid:2010795; rev:12;)
 
 #by Kevin Ross
 #
@@ -409,19 +409,19 @@ alert tcp $HOME_NET any -> [72.20.18.2,72.20.18.3] $HTTP_PORTS (msg:"ET ATTACK_R
 
 #by Matt Jonkman
 #
-alert tcp $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via HTTP (linux style)"; flow:established,from_server; content:"root|3a|x|3a|0|3a|0|3a|root|3a|/root|3a|/"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2002034; classtype:misc-activity; sid:2002034; rev:8;)
+alert tcp $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via HTTP (linux style)"; flow:established,from_server; content:"root|3a|x|3a|0|3a|0|3a|root|3a|/root|3a|/"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2002034; classtype:misc-activity; sid:2002034; rev:9;)
 
 #by Matt Jonkman
 #
-alert tcp $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via HTTP (BSD style)"; flow:established,from_server; content:"root|3a|*|3a|0|3a|0|3a|"; nocase; content:"|3a|/root|3a|/bin"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2003071; classtype:misc-activity; sid:2003071; rev:5;)
+alert tcp $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via HTTP (BSD style)"; flow:established,from_server; content:"root|3a|*|3a|0|3a|0|3a|"; nocase; content:"|3a|/root|3a|/bin"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2003071; classtype:successful-recon-limited; sid:2003071; rev:6;)
 
 #by Matt Jonkman
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via SMTP (linux style)"; flow:established,to_server; content:"root|3a|x|3a|0|3a|0|3a|root|3a|/root|3a|/"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2003149; classtype:misc-activity; sid:2003149; rev:5;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via SMTP (linux style)"; flow:established,to_server; content:"root|3a|x|3a|0|3a|0|3a|root|3a|/root|3a|/"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2003149; classtype:successful-recon-limited; sid:2003149; rev:6;)
 
 #by Matt Jonkman
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via SMTP (BSD style)"; flow:established,to_server; content:"root|3a|*|3a|0|3a|0|3a|"; nocase; content:"|3a|/root|3a|/bin"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2003150; classtype:misc-activity; sid:2003150; rev:5;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via SMTP (BSD style)"; flow:established,to_server; content:"root|3a|*|3a|0|3a|0|3a|"; nocase; content:"|3a|/root|3a|/bin"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2003150; classtype:successful-recon-limited; sid:2003150; rev:6;)
 
 #
 #alert ip $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned userid"; content:"uid="; byte_test:5,<,65537,0,relative,string; content:" gid="; within:15; byte_test:5,<,65537,0,relative,string; classtype:bad-unknown; sid:2101882; rev:11;)

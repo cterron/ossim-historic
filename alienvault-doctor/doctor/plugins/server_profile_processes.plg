@@ -4,23 +4,23 @@ description=Check for misbehaviours in AlienVault Server profile related process
 category=alienvault,system
 type=command
 profiles=Server:>4.0
-requires=@files:/usr/bin/ossim-server,/usr/bin/alienvault_indexd
-command=ps aux
+requires=@dpkg:alienvault-professional;@files:/usr/bin/ossim-server,/usr/bin/alienvault_indexd
+command=ps auxfwww | grep -v "^mysql"
 
 # Check for logger CPU load, memory usage and time spent.
 # Note that it's using @string@ types, this is because
 # floating point numbers are not currently supported.
 [Indexer process]
-pattern=(\d+\.\d)\s+(\d+\.\d)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(\d{1,3}:\d{2})\s+/usr/bin/alienvault_indexd
+pattern=(?:\S+\s+){2}(\d+\.\d)\s+(\d+\.\d)\s+(?:\S+\s+){5}(\d{1,3}:\d{2})\s+(?:\\_\s+)?\/usr\/bin\/alienvault_indexd
 fail_if_empty=False
-conditions=@string@:<"80.0";@string@:<position[0];@string@:<"90:00"
+conditions=@string@:<"90.0";@string@:<"90.0";@string@:<"90:00"
 warning=Indexer process is either hogging the machine or running for too long
 advice=The Indexer is the process that creates and indexes raw log metadata. It may be affected by IO problems, excessive CPU usage or memory shortage. Please check your system or contact your vendor
 
 # Check for server CPU load and memory usage.
 [Server process]
-pattern=(\d+\.\d)\s+(\d+\.\d)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+/usr/bin/ossim-server
-conditions=@string@:<position[1];@string@:<"90.0"
+pattern=(?:\S+\s+){2}(\d+\.\d)\s+(\d+\.\d)\s+(?:\S+\s+){5}(?:\d{1,3}:\d{2})\s+(?:\\_\s+)?\/usr\/bin\/ossim-server
+conditions=@string@:<"90.0";@string@:<"90.0"
 fail_if_empty=True
 warning=Server process is hoarding memory/cpu resources
 advice=The AlienVault Server runs in a well defined cpu/memory usage range. Please check your system or contact your vendor

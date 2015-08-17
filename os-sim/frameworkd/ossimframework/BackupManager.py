@@ -980,8 +980,8 @@ class BackupManager(threading.Thread):
                     logger.info("Events to delete: '%s' events from %s to %s" % (events_to_delete, begin_date, end_date ))
 
                     # Delete acumulate tables entries
-                    deletes.append("DELETE FROM alienvault_siem.ac_acid_event WHERE timestamp BETWEEN '%s' AND '%s';" % (begin_date, end_date))
-                    deletes.append("DELETE FROM alienvault_siem.po_acid_event WHERE timestamp BETWEEN '%s' AND '%s';" % (begin_date, end_date))
+                    deletes.append("DELETE FROM alienvault_siem.ac_acid_event WHERE timestamp <= '%s';" % end_date)
+                    deletes.append("DELETE FROM alienvault_siem.po_acid_event WHERE timestamp <= '%s';" % end_date)
  
                     block = 100000
 

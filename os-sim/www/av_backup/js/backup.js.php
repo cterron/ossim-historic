@@ -149,7 +149,7 @@ function load_backup_list()
                     
                     datatables_loading(false);
                     
-                    var error = '<?php echo _('An unexpected error occurred - unable to load backup information for this system.') ?>';
+                    var error = '<?php echo _('An error occurred - unable to load backup information for this system.') ?>';
                     show_notification('backup_notif', error, 'nf_error', 5000, true);
                     
                     var json = $.parseJSON('{"sEcho": '+aoData[0].value+', "iTotalRecords": 0, "iTotalDisplayRecords": 0, "aaData": "" }');

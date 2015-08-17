@@ -4,3 +4,5 @@ interest alienvault-config-system-admin-ip
 interest alienvault-config-system-admin-netmask
 interest alienvault-config-system-admin-gateway
 interest alienvault-config-system-admin-dns
+interest alienvault-config-sensor-interfaces
+

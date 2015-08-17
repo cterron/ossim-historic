@@ -16,7 +16,7 @@ conditions=@info@;@int@:<1200000
 fail_if_empty=False
 severity=High
 warning=You have one or more queries that are taking too long
-advice=Queries taking forever to end may be a sign of poorly designed query filters or even IO issues. Please, check your filters and/or your hardware
+advice=Queries taking forever to end may be a sign of a problem in query filters and/or even in IO configuration. Please, check your filters and/or your hardware
 
 [Rows examined]
 query=SELECT INFO,ROWS_EXAMINED FROM INFORMATION_SCHEMA.PROCESSLIST WHERE INFO != 'NULL';
@@ -24,7 +24,7 @@ conditions=@info@;@int@:<30000000
 fail_if_empty=False
 severity=High
 warning=One of your queries is scanning way too many rows
-advice=When a query scans too many rows, it may be a sign of a poorly designed query filter. Please, check your filters
+advice=When a query scans too many rows, it may be a sign of a problem in the query filter. Please, check your filters
 
 [Entries in the SIEM]
 query=SELECT TABLE_ROWS FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'alienvault_siem' AND TABLE_NAME = 'acid_event';

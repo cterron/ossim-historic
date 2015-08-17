@@ -316,10 +316,22 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
 
         $(document).ready(function()
         {
-            var items       = {};
-            items['all']    = {'title': "<?php echo _('Tickets') ?>", 'action': 'index.php'};
-            items['ticket'] = {'title': "<?php echo Util::js_entities($title) ?>", 'action': ''};
-                
+            <?php
+
+            $items = array(
+                'all' => array(
+                    'title'  => _('Tickets'),
+                    'action' => _('index.php')
+                ),
+                'ticket' => array(
+                    'title'  => $title,
+                    'action' => ''
+                )
+            );
+            ?>
+
+            var items = jQuery.parseJSON('<?php echo json_encode($items, JSON_HEX_TAG)?>');
+
             $('#ticket_bread_crumb').AVbreadcrumb(
             {
                 'with_menu': false,

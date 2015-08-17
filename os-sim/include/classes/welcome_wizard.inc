@@ -777,7 +777,7 @@ class Welcome_wizard
         }
 
         //Saving the hosts
-        Scan::save_hosts_in_db($conn, $scan_results, $host_data);
+        Av_scan::save_scan_report_in_db($conn, $scan_results, $host_data);
 
         //Returning the stadistic info to show in the wizard:
         //Time elapsed, #server devices, #network devices
@@ -1114,12 +1114,22 @@ class Welcome_wizard
      */
     public static function launch_ossec_deploy($name, $ip, $username, $domain, $pass)
     {
+        //Create agent
+        $db   = new Ossim_db();
+        $conn = $db->connect();
+
+        $sensor_id = Av_sensor::get_default_sensor($conn);
+
+        $db->close();
+
+        Ossec_agent::create($sensor_id, $name, $ip);
+
         // API CALL
         $client = new Alienvault_client();
 
         $response = $client->sensor()->launch_ossec_deploy($name, $ip, $username, $domain, $pass);
         $response = @json_decode($response, TRUE);
-        
+
         if (!$response || $response['status'] == 'error')
         {
             $exp_msg = $client->get_error_message($response);

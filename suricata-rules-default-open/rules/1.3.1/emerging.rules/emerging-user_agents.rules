@@ -294,3 +294,6 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS User-Agent (C
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET USER_AGENTS FOCA User-Agent"; flow:established,to_server; content:"GET"; http_method; content:"FOCA"; depth:4; http_user_agent; fast_pattern; content:!"Referer|3a 20|"; http_header; content:!"Accept|3a 20|"; http_header; reference:url,blog.bannasties.com/2013/08/vulnerability-scans/; classtype:attempted-recon; sid:2017949; rev:5;)
 
+#
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS MSF Meterpreter Default User Agent"; flow:established,to_server; content:"User-Agent|3a 20|Mozilla/4.0 (compatible|3b 20|MSIE 6.1|3b 20|Windows NT|29 0d 0a|"; http_header; fast_pattern:40,20; reference:url,blog.didierstevens.com/2015/03/16/quickpost-metasploit-user-agent-strings; classtype:bad-unknown; sid:2021060; rev:2;)
+

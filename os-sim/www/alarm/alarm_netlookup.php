@@ -63,7 +63,7 @@ if (is_array($net))
 {
 	if ($net['icon'] != '') 
 	{
-	   echo "<img src='data:image/png;base64,".base64_encode($net['icon'])."' border='0'/> ";
+	   echo "<img class='asset_icon w16' src='data:image/png;base64,".base64_encode($net['icon'])."' border='0'/> ";
 	}
 	
 	echo '<strong>'.$net['name'].'</strong> ('.$net['ips'].')';

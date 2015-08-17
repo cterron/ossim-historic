@@ -45,7 +45,7 @@ $wizard = Welcome_wizard::get_instance();
 
 if(!$wizard instanceof Welcome_wizard)
 {
-     Av_exception::throw_error(Av_exception::USER_ERROR, 'There was an unexpected error');
+     Av_exception::throw_error(Av_exception::USER_ERROR, "There was an error, the Welcome_wizard object doesn't exist");
 }
 
 //Getting the scan step to know if we have a scan running

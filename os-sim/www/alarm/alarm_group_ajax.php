@@ -205,7 +205,10 @@ function close_group($data)
 	$groups = "'" . implode("','", $groups) . "'";
     $file   = Alarm_groups::change_status($groups, "closed");
     
-    @system("php /usr/share/ossim/scripts/alarms/bg_alarms.php $user $file > /dev/null 2>&1 &");
+    $cmd    = 'php /usr/share/ossim/scripts/alarms/bg_alarms.php ? ? > /dev/null 2>&1 &';
+    $params = array($user, $file);
+    
+    Util::execute_command($cmd, $params);
     
 	$return['error'] = FALSE;
 	$return['data']  = '';
@@ -245,7 +248,10 @@ function open_group($data)
 	
     $file   = Alarm_groups::change_status($groups, "open");
     
-    @system("php /usr/share/ossim/scripts/alarms/bg_alarms.php $user $file > /dev/null 2>&1 &");
+    $cmd    = 'php /usr/share/ossim/scripts/alarms/bg_alarms.php ? ? > /dev/null 2>&1 &';
+    $params = array($user, $file);
+    
+    Util::execute_command($cmd, $params);
     
 	$return['error'] = FALSE;
 	$return['data']  = '';
@@ -286,7 +292,10 @@ function delete_group($conn, $data)
 	$user   = Session::get_session_user();
     $file   = Alarm_groups::delete_alarms_from_groups($conn, $params);
 	
-    @system("php /usr/share/ossim/scripts/alarms/bg_alarms.php $user $file > /dev/null 2>&1 &");
+    $cmd    = 'php /usr/share/ossim/scripts/alarms/bg_alarms.php ? ? > /dev/null 2>&1 &';
+    $params = array($user, $file);
+    
+    Util::execute_command($cmd, $params);
     
 	$return['error'] = FALSE;
 	$return['data']  = '';
@@ -311,7 +320,10 @@ function delete_all($conn)
 	
     $file   = Alarm::delete_all_backlog($conn, $params);
     
-    @system("php /usr/share/ossim/scripts/alarms/bg_alarms.php $user $file > /dev/null 2>&1 &");
+    $cmd    = 'php /usr/share/ossim/scripts/alarms/bg_alarms.php ? ? > /dev/null 2>&1 &';
+    $params = array($user, $file);
+    
+    Util::execute_command($cmd, $params);
     
 	$return['error'] = FALSE;
 	$return['data']  = '';

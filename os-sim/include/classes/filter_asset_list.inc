@@ -166,7 +166,7 @@ class Filter_asset_list extends Filter_list
         
         $params = array
         (
-            Session::get_session_user(),
+            session_id(),
             'host',
             $this->_force_reload,
             $filter_values[4],

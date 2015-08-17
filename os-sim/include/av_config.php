@@ -46,7 +46,7 @@ define("AV_MAIN_ROOT_PATH", '/usr/share/ossim/www');
 define("AV_CLASS_PATH", '/usr/share/ossim/include');
 
 //Directory for temporary files
-define("AV_TMP_DIR", AV_MAIN_PATH.'/tmp');
+define("AV_TMP_DIR", '/var/tmp');
 
 //Directory for uploads 
 define("AV_UPLOAD_DIR", '/usr/share/ossim/uploads');
@@ -87,7 +87,7 @@ define("AV_CSS_DIR", AV_MAIN_PATH.'/styles');
 define("AV_DEBUG", 0);
 
 //Debug file
-define("AV_DEBUG_FILE", '/var/tmp/ui.log');
+define("AV_DEBUG_FILE", AV_TMP_DIR.'/ui.log');
 
 
 /***************************************************************

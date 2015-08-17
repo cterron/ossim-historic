@@ -244,7 +244,7 @@ if ($not_allowed)
             else
             {
                 $('#gb_b_apply').removeClass('av_b_processing');
-                show_notification('plugin_notif', "<?php echo _('An unexpected error happened. Try again later.') ?>", 'nf_error', 7500, true);
+                show_notification('plugin_notif', "<?php echo _('Sorry, operation was not completed due to an error when processing the request. Try again later.') ?>", 'nf_error', 7500, true);
             }
     	}
 

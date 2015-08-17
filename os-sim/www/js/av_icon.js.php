@@ -50,7 +50,7 @@ require_once 'av_init.php';
             "size_not_allowed"  : "<?php echo _('Error in the icon field (Image size not allowed)')?>",
             "file_not_allowed"  : "<?php echo _('Error in the icon field (Invalid image)')?>",
             "file_not_uploaded" : "<?php echo _('Error in the icon field (Image not uploaded)')?>",
-            "unknown_error"     : "<?php echo _('Error in the icon field (Unknown error - Operation cannot be completed)')?>"
+            "unknown_error"     : "<?php echo _('Error in the icon field (Sorry, operation was not completed due to an error when processing the request)')?>"
         };
 
         // Default options
@@ -193,13 +193,15 @@ require_once 'av_init.php';
         {
             __delete_previous_error.call(self);
 
-            var file = self.input.files[0];
+            var filename = $(self.input).val();
 
-            if (typeof(file) == 'object')
+            if (typeof(filename) != 'undefined' && filename != '')
             {
                 //Checking FileReader support
-                if (window.FileReader)
+                if (window.FileReader && typeof(self.input.files[0]) == 'object')
                 {
+                    var file = self.input.files[0];
+
                     if (file.type.match('image.*'))
                     {
                         var reader = new FileReader();
@@ -213,7 +215,7 @@ require_once 'av_init.php';
                                 var i_width  = this.width;
                                 var i_height = this.height;
 
-                                if (i_width > max_allowed_size.width && i_height > max_allowed_size.height)
+                                if (i_width > max_allowed_size.width || i_height > max_allowed_size.height)
                                 {
                                     __throw_error.call(self, 'size_not_allowed');
                                 }
@@ -241,9 +243,9 @@ require_once 'av_init.php';
                 {
                     // No FileReader support, no show preview image
 
-                    if ($(self.input).val().match(/(png|jpeg|jpg|gif)$/i))
+                    if (filename.match(/(png|jpeg|jpg|gif)$/i))
                     {
-                        options.icon = $(self.input).val();
+                        options.icon = filename.replace(/\\/g,'/').replace(/.*\//, '');
 
                         __show_text.call(self);
                         __show_actions.call(self);

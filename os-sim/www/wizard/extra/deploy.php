@@ -87,7 +87,7 @@ else
     else
     {   
         $step = -1;
-        $msg  = _('An unexpected error happened. Try again later');
+        $msg  = _('An error happened. Try again later');
     }
 
 }
@@ -104,7 +104,7 @@ else
     
     if ($msg == '')
     {
-        $msg = _('An unexpected error happened. Try again later');
+        $msg = _('An error happened. Try again later');
     }
 }
 

@@ -43,7 +43,7 @@ require_once 'av_init.php';
         // Error messages
         var __error_messages = {
             "no_suggestions"  : "<?php echo _('Currently no suggestions')?>",
-            "unknown_error"   : "<?php echo _('Unknown error - Operation cannot be completed')?>"
+            "unknown_error"   : "<?php echo _('Sorry, operation was not completed due to an error when processing the request')?>"
         };
 
 

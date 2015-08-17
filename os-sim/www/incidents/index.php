@@ -185,7 +185,13 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 
                                 for (var i=0; i<selected.length; i++)
                                 {
-                                    $('#tags_'+selected[i]).append(html_tag);
+                                    // Append only if not exists
+                                    var _title = $(html_tag).children().attr('title');
+
+                                    if (!$('#tags_'+selected[i]).find('label[title="'+_title+'"]').length)
+                                    {
+                                        $('#tags_'+selected[i]).append(html_tag);
+                                    }
                                 }
                             }
                             else

@@ -17,6 +17,12 @@ prepare_dir(){
     chown avapi:alienvault "$1"
 }
 
+configure_sudoers(){
+    # Check if these lines are available, just in case.
+    grep --fixed-strings --quiet "root	ALL=(ALL) ALL" /etc/sudoers || echo "root	ALL=(ALL) ALL" >> /etc/sudoers
+    grep --fixed-strings --quiet "%sudo ALL=(ALL) ALL" /etc/sudoers || echo "%sudo ALL=(ALL) ALL" >> /etc/sudoers
+}
+
 . /usr/share/debconf/confmodule
 
 if [ "$OSSIM_DEBUG" = "TRUE" ];then
@@ -43,6 +49,7 @@ case "$1" in
         prepare_dir "$UPDATE_LOG_DIR"
         prepare_dir "$ANSIBLE_LOG_DIR"
         prepare_dir "$DOWNLOADED_BACKUP_DIR" "0770"
+        configure_sudoers
     ;;
 esac
 

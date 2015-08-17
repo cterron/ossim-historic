@@ -177,7 +177,7 @@ else
         {
             <?php
             $config_nt = array(
-    			'content' => _("Unknown error - Operation cannot be completed"),
+    			'content' => _("Invalid action - Operation cannot be completed"),
     			'options' => array (
     				'type'          => 'nf_error',
     				'cancel_button' => false

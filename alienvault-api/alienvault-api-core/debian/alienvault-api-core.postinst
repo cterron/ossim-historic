@@ -36,8 +36,15 @@ case "$1" in
             addgroup --quiet --system alienvault
         fi
         if ! getent passwd avapi > /dev/null; then
-            adduser --system --shell /bin/bash --ingroup alienvault --gecos "AlienVault SIEM" avapi
+            adduser --home /home/avapi --system --shell /bin/bash --ingroup alienvault --gecos "AlienVault SIEM" avapi
         fi
+        # Please genetate de /home/avapi/.ssh 
+        if [ ! -d /home/avapi/.ssh ]
+        then
+            mkdir /home/avapi/.ssh
+            chmod 0750 /home/avapi/.ssh
+            chown avapi:alienvault /home/avapi/.ssh
+        fi	
         if [ -f /home/avapi/.ssh/known_hosts ] 
         then
             ssh-keygen -R 127.0.0.1 -f /home/avapi/.ssh/known_hosts

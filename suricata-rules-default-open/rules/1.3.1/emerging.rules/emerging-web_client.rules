@@ -900,3 +900,6 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft Offi
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Firefox Proxy Prototype RCE Attempt (CVE-2014-8636)"; flow:from_server,established; file_data; content:"chrome|3a 2f 2f|"; nocase; content:"open"; nocase; pcre:"/^\s*?\(\s*?[\x22\x27]chrome\x3a\/\//Ri"; content:"messageManager.loadFrameScript"; nocase; content:"Proxy.create"; nocase; reference:url,community.rapid7.com/community/metasploit/blog/2015/03/23/r7-2015-04-disclosure-mozilla-firefox-proxy-prototype-rce-cve-2014-8636; reference:cve,2014-8636; classtype:attempted-user; sid:2020756; rev:2;)
 
+#
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Possible CVE-2013-1710/CVE-2012-3993 Firefox Exploit Attempt"; flow:established,to_client; file_data; content:"generateCRMFRequest"; nocase; fast_pattern:only; content:"InstallTrigger"; nocase; content:"__exposedProps__"; nocase; content:"__defineGetter__"; nocase; content:"getInstallForURL"; nocase; content:".install|28|"; nocase; content:"x-xpinstall"; nocase; reference:cve,CVE-2013-1710; reference:cve,CVE-2012-3993; classtype:attempted-user; sid:2021078; rev:2;)
+

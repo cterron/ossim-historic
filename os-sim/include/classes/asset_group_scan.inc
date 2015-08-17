@@ -511,23 +511,23 @@ class Asset_group_scan
      * This function enables Nagios to bulk selected assets
      *
      * @param object   $conn        Database access object
-     * @param string   $login       Current user
      *
      * @throws Exception  If an error occurred
      *
      * @return boolean
      */
-    public static function bulk_enable_monitoring($conn, $login)
+    public static function bulk_enable_monitoring($conn)
     {
         Ossim_db::check_connection($conn);
 
-        $ids = array();
+        $session = session_id();
+        $ids     = array();
 
-        $query = "SELECT HEX(asset_id) AS group_id FROM user_component_filter
-                  WHERE asset_type = 'group' AND login = ?
-                  AND asset_id NOT IN (SELECT host_group_id FROM host_group_scan)";
+        $query   = "SELECT HEX(asset_id) AS group_id FROM user_component_filter
+                    WHERE asset_type = 'group' AND session_id = ?
+                    AND asset_id NOT IN (SELECT host_group_id FROM host_group_scan)";
 
-        $rs = $conn->Execute($query, array($login));
+        $rs = $conn->Execute($query, array($session));
 
         if (!$rs)
         {
@@ -559,23 +559,23 @@ class Asset_group_scan
      * This function disables Nagios to bulk selected assets
      *
      * @param object   $conn        Database access object
-     * @param string   $login       Current user
      *
      * @throws Exception  If an error occurred
      *
      * @return boolean
      */
-    public static function bulk_disable_monitoring($conn, $login)
+    public static function bulk_disable_monitoring($conn)
     {
         Ossim_db::check_connection($conn);
 
-        $ids = array();
+        $session = session_id();
+        $ids     = array();
 
-        $query = "SELECT HEX(asset_id) AS group_id FROM user_component_filter
-                  WHERE asset_type = 'group' AND login = ?
-                  AND asset_id IN (SELECT host_group_id FROM host_group_scan)";
+        $query   = "SELECT HEX(asset_id) AS group_id FROM user_component_filter
+                    WHERE asset_type = 'group' AND session_id = ?
+                    AND asset_id IN (SELECT host_group_id FROM host_group_scan)";
 
-        $rs = $conn->Execute($query, array($login));
+        $rs = $conn->Execute($query, array($session));
 
         if (!$rs)
         {

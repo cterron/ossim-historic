@@ -3,6 +3,7 @@ name=Domain nameservers configuration file
 description=Parses the /etc/resolv.conf file for inconsistencies
 category=system,network
 strike_zone=True
+exclude=alienvault-ami-aio-6x1gb
 type=file
 filename=/etc/resolv.conf
 raw_limit=100

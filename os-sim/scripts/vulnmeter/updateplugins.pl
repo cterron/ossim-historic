@@ -1116,12 +1116,31 @@ CREATE TABLE `vuln_nessus_preferences_defaults` (
     }
     
     foreach my $preference (@items) {
-        #print Dumper($preference);
+
+        my $alts = '';
+
         if (ref($preference->{'value'}) eq 'HASH') {
-            $preference->{'value'} = ""; 
+            $preference->{'value'} = ''; 
         }
-        push(@preferences, $preference->{'name'}." = ".$preference->{'value'});
-        #print "\n[".$preference->{'name'}." = ".$preference->{'value'}."]";
+        
+        if (defined($preference->{'alt'}))
+        {
+            if (ref($preference->{'alt'}) eq 'ARRAY')
+            {
+               $alts = ';' . join(';', @{$preference->{'alt'}});
+            }
+            else
+            {
+               $alts = ';' . join(';', $preference->{'alt'});
+            }
+        }
+        
+        if (defined($preference->{'nvt'}->{'name'}) && ref($preference->{'nvt'}->{'name'}) ne 'HASH' && $preference->{'nvt'}->{'name'} ne '')
+        {
+            $preference->{'name'} = $preference->{'nvt'}->{'name'} . "[" . $preference->{'type'} . "]:" . $preference->{'name'};
+        }
+        
+        push(@preferences, $preference->{'name'}." = ".$preference->{'value'} . $alts);
     }
     foreach (@preferences) {
         if (/\]:/) {

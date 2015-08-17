@@ -114,8 +114,8 @@ switch($order)
 $torder  = ($torder == 1) ? 'ASC' : 'DESC';
 // Limit
 $maxrows = ($maxrows > 50) ? 50 : $maxrows;
-//User
-$user    = Session::get_session_user();
+//Session ID
+$session = session_id();
 
 
 //list params
@@ -129,7 +129,7 @@ $filters['limit']    = $from . ', ' . $maxrows;
 if (!$all_list)
 {
     $tables = ', user_host_filter hf';
-    $filters['where'] = "hf.asset_id=g.id AND hf.login='$user'";
+    $filters['where'] = "hf.asset_id=g.id AND hf.session_id='$session'";
 }
 
 try
@@ -146,8 +146,8 @@ try
         $alarms_icon = ($alarms) ? "<img src='". AV_PIXMAPS_DIR ."/assets_tick_gray.png'/>" : '-';
         
         // Vulns
-        $vulns       = $group->get_vulnerability_number($conn, $group->get_id());
-        $vulns_icon  = ($vulns > 0) ? "<img src='". AV_PIXMAPS_DIR ."/assets_tick_gray.png'/>" : '-';
+        list($vulns_list, $vulns) = $group->get_vulnerabilities($conn);
+        $vulns_icon               = ($vulns > 0) ? "<img src='". AV_PIXMAPS_DIR ."/assets_tick_gray.png'/>" : '-';
         
         // Events
         $events      = $group->has_events($conn);

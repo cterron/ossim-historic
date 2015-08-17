@@ -128,7 +128,7 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 4569 (msg:"ET SCAN Enumiax Inter-Asteri
 
 #by atomic-penguin, tweak by matt Jonkman to cover other ftp daemons like freeftpd and warftpd
 #
-alert tcp $HOME_NET 21 -> $EXTERNAL_NET any (msg:"ET SCAN Potential FTP Brute-Force attempt"; flow:from_server,established; dsize:<100; content:"530 "; depth:4; pcre:"/530\s+(Login|User|Failed|Not)/smi"; threshold: type threshold, track by_dst, count 5, seconds 300; reference:url,doc.emergingthreats.net/2002383; classtype:unsuccessful-user; sid:2002383; rev:11;)
+alert tcp $HOME_NET 21 -> $EXTERNAL_NET any (msg:"ET SCAN Potential FTP Brute-Force attempt response"; flow:from_server,established; dsize:<100; content:"530 "; depth:4; pcre:"/530\s+(Login|User|Failed|Not)/smi"; threshold: type threshold, track by_dst, count 5, seconds 300; reference:url,doc.emergingthreats.net/2002383; classtype:unsuccessful-user; sid:2002383; rev:12;)
 
 #by kevin ross
 #
@@ -206,7 +206,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN IBM NSA User Agent";
 
 #by evilghost
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN ICMP =XXXXXXXX Likely Precursor to Scan"; itype:8; icode:0; content:"=XXXXXXXX"; reference:url,doc.emergingthreats.net/2010686; classtype:misc-activity; sid:2010686; rev:2;)
+alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN ICMP =XXXXXXXX Likely Precursor to Scan"; itype:8; icode:0; content:"=XXXXXXXX"; reference:url,doc.emergingthreats.net/2010686; classtype:network-scan; sid:2010686; rev:3;)
 
 #Submitted by Joseph Gama
 #
@@ -463,7 +463,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 22 (msg:"ET SCAN Potential SSH Scan OUT
 
 #This is the same as above but has a threshold to help keep events down, and more readily identify brute force attacks
 #
-alert ssh $EXTERNAL_NET any -> $HOME_NET 22 (msg:"ET SCAN LibSSH Based Frequent SSH Connections Likely BruteForce Attack!"; flow:established,to_server; content:"SSH-"; content:"libssh"; within:20; threshold: type both, count 5, seconds 30, track by_src; reference:url,doc.emergingthreats.net/2006546; classtype:attempted-admin; sid:2006546; rev:8;)
+alert ssh $EXTERNAL_NET any -> $HOME_NET 22 (msg:"ET SCAN LibSSH Based Frequent SSH Connections Likely BruteForce Attack"; flow:established,to_server; content:"SSH-"; content:"libssh"; within:20; threshold: type both, count 5, seconds 30, track by_src; reference:url,doc.emergingthreats.net/2006546; classtype:attempted-admin; sid:2006546; rev:9;)
 
 #Idea from dynamicnet
 #
@@ -528,7 +528,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN Suspicious User-Agen
 
 #Works for other proto's, may as well extend the idea
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ET SCAN Behavioral Unusually fast Terminal Server Traffic, Potential Scan or Infection (Inbound)"; flags: S,12; threshold: type both, track by_src, count 20, seconds 360; reference:url,doc.emergingthreats.net/2001972; classtype:misc-activity; sid:2001972; rev:17;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ET SCAN Behavioral Unusually fast Terminal Server Traffic, Potential Scan or Infection (Inbound)"; flags: S,12; threshold: type both, track by_src, count 20, seconds 360; reference:url,doc.emergingthreats.net/2001972; classtype:network-scan; sid:2001972; rev:18;)
 
 #Scanner using this UA, looking for many common vulns
 #
@@ -1034,4 +1034,13 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN Acunetix Accept HTTP
 
 #
 alert tcp any any -> $HOME_NET 1720 (msg:"ET SCAN H.323 Scanning device"; flow:established,to_server; content:"|40 04 00 63 00 69 00 73 00 63 00 6f|"; fast_pattern; offset:55; depth:12; threshold: type limit, track by_src, count 1, seconds 60; reference:url,videonationsltd.co.uk/2014/11/h-323-cisco-spam-calls/; classtype:network-scan; sid:2020853; rev:2;)
+
+#
+alert tcp any any -> $HOME_NET any (msg:"ET SCAN Nmap NSE Heartbleed Request"; flow:established,to_server; content:"|18 03|"; depth:2; byte_test:1,<,4,2; content:"|01|"; offset:5; depth:1; byte_test:2,>,2,3; byte_test:2,>,200,6; content:"|40 00|Nmap ssl-heartbleed"; fast_pattern:2,19; classtype:attempted-recon; sid:2021023; rev:1;)
+
+#
+alert tcp $HOME_NET any -> any any (msg:"ET SCAN Nmap NSE Heartbleed Response"; flow:established,from_server; content:"|18 03|"; depth:2; byte_test:1,<,4,2; byte_test:2,>,200,3; content:"|40 00|Nmap ssl-heartbleed"; fast_pattern:2,19; classtype:attempted-recon; sid:2021024; rev:1;)
+
+#
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET SCAN Xenu Link Sleuth Scanner Outbound"; flow:to_server,established; content:"GET"; http_method; content:"Xenu Link Sleuth"; http_user_agent; fast_pattern:only; classtype:attempted-recon; sid:2021058; rev:3;)
 

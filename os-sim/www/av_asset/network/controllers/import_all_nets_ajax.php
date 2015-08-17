@@ -37,16 +37,16 @@ Session::logcheck('environment-menu', 'PolicyNetworks');
 
 function is_allowed_format ($type_uf)
 {
-	$types = '/force-download|octet-stream|text|csv|plain|spreadsheet|excel|comma-separated-values/';
-	
-	if (preg_match ($types, $type_uf) == FALSE)
-	{
-		return FALSE;
-	}
-	else
-	{
-		return TRUE;
-	}
+    $types = '/force-download|octet-stream|text|csv|plain|spreadsheet|excel|comma-separated-values/';
+
+    if (preg_match ($types, $type_uf) == FALSE)
+    {
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
 }
 
 $import_type  = POST('import_type');
@@ -59,31 +59,31 @@ $file_csv     = $path . $current_user . '_assets_import.csv';
 if ($import_type != 'networks' && $import_type != 'welcome_wizard_nets')
 {
     ?>
-	<script type='text/javascript'>
-		parent.show_error('<?php echo _('Error! Import Type not found')?>');
-	</script>
-	<?php
-	exit();
+    <script type='text/javascript'>
+        parent.show_error('<?php echo _('Error! Import Type not found')?>');
+    </script>
+    <?php
+    exit();
 }
 
 
 if (!isset($_POST['ctx']) || empty($_POST['ctx']))
 {
-	?>
-	<script type='text/javascript'>
-		parent.show_error('<?php echo _('You must select an entity')?>');
-	</script>
-	<?php
+    ?>
+    <script type='text/javascript'>
+        parent.show_error('<?php echo _('You must select an entity')?>');
+    </script>
+    <?php
 }
 
-		 
+
 if (Session::is_pro())
 {
-	if (!valid_hex32($ctx) || Acl::entityAllowed($ctx) < 1)
+    if (!valid_hex32($ctx) || Acl::entityAllowed($ctx) < 1)
     {
-		$msg_error = (empty($ctx)) ? _('You must select an entity') : _('Entity not allowed');            
+        $msg_error = (empty($ctx)) ? _('You must select an entity') : _('Entity not allowed');
         ?>
-        
+
         <script type='text/javascript'>
             parent.show_error('<?php echo $msg_error?>');
         </script>
@@ -93,31 +93,31 @@ if (Session::is_pro())
 }
 else
 {
-	$ctx = Session::get_default_ctx();
+    $ctx = Session::get_default_ctx();
 }
 
 
 if (!empty ($_FILES['file_csv']['name']))
 {
-	if ($_FILES['file_csv']['error'] > 0)
-	{
-		$msg_error  = _('Unable to upload file. Return Code').': '.$_FILES['file_csv']['error'];
-	}
-	else
-	{
-		if (!is_allowed_format($_FILES['file_csv']['type']))
-		{
-			$msg_error  = _('File type \''.$_FILES['file_csv']['type'].'\' not allowed');
+    if ($_FILES['file_csv']['error'] > 0)
+    {
+        $msg_error  = _('Unable to upload file. Return Code').': '.$_FILES['file_csv']['error'];
+    }
+    else
+    {
+        if (!is_allowed_format($_FILES['file_csv']['type']))
+        {
+            $msg_error  = _('File type \x27'.$_FILES['file_csv']['type'].'\x27 not allowed');
         }
-		elseif (@move_uploaded_file($_FILES['file_csv']['tmp_name'], $file_csv) == FALSE)
-		{
-			$msg_error = (empty ($msg_error)) ? _('Unable to upload file') : $msg_error;
+        elseif (@move_uploaded_file($_FILES['file_csv']['tmp_name'], $file_csv) == FALSE)
+        {
+            $msg_error = (empty ($msg_error)) ? _('Unable to upload file') : $msg_error;
         }
     }
 }
 else
 {
-	$msg_error  = _('Filename is empty');
+    $msg_error  = _('Filename is empty');
 }
 
 
@@ -132,7 +132,7 @@ if (!empty($msg_error))
 else
 {
     $_SESSION['file_csv'] = $file_csv;
-  
+
     ?>
     <script type='text/javascript'>
         parent.import_assets_csv('<?php echo $import_type?>');

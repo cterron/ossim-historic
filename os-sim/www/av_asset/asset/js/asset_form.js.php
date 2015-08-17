@@ -70,7 +70,7 @@ function Av_tabs_asset_edition(tab_config)
                     return;
                 }
 
-                var __error_msg = '<?php echo _("Sorry, asset data was not loaded due to an unknown error")?>';
+                var __error_msg = '<?php echo _("Sorry, asset data was not loaded due to an error when processing the request")?>';
 
                 if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
                 {
@@ -388,7 +388,7 @@ function Av_tabs_asset_bulk_edition(tab_config)
                     return;
                 }
 
-                var __error_msg = '<?php echo _("Sorry, asset data was not loaded due to an unknown error")?>';
+                var __error_msg = '<?php echo _("Sorry, asset data was not loaded due to an error when processing the request")?>';
 
                 if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
                 {
