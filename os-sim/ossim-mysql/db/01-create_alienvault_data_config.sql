@@ -460,5 +460,5 @@ INSERT IGNORE INTO config (conf, value) VALUES ('internet_connection', 1);
 
 INSERT IGNORE INTO config (conf, value) VALUES ('track_usage_information', '');
 
-REPLACE INTO config (conf, value) VALUES ('last_update', '2015-05-12');
-REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.0.1');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2015-05-13');
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.0.2');

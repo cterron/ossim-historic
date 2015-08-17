@@ -874,10 +874,10 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possibl
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Samsung Galaxy Knox Android Browser RCE smdm attempt"; flow:to_client,established; file_data; content:"smdm|3a|//"; nocase; distance:0; reference:url,blog.quarkslab.com/abusing-samsung-knox-to-remotely-install-a-malicious-application-story-of-a-half-patched-vulnerability.html; reference:osvdb,114590; reference:url,cxsecurity.com/issue/WLB-2014110124; classtype:web-application-activity; sid:2019750; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project"; flow:established,from_server; flowbits:isset,et.http.PK; file_data; content:"/vbaProject"; nocase; pcre:"/\d*?\.bin/Ri"; classtype:bad-unknown; sid:2019835; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project"; flow:established,from_server; flowbits:isset,et.http.PK; file_data; content:"/vbaProject"; nocase; pcre:"/\d*?\.bin/Ri"; flowbits:set,et.DocVBAProject; classtype:bad-unknown; sid:2019835; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project"; flow:established,from_server; flowbits:isset,et.http.PK; file_data; content:"_VBA_PROJECT"; nocase; classtype:bad-unknown; sid:2019836; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project"; flow:established,from_server; flowbits:isset,et.http.PK; file_data; content:"_VBA_PROJECT"; nocase; flowbits:set,et.DocVBAProject; classtype:bad-unknown; sid:2019836; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project (Wide)"; flow:established,from_server; flowbits:isset,et.MCOFF; file_data; content:"_|00|V|00|B|00|A|00|_|00|P|00|R|00|O|00|J|00|E|00|C|00|T|00|"; nocase; flowbits:set,et.DocVBAProject; classtype:bad-unknown; sid:2019837; rev:2;)

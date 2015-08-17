@@ -686,9 +686,9 @@ class MonitorWebUIData(Monitor):
             contracted_devices = get_license_devices()
             over_assets = False
             exceeding_assets = 0
-            if assets > contracted_devices:
-                exceeding_assets = assets - contracted_devices
-                over_assets = True
+            #if assets > contracted_devices:
+            #    exceeding_assets = assets - contracted_devices
+            #    over_assets = True
             monitor_data[self.__WEB_MESSAGES["MESSAGE_LICENSE_VIOLATION"]] = {'over_assets': over_assets,
                                                                               'exceeding_assets': exceeding_assets}
 

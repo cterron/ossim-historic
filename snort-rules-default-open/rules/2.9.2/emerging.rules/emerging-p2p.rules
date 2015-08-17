@@ -177,7 +177,7 @@ alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey 
 
 #Matt Jonkman
 #
-#alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Publicize File"; dsize:>15; content:"|e3 0c|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003310; classtype:policy-violation; sid:2003310; rev:3;)
+##alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Publicize File"; dsize:>15; content:"|e3 0c|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003310; classtype:policy-violation; sid:2003310; rev:3;)
 
 #Matt Jonkman
 #
