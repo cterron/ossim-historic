@@ -110,7 +110,7 @@ switch($order)
 	break;
 		
     case 7:
-		$order = 'avail';  //Order by Availability Configured
+		$order = 'hids';  //Order by HIDS Status
 	break;
 
     default:
@@ -178,7 +178,7 @@ foreach($assets as $_id => $asset_data)
     $_res[] = $asset_data['os'];           //OS
     $_res[] = $asset_data['asset_value'];  //Asset Value
     $_res[] = $asset_data['vuln_scan'];    //Vulnerability Scan
-    $_res[] = $asset_data['availability']; // Availability Configured
+    $_res[] = $asset_data['hids']; // HIDS status
     $_res[] = '';  //Detail
 
 

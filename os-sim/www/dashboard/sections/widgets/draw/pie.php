@@ -34,7 +34,6 @@ require_once 'av_init.php';
 
 Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 
-
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -110,9 +109,9 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
         </style>
         
         <script class="code" type="text/javascript">
-		
-        
-			var links = [<?php echo $links; ?>];
+		        
+            var tooltip_legend = <?php echo $tooltip ?>;
+			var links = <?php echo $links ?>;
 
 			function myClickHandler(ev, gridpos, datapos, neighbor, plot) 
 			{
@@ -129,8 +128,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 						else
 						{
     						top.frames['main'].location.href = url;
-						}
-						
+						}						
 					}
 				}
 			}
@@ -145,7 +143,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 					{
     					isShowing = neighbor.pointIndex;
     					
-						var tooltip  = neighbor.data[0];
+    					var tooltip  = tooltip_legend[isShowing] ? tooltip_legend[isShowing] : neighbor.data[0];
 						    tooltip += '<br/>';
                             tooltip += '<strong>(' + format_dot_number(neighbor.data[1]) +  ')</strong>';
 						
@@ -171,7 +169,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 				$.jqplot.eventListenerHooks.push(['jqplotMouseMove', myMoveHandler]);
 				$.jqplot.eventListenerHooks.push(['jqplotClick', myClickHandler]); 
 				
-				s1 = [<?php echo $data; ?>];
+				s1 = <?php echo $data ?>;
                         
 				plot1 = $.jqplot('chart', [s1], 
 				{
@@ -182,7 +180,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 						background: 'transparent',
 						shadow:false
 					},
-					<?php if ($colors!="") { ?>seriesColors: [ <?php echo $colors; ?> ], <?php } ?>
+					<?php if ($colors!="") { ?>seriesColors: [ <?php echo $colors ?> ], <?php } ?>
 
 					seriesDefaults:
 					{
@@ -238,14 +236,14 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 				$('td.jqplot-legend-title').mouseenter(function()
 				{
     			    var index    = $(this).data('elem_index');   
-    			    var elem     = plot1.data[0][index];
-
+                    var elem     = plot1.data[0][index];
+                    
     			    if (elem == undefined || elem[0] == undefined || elem[1] == undefined)
     			    {
         			    return false;
     			    }
-    			        			    
-    			    var tooltip  = elem[0];
+    			        	
+                    var tooltip  = (tooltip_legend[index]) ? tooltip_legend[index] : elem[0];     		    
                         tooltip += '<br/>';
                         tooltip += '<strong>(' + format_dot_number(elem[1]) +  ')</strong>';
                     

@@ -106,14 +106,7 @@ class SensorYamlConfig(object):
             new_config = {'plugins':[]}
             for device_id,device_data in dic.iteritems():
                 device_ip = device_data['device_ip']
-                for plugin, plugin_data in device_data['plugins'].iteritems():
-                    if 'cpe' not in plugin_data:
-                        continue
-
-                    if 'plugin_id' not in plugin_data:
-                        continue
-                    cpe = plugin_data['cpe']
-                    plugin_id = plugin_data['plugin_id']
+                for plugin in device_data['plugins']:
                     plugin_path = str(SensorYamlConfig.PLUGINS_BASE_PATH % plugin)
                     if not os.path.isfile(plugin_path):
                         f.close()
@@ -121,7 +114,7 @@ class SensorYamlConfig(object):
                     location = str(SensorYamlConfig.PLUGIN_BASE_LOCATION %(device_ip,device_ip))
                     new_plugin_conf = {plugin_path:
                                            {'config': {"location": location},
-                                            'DEFAULT': {"device": device_ip, "device_id": str(device_id), "cpe":str(cpe), "pid":str(plugin_id)}
+                                            'DEFAULT': {"device": device_ip, "device_id": str(device_id)}
                                            }
                                        }
                     new_config['plugins'].append(new_plugin_conf)

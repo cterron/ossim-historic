@@ -1708,11 +1708,11 @@ REPLACE INTO alienvault.plugin_group (group_id,name,descr) VALUES (@newuuid, "Se
 
 SET @newuuid = REPLACE(UUID(),'-','');
 REPLACE INTO alienvault.plugin_group_descr (group_id,plugin_id,plugin_sid) VALUES (@newuuid, 1001, "ANY");
-REPLACE INTO alienvault.plugin_group (group_id,name,descr) VALUES (@newuuid, "Snort IDS sigs", "Snort IDS signatures");
+REPLACE INTO alienvault.plugin_group (group_id,name,descr) VALUES (@newuuid, "AlienVault NIDS sigs", "AlienVault NIDS signatures");
 
 SET @newuuid = REPLACE(UUID(),'-','');
 REPLACE INTO alienvault.plugin_group_descr (group_id,plugin_id,plugin_sid) VALUES (@newuuid, 1119, "ANY");
-REPLACE INTO alienvault.plugin_group (group_id,name,descr) VALUES (@newuuid, "Snort HTTP INSPECT", "Snort HTTP Inspect preprocessor signatures");
+REPLACE INTO alienvault.plugin_group (group_id,name,descr) VALUES (@newuuid, "AlienVault NIDS HTTP INSPECT", "AlienVault NIDS HTTP Inspect preprocessor signatures");
 
 SET @newuuid = REPLACE(UUID(),'-','');
 REPLACE INTO alienvault.plugin_group_descr (group_id,plugin_id,plugin_sid) VALUES (@newuuid, 1116, "ANY");

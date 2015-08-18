@@ -35,7 +35,8 @@ from api.lib.monitors.sensor import (MonitorSensorLocation,
                                      MonitorVulnerabilityScans,
                                      MonitorSensorDroppedPackages,
                                      MonitorPluginsVersion,
-                                     MonitorPluginIntegrity)
+                                     MonitorPluginIntegrity,
+                                     MonitorUpdateHostPlugins)
 
 from api.lib.monitors.assets import MonitorSensorAssetLogActivity
 
@@ -53,9 +54,21 @@ from api.lib.monitors.system import (MonitorSystemCPULoad,
                                      MonitorSystemCheckDB,
                                      MonitorWebUIData,
                                      MonitorSupportTunnel,
-                                     MonitorSystemRebootNeeded)
+                                     MonitorSystemRebootNeeded,
+                                     MonitorDownloadPulses,
+                                     MonitorInsecureVPN,
+                                     MonitorFederatedOTXKey)
 
 from api.lib.monitors.doctor import MonitorPlatformTelemetryData
+
+from apimethods.otx.otx import apimethod_is_otx_enabled
+from apimethods.system.status import system_status
+
+
+from db.methods.system import get_system_id_from_local
+
+
+from apiexceptions.system import APICannotRetrieveSystems
 
 
 logger = get_logger("celery")
@@ -393,4 +406,105 @@ def monitor_system_reboot_needed():
     if monitor.start():
         rt = True
     logger.info("Monitor MonitorSystemRebootNeeded stopped")
+    return rt
+
+@celery_instance.task
+def monitor_download_pulses():
+    """Monitor for new pulses
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorDownloadPulses started")
+    monitor = MonitorDownloadPulses()
+    try:
+        rt = monitor.start()
+    except:
+        rt = False
+
+    logger.info("Monitor MonitorDownloadPulses stopped")
+    return rt
+
+
+@celery_instance.task
+def monitor_download_pulses_ha():
+    """Monitor for new pulses (HA Environments)
+
+    Returns:
+        True if successful, False otherwise
+    """
+    rt = False
+    ha_enabled = False
+
+    try:
+        is_otx_enabled = apimethod_is_otx_enabled()
+
+        if is_otx_enabled is True:
+            system_id = get_system_id_from_local()[1]
+            success, system_info = system_status(system_id)
+
+            if success is False:
+                APICannotRetrieveSystems()
+
+            if 'ha_status' in system_info and system_info['ha_status'] == 'up':
+                logger.info("Monitor MonitorDownloadPulses [HA] started")
+                ha_enabled = True
+                monitor = MonitorDownloadPulses()
+                rt = monitor.start()
+    except:
+        rt = False
+
+    if ha_enabled is True:
+        logger.info("Monitor MonitorDownloadPulses [HA] stopped")
+    return rt
+
+
+@celery_instance.task
+def monitor_update_host_plugins():
+    """Monitor to fill host_scan table with active plugins per device
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorUpdateHostPlugins started")
+    monitor = MonitorUpdateHostPlugins()
+    rt = False
+
+    if monitor.start():
+        rt = True
+
+    logger.info("Monitor MonitorUpdateHostPlugins stopped")
+
+    return rt
+
+
+@celery_instance.task
+def monitor_insecured_vpn():
+    """Monitor for checking insecured VPN scenarios
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorInsecureVPN started")
+    monitor = MonitorInsecureVPN()
+    try:
+        rt = monitor.start()
+    except:
+        return False
+    logger.info("Monitor MonitorInsecureVPN stopped")
+    return rt
+
+
+@celery_instance.task
+def monitor_federated_otx_key():
+    """Monitor for checking that all the systems in a federated environment have the same OTX key.
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorFederatedOTXKey started")
+    monitor = MonitorFederatedOTXKey()
+    try:
+        rt = monitor.start()
+    except:
+        return False
+    logger.info("Monitor MonitorFederatedOTXKey stopped")
     return rt

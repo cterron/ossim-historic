@@ -363,17 +363,17 @@ class Status
         	$plugin_name = $rs->fields['name'];
         }
         
-        if ($plugin_name!='' && $plugin_sid=2000000000)
+        if ($plugin_name != '' && $plugin_sid == 2000000000)
         {
-            return "$plugin_name: ".gettext('Generic event');
+            return "$plugin_name: " . _('Generic event');
         }
-        elseif ($plugin_name!='' && $plugin_sid!=2000000000)
+        elseif ($plugin_name != '' && $plugin_sid != 2000000000)
         {    
-            return "$plugin_name: ".gettext('Unknown event');
+            return "$plugin_name: " . _('Unknown event');
         }
         else
         {
-            return gettext('SigName unknown');
+            return _('SigName unknown');
         }
 	}
 	

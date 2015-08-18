@@ -78,7 +78,7 @@ function SIEM_trends_week($param = '', $d = 7, $assets_filters = '')
 	} 
 	elseif ($param != '') 
 	{
-		$plugins_sql   = "AND acid_event.plugin_id between 7000 and 7999";
+		$plugins_sql   = "AND acid_event.plugin_id between " . OSSEC_MIN_PLUGIN_ID . " AND " . OSSEC_MAX_PLUGIN_ID;
 	}
 	
 	//Filters of assets.

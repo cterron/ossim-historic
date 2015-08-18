@@ -20,6 +20,10 @@ set -e
 
 case "$1" in
     configure)
+        if [ -f "/etc/ossim/doctor/doctor.cfg" ]; then
+            chmod 640 /etc/ossim/doctor/doctor.cfg
+        fi
+
         obsolete_plugins=$(dpkg --status alienvault-doctor | grep -e "/etc/ossim/doctor/plugins" | grep "obsolete" | cut -d' ' -f2 || echo "None")
         if [ "$obsolete_plugins" != "None" ]; then
             for obsolete_plugin in $obsolete_plugins

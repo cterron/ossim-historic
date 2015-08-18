@@ -169,7 +169,7 @@ switch(GET('type'))
         
         $pie_labels = array();
 
-        $plugins = ' AND a.plugin_id BETWEEN 7000 AND 7999 ';
+        $plugins = ' AND a.plugin_id BETWEEN ' . OSSEC_MIN_PLUGIN_ID . ' AND ' . OSSEC_MAX_PLUGIN_ID;
 
         $sqlgraph = "SELECT sum(a.cnt) as num_events,p.id,p.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin p WHERE p.id=a.plugin_id AND a.timestamp BETWEEN '".gmdate("Y-m-d 00:00:00",gmdate("U")-$range)."' AND '".gmdate("Y-m-d 23:59:59")."' $plugins $sensor_where group by p.name order by num_events desc LIMIT 8";
         
@@ -181,10 +181,14 @@ switch(GET('type'))
         {
             while (!$rg->EOF)
             {
-                $name = ucwords(str_replace("_", " ", str_replace("ossec-", "ossec: ", $rg->fields['name'])));
-                
-                $hids_label   = ucwords(str_replace("_", " ", str_replace("ossec-", "", $rg->fields['name'])));
-                
+                preg_match('/-([^\-]+)$/', $rg->fields['name'], $found);
+                $hids_label = $name = ucwords(str_replace('_', ' ', $found[1]));
+
+                if (trim($name) == '')
+                {
+                    $hids_label = $name = 'HIDS';
+                }
+
                 $pie_labels[] = (strlen($hids_label) > 8) ? substr($hids_label, 0, 8) . "..." : $hids_label;
 
                 $url   = Menu::get_menu_url($f_url."&plugin=".$rg->fields["id"], 'analysis', 'security_events', 'security_events');

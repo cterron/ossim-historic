@@ -440,6 +440,16 @@ class Session
             return $tz; // Old stored numeric format
         }
         
+        // Fix PHP Etc/GMT+-N timezone bug
+        if (preg_match("/Etc\/GMT\-\d+/i",$tz))
+        {
+            $tz = str_replace('-','+',$tz);
+        }
+        elseif (preg_match("/Etc\/GMT\+\d+/i",$tz))
+        {
+            $tz = str_replace('+','-',$tz);
+        }
+        
         try 
         {
             $this_tz = new DateTimeZone($tz);
@@ -1546,39 +1556,39 @@ class Session
         
         return TRUE;
     }
-    
-        
+
+
     /**
     * This function returns TRUE if it's first time that user is logged in the system
     *
-    * @return boolean             
-    */   
-    public function get_first_login() 
+    * @return boolean
+    */
+    public function get_first_login()
     {
-		$conn     = $this->conn;
-		$pass     = md5($this->pass);
-		$pass_sha = hash('sha256', $this->pass);
+        $conn     = $this->conn;
+        $pass     = md5($this->pass);
+        $pass_sha = hash('sha256', $this->pass);
         $login    = $this->login;
-		
-		$params = array($login, $pass, $pass_sha);
+
+        $params = array($login, $pass, $pass_sha);
         $query  = "SELECT * FROM users WHERE login = ? AND (pass = ? OR pass = ?)";
-		
-		$rs = $conn->Execute($query, $params);
-		
-		if(!$rs)
-		{
-    		Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-    		
-    		return FALSE;
-		}		
-                
-        if (!$rs->EOF) 
+
+        $rs = $conn->Execute($query, $params);
+
+        if(!$rs)
         {
-			$first_login = $rs->fields['first_login'];
-            
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+            return FALSE;
+        }
+
+        if (!$rs->EOF)
+        {
+            $first_login = $rs->fields['first_login'];
+
             return ($first_login) ? TRUE : FALSE;
         }
-	}
+    }
     
     
     /**
@@ -1655,9 +1665,10 @@ class Session
                 
         if ($autologin)
         {
-            $query  = "SELECT *, HEX(uuid) AS uuid FROM users WHERE login = ?";
-            $params = array($login);
-            $rs     = $conn->Execute($query, $params);
+            $login_method = 'pass';
+            $query        = "SELECT *, HEX(uuid) AS uuid FROM users WHERE login = ?";
+            $params       = array($login);
+            $rs           = $conn->Execute($query, $params);
         }
         else
         {
@@ -1992,59 +2003,69 @@ class Session
     
         
     /**
-    * This function is used when an external process (AV Report Scheduler or Remote Interface) wants to log into the system
-    *
-    * @return boolean                
-    */            
+     * This function is used when an external process (AV Report Scheduler or Remote Interface) wants to log into the system
+     *
+     * @return boolean
+     */
     public static function external_login()
-    {                       
-        if (!empty($_SESSION['_user'])) 
+    {
+        if (!empty($_SESSION['_user']))
         {
             return FALSE;
-        }                           
-                 
+        }
+
         if (array_key_exists('user', $_POST) && array_key_exists('pass', $_POST))
         {
             $user = $_POST['user'];
             $pass = $_POST['pass'];
-        }     
-              
-        if (array_key_exists('login', $_POST)) 
-        {            
+        }
+
+        if (array_key_exists('login', $_POST))
+        {
             $conf = $GLOBALS['CONF'];
-            
+
             if (!$conf)
-            {                   
-                $conf = new Ossim_conf();                
+            {
+                $conf = new Ossim_conf();
                 $GLOBALS['CONF'] = $conf;
             }
-                       
-            $remote_key  = $conf->get_conf('remote_key'); 
-             
-            list($user,$pass,$pass_sha) = explode("####",Util::decrypt(base64_decode($_POST["login"]), $remote_key), 3);
+
+            $remote_key = $conf->get_conf('remote_key');
+
+            list($user, $pass, $pass_sha) = explode("####", Util::decrypt(base64_decode($_POST["login"]), $remote_key), 3);
         }
-        
-        // Temporaly compatible with both md5 and sha256
-        if (isset($user) && 
-            ((isset($pass) && preg_match('/^[A-Fa-f0-9]{32}$/',$pass))
-             || (isset($pass_sha) && preg_match('/^[A-Fa-f0-9]{64}$/',$pass_sha)))) 
+
+        ossim_valid($user, OSS_USER, 'illegal:' . _('User'));
+
+        $cnd_1   = (isset($user) && !ossim_error());
+        $cnd_2_1 = (isset($pass) && (preg_match('/^[A-Fa-f0-9]{32}$/', $pass)));
+        $cnd_2_2 = (isset($pass_sha) && (preg_match('/^[A-Fa-f0-9]{64}$/', $pass_sha)));
+
+        ossim_clean_error();
+
+        //Temporaly compatible with both md5 and sha256
+        if ($cnd_1 && ($cnd_2_1 || $cnd_2_2))
         {
             // First try with sha256
             $sess = new Session($user, $pass_sha);
-            
+
             $sess->external = TRUE;
-            
+
             if (!$sess->login())
             {
                 // If it fails, try with md5
                 $sess = new Session($user, $pass);
-                
+
                 $sess->external = TRUE;
-                
+
                 $sess->login();
             }
-        }    
-        
+            else
+            {
+                return TRUE;
+            }
+        }
+
         return FALSE;
     }
     
@@ -2052,7 +2073,7 @@ class Session
     /**
     * This function checks if logged user exists in Database
     *
-    * @return boolean                
+    * @return boolean
     */ 
     public function is_logged_user_in_db() 
     {
@@ -2081,13 +2102,13 @@ class Session
     /**
     * This function returns TRUE if logged user is disabled, otherwise it returns FALSE
     *
-    * @return boolean                
+    * @return boolean
     */  
     public function is_user_disabled() 
     {
         $conn  = $this->conn;
         $login = $this->login;
-        
+
         $clogin = $conn->GetOne("SELECT login FROM users WHERE login = '".$login."' AND expires > '".gmdate('Y-m-d H:i:s')."'");
         
         if ($clogin == '') 
@@ -2123,7 +2144,7 @@ class Session
             if ($rs->fields['last_logon_try'] != '0000-00-00 00:00:00' 
                 && time() - strtotime($rs->fields['last_logon_try']) >= $lockout_duration) 
             {
-                $conn->Execute('UPDATE users SET enabled = 1 WHERE login=?', $params);
+                $conn->Execute('UPDATE users SET enabled = 1 WHERE login = ?', $params);
                 
                 return FALSE;
             }
@@ -2206,8 +2227,8 @@ class Session
     {
         Ossim_db::check_connection($conn); 
         
-        $pass  = hash('sha256', $pass);
-        $login = strtolower($login);        
+        $pass  = ($login_method=='ldap') ? hash('sha256', $login) : hash('sha256', $pass);
+        $login = strtolower($login);
         
         $params = array(
             $login,
@@ -4380,8 +4401,23 @@ class Session
     {
         if (!self::menu_perms($menu, $submenu))
         {
-            $_error_msg = _("You don't have permission to see this page");
-            
+            $_error_msg = _('You do not have permissions to see this section.');
+
+            Util::response_bad_request($_error_msg, 401);
+        }
+    }
+    
+    
+    /**
+     * This function throws a 401 error when the user is not admin
+     *
+     * @return void
+     */
+    public static function admin_logcheck_ajax()
+    {
+        if (!Session::am_i_admin())
+        {
+            $_error_msg = _('You do not have permissions to see this section.');
             Util::response_bad_request($_error_msg, 401);
         }
     }
@@ -5055,7 +5091,7 @@ class Session
             if (isset($_SESSION['_expiration_time']) && intval($_SESSION['_expiration_time']) + $expired_timeout < $time) 
             {
                 $ossim_link     = $conf->get_conf('ossim_link');
-                $login_location = preg_replace("/(\/)+/","/",$ossim_link . '/session/login.php?action=logout');    
+                $login_location = preg_replace("/(\/)+/","/",$ossim_link . '/session/login.php?action=logout&timeout=1');
                 
                 header("Location: $login_location");
             }

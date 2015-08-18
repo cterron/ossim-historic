@@ -120,7 +120,7 @@ $mounted_disks = $st['disk'];
             <td class='_data'><?php echo $hostname?></td>
             <td class='t_status_header' colspan='2'>
                 <span><?php echo _('RAM used')?></span>
-                <span style='font-weight: normal; font-size: 9px'>
+                <span id='r_mem_data' style='font-weight: normal; font-size: 9px'>
                     [<span class='free'><?php echo _('Free').': '?><?php echo $rmf?></span>,
                     <span class='used'><?php echo _('Used').': '?><?php echo $rmu?></span>,
                     <span class='total'><?php echo _('Total').': '?><?php echo $rmt?></span>]
@@ -148,7 +148,7 @@ $mounted_disks = $st['disk'];
             <td class='_data'><?php echo $system_uptime;?></td>
             <td class='t_status_header' colspan='2'>
                 <span><?php echo _('Swap used')?></span>
-                <span style='font-weight: normal; font-size: 9px'>
+                <span id='s_mem_data' style='font-weight: normal; font-size: 9px'>
                     [<span class='free'><?php echo _('Free').': '?><?php echo $vmf?></span>,
                     <span class='used'><?php echo _('Used').': '?><?php echo $vmu?></span>,
                     <span class='total'><?php echo _('Total').': '?><?php echo $vmt?></span>]

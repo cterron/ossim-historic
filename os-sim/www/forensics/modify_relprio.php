@@ -198,7 +198,7 @@ else {
 		  </td>
 		</tr>      
         <tr>
-            <td colspan="2" class="center nobborder" style="padding:10px"><input type="submit" value="<?=_("Update")?>"/></td>
+            <td colspan="2" class="center nobborder" style="padding:10px"><input type="submit" value="<?=_("Save")?>"/></td>
         </tr>
     </table>
     </form>

@@ -50,11 +50,11 @@ function av_asset_detail(o)
 		'scroll_section': false,
 		'perms'         : {}
 	};
-	
+
 	//Merging default and custom detail options.
 	$.extend(opt, o || {});
-	
-	
+
+
 	//Asset General Info
     this.info =
     {
@@ -81,11 +81,11 @@ function av_asset_detail(o)
     /************************            ACTIONS FUNCITONS             *************************/
     /*******************************************************************************************/
 
-    
+
     /*
-     *  Function to open the asset ntop section in a new window. 
+     *  Function to open the asset netflows section in a new window.
      */
-    this.open_ntop = function()
+    this.open_netflows = function()
     {
         try
         {
@@ -95,37 +95,30 @@ function av_asset_detail(o)
         {
             var ip = '';
         }
-        
+
         if (ip != '')
         {
-            var url = "/ntop/" + ip + ".html";
-            var opt =
-            {
-                width      : 900,
-                height     : 600,
-                title      : "<?php echo _('Network Activity') ?>"
-            }
-            
-            av_window_open(url, opt);
+            var url = this.cfg.ossim + "nfsen/nfsen.php?tab=2&ip=" + ip;
+            link(url, "environment", "netflow", "details");
         }
     }
-       
-    
+
+
     /*
      *  Function to load the asset edition lightbox
-     */    
+     */
     this.edit_asset = function()
-    {        		
+    {
         var url   = this.cfg.asset.views + "asset_form.php?id=" + this.asset_id + "&asset_type=" + this.asset_type;
         var title = "<?php echo _('Edit Asset') ?>";
-           
+
         GB_show(title, url, '80%', '850');
     }
-    
-    
+
+
     /*
      *  Function to delete the asset.
-     */ 
+     */
     this.delete_asset = function()
     {
         var __self = this;
@@ -136,7 +129,7 @@ function av_asset_detail(o)
             'token'   : token,
             'asset_id': __self.asset_id
         }
-        
+
         $.ajax(
         {
             type: "POST",
@@ -156,7 +149,7 @@ function av_asset_detail(o)
                     session.redirect();
                     return;
                 }
-                
+
                 var error = XMLHttpRequest.responseText;
                 show_notification('asset_notif', error, 'nf_error', 5000, true);
             }
@@ -167,15 +160,15 @@ function av_asset_detail(o)
     /*******************************************************************************************/
     /**************************            DRAW FUNCTIONS             **************************/
     /*******************************************************************************************/
-    
-    
+
+
     /*
      *  Function to retrieve and draw the general asset info
-     */ 
+     */
     this.draw_info = function()
-    {        
+    {
         var __self = this;
-               
+
         __self.load_info().done(function()
         {
             draw_icon($('[data-bind="asset_icon"]'), __self.info.icon);
@@ -190,19 +183,22 @@ function av_asset_detail(o)
             draw_list($('[data-bind="asset_sensors"]'), format_sensors(__self.info.sensors));
             draw_list($('[data-bind="asset_networks"]'), format_networks(__self.info.networks));
             draw_text($('[data-bind="asset_descr"]'), __self.info.descr);
-            
+
+            //Reloading Actions to load the agent deploy permissions!
+            __self.perms['deploy_agent'] = __self.perms['hids'] && __self.info['os'] && __self.info['os'].match(/(^microsoft|windows)/i);
+            __self.load_actions();
         });
     }
-    
-    
+
+
     /*
      *  Function to Draw the Asset Labels.
-     */ 
+     */
     this.draw_labels = function()
     {
         var __self = this;
         var elem   = $('[data-bind="detail_label_container"]');
-        
+
         __self.load_labels().done(function ()
         {
             elem.show_more('destroy');
@@ -216,42 +212,82 @@ function av_asset_detail(o)
             elem.show_more({items_to_show: 10, display_button: 'outside'});
         });
     };
-    
-    
+
+
     /*******************************************************************************************/
     /**************************            EXTRA FUNCTIONS             *************************/
     /*******************************************************************************************/
-    
-    
+
+
     /*
-     *  Function to Go Back   
+     *  Function to Go Back
      *
      * @param  params    Params to load in the url to the asset list.
      */
     this.go_back = function(params)
     {
         var url = this.cfg.asset.views + 'list.php?back=1';
-        
+
         if (typeof params == 'string' && params != '')
         {
             url += '&' + params;
         }
-        
+
         link(url, "environment", "assets", "assets");
     }
-    
-    
+
+
     /*
-     *  Function to reload the sections when actions are performed. 
-     * 
+     *  Function to reload the sections when actions are performed.
+     *
      * @param  url      Lightbox URL
      * @param  params   Data sent through the lightbox.
      */
     this.manage_reload = function(url, params)
     {
-        var __self    = this;
-        
-        if (url.match(/software/))
+        var __self = this;
+
+        if (url.match(/hids/))
+        {
+            try
+            {
+                if (typeof(params) == 'object')
+                {
+                    var action = params.action || '';
+
+                    if (action == 'discover_os')
+                    {
+                        url = '/ossim/netscan/index.php?action=custom_scan&scan_type=normal&sensor=local&host_id=' + __self.asset_id;
+
+                        link(url, "environment", "assets", "assets");
+                    }
+                    else if (action == 'go_to_hids')
+                    {
+                        url = '/ossim/ossec/views/ossec_status/status.php';
+
+                        link(url, "environment", "detection");
+                    }
+                    else if (action == 'go_to_mc')
+                    {
+                        url = '/message_center/views/message_center.php';
+
+                        link(url, "message_center", "message_center");
+                    }
+                    else if (action == 'agent_deployed')
+                    {
+                        __self.draw_info();
+                        __self.load_environment_info();
+
+                        show_notification('asset_notif', params.msg, 'nf_success', 5000, true);
+                    }
+                }
+            }
+            catch(Err)
+            {
+                ;
+            }
+        }
+        else if (url.match(/software/))
         {
             //Reload Software Tab
             __self.reload_section('software');
@@ -271,10 +307,10 @@ function av_asset_detail(o)
         {
             __self.load_map();
             __self.draw_info();
-            
+
             __self.reload_section('software');
             __self.reload_section('properties');
-            
+
         }
         else if (url.match(/plugins/))
         {
@@ -299,22 +335,29 @@ function av_asset_detail(o)
         {
             __self.load_environment_info();
         }
+        else if (url.match(/base_qry_alert/))
+        {
+            if (typeof(params) == 'object' && typeof params['url_detail'] != 'undefined')
+            {
+                go_to(params['url_detail']);
+            }
+        }
 
     }
-    
-    
+
+
     /*******************************************************************************************/
     /**************************            BINDING & INIT             **************************/
     /*******************************************************************************************/
-    
-    
+
+
     /*
      *  Function to Bind the custom asset handlers.
-     */ 
+     */
     this.bind_handlers = function()
     {
         var __self = this;
-        
+
         if (__self.perms['edit'])
         {
             var options =
@@ -335,67 +378,55 @@ function av_asset_detail(o)
                     __self.delete_label(status, data);
                 }
             };
-            
+
             $('#label_selection').av_dropdown_tag(options);
-            
-            
-            $("[data-bind='delete_asset']").on('click', function()
-            {
-                var msg  = "<?php echo _('Are you sure you want to permanently delete this asset?') ?>";
-                
-                av_confirm(msg, __confirm_keys).done(function()
-                {
-                    __self.delete_asset();
-                });
-            });
 
             $("[data-bind='export-asset']").hide();
         }
         else
         {
             $('#label_selection').hide();
-            $("[data-bind='delete_asset']").addClass('disabled');
         }
-        
-        
-        $ntop = $('[data-bind="ntop_link"]').show();
-        if (__self.perms['ntop'])
+
+
+        $netflows = $('[data-bind="netflows_link"]').show();
+        if (__self.perms['netflows'])
         {
-            $ntop.on('click', function()
+            $netflows.on('click', function()
             {
-                __self.open_ntop();
+                __self.open_netflows();
             });
-        } 
+        }
         else
         {
-            $ntop.addClass('av_l_disabled');
-        }      
-          
+            $netflows.addClass('av_l_disabled');
+        }
+
     }
-    
-    
+
+
     /*
      * Function to Init the asset detail.
      *
      * @param  opt    Asset Detail Options
-     */ 
+     */
     this.init = function(opt)
     {
         var __self = this;
-        
+
         this.asset_type = 'asset';
         this.asset_id   = opt.id;
         this.perms      = opt.perms;
-        
+
         this.db         = new av_session_db('db_' + this.asset_type);
-                
+
         //Section Tabs
         this.sections =
         {
             "id"       : 'detail_sections',
             "selected" : 0,
             "hide"     : 0,
-            "tabs"     : 
+            "tabs"     :
             [
                 {
                     "id"   : "tab_vulnerabilities",
@@ -447,7 +478,7 @@ function av_asset_detail(o)
                 },
                 {
                     "id"   : "tab_plugins",
-                    "name" : "<?php echo Util::js_entities(_('Plugin')) ?>",
+                    "name" : "<?php echo Util::js_entities(_('Plugins')) ?>",
                     "href" : this.cfg.common.templates + "tpl_dt_plugins.php",
                     "hide" : !this.perms.plugins,
                     "load_callback": function()
@@ -472,7 +503,7 @@ function av_asset_detail(o)
                     "load_callback": function()
                     {
                         __self.av_sections.load_netflows();
-                        
+
                     }
                 },
                 {
@@ -489,10 +520,33 @@ function av_asset_detail(o)
                 }
             ]
         };
-        
+
         //Actions Allowed in the detail section.
-        this.actions = 
+        this.actions =
         [
+            {
+                "id"    : "edit",
+                "name"  : "<?php echo _('Edit') ?>",
+                "perms" : "edit",
+                "action": function()
+                {
+                    __self.edit_asset();
+                }
+            },
+            {
+                "id"    : "delete",
+                "name"  : "<?php echo _('Delete') ?>",
+                "perms" : "delete",
+                "action": function()
+                {
+                    var msg  = "<?php echo _('Are you sure you want to permanently delete this asset?') ?>";
+
+                    av_confirm(msg, __confirm_keys).done(function()
+                    {
+                        __self.delete_asset();
+                    });
+                }
+            },
             {
                 "id"    : "nmap_scan",
                 "name"  : "<?php echo _('Run Asset Scan') ?>",
@@ -528,9 +582,18 @@ function av_asset_detail(o)
                 {
                     __self.toggle_monitoring('disable');
                 }
+            },
+            {
+                "id"    : "deploy_hids",
+                "name"  : "<?php echo _('Deploy HIDS Agent') ?>",
+                "perms" : "deploy_agent",
+                "action": function()
+                {
+                    __self.deploy_hids();
+                }
             }
         ];
-        
+
         var section = this.translate_tab_section(opt.section);
 
 		this.load_sections(section, opt.scroll_section);

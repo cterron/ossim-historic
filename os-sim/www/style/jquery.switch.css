@@ -23,6 +23,7 @@ https://github.com/simontabor/jquery-toggles / http://simontabor.com/labs/toggle
     -moz-user-select:none;
     -ms-user-select:none;
     user-select:none;
+    text-align: center;
 }
 
 .toggle-slide .toggle-on,.toggle-slide .toggle-off,.toggle-slide .toggle-blob

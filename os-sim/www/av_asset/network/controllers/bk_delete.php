@@ -54,7 +54,7 @@ $conn = $db->connect();
 
 try
 {
-    $perm_add  = Session::can_i_create_assets();
+    $perm_add = Session::can_i_create_assets();
 
     if (!$perm_add)
     {

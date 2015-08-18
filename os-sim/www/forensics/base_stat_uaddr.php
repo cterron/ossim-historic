@@ -139,6 +139,7 @@ $et->Mark("Counting Result size");
 $qro = new QueryResultsOutput("base_stat_uaddr.php?caller=" . $caller . "&amp;addr_type=" . $addr_type);
 $qro->AddTitle(" ");
 $qro->AddTitle($results_title, "addr_a", " ", " ORDER BY $addr_type_name ASC", "addr_d", " ", " ORDER BY $addr_type_name DESC");
+$qro->AddTitle(gettext("OTX"));
 if ($resolve_IP == 1) $qro->AddTitle("FQDN");
 $qro->AddTitle((Session::show_entities()) ? gettext("Context") : gettext("Sensor"));
 $qro->AddTitle(gettext("Events") . "&nbsp;# <span class='idminfo' txt='".Util::timezone(Util::get_timezone())."'>(*)</span>", "occur_a", " ", " ORDER BY num_events ASC", "occur_d", " ", " ORDER BY num_events DESC");
@@ -232,7 +233,11 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     /* Check for a NULL IP which indicates an event (e.g. portscan)
     * which has no IP
     */
-    if ($no_ip) qroPrintEntry(gettext("unknown"));
+    if ($no_ip) 
+    {
+        qroPrintEntry(gettext("unknown"));
+        qroPrintEntry(gettext("N/A"), "center", "middle");
+    }
     else
     {
         $geo_info = Asset_host::get_extended_location($_conn, $geoloc , $currentIP);
@@ -249,7 +254,8 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
         
         $div = '<div id="'.$currentIP.';'.$currentIP.';'.$host_id.'" ctx="'.((Session::show_entities()) ? $ctx : Session::get_default_ctx()).'" class="HostReportMenu" style="padding:0px 0px 0px 25px">'; //'.getrepbgcolor($prio,1).'
 		$bdiv = '</div>';        
-        qroPrintEntry($div . $country_img . "&nbsp;" . BuildAddressLink($currentIP, 32) . $currentIP . '</A>&nbsp;' . getrepimg($prio,$rel,$act,$currentIP) . $bdiv, 'left','','nowrap');
+        qroPrintEntry($div . $country_img . "&nbsp;" . BuildAddressLink($currentIP, 32) . $currentIP . '</A>&nbsp;' . $bdiv, 'left','','nowrap');
+        qroPrintEntry(getrepimg($prio,$rel,$act,$currentIP), "center", "middle");
     }
     if ($resolve_IP == 1) qroPrintEntry('&nbsp;&nbsp;' . baseGetHostByAddr($currentIP, $ctx, $db) . '&nbsp;&nbsp;');
     /* Print # of Occurances */

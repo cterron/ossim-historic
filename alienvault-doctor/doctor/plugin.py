@@ -29,20 +29,16 @@
 
 import subprocess
 import MySQLdb
-import re
-import json
-import traceback
 
 from os import path
 
 import ConfigParser
-from ConfigParser import RawConfigParser, NoOptionError
+from ConfigParser import RawConfigParser
 from distutils.version import LooseVersion
 
 import dependency
-from output import Output
+from output import Output, log_debug
 from wildcard import Wildcard
-from sysinfo import Sysinfo
 from check import Check
 from error import PluginError, PluginConfigParserError, CheckError
 
@@ -109,15 +105,18 @@ class Plugin:
     Plugin class.
     Defines a plugin with a set of conditions/actions.
     '''
-    def __init__(self, filename, alienvault_config, severity_list, verbose, raw):
-
+    # # def __init__(self, filename, alienvault_config, severity_list, appliance_type_list, verbose, raw):
+    def __init__(self, filename, config_file, alienvault_config, severity_list, appliance_type_list, verbose, raw):
         # Common properties.
         self.__config_file = None
+        self.__sections = []
         self.__alienvault_config = {}
         self.__severity_list = []
+        self.__appliance_type_list = []
         self.__verbose = 0
         self.__raw = False
         self.__name = ''
+        self.__id = ''
         self.__description = ''
         self.__type = ''
         self.__exclude = ''
@@ -127,6 +126,7 @@ class Plugin:
         self.__cutoff = False
         self.__strike_zone = False
         self.__raw_limit = 0
+        self.__result = True
 
         # 'file' type properties.
         self.__filename = ''
@@ -151,30 +151,34 @@ class Plugin:
         # Plugin defined checks.
         self.__checks = []
 
-        # Check for file extension.
-        if not filename.endswith('.plg'):
-            raise PluginError('File extension is not .plg', filename)
-
+        self.__config_file = config_file
         self.__alienvault_config = alienvault_config
         self.__severity_list = severity_list
+        self.__appliance_type_list = appliance_type_list
         self.__verbose = verbose
         self.__raw = raw
 
-        try:
-            # Parse the plugin configuration file.
-            self.__config_file = PluginConfigParser()
-            self.__config_file.read(filename)
-        except PluginConfigParserError:
-            raise
-        except Exception as e:
-            raise PluginError('Cannot parse plugin file "%s": %s' % (filename, str(e)), filename)
+        # try:
+        #     # Parse the plugin configuration file.
+        #     self.__config_file = PluginConfigParser()
+        #     self.__config_file.read(filename)
+        # except PluginConfigParserError:
+        #     raise
+        # except Exception as e:
+        #     raise PluginError('Cannot parse plugin file "%s": %s' % (filename, str(e)), filename)
 
         try:
+            # Parse 'check' sections.
+            self.__sections = self.__config_file.sections()
             self.__name = self.__config_file.get('properties', 'name')
+            self.__id = self.__config_file.get('properties', 'id')
             self.__description = self.__config_file.get('properties', 'description')
             self.__type = self.__config_file.get('properties', 'type')
             self.__category = self.__config_file.get('properties', 'category').split(',')
 
+            plugin_data = {'id': self.__id if self.__id else '',
+                           'type': self.__type if self.__type else '',
+                           'description': self.__description if self.__description else ''}
             if self.__verbose > 0:
                 Output.emphasized('\nRunning plugin "%s"...\n' % self.__name, [self.__name])
 
@@ -200,8 +204,9 @@ class Plugin:
                 for excluding_profile in self.__exclude:
                     excluding_profile = excluding_profile.strip()
                     if excluding_profile in self.__alienvault_config['hw_profile']:
-                        raise PluginError('Plugin cannot be executed in %s' % self.__alienvault_config['hw_profile'],
-                                          self.__name)
+                        raise PluginError(msg='Plugin cannot be executed in %s' % self.__alienvault_config['hw_profile'],
+                                          plugin=self.__name,
+                                          plugin_data=plugin_data)
 
             # Check for the 'limit' option (in kbytes), used in combination with the raw data output. '0' means no limit.
             if self.__raw and self.__config_file.has_option('properties', 'raw_limit'):
@@ -214,11 +219,15 @@ class Plugin:
 
                 for (profile, version) in self.__profiles:
                     if profile == '' or version == '':
-                        raise PluginError('Empty profile or version in "profiles" field', self.__name)
+                        raise PluginError(msg='Empty profile or version in "profiles" field',
+                                          plugin=self.__name,
+                                          plugin_data=plugin_data)
 
                     if profile not in self.__alienvault_config['sw_profile'] and \
-                       profile not in self.__alienvault_config['hw_profile']:
-                        raise PluginError('Profile "%s" does not match installed profiles' % profile, self.__name)
+                       profile != self.__alienvault_config['hw_profile']:
+                        raise PluginError(msg='Profile "%s" does not match installed profiles' % profile,
+                                          plugin=self.__name,
+                                          plugin_data=plugin_data)
 
                     if version.startswith('>'):
                         ret = LooseVersion(self.__alienvault_config['version']) > LooseVersion(version[1:])
@@ -229,7 +238,9 @@ class Plugin:
                     elif version.startswith('!='):
                         ret = LooseVersion(self.__alienvault_config['version']) != LooseVersion(version[2:])
                     else:
-                        raise PluginError('Profile "%s" version does not match installed profiles' % profile, self.__name)
+                        raise PluginError(msg='Profile "%s" version does not match installed profiles' % profile,
+                                          plugin=self.__name,
+                                          plugin_data=plugin_data)
 
             # Ugly...
             if self.__type == 'file':
@@ -238,15 +249,31 @@ class Plugin:
                 self.__init_command__()
             elif self.__type == 'db':
                 self.__init_db__()
+            elif self.__type == 'hardware':
+                pass
             else:
-                raise PluginError('Unknown type', self.__name)
+                raise PluginError(msg='Unknown type',
+                                  plugin=self.__name,
+                                  plugin_data=plugin_data)
 
             # Parse 'check' sections.
             sections = self.__config_file.sections()
             for section in sections:
                 if section != 'properties':
                     check = Check(self, section)
-                    if check.check_severity(self.__severity_list):
+                    needs_deletion = False
+                    if not check.check_appliance_type(self.__alienvault_config['hw_profile'],
+                                                      self.__appliance_type_list):
+                        Output.warning("\nCheck %s is not meant to be run in %s" % (section,
+                                                                                    self.__alienvault_config['hw_profile']))
+                        needs_deletion = True
+
+                    elif not check.check_version(self.__alienvault_config['version']):
+                        Output.warning("\nCheck %s cannot be run in version %s" % (section,
+                                                                                   self.__alienvault_config['version']))
+                        needs_deletion = True
+
+                    if not needs_deletion:
                         self.__checks.append(check)
                     else:
                         del check
@@ -257,16 +284,27 @@ class Plugin:
         except PluginConfigParserError:
             raise
 
-        except CheckError:
-            raise
+        except CheckError as e:
+            plugin_data = {'id': self.__id if self.__id else '',
+                           'type': self.__type if self.__type else '',
+                           'description': self.__description if self.__description else ''}
+            raise PluginError(msg=e.msg,
+                              plugin=e.plugin,
+                              plugin_data=plugin_data)
 
-        except Exception, msg:
-            raise PluginError('%s' % traceback.format_exc(), filename)
-            # raise PluginError('Cannot initialize plugin: %s' % str(msg), filename)
+        except Exception as e:
+            raise PluginError(msg='%s' % str(e),
+                              plugin=filename,
+                              plugin_data={})
 
     # Check for plugin requirements.
     # Currently, requirement types could be 'modules', 'files', 'dpkg', 'hardware'.
     def __check_requirements__(self):
+
+        plugin_data = {'id': self.__id if self.__id else '',
+                       'type': self.__type if self.__type else '',
+                       'description': self.__description if self.__description else ''}
+
         for requirement in self.__requires:
             req_type, req_data = requirement.split(':')
             req_data_split = req_data.split(',')
@@ -279,39 +317,57 @@ class Plugin:
                     proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     data, err = proc.communicate()
                     if data == '':
-                        raise PluginError('Required module "%s" is not present' % req_module, self.__name)
+                        raise PluginError(msg='Required module "%s" is not present' % req_module,
+                                          plugin=self.__name,
+                                          plugin_data=plugin_data)
             elif req_type == '@files':
                 for req_file in req_data_split:
                     if not path.exists(req_file):
-                        raise PluginError('Required file "%s" does not exist' % req_file, self.__name)
+                        raise PluginError(msg='Required file "%s" does not exist' % req_file,
+                                          plugin=self.__name,
+                                          plugin_data=plugin_data)
             elif req_type == '@dpkg':
                 for req_pkg in req_data_split:
                     command = 'dpkg -l ' + req_pkg
                     proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     data, err = proc.communicate()
                     if err != '':
-                        raise PluginError('Required package "%s" is not installed' % req_pkg, self.__name)
+                        raise PluginError(msg='Required package "%s" is not installed' % req_pkg,
+                                          plugin=self.__name,
+                                          plugin_data=plugin_data)
             elif req_type == '@hardware':
                 self.__check_hardware_requirements__(req_data_split)
             else:
-                raise PluginError('Unknown requirement type: %s' % req_type, self.__name)
+                raise PluginError(msg='Unknown requirement type: %s' % req_type,
+                                  plugin=self.__name,
+                                  plugin_data=plugin_data)
 
     # Check for hardware requirements.
-    # Items in the list are defined this way: hardware/attribute/value
-    def __check_hardware_requirements__(self, hw_list):
-        # Check hardware requirements.
-        for hw_req in hw_list:
-            (hw_req_pretty, eval_str) = Wildcard.hw_config(hw_req)
-            try:
-                if not eval(eval_str):
-                    raise PluginError(hw_req_pretty, self.__name)
-            except PluginError:
-                raise
-            except:
-                raise PluginError('Expression "%s" cannot be evaluated' % eval_str, self.__name)
+    # # Items in the list are defined this way: hardware/attribute/value
+    # def __check_hardware_requirements__(self, hw_list):
+    #     plugin_data = {'id': self.__id if self.__id else '',
+    #                    'type': self.__type if self.__type else '',
+    #                    'description': self.__description if self.__description else ''}
+    #     # Check hardware requirements.
+    #     for hw_req in hw_list:
+    #         (hw_req_pretty, eval_str) = Wildcard.hw_config(hw_req)
+    #         try:
+    #             if not eval(eval_str):
+    #                 raise PluginError(msg=hw_req_pretty,
+    #                                   plugin=self.__name,
+    #                                   plugin_data=plugin_data)
+    #         except PluginError:
+    #             raise
+    #         except:
+    #             raise PluginError(msg='Expression "%s" cannot be evaluated' % eval_str,
+    #                               plugin=self.__name,
+    #                               plugin_data=plugin_data)
 
     # Initialize 'file' type plugin properties.
     def __init_file__(self):
+        plugin_data = {'id': self.__id if self.__id else '',
+                       'type': self.__type if self.__type else '',
+                       'description': self.__description if self.__description else ''}
         self.__filename = self.__config_file.get('properties', 'filename')
 
         try:
@@ -322,12 +378,19 @@ class Plugin:
             if e.strerror == "No such file or directory" and not self.__file_must_exist:
                 self.__check_force_true = True
             else:
-                raise PluginError('Cannot parse file "%s": %s' % (self.__filename, e), self.__name)
+                raise PluginError(msg='Cannot parse file "%s": %s' % (self.__filename, e),
+                                  plugin=self.__name,
+                                  plugin_data=plugin_data)
         except Exception as e:
-            raise PluginError('Cannot parse file "%s": %s' % (self.__filename, e), self.__name)
+            raise PluginError(msg='Cannot parse file "%s": %s' % (self.__filename, e),
+                              plugin=self.__name,
+                              plugin_data=plugin_data)
 
     # Initialize 'command' type plugin properties.
     def __init_command__(self):
+        plugin_data = {'id': self.__id if self.__id else '',
+                       'type': self.__type if self.__type else '',
+                       'description': self.__description if self.__description else ''}
         self.__command = self.__config_file.get('properties', 'command')
         self.__command = Wildcard.av_config(self.__command)
 
@@ -336,10 +399,15 @@ class Plugin:
             self.__data, err = proc.communicate()
             self.__data_len = len(self.__data)
         except Exception as e:
-            raise PluginError('Cannot run command "%s": %s' % (self.__command, e), self.__name)
+            raise PluginError(msg='Cannot run command "%s": %s' % (self.__command, e),
+                              plugin=self.__name,
+                              plugin_data=plugin_data)
 
     # Initialize 'db' type plugin properties.
     def __init_db__(self):
+        plugin_data = {'id': self.__id if self.__id else '',
+                       'type': self.__type if self.__type else '',
+                       'description': self.__description if self.__description else ''}
         self.__host = Wildcard.av_config(self.__config_file.get('properties', 'host')) if self.__config_file.get('properties', 'host') else self.__alienvault_config['dbhost']
         self.__user = Wildcard.av_config(self.__config_file.get('properties', 'user')) if self.__config_file.get('properties', 'user') else self.__alienvault_config['dbuser']
         self.__password = Wildcard.av_config(self.__config_file.get('properties', 'password')) if self.__config_file.get('properties', 'password') else self.__alienvault_config['dbpass']
@@ -349,7 +417,9 @@ class Plugin:
             self.__db_conn = MySQLdb.connect(host=self.__host, user=self.__user, passwd=self.__password, db=self.__database)
             self.__db_cursor = self.__db_conn.cursor()
         except Exception as e:
-            raise PluginError('Cannot connect to database: %s' % e, self.__name)
+            raise PluginError(msg='Cannot connect to database: %s' % e,
+                              plugin=self.__name,
+                              plugin_data=plugin_data)
 
     # Getter/setter methods.
     def get_name(self):
@@ -372,6 +442,12 @@ class Plugin:
 
     def get_filename(self):
         return self.__filename
+
+    def get_result(self):
+        return self.__result
+
+    def get_alienvault_config(self):
+        return self.__alienvault_config
 
       # Check if any of the categories match with the plugin ones.
     def check_category(self, categories):
@@ -413,7 +489,12 @@ class Plugin:
         total = 0
         passed = 0
 
-        json_msg = {'description': self.__description, 'checks': {}}
+        json_msg = {'id': self.__id,
+                    'name': self.__name,
+                    'description': self.__description,
+                    'checks': {},
+                    }
+
         if self.__strike_zone:
             json_msg['strike_zone'] = True
 
@@ -427,18 +508,59 @@ class Plugin:
             if self.__check_force_true:
                 result = True
             else:
-                result, msg = check.run()
+                result, msg, fo = check.run()
+
+            # Prepare 'command' field
+            aux_command = ''
+            if self.__type == "file":
+                aux_command = "cat %s" % self.__filename
+            elif self.__type == "command":
+                aux_command = self.__command
+            elif self.__type == "db":
+                aux_command = "echo '%s' | ossim-db" % check.get_query()
 
             if not result:
-                if self.__verbose == 2:
-                    Output.error('Check "%s" failed: %s' % (check.get_name(), msg))
+                if self.__verbose >= 2:
+                    Output.error("Check '%s' failed: %s" % (check.get_name(), msg))
                 elif self.__verbose == 1:
-                    Output.error('Check "%s" failed' % check.get_name())
+                    Output.error("Check '%s' failed" % check.get_name())
 
-                json_msg['checks'][check.get_name()] = {'result': False, 'severity': check.get_severity(), 'warning': check.get_warning(), 'advice': check.get_advice(), 'detail': msg.lstrip().replace('\n\t', ';')}
+                if check.get_severity() != 'Info':
+                    json_msg['checks'][check.get_name()] = {'result': 'failed',
+                                                            'severity': check.get_severity(),
+                                                            'description': check.get_description(),
+                                                            'summary': check.get_summary_failed(),
+                                                            'remediation': check.get_remediation(),
+                                                            'detail': fo.lstrip().replace('\n\t', ';'),
+                                                            'debug_detail': msg.lstrip().replace('\n\t', ';'),
+                                                            'pattern': check.get_pattern(),
+                                                            'command': aux_command,
+                                                            'output': check.get_output(),
+                                                            'strike_zone': False}
+                else:
+                    json_msg['checks'][check.get_name()] = {'result': 'passed',
+                                                            'severity': check.get_severity(),
+                                                            'description': check.get_description(),
+                                                            'summary': check.get_summary_failed(),
+                                                            'remediation': check.get_remediation(),
+                                                            'detail': fo.lstrip().replace('\n\t', ';'),
+                                                            'debug_detail': msg.lstrip().replace('\n\t', ';'),
+                                                            'pattern': check.get_pattern(),
+                                                            'command': aux_command,
+                                                            'output': check.get_output(),
+                                                            'strike_zone': True}
 
+                if json_msg['checks'][check.get_name()]['result'] == 'failed':
+                    self.__result &= False
+
+                # Evaluate strike zone. We have to take in mind:
+                # 1. If the current plugin affects to the strike zone
+                # 2. If the check analysed affects to the strike zone
+                # 3. If this is an info check
                 if self.__strike_zone:
-                    json_msg['strike_zone'] = False
+                    if check.get_strike_zone():
+                        if check.get_severity() != 'Info':
+                            json_msg['strike_zone'] = False
 
                 # Exit the loop if one check has failed.
                 if self.__cutoff:
@@ -446,8 +568,27 @@ class Plugin:
             else:
                 if self.__verbose > 0:
                     Output.info('Check "%s" passed' % check.get_name())
-                json_msg['checks'][check.get_name()] = {'result': True}
+                if check.get_severity() != 'Debug':
+                    json_msg['checks'][check.get_name()] = {'result': 'passed',
+                                                            'severity': check.get_severity(),
+                                                            'description': check.get_description(),
+                                                            'summary': check.get_summary_passed(),
+                                                            'pattern': str(check.get_pattern()),
+                                                            'command': aux_command,
+                                                            'output': check.get_output(),
+                                                            'strike_zone': True}
+                else:
+                    json_msg['checks'][check.get_name()] = {'result': 'passed',
+                                                            'severity': check.get_severity(),
+                                                            'description': check.get_description(),
+                                                            'summary': fo.lstrip().replace('\n\t', ';'),
+                                                            'pattern': str(check.get_pattern()),
+                                                            'command': aux_command,
+                                                            'output': check.get_output(),
+                                                            'strike_zone': True}
                 passed += 1
+
+        json_msg['result'] = self.get_result()
 
         if self.__verbose > 0:
             if passed == total:

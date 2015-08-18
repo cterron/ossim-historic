@@ -228,7 +228,7 @@ if (POST('name') != "") {
     ossim_valid(POST('absolute'), OSS_LETTER, OSS_NULLABLE, 'illegal:' . _("absolute"));
     ossim_valid(POST('sticky'), OSS_LETTER, OSS_NULLABLE, 'illegal:' . _("sticky"));
     ossim_valid(POST('sticky_different'), OSS_LETTER, OSS_NULLABLE, OSS_SCORE, 'illegal:' . _("sticky different"));
-    ossim_valid(POST('filename'), OSS_NULLABLE, OSS_ALPHA, OSS_SLASH, OSS_DIGIT, OSS_DOT, OSS_COLON, '\!,', 'illegal:' . _("file name"));
+    ossim_valid(POST('filename'), OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT, 'illegal:' . _("file name"));
     ossim_valid(POST('username'), OSS_NULLABLE, OSS_USER, OSS_PUNC_EXT, 'illegal:' . _("user name"));
     ossim_valid(POST('password'), OSS_NULLABLE, OSS_PASSWORD, 'illegal:' . _("password"));
     ossim_valid(POST('userdata1'), OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT, 'illegal:' . _("userdata1"));
@@ -313,8 +313,15 @@ if (POST('name') != "") {
     $rule = new Directive_rule(POST('id'), POST('level'), "", $attributes);
     $file = $directive_editor->engine_path."/".POST('xml_file');
 	$directive_error = false;
-	
+
 	if (POST('from_directive') != "") {
+
+        $new_id = $directive_editor->new_directive_id(POST('xml_file'));
+        if ($new_id && intval($new_id) != intval(POST('directive_id')))
+        {
+            $_POST['directive_id'] = intval($new_id);
+        }
+
 		$dom  = $directive_editor->get_xml($file, "DOMXML");
 		$node = $dom->createElement('directive');
 	    $node->setAttribute('id', POST('directive_id'));
@@ -327,6 +334,9 @@ if (POST('name') != "") {
 			$directive_editor->update_directive_pluginsid(POST('directive_id'), 2, POST('directive_prio'), POST('directive_name'));
 			$directive_editor->update_directive_taxonomy(POST('directive_id'), POST('directive_intent'), POST('directive_strategy'), POST('directive_method'));
 		}
+		
+		$infolog = array(POST('directive_id'));
+		Log_action::log(85, $infolog);
     }
     
     if (!$directive_error) {

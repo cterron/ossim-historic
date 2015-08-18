@@ -274,6 +274,11 @@ DATE_REGEXPS = [
     re.compile(r'(?P<year>\d{4})-(?P<month>\d+)-(?P<day>\d+)\s+(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+)'),
     #suricata -- 03/20/2012-12:12:24.376349
     re.compile(r'(?P<month>\d+)/(?P<day>\d+)/(?P<year>\d+)-(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+)'),
+    #Fortigate date=2015-03-17 time=22:03:55 
+    re.compile('(?P<year>\d{4})-(?P<month>\d+)-(?P<day>\d+)\s+time=(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+)'),
+    #Sophos UTM format date -- 2014:09:06-00:00:06
+    re.compile('(?P<year>\d{4}):(?:\s)?(?P<month>\d+):(?P<day>\d+)-(?P<hour>\d{1,2}):(?P<minute>\d{1,2}):(?P<second>\d{1,2})'),
+
 ]
 def normalize_date_american(string_date):
     date = normalize_date(string_date, True)

@@ -131,8 +131,6 @@ $icon  = (!empty($icon)) ? 'data:image/png;base64,'.base64_encode($icon) : '';
 $external = $net->get_external();
 
 $asset_value = $net->get_asset_value();
-$threshold_a = $net->get_threshold_a();
-$threshold_c = $net->get_threshold_c();
 $owner       = $net->get_owner();
 
 //Net Ips
@@ -323,11 +321,6 @@ $db->close();
             text-align : right;
         }
 
-        #threshold_c, #threshold_a
-        {
-            width : 30px;
-        }
-
         #av_info
         {
             width  : 80%;
@@ -457,7 +450,7 @@ $db->close();
                         //Try - Catch to avoid if this launch an error, the lightbox must be closed.
                         try
                         {
-                            top.frames['main'].notify('<?php echo $_message?>', 'nf_success', true);
+                            top.frames['main'].show_notification('asset_notif', "<?php echo $_message ?>", 'nf_success', 15000, true);
                         }
                         catch(Err){}
     
@@ -511,8 +504,6 @@ $db->close();
 
     <form method="POST" name="net_form" id="net_form" enctype="multipart/form-data">
         
-        <input type="hidden" name="threshold_a" id="threshold_a" class="vfield" value="<?php echo $threshold_a ?>"/>
-        <input type="hidden" name="threshold_c" id="threshold_c" class="vfield" value="<?php echo $threshold_c ?>"/>
         <input type="hidden" name="id" id="id" class="vfield" value="<?php echo $id;?>"/>
         <input type="hidden" name="ctx" id="ctx" class="vfield" value="<?php echo $ctx;?>"/>
 
@@ -713,7 +704,7 @@ $db->close();
                         <div id="tree"></div>
                         <div id="entity_selected">
                             <?php
-                            echo _('Context selected') . ': <strong>' . $ctx_name . "</strong>";
+                            echo _('Context selected') . ': <strong>' . Util::htmlentities($ctx_name) . "</strong>";
                             ?>
                         </div>
                     </td>

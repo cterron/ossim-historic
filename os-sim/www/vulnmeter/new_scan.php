@@ -390,7 +390,7 @@ if (!$limit_msg && in_array ($action, array ('create_scan', 'save_scan')))
         'D'   => array('name' => _('Daily')),
         'W'   => array('name' => _('Day of the Week')),
         'M'   => array('name' => _('Day of the Month')),
-        'NW'  => array('name' => _('N<sup>th</sup> weekday of the month'))
+        'NW'  => array('name' => _('N<sup>th</sup> week of the month'))
     );
     
     // date to fill the form
@@ -698,7 +698,7 @@ $db->close($conn);
                     }
                 ?>
                 
-                top.frames['main'].notify('<?php echo $message ?>', 'nf_success', true);
+                top.frames['main'].show_notification('asset_notif', "<?php echo Util::js_entities($message) ?>", 'nf_success', 15000, true);
                 parent.GB_hide();
             }
 
@@ -1270,7 +1270,7 @@ $db->close($conn);
                         <br>
                         <table width="100%">
                             <tr>
-                                <th align="right"><?echo _('N<sup>th</sup> weekday') ?></th>
+                                <th align="right"><?echo _('N<sup>th</sup> week') ?></th>
                                 <td colspan="2" class="noborder">
                                     <select name='nthweekday'>
                                         <?php
@@ -1806,7 +1806,7 @@ function submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $sched
         $nt = new Notification('nt_1', $config_nt);
         $nt->show();
         
-        $dbconn->close($conn);
+        $dbconn->close();
     }
 }
 

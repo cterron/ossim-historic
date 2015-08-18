@@ -616,11 +616,12 @@ def get_current_status_message_from_id(current_status_id):
 
 
 @require_db
-def delete_messages(messages):
-    """Delete a given list of messages ids from message status and from current_status
+def delete_current_status_messages(messages):
+    """Delete a given list of messages ids from current_status
     Args:
         messages[Message.id]
     """
+
     success = True
     msg = ""
     try:
@@ -628,7 +629,27 @@ def delete_messages(messages):
         records = db.session.query(Current_Status).filter(Current_Status.message_id.in_(messages)).all()
         for record in records:
             db.session.delete(record)
-        del records[:]
+        db.session.commit()
+    except NoResultFound:
+        db.session.rollback()
+    except Exception as error:
+        db.session.rollback()
+        success = False
+        msg = "%s" % str(error)
+        api_log.error("[delete_current_status_messages]: Cannot delete current_status: %s" % str(msg))
+    return success, msg
+
+
+@require_db
+def delete_status_messages(messages):
+    """Delete a given list of messages ids from status_messages
+    Args:
+        messages[Message.id]
+    """
+    success = True
+    msg = ""
+    try:
+        db.session.begin()
         records = db.session.query(Status_Message).filter(Status_Message.id.in_(messages)).all()
         for record in records:
             db.session.delete(record)
@@ -639,11 +660,25 @@ def delete_messages(messages):
         db.session.rollback()
         success = False
         msg = "%s" % str(error)
+        api_log.error("[delete_status_messages]: Cannot delete status_message: %s" % str(msg))
     return success, msg
 
 
 @require_db
-def db_insert_current_status_message(message_id, component_id, component_type, additional_info):
+def delete_messages(messages):
+    """Delete a given list of messages ids from message status and from current_status
+    Args:
+        messages[Message.id]
+    """
+    success, msg = delete_current_status_messages(messages)
+    if not success:
+        return success, msg
+
+    success, msg = delete_status_messages(messages)
+    return success, msg
+
+@require_db
+def db_insert_current_status_message(message_id, component_id, component_type, additional_info, replace):
     """Inserts a new notification on the system. The related message id should exists.
     Args:
         message_id (str:uuid string): Message id related with the notification
@@ -661,7 +696,6 @@ def db_insert_current_status_message(message_id, component_id, component_type, a
 
     msg_id_binary = get_bytes_from_uuid(message_id)
     success, status_message = get_status_message_from_id(message_id=msg_id_binary, is_admin=True, serialize=False)
-
     if not success:
         return False, "The given message_id doesn't exist"
     if status_message is None:
@@ -670,6 +704,11 @@ def db_insert_current_status_message(message_id, component_id, component_type, a
     component_id_binary = get_bytes_from_uuid(component_id)
     if component_id_binary is None or component_id_binary == "":
         return False, "Invalid component_id"
+
+    if replace is True:
+        success, msg = delete_current_status_messages([msg_id_binary])
+        if not success:
+            return success, "Unable to remove previous messages for the given message ID."
 
     try:
         db.session.begin()

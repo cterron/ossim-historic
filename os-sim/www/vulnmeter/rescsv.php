@@ -70,7 +70,6 @@
 /* anything done with this program, code, or items         */
 /* discovered with this program's use.                     */
 /***********************************************************/
-ini_set('memory_limit', '1500M');
 ini_set("max_execution_time","720");
 
 require_once 'av_init.php';
@@ -434,12 +433,12 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
                 $pversion   = $plugin_info->fields['version'];
 
                 $msg = htmlspecialchars_decode($msg, ENT_QUOTES);
+                $msg = str_replace("&amp;","&", $msg);
 
                 $dfields = extract_fields($msg);
 
                 $pinfo = array();
                 
-                if ($dfields['Summary']!="") { $pinfo[] = 'Summary: '.$dfields['Summary']; }
                 if ($pfamily!="")            { $pinfo[] = 'Family name: '.trim(strip_tags($pfamily));} 
                 if ($pcategory!="")          { $pinfo[] = 'Category: '.trim(strip_tags($pcategory)); }
                 if ($pcopyright!="")         { $pinfo[] = 'Copyright: '.trim(strip_tags($pcopyright)); }
@@ -454,7 +453,7 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
                     $row[] =  $pname."\n".implode("\n", $pinfo);
                 }
                 
-                $row[] = (empty($dfields['Overview'])) ? 'n/a' : $dfields['Overview'];
+                $row[] = (empty($dfields['Summary'])) ? 'n/a' : $dfields['Summary'];
              
                 $row[] = (empty($dfields['Fix'])) ?      'n/a' : $dfields['Fix'];
                 
@@ -463,6 +462,7 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
                 $consequences = array(); 
                     
                 $consequences[] = (empty($dfields['Description'])) ? '' : $dfields['Description'];
+                $consequences[] = (empty($dfields['Insight'])) ? '' : $dfields['Insight'];
                 $consequences[] = (empty($dfields['Vulnerability Insight'])) ? '' : $dfields['Vulnerability Insight'];
                 $consequences[] = (empty($dfields['Impact'])) ? '' : _('Impact') . ': ' . $dfields['Impact'];
                 $consequences[] = (empty($dfields['Impact Level'])) ? '' : _('Impact Level') . ': ' . $dfields['Impact Level'];
@@ -474,6 +474,8 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
                 // Test output
    
                 $test_output = array();
+
+                $test_output[] = (empty($dfields['Vulnerability Detection Result'])) ? '' : $dfields['Vulnerability Detection Result'];
 
                 $test_output[] = (empty($dfields['Plugin output'])) ? '' : $dfields['Plugin output'];
                 

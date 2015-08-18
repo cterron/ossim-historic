@@ -92,22 +92,26 @@ class Tshark {
             if(preg_match("/An error occurred after reading ([0-9]*) packets/",$output,$match)){
                 //$this->put_error($match[0].". Only show the ".$match[1]." firsts packets");
                 $packeterror = $match[1];
-                $cmd         = "editcap -r ".$file." ".$file."_2 1-".$packeterror;
-                $output      = shell_exec($cmd);
+                $cmd         = "editcap -r ? ? ?";
+                $params      = array($file, $file."_2", "1-".$packeterror);
+                $output      = Util::execute_command($cmd, $params, 'string');
                 $file        = $file."_2";
                 $this->put_file_pcap($file);
             }
             
-            $cmd    = "capinfos -aecsu ".$file;
-            $output = shell_exec($cmd);
+            $cmd    = "capinfos -aecsu ?";
+            $params = array($file);
+            $output = Util::execute_command($cmd, $params, 'string');
             $this->put_max_len($output);
             
-            $cmd    = "tshark -r ".$file." -R '".$filter."' -T psml -n"; 
-            $output = shell_exec($cmd);
+            $cmd    = "tshark -r ? -R ? -T psml -n";
+            $params = array($file, $filter); 
+            $output = Util::execute_command($cmd, $params, 'string');
 
             if (!preg_match('<structure>',$output)){
-                $cmd    = "tshark -r ".$file." -T psml -n"; 
-                $output = shell_exec($cmd);
+                $cmd    = "tshark -r ? -T psml -n";
+                $params = array($file); 
+                $output = Util::execute_command($cmd, $params, 'string');
                 $this->put_filter('');
                 $this->put_error(_("no data with this filter")."(".$filter.")");
             }
@@ -249,9 +253,9 @@ class Tshark {
     
     public function print_pdml($id)
     {
-        $cmd = "tshark -r ".$this->file_pcap." -T pdml -n frame.number==".$id; 
-        //$this->xml_pdml = shell_exec($cmd);
-        $xml_pdml = shell_exec($cmd);
+        $cmd      = "tshark -r ? -T pdml -n ?"; 
+        $params   = array($this->file_pcap, "frame.number==".$id);
+        $xml_pdml = Util::execute_command($cmd, $params, 'string');
         
         $pdml   = simplexml_load_string($xml_pdml);
         $pdml   = $pdml->packet;
@@ -307,9 +311,10 @@ class Tshark {
     
     public function print_text_bin($id)
     {
-        $cmd = "tshark -r ".$this->file_pcap." -T text -x -n frame.number==".$id; 
+        $cmd    = "tshark -r ? -T text -x -n ?";
+        $params = array($this->file_pcap, "frame.number==".$id); 
         $salida = "";
-        $lines  = explode("\n",shell_exec($cmd));
+        $lines  = explode("\n",Util::execute_command($cmd, $params, 'string'));
 
         foreach ($lines as $line){
             if ($line==="")
@@ -325,8 +330,9 @@ class Tshark {
 	    case "All":
                 $interval = round($this->get_max_len() / 30, 6);
                 $filter   = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
-                $cmd      = "tshark -r '".$this->get_file_pcap()."' -q -z io,stat,".$interval.",";
-                $lines    = explode("\n",shell_exec($cmd));
+                $cmd      = "tshark -r ? -q -z ?";
+                $params   = array($this->get_file_pcap(), "io,stat,".$interval.",");
+                $lines    = explode("\n",Util::execute_command($cmd, $params, 'string'));
 		$values   = array();
 		$i        = 0;
 		$max      = 0;
@@ -381,8 +387,9 @@ class Tshark {
             case "AllFilter":
                 $interval = round($this->get_max_len() / 30, 6);
                 $filter = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
-                $cmd = "tshark -r '".$this->get_file_pcap()."' -q -z io,stat,".$interval.",".$filter;
-		$lines  = explode("\n",shell_exec($cmd));
+                $cmd    = "tshark -r ? -q -z ?";
+                $params = array($this->get_file_pcap(), "io,stat,".$interval.",".$filter);
+		$lines  = explode("\n", Util::execute_command($cmd, $params, 'string'));
 		$values = array();
 		$i=0;
 		$max=0;
@@ -444,8 +451,9 @@ class Tshark {
             case "Protocols":
                 $interval = round($this->get_max_len() / 30, 6);
                 $filter   = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
-                $cmd      = "tshark -r '".$this->get_file_pcap()."' -q -z io,stat,".$interval.",tcp,udp,'not udp && not tcp'";
-		$lines    = explode("\n",shell_exec($cmd));
+                $cmd      = "tshark -r ? -q -z ?";
+                $params   = array($this->get_file_pcap(), "io,stat,".$interval.",tcp,udp,not udp && not tcp");
+		$lines    = explode("\n", Util::execute_command($cmd, $params, 'string'));
 		$values   = array();
 		$i        = 0;
 		$max      = 0;
@@ -516,8 +524,9 @@ class Tshark {
             case "ProtocolsFilter":
                 $interval = round($this->get_max_len() / 30, 6);
                 $filter = $this->get_filter() ;
-                $cmd = "tshark -r '".$this->get_file_pcap()."' -q -z io,stat,".$interval.",'tcp && ".$filter."','udp && ".$filter."','not udp && not tcp && ".$filter."',";
-				$lines  = explode("\n",shell_exec($cmd));
+                $cmd    = "tshark -r ? -q -z ?";
+                $params = array($this->get_file_pcap(), "io,stat,".$interval.",tcp && ".$filter.",udp && ".$filter.",not udp && not tcp && ".$filter.",");
+				$lines  = explode("\n", Util::execute_command($cmd, $params, 'string'));
 				$values = array();
 				$i=0;
 				$max=0;
@@ -588,8 +597,9 @@ class Tshark {
             case "sparkline":
                 $interval = round($this->get_max_len() / 30, 6);
                 $filter   = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
-                $cmd      = "tshark -r '".$this->get_file_pcap()."' -q -z io,stat,".$interval.",";
-                $lines    = explode("\n",shell_exec($cmd));
+                $cmd      = "tshark -r ? -q -z ?";
+                $params   = array($this->get_file_pcap(), "io,stat,".$interval.",");
+                $lines    = explode("\n", Util::execute_command($cmd, $params, 'string'));
         		$values   = array();
         		$i        = 0;
         		$max      = 0;

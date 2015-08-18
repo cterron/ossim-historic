@@ -34,8 +34,6 @@ import time
 import json
 import pwd
 import grp
-import subprocess
-import re
 from optparse import OptionParser, OptionGroup
 from ConfigParser import RawConfigParser
 import random
@@ -49,7 +47,7 @@ import default
 
 from output import *
 from sysinfo import Sysinfo
-from plugin import Plugin
+from plugin import Plugin, PluginConfigParser
 from error import PluginError, PluginConfigParserError, CheckError
 
 
@@ -64,6 +62,7 @@ class Doctor:
         self.__plugin_list = []
         self.__category_list = []
         self.__alienvault_config = {}
+        self.__successful_config = {}
         self.__system_summary = []
         self.__summary = {}
         self.__in_strike_zone = True
@@ -75,10 +74,11 @@ class Doctor:
 
         # Parse command line options.
         parser = OptionParser(description='Save the world, one Alien at a time', version=default.version_string)
-        parser.add_option("-v", "--verbose", dest="verbose", default=default.verbose, action="count", help="More meaningful warnings [default: %default]")
+        parser.add_option("-v", "--verbose", dest="verbose", default=default.verbose, action="count", help="More meaningful warnings [default: %default]. Maximum verbosity depth is 2 (-vv)")
         parser.add_option("-l", "--plugin-list", dest="plugin_list", default=default.plugin_list, help="A list of plugins you want to run, separated by commas [default: run all plugins]")
         parser.add_option("-c", "--category_list", dest="category_list", default=default.category_list, help="A list of plugin categories you want to run [default: run all plugins]")
         parser.add_option("-s", "--severity_list", dest="severity_list", default=default.severity_list, help="A list of check severities you want to run [default: run all checks]")
+        parser.add_option("-a", "--appliance_type", dest="appliance_type_list", default=default.appliance_type_list, help="Appliance whose checks you want to run [default: run checks for current appliance] ")
         parser.add_option("-P", "--plugin-dir", dest="plugin_dir", default=default.plugin_dir, help="Directory where plugins are stored [default: %default]")
 
         output_group = OptionGroup(parser, 'Output options')
@@ -91,12 +91,13 @@ class Doctor:
         (options, args) = parser.parse_args()
 
         # Disable normal output for 'ansible' and 'support' output options.
-        if options.output_type in ['ansible', 'support']:
+        if options.output_type in ['ansible']:
             Output.set_std_output(False)
 
         # Get basic system info.
         self.__sysinfo = Sysinfo()
         self.__alienvault_config = self.__sysinfo.get_alienvault_config()
+        self.__successful_config = self.__sysinfo.get_successful_config()
 
         Output.emphasized('\nAlienVault Doctor version %s (%s)\n' % (default.version, default.nickname), ['AlienVault Doctor'], [GREEN])
 
@@ -121,8 +122,9 @@ class Doctor:
             if options.output_type == 'support':
                 if options.output_file_prefix == default.output_file_prefix or \
                    len(options.output_file_prefix) != 8 or not options.output_file_prefix.isdigit():
-                    Output.error('For "support" output, a valid ticket number has to be specified as the file prefix')
+                    Output.error('For "support" output, a valid ticket number has to be specified as the file prefix (-f option)')
                     sys.exit(default.error_codes['undef_support_prefix'])
+                Output.set_std_output(False) 
 
             if not path.exists(options.output_path):
                 os.mkdir(options.output_path)
@@ -149,75 +151,95 @@ class Doctor:
         # Show some system info.
         self.__system_summary = self.__sysinfo.show_platform_info(extended=bool(options.verbose))
 
-        # Run a list of plugins or categories of plugins
-        self.__plugin_list = options.plugin_list.split(',')
+        if self.__system_summary['Hardware profile'] != 'ossim-free':
+            # Run a list of plugins or categories of plugins
+            self.__plugin_list = options.plugin_list.split(',')
 
-        if self.__plugin_list == [] or 'all' in self.__plugin_list:
-            self.__plugin_list = os.listdir(options.plugin_dir)
+            if self.__plugin_list == [] or 'all' in self.__plugin_list:
+                self.__plugin_list = os.listdir(options.plugin_dir)
 
-        # Filter by category.
-        self.__category_list = options.category_list.split(',')
+            # Filter by category.
+            self.__category_list = options.category_list.split(',')
 
-        # Filter checks by severity.
-        self.__severity_list = options.severity_list.split(',')
+            # Filter checks by severity.
+            self.__severity_list = options.severity_list.split(',')
 
-        # Run! Run! Run!
-        Output.emphasized('\nHmmm, let the Doctor have a look at you%s' % ('...\n' if options.verbose > 0 else ''), ['Doctor'], [GREEN], False)
+            # Filter checks by appliance_type.
+            self.__appliance_type_list = options.appliance_type_list.split(',')
 
-        for filename in self.__plugin_list:
-            if filename.endswith('.plg'):
-                if options.verbose < 1:
-                    Progress.dots()
-                self.__run_plugin__(options.plugin_dir + '/' + filename, options.verbose, options.output_raw)
+            # Run! Run! Run!
+            Output.emphasized('\nHmmm, let the Doctor have a look at you%s' % ('...\n' if options.verbose > 0 else ''), ['Doctor'], [GREEN], False)
 
-        # Separator
-        print ''
+            for filename in self.__plugin_list:
+                if filename.endswith('.plg'):
+                    if options.verbose < 1:
+                        Progress.dots()
+                    self.__run_plugin__(options.plugin_dir + '/' + filename, options.verbose, options.output_raw)
+
+            # Separator
+            print ''
+        else:
+            Output.emphasized('\nThe Doctor is not aimed to diagnose an ossim free version...', ['Doctor'], [GREEN])
 
         # Show summary only for screen output.
         if options.output_type == default.output_type:
-            if self.__summary != {}:
-                Output.emphasized('\nHooray! The Doctor has diagnosed you, check out the results...', ['Doctor'], [GREEN])
-            else:
-                Output.emphasized('\nThe Doctor has finished, nothing to see here though', ['Doctor'], [GREEN])
-
-            # Show if the system is in the 'Strike zone'
-            if not self.__in_strike_zone:
-                Output.emphasized('\n  Be careful! Seems that you are not in the Strike Zone! Please check the output below.', ['Strike', 'Zone'], [RED])
-
-            # Show per plugin results.
-            for plugin_name, result in self.__summary.iteritems():
-                plugin_description = result.get('description', None)
-                plugin_strike_zone = result.get('strike_zone', None)
-
-                if (not 'checks' in result.keys()) and ('warning' in result.keys()):
-                    Output.emphasized('\n     Plugin %s didn\'t run: %s' % (plugin_name, result['warning']), [plugin_name])
+            if self.__system_summary['Hardware profile'] != 'ossim-free':
+                if self.__summary != {}:
+                    Output.emphasized('\nHooray! The Doctor has diagnosed you, check out the results...', ['Doctor'], [GREEN])
                 else:
-                    checks = result['checks']
-                    header = '\n     Plugin: %s' % plugin_name
-                    if plugin_description is not None:
-                        header += '\n             %s' % plugin_description
-                    if plugin_strike_zone is not None:
-                        header += '\n             In the Strike Zone?: %s' % str(plugin_strike_zone)
+                    Output.emphasized('\nThe Doctor has finished, nothing to see here though', ['Doctor'], [GREEN])
 
-                    Output.emphasized(header, [plugin_name, 'In the Strike Zone?'])
-                    for (check_name, check_result) in checks.items():
-                        if not check_result['result']:
-                            if check_result['severity'] == 'High':
-                                severity_color = RED
-                            elif check_result['severity'] == 'Medium':
-                                severity_color = YELLOW
-                            elif check_result['severity'] == 'Low':
-                                severity_color = BLUE
+                # Show if the system is in the 'Strike zone'
+                if not self.__in_strike_zone:
+                    Output.emphasized('\n  Be careful! Seems that you are not in the Strike Zone! Please check the output below.', ['Strike', 'Zone'], [RED])
+
+                # Show per plugin results.
+                for plugin_name, result in self.__summary.iteritems():
+                    plugin_description = result.get('description', None)
+                    plugin_strike_zone = result.get('strike_zone', None)
+
+                    if (not 'checks' in result.keys() or not result['checks']) and ('summary' in result.keys()):
+                        Output.emphasized('\n     Plugin %s didn\'t run: %s' % (plugin_name, result['summary']), [plugin_name])
+                    else:
+                        checks = result['checks']
+                        header = '\n     Plugin: %s' % plugin_name
+                        if plugin_description is not None:
+                            header += '\n             %s' % plugin_description
+                        if plugin_strike_zone is not None:
+                            header += '\n             In the Strike Zone?: %s' % str(plugin_strike_zone)
+
+                        Output.emphasized(header, [plugin_name, 'In the Strike Zone?'])
+                        for (check_name, check_result) in checks.items():
+                            if check_result['result'] == 'failed':
+                                if check_result['severity'] == 'Emerg':
+                                    severity_color = RED
+                                elif check_result['severity'] == 'Alert':
+                                    severity_color = RED
+                                elif check_result['severity'] == 'Critical':
+                                    severity_color = RED
+                                elif check_result['severity'] == 'Error':
+                                    severity_color = RED
+                                elif check_result['severity'] == 'Warning':
+                                    severity_color = YELLOW
+                                elif check_result['severity'] == 'Notice':
+                                    severity_color = GREEN
+                                elif check_result['severity'] == 'Info':
+                                    severity_color = GREEN
+                                elif check_result['severity'] == 'Debug':
+                                    severity_color = BLUE
+                                else:
+                                    severity_color = YELLOW
+
+                                Output.emphasized('%s[*] %s: %s' % ((' '*9), check_name, check_result['summary']), ['*', check_name], [severity_color, EMPH])
+                                if check_result['remediation'] != '':
+                                    Output.emphasized('%sWord of advice: %s' % ((' '*13), check_result['remediation']), ['Word of advice'])
                             else:
-                                severity_color = YELLOW
-
-                            Output.emphasized('%s[*] %s: %s' % ((' '*9), check_name, check_result['warning']), ['*', check_name], [severity_color, EMPH])
-                            if check_result['advice'] != '':
-                                Output.emphasized('%sWord of advice: %s' % ((' '*13), check_result['advice']), ['Word of advice'])
-                        else:
-                            Output.emphasized('%s[*] %s: All good' % ((' '*9), check_name), ['*', check_name], [GREEN, EMPH])
+                                Output.emphasized('%s[*] %s: All good' % ((' '*9), check_name), ['*', check_name], [GREEN, EMPH])
         elif options.output_type in ['file', 'support']:
-            full_summary = dict(self.__system_summary, **self.__summary)
+            if self.__system_summary['Hardware profile'] != 'ossim-free':
+                full_summary = dict(self.__system_summary, **self.__summary)
+            else:
+                full_summary = dict(self.__system_summary)
             full_summary['strike_zone'] = self.__in_strike_zone
             output_data = plain_data = json.dumps(full_summary, sort_keys=True, indent=4, separators=(',', ': ')) + '\n'
 
@@ -230,13 +252,12 @@ class Doctor:
 
             elif options.output_type == 'support':
                 output_data = plain_data
+
                 if output_data != None:
                     output_data = self.__compress__(output_data)
-                    # output_data = self.__cipher__(output_data)
 
                 if output_data != None:
                     output_fd.write(self.__cipher__(output_data))
-                    # output_fd.write(self.__compress__(output_data))
 
                 output_fd.close()
 
@@ -256,7 +277,10 @@ class Doctor:
                         self.__rc = default.exit_codes['ftp_upload_failed']
 
         elif options.output_type == 'ansible':
-            full_summary = dict(self.__system_summary, **self.__summary)
+            if self.__system_summary['Hardware profile'] != 'ossim-free':
+                full_summary = dict(self.__system_summary, **self.__summary)
+            else:
+                full_summary = dict(self.__system_summary)
             full_summary['strike_zone'] = self.__in_strike_zone
             output_fd.write(json.dumps(full_summary, sort_keys=True, indent=4, separators=(',', ': ')) + '\n')
 
@@ -269,24 +293,155 @@ class Doctor:
         parser.read(default.doctor_cfg_file)
         self.__config = parser._sections['main']
 
+    # Load plugin file
+    def __load_plugin_file(self, filename):
+        config_file = None
+        try:
+            config_file = PluginConfigParser()
+            config_file.read(filename)
+        except PluginConfigParserError as e:
+            raise PluginError(e.msg, filename)
+        except Exception as e:
+            raise PluginError("Cannot parse plugin file: %s" % str(e), filename)
+        return config_file
+
     # Run a plugin.
     def __run_plugin__(self, filename, verbose, raw):
+        # Parse the plugin configuration file.
+        # Check if file exists
+        if not path.isfile(filename):
+            msg = 'Plugin file does not exist: %s' % filename
+            self.__generate_blocked_output(config_file=None,
+                                           plugin=filename,
+                                           plugin_data={},
+                                           sections=[],
+                                           error_msg=msg)
+            return
+
+        # Check for file extension.
+        if not filename.endswith('.plg'):
+            msg = 'File extension is not .plg'
+            self.__generate_blocked_output(config_file=None,
+                                           plugin=filename,
+                                           plugin_data={},
+                                           sections=[],
+                                           error_msg=msg)
+            return
+
+        # Check for db connections and some other basic param config
+        cfg_msg = ''
+        for key in self.__successful_config.keys():
+            if not self.__successful_config[key]['result']:
+                cfg_msg = ';'.join([cfg_msg, self.__successful_config[key]['error']])
+        if cfg_msg != '':
+            self.__generate_blocked_output(config_file=None,
+                                           plugin=filename,
+                                           plugin_data={},
+                                           sections=[],
+                                           error_msg=cfg_msg)
+
+        config_file = None
         try:
-            plugin = Plugin(filename, self.__alienvault_config, self.__severity_list, verbose, raw)
-            if (plugin.get_checks_len() > 0) and (plugin.check_category(self.__category_list)):
-                result = plugin.run()
-                self.__in_strike_zone &= result.get('strike_zone', True)
-                self.__summary[plugin.get_name()] = result
-            else:
-                del plugin
+            config_file = self.__load_plugin_file(filename)
+        except PluginError as e:
+            self.__generate_blocked_output(config_file=None,
+                                           plugin=e.plugin,
+                                           plugin_data={},
+                                           sections=[],
+                                           error_msg=e.msg)
 
-        except (PluginError, PluginConfigParserError, CheckError) as e:
-            if verbose > 0:
-                Output.warning(e.msg)
+            return
 
-            self.__summary[e.plugin] = {'plugin': e.plugin, 'warning': e.msg}
-        except KeyError, msg:
-            Output.error('Unknown error running plugin "%s": %s' % (filename, str(msg)))
+        # Fill the Plugin Object
+        if config_file:
+            try:
+                plugin = Plugin(filename,
+                                config_file,
+                                self.__alienvault_config,
+                                self.__severity_list,
+                                self.__appliance_type_list,
+                                verbose,
+                                raw)
+
+                if (plugin.get_checks_len() > 0) and (plugin.check_category(self.__category_list)):
+                    result = plugin.run()
+                    self.__in_strike_zone &= result.get('strike_zone', True)
+                    self.__summary[plugin.get_name()] = result
+                else:
+                    del plugin
+
+            except (PluginError, PluginConfigParserError, CheckError) as e:
+
+                if verbose > 0:
+                    Output.warning(e.msg)
+
+                sections = []
+                try:
+                    sections = config_file.sections()
+                except Exception as e:
+                    pass
+
+                plugin_data = e.plugin_data if e.plugin_data else {}
+                self.__generate_blocked_output(config_file=config_file,
+                                               plugin=e.plugin,
+                                               plugin_data=plugin_data,
+                                               sections=sections,
+                                               error_msg=e.msg)
+
+            except KeyError, msg:
+                Output.error('Unknown error running plugin "%s": %s' % (filename, str(msg)))
+
+        else:
+            msg = "There was an error parsing the plugin file %s" % filename
+            self.__generate_blocked_output(config_file=None,
+                                           plugin=e.plugin,
+                                           plugin_data=e.plugin_data,
+                                           sections=[],
+                                           error_msg=e.msg)
+
+    def __generate_blocked_output(self, config_file, plugin, plugin_data, sections, error_msg):
+        # Parse the plugin configuration file.
+        checks = {}
+        if config_file:
+            try:
+                data = {'filename': '', 'command': ''}
+                for section in sections:
+                    if section != 'properties':
+                        pass
+                    else:
+                        items = dict(config_file.items(section))
+                        if 'type' in plugin_data.keys() and plugin_data['type'] == "file":
+                            data['filename'] = items['filename']
+                        elif plugin_data and plugin_data['type'] == "command":
+                            data['command'] = items['command']
+                        break
+
+                for section in sections:
+                    if section != 'properties':
+                        items = dict(config_file.items(section))
+                        if 'type' in plugin_data.keys() and plugin_data['type'] == "db":
+                            try:
+                                data['command'] = "echo '%s;' | ossim-db" % items['query']
+                            except Exception:
+                                pass
+                        elif 'type' in plugin_data.keys() and plugin_data['type'] == "file":
+                            try:
+                                data['command'] = "cat %s" % filename
+                            except Exception:
+                                pass
+
+                        checks[section] = {'result': 'blocked',
+                                           'detail': error_msg,
+                                           'description': items['description'],
+                                           'command': data['command'],
+                                           'severity': items['severity']}
+
+            except Exception:
+                checks = {}
+
+        self.__summary[plugin] = {'result': 'blocked',
+                                  'summary': error_msg,
+                                  'checks': checks}
 
     # Compress some data.
     def __compress__(self, data):

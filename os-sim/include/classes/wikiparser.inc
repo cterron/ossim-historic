@@ -521,18 +521,10 @@ class Wikiparser
         $text  = preg_replace("/<br>/", "\n", $text);
         $text  = preg_replace("/<b>|<\/b>/", "'''", $text);
 
-        /*
         $text   = Util::htmlentities($text, ENT_NOQUOTES);
         $text   = preg_replace("/&lt;(\/)?(pre|code|strike)&gt;/", "<\\1\\2>", $text);
         $text   = preg_replace("/\n/","<br>", $text);
         $text   = preg_replace_callback('/<nowiki>([\s\S]*)<\/nowiki>/i', array(&$this, "handle_save_nowiki"), $text);
-        */
-
-
-        $text = strip_tags($text, "<nowiki><pre><code><strike><div><span><table><tr><td><th><thead><tbody><tfoot>");
-        $text = preg_replace("/<(\/)?(nowiki|pre|code|strike|div|span|table|tr|td|th|thead|tbody|tfoot).*style\s*=\s*['|\"]([^'\"]*)['|\"]([^>]+)?>/", '<\\1\\2 style="\\3">', $text);
-        $text = preg_replace_callback('/<nowiki>([\s\S]*)<\/nowiki>/i', array(&$this, "handle_save_nowiki"), $text);
-        $text = preg_replace("/\n/","<br>", $text);
 
         $lines = explode("<br>", $text);
 

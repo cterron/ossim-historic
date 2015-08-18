@@ -1018,14 +1018,14 @@ class Av_sensor extends Av_component
                 }
                 else
                 {
-                    $exp_msg = _('Basic Authentication failed: Check credentials in Nagios configuration');
+                    $exp_msg = _('Basic Authentication failed: Check credentials in Availability Monitoring configuration');
 
                     Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
                 }
             }
             else
             {
-                $exp_msg = _('Unable to connect with Nagios');
+                $exp_msg = _('Unable to connect with Availability Monitoring');
 
                 Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
             }
@@ -1259,197 +1259,6 @@ class Av_sensor extends Av_component
     }
 
 
-
-    /*****************************************************
-    *
-    * NTOP functions
-    *  - get_ntop_link
-    *  - get_ntop_link_content
-    *  - get_ntop_link_by_host
-    *  - get_ntop_link_by_net
-    *  - is_ntop_wrapper
-    *
-    *****************************************************/
-
-
-
-    /**
-    * This function gets NTOP url from host
-    *
-    * @param object $ip   Sensor IP
-    *
-    * @return array
-    */
-    public static function get_ntop_link($ip)
-    {
-        $protocol    = 'http';
-        $port        = '';
-        $url_sensor  = ($ip == '') ? "/ntop/" : "/ntop_" . $ip. "/";
-
-        $data = array(
-            "ntop"        => NULL,
-            "testntop"    => NULL,
-            "sensor_ntop" => $ip
-        );
-
-
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on")
-        {
-            $protocol = "https";
-        }
-
-        if (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443")
-        {
-            $port = ":".$_SERVER['SERVER_PORT'];
-        }
-
-        $data['ntop']     = "$protocol://". $_SERVER['SERVER_NAME'].$port.$url_sensor;
-        $data['testntop'] = "$protocol://127.0.0.1/".$url_sensor;
-
-        return $data;
-    }
-
-    /**
-    * This function gets NTOP link content
-    *
-    * @param string $url   NTOP link
-    *
-    * @return mixed
-    */
-    public static function get_ntop_link_content($url)
-    {
-        $s_context = array('http' => array('header' => "Cookie: ".session_name()."=".session_id()));
-
-        $resource = stream_context_create($s_context);
-        $data     = @file_get_contents($url, FALSE, $resource);
-
-        return $data;
-    }
-
-
-    /**
-    * This function gets NTOP url associated to host
-    *
-    * @param object $conn  Database access object
-    * @param string $host  Host ID/IP
-    * @param string $ctx   [Optional] Host context
-    *
-    * @throws Exception  If a connection error occurred
-    *
-    * @return array
-    */
-    public static function get_ntop_link_by_host($conn, $host, $ctx = '')
-     {
-        Ossim_db::check_connection($conn);
-
-        $sensor_ip = '';
-        $host_id   = '';
-
-        if (Asset_host_ips::valid_ip($host))
-        {
-            $hosts   = Asset_host::get_id_by_ips($conn, $host, $ctx);
-            $host_id = key($hosts);
-        }
-        else
-        {
-            if(valid_hex32($host))
-            {
-                $host_id = $host;
-            }
-        }
-
-        if (!empty($host_id))
-        {
-            $host_sensors = new Asset_host_sensors($host_id);
-            $host_sensors->load_from_db($conn);
-
-            $sensors = $host_sensors->get_sensors();
-
-            $sensor  = array_pop($sensors);
-            $sensor_ip = $sensor['ip'];
-        }
-
-        return self::get_ntop_link($sensor_ip);
-    }
-
-
-    /**
-    * This function gets NTOP url associated to net
-    *
-    * @param object $conn  Database access object
-    * @param string $net   Net ID/CIDR
-    * @param string $ctx   [Optional] Net context
-    *
-    * @throws Exception  If a connection error occurred
-    *
-    * @return array
-    */
-    public static function get_ntop_link_by_net($conn, $net, $ctx = '')
-    {
-        Ossim_db::check_connection($conn);
-
-        $sensor_ip = '';
-        $net_id    = '';
-
-        if (Asset_net::valid_cidr($net))
-        {
-            $nets = Asset_net::get_id_by_ips($conn, $net, $ctx);
-
-            if (is_array($nets) && !empty($nets))
-            {
-                $nets = array_keys($nets);
-                $net_id = $nets[0];
-            }
-        }
-        else
-        {
-            if(valid_hex32($net))
-            {
-                $net_id = $net;
-            }
-        }
-
-        if (!empty($net_id))
-        {
-            $net_sensors = new Asset_net_sensors($net_id);
-            $net_sensors->load_from_db($conn);
-
-            $sensors = $net_sensors->get_sensors();
-
-            $sensor  = array_pop($sensors);
-            $sensor_ip = $sensor['ip'];
-        }
-
-        return self::get_ntop_link($sensor_ip);
-    }
-
-
-
-    /**
-    * This function checks if url given is a NTOP url
-    *
-    * @param string $url  NTOP url
-    *
-    * @return boolean
-    */
-    public static function is_ntop_wrapper($url)
-    {
-        $data = self::get_ntop_link_content($url);
-
-        $im = @imagecreatefromstring($data);
-        $height = ($im !== FALSE) ? intval(imagesy($im)) : 0;
-
-        // data can be a image or a html page
-
-        if ($height>0 || preg_match("/Generated by ntop/i", $data) == TRUE)
-        {
-             return TRUE;
-        }
-
-        return FALSE;
-    }
-
-
     /**
     * This function checks default options for default sensor
     *
@@ -1527,7 +1336,7 @@ class Av_sensor extends Av_component
 
             //Inventory
             $queries[] = "INSERT IGNORE INTO task_inventory (task_type, task_period, task_enable, task_sensor, task_name)
-                VALUES (3, 1800, 1, UNHEX(?), 'default_ocs')";
+                VALUES (3, 1800, 1, UNHEX(?), 'default_inventory')";
 
             //Nessus Config
             $queries[] = "REPLACE INTO alienvault.config VALUES ('nessus_host','".$this->get_ip()."')";

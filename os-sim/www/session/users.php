@@ -260,7 +260,7 @@ if ($action != "" && $user_id != '')
 				//Delete user by AJAX
 				if (typeof(items[0]) != 'undefined') 
 				{					
-					if (confirm('<?php echo Util::js_entities(_('Are you sure to delete this user?'))?>'))
+					if (confirm('<?php echo Util::js_entities(_('Are you sure you want to delete this user?'))?>'))
 					{
 						$("#flextable").changeStatus('<?php echo _('Deleting user')?>...', false);
 						var dtoken = Token.get_token("delete_user");
@@ -292,7 +292,7 @@ if ($action != "" && $user_id != '')
 				}
 				else
 				{
-					alert('<?php echo Util::js_entities(_('You must select an user'))?>');
+					alert('<?php echo Util::js_entities(_('You must select a user'))?>');
 				}
 			}
 			else if (com == '<?=_('Modify')?>') 
@@ -303,7 +303,7 @@ if ($action != "" && $user_id != '')
 				}
 				else
 				{ 
-				    alert('<?php echo Util::js_entities(_('You must select an user'))?>');
+				    alert('<?php echo Util::js_entities(_('You must select a user'))?>');
 				}
 			}
 			else if (com == '<?=_('Duplicate selected')?>') 
@@ -321,7 +321,7 @@ if ($action != "" && $user_id != '')
                 }
 				else
 				{ 
-				    alert('<?php echo Util::js_entities(_('You must select an user'))?>');
+				    alert('<?php echo Util::js_entities(_('You must select a user'))?>');
 				}
 			}
 			else if (com == '<?=_('New')?>') 

@@ -58,7 +58,7 @@ $conn = $db->snort_connect();
         <tr>
             <th style='width:250px;'><?php echo _("Signature")?></th>
             <th><?php echo _("Total #")?></th>
-            <th><?php echo _("Kismet<br/>Sensor")?></th>
+            <th><?php echo _("Wireless IDS<br/>Sensor")?></th>
             <th><?php echo _("Source<br/>Address")?></th>
             <th><?php echo _("Dest.<br/>Address")?></th>
             <th><?php echo _("First")?></th>

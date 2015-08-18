@@ -471,6 +471,58 @@ class Directive_editor {
     }
     
     /**
+     * This function checks if we can remove a directive
+     *
+     * @param int    $dir_id
+     *
+     * @return Array
+     */
+    public function can_delete_directive($dir_id)
+    {
+        // Check if it belongs to a DS Group
+        
+        $msg    = _('Unable to delete directive. Please remove directive from the following DS Groups and try again. %GROUPS');
+        
+        $sql    = "SELECT g.name FROM plugin_group_descr gd, plugin_group g 
+                   WHERE gd.group_id = g.group_id AND 
+                         gd.plugin_id   = ? AND 
+                        (gd.plugin_sid  = ? OR gd.plugin_sid LIKE ? OR gd.plugin_sid LIKE ? OR gd.plugin_sid LIKE ?)";
+        $params = array(
+                1505,
+                $dir_id,
+                "%,$dir_id",
+                "$dir_id,%",
+                "%,$dir_id,%"
+        );
+        
+        $rs = $this->conn->Execute($sql, $params);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+        }
+        else
+        {
+            $ds_groups = array();
+            
+            while (!$rs->EOF)
+            {
+                $ds_groups[] = $rs->fields['name'];
+                
+                $rs->MoveNext();
+            }
+            
+            if (count($ds_groups) > 0)
+            {
+                $msg = str_replace('%GROUPS', implode(', ', $ds_groups), $msg);
+                return array(FALSE, $msg);
+            }
+        }
+        
+        return array(TRUE, '');
+    }
+    
+    /**
      * This function deletes a directive
      * 
      * @param int    $dir_id
@@ -494,6 +546,10 @@ class Directive_editor {
             if (self::save_xml($filepath, $dom, "DOMXML")) {
                 $this->remove_directive_pluginsid($dir_id);
                 $this->remove_directive_taxonomy($dir_id);
+                
+                $infolog = array($dir_id);
+                Log_action::log(87, $infolog);
+                
                 return TRUE; }} // These brakets are here because a coverture analyzer issue
         return FALSE;
     }
@@ -592,6 +648,10 @@ class Directive_editor {
                 $this->update_directive_pluginsid($new_id, 2, $directive->priority, $directive->name);
                 list($directive_intent, $directive_strategy, $directive_method) = $this->get_directive_intent($dir_id, "array");
                 $this->update_directive_taxonomy($new_id, $directive_intent, $directive_strategy, $directive_method);
+                
+                $infolog = array($new_id);
+                Log_action::log(85, $infolog);
+                
                 return TRUE; }}
         return FALSE;
     }

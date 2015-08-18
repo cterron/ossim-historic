@@ -303,15 +303,17 @@ function load_menu_scripts()
 
     });
 
-
+       
     load_sidebar_data();
     get_notifications_number()
     bind_notif_links();
-
-    $('#notif_resume').on('click', function(){
+    
+    
+    $('#notif_container').on('click', '#notif_resume', function()
+    {
         $('#notif_bt').trigger('click');
     });
-
+    
     <?php
     if ($_SESSION['_welcome_wizard_bar'] === TRUE)
     {

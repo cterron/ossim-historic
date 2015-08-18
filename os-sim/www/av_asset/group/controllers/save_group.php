@@ -40,9 +40,7 @@ $validate = array (
     'id'          => array('validation'=>'OSS_HEX',                            'e_message' => 'illegal:' . _('ID')),
     'ag_name'     => array('validation'=>'OSS_ALPHA, OSS_PUNC',                'e_message' => 'illegal:' . _('Asset group name')),
     'owner'       => array('validation'=>'OSS_ALPHA, OSS_PUNC, OSS_NULLABLE',  'e_message' => 'illegal:' . _('Owner')),
-    'descr'       => array('validation'=>'OSS_NULLABLE, OSS_ALL',              'e_message' => 'illegal:' . _('Description')),
-    'threshold_a' => array('validation'=>'OSS_DIGIT',                          'e_message' => 'illegal:' . _('Threshold A')),
-    'threshold_c' => array('validation'=>'OSS_DIGIT',                          'e_message' => 'illegal:' . _('Threshold C'))
+    'descr'       => array('validation'=>'OSS_NULLABLE, OSS_ALL',              'e_message' => 'illegal:' . _('Description'))
 );
 
 
@@ -91,8 +89,6 @@ $id           = POST('id');
 $name         = trim(POST('ag_name'));
 $owner        = POST('owner');
 $descr        = POST('descr');
-$threshold_a  = POST('threshold_a');
-$threshold_c  = POST('threshold_c');
 
 
 $validation_errors = validate_form_fields('POST', $validate);
@@ -144,7 +140,14 @@ else
         <title><?php echo _('OSSIM Framework');?></title>
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
         <meta http-equiv="Pragma" content="no-cache">
-        <link type="text/css" rel="stylesheet" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
+        <?php
+            //CSS Files
+            $_files = array(
+                array('src' => 'av_common.css',                 'def_path' => TRUE)
+            );
+            
+            Util::print_include_files($_files, 'css');
+        ?>
     </head>
 
     <body>
@@ -162,8 +165,6 @@ else
             $asset_group->set_name($name);
             $asset_group->set_owner($owner);
             $asset_group->set_descr($descr);
-            $asset_group->set_threshold($threshold_a, 'a');
-            $asset_group->set_threshold($threshold_c, 'c');
 
             $asset_group->save_in_db($conn);
 

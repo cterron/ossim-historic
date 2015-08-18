@@ -84,7 +84,6 @@ else
     */
     
     set_time_limit(0);
-    ini_set('memory_limit', '2048M');
     ini_set('session.bug_compat_warn','off');
     
     $report_id = POST('report_id');

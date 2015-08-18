@@ -33,20 +33,15 @@
 #
 # GLOBAL IMPORTS
 #
-import commands
-import os
-import re
-import socket
-import sys
+
 import time
 import xml.dom.minidom
 
 #
 # LOCAL IMPORTS
 #
-from Config import Plugin
 from Detector import Detector
-from Event import Event, EventOS, EventMac, EventService, EventHids
+from Event import Event
 from Logger import Logger
 from pySDEE import SDEE
 

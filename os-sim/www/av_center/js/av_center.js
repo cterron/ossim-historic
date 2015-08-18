@@ -117,13 +117,15 @@ Main.autocomplete_avc = function(av_components){
 
 Main.delete_system = function(id)
 {
-    var del_keys  = { "yes": labels['delete_yes'], "no": labels['delete_no'] };
-    var system_id = id.replace('row_', '');
-    var status    = $('.td_status', $('#' +id)).hasClass('td_down') ? 'down' : 'up';
+    var del_keys    = { "yes": labels['delete_yes'], "no": labels['delete_no'] };
+    var system_id   = id.replace('row_', '');
+    var system_name = $('#row_' +system_id).data('name');
+    var status      = $('.td_status', $('#' +id)).hasClass('td_down') ? 'down' : 'up';
 
     var msg_index = (status == 'down') ? 'delete_msg_down' : 'delete_msg';
+    var msg = labels[msg_index].replace('__SYSTEM__',system_name);
 
-    av_confirm(labels[msg_index], del_keys).done(function()
+    av_confirm(msg, del_keys).done(function()
     {
         var confirm = (status == 'down') ? 1 : 0
 
@@ -220,7 +222,10 @@ Main.delete_system = function(id)
                         $('.l_box').remove();
                         $('.w_overlay').remove();
 
-                        av_confirm(labels['delete_msg_down'], del_keys).done(function()
+                        var system_name = $('#row_' +system_id).data('name');
+                        var msg = labels['delete_msg_down'].replace('__SYSTEM__',system_name);
+
+                        av_confirm(msg, del_keys).done(function()
                         {
                             __delete_system(system_id, 1);
                         });

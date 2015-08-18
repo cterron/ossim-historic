@@ -122,8 +122,7 @@ $db->close();
 
 
     <form method="POST" name="asset_form" id="asset_form" action="" enctype="multipart/form-data">
-        <input type="hidden" name="threshold_a" id="threshold_a" class="vfield" value="30"/>
-        <input type="hidden" name="threshold_c" id="threshold_c" class="vfield" value="30"/>
+        
         <input type="hidden" name="asset_id" id="tg_asset_id" class="vfield"/>
         <input type="hidden" name="ctx" id="ctx" class="vfield"/>
 
@@ -364,7 +363,7 @@ $db->close();
                     <td class="td_left">
                         <div id="tree"></div>
                         <br/>
-                        <div id="entity_selected"><?php echo _('Context selected').': <strong>'.$ctx_name."</strong>";?></div>
+                        <div id="entity_selected"><?php echo _('Context selected').': <strong>'.Util::htmlentities($ctx_name)."</strong>";?></div>
                     </td>
 
                     <td class="td_right">

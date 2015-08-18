@@ -88,6 +88,7 @@ class Menu(object):
     VALUE_NONE = "None"
 
     # Options tags
+    OPTION_SHOW_IF_TRUE = "show_if_true"
     OPTION_PRO = "pro"
     OPTION_LICENSED = "licensed"
     OPTION_PROFILE = "profile"
@@ -447,6 +448,12 @@ class Menu(object):
         Return True if the option can be shown with the current profile,
         False otherwise.
         """
+        if self.__data.has_option(option, Menu.OPTION_SHOW_IF_TRUE):
+            show_if_true_cmd = self.__data.get(option, Menu.OPTION_SHOW_IF_TRUE)
+            cmd_success = self.exec_external_command(Menu.VALUE_NONE, show_if_true_cmd)
+            if cmd_success:
+                return False
+
         if self.__data.has_option(option, Menu.OPTION_PRO) and not utils.get_is_professional():
             return False
 
@@ -1381,6 +1388,16 @@ class Menu(object):
             return (True, "VPN configuration is present")
 
         return (False, "VPN configuration is NOT present")
+
+    def is_vpn_server_certs_conf_present(self):
+        """
+        Check if a VPN server has been already configured
+        """
+        if "server" in [x.lower() for x in self.__setup_config.get_general_profile().replace(' ', '').split(',')]:
+            if os.path.isdir("/etc/openvpn/AVinfraestructure/keys"):
+                return (True, "VPN Server certs configuration is present")
+            return (False, "VPN Server certs configuration is NOT present")
+        return (True, "")
 
     def is_tunnel_up(self):
         """

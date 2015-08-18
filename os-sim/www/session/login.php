@@ -79,7 +79,7 @@ if ($action == 'logout')
 
     if (!empty($c_user))
     {
-        $infolog = array($c_user);
+        $infolog = array($c_user, (intval(REQUEST('timeout'))==1 ? _('- Timeout expired') : ''));
 
         Log_action::log(2, $infolog);
 
@@ -280,7 +280,7 @@ if ($cnd_1 && $cnd_2 && $cnd_3)
     //Update admin info
     list($db, $conn) = Ossim_db::get_conn_db();
 
-    $local_tz = trim(`head -1 /etc/timezone`);
+    $local_tz = trim(Util::execute_command('head -1 /etc/timezone', FALSE, 'string'));
     Session::update_user_light($conn, AV_DEFAULT_ADMIN, 'pass', $fullname, $email, $company, '', 'en_GB', 0, 1, $local_tz);
 
     if ($company != '')

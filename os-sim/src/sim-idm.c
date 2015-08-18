@@ -273,7 +273,7 @@ sim_idm_process (SimSensor *sensor, SimCommand *command)
 
     entry_old = entry_new;
 
-    new_host = sim_host_new (sim_idm_entry_get_ip (entry_old), sim_idm_entry_get_host_id (entry_old), sim_idm_entry_get_hostname (entry_old), DEFAULT_ASSET, 0, 0);
+    new_host = sim_host_new (sim_idm_entry_get_ip (entry_old), sim_idm_entry_get_host_id (entry_old), sim_idm_entry_get_hostname (entry_old), DEFAULT_ASSET);
     sim_context_append_host (context_info_store->context, new_host);
   }
 

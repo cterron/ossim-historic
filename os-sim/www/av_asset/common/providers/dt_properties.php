@@ -181,6 +181,7 @@ foreach ($p_list as $_asset_id => $prop_data)
         {
             $r_key    = strtolower($_asset_id.'_'.$p_id.'_'.md5($p_value['value']));
             $p_locked = ($p_value['source']['id'] == 1) ? 1 : 0;
+            $ip_value = ($p_id == 50) ? $_host->get_name().' ('.$p_value['extra'].')' : $ips_to_show;
 
             $_p_data = array(
                 "DT_RowId"   => $r_key,
@@ -192,7 +193,7 @@ foreach ($p_list as $_asset_id => $prop_data)
                     'extra'     => $p_value['extra']
                 ),
                 "",
-                $ips_to_show,
+                $ip_value,
                 $p_value['description'],
                 $p_value['value'],
                 $p_value['date'],

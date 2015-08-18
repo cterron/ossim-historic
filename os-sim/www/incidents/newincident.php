@@ -271,7 +271,7 @@ else
         $description  = POST('description');
 
         // Validate first nessus_id for queries
-        ossim_valid($nessus_id , OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _('Nessus ID'));
+        ossim_valid($nessus_id , OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _('Plugin ID'));
         if (ossim_error())
         {
             echo ossim_error();
@@ -296,7 +296,7 @@ else
             'ip'           => array('validation' => 'OSS_IP_ADDRCIDR_0, OSS_NULLABLE',                            'e_message' => 'illegal:' . _('Host')),
             'port'         => array('validation' => 'OSS_PORT, OSS_NULLABLE',                                     'e_message' => 'illegal:' . _('Port')),
             'risk'         => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Risk')),
-            'nessus_id'    => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Nessus/OpenVas ID')),
+            'nessus_id'    => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Plugin ID')),
             'description'  => array('validation' => 'OSS_NULLABLE, OSS_AT, OSS_TEXT, OSS_PUNC_EXT',               'e_message' => 'illegal:' . _('Description'))
        );
     }
@@ -625,7 +625,7 @@ if ($ref == 'Custom' && !empty($custom_type))
 
                 <thead>
                     <tr>
-                        <th class="headerpr" colspan="2"> <?php echo _('New Ticket') ?></th>
+                        <th class="headerpr" colspan="2"> <?php echo (!$incident_id) ? _('New Ticket') : _('Edit Ticket') ?></th>
                     </tr>
                 </thead>
 
@@ -1044,7 +1044,7 @@ if ($ref == 'Custom' && !empty($custom_type))
 
                     <tr>
                         <th class='thr'>
-                            <label for="nessus_id"><?php echo _('Nessus/OpenVas ID')?></label>
+                            <label for="nessus_id"><?php echo _('Plugin ID')?></label>
                         </th>
                         <td class="left">
                             <input type="text" class='vfield' id='nessus_id' name="nessus_id" value="<?php echo $nessus_id?>"/>

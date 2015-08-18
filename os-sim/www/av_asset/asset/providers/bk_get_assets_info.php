@@ -61,6 +61,7 @@ $ctx = Asset_host::get_common_ctx($conn);
 if (!empty($ctx))
 {
     $ctx_name = Session::get_entity_name($conn, $ctx);
+    $ctx_name = Util::utf8_encode2($ctx_name);
     
     //Check asset context
     $ext_ctxs = Session::get_external_ctxs($conn);

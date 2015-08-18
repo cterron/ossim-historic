@@ -18,7 +18,7 @@ set -e
 # the debian-policy package
 
 OSSIM_SETUP_CONF_FILE="/etc/ossim/ossim_setup.conf"
-PROFILES=$(grep profile "$OSSIM_SETUP_CONF_FILE" | cut -d'=' -f2 || true)
+PROFILES=$(grep -m1 profile "$OSSIM_SETUP_CONF_FILE" | cut -d'=' -f2 || true)
 SENSOR_DETECTORS=$(grep "^detectors=" "$OSSIM_SETUP_CONF_FILE" | cut -d'=' -f2 || true)
 
 

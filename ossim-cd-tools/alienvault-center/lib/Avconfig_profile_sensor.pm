@@ -36,7 +36,6 @@ use v5.10;
 
 use AV::ConfigParser;
 use AV::Log;
-# use AV::Debian::Suricata;
 
 use Config::Tiny;
 use Time::Local;
@@ -48,13 +47,9 @@ my $script_msg
     = "# Automatically generated for ossim-reconfig scripts. DO NOT TOUCH!";
 my $agentcfg            = "/etc/ossim/agent/config.cfg";
 my $plugins_cfg_basedir = '/etc/ossim/agent/plugins';
-my $snort_cfg           = "/etc/snort/snort.conf";
-my $snort_debian_cfg    = "/etc/snort/snort.debian.conf";
-my $snort_unified_cfg   = "/etc/ossim/agent/plugins/snortunified.cfg";
 my $fprobeconfig        = "/etc/default/fprobe";
 my $monit_file          = "/etc/monit/alienvault/avsensor.monitrc";
 my $agentcfgorig        = "/etc/ossim/agent/config.cfg.orig";
-my $snort_default_debian_file = "/etc/default/snort";
 my $config_file         = '/etc/ossim/ossim_setup.conf';
 
 #FIXME Unknown source variables
@@ -71,7 +66,6 @@ my @sensor_interfaces_arr;
 my @sensor_interfaces_arr_last;
 my $tmp_interface = q{};
 # FIXME: $tmp_interface is an empty string at this point!
-my $snort_conf_name = "/etc/snort/snort.$tmp_interface.conf";
 my $profile_framework;
 my %reset;
 my @mservers_arr;
@@ -201,28 +195,6 @@ sub config_profile_sensor() {
             system($command);
         }
     }
-
-
-
-#	if ( -f "/etc/init.d/snort" ){
-#
-#			my $avfunc = `grep /etc/alienvaultfunctions /etc/init.d/snort`; $avfunc =~ s/\n//g;
-#			if ( $avfunc eq "" ){
-#
-#					system("sed -i \"s:/lib/lsb/init-functions:/lib/lsb/init-functions ; \\\. /etc/alienvaultfunctions:g\" /etc/init.d/snort");
-#
-#			}
-#
-#
-#
-#	}
-
-    debug_log("Sensor Profile: Update rrd plugin conection");
-
-    $command
-        = "sed -i \"s/ossim_dsn[ =].*/ossim_dsn=mysql:$db_host:alienvault:root:$db_pass/\" $agentcfg";
-    debug_log("$command");
-    system($command);
 
     debug_log("Sensor Profile: Update default tzone");
 
@@ -375,30 +347,9 @@ sub config_profile_sensor() {
     my $Config_plugins_orig = Config::Tiny->read($agentcfgorig);
     delete $Config_plugins->{plugins};
 
-    # Normalize detector list, only allows either suricata or snort to be
-    # enabled at once.
-    my @list_input = split /,\s*/, $config{'sensor_detectors'};
-    my @list_intermediate = ();
-    my $found = 0;
-
-    for my $item (@list_input) {
-        if ( $item eq 'suricata' || $item eq 'snortunified' ) {
-                next if $found;
-                console_log("Sensor Profile: $item disabled. Suricata and Snort cannot be enabled at the same time");
-                $found = 1;
-        }
-        push @list_intermediate, $item;
-    }
-    $config{'sensor_detectors'} = join ', ', @list_intermediate;
-
     foreach my $var ( split( /,\s*/, $config{'sensor_detectors'} ) ) {
 
 	# Do not enable simple plugin for these when multiple interfaces selected
-        if (   $var eq "snortunified" )
-        {
-            next;
-        }
-
         $Config_plugins->{plugins}->{$var}
             = $Config_plugins_orig->{plugins}->{$var}
             // "$plugins_cfg_basedir/$var.cfg";
@@ -419,68 +370,8 @@ sub config_profile_sensor() {
 
     $Config_plugins->write($agentcfg);
 
-
-    verbose_log("Sensor Profile: Config snort.conf");
-    $command="sed -i \"s:^var[[:space:]]HOME_NET.*:var HOME_NET \[$trimmed_sensor_networks\]:\" $snort_cfg";
-    debug_log("$command");
-    system($command);
-
-	if ( -d "/opt/rightscale"){
-		verbose_log("Sensor Profile: Config snort default file");
-		$command
-		    = "sed -i \"s:PARAMS=.*:PARAMS=\\\"-m 027 -D -d \\\":\" $snort_default_debian_file";
-		debug_log("$command");
-		system($command);
-	}else{
-		verbose_log("Sensor Profile: Config snort default file");
-		$command
-		= "sed -i \"s:PARAMS=.*:PARAMS=\\\"-m 027 -D -d --daq-dir=/usr/lib/daq --daq pfring --daq-mode passive \\\":\" $snort_default_debian_file";
-		debug_log("$command");
-		system($command);
-	}
-	verbose_log("Sensor Profile: Config user for snort");
-
-	$command
-		= "sed -i \"s:COMMON=\\\"\\\$PARAMS -l \\\$LOGDIR -u \\\$SNORTUSER -g \\\$SNORTGROUP\\\":COMMON=\\\"\\\$PARAMS -l \\\$LOGDIR -u root -g \\\$SNORTGROUP\\\":\" /etc/init.d/snort";
-	debug_log("$command");
-    system($command);
-
-
-    verbose_log("Sensor Profile: Config snort.debian.conf");
-    $command
-        = "sed -i \"s:DEBIAN_SNORT_HOME_NET=.*:DEBIAN_SNORT_HOME_NET=\\\"$trimmed_sensor_networks\\\":\" $snort_debian_cfg";
-    debug_log("$command");
-    system($command);
-
-    verbose_log("Sensor Profile: Config $snort_conf_name --");
-
-    my $snver = `cat /etc/snort/snort.conf|grep -v ^#|grep unified`;
-    if ( $snver eq "" ) {
-        my $command
-            = "sed -i \"s/# output log_unified: filename snort.log, limit 128/output unified2: filename snort, limit 128/\" /etc/snort/snort.conf";
-        debug_log("$command");
-        system($command);
-    }
-
-    verbose_log("Sensor Profile: snort: check local.rules");
-    if ( ! -d "/etc/snort/rules/" ) {
-        $command="mkdir -p /etc/snort/rules";
-        debug_log("$command");
-        system($command);
-    }
-    if ( ! -f "/etc/snort/rules/local.rules" ) {
-        $command="touch /etc/snort/rules/local.rules";
-        debug_log("$command");
-        system($command);
-    }
-
     foreach my $var ( split( /,\s*/, $config{'sensor_detectors'} ) ) {
 
-
-        given ($var) {
-            when ( m/snortunified/ ) { update_plugin_interfaces("$var"); }
-
-        }
 
      # Do not enable simple plugin for these when multiple interfaces selected
      #	next;
@@ -488,21 +379,6 @@ sub config_profile_sensor() {
     }
 
     verbose_log("Sensor Profile: Config IDS rules flow control");
-
-    foreach my $var ( split( /,\s*/, $config{'sensor_detectors'} ) ) {
-        if ( $var eq "snortunified" ) {
-            my $idsrfcauxs
-                = "/usr/share/ossim-installer/auxscripts/ids_rules_flow_control.sh";
-            if ( -f "$idsrfcauxs" ) {
-                my $command = "/bin/bash $idsrfcauxs >/dev/null 2>&1";
-                debug_log("$command");
-                system($command);
-            }
-            else {
-                verbose_log("$idsrfcauxs not found");
-            }
-        }
-    }
 
     # fprobe
 
@@ -532,15 +408,6 @@ sub config_profile_sensor() {
 
         close(FPROBEDEFAULTFILE);
 
-        verbose_log("Sensor Profile: Config $snort_conf_name --");
-
-        $snver = `cat /etc/snort/snort.conf|grep -v ^#|grep unified`;
-        if ( $snver eq "" ) {
-            my $command
-                = "sed -i \"s/# output log_unified: filename snort.log, limit 128/output unified2: filename snort, limit 128/\" /etc/snort/snort.conf";
-            debug_log("$command");
-            system($command);
-        }
     }
 
 
@@ -620,7 +487,7 @@ sub config_profile_sensor() {
 
                 verbose_log("Sensor Profile: Add new sensor");
                 
-                my $ids   = ($config{'sensor_detectors'} =~ /snort|suricata/) ? '1' : '0';
+                my $ids   = ($config{'sensor_detectors'} =~ /suricata/) ? '1' : '0';
                 my $prads = ($config{'sensor_detectors'} =~ /prads/) ? '1' : '0';
                 my $nflow = ($config{'netflow'} =~ /yes/) ? '1' : '0';
                 
@@ -672,10 +539,6 @@ sub config_profile_sensor() {
         verbose_log("Sensor Profile: Configuring Munin-node");
 	my $machine= `hostname -f`;
 	my $machine_name = lc($machine);
-	
-# Allow from all, limit with iptables, for 1498.
-#my ($one,$two,$tree,$four) = split(/\./,$config{'framework_ip'});
-#$autorized = "^" . $one . "\\\." . $two . "\\\." . $tree ."\\\." . $four . "\$";
 
         open MUNINNODEFILE, "> /etc/munin/munin-node.conf";
         print MUNINNODEFILE<<EOF;
@@ -812,14 +675,7 @@ sub update_plugin_interfaces {
         "egrep -v \"$plugin.*eth.*cfg\" /etc/ossim/agent/config.cfg >> /etc/ossim/agent/config.cfg.new; mv /etc/ossim/agent/config.cfg.new /etc/ossim/agent/config.cfg"
     );
 
-    #
-    #
-    #
-
-    #if ( scalar(@sensor_interfaces_arr) > 1 ) {
-
     # FIXME Cleaner implementation
-    my ( $location_bin, $destination_bin );
     for my $tmp_interface (@sensor_interfaces_arr) {
 
         my $tmp_interface_clean = $tmp_interface;
@@ -836,144 +692,11 @@ sub update_plugin_interfaces {
         my $Config_tmp = Config::Tiny->read($plugin_interface_filename);
         $Config_tmp->{config}->{interface} = "$tmp_interface";
 
-        if ( $plugin eq "snortunified" ) {
-            my $tmp_interfaces
-            = join( " ", split( /,\s*/, $config{'sensor_interfaces'} ) );
-            my $Config_snort = Config::Tiny->read($snort_debian_cfg);
-            $Config_snort->{_}->{DEBIAN_SNORT_INTERFACE} = "\"$tmp_interfaces\"";
-            $Config_snort->write($snort_debian_cfg);
-            if ( scalar(@sensor_interfaces_arr) == 1 ) {
-                $tmp_interface = $sensor_interfaces_arr[0];
-
-# If we've got only one interface let's see if we have to change the linklayer type within snort
-                if ( $sensor_interfaces_arr[0] eq "any" ) {
-                    debug_log("Setting linklayer to cooked\n");
-                    $Config_tmp->{config}->{linklayer} = "cookedlinux";
-                }
-                else {
-                    debug_log("Setting linklayer to ethernet\n");
-                    $Config_tmp->{config}->{linklayer} = "ethernet";
-                }
-                $Config_tmp->write($plugin_interface_filename);
-                $snort_conf_name = "/etc/snort/snort.$tmp_interface.conf";
-                system("cp $snort_cfg $snort_conf_name");
-            }
-
-            my $init_source     = "/etc/init.d/snort";
-            my $init_dest       = "/etc/init.d/snort_" . $tmp_interface;
-            $location_bin    = "/usr/sbin/snort";
-            $destination_bin = "/usr/sbin/snort" . "_" . $tmp_interface;
-            my $destination_bin_escaped
-                = "\\/usr\\/sbin\\/snort" . "_" . $tmp_interface;
-            $snort_conf_name = "/etc/snort/snort.$tmp_interface.conf";
-            my $prefix_name     = "snort_" . $tmp_interface;
-            $Config_tmp->{config}->{prefix}  = "$prefix_name";
-            $Config_tmp->{config}->{process} = "snort_$tmp_interface";
-
-            #                system("cp $location_bin $destination_bin");
-            system("cp -rf $init_source $init_dest");
-
-            # prevent LSB problems when provided 'same' initscript:
-            system(
-                "sed -i 's/Provides:.*/Provides: snort_$tmp_interface/' $init_dest"
-            );
-            system("cp -rf /etc/snort/snort.conf $snort_conf_name");
-
-            # create snort.debian.$iface.conf
-            system(
-                "cp $snort_debian_cfg /etc/snort/snort.debian.$tmp_interface.conf"
-            );
-            my $command
-                = "sed -i \"s:DEBIAN_SNORT_HOME_NET=.*:DEBIAN_SNORT_HOME_NET=\\\"$trimmed_sensor_networks\\\":\" /etc/snort/snort.debian.$tmp_interface.conf";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: Config $snort_conf_name");
-
-            my $snver = `cat /etc/snort/snort.conf|grep -v ^#|grep unified`;
-            if ( $snver eq "" ) {
-                my $command
-                    = "sed -i \"s/# output log_unified: filename snort.log, limit 128/output unified2: filename snort, limit 128/\" /etc/snort/snort.conf";
-                debug_log("$command");
-                system($command);
-            }
-
-            $command
-                = "sed -i \"s:DEBIAN_SNORT_INTERFACE=.*:DEBIAN_SNORT_INTERFACE=\\\"$tmp_interface_master[0]\\\":\" /etc/snort/snort.debian.$tmp_interface.conf";
-            debug_log("$command");
-            system($command);
-
-            $command
-                = "sed -i \"s:CONFIG=.*:CONFIG=/etc/snort/snort.debian.$tmp_interface.conf:\" $init_dest";
-            debug_log("$command");
-            system($command);
-
-            ##########
-            verbose_log("Sensor Profile: Config $init_dest daemon");
-            $command
-                = "sed -i \"s:DAEMON=.*:DAEMON=$destination_bin_escaped:\" $init_dest";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: Config $init_dest interface");
-            $command
-                = "sed -i \"s/interfaces=\\\".*\\\"/interfaces=\\\"$tmp_interface_master[0]\\\"/\" $init_dest";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: Config $init_dest interface");
-            $command
-                = "sed -i \"s:-i\\s*\$interface.*:-i $tmp_interface_clean >/dev/null:\" $init_dest";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: Config $init_dest interface");
-            $command
-                = "sed -i \"s:CONFIGFILE=/etc/snort/snort.*:CONFIGFILE=/etc/snort/snort.$tmp_interface.conf:\" $init_dest";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: Config $init_dest name");
-            $command
-                = "sed -i \"s:NAME=.*:NAME=snort_$tmp_interface:\" $init_dest";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: Config $snort_conf_name");
-            $command
-                = "sed -i \"s/output.*unified.*filename.*limit/output unified2: filename $prefix_name, limit/\" $snort_conf_name";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: Config $snort_conf_name");
-            $command
-                = "sed -i \"s/output.*unified2.*filename.*limit/output unified2: filename $prefix_name, limit/\" $snort_conf_name";
-            debug_log("$command");
-            system($command);
-
-            verbose_log("Sensor Profile: set +x $init_dest");
-            system("chmod +x $init_dest");
-
-            debug_log("Sensor Profile: Include user defined parameters for $prefix_name");
-            open my $snort_conf_name_fh, '>>', $snort_conf_name;
-            print $snort_conf_name_fh <<EOF;
-
-# include user defined parameters for snort at $tmp_interface
-include snortuser.$tmp_interface.conf
-
-EOF
-            close($snort_conf_name_fh);
-            my $path = "/etc/snort/snortuser.$tmp_interface.conf";
-            my $update = touch ($path);
-        }
-
         $Config_tmp->write($plugin_interface_filename);
         my $Config_plugins = Config::Tiny->read($agentcfg);
         $Config_plugins->{plugins}->{ $plugin . "_" . $tmp_interface }
             = $plugin_interface_filename;
         $Config_plugins->write($agentcfg);
-
-        system("cp -rf $location_bin $destination_bin");
     }
 
     #    }

@@ -61,17 +61,19 @@ $conn     = $db->connect();
 if (Asset_host::is_in_db($conn, $id))
 {
     $asset_type   = 'asset';
-    
+
     Session::logcheck('environment-menu', 'PolicyHosts');
-    
+
     $breadcrumb   = array(
         'section' => _('Assets'),
         'current' => _('Asset Details')
     );
-    
+
     $edit         = Asset_host::can_i_modify_ips($conn, $id);
+    $delete       = Asset_host::can_delete($conn, $id);
     $local_assets = Asset_host::get_asset_by_system($conn, Util::get_system_uuid());
     $p_plugin     = Session::am_i_admin() && !$local_assets[$id];
+    $deploy_agent = Session::logcheck_bool('environment-menu', 'EventsHidsConfig');
 }
 else if (Asset_net::is_in_db($conn, $id))
 {
@@ -84,8 +86,10 @@ else if (Asset_net::is_in_db($conn, $id))
         'current' => _('Network Details')
     );
     
-    $edit     = Asset_net::can_i_modify_ips($conn, $id);
-    $p_plugin = Session::am_i_admin();
+    $edit         = Asset_net::can_i_modify_ips($conn, $id);
+    $delete       = Asset_net::can_delete($conn, $id);
+    $p_plugin     = Session::am_i_admin();
+    $deploy_agent = FALSE;
     
 }
 else if (Asset_group::is_in_db($conn, $id))
@@ -109,7 +113,17 @@ else if (Asset_group::is_in_db($conn, $id))
         $edit = FALSE;
     }
     
-    $p_plugin = Session::am_i_admin();
+    try
+    {
+        $delete = $gobj->can_delete_group($conn);
+    }
+    catch(Exception $err)
+    {
+        $delete = FALSE;
+    }
+    
+    $p_plugin     = Session::am_i_admin();
+    $deploy_agent = FALSE;
 }
 else
 {
@@ -120,15 +134,16 @@ else
 
 $perms = array(
     'admin'           => Session::am_i_admin(),
+    'delete'          => $delete,
     'edit'            => $edit,
     'vulnerabilities' => Session::logcheck_bool('environment-menu', 'EventsVulnerabilitiesScan'),
     'alarms'          => Session::logcheck_bool('analysis-menu', 'ControlPanelAlarms'),
     'events'          => Session::logcheck_bool('analysis-menu', 'EventsForensics'),
     'netflows'        => Session::logcheck_bool('environment-menu', 'MonitorsNetflows'),
     'nmap'            => Session::logcheck_bool('environment-menu', 'ToolsScan'),
-    'ntop'            => Session::logcheck_bool('environment-menu', 'MonitorsNetwork'),
     'availability'    => Session::logcheck_bool('environment-menu', 'MonitorsAvailability'),
-    'hids'            => Session::logcheck_bool('environment-menu', 'EventsHidsConfig'),
+    'hids'            => Session::logcheck_bool('environment-menu', 'EventsHids') || Session::logcheck_bool('environment-menu', 'EventsHidsConfig'),
+    'deploy_agent'    => $deploy_agent,
     'plugins'         => $p_plugin
 );
 
@@ -291,8 +306,6 @@ $db->close();
         <?php echo _('Actions') ?> &nbsp;&#x25be;
     </a>
 
-    <img id='edit_asset' data-bind='edit_asset' class='img_action' src="/ossim/pixmaps/edit.png"/>
-    <img id='delete_asset' data-bind='delete_asset' class='img_action' src="/ossim/pixmaps/delete-big.png"/>
     <img id='export_asset' data-bind='export-asset' class='img_action' src="/ossim/pixmaps/download-big.png"/>
 
 </div>
@@ -442,10 +455,10 @@ $db->close();
             <div class='b_content'>
                 <div class="detail_led" data-bind='led_hids'><?php echo _('HIDS')?></div>
                 <div class="detail_led" data-bind='led_nmap'><?php echo _('Automatic Asset Discovery')?></div>
-                <div class="detail_led" data-bind='led_vulnerabilities'><?php echo _('Vulnerability Scan Scheduled')?></div>
+                <div class="detail_led" data-bind='led_vulnerabilities'><?php echo _('Vuln Scan Scheduled')?></div>
             </div>
 
-            <div id='ntop_link' class='av_link' data-bind='ntop_link'>
+            <div id='netflows_link' class='av_link' data-bind='netflows_link'>
                 <?php echo _('See Network Activity') ?>
             </div>
 

@@ -1,5 +1,5 @@
 <?php
-if (!headers_sent()) 
+if (!headers_sent())
 {
     header("Content-type: text/css");
 }
@@ -36,59 +36,122 @@ if (!headers_sent())
 *
 */
 
-body 
-{ 
-    margin: 0px;
+
+.dataTables_filter
+{
+    margin-bottom: 8px !important;
+    float:left !important;
 }
 
-#headerh1
+.dataTables_filter input
 {
-    width:100%;
-    
-    height:1px;
+    width: 150px !important;
 }
 
-#container
+#ss_container
 {
-    position:relative;
-    margin:10px auto;
+    margin: 30px auto 10px auto;
 }
 
-#flextable
+#ss_container img.img_action
 {
-    display:none;
-}       
-
-table, th, tr, td 
-{
-    background:transparent;         
-    border:none;
-    padding:0px; 
-    margin:0px;
+    padding: 0px 2px;
+    cursor: pointer;
+    height: 16px;
 }
 
-input, select 
-{           
-    border: 1px solid #8F8FC6;
-    font-size:12px; 
-    font-family:arial; 
-    vertical-align:middle;
-    padding:0px; 
-    margin:0px;
+#ss_container .c_action_buttons
+{
+    z-index: 10;
+    position: relative;
+    height: 1px;
 }
 
-.flexigrid
+#ss_container .c_action_buttons .action_buttons
 {
-    min-height: inherit !important;
+    position: absolute;
+    right: 2px;
+    top: 10px;
 }
 
-button.button
+#ss_container  img.img_action
 {
-    float:right;
-    margin-top:15px;
+    padding: 0px 2px;
+    cursor: pointer;
+    height: 18px;
 }
 
-#button_apply
+#ss_container .rs_t_scan
 {
-	display:none;
+    text-align: center !important;
+    width: 50px;
+}
+
+#ss_container #table_data_s_scan
+{
+    width: 100%;
+}
+
+
+/* Scan forms */
+
+#avi_container
+{
+	width: 450px;
+	margin: 10px auto 40px auto;
+	min-height: 400px;
+	position: relative;
+}
+
+#avi_info
+{
+	width: 100%;
+	margin: 5px auto 10px auto;
+	min-height: 40px;
+}
+
+.legend
+{
+    font-size: 10px;
+	font-style: italic;
+	text-align: center;
+	padding: 0px 0px 5px 0px;
+	margin: auto;
+	width: 400px;
+}
+
+#t_avi
+{
+	width: 100%;
+	margin:auto;
+	border: none;
+}
+
+#t_avi td.left
+{
+    padding: 8px 15px 0 10px !important;
+    vertical-align: top;
+}
+
+#t_avi label
+{
+    font-size: 13px;
+}
+
+#t_avi input[type='text']
+{
+    width: 98%;
+    height: 18px;
+}
+
+#t_avi select
+{
+    width: 99%;
+    height: 20px !important;
+}
+
+#ss_actions
+{
+    margin: 20px auto 0px auto;
+    text-align: center;
 }

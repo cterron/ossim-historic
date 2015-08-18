@@ -204,7 +204,14 @@ class Repository
         }
         elseif (valid_hex32($in_charge))
         {
-            return Acl::get_entity_name($conn,$in_charge);
+            $db   = new Ossim_db();
+            $conn = $db->connect();
+
+            $entity_name = Acl::get_entity_name($conn, $in_charge);
+
+            $db->close();
+
+            return $entity_name;
         }
         else
         {
@@ -575,7 +582,8 @@ class Repository
     {
         $ret = FALSE;      
         
-        $query = "SELECT * FROM repository WHERE id=$id_document";
+        $params = array($id_document);
+        $query  = "SELECT * FROM repository WHERE id = ?";
 
         $rs = $conn->Execute($query, $params);
         if (!$rs)
@@ -707,10 +715,10 @@ class Repository
     public static function attach($conn, $id_document, $filename)
     {
         // Check if exists
-        $query = "SELECT * FROM repository_attachments WHERE name='$filename'";
+        $query = "SELECT * FROM repository_attachments WHERE name = ?";
         
-        $rs = $conn->Execute($query);
-        if ($rs) 
+        $rs = $conn->Execute($query, array($filename));
+        if ($rs)
         {
             if ($rs->numrows() > 0) 
             {

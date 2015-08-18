@@ -50,10 +50,6 @@
 #include "sim-debug.h"
 #include "sim-uuid.h"
 
-G_LOCK_DEFINE (s_mutex_config);
-G_LOCK_DEFINE (s_mutex_inets);
-G_LOCK_DEFINE (s_mutex_events);
-
 extern guint sem_total_events_popped;
 
 /* Prototypes */
@@ -1081,6 +1077,29 @@ sim_container_add_sensor_to_hash_table (SimContainer * container,
   sim_container_add_sensor_to_hash_table_ul (container, sensor);
   g_mutex_unlock (container->_priv->mutex_sensors);
 }
+static void
+sim_container_remove_sensor_from_hash_table_ul (SimContainer * container, SimSensor * sensor)
+{
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (sensor != NULL);
+  SimInet * inet = sim_sensor_get_ia (sensor);
+  SimUuid * uuid = sim_sensor_get_id (sensor);
+  g_hash_table_remove (container->_priv->sensors, inet);
+  g_hash_table_remove (container->_priv->sensor_ids, uuid);
+}
+
+/**
+ *
+ *
+ *
+*/
+void
+sim_container_remove_sensor_from_hash_table (SimContainer * container, SimSensor * sensor)
+{
+  g_mutex_lock (container->_priv->mutex_sensors);
+  sim_container_remove_sensor_from_hash_table_ul (container, sensor);
+  g_mutex_unlock (container->_priv->mutex_sensors);
+}
 
 
 /**
@@ -1806,28 +1825,6 @@ guint*
 sim_container_get_signatures_to_id(SimContainer *container, gchar *sig_name) //Snort & ossim massive events db storage related
 {
   return g_hash_table_lookup(container->_priv->signatures_to_id,sig_name);
-}
-
-/**
- * sim_container_update_recovery:
- * @container: #SimContainer object
- * @database: #SimDatabase object
- *
- * Updates recovery in all context
- */
-void
-sim_container_update_recovery (SimContainer *container,
-                               SimDatabase  *database)
-{
-  gint recovery;
-
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  recovery = sim_db_get_config_int (database, "recovery");
-
-  sim_context_update_host_level_recovery (container->_priv->context, recovery);
-  sim_context_update_net_level_recovery (container->_priv->context, recovery);
 }
 
 /**

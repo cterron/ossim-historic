@@ -20,21 +20,26 @@ set -e
 case "$1" in
     configure)
         DEFAULT_GRUB_FILE="/etc/default/grub"
+        MODULES_FILE="/etc/initramfs-tools/modules"
         UPDATE_GRUB2_BIN="/usr/sbin/update-grub2"
-
-        plymouth-set-default-theme alienvault --rebuild-initrd
 
         if [ -f "$DEFAULT_GRUB_FILE" ] && [ -x "$UPDATE_GRUB2_BIN" ]; then
             CONFIG_VAR="PLYMOUTH_CONFIG"
-            CONFIG_PARAMS="loglevel=2 splash vga=784"
+            CONFIG_PARAMS="loglevel=3 splash video=uvesafb:1024x768-24"
             CONFIG_LINE=$(grep "^$CONFIG_VAR=\"$CONFIG_PARAMS\"" "$DEFAULT_GRUB_FILE" || true)
             CONFIG_INCLUDED=$(grep "^GRUB_CMDLINE_LINUX_DEFAULT.*\$$CONFIG_VAR" "$DEFAULT_GRUB_FILE" || true)
+            MODULE_INCLUDED=$(grep "^uvesafb" "$MODULES_FILE" || true)
             CHANGED=0
 
             if [ -z "$CONFIG_LINE" ]; then
                 sed -i "$DEFAULT_GRUB_FILE" \
                     -e "/^$CONFIG_VAR/d" \
                     -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/$CONFIG_VAR=\"$CONFIG_PARAMS\"\n&/"
+                CHANGED=1
+            fi
+
+            if [ -z "$MODULE_INCLUDED" ]; then
+                echo "uvesafb" >> "$MODULES_FILE"
                 CHANGED=1
             fi
 
@@ -46,6 +51,8 @@ case "$1" in
                     -e "/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/s/\"$/ \$$CONFIG_VAR\"/"
                 CHANGED=1
             fi
+
+            plymouth-set-default-theme alienvault --rebuild-initrd
 
             if [ $CHANGED -ne 0 ]; then
                 $UPDATE_GRUB2_BIN

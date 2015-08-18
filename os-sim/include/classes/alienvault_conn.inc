@@ -145,7 +145,7 @@ class Alienvault_conn {
         $this->username    = strtolower($this->username);
         $this->host        = (Asset_host_ips::valid_ip($host)) ? $host     : '127.0.0.1';
         $this->port        = ($port>0 && $port<65535)          ? $port     : 40011;
-        $this->timeout     = 60;
+        $this->timeout     = 120;
 
         $this->prefix_url  = "/av/api/1.0";
 
@@ -293,21 +293,15 @@ class Alienvault_conn {
 
         $this->error = curl_error($handle);
 
-        // Log
-        if ($this->log)
-        {
-            error_log($response."\n".$this->error."\n", 3, $this->debug_file);
-        }
-
         // Close the cURL session
 
         curl_close($handle);
 
+        $return = @json_decode($response, TRUE);
+
         // Check if a response is not 403 and relogin
         if ($trylogin)
         {
-            $return = @json_decode($response, TRUE);
-
             if ($return['status'] == 'error' && $return['status_code'] == '403') // Unauthorized
             {
                 return $this->try_login_redo_request($orig_url, $parameters, $method);
@@ -317,6 +311,18 @@ class Alienvault_conn {
 
         //Setting the timeout to the default value
         $this->set_timeout();
+ 
+        if ($return)
+        {
+            self::__sanitize_array($return); // Double encoding html entities to prevent xss
+            $response = json_encode($return);
+        }
+
+        // Log
+        if ($this->log)
+        {
+            error_log(self::__jsonpp($response)."\n".$this->error."\n", 3, $this->debug_file);
+        }
 
         return $response;
     }
@@ -344,5 +350,46 @@ class Alienvault_conn {
 
         return $this->do_request($url, $parameters, $method, FALSE);
     }
+    
+    
+    private static function __sanitize_array(&$array)
+    {
+        array_walk_recursive($array, 'self::__clean_string');
+    } 
+    
+    
+    private static function __clean_string(&$value, &$key)
+    {
+        if (gettype($value) == "string")
+        {
+            $value = Util::htmlentities($value, ENT_NOQUOTES, 'ISO-8859-1', TRUE);
+        }
+        if (gettype($key) == "string")
+        {
+            $key   = Util::htmlentities($key, ENT_NOQUOTES, 'ISO-8859-1', TRUE);
+        }
+    }
+    
+    private static function __jsonpp($json, $istr='  ')
+    {
+        $result = '';
+        for($p=$q=$i=0; isset($json[$p]); $p++)
+        {
+            $json[$p] == '"' && ($p>0?$json[$p-1]:'') != '\\' && $q=!$q;
+            if(!$q && strchr(" \t\n\r", $json[$p])){continue;}
+            if(strchr('}]', $json[$p]) && !$q && $i--)
+            {
+                strchr('{[', $json[$p-1]) || $result .= "\n".str_repeat($istr, $i);
+            }
+            $result .= $json[$p];
+            if(strchr(',{[', $json[$p]) && !$q)
+            {
+                $i += strchr('{[', $json[$p])===FALSE?0:1;
+                strchr('}]', $json[$p+1]) || $result .= "\n".str_repeat($istr, $i);
+            }
+        }
+        return $result;
+    }
+
 }
 ?>

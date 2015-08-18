@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -48,9 +48,7 @@ from datetime import datetime
 # LOCAL IMPORTS
 #
 
-from ApacheNtopProxyManager import ApacheNtopProxyManager
 from NagiosMkLiveManager import NagiosMkLiveManager
-from PostCorrelationManager import PostCorrelationManager
 from OssimConf import OssimConf
 from OssimDB import OssimDB
 from DBConstantNames import *
@@ -67,17 +65,9 @@ class Framework:
         Default Constructor
         """
         self.__classes = [
-                "ControlPanelRRD",
-                "AcidCache",
-        #        "Listener",
                 "Scheduler",
-                "SOC",
-                "BusinessProcesses",
-                #"Backup",
                 "DoNagios",
-                "NtopDiscovery",
                 "NagiosMkLiveManager",
-                "PostCorrelationManager",
                 "BackupManager",
             ]
         self.__encryptionKey = ''
@@ -110,7 +100,7 @@ class Framework:
 
         if options.verbose and options.daemon:
             parser.error("incompatible options -v -d")
-        
+
         return options
 
 
@@ -321,10 +311,8 @@ class Framework:
         logger.info("Start Listener...")
         self.__listener = Listener()
         self.__listener.start()
-        ap = ApacheNtopProxyManager(self.__conf)
-        self.checkEncryptionKey()
-        logger.info("Check ntop proxy configuration ...")
-        ap.refreshConfiguration()
+        
+        # BackupManager
         t = None
         bkm = BackupManager()
         bkm.start()
@@ -334,40 +322,10 @@ class Framework:
             logger.debug("Conf entry:%s value: %s" % (conf_entry, self.__conf[conf_entry]))
             if str(self.__conf[conf_entry]).lower() in ('1', 'yes', 'true'):
                 logger.info(c.upper() + " is enabled")
-                #print conf_entry
                 exec "from %s import %s" % (c, c)
                 exec "t = %s()" % (c)
                 t.start()
 
         self.waitforever()
-
-        #Autodiscovery
-    
-        '''
-        OBSOLETE...
-        '''
-        #Ntop
-#        if str(self.__conf[VAR_LOAD_NETWORK_AUTODISCOVERY]) in ('1', 'yes', 'true'):
-#            logger.info("NtopDiscovery" + " is enabled")
-#            exec "from %s import %s" % ("NtopDiscovery", "NtopDiscovery")
-#            exec "t = %s()" % ("NtopDiscovery")
-#            t.start()
-#    
-#        #Nedi
-#        if str(self.__conf[VAR_LOAD_NEDI_AUTODISCOVERY]) in  ('1', 'yes', 'true'):    
-#            logger.info("nediDiscovery" + " is enabled")
-#            exec "from %s import %s" % ("nediDiscovery", "nediDiscovery")
-#            exec "t = %s()" % ("nediDiscovery")
-#            t.start()
-#        #OCSIventory 
-#        if str(self.__conf[VAR_LOAD_OCS_AUTODISCOVERY]) in ('1', 'yes', 'true'):
-#            logger.info("OCSInventory" + " is enabled")
-#            exec "from %s import %s" % ("OCSInventory", "OCSInventory")
-#            exec "t = %s()" % ("OCSInventory")
-#            t.start()
-if __name__ == "__main__" :
-    f = Framework()
-    f.main()
-    
 
 # vim:ts=4 sts=4 tw=79 expandtab:

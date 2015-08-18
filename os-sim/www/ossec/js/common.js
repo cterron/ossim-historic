@@ -69,14 +69,14 @@ function Ajax_Requests(size)
 
 //Tabs
 function show_tab_content(tab)
-{	
+{
 	$("ul.oss_tabs li").removeClass("active"); //Remove any "active" class
 	$(tab).addClass("active"); //Add "active" class to selected tab
 	$(".tab_content").hide(); //Hide all tab content
-	
+
 	var activeTab = $(tab).find("a").attr("href"); //Find the rel attribute value to identify the active tab + content
 	$(activeTab).show(); //Fade in the active content
-	
+
 	return false;
 }
 
@@ -84,18 +84,18 @@ function show_tab_content(tab)
 // Sensor (Select)
 
 function hide_select()
-{    
+{
     if ($('#sensors').hasClass('s_show'))
     {
         $('.c_filter_and_actions').hide();
-    }			
+    }
 }
 
 
 function show_select()
-{    
+{
     if ($('#sensors').hasClass('s_show'))
     {
         $('.c_filter_and_actions').show();
-    } 
+    }
 }

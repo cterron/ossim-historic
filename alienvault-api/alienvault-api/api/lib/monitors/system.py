@@ -42,17 +42,20 @@ import celery.utils.log
 import time
 import datetime
 import os
+import api_log
+
 from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
 from ansiblemethods.system.system import (
     get_root_disk_usage,
     get_system_load,
     get_av_config,
-    ping_system,
-    ansible_download_release_info
+    ansible_download_release_info,
+    ansible_get_otx_key
 )
 from ansiblemethods.system.maintenance import system_reboot_needed
 from ansiblemethods.system.about import get_is_professional
 from ansiblemethods.system.support import check_support_tunnels
+from ansiblemethods.system.network import ansible_check_insecure_vpn
 from apimethods.system.network import dns_is_external
 from db.methods.data import get_asset_list
 from db.methods.system import (
@@ -67,19 +70,20 @@ from db.methods.system import (
     set_system_ha_name,
     fix_system_references,
     check_any_innodb_tables,
-    get_config_otx_enabled,
     get_wizard_data,
     get_trial_expiration_date,
-    check_backup_process_running
+    check_backup_process_running,
+    db_get_config,
 )
 from db.methods.sensor import (
     get_sensor_id_from_system_id,
     set_sensor_properties_active_inventory,
     set_sensor_properties_passive_inventory,
     set_sensor_properties_netflow,
-    check_any_orphan_sensor
+    check_any_orphan_sensor,
+    get_sensor_by_sensor_id
 )
-from apimethods.sensor.sensor import get_plugins_from_yaml
+from apimethods.sensor.plugin import get_sensor_plugins
 from apimethods.system.config import (
     get_system_config_general,
     get_system_config_alienvault
@@ -90,19 +94,23 @@ from apimethods.system.system import (
     apimethod_get_update_info,
     system_is_trial,
     system_is_professional,
-    get_license_devices
+    get_license_devices,
+    ping_system
 )
 from apimethods.system.support import status_tunnel
 from apimethods.system.backup import get_backup_list
+from apimethods.otx.otx import apimethod_get_open_threat_exchange_config, apimethod_is_otx_enabled
 
-from apimethods.system.cache import flush_cache
 from apimethods.utils import is_valid_ipv4
 from apimethods.system.status import system_all_info, network_status, alienvault_status
-import api_log
-from api.lib.mcenter import get_message_center_messages
+
+from apimethods.otx.pulse import OTXv2
+
 from apimethods.data.status import load_external_messages_on_db
-from apimethods.data.status import insert_current_status_message
 from api.lib.monitors.messages import MessageReader
+from api.lib.mcenter import get_message_center_messages
+
+from apiexceptions import APIException
 
 messages = MessageReader()
 logger = celery.utils.log.get_logger("celery")
@@ -242,19 +250,23 @@ class MonitorRemoteCertificates(Monitor):
             logger.error("Can't retrieve systems..%s" % str(system_list))
             return False
         for (system_id, system_ip) in system_list:
-            result, ansible_output = ping_system(system_ip)
-            if not result:
+            try:
+                reachable = ping_system(system_id, no_cache=True)
+            except APIException:
+                reachable = False
+
+            if not reachable:
                 # Check whether is sensor or not
                 sensor, sensor_id = get_sensor_id_from_system_id(system_id)
-                if not self.save_data(system_id, ComponentTypes.SYSTEM,
-                                      self.get_json_message({'remote_certificates': 'Error: %s' % str(ansible_output),
-                                                             'contacted': False,
+                if not self.save_data(system_id,
+                                      ComponentTypes.SYSTEM,
+                                      self.get_json_message({'contacted': False,
                                                              'is_sensor': sensor})):
                     logger.error("Can't save monitor info")
             else:
-                self.save_data(system_id, ComponentTypes.SYSTEM,
-                               self.get_json_message({'remote_certificates': 'Ping OK',
-                                                      'contacted': True}))
+                self.save_data(system_id,
+                               ComponentTypes.SYSTEM,
+                               self.get_json_message({'contacted': True}))
         return True
 
 
@@ -277,79 +289,75 @@ class MonitorRetrievesRemoteInfo(Monitor):
             for (system_id, system_ip) in system_list:
                 success, sensor_id = get_sensor_id_from_system_id(system_id)
                 if not success:
-                    logger.warning("[MonitorRetrievesRemoteInfo] get_sensor_id_from_system_id failed for system %s (%s)" % (system_ip, system_id))
-                    continue
+                    logger.warning("[MonitorRetrievesRemoteInfo] "
+                                   "get_sensor_id_from_system_id failed for system %s (%s)" % (system_ip, system_id))
+                    sensor_id = None
 
-                if sensor_id is not None and sensor_id != '':
-                    success, result = get_plugins_from_yaml(sensor_id, no_cache=True)
-                    if not success:
-                        logger.warning("[MonitorRetrievesRemoteInfo] get_plugins_from_yaml failed for system %s (%s)" % (system_ip, system_id))
-                        continue
                 ha_name = None
                 success, result = system_all_info(system_id, no_cache=True)
                 if not success:
-                    logger.warning("[MonitorRetrievesRemoteInfo] system_all_info failed for system %s (%s)" % (system_ip, system_id))
+                    logger.warning("[MonitorRetrievesRemoteInfo] "
+                                   "system_all_info failed for system %s (%s)" % (system_ip, system_id))
                     continue
                 if 'ha_status' in result:
                     ha_name = 'active' if result['ha_status'] == 'up' else 'passive'
                 success, result = network_status(system_id, no_cache=True)
                 if not success:
-                    logger.warning("[MonitorRetrievesRemoteInfo] network_status failed for system %s (%s)" % (system_ip, system_id))
+                    logger.warning("[MonitorRetrievesRemoteInfo] "
+                                   "network_status failed for system %s (%s)" % (system_ip, system_id))
                     continue
                 success, result = alienvault_status(system_id, no_cache=True)
                 if not success:
-                    logger.warning("[MonitorRetrievesRemoteInfo] alienvault_status failed for system %s (%s)" % (system_ip, system_id))
+                    logger.warning("[MonitorRetrievesRemoteInfo] "
+                                   "alienvault_status failed for system %s (%s)" % (system_ip, system_id))
                     continue
                 success, result = status_tunnel(system_id, no_cache=True)
                 if not success:
-                    logger.warning("[MonitorRetrievesRemoreInfo] status_tunnel failed for system %s (%s)" % (system_ip, system_id))
+                    logger.warning("[MonitorRetrievesRemoreInfo] "
+                                   "status_tunnel failed for system %s (%s)" % (system_ip, system_id))
                     continue
                 success, result = get_system_config_general(system_id, no_cache=True)
                 if not success:
-                    logger.warning("[MonitorRetrievesRemoteInfo] get_system_config_general failed for system %s (%s)" % (system_ip, system_id))
+                    logger.warning("[MonitorRetrievesRemoteInfo] "
+                                   "get_system_config_general failed for system %s (%s)" % (system_ip, system_id))
                     continue
-                                # Here we have the hostname
+
                 hostname = result.get('general_hostname', None)
                 if hostname is not None:
                     success, hostname_old = db_get_hostname(system_id)
                     if not success:
-                        logger.warning("[MonitorRetrievesRemoteInfo] db_get_hostname failed for system %s (%s)" % (system_ip, system_id))
+                        logger.warning("[MonitorRetrievesRemoteInfo] "
+                                       "db_get_hostname failed for system %s (%s)" % (system_ip, system_id))
                         continue
                     if hostname == hostname_old:
                         hostname = None
 
                 # Getting config params from the system,
                 # we do use this result var so do not change the order of the calls!
-                success, result = get_system_config_alienvault(system_id, no_cache=True)
+                success, config_alienvault = get_system_config_alienvault(system_id, no_cache=True)
                 if not success:
-                    logger.warning("[MonitorRetrievesRemoteInfo] get_system_config_alienvault failed for system %s (%s)" % (system_ip, system_id))
+                    logger.warning("[MonitorRetrievesRemoteInfo] "
+                                   "get_system_config_alienvault failed for system %s (%s)" % (system_ip, system_id))
                     continue
 
-                prads_enabled = False
-                suricata_snort_enabled = False
-                netflow_enabled = False
                 ha_ip = None
                 ha_role = None
-
-                if 'sensor_detectors' in result:
-                    prads_enabled = True if 'prads' in result['sensor_detectors'] else False
-                    suricata_snort_enabled = True if 'snort' in result['sensor_detectors'] or 'suricata' in result['sensor_detectors'] else False
-                if 'sensor_netflow' in result:
-                    netflow_enabled = True if result['sensor_netflow'] == 'yes' else False
-
-                if 'ha_ha_virtual_ip' in result:
-                    ha_ip = result['ha_ha_virtual_ip']
+                if 'ha_ha_virtual_ip' in config_alienvault:
+                    ha_ip = config_alienvault['ha_ha_virtual_ip']
                     if not is_valid_ipv4(ha_ip):
                         ha_ip = None
 
-                if 'ha_ha_role' in result:
-                    ha_role = result['ha_ha_role']
+                if 'ha_ha_role' in config_alienvault:
+                    ha_role = config_alienvault['ha_ha_role']
                     if ha_role not in ['master', 'slave']:
                         ha_role = None
 
+                # Update interfaces cache
                 success, result = get_interfaces(system_id, no_cache=True)
                 if not success:
                     continue
+
+                # Update system setup data cache
                 success, result = system_get(system_id, no_cache=True)
                 if not success:
                     continue
@@ -361,18 +369,16 @@ class MonitorRetrievesRemoteInfo(Monitor):
                     except Exception:
                         vpn_ip = None
 
-                # TO DB; vpn_ip, netflow, active inventory, passive inventory
-                # ha_ip
+                # Sensor exclusive
                 if sensor_id is not None and sensor_id != '':
-                    success, message = set_sensor_properties_active_inventory(sensor_id, suricata_snort_enabled)
-                    if not success:
-                        logger.warning("[MonitorRetrievesRemoteInfo] set_sensor_properties_active_inventory failed: %s" % message)
-                    success, message = set_sensor_properties_passive_inventory(sensor_id, prads_enabled)
-                    if not success:
-                        logger.warning("[MonitorRetrievesRemoteInfo] set_sensor_properties_pasive_inventory failed: %s" % message)
-                    success, message = set_sensor_properties_netflow(sensor_id, netflow_enabled)
-                    if not success:
-                        logger.warning("[MonitorRetrievesRemoteInfo] set_sensor_properties_netflow failed: %s" % message)
+                    self.__update_sensor_properties(sensor_id=sensor_id,
+                                                    config_alienvault=config_alienvault)
+                    # Refresh sensor plugins cache
+                    try:
+                        get_sensor_plugins(sensor_id, no_cache=True)
+                    except APIException:
+                        logger.warning("[MonitorRetrievesRemoteInfo] "
+                                       "error getting plugins from sensor '{0}' {1}".format(sensor_id, system_ip))
 
                 if vpn_ip is not None:
                     success, message = set_system_vpn_ip(system_id, vpn_ip)
@@ -421,6 +427,37 @@ class MonitorRetrievesRemoteInfo(Monitor):
             return False
         return True
 
+    def __update_sensor_properties(self,
+                                   sensor_id,
+                                   config_alienvault):
+        """ Update sensor properties
+        """
+        # Only updates sensors with entries in sensor and sensor_properties tables
+        # This situation could happen in Federated environments without forwarding enabled
+        success, sensor = get_sensor_by_sensor_id(sensor_id)
+        if not success or sensor is None:
+            return
+
+        sensor_detectors = config_alienvault.get('sensor_detectors', [])
+        sensor_netflow = config_alienvault.get('sensor_netflow', 'no')
+
+        prads_enabled = 'prads' in sensor_detectors
+        nids_enabled = 'AlienVault_NIDS' in sensor_detectors
+        netflow_enabled = sensor_netflow == 'yes'
+
+        success, message = set_sensor_properties_active_inventory(sensor_id, nids_enabled)
+        if not success:
+            logger.warning("[MonitorRetrievesRemoteInfo] "
+                           "set_sensor_properties_active_inventory failed: %s" % message)
+        success, message = set_sensor_properties_passive_inventory(sensor_id, prads_enabled)
+        if not success:
+            logger.warning("[MonitorRetrievesRemoteInfo] "
+                           "set_sensor_properties_pasive_inventory failed: %s" % message)
+        success, message = set_sensor_properties_netflow(sensor_id, netflow_enabled)
+        if not success:
+            logger.warning("[MonitorRetrievesRemoteInfo] "
+                           "set_sensor_properties_netflow failed: %s" % message)
+
 
 class MonitorPendingUpdates(Monitor):
     """ Monitor for pending updates
@@ -435,8 +472,7 @@ class MonitorPendingUpdates(Monitor):
         """
         rt = True
         self.remove_monitor_data()
-        # Clear caché
-        flush_cache(namespace='system')
+
         # Load all system from current_local
         logger.info("Checking for pending updates")
         result, systems = get_systems()
@@ -693,7 +729,7 @@ class MonitorWebUIData(Monitor):
                                                                               'exceeding_assets': exceeding_assets}
 
             # OTX contribution
-            otx_enabled = get_config_otx_enabled()
+            otx_enabled = apimethod_is_otx_enabled()
             monitor_data[self.__WEB_MESSAGES["MESSAGE_OTX_CONNECTION"]] = {'otx_enabled': otx_enabled}
 
             # Backup in progress?
@@ -744,6 +780,7 @@ class MonitorSupportTunnel(Monitor):
                 logger.info("Tunnel in ('%s','%s'): %s" % (system_id, system_ip, result))
         return result, ''
 
+
 class MonitorSystemRebootNeeded(Monitor):
     def __init__(self):
         Monitor.__init__(self, MonitorTypes.MONITOR_SYSTEM_REBOOT_NEEDED)
@@ -765,6 +802,115 @@ class MonitorSystemRebootNeeded(Monitor):
                 if not self.save_data(system_id, ComponentTypes.SYSTEM, self.get_json_message({'reboot_needed': msg})):
                     logger.error("Cannot save monitor info")
             else:
-                logger.error("Cannot retrieve system %s information: %s") % (system_id, msg)
+                logger.error("Cannot retrieve system {0} information: {1}".format(system_id, msg))
+
+        return True
+
+
+class MonitorDownloadPulses(Monitor):
+    """Periodic task to download pulse information"""
+
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_DOWNLOAD_PULSES)
+        self.message = 'Download OTX Pulse data'
+
+    def start(self):
+        """ Starts the monitor activity
+        """
+        monitor_data = {"pulses_download_fail": False, "old_otx_key": False}
+
+        self.remove_monitor_data()
+        success, system_id = get_system_id_from_local()
+        if not success:
+            return False
+        # Load all system from current_local
+        logger.info("[MonitorDownloadPulses] downloading pulses started...")
+
+        success, otx_config = apimethod_get_open_threat_exchange_config()
+        if success:
+            if otx_config["token"]:
+                try:
+                    otx = OTXv2(key=otx_config["token"])
+                    #Checking that the key is an valid OTX v2
+                    if otx_config["key_version"] < "2":
+                        monitor_data['old_otx_key'] = True
+
+                    otx.download_pulses()
+                except Exception, err:
+                    logger.error("Cannot Download Pulses: %s" % str(err))
+                    monitor_data['pulses_download_fail'] = True
+        else:
+            logger.error("[MonitorDownloadPulses] Cannot download pulses. <%s> " % str(otx_config))
+
+        self.save_data(system_id,
+                       ComponentTypes.SYSTEM,
+                       self.get_json_message(monitor_data))
+        logger.info("[MonitorDownloadPulses] downloading pulses finished...")
+
+        return True
+
+
+class MonitorInsecureVPN(Monitor):
+    """Periodic task to check if the VPN is insecured"""
+
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_INSECURE_VPN)
+        self.message = 'Check Insecure VPN'
+
+    def start(self):
+        """
+        Starts the monitor activity
+        """
+        result, systems = get_systems()
+        if not result:
+            logger.error("Cannot retrieve system info: %s" % str(systems))
+            return False
+        self.remove_monitor_data()
+
+        for system_id, system_ip in systems:
+            try:
+                insecure = ansible_check_insecure_vpn(system_ip)
+                if not self.save_data(system_id, ComponentTypes.SYSTEM, self.get_json_message({'vpn_insecure': insecure})):
+                    logger.error("Cannot save monitor info")
+            except Exception, exc:
+                logger.error("[MonitorInsecureVPN]: %s" % str(exc))
+
+        return True
+
+
+class MonitorFederatedOTXKey(Monitor):
+    """Periodic task to check that all the systems in a federated environment have the same OTX key"""
+
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_FEDERATED_OTX_KEY)
+        self.message = 'Check Insecure VPN'
+
+    def start(self):
+        """
+        Starts the monitor activity
+        """
+        result, systems = get_systems('server')
+        if not result:
+            logger.error("Cannot retrieve system info: %s" % str(systems))
+            return False
+
+        self.remove_monitor_data()
+
+        success, main_key = db_get_config('open_threat_exchange_key')
+        # if error or otx key is not activated then we don't keep checking.
+        if not success or main_key == '':
+            return False
+
+        for system_id, system_ip in systems:
+            try:
+                key = ansible_get_otx_key(system_ip)
+                if main_key != key:
+                    monitor_data = {'same_otx_key': False}
+                    if not self.save_data(system_id,
+                                          ComponentTypes.SYSTEM,
+                                          self.get_json_message(monitor_data)):
+                        logger.error("Cannot save monitor info")
+            except Exception, exc:
+                logger.error("[MonitorFederatedOTXKey]: %s" % str(exc))
 
         return True

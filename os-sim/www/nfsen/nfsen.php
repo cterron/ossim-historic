@@ -93,7 +93,7 @@ $h_opt  = Util::htmlentities($qs['h_opt']);
 
 $self = $_SERVER['SCRIPT_NAME']."?m_opt=$m_opt&sm_opt=$sm_opt&h_opt=$h_opt";
 
-
+$alarm_url = Alarm::get_alarm_path();
 //
 // Function definitions
 //
@@ -216,7 +216,7 @@ function SendHeader ($established) {
                         ip_data = ip_data.split('-');
                     
                     $.ajax({
-                        url: '../alarm/alarm_netlookup.php?ip=' + ip_data[0],
+                        url: '<?php echo $alarm_url['provider'] ?>alarm_netlookup.php?ip=' + ip_data[0],
                         success: function (response) {
                           e.content.html(response); // the var e is the callback function data (see above)
                         }
@@ -242,8 +242,9 @@ function SendHeader ($established) {
 			if (GET('ip') != "") 
 			{ 
     			?>
+				$("#modeselect1").prop("checked",true);
 				$("#process_button").click();
-				<?php 
+			<?php 
         		} 
         		?>
 			

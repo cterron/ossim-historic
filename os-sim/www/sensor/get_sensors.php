@@ -77,8 +77,9 @@ function server_get_sensors_script()
     
     session_write_close();
         
-    $cmd = '/usr/share/ossim/scripts/av_web_steward.py -r "server-get-sensor-plugins id=\"2\"" -t '.$tmp.'  -s "'.$address.'" -p "'.$port.'"  > /dev/null 2>&1';
-    system ($cmd);
+    $cmd    = '/usr/share/ossim/scripts/av_web_steward.py -r "server-get-sensor-plugins id=\"2\"" -t ?  -s ? -p ?  > /dev/null 2>&1';
+    $params = array($tmp, $address, $port);
+    Util::execute_command($cmd, $params);
         
     $file = @file($tmp);
     
@@ -195,7 +196,7 @@ function server_get_sensors_socket()
     return array($list, '');
 }
 
-
+// Deprecated
 function server_get_name_byip($ip) 
 {
 	$ossim_conf = $GLOBALS['CONF'];
@@ -211,7 +212,8 @@ function server_get_name_byip($ip)
 	$frameworkd_address = '127.0.0.1';
 	
 	$cmd    = 'echo "control action=\"getconnectedagents\"" | nc '.$frameworkd_address.' 40003 -w1';
-	$output = explode("\n", `$cmd`);
+	$params = array($frameworkd_address);
+	$output = Util::execute_command($cmd, $params, 'array');
 	
 	if (preg_match("/ names\=\"([^\"]+)\"/", $output[0], $found)) 
 	{

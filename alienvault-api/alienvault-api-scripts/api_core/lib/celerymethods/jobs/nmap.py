@@ -31,7 +31,9 @@ from celery import current_task
 from apimethods.sensor.nmap import apimethod_run_nmap_scan, apimethod_monitor_nmap_scan, \
     apimethods_nmap_purge_scan_files, apimethod_nmapdb_add_task, apimethod_nmapdb_get_task, \
     apimethod_nmapdb_update_task, apimethod_nmapdb_delete_task, apimethod_delete_nmap_scan
-from apimethods.sensor.exceptions.nmap import APIMethodNMAPScanException
+
+from apiexceptions.nmap import APINMAPScanException
+
 from celery.utils.log import get_logger
 from celerymethods.tasks import celery_instance
 from celery.task.control import inspect
@@ -40,6 +42,7 @@ import time
 logger = get_logger("celery")
 # from celery_once.tasks import QueueOnce
 # from retrying import retry
+
 
 @celery_instance.task
 def run_nmap_scan(sensor_id, target, targets_number, scan_type, rdns, scan_timing, autodetect, scan_ports, idm, user):
@@ -96,11 +99,16 @@ def run_nmap_scan(sensor_id, target, targets_number, scan_type, rdns, scan_timin
             job["scanned_hosts"] = job["target_number"]
             job["remaining_time"] = 0
             job["end_time"] = int(time.time())
-            apimethod_nmapdb_update_task(job_id, job)
+            rt = False
+            tries = 3
+            while not rt and tries > 0:
+                rt = apimethod_nmapdb_update_task(job_id, job)
+                tries -= 1
+                time.sleep(1)
     except Exception as e:
         job = apimethod_nmapdb_get_task(job_id)
         if job is not None:
-            if str(job["status"]).lower() != "finished" and str(job["status"]).lower() != "stopping" :  # Could be stopped by the user
+            if str(job["status"]).lower() != "finished" and str(job["status"]).lower() != "stopping":  # Could be stopped by the user
                 job["status"] = "Fail"
                 job["reason"] = ""
             job["remaining_time"] = 0
@@ -131,7 +139,7 @@ def monitor_nmap_scan(sensor_id, task_id):
         try:
             try:
                 job = apimethod_nmapdb_get_task(task_id)
-            except APIMethodNMAPScanException:
+            except APINMAPScanException:
                 job = None
             if not found:
                 _, _ = apimethods_nmap_purge_scan_files(task_id)
@@ -139,18 +147,19 @@ def monitor_nmap_scan(sensor_id, task_id):
                     job["remaining_time"] = 0
                     job["end_time"] = int(time.time())
                     apimethod_nmapdb_update_task(task_id, job)
-                    if job['idm']:
-                        try:
-                            apimethod_delete_nmap_scan(sensor_id, task_id)
-                        except:
-                            pass
+                    # Task will be deleted by the timeout
+                    # if job['idm']:
+                    #     try:
+                    #         apimethod_delete_nmap_scan(sensor_id, task_id)
+                    #     except:
+                    #         pass
                 return True
 
             if job is not None and job["status"] == "In Progress":
                 # check status
                 data = apimethod_monitor_nmap_scan(sensor_id, task_id)
-
-                job["status"] = "In Progress"
+                # status should only be written in one place
+                #job["status"] = "In Progress"
                 job["scanned_hosts"] = data['scanned_hosts']
                 if data['target_number'] > 0:
                     job["target_number"] = data['target_number']

@@ -118,13 +118,6 @@ class Asset_net extends Asset
             $asset_value = 2;
         }
 
-        $threshold   = $conf->get_conf('threshold');
-
-        if ($threshold == '')
-        {
-            $threshold = 30;
-        }
-
 
         $this->ctx         = Session::get_default_ctx();
         $this->name        = '';
@@ -133,8 +126,6 @@ class Asset_net extends Asset
         $this->icon        = NULL;
         $this->external    = 0;
         $this->asset_value = $asset_value;
-        $this->threshold_c = $threshold;
-        $this->threshold_a = $threshold;
         $this->owner       = NULL;
         $this->sensors     = new Asset_net_sensors($id);
     }
@@ -211,7 +202,7 @@ class Asset_net extends Asset
             {
                 $q_where = $q_where . ' AND ' . $filters['where'];
             }
-            
+
             if (!empty($filters['order_by']))
             {
                 $q_where  .= ' ORDER BY '.$filters['order_by'];
@@ -235,8 +226,6 @@ class Asset_net extends Asset
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
 
-            $total = Ossim_db::get_found_rows($conn, $query, $cache);
-
             $rs = $conn->Execute($query, $params);
 
             if (!$rs)
@@ -248,6 +237,8 @@ class Asset_net extends Asset
             {
                 if (empty($hosts[$rs->fields['h_id']]))
                 {
+                    $total++;
+
                     $hosts[$rs->fields['h_id']]['hostname'] = $rs->fields['hostname'];
                     $hosts[$rs->fields['h_id']]['ips']      = $rs->fields['h_ip'];
                 }
@@ -282,102 +273,104 @@ class Asset_net extends Asset
 
 
     /**
-    * This function returns HIDS configuration
-    *
-    *   - 0 No IPs are configured (red)
-    *   - 1 All IPs are configured (green)
-    *   - 2 Some IPs configured belongs to net (yellow)
-    *
-    * @param object  $conn   Database access object
-    *
-    * @throws Exception  If a connection error occurred
-    *
-    * @return integer
-    */
-    public function is_hids_enabled($conn)
+     * Function get_hids_status
+     *
+     * This function returns the status of HIDS agents than belongs to network
+     *
+     *   0 --> GRAY:   Not HIDS agents deployed
+     *   1 --> RED:    Some HIDS agents deployed but not connected  (Never Connected)
+     *   2 --> YELLOW: Some HIDS agents deployed but not all active
+     *   3 --> GREEN:  All HIDS agents deployed and active
+     *
+     * @param object $conn Database access object
+     *
+     * @throws Av_exception If a connection error occurred
+     *
+     * @access public
+     *
+     * @return integer
+     */
+    public function get_hids_status($conn)
     {
         Ossim_db::check_connection($conn);
 
-        $agents      = array();
-        $agent_cidrs = array();
+        $hids_status = 0;
 
-        $sensors = $this->sensors->get_sensors();
+        $number_of_assets = $this->get_num_host($conn);
 
-        // Get the agents IPs and CIDRs (For each related sensor)
-        foreach ($sensors as $s_id => $s_data)
+        $query = "SELECT agent_status
+                  FROM hids_agents INNER JOIN host_net_reference ON hids_agents.host_id=host_net_reference.host_id
+                  WHERE net_id = UNHEX(?)";
+
+        $params = array($this->get_id());
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
         {
-            $agents = Ossec_agent::get_list($s_id);
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
 
-            foreach ($agents as $a_data)
+
+        if (!$rs->EOF)
+        {
+            $active_agents       = 0;
+            $disconnected_agents = 0;
+            $no_connected_agents = 0;
+
+            while (!$rs->EOF)
             {
-                $ip_cidr = trim($a_data['ip']);
-
-                if(preg_match("/any|0\.0\.0\.0\/0/", $ip_cidr) == TRUE)
+                switch($rs->fields['agent_status'])
                 {
-                    //Special Case: IP/CIDR is any or 0.0.0.0/0
+                    case 0:
+                    case 1:
+                        $no_connected_agents++;
+                    break;
 
-                    return 1; // GREEN
+                    case 2:
+                        $disconnected_agents++;
+                    break;
+
+                    case 3:
+                    case 4:
+                        $active_agents++;
+                    break;
+
+                    default:
+                        $no_connected_agents++;
                 }
-                elseif (preg_match("/^\d+\.\d+\.\d+\.\d+\/\d+$/", $ip_cidr) == TRUE)
+
+                //It doesn't make sense to iterate until the end
+                if ($active_agents > 0 && ($no_connected_agents > 0 || $disconnected_agents > 0))
                 {
-                    $agent_cidrs[$ip_cidr] = $ip_cidr;
+                    break;
+                }
+
+                $rs->MoveNext();
+            }
+
+            $number_of_agents = $no_connected_agents + $disconnected_agents + $active_agents;
+
+            if ($number_of_agents == $number_of_assets && $active_agents == $number_of_assets)
+            {
+                $hids_status = 3;
+            }
+            else
+            {
+                if ($number_of_agents == $no_connected_agents)
+                {
+                    $hids_status = 1;
+                }
+                else
+                {
+                    $hids_status = 2;
                 }
             }
         }
 
-        if (!empty($agent_cidrs))
-        {
-            $all_are_hids  = TRUE;  // All CIDRs have HIDS enabled
-            $any_is_hids   = FALSE; // True if some CIDRs has HIDS enabled
-
-            // Compare CIDRs
-            $cidrs = $this->get_ips();
-
-            //Getting closest nets
-            $closest_nets = self::get_closest_nets($conn, $cidrs);
-
-            $cidrs = explode(',', $cidrs);
-
-            foreach ($cidrs as $cidr)
-            {
-                $is_in_hids = FALSE;
-
-                // 1-. Net CIDR is an Agent CIDR?
-                if (array_key_exists($cidr, $agent_cidrs))
-                {
-                    $is_in_hids = TRUE;
-                }
-                else
-                {
-                    foreach($closest_nets as $cn_data)
-                    {
-                        if (array_key_exists($cn_data['ips'], $agent_cidrs))
-                        {
-                            $is_in_hids = TRUE;
-
-                            break;
-                        }
-                    }
-                }
-
-                if ($is_in_hids == TRUE)
-                {
-                    $any_is_hids = TRUE;
-                }
-                else
-                {
-                    $all_are_hids = FALSE;
-                }
-            }
-
-            if ($any_is_hids == TRUE)
-            {
-                return ($all_are_hids) ? 1 : 2; // GREEN / YELLOW
-            }
-        }
-
-        return 0; // RED
+        return $hids_status;
     }
+
 
     /**
      * Function get_num_host
@@ -601,7 +594,7 @@ class Asset_net extends Asset
 
         return Alarm::get_list($conn, $criteria);
     }
-    
+
     /**
      * Function get_highest_risk_alarms
      *
@@ -750,17 +743,17 @@ class Asset_net extends Asset
         $tables  = '';
         $filters = array();
         $sensors = $this->get_sensors()->get_sensors();
-        
+
         // Get only plugins from one specified sensor
         if (valid_hex32($sensor_id))
         {
             $tables           = ', host_sensor_reference hsr';
             $filters['where'] = "hsr.host_id = h.id AND hsr.sensor_id = UNHEX('$sensor_id')";
-            
+
             $_sensor_aux = $sensors[$sensor_id];
             $sensors     = array($sensor_id => $_sensor_aux);
         }
-        
+
         $_asset_data = $this->get_hosts($conn, $tables, $filters);
         $assets      = $_asset_data[0];
 
@@ -793,9 +786,9 @@ class Asset_net extends Asset
         $_subnets   = self::get_my_subnets($conn, $this->id);
         $_net_ids   = array_keys($_subnets);
         $_net_ids[] = $this->id;
-        
+
         $rs = $siem->conn->Execute('REPLACE INTO '.$_tmp_table.' (id) VALUES (UNHEX("'.implode('")), (UNHEX("', $_net_ids).'"))');
-        
+
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $siem->conn->ErrorMsg());
@@ -809,16 +802,16 @@ class Asset_net extends Asset
         return $siem->get_events_sp($_tmp_table, 'network', $from, $maxrows, "$order $torder", $search_str);
 
     }
-    
-    
+
+
     /**
      * Function get_events_status
      *
      * This function returns the event count and level related to asset network
      *
-     * 
+     *
      * @param object $conn Database access object
-     * 
+     *
      *
      * @throws Exception  If a connection error occurred
      *
@@ -826,22 +819,22 @@ class Asset_net extends Asset
      */
     public function get_events_status($conn)
     {
-        
-        $siem       = new Siem(TRUE); // Perms byPass TRUE    
-    
+
+        $siem       = new Siem(TRUE); // Perms byPass TRUE
+
         // Create temporary table with inner assets
         $_tmp_table = Util::create_tmp_table($siem->conn);
         $_subnets   = self::get_my_subnets($conn, $this->id);
         $_net_ids   = array_keys($_subnets);
         $_net_ids[] = $this->id;
-        
+
         $rs = $siem->conn->Execute('REPLACE INTO '.$_tmp_table.' (id) VALUES (UNHEX("'.implode('")), (UNHEX("', $_net_ids).'"))');
-        
+
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $siem->conn->ErrorMsg());
         }
-        
+
         // Get Total
         $siem->add_criteria('src_net', $_tmp_table.'.id');
         $event_count_src = $siem->get_events_total();
@@ -856,21 +849,21 @@ class Asset_net extends Asset
         $event_count = $event_count_src + $event_count_dst - $siem->get_events_total();
 
         $event_level = ($event_count > 0) ? 1 : 0;
-        
+
         // Total with risk = 1
         $siem->clear_criteria();
         $siem->add_criteria(array('src_net', 'dst_net'), $_tmp_table.'.id');
         $siem->add_criteria('ossim_risk_a', 1);
-    
+
         $event_count_medium = $siem->get_events_total();
-    
+
         // Total with risk > 1
         $siem->clear_criteria();
         $siem->add_criteria(array('src_net', 'dst_net'), $_tmp_table.'.id');
         $siem->add_criteria('ossim_risk_a', 1, '>');
-    
+
         $event_count_high = $siem->get_events_total();
-    
+
         // Calculate level
         if ($event_count_high > 0)
         {
@@ -880,11 +873,11 @@ class Asset_net extends Asset
         {
             $event_level = 2;
         }
-    
+
         return array($event_count, $event_level);
     }
-    
-    
+
+
     /**
      * Function get_suggestions
      *
@@ -899,24 +892,24 @@ class Asset_net extends Asset
     public function get_suggestions($filters = array(), $pagination = array())
     {
         $status = new System_notifications();
-    
+
         $filters['component_id'] = Util::uuid_format($this->id);
-    
+
         if (empty($filters['level']))
         {
             $filters['level'] = 'info,warning,error';
         }
-    
+
         if (empty($filters['order_by']))
         {
             $filters['order_by'] = 'creation_time';
         }
-    
+
         if (empty($filters['order_desc']))
         {
             $filters['order_desc'] = 'false';
         }
-    
+
         return $status->get_status_messages($filters, $pagination);
     }
 
@@ -970,8 +963,6 @@ class Asset_net extends Asset
         $this->icon        = $rs->fields['icon'];
         $this->external    = $rs->fields['external_net'];
         $this->asset_value = $rs->fields['asset'];
-        $this->threshold_c = $rs->fields['threshold_c'];
-        $this->threshold_a = $rs->fields['threshold_a'];
         $this->owner       = $rs->fields['owner'];
 
         $this->sensors->load_from_db($conn, $cache);
@@ -1009,7 +1000,7 @@ class Asset_net extends Asset
         }
 
         $existing_netname = self::cidr_exists($conn, $id, $ips, $ctx);
-        
+
         if (!empty($existing_netname))
         {
             $exp_msg = sprintf(_("Error! CIDR not allowed. <b>%s</b> already contains the same CIDR"), $existing_netname);
@@ -1031,15 +1022,13 @@ class Asset_net extends Asset
                     ips,
                     external_net,
                     asset,
-                    threshold_c,
-                    threshold_a,
                     rrd_profile,
                     alert,
                     persistence,
                     descr,
                     icon,
                     owner)
-                VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
 
        $params = array(
@@ -1049,8 +1038,6 @@ class Asset_net extends Asset
             $ips,
             $this->get_external(),
             $this->get_asset_value(),
-            $this->get_threshold_c(),
-            $this->get_threshold_a(),
             0,
             0,
             0,
@@ -1074,11 +1061,7 @@ class Asset_net extends Asset
         {
             $this->delete_cidrs_from_cache($conn, $id);
         }
-        else
-        {
-            //Net Qualification
-            Asset_net_qualification::insert($conn, $id, 1, 1);
-        }
+
 
         $this->add_cidrs_to_cache($conn, $id, $ips);
 
@@ -1440,7 +1423,7 @@ class Asset_net extends Asset
     *
     * @return boolean
     */
-    protected static function can_delete($conn, $id)
+    public static function can_delete($conn, $id)
     {
         Ossim_db::check_connection($conn);
 
@@ -1741,9 +1724,6 @@ class Asset_net extends Asset
         //Scan
         Asset_net_scan::delete_all_from_db($conn, $id);
 
-        //Metrics
-        Control_panel_net::delete($conn, $id);
-
         //Net network reference
         self::set_host_net_reference($conn, $id, TRUE, FALSE);
 
@@ -1793,7 +1773,7 @@ class Asset_net extends Asset
             {
                 try
                 {
-                    self::report_changes($conn, 'nets');
+                    self::report_changes($conn, 'nets', TRUE);
                 }
                 catch(Exception $e)
                 {
@@ -1921,8 +1901,8 @@ class Asset_net extends Asset
 
         return $nets;
     }
-    
-    
+
+
     /**
      * Function get_all_locations
      *
@@ -1948,7 +1928,7 @@ class Asset_net extends Asset
         }
 
         ;
-        $query = "SELECT HEX(id) as id, h.hostname, h.lat, h.lon FROM host h, host_net_reference hnr 
+        $query = "SELECT HEX(id) as id, h.hostname, h.lat, h.lon FROM host h, host_net_reference hnr
         			WHERE h.id=hnr.host_id AND hnr.net_id=UNHEX(?) AND h.lat IS NOT NULL AND h.lon IS NOT NULL $perms_where";
 
         $params = array($this->get_id());
@@ -1973,7 +1953,7 @@ class Asset_net extends Asset
         }
 
         return $locations;
-	    
+
     }
 
 
@@ -2073,9 +2053,6 @@ class Asset_net extends Asset
             //Scan
             Asset_net_scan::delete_all_from_db($conn, $_net_id);
 
-            //Metrics
-            Control_panel_net::delete($conn, $_net_id);
-
             //Net network reference
             self::set_host_net_reference($conn, $_net_id, TRUE, FALSE);
         }
@@ -2115,7 +2092,7 @@ class Asset_net extends Asset
             {
                 try
                 {
-                    self::report_changes($conn, 'nets');
+                    self::report_changes($conn, 'nets', TRUE);
                 }
                 catch (Exception $e)
                 {
@@ -2162,7 +2139,7 @@ class Asset_net extends Asset
             $perms_where = self::get_perms_where('net.', TRUE);
             $ctxs        = (preg_match('/unhex/i', $ctx) == TRUE) ? $ctx : "UNHEX('".str_replace(',', "'), UNHEX('",$ctx)."')";
             $ips_list    = explode(',', $ips);
-            
+
             foreach ($ips_list as $cidr)
             {
                 $ip_range = self::expand_cidr(trim($cidr), 'SHORT', 'IP');
@@ -2177,23 +2154,23 @@ class Asset_net extends Asset
                     $query = "SELECT net.name FROM net_cidrs, net WHERE net.id = net_cidrs.net_id $perms_where
                          AND net.id<>UNHEX(?) AND INET6_ATON(?) = net_cidrs.begin AND INET6_ATON(?) = net_cidrs.end";
                 }
-                
+
                 $params = array($id, $ip_range[$cidr][0], $ip_range[$cidr][1]);
 
                 $rs = $conn->Execute ($query, $params);
-        
+
                 if (!$rs)
                 {
                     Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
-        
+
                 if (!$rs->EOF)
                 {
                     return $rs->fields['name'];
                 }
-                
+
                 $rs->free();
-            } 
+            }
 
         }
 
@@ -2323,6 +2300,42 @@ class Asset_net extends Asset
         }
 
         return $nets;
+    }
+
+
+    /**
+    * This function returns the subnets ids that belongs to network, including itself
+    *
+    * @param object  $conn   Database access object
+    * @param array   $nets   Net Array
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return string
+    */
+    public static function get_subnets($conn, $nets)
+    {
+        Ossim_db::check_connection($conn);
+
+        $subnets = array();
+
+        if (!is_array($nets))
+        {
+            $nets = array($nets);
+        }
+
+        foreach ($nets as $id)
+        {
+            $subnets[$id] = $id;
+            $snets        = self::get_my_subnets($conn, $id);
+
+            foreach ($snets as $nid => $sns)
+            {
+                $subnets[$nid] = $nid;
+            }
+        }
+
+        return implode(',',array_keys($subnets));
     }
 
 
@@ -2704,9 +2717,7 @@ class Asset_net extends Asset
                 'descr'       => $rs->fields['descr'],
                 'icon'        => $rs->fields['icon'],
                 'external'    => $rs->fields['external_net'],
-                'asset_value' => $rs->fields['asset'],
-                'threshold_c' => $rs->fields['threshold_c'],
-                'threshold_a' => $rs->fields['threshold_a']
+                'asset_value' => $rs->fields['asset']
             );
 
             $rs->MoveNext();
@@ -2860,8 +2871,6 @@ class Asset_net extends Asset
                     'icon'        => $rs->fields['icon'],
                     'external'    => $rs->fields['external_net'],
                     'asset_value' => $rs->fields['asset'],
-                    'threshold_c' => $rs->fields['threshold_c'],
-                    'threshold_a' => $rs->fields['threshold_a'],
                     'owner'       => $rs->fields['owner']
                 );
 
@@ -2952,8 +2961,6 @@ class Asset_net extends Asset
                     'icon'        => $rs->fields['icon'],
                     'external'    => $rs->fields['external_net'],
                     'asset_value' => $rs->fields['asset'],
-                    'threshold_c' => $rs->fields['threshold_c'],
-                    'threshold_a' => $rs->fields['threshold_a'],
                     'owner'       => $rs->fields['owner']
                 );
 
@@ -3003,8 +3010,6 @@ class Asset_net extends Asset
                         'icon'        => $rs->fields['icon'],
                         'external'    => $rs->fields['external_net'],
                         'asset_value' => $rs->fields['asset'],
-                        'threshold_c' => $rs->fields['threshold_c'],
-                        'threshold_a' => $rs->fields['threshold_a'],
                         'owner'       => $rs->fields['owner']
                     );
 
@@ -3020,4 +3025,4 @@ class Asset_net extends Asset
 }
 
 /* End of file asset_net.inc */
-/* Location: ../include/classes/asset_net.inc */ 
+/* Location: ../include/classes/asset_net.inc */

@@ -677,6 +677,36 @@ class Template
 
         return array($list, $num_rows);
     }
+
+    /**
+    * This function returns an array of templates that satisfies the filter
+    *
+    * @param object   $conn    Database access object
+    * @param string   $user    User name
+    * @param string   $menu    Menu name
+    * @param string   $submenu Submenu name
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return array
+    */
+    public static function menu_perms($conn, $user, $menu, $submenu)
+    {
+        Ossim_db::check_connection($conn);
+
+        $is_admin = @$conn->GetOne("SELECT is_admin FROM users WHERE login = ?", array($user));
+        if ($user == AV_DEFAULT_ADMIN || $is_admin)
+        {
+            return TRUE;
+        }
+        $perm_id = @$conn->GetOne("select p.id from acl_perm p,acl_templates_perms t,users u where p.id=t.ac_perm_id and t.ac_templates_id=u.template_id and u.login=? and p.name=? and p.value=?", array($user, $menu, $submenu));
+        if ($perm_id>0)
+        {
+            return TRUE;
+        }
+        return FALSE;
+    }
+
 }
 
 /* End of file template.inc */

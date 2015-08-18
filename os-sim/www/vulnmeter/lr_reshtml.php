@@ -70,7 +70,6 @@
 /* anything done with this program, code, or items      */
 /* discovered with this program's use.                  */
 /***********************************************************/
-ini_set('memory_limit', '1500M');
 ini_set("max_execution_time","720");
 
 require_once 'av_init.php';
@@ -1484,8 +1483,9 @@ function origdetails()
              $tmprisk = getrisk($risk);
     
              $msg = preg_replace("/^\<br\>/i","",str_replace("\\r", "", $msg));
-             $msg = preg_replace("/(Solution|Summary|Details|Overview|Synopsis|Description|See also|Plugin output|References|Vulnerability Insight|Vulnerability Detection|Impact|Impact Level|Affected Software\/OS|Fix|Information about this scan)\s*:/","<b>\\1:</b>",$msg);
-     
+             $msg = preg_replace("/(Insight|CVSS Base Score|Vulnerability Detection Method|Vulnerability Detection Result|CVSS Base Vector|Solution|Summary|Details|Overview|Synopsis|Description|See also|Plugin output|References|Vulnerability Insight|Vulnerability Detection|Impact|Impact Level|Affected Software\/OS|Fix|Information about this scan)\s*:/","<b>\\1:</b>",$msg);
+             $msg= str_replace("&amp;","&", $msg);
+
              // output the table cells
              $ancla = $hostip."_".$hostctx."_".$levels[$tmprisk];
              
@@ -1563,7 +1563,7 @@ function origdetails()
                     }
                     
                     $pticket = "ref=Vulnerability&title=".urlencode($pname)."&priority=1&ip=".urlencode($hostip)."&port=".urlencode($service_num).
-                    "&nessus_id=".urlencode($scriptid)."&risk=".urlencode($tmprisk)."&type=".urlencode("OpenVAS Vulnerability"); 
+                    "&nessus_id=".urlencode($scriptid)."&risk=".urlencode($tmprisk)."&type=".urlencode("Vulnerability"); 
                     
                     
                     echo "<a title=\""._("New ticket")."\" class=\"greybox\" href=\"../incidents/newincident.php?$pticket\"><img style=\"padding-bottom:2px;\" src=\"../pixmaps/script--pencil.png\" border=\"0\" alt=\"i\" width=\"12\"></a>&nbsp;&nbsp;";

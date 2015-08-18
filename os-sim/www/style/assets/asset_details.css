@@ -295,6 +295,10 @@ header("Content-type: text/css");
     height: 24px;
 }
 
+.otx_icon
+{
+    height: 22px;
+}
 
 /*   DETAIL NOTES   */
 
@@ -472,7 +476,7 @@ header("Content-type: text/css");
     background-color: #FAC800;
 }
 
-#ntop_link
+#netflows_link
 {
     position: relative;
     background: rgba(150, 150, 150, 0.1);
@@ -482,7 +486,7 @@ header("Content-type: text/css");
     display: none;
 }
 
-#ntop_link:before
+#netflows_link:before
 {
     content: '';
     position: absolute;
@@ -607,12 +611,22 @@ td.tray_details
     border: none;
 }
 
+.plugin_list td
+{
+    width: 33%;
+    max-width: 100px
+}
 .select_plugin
 {
-    width: 175px;
+    width: 95%;
 }
 
 .related_sensor
 {
     margin-top:20px;
+}
+
+.plugin_column_add
+{
+    width: 40px;
 }

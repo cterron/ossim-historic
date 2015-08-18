@@ -79,7 +79,7 @@ $f['where']  = " host.id=ht.host_id AND ht.type=4 AND hip.host_id=host.id AND hi
 try
 {
     list($hosts, $total) = Asset_host::get_list($conn, $table, $f, FALSE);
-    $active_plugins      = Plugin::get_plugins_by_device();    
+    $active_plugins      = Plugin::get_plugins_by_assets();    
 }
 catch(Exception $e)
 {
@@ -93,7 +93,7 @@ if ($total > 0)
     
     try
     {
-        $vendors = Software::get_hardware_vendors($conn, TRUE);
+        $vendors = Software::get_hardware_vendors();
     }
     catch(Exception $e)
     {
@@ -107,8 +107,10 @@ if ($total > 0)
     {
 
         $plugin_list = array();
-                
-        if (count($active_plugins[$asset_id]) < 1)
+        
+        $asset_id_canonical = Util::uuid_format($asset_id);
+        
+        if (count($active_plugins[$asset_id_canonical]) < 1)
         {
             $plugin_list[$asset_id][] = array(
                 'vendor'       => '',
@@ -120,18 +122,16 @@ if ($total > 0)
         }
         else
         {
-            foreach ($active_plugins[$asset_id] as $pdata)
+            foreach ($active_plugins[$asset_id_canonical] as $pdata)
             {        
                 $models   = array();
                 $versions = array();
-                
-                list($vendor, $model, $version) = Plugin::translate_cpe_to_software($pdata['cpe']);
 
-                if ($vendor != '')
+                if ($pdata['vendor'] != '')
                 {
                     try
                     {
-                        $models = Software::get_models_by_cpe($conn, $vendor, TRUE);
+                        $models = Software::get_models_by_vendor($pdata['vendor']);
                 
                     }
                     catch(Exception $e)
@@ -141,11 +141,11 @@ if ($total > 0)
                 
                 }
                 
-                if ($model != '')
+                if ($pdata['model'] != '')
                 {
                     try
                     {
-                        $versions = Software::get_versions_by_cpe($conn, $model, TRUE);
+                        $versions = Software::get_versions_by_model($pdata['vendor'].':'.$pdata['model']);
                     }
                     catch(Exception $e)
                     { 
@@ -154,9 +154,9 @@ if ($total > 0)
                 }   
                 
                 $plugin_list[$asset_id][] = array(
-                    'vendor'       => $vendor,
-                    'model'        => $model,
-                    'version'      => $version,
+                    'vendor'       => $pdata['vendor'],
+                    'model'        => $pdata['vendor'].':'.$pdata['model'],
+                    'version'      => $pdata['vendor'].':'.$pdata['model'].':'.$pdata['version'],
                     'model_list'   => $models,
                     'version_list' => $versions
                 );                    
@@ -202,31 +202,22 @@ $subtitle_2_empty = _('You have not configured any plugin yet. In order to compl
 
 <script type='text/javascript'>
     
-    var __vendor_list = <?php echo json_encode($vendors) ?>;
-    
+    var av_plugin_obj = false;
     
     function load_js_step()
     {
+        av_plugin_obj = new AVplugin_select();
         
         <?php
         if ($total > 0)
         {
             foreach ($device_list as $d_id => $dev)
-            {                
-                foreach ($dev['plugins'] as $p)
-                {
-            ?>
-                    $('#table_<?php echo $d_id ?>').AVplugin_select(
-                    {
-                        "vendor"       : "<?php echo $p['vendor'] ?>",
-                        "model"        : "<?php echo $p['model'] ?>",
-                        "version"      : "<?php echo $p['version'] ?>",
-                        "vendor_list"  : __vendor_list,
-                        "model_list"   : <?php echo json_encode($p['model_list']) ?>,
-                        "version_list" : <?php echo json_encode($p['version_list']) ?>
-                    });
-            <?php
-                }
+            {
+                ?>
+                var _options = <?php echo json_encode($dev['plugins']) ?>;
+                
+                av_plugin_obj.create('#table_<?php echo $d_id ?>', _options)
+                <?php
             }
         }
         ?>
@@ -262,10 +253,10 @@ $subtitle_2_empty = _('You have not configured any plugin yet. In order to compl
                     <thead>
                     <tr>
                         <th><?php echo _('Asset') ?></th>
-                        <th><?php echo _('Vendor') ?></th>
-                        <th><?php echo _('Model') ?></th>
-                        <th><?php echo _('Version') ?></th>
-                        <!--<th></th>-->
+                        <th class='net_devices_col_box'><?php echo _('Vendor') ?></th>
+                        <th class='net_devices_col_box'><?php echo _('Model') ?></th>
+                        <th class='net_devices_col_box'><?php echo _('Version') ?></th>
+                        <th class='net_devices_col_add'></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -283,8 +274,8 @@ $subtitle_2_empty = _('You have not configured any plugin yet. In order to compl
                             
                         </td>
         
-                        <td colspan="3">
-                            <table class='table_data table_plugin_list'>
+                        <td colspan="4">
+                            <table class='table_data table_plugin_list' data-asset_id="<?php echo $d_id ?>">
                                 <tbody id='table_<?php echo $d_id ?>' class='plugin_list' data-host="<?php echo $d_id ?>"></tbody>
                             </table>
                         </td>

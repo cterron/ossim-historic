@@ -461,8 +461,8 @@ class Incident
 
     public static function get_risk_info($risk)
     {
-        $bgcolor   = "white";
-        $fgcolor   = "black";
+        $bgcolor   = "fff";
+        $fgcolor   = "000";
         $name_risk = "-";
         switch($risk)
         {
@@ -509,8 +509,8 @@ class Incident
             break;
 
             default:
-                $bgcolor = 'white';
-                $fgcolor = 'black';
+                $bgcolor = 'fff';
+                $fgcolor = '000';
                 $name_risk='-';
             break;
         }
@@ -679,7 +679,7 @@ class Incident
                 OSS_PUNC,
                 OSS_SPACE,
                 OSS_NULLABLE,
-                'illegal:' . _("Nessus ID")
+                'illegal:' . _("Plugin ID")
             ) ,
             'risk' => array(
                 OSS_LETTER,
@@ -2295,7 +2295,7 @@ class Incident
 
 
     public function __insert($conn, $title, $type, $submitter, $priority, $ref, $event_start, $event_end, $in_charge = '')
-    {
+    {   
         $user = Session::get_session_user();
 
         if($in_charge == '')
@@ -3519,7 +3519,6 @@ class Incident
             "Alarm"          => 'incident.ref="Alarm"',
             "Custom"         => 'incident.ref="Custom"',
             "Event"          => 'incident.ref="Event"',
-            "Metric"         => 'incident.ref="Metric"',
             "Anomaly"        => 'incident.ref="Anomaly"',
             "Vulnerability"  => 'incident.ref="Vulnerability"'
         );

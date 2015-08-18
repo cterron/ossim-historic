@@ -129,6 +129,19 @@ class AVConfigParser():
         except Exception, e:
             self.__sections.clear()
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.EXCEPTION, str(e))
+
+        if self.__sections['sensor']['detectors'] != '':
+            detector_plugin_list = self.__sections['sensor']['detectors']
+            detector_plugin_list = detector_plugin_list.replace(' ','')
+            detector_plugin_list = detector_plugin_list.split(',')
+
+            detector_plugin_list = ["AlienVault_NIDS" if p == "suricata" else p for p in detector_plugin_list]
+            detector_plugin_list = ["AlienVault_HIDS" if p == "ossec-single-line" else p for p in detector_plugin_list]
+            detector_plugin_list = ["availability_monitoring" if p == "nagios" else p for p in detector_plugin_list]
+            detector_plugin_list = ["AlienVault_HIDS-IDM" if p == "ossec-idm-single-line" else p for p in detector_plugin_list]
+
+            self.__sections['sensor']['detectors'] = ', '.join(detector_plugin_list)
+
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SUCCESS)
 
 
@@ -236,6 +249,18 @@ class AVConfigParser():
                 sorted_keys = sorted(self.__sections[section].keys())
                 for key in sorted_keys:
                     value = self.__sections[section][key]
+
+                    if section == 'sensor' and key == 'detectors' and value !='':
+                        detector_plugin_list = value.replace(' ','')
+                        detector_plugin_list = detector_plugin_list.split(',')
+
+                        detector_plugin_list = ["suricata" if p == "AlienVault_NIDS" else p for p in detector_plugin_list]
+                        detector_plugin_list = ["ossec-single-line" if p == "AlienVault_HIDS" else p for p in detector_plugin_list]
+                        detector_plugin_list = ["nagios" if p == "availability_monitoring" else p for p in detector_plugin_list]
+                        detector_plugin_list = ["ossec-idm-single-line" if p == "AlienVault_HIDS-IDM" else p for p in detector_plugin_list]
+
+                        value = ', '.join(detector_plugin_list)
+
                     fp.write("%s=%s\n" % (key, str(value).replace('\n', '\n\t')))
                 fp.write("\n")
         except Exception, e:

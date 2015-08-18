@@ -234,17 +234,33 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
         if ($edit_mode == TRUE)
         {
             $linked_url  = "javascript:void(0);";
-            $r_url       = '';
+            $r_url       = "javascript:void(0);";
             $v_url       = "javascript:void(0);";
             $a_url       = "javascript:void(0);";
         }
         else
         {
             // Risk link
-            $gtype = ($ri_data['asset_type'] == 'net' || $ri_data['asset_type'] == 'net_group' || $ri_data['asset_type'] == 'netgroup') ? 'net' : 'host';
-
-            $r_url = "GB_show('".Util::js_entities(_('Indicator Risk'))."', '/ossim/control_panel/show_image.php?id=".$ri_data['asset_id']."&range=week&what=compromise&start=N-1Y&end=N&type=$gtype&zoom=1','400','70%');";
-
+            $alarm_query = '';
+            if ($ri_data['asset_type'] == 'host')
+            {
+                $alarm_query .= "&host_id=".$ri_data['asset_id'];
+            }
+            elseif ($ri_data['asset_type'] == 'net')
+            {
+                $alarm_query .= "&net_id=".$ri_data['asset_id'];
+            }
+            elseif ($ri_data['asset_type'] == 'sensor')
+            {
+                $alarm_query .= "&sensor_query=".$ri_data['asset_id'];
+            }
+            elseif ($ri_data['asset_type'] == 'host_group' || $ri_data['asset_type'] == 'hostgroup')
+            {
+                $alarm_query .= "&asset_group=".$ri_data['asset_id'];
+            }
+            
+            $r_url = Menu::get_menu_url("/ossim/alarm/alarm_console.php?hide_closed=1".$alarm_query, 'analysis', 'alarms', 'alarms');
+            
             // Vulnerability link
             if ($ri_data['asset_type'] == 'host_group' || $ri_data['asset_type'] == 'hostgroup')
             {
@@ -440,11 +456,7 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
         {
             $ri_html .= '<table border="0" cellspacing="0" cellpadding="2" style="text-align:center; margin:auto;">
                             <tr>
-                                <td>
-                                    <a class="ne11" onclick="'.$r_url.'" href="javascript:void(0);">
-                                        <img src="images/'.$r_value.'.gif" border="0"/>
-                                    </a>
-                                </td>
+                                <td><a class="ne11" href="'.$r_url.'"><img src="images/'.$r_value.'.gif" border="0"/></a></td>
                                 <td><a class="ne11" href="'.$v_url.'"><img src="images/'.$v_value.'.gif" border="0"/></a></td>
                                 <td><a class="ne11" href="'.$a_url.'"><img src="images/'.$a_value.'.gif" border="0"/></a></td>
                             </tr>
@@ -455,7 +467,7 @@ function draw_html_content($conn, $ri_data, $edit_mode = FALSE)
             $ri_html .= '
                 <table border="0" cellspacing="0" cellpadding="2" style="text-align:center; margin:auto;">
                     <tr>
-                        <td><a class="ne11" onclick="'.$r_url.'" href="javascript:void(0);">R</a></td>
+                        <td><a class="ne11" href="'.$r_url.'">R</a></td>
                         <td><a class="ne11" href="'.$v_url.'">V</a></td>
                         <td><a class="ne11" href="'.$a_url.'">A</a></td>
                     </tr>

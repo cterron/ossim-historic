@@ -56,11 +56,7 @@ f_check_service()
 						PRIO_S="91"
 						PRIO_K="10"
 					;;					
-					ntop)
-						PRIO_S="91"
-						PRIO_K="10"
-					;;					
-				    snort)
+				        snort)
 						PRIO_S="91"
 						PRIO_K="10"
 					;;					

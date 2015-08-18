@@ -82,12 +82,18 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 		  border: 1.5px solid #aaaaaa;
 		  padding: 1px 3px;
 		  background-color: #eeccdd;
-		}  			
+		} 
+		
+		.jqplot-yaxis
+		{
+    		text-transform: uppercase;
+		} 			
     </style>
     
     <script class="code" type="text/javascript">
     
-		var links = [<?php echo $links; ?>];
+        var tooltip_legend = <?php echo $tooltip ?>;
+		var links = <?php echo $links ?>;
 
 		function myClickHandler(ev, gridpos, datapos, neighbor, plot) 
 		{
@@ -122,7 +128,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
     				try
                     {
                         var index   = neighbor.data[1] - 1;
-                        var tooltip = plot.axes.yaxis.ticks[index];
+                        var tooltip = tooltip_legend[index] ? tooltip_legend[index] : plot.axes.yaxis.ticks[index];
                         
                         tooltip += '<br/>';
                         tooltip +=  '<strong>(' + format_dot_number(neighbor.data[0]) +  ')</strong>';
@@ -155,7 +161,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 			$.jqplot.eventListenerHooks.push(['jqplotMouseMove', myMoveHandler]);
 			$.jqplot.eventListenerHooks.push(['jqplotClick', myClickHandler]); 
 			
-			line1 = [<?php echo $data ?>];
+			line1 = <?php echo $data ?>;
 			plot1 = $.jqplot('chart', [line1], 
 			{					
 				seriesDefaults:
@@ -177,7 +183,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 				       {
 				           show: false 
 				       }, 
-				       label: '<?php echo $serie; ?>', 
+				       label: "<?php echo $serie ?>", 
 				       shadow: false, 
 				       renderer: $.jqplot.BarRenderer 
 				   }
@@ -187,7 +193,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 				if ($colors != "") 
 				{ 
 				?>
-				   seriesColors: [<?php echo $colors?>], 
+				   seriesColors: [<?php echo $colors ?>], 
 				   
 			    <? 
 			    } 
@@ -207,7 +213,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 					yaxis:
 					{
 						renderer:$.jqplot.CategoryAxisRenderer,
-						ticks:[<?php echo strtoupper($label) ?>]
+						ticks: <?php echo $label ?>
 					}, 
 					xaxis:
 					{

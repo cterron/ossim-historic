@@ -14,7 +14,6 @@
 ini_set("max_execution_time", 0);
 ob_implicit_flush();
 ini_set('include_path', '/usr/share/ossim/include');
-ini_set('memory_limit','1024M');
 
 require_once 'av_init.php';
 

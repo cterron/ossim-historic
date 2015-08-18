@@ -57,7 +57,7 @@ $confirm .= _(', this may take more than a few minutes. Are you sure you would l
         
 ?>
 <div class='wizard_title'>
-    <?php echo _('HIDs Deployment') ?>
+    <?php echo _('HIDS Deployment') ?>
 </div>
 
 <div class='wizard_subtitle'>

@@ -1332,7 +1332,7 @@ class Av_tree
                     );
 
 
-                    $d_title = "<span class='size12n'>".self::utf8_encode(_('Nagios')).": </span><span class='ml3 size12b'>".$nagios_status."</span>";                                   
+                    $d_title = "<span class='size12n'>".self::utf8_encode(_('Availability Monitoring')).": </span><span class='ml3 size12b'>".$nagios_status."</span>";                                   
                                         
                     $t_children[] = array(
                         'title'        => $d_title,

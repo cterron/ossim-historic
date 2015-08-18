@@ -1,7 +1,7 @@
 Template: cd-setup/monitors
 Type: multiselect
-Choices: nessus-monitor ,nmap-monitor ,ntop-monitor ,opennms-monitor ,ossim-monitor ,ping-monitor ,session-monitor ,tcptrack-monitor ,whois-monitor ,wmi-monitor 
-Default: wmi-monitor, nmap-monitor, ntop-monitor, ossim-monitor, ping-monitor, whois-monitor, malwaredomainlist
+Choices: nessus-monitor ,nmap-monitor ,opennms-monitor ,ossim-monitor ,ping-monitor ,session-monitor ,tcptrack-monitor ,whois-monitor ,wmi-monitor 
+Default: wmi-monitor, nmap-monitor, ossim-monitor, ping-monitor, whois-monitor, malwaredomainlist
 Description: There are two types of plugins available for OSSIM Agent: Monitors and Detectors.
  The following list displays the MONITORS available. Check the plugins you load with OSSIM Agent
 

@@ -139,7 +139,7 @@ class Ossec_agent
     }
 
 
-     /**
+    /**
      * This function returns the last IP of OSSEC agent
      *
      * @param string  $sensor_id   Sensor ID (Table alienvault.sensor)
@@ -151,7 +151,7 @@ class Ossec_agent
      */
     public static function get_last_ip($sensor_id, $agent)
     {
-        $last_ip = (Asset_host_ips::valid_ip($agent['ip'])) ? $agent['ip'] : '';
+        $last_ip = (Asset_host_ips::valid_ip($agent['ip_cidr'])) ? $agent['ip_cidr'] : '';
 
         if (empty($last_ip))
         {
@@ -316,23 +316,21 @@ class Ossec_agent
      * @param string  $sensor_id    Sensor ID (Table alienvault.sensor)
      * @param string  $agent_name   Agent name
      * @param string  $agent_ip     Ip address
+     * @param string  $asset_id     Asset related to agent
      *
      * @throws Exception  If an error occurred
      *
      * @return array
      */
-    public static function create($sensor_id, $agent_name, $agent_ip)
+    public static function create($sensor_id, $agent_name, $agent_ip, $asset_id)
     {
-        /************************************************************
-        ******************** Create OSSEC Agent *********************
-        *************************************************************/
-
         $new_agent = array();
 
+        $agent_ip = strtolower($agent_ip);
         $agent_ip = ($agent_ip == 'any') ? '0.0.0.0/0' : $agent_ip;
 
         $client   = new Alienvault_client();
-        $response = $client->sensor($sensor_id)->create_ossec_agent($agent_name, $agent_ip);
+        $response = $client->sensor($sensor_id)->create_ossec_agent($agent_name, $agent_ip, $asset_id);
         $response = @json_decode($response, TRUE);
 
         if (!$response || $response['status'] == 'error')
@@ -342,100 +340,7 @@ class Ossec_agent
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
 
-        if (!empty($response['data']['agent_detail'][0]))
-        {
-            $new_agent = explode(',', $response['data']['agent_detail'][0]);
-        }
-
-        /*************************************************************
-        ***** Add Agent IP/CIDR to asset inventory automatically *****
-        **************************************************************/
-
-        if (Session::can_i_create_assets())
-        {
-            $db   = new ossim_db();
-            $conn = $db->connect();
-
-            //Get CTX
-            $conf = $GLOBALS['CONF'];
-
-            if (!$conf)
-            {
-                $conf = new Ossim_conf();
-                $GLOBALS['CONF'] = $conf;
-            }
-
-            $default_ctx = str_replace('-', '', strtoupper($conf->get_conf('default_context_id')));
-
-            $sensor_ctxs = Av_sensor::get_ctx_by_id($conn, $sensor_id);
-
-            $ctx = $default_ctx;
-
-            if (is_array($sensor_ctxs) && !empty($sensor_ctxs))
-            {
-                $ctx = (array_key_exists($default_ctx, $sensor_ctxs)) ? $default_ctx : key($sensor_ctxs);
-            }
-
-            //Sensors
-            $sensors = array($sensor_id);
-
-            if (Asset_host_ips::valid_ip($agent_ip))
-            {
-                $host_ids = Asset_host::get_id_by_ips($conn, $agent_ip, $ctx);
-
-                // There is no host with this IP
-                if (!is_array($host_ids) || empty($host_ids))
-                {
-                    try
-                    {
-                        $id   = Util::uuid();
-                        $host = new Asset_host($conn, $id);
-                        $host->set_name($agent_name);
-                        $host->set_ctx($ctx);
-
-                        $ips = array();
-                        $ips[$agent_ip] = array(
-                        'ip'  => $agent_ip,
-                        'mac' => NULL
-                        );
-
-                        $host->set_ips($ips);
-                        $host->set_descr('Ossec Agent');
-                        $host->set_sensors($sensors);
-                        $host->save_in_db($conn);
-                    }
-                    catch(Exception $e)
-                    {
-                        ;
-                    }
-                }
-            }
-            elseif (Asset_net::valid_cidr($agent_ip))
-            {
-                $net_ids = Asset_net::get_id_by_ips($conn, $agent_ip, $ctx);
-
-                if (!is_array($net_ids) || empty($net_ids))
-                {
-                    try
-                    {
-                        $id  = Util::uuid();
-                        $net = new Asset_net($id);
-                        $net->set_name($agent_name);
-                        $net->set_ctx($ctx);
-                        $net->set_ips($agent_ip);
-                        $net->set_descr('Ossec Agent');
-                        $net->set_sensors($sensors);
-                        $net->save_in_db($conn);
-                    }
-                    catch(Exception $e)
-                    {
-                        ;
-                    }
-                }
-            }
-
-            $db->close();
-        }
+        $new_agent = $response['data']['agent_detail'];
 
         return $new_agent;
     }
@@ -642,7 +547,7 @@ class Ossec_agent
      * This function deploys a Windows agent on a remote host
      *
      * @param  string  $sensor_id   Sensor ID (Table alienvault.sensor)
-     * @param  array   $d_data      Deployment data  (agent_name, agent_ip, user, domain, pass)
+     * @param  array   $d_data      Deployment data  (asset_id, w_ip, w_user, w_password, w_domain, agent_id)
      *
      * @throws Exception  If there is a connection or API error
      *
@@ -652,7 +557,7 @@ class Ossec_agent
     {
         $client = new Alienvault_client();
 
-        $response = $client->sensor($sensor_id)->launch_ossec_deploy($d_data['agent_name'], $d_data['agent_ip'], $d_data['user'], $d_data['domain'], $d_data['pass']);
+        $response = $client->sensor($sensor_id)->launch_ossec_deploy($d_data['asset_id'], $d_data['w_ip'], $d_data['w_user'], $d_data['w_password'], $d_data['w_domain'], $d_data['agent_id']);
         $response = @json_decode($response, TRUE);
 
         if (!$response || $response['status'] == 'error')
@@ -695,14 +600,16 @@ class Ossec_agent
             {
                 $data = array(
                     'status' => 'success',
-                    'data'   => _('Deployment completed successfully')
+                    'data'   => _('HIDS Agent has been deployed')
                 );
             }
             else
             {
+                preg_match('/.*reason:\s+(.*)/i', $response['data']['job_result'][1], $found);
+
                 $data = array(
                     'status' => 'error',
-                    'data'   => _($response['data']['job_result'][1])
+                    'data'   => sprintf(_('Unable to deploy HIDS agent. %s'), $found[1])
                 );
             }
         }
@@ -710,57 +617,52 @@ class Ossec_agent
         {
             $data = array(
                 'status' => 'error',
-                'data'   => _('Error! Deployment could not be completed')
+                'data'   => _('Unable to deploy HIDS agent')
             );
-
-            $data['data']['help'] = '<div style="text-align: left; padding-left: 10px;">'._('OSSEC installation failed. Please make sure that:').'</div>
-                                 <div style="text-align: left; padding-left: 5px;">
-                                    <ul>
-                                        <li>'.('The target is running Windows XP or above').'.</li>
-                                        <li>'.('The target is not running a Firewall blocking the incoming connections').'.</li>
-                                        <li>'.('The user entered has enough permissions to install software in the target').'.</li>
-                                        <li>'.('If the target is NOT a member of a Windows domain, User Account Control (UAC) must be disabled').'.</li>
-                                    </ul>
-                                 </div>';
         }
         else
         {
             $data = array(
                 'status' => 'in_progress',
-                'data'   => _('Installing OSSEC agent')
+                'data'   => _('HIDS deployment is running')
             );
         }
+
+
+        if ($data['status'] == 'error')
+        {
+            $data['help'] = 'Please check the <span class="bold" id="go_to_mc">Message Center</span> for details';
+        }
+
 
         return $data;
     }
 
 
     /**
-     * This function returns information about last created agent within an agent set
+     * This function binds an asset with an agent
+     *
+     * @param string   $sensor_id   Sensor ID (Table alienvault.sensor)
+     * @param string   $agent_id    Agent ID
+     * @param string   $asset_id    Asset related to agent
      *
      * @return array
      */
-    public static function get_last_agent($agents)
+    public static function link_to_asset($sensor_id, $agent_id, $asset_id)
     {
-        $data = array('', array());
+        $client = new Alienvault_client();
 
-        if (is_array($agents) && !empty($agents))
+        $response = $client->sensor($sensor_id)->link_ossec_agent_to_asset($agent_id, $asset_id);
+        $response = @json_decode($response, TRUE);
+
+        if (!$response || $response['status'] == 'error')
         {
-            $agent_ids = array_keys($agents);
-            $size = count($agent_ids);
+            $exp_msg = $client->get_error_message($response);
 
-            for ($i = $size; $i>=0; $i--)
-            {
-                if (is_numeric($agent_ids[$i]))
-                {
-                    $data = array($agent_ids[$i], $agents[$agent_ids[$i]]);
-
-                    break;
-                }
-            }
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
 
-        return $data;
+        return $response['data'];
     }
 
 
@@ -776,66 +678,108 @@ class Ossec_agent
     {
         $path = '/ossim/pixmaps';
 
-        if (preg_match('/Local$/', $agent['status']) == FALSE)
+        $ip_address = $agent['ip_cidr'];
+        $asset_id   = $agent['host_id'];
+
+        $is_local_agent = ($ip_address == '127.0.0.1' || $ip_address == Util::get_default_admin_ip());
+
+        $is_windows_os = FALSE;
+
+        if (valid_hex32($asset_id))
         {
-            $key    = "<a id='_key##".$agent_id."'><img src='$path/key--arrow.png' align='absmiddle' class='action_info' alt='"._('Extract Key')."' title='"._('Extract Key')."'/></a>";
+            $db   = new ossim_db();
+            $conn = $db->connect();
 
-            $delete = "<a id='_del##".$agent_id."'><img src='$path/delete.gif' align='absmiddle' class='action_info' alt='"._('Delete Agent')."' title='"._('Delete Agent')."'/></a>";
+            $os_filters = array(
+                'where' => 'h.id = UNHEX("'.$asset_id.'")
+                    AND (host_properties.value LIKE "windows%" OR host_properties.value LIKE "microsoft%")'
+            );
 
-            $w_installer = "<a id='_w_installer_##".$agent_id."'><img src='$path/download_windows.png' align='absmiddle' class='action_info' alt='"._("Download preconfigured agent for Windows")."' title='"._("Download preconfigured agent for Windows")."'/></a>";
+            list($os_list, $total_os) = Asset_host_properties::get_property_values($conn, 3, $os_filters);
 
-            $u_installer = "<a id='_u_installer_##".$agent_id."'><img src='$path/download_linux.png' align='absmiddle' class='action_info' alt='"._('Download preconfigured agent for UNIX')."' title='"._('Download preconfigured agent for UNIX')."'/></a>";
+            $is_windows_os = ($total_os > 0);
 
-            $restart = "<a id='_restart##".$agent_id."'><img src='$path/clock.png' align='absmiddle' class='action_info' alt='"._('Restart Agent')."' title='"._('Restart Agent')."'/></a>";
-        }
-        else
-        {
-            $key    = "<span class='unbind'><img src='$path/key--arrow.png' align='absmiddle' class='action_info' alt='"._('Extract Key')."' title='"._('Extract Key')."'/></span>";
-
-            $delete = "<span class='unbind'><img src='$path/delete.gif' align='absmiddle' class='action_info' alt='"._('Delete Agent')."' title='"._('Delete Agent')."'/></span>";
-
-            $w_installer = "<span class='unbind'><img src='$path/download_windows.png' align='absmiddle' class='action_info' alt='"._('Download not available')."' title='"._('Download not available')."'/></span>";
-
-            $u_installer = "<span class='unbind'>
-                               <img src='$path/download_linux.png' align='absmiddle' class='action_info' alt='"._('Download not available')."' title='"._('Download not available')."'/></span>";
-
-            $restart = "<span class='unbind'><img src='$path/clock.png' align='absmiddle' class='action_info' alt='"._('Restart Agent')."' title='"._('Restart Agent')."'/></span>";
+            $db->close();
         }
 
+        $actions = array(
+            'restart' => array(
+                'perms' => (!$is_local_agent),
+                'title' => _('Restart Agent'),
+                'img'   => "clock.png",
+                'id'    => "_restart_##_$agent_id"
+            ),
+            'integrity' => array(
+                'perms' => TRUE,
+                'title' => _('Integrity/rootkit checking'),
+                'img'   => "tick-circle.png",
+                'id'    => "_integrity_##_$agent_id"
+            ),
+            'extract_key' => array(
+                'perms' => (!$is_local_agent),
+                'title' => _('Extract Key'),
+                'img'   => "key--arrow.png",
+                'id'    => "_key_##_$agent_id"
+            ),
+            'files_modified' => array(
+                'perms' => TRUE,
+                'title' => _('Modified Files'),
+                'img'   => "file.png",
+                'id'    => "_file_##_$agent_id"
+            ),
+            'reg_entries' => array(
+                'perms' => (!$is_local_agent && $is_windows_os),
+                'title' => _('Modified registry entries'),
+                'img'   => "registry.gif",
+                'id'    => "_reg_##_$agent_id"
+            ),
+            'rootcheck' => array(
+                'perms' => TRUE,
+                'title' => _('Rootcheck'),
+                'img'   => "radar.gif",
+                'id'    => "_rchk_##_$agent_id"
+            ),
+            'installer' => array(
+                'perms' => (!$is_local_agent && $is_windows_os),
+                'title' => _('Download preconfigured agent for Windows'),
+                'img'   => "download_windows.png",
+                'id'    => "_w_installer_##_$agent_id"
+            ),
+            'deployment' => array(
+                'perms' => (!$is_local_agent && $is_windows_os),
+                'title' => _('Automatic deployment for Windows OS'),
+                'img'   => "w_installer.png",
+                'id'    => "_w_deployment_##_".base64_encode($agent_id.'###'.$asset_id)
+            ),
+            'link' => array(
+                'perms' => (!$is_local_agent),
+                'title' => _('Connect agent to an asset'),
+                'img'   => "link.png",
+                'id'    => "_link_to_asset_##_".base64_encode($agent_id.'###'.$ip_address)
+            ),
+            'delete' => array(
+                'perms' => ($ip_address != '127.0.0.1'),
+                'title' => _('Delete Agent'),
+                'img'   => "delete-big.png",
+                'id'    => "_del_##_$agent_id"
+            )
+        );
 
-        //Automatic deployment only for Non-local agents and IPs (No CIDR and any)
-        if (preg_match('/Local$/', $agent['status']) == FALSE && Asset_host_ips::valid_ip($agent['ip']))
+        $action_buttons = '';
+
+        foreach($actions as $a_data)
         {
-
-            $w_deployment = "<a id='_w_deployment_##".base64_encode($agent['ip'].'###'.$agent['name'])."'><img src='$path/w_installer.png' align='absmiddle' class='action_info' alt='"._('Automatic deployment for Windows')."' title='"._("Automatic deployment for Windows")."'/></a>";
-        }
-        else
-        {
-            $info = _("Automatic deployment not available");
-
-            if (preg_match('/Local$/', $agent['status']))
+            if ($a_data['perms'] == TRUE)
             {
-                $info = _('Automatic deployment not available for Local agent');
+                $action_buttons .= "<a id='".$a_data['id']."'><img class='action_icon w16' src='$path/".$a_data['img']."' alt='".$a_data['title']."' data-title='".$a_data['title']."'/></a>";
             }
-
-            $w_deployment = "<span class='unbind'><img src='$path/w_installer.png' align='absmiddle' class='action_info' alt='".$info."' title='".$info."'/></span>";
+            else
+            {
+                $action_buttons .= "<span class='unbind'><img class='action_icon w16' src='$path/".$a_data['img']."' alt='".$a_data['title']."' data-title='".$a_data['title']."'/></span>";
+            }
         }
 
-
-        $mfiles = "<a id='_file##".$agent_id."'><img src='$path/file.png' align='absmiddle' class='action_info' alt='"._('Modified Files')."' title='"._('Modified Files')."'/></a>";
-
-        $mreg   = "<a id='_reg##".$agent_id."'><img src='$path/registry.gif' align='absmiddle' class='action_info' alt='"._('Modified Reg. Entries')."' title='"._('Modified Reg. Entries')."'/></a>";
-
-        $rchk   = "<a id='_rchk##".$agent_id."'><img src='$path/radar.gif' align='absmiddle' class='action_info' alt='"._('Rootcheck')."' title='"._('Rootcheck')."'/></a>";
-
-        $check   = "<a id='_check##".$agent_id."'><img src='$path/tick-circle.png' align='absmiddle' class='action_info' alt='"._('Integrity/rootkit checking')."' title='"._('Integrity/rootkit checking')."'/></a>";
-
-        /*
-            Note: OSSEC agent for UNIX not available yet
-            return $restart.$check.$key.$mfiles.$mreg.$rchk.$w_installer.$w_deployment.$u_installer.$delete;
-        */
-
-        return $restart.$check.$key.$mfiles.$mreg.$rchk.$w_installer.$w_deployment.$delete;
+        return $action_buttons;
     }
 
 
@@ -905,7 +849,7 @@ class Ossec_agent
             $new_conf = preg_replace($pattern, '<email_notification>no</email_notification>', $new_conf);
 
             $system_name = (Session::is_pro()) ? 'AlienVault' : 'OSSIM';
-            $warning_msg = _('OSSEC email notification is not supported. Please, use '.$system_name.' email notifications instead').'.';
+            $warning_msg = _('HIDS email notification is not supported. Please, use '.$system_name.' email notifications instead').'.';
 
             $data['status'] = 'warning';
             $data['msg']    = _('Agent configuration file updated with warnings:').'<br/><br/>'. $warning_msg;

@@ -80,11 +80,21 @@ if (POST('delete_directive_id') != "") {
 	    die(ossim_error());
 	}
 
-	if ($directive_editor->delete_directive(POST('delete_directive_id'), POST('file'))) {
-		$msg_success = _("The directive was successfully deleted");
-	} else {
-		$msg_error = _("Unable to delete this directive");
-	}
+    // Check if the directive belongs to a DS Group
+    list($can_delete, $can_delete_msg) = $directive_editor->can_delete_directive(POST('delete_directive_id'));
+    
+    if (!$can_delete)
+    {
+        $msg_error = $can_delete_msg;
+    }
+    elseif ($directive_editor->delete_directive(POST('delete_directive_id'), POST('file')))
+    {
+        $msg_success = _("The directive was successfully deleted");
+    }
+    else
+    {
+        $msg_error = _("Unable to delete this directive");
+    }
 }
 
 if (POST('clone_directive_id') != "") {
@@ -238,10 +248,10 @@ $(document).ready(function(){
     });
 
 	<?php if ($msg_success != "") { ?>
-	notify('<?php echo $msg_success ?>', 'nf_success');
+    show_notification('directives_notif', "<?php echo $msg_success ?>", 'nf_success', 5000);
 	<?php } ?>
 	<?php if ($msg_error != "") { ?>
-	notify('<?php echo $msg_error ?>', 'nf_error');
+    show_notification('directives_notif', "<?php echo $msg_error ?>", 'nf_error', 5000);
 	<?php } ?>
 
 
@@ -536,6 +546,9 @@ function rules_postload(dir_id, file, reset) {
 
 </head>
 <body style="margin:0px;">
+
+<div id='directives_notif'></div>
+
 <form method="post" id="actionform">
 <input type="hidden" name="engine_id" id="engine_id" value="<?php echo $engine_id ?>" />
 <input type="hidden" name="file" id="file" value="" />

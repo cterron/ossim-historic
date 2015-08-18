@@ -1032,16 +1032,17 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
             $in_charge_name = format_user($in_charge);
         }
 
-        $transferred = FALSE;
+        $is_transferred = FALSE;
         if (!empty($transferred))
         {
+            $is_transferred = TRUE;
             if ($pro && valid_hex32($transferred))
             {
                 $transferred_name = Acl::get_entity_name($conn, $transferred);
 
                 if ($transferred_name == _('Unknown entity'))
                 {
-                    $transferred = FALSE;
+                    $is_transferred = FALSE;
                 }
             }
             else
@@ -1132,7 +1133,7 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
                     </tr>
 
                     <?php
-                    if (!$transferred)
+                    if (!$is_transferred)
                     {
                         ?>
                         <tr>

@@ -1,3 +1,4 @@
+alienvault-firewall/firewall_include usr/share/alienvault-firewall
 alienvault-firewall/iptables etc/network/if-pre-up.d
 alienvault-firewall/aaaaa-header.iptables etc/iptables
 alienvault-firewall/rules001-common.iptables etc/iptables

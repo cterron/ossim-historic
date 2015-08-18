@@ -217,10 +217,8 @@ files: [
 '/etc/alienvault/system-id',
 '/etc/ansible/hosts',
 '/etc/curlrc',
-'/etc/default/suricata',
 '/etc/hostname',
 '/etc/hosts',
-'/etc/init.d/suricata',
 '/etc/ldap/ldap.conf',
 '/etc/localtime',
 '/etc/mailname',
@@ -235,7 +233,6 @@ files: [
 '/etc/squid/squid.conf',
 '/etc/ssl/certs/ossimweb.pem',
 '/etc/ssl/private/ossimweb.key',
-'/etc/suricata/suricata.yaml',
 '/etc/timezone',
 '/etc/wgetrc',
 '/usr/share/alienvault/api/secret.py',
@@ -244,7 +241,9 @@ files: [
 '/var/ossim/ssl/',
 '/var/tmp/wizard_status',
 '/home/avapi/.ssh/',
-'/etc/ossim/ossim.lic'
+'/etc/ossim/ossim.lic',
+'/etc/alienvault/network/vpn.conf',
+'/etc/alienvault/network/interfaces.conf'
 ]
 
 services: [
@@ -263,8 +262,8 @@ services: [
 'asec-machete',
 'alienvault-forward',
 'alienvault-api',
-'ntop',
 'redis-server',
 'memcached',
-'squid3'
+'squid3',
+'alienvault-rhythm'
 ]

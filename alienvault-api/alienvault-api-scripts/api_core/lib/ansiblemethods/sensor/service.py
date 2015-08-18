@@ -29,7 +29,7 @@
 #
 
 """
-Ansible methods for host services (snort, suricata, prads, ntop and ossec)
+Ansible methods for host services (suricata, prads and ossec)
 """
 
 import api_log
@@ -42,47 +42,42 @@ from ansiblemethods.helper import ansible_is_valid_response
 # Pylint thinks that a variable at module scope is a constant
 _ansible = Ansible()  # pylint: disable-msg=C0103
 
+
 def get_service_status_by_ip(system_ip):
-    """Retrieves the processes status for snort, suricata, prads, ntop and ossec
+    """Retrieves the processes status for suricata, prads, and ossec
     Args:
         system_ip(str): System IP
-        
+
     Returns:
         It returns a hastable with the services status
 
     """
     try:
-        processes = {}
-        
-        processes['snort']    = 'down'
-        processes['suricata'] = 'down'
-        processes['ntop']     = 'down'
-        processes['ossec']    = 'down'
-        processes['prads']    = 'down'
-        
-        command = "ps ax | egrep 'snort|suricata|prads|ntop|ossec' | awk '{print $5}' | grep -v egrep"
+        processes = {
+            'AlienVault_NIDS': 'down',
+            'AlienVault_HIDS': 'down',
+            'prads': 'down'
+        }
+
+        command = "ps ax | egrep 'suricata|prads|ossec' | awk '{print $5}' | grep -v egrep"
         response = _ansible.run_module(host_list=[system_ip], module="shell", args=command)
-        
+
         result, msg = ansible_is_valid_response(system_ip, response)
         if not result:
             return False, msg
 
         lines = response['contacted'][system_ip]['stdout'].split("\n")
-    
+
         for line in lines:
-            if re.search('snort', line) is not None:
-                processes['snort'] = 'up'  
-            elif re.search('suricata', line) is not None:
-                processes['suricata'] = 'up'
-            elif re.search('ntop', line) is not None:
-                processes['ntop'] = 'up'
+            if re.search('suricata', line) is not None:
+                processes['AlienVault_NIDS'] = 'up'
             elif re.search('ossec', line) is not None:
-                processes['ossec'] = 'up'
+                processes['AlienVault_HIDS'] = 'up'
             elif re.search('prads', line) is not None:
-                processes['prads'] = 'up'            
-    
+                processes['prads'] = 'up'
+
     except Exception, msg:
         api_log.error("Ansible Error: An error occurred while retrieving processes status for sensor %s: %s" % (str(system_ip), str(msg)))
         return False, str(msg)
-    
+
     return True, processes

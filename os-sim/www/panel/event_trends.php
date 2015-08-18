@@ -130,8 +130,8 @@ function SIEM_trends_week($param = '')
 	} 
 	elseif ($param == 'ossec%') 
 	{
-		$plugins_sql = 'AND acid_event.plugin_id between 7000 and 7999';
-        $plugins     = '7000-7999';
+		$plugins_sql = 'AND acid_event.plugin_id between ' . OSSEC_MIN_PLUGIN_ID . ' AND ' . OSSEC_MAX_PLUGIN_ID;
+        $plugins     = OSSEC_MIN_PLUGIN_ID . '-' . OSSEC_MAX_PLUGIN_ID;
 	}
 	
 	$sqlgraph = "SELECT SUM(acid_event.cnt) as num_events, day(convert_tz(timestamp,'+00:00','$tzc')) AS intervalo, monthname(convert_tz(timestamp,'+00:00','$tzc')) AS suf 

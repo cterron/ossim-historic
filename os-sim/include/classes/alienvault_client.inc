@@ -141,6 +141,33 @@ class Alienvault_client
 
         return $error_msg;
     }
+    
+    
+    /**
+     * This function parse the API json response string
+     *
+     * @param array  Result of parsing the response: success flag and data result.
+     *
+     * @return string
+     */
+    public function check_response($response)
+    {        
+        $response = @json_decode($response, TRUE);
+        
+        if (!$response || $response['status'] == 'error')
+        {
+            $success = FALSE;
+            $data    = $this->get_error_message($response);
+        }
+        else
+        {
+            $success = TRUE;
+            $data    = $response['data'];
+        }
+        
+        return array($success, $data);
+    }
+    
 
 
     /**

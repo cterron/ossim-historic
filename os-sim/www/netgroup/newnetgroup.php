@@ -42,9 +42,7 @@ $validate = array (
 	'ctx'    	  => array('validation'=>'OSS_HEX',                                'e_message' => 'illegal:' . _('Entity')),
 	'nets[]'      => array('validation'=>'OSS_ALPHA',                              'e_message' => 'illegal:' . _('Networks')),
 	'rrd_profile' => array('validation'=>'OSS_ALPHA, OSS_NULLABLE, OSS_PUNC',      'e_message' => 'illegal:' . _('RRD Profile')),
-	'threshold_a' => array('validation'=>'OSS_DIGIT',                              'e_message' => 'illegal:' . _('Threshold A')),
-	'threshold_c' => array('validation'=>'OSS_DIGIT',                              'e_message' => 'illegal:' . _('Threshold C')),
-	'nagios'      => array('validation'=>'OSS_NULLABLE, OSS_DIGIT',                'e_message' => 'illegal:' . _('Nagios')));
+	'nagios'      => array('validation'=>'OSS_NULLABLE, OSS_DIGIT',                'e_message' => 'illegal:' . _('Availability Monitoring')));
 
 	
 if (GET('ajax_validation') == TRUE)
@@ -75,8 +73,6 @@ if (!isset($_POST['ajax_validation_all']) || POST('ajax_validation_all') == FALS
 $ctx		  = POST('ctx');
 $descr        = POST('descr');
 $ngname       = POST('ngname');
-$threshold_a  = POST('threshold_a');
-$threshold_c  = POST('threshold_c');
 $rrd_profile  = POST('rrd_profile');
 
 $networks     = (isset($_POST['nets'] ) && !empty ( $_POST['nets'])) ? Util::clean_array(POST('nets')) : array();
@@ -148,7 +144,7 @@ else
         $db   = new ossim_db();
         $conn = $db->connect();
     	
-        $new_id = Net_group::insert($conn, $ctx, $ngname, $threshold_c, $threshold_a, $rrd_profile, $networks, $descr);
+        $new_id = Net_group::insert($conn, $ctx, $ngname, $rrd_profile, $networks, $descr);
             	        
     	$db->close();
         

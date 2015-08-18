@@ -81,6 +81,7 @@ gboolean        sim_uuid_equal                        (gconstpointer  v1,
                                                        gconstpointer  v2);
 
 gboolean        sim_uuid_is_valid_string              (const gchar   *str);
+gchar *         sim_uuid_to_base64                    (SimUuid *id);
 
 
 #ifdef USE_UNITTESTS

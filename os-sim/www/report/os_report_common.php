@@ -596,7 +596,7 @@ function get_report_data($id = NULL)
         'Net Performance'         => array ('text' => _('Net Performance')),
         'Applications and Systems Failures'  => array ('text' => _('Applications and Systems Failures')),
         'Anomalies'                          => array ('text' => _('Anomalies')),
-        'OpenVAS Vulnerability'              => array ('text' => _('OpenVAS Vulnerability'))
+        'Vulnerability'                      => array ('text' => _('Vulnerability'))
     );
 
 
@@ -615,7 +615,6 @@ function get_report_data($id = NULL)
             'title_page'     => array('id' => 'title_page',    'name' => _('Title Page'),    'report_file' => 'os_reports/Common/titlepage.php'),                       
              'alarm'         => array('id' => 'alarm',         'name' => _('Alarm'),         'report_file' => 'os_reports/Tickets/Alarm.php'),
              'event'         => array('id' => 'event',         'name' => _('Event'),         'report_file' => 'os_reports/Tickets/Event.php'),
-             'metric'        => array('id' => 'metric',        'name' => _('Metric'),        'report_file' => 'os_reports/Tickets/Metric.php'),
              'anomaly'       => array('id' => 'anomaly',       'name' => _('Anomaly'),       'report_file' => 'os_reports/Tickets/Anomaly.php'),
              'vulnerability' => array('id' => 'vulnerability', 'name' => _('Vulnerability'), 'report_file' => 'os_reports/Tickets/Vulnerability.php')
         ),

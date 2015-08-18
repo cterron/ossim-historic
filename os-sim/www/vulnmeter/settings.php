@@ -352,6 +352,7 @@ if ( Vulnerabilities::scanner_type() == 'omp' )
                             notifications_changes('Updating Database', 'database', dmsg.status, dmsg.message);
                             if(dmsg.status != "error") {
                                 var sensor_count = 0;
+                                var hidew = true;
                                 $.each(ids, function(k,v){
                                     notifications_changes('Updating ' + v.name + ' Sensor ', v.id, 'loading', '');
 
@@ -365,6 +366,7 @@ if ( Vulnerabilities::scanner_type() == 'omp' )
 
                                             if (msg == null) {
                                                 status = 'error';
+                                                hidew = false;
                                             }
                                             else {
                                                 status = msg.status;
@@ -376,6 +378,10 @@ if ( Vulnerabilities::scanner_type() == 'omp' )
                                             if(sensor_count == ids.length) {
                                                 $('#update_button').removeAttr("disabled");
                                                 $('#update_button').removeClass("disabled");
+                                                if (hidew && typeof(parent.GB_hide) == 'function')
+                                                {
+                                                    setTimeout('parent.GB_hide()',200);
+                                                }
                                             }
                                         }
                                     });
@@ -473,15 +479,16 @@ if ( Vulnerabilities::scanner_type() == 'omp' )
                     ?>
                     var ids = <?php echo json_encode($sIDs)?>;
 
-                    $.each(ids, function(k,v){
-                    notifications_changes('Updating ' + v.name + ' Sensor ', v.id, 'loading', '');
+                    $.each(ids, function(k,v)
+                    {
+                        notifications_changes('Updating ' + v.name + ' Sensor ', v.id, 'loading', '');
 
-                    $.ajax({
-                        type: 'POST',
-                        url: 'profiles_ajax.php',
-                        dataType: 'json',
-                        data: { sensor_id: v.id, type: 'delete_sensor_profile', sid:pid } ,
-                        success: function(msg) {
+                        $.ajax({
+                            type: 'POST',
+                            url: 'profiles_ajax.php',
+                            dataType: 'json',
+                            data: { sensor_id: v.id, type: 'delete_sensor_profile', sid:pid } ,
+                            success: function(msg) {
                                 var status;
 
                                 if (msg == null) {

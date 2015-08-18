@@ -206,3 +206,14 @@ a.button.av_b_disabled:hover
 {
     background: #E4E4E4;
 }
+
+/* Class to set the cursor to pointer */
+.pointer
+{
+    cursor: pointer;
+}
+
+.cursor_default
+{
+    cursor: default !important;
+}

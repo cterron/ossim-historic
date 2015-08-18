@@ -302,7 +302,7 @@ else
 
     //Showing scan results
     ?>
-
+    <link rel="stylesheet" type="text/css" href="../style/environment/assets/asset_discovery.css"/>
     <div id="summary_container">
 
         <div id='av_info' style='width: 100%;'>

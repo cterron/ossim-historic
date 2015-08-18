@@ -70,7 +70,7 @@ class Asset_host extends Asset
     /**
      * Host operating system
      *
-     * @var    string $os
+     * @var    array $os
      * @access protected
      */
     protected $os;
@@ -131,12 +131,6 @@ class Asset_host extends Asset
             $asset_value = 2;
         }
 
-        $threshold = $conf->get_conf('threshold');
-
-        if ($threshold == '')
-        {
-            $threshold = 30;
-        }
 
         $this->ctx         = Session::get_default_ctx();
         $this->name        = '';
@@ -151,9 +145,7 @@ class Asset_host extends Asset
             'zoom' => 4
         );
         $this->asset_value = $asset_value;
-        $this->threshold_c = $threshold;
-        $this->threshold_a = $threshold;
-        $this->os          = '';
+        $this->os          = array();
         $this->model       = '';
         $this->devices     = new Asset_host_devices($conn, $id);
         $this->sensors     = new Asset_host_sensors($id);
@@ -205,10 +197,10 @@ class Asset_host extends Asset
     /**
      * Function get_os
      *
-     * This function returns host Operating System (Property with ID = 3)
+     * This function returns host Operating System data (Property with ID = 3)
      *
      * @access public
-     * @return string
+     * @return array
      */
     public function get_os()
     {
@@ -259,114 +251,103 @@ class Asset_host extends Asset
 
 
     /**
-    * Function is_hids_enabled
-    *
-    * This function returns HIDS configuration
-    *
-    *   - 0 No IPs are configured (red)
-    *   - 1 All IPs are configured (green)
-    *   - 2 Some IPs are configured (yellow)
-    *
-    * @param object $conn Database access object
-    *
-    * @access public
-    * @return int
-    * @throws Av_exception If a connection error occurred
-    */
-    public function is_hids_enabled($conn)
+     * Function get_hids_status
+     *
+     * This function returns the status of HIDS agent
+     *
+     *   0 --> GRAY:   HIDS agent is not deployed
+     *   1 --> RED:    HIDS agent is deployed with status 'Never Connected'
+     *   2 --> YELLOW: HIDS agent is deployed with status 'Disconnected'
+     *   3 --> GREEN:  HIDS agent is deployed with status 'Active' or 'Active/Local'
+     *
+     * @param object $conn Database access object
+     *
+     * @throws Av_exception If a connection error occurred
+     *
+     * @access public
+     *
+     * @return integer
+     */
+    public function get_hids_status($conn)
     {
         Ossim_db::check_connection($conn);
 
-        $agents      = array();
-        $agent_ips   = array();
-        $agent_cidrs = array();
+        $hids_status = 0;
 
-        $sensors = $this->sensors->get_sensors();
+        $query = "SELECT agent_status FROM hids_agents WHERE host_id = UNHEX(?) ORDER BY agent_status DESC LIMIT 1";
 
-        // Get the agents IPs and CIDRs (For each related sensor)
-        foreach ($sensors as $s_id => $s_data)
+        $params = array($this->get_id());
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
         {
-            $agents = Ossec_agent::get_list($s_id);
-
-            foreach ($agents as $a_data)
-            {
-                $ip_cidr = trim($a_data['ip']);
-
-                if (preg_match("/any|0\.0\.0\.0\/0/", $ip_cidr) == TRUE)
-                {
-                    //Special Case: IP/CIDR is any or 0.0.0.0/0
-
-                    return 1;
-                }
-                elseif (preg_match("/^\d+\.\d+\.\d+\.\d+$/", $ip_cidr) == TRUE)
-                {
-                    //Special case:: Default admin IP is always monitored
-                    if (preg_match("/^127.0.0.1$/", $ip_cidr) == TRUE)
-                    {
-                        $default_admin_ip             = Util::get_default_admin_ip();
-                        $agent_ips[$default_admin_ip] = $default_admin_ip;
-                    }
-
-                    $agent_ips[$ip_cidr] = $ip_cidr;
-                }
-                elseif (preg_match("/^\d+\.\d+\.\d+\.\d+\/\d+$/", $ip_cidr) == TRUE)
-                {
-                    $agent_cidrs[$ip_cidr] = $ip_cidr;
-                }
-            }
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
-        if (!empty($agent_ips) || !empty($agent_cidrs))
+        if (!$rs->EOF)
         {
-            $all_are_hids = TRUE; // All IPs have HIDS enabled
-            $any_is_hids  = FALSE; // True if some IP has HIDS enabled
-
-            // Compare Ips and CIDRs
-            $host_ips = $this->get_ips();
-            $ips      = $host_ips->get_ips();
-
-            foreach ($ips as $ip => $h_data)
-            {
-                $is_in_hids = FALSE;
-
-                // 1-. Is Host IP an Agent IP?
-                if (!empty($agent_ips[$ip]))
-                {
-                    $is_in_hids = TRUE;
-                }
-                else
-                {
-                    // 2-. Do Host IP belong to agent CIDR?
-                    $ip_long = Asset_host_ips::ip2ulong($ip);
-                    foreach ($agent_cidrs as $cidr)
-                    {
-                        $ranges = Cidr::expand_cidr($cidr);
-                        if ($ip_long >= $ranges[0] && $ip_long <= $ranges[1])
-                        {
-                            $is_in_hids = TRUE;
-
-                            break;
-                        }
-                    }
-                }
-
-                if ($is_in_hids == TRUE)
-                {
-                    $any_is_hids = TRUE;
-                }
-                else
-                {
-                    $all_are_hids = FALSE;
-                }
-            }
-
-            if ($any_is_hids == TRUE)
-            {
-                return ($all_are_hids) ? 1 : 2; // GREEN / YELLOW
-            }
+            $hids_status = intval($rs->fields['agent_status']);
+            $hids_status = ($hids_status > 3) ? 3 : $hids_status;
         }
 
-        return 0; // RED
+        return $hids_status;
+    }
+
+
+    /**
+     * Function get_related_hids_agents
+     *
+     * This function returns HIDS agents related to asset
+     *
+     * @param object  $conn        Database access object
+     * @param string  $asset_id    Asset ID
+     * @param string  $sensor_id   [Optional] Sensor ID (Table alienvault.sensor)
+     *
+     * @param object $conn Database access object
+     *
+     * @throws Av_exception If a connection error occurred
+     *
+     * @access public
+     *
+     * @return array
+     */
+    public static function get_related_hids_agents($conn, $asset_id, $sensor_id = NULL)
+    {
+        Ossim_db::check_connection($conn);
+
+        $agents = array();
+
+        $query = "SELECT HEX(sensor_id) AS sensor_id, agent_id, agent_name, agent_ip, agent_status FROM hids_agents WHERE host_id = UNHEX(?)";
+
+        if (!empty($sensor_id))
+        {
+            $query .= " AND sensor_id = UNHEX(?)";
+        }
+
+        $params = array($asset_id, $sensor_id);
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        while (!$rs->EOF)
+        {
+            $agent_key = md5($rs->fields['sensor_id'].'#'.$rs->fields['agent_id']);
+
+            $agents[$agent_key] = array(
+                'sensor_id' => $rs->fields['sensor_id'],
+                'agent_id'  => $rs->fields['agent_id'],
+                'name'      => $rs->fields['agent_name'],
+                'ip_cidr'   => $rs->fields['agent_ip'],
+                'status'    => intval($rs->fields['agent_status'])
+            );
+
+            $rs->MoveNext();
+        }
+
+        return $agents;
     }
 
 
@@ -953,16 +934,16 @@ class Asset_host extends Asset
     /**
      * Function set_os
      *
-     * This function sets host Operating System
+     * This function sets host Operating System data
      *
-     * @param string $os  Host Operating System
+     * @param array $os  Host Operating System data
      *
      * @access public
      * @return void
      */
-    public function set_os($os)
+    public function set_os($os_data)
     {
-        $this->os = $os;
+        $this->os = $os_data;
     }
 
 
@@ -1059,8 +1040,6 @@ class Asset_host extends Asset
         );
 
         $this->asset_value = $rs->fields['asset'];
-        $this->threshold_c = $rs->fields['threshold_c'];
-        $this->threshold_a = $rs->fields['threshold_a'];
 
 
         $filters = array(
@@ -1071,7 +1050,7 @@ class Asset_host extends Asset
         list($properties ,) = Asset_host_properties::get_list($conn, $filters);
         $properties = array_pop($properties);
 
-        $this->os    = $properties[3][0]['value'];
+        $this->os    = $properties[3][0];
         $this->model = $properties[14][0]['value'];
 
 
@@ -1147,8 +1126,6 @@ class Asset_host extends Asset
                     external_host,
                     fqdns,
                     asset,
-                    threshold_c,
-                    threshold_a,
                     rrd_profile,
                     alert,
                     persistence,
@@ -1158,7 +1135,7 @@ class Asset_host extends Asset
                     lon,
                     country,
                     icon)
-                VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         //Host Location
         $location = $this->get_location();
@@ -1187,8 +1164,6 @@ class Asset_host extends Asset
             $this->get_external(),
             $this->get_fqdns(),
             $this->get_asset_value(),
-            $this->get_threshold_c(),
-            $this->get_threshold_a(),
             0,
             0,
             0,
@@ -1220,9 +1195,9 @@ class Asset_host extends Asset
         $model = $this->get_model();
 
         Asset_host_properties::delete_property_from_db($conn, $id, 3);
-        if (!empty($os))
+        if (!empty($os['value']))
         {
-            Asset_host_properties::save_property_in_db($conn, $id, 3, $os, 1);
+            Asset_host_properties::save_property_in_db($conn, $id, 3, $os['value'], $os['source']['id']);
         }
 
         Asset_host_properties::delete_property_from_db($conn, $id, 14);
@@ -1761,8 +1736,8 @@ class Asset_host extends Asset
     public function add_to_groups($conn)
     {
         Ossim_db::check_connection($conn);
-        
-        
+
+
         $query = "REPLACE INTO host_group_reference (
                     SELECT f.asset_id, UNHEX(?)
                         FROM user_component_filter f, host h
@@ -1779,34 +1754,34 @@ class Asset_host extends Asset
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
         // Get affected groups to update history
         $group_ids = array();
-        
+
         $query = "SELECT HEX(f.asset_id) AS group_id
                       FROM user_component_filter f
                       WHERE f.session_id=? AND f.asset_type='group'";
-        
+
         $params = array(session_id());
-        
+
         $rs = $conn->Execute($query, $params);
-        
+
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
         while (!$rs->EOF)
         {
             $group_ids[] = $rs->fields['group_id'];
-        
+
             $rs->MoveNext();
         }
-        
+
         foreach ($group_ids as $group_id)
         {
             $_group_obj = new Asset_group($group_id);
-            
+
             $_group_obj->save_history($conn, 'add', array($this->id));
         }
     }
@@ -1828,8 +1803,7 @@ class Asset_host extends Asset
     public function delete_from_groups($conn)
     {
         Ossim_db::check_connection($conn);
-        
-        
+
         $query = "DELETE hgr FROM host_group_reference hgr, user_component_filter f, host h
             WHERE hgr.host_id = UNHEX(?) AND hgr.host_group_id=f.asset_id AND f.session_id=? AND f.asset_type='group'";
 
@@ -1846,34 +1820,34 @@ class Asset_host extends Asset
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
         // Get affected groups to update history
         $group_ids = array();
-        
+
         $query = "SELECT HEX(f.asset_id) AS group_id
                       FROM user_component_filter f
                       WHERE f.session_id=? AND f.asset_type='group'";
-        
+
         $params = array(session_id());
-        
+
         $rs = $conn->Execute($query, $params);
-        
+
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
         while (!$rs->EOF)
         {
             $group_ids[] = $rs->fields['group_id'];
-        
+
             $rs->MoveNext();
         }
-        
+
         foreach ($group_ids as $group_id)
         {
             $_group_obj = new Asset_group($group_id);
-        
+
             $_group_obj->save_history($conn, 'remove', array($this->id));
         }
     }
@@ -1897,7 +1871,7 @@ class Asset_host extends Asset
      * @return bool
      * @throws Av_exception If a connection error occurred
      */
-    protected static function can_delete($conn, $id)
+    public static function can_delete($conn, $id)
     {
         Ossim_db::check_connection($conn);
 
@@ -2205,6 +2179,14 @@ class Asset_host extends Asset
         $host_ips->load_from_db($conn);
         $ips = array_keys($host_ips->get_ips());
 
+        // Only admins will use sensors to clean plugins related
+        if (Session::am_i_admin())
+        {
+            $host_sensors = new Asset_host_sensors($id);
+            $host_sensors->load_from_db($conn);
+            $sensors = array_keys($host_sensors->get_sensors());
+        }
+
         //Begin transaction
         $conn->StartTrans();
 
@@ -2281,6 +2263,10 @@ class Asset_host extends Asset
         //Host
         $queries[] = 'DELETE FROM host WHERE id = UNHEX(?)';
 
+        //HIDS agents
+        $queries[] = 'UPDATE hids_agents SET host_id = NULL WHERE host_id = UNHEX(?)';
+
+
         foreach ($queries as $query)
         {
             $rs = $conn->Execute($query, $params);
@@ -2290,10 +2276,42 @@ class Asset_host extends Asset
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
         }
-
+        
+        
+        // Clean related plugins
+        if (Session::am_i_admin())
+        {
+            $plugins[$id] = array();
+        
+            foreach ($sensors as $_sensor_id)
+            {
+                try
+                {
+                    Plugin::set_plugins_by_assets($plugins, Util::uuid_format($_sensor_id));
+                }
+                catch (Exception $e)
+                {
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+                }
+            }
+        }
+        
+        
         //Finish transaction
         if ($conn->CompleteTrans())
         {
+            //Reload Nagios
+            try
+            {
+                $nagios_adm = new Nagios_adm();
+                $nagios_adm->reload();
+                $nagios_adm->close();
+            }
+            catch(Exception $e)
+            {
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+            }
+
             //Log action
             $infolog = array($id);
             Log_action::log(25, $infolog);
@@ -2306,7 +2324,7 @@ class Asset_host extends Asset
 
                 try
                 {
-                    self::report_changes($conn, 'hosts');
+                    self::report_changes($conn, 'hosts', TRUE);
                 }
                 catch (Exception $e)
                 {
@@ -2374,7 +2392,6 @@ class Asset_host extends Asset
     */
     public static function bulk_delete($conn, $report_changes = TRUE)
     {
-
         Ossim_db::check_connection($conn);
 
         Util::disable_perm_triggers($conn, TRUE);
@@ -2412,6 +2429,29 @@ class Asset_host extends Asset
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
+        
+        //Get related sensors to plugins clean below
+        //Only admins will use sensors to clean plugins related
+        if (Session::am_i_admin())
+        {
+            $sensors = array();
+            $query   = "SELECT DISTINCT HEX(sensor_id) AS sensor_id FROM host_sensor_reference h, $tmp_table f WHERE f.host_id = h.host_id";
+            $rs      = $conn->Execute($query);
+            
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+            else
+            {
+                while (!$rs->EOF)
+                {
+                    $sensors[] = $rs->fields['sensor_id'];
+                    $rs->MoveNext();
+                }
+            }
+        }
+        
         //Check if there ire hosts belong some policies
         $hosts_belong_policies = FALSE;
 
@@ -2457,6 +2497,10 @@ class Asset_host extends Asset
         $queries[] = "DELETE h.* FROM vuln_nessus_latest_reports h
             LEFT JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
 
+        //Update statements
+        $queries[] = "UPDATE hids_agents ha INNER JOIN $tmp_table f ON f.host_id=ha.host_id SET ha.host_id = NULL";
+
+
         foreach ($queries as $query)
         {
             $rs = $conn->Execute($query);
@@ -2466,10 +2510,55 @@ class Asset_host extends Asset
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
         }
+        
+        
+        // Clean plugins related to deleted hosts
+        if (Session::am_i_admin())
+        {
+            $plugins = array();
+            $query   = "SELECT HEX(host_id) AS host_id FROM $tmp_table";
+            $rs      = $conn->Execute($query);
+        
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+        
+            while (!$rs->EOF)
+            {
+                $plugins[$rs->fields['host_id']] = array();
+                $rs->MoveNext();
+            }
+        
+            foreach ($sensors as $_sensor_id)
+            {
+                try
+                {
+                    Plugin::set_plugins_by_assets($plugins, Util::uuid_format($_sensor_id));
+                }
+                catch(Exception $e)
+                {
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+                }
+            }
+        }
+        
 
         //Finish transaction
         if ($conn->CompleteTrans())
         {
+            //Reload Nagios
+            try
+            {
+                $nagios_adm = new Nagios_adm();
+                $nagios_adm->reload();
+                $nagios_adm->close();
+            }
+            catch(Exception $e)
+            {
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+            }
+
             //Log action
             $infolog = array(_('Policy - Asset deleted massively'));
             Log_action::log(92, $infolog);
@@ -2486,13 +2575,14 @@ class Asset_host extends Asset
 
                 try
                 {
-                    self::report_changes($conn, 'hosts');
+                    self::report_changes($conn, 'hosts', TRUE);
                 }
                 catch(Exception $e)
                 {
                     Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
             }
+            
 
             // Hosts belong a policy
             if ($hosts_belong_policies == TRUE)
@@ -2501,7 +2591,6 @@ class Asset_host extends Asset
 
                 Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
             }
-
         }
         else
         {
@@ -3629,9 +3718,7 @@ class Asset_host extends Asset
                     'fqdns'       => $rs->fields['fqdns'],
                     'external'    => $rs->fields['external_host'],
                     'location'    => $location,
-                    'asset_value' => $rs->fields['asset'],
-                    'threshold_c' => $rs->fields['threshold_c'],
-                    'threshold_a' => $rs->fields['threshold_a']
+                    'asset_value' => $rs->fields['asset']
                 );
 
                 $rs->MoveNext();
@@ -3707,9 +3794,7 @@ class Asset_host extends Asset
                         'fqdns'       => $rs->fields['fqdns'],
                         'external'    => $rs->fields['external_host'],
                         'location'    => $location,
-                        'asset_value' => $rs->fields['asset'],
-                        'threshold_c' => $rs->fields['threshold_c'],
-                        'threshold_a' => $rs->fields['threshold_a'],
+                        'asset_value' => $rs->fields['asset']
                     );
 
                     $rs->MoveNext();
@@ -3749,7 +3834,7 @@ class Asset_host extends Asset
 
         $q_select  = 'host.*';
         $q_where   = 'WHERE 1=1 '.$perms_where;
-        $leftjoins = 'LEFT JOIN host_properties hp ON hp.host_id=host.id AND hp.property_ref=3 LEFT JOIN vuln_job_assets vj ON vj.asset_id=host.id LEFT JOIN host_scan hs ON hs.host_id=host.id AND hs.plugin_id=2007 AND hs.plugin_sid=0';
+        $leftjoins = 'LEFT JOIN host_properties hp ON hp.host_id=host.id AND hp.property_ref=3 LEFT JOIN vuln_job_assets vj ON vj.asset_id=host.id LEFT JOIN hids_agents ha ON ha.host_id=host.id';
 
         if (!empty($filters['where']))
         {
@@ -3778,7 +3863,9 @@ class Asset_host extends Asset
         // Has LIMIT
         if (!empty($filters['limit']))
         {
-            $query = "SELECT DISTINCT $q_select, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, hp.value as os, if(vj.job_id is not null,'Yes','No') as vuln, if(hs.host_id is not null,'Yes','No') as avail
+            $query = "SELECT DISTINCT $q_select, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, hp.value as os,
+                if(vj.job_id is not null,'Yes','No') AS vuln,
+                if(ha.agent_status IN(3,4), 'Connected', if(ha.agent_status > 0,'Disconnected', 'Not Deployed')) AS hids
                 FROM host $leftjoins $tables $q_where";
 
             $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
@@ -3831,11 +3918,9 @@ class Asset_host extends Asset
                     'external'     => $rs->fields['external_host'],
                     'location'     => $location,
                     'asset_value'  => $rs->fields['asset'],
-                    'threshold_c'  => $rs->fields['threshold_c'],
-                    'threshold_a'  => $rs->fields['threshold_a'],
                     'os'           => $rs->fields['os'],
                     'vuln_scan'    => $rs->fields['vuln'],
-                    'availability' => $rs->fields['avail']
+                    'hids'         => $rs->fields['hids']
                 );
 
                 $rs->MoveNext();
@@ -3862,7 +3947,9 @@ class Asset_host extends Asset
 
             for ($i = 0; $i <= $total; $i += $block)
             {
-                $query = ossim_query("SELECT DISTINCT $q_select, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, hp.value as os, if(vj.job_id is not null,'Yes','No') as vuln, if(hs.host_id is not null,'Yes','No') as avail
+                $query = ossim_query("SELECT DISTINCT $q_select, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, hp.value as os,
+                    if(vj.job_id is not null,'Yes','No') as vuln,
+                    if(ha.agent_status IN(3,4), 'Connected', if(ha.agent_status > 0, 'Disconnected', 'Not Deployed')) AS hids
                     FROM host $leftjoins $tables $q_where LIMIT $i, $block");
 
                 $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
@@ -3912,11 +3999,9 @@ class Asset_host extends Asset
                         'external'     => $rs->fields['external_host'],
                         'location'     => $location,
                         'asset_value'  => $rs->fields['asset'],
-                        'threshold_c'  => $rs->fields['threshold_c'],
-                        'threshold_a'  => $rs->fields['threshold_a'],
                         'os'           => $rs->fields['os'],
                         'vuln_scan'    => $rs->fields['vuln'],
-                        'availability' => $rs->fields['avail']
+                        'hids'         => $rs->fields['hids']
                     );
 
                     $rs->MoveNext();
@@ -3955,8 +4040,15 @@ class Asset_host extends Asset
         foreach ($sensors as $sensor_id => $s_data)
         {
             // Get all plugins related to the sensor (Skip the local host)
-            $plugins  = $client->sensor(Util::uuid_format($sensor_id))->get_plugins_by_assets();
-            $plugins  = @json_decode($plugins, TRUE);
+            try
+            {
+                $plugins  = $client->sensor(Util::uuid_format($sensor_id))->get_plugins_by_assets($assets);
+                $plugins  = @json_decode($plugins, TRUE);
+            }
+            catch(Exception $e)
+            {
+                Av_exception::throw_error(Av_exception::USER_ERROR, $e->getMessage());
+            }
 
             if ($plugins['status'] == 'success')
             {
@@ -3971,26 +4063,27 @@ class Asset_host extends Asset
                     {
                         continue;
                     }
-
-                    if (array_key_exists($asset_id, $plugins['data']['plugins']))
+                    
+                    $asset_id_canonical = Util::uuid_format($asset_id);
+                    
+                    if (array_key_exists($asset_id_canonical, $plugins['data']['plugins']))
                     {
-                        $asset_plugins = $plugins['data']['plugins'][$asset_id];
+                        $asset_plugins = $plugins['data']['plugins'][$asset_id_canonical];
 
-                        foreach ($asset_plugins as $plugin_name => $pdata)
+                        foreach ($asset_plugins as $plugin_key => $pdata)
                         {
-                            $vmv    = Software::get_vmv_by_cpe($conn, $pdata['cpe']);
                             $active = Asset_host_devices::check_device_connectivity($conn, $asset_id, $pdata['plugin_id'], $sensor_id, TRUE);
 
                             $aux_data = array(
                                     'asset'          => $_asset_name,
                                     'asset_id'       => $asset_id,
-                                    'vendor'         => $vmv['vendor'],
-                                    'model'          => $vmv['name'],
-                                    'version'        => $vmv['version'],
-                                    'plugin'         => $plugin_name,
+                                    'vendor'         => $pdata['vendor'],
+                                    'model'          => $pdata['model'],
+                                    'version'        => $pdata['version'],
+                                    'plugin_id'      => $pdata['plugin_id'],
+                                    'plugin'         => $pdata['name'],
                                     'sensor'         => $s_data['name'].' ['.$s_data['ip'].']',
                                     'sensor_id'      => $sensor_id,
-                                    'cpe'            => $pdata['cpe'],
                                     'receiving_data' => $active
                             );
 
@@ -4018,8 +4111,8 @@ class Asset_host extends Asset
     /**
      * This function set @disable_host_update variable to enable/disable trigger calc
      *
-     * @param object   $conn            Database access object
-     * @param boolean  $enable          TRUE|FALSE
+     * @param object   $conn     Database access object
+     * @param boolean  $enable   TRUE|FALSE
      *
      * @return boolean
      */

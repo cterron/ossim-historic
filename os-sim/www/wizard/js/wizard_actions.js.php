@@ -1338,7 +1338,7 @@ function load_handler_step_log()
 
         setTimeout(function()
         {
-            av_apply_plugin(apply_plugin_callback, __ajax_path + 'wizard_actions_ajax.php');
+            av_plugin_obj.apply_changes(apply_plugin_callback, __ajax_path + 'wizard_actions_ajax.php');
 
         }, 250);
 
@@ -1354,18 +1354,20 @@ function load_handler_step_log()
 
     $('#step_log').on('click', '.view_links', function()
     {
-        var id     = $(this).parents('tr').data('host');
-        var vendor = $('table.table_plugin_list tbody[data-host="'+id+'"] tr select.vendor option:selected').text();
-        var model  = $('table.table_plugin_list tbody[data-host="'+id+'"] tr select.model option:selected').text();
-        var versn  = $('table.table_plugin_list tbody[data-host="'+id+'"] tr select.version option:selected').text();
-        var cpe    = ''
-
+        var vmv    = $(this).parents('tr').data('vmv').split(':');
+        var vendor = vmv[0];
+        var model  = vmv[1];
+        var versn  = vmv[2];
+        
+        
+        var internet = '';
+        
         if (is_internet_available())
         {
-            cpe    = $(this).parents('tr').data('cpe');
+            internet = 'true';
         }
 
-        var url    = 'extra/instrucctions.php?vendor='+encodeURIComponent(vendor)+'&model='+encodeURIComponent(model)+'&version='+encodeURIComponent(versn)+'&cpe='+encodeURIComponent(cpe);
+        var url    = 'extra/instrucctions.php?vendor='+encodeURIComponent(vendor)+'&model='+encodeURIComponent(model)+'&version='+encodeURIComponent(versn)+'&internet='+internet;
 
         av_window_open(url,
         {
@@ -1446,22 +1448,23 @@ function draw_active_device_table()
 
         $('.plugin_list > tr', this).each(function()
         {
-            var vendor = $('.vendor option:selected', this).text();
-            var model  = $('.model option:selected', this).text();
+            var vendor  = $('.vendor option:selected', this).text();
+            var model   = $('.model option:selected', this).text();
+            var version = $('.version option:selected', this).text();
 
             var type   = $.trim(vendor + " " + model);
 
-            if (type == '')
+            if (version == '')
             {
                 return true;
             }
 
-            var cpe = get_cpe_from_software(this);
+            var vmv = get_vmv_from_software(this);
             var led = '';
 
             var row = $('<tr>', {
                 'data-host': id,
-                'data-cpe' : cpe,
+                'data-vmv' : vmv,
                 'class'    : 'enabled_plugin'
             }).appendTo(device_table);
 
@@ -1523,7 +1526,7 @@ function apply_plugin_callback(data)
 }
 
 
-function get_cpe_from_software(elem)
+function get_vmv_from_software(elem)
 {
     var vendor  = $('select.vendor',  elem).val();
     var model   = $('select.model',   elem).val();
@@ -1596,11 +1599,11 @@ function net_devices_activity()
                 $('#log_devices_list tbody tr').each(function()
                 {
                     var id  = $(this).data('host');
-                    var cpe = $(this).data('cpe');
+                    var vmv = $(this).data('vmv');
 
                     $('.led_plugin',this).addClass('led_green');
 
-                    if (typeof(plugins[id][cpe]) != 'undefined' && plugins[id][cpe] == 1)
+                    if (typeof(plugins[id][vmv]) != 'undefined' && plugins[id][vmv] == 1)
                     {
                         $('.led_host',this).addClass('led_green');
                         active = true;
@@ -1704,7 +1707,7 @@ function load_handler_step_otx()
 
     $('#b_get_otx_token').on('click', function()
     {
-        var url = "https://www.alienvault.com/my-account/customer/signup-or-thanks/?ctype=<?php echo (Session::is_pro()) ? 'usm' : 'ossim' ?>";
+        var url = "<?php echo Otx::OTX_URL_NEW_LOGIN ?>";
 
         av_window_open(url,
         {

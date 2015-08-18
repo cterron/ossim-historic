@@ -64,7 +64,7 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"ET DOS Cisco 514 UDP flood Do
 
 #by kevin ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET DOS Cisco 4200 Wireless Lan Controller Long Authorisation Denial of Service Attempt"; flow:to_server,established; content:"GET"; http_method; nocase; content:"/screens/frameset.html"; fast_pattern; http_uri; nocase; content:"Authorization|3A 20|Basic"; nocase; content:!"|0a|"; distance:2; within:118; isdataat:120,relative; pcre:"/^Authorization\x3A Basic.{120}/Hmi"; reference:url,www.securityfocus.com/bid/35805; reference:url,www.cisco.com/warp/public/707/cisco-amb-20090727-wlc.shtml; reference:cve,2009-1164; reference:url,doc.emergingthreats.net/2010674; classtype:attempted-dos; sid:2010674; rev:10;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET DOS Cisco 4200 Wireless Lan Controller Long Authorisation Denial of Service Attempt"; flow:to_server,established; content:"GET"; http_method; nocase; content:"/screens/frameset.html"; fast_pattern; http_uri; nocase; content:"Authorization|3A 20|Basic"; nocase; content:!"|0a|"; distance:2; within:118; isdataat:120,relative; pcre:"/^Authorization\x3A Basic.{120}/Hmi"; reference:url,www.securityfocus.com/bid/35805; reference:url,www.cisco.com/warp/public/707/cisco-amb-20090727-wlc.shtml; reference:cve,2009-1164; reference:url,doc.emergingthreats.net/2010674; classtype:attempted-dos; sid:2010674; rev:10;)
 
 #by Kevin Ross
 #
@@ -102,7 +102,7 @@ alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET DOS Excessive SMTP MAIL
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET DOS Possible MYSQL GeomFromWKB() function Denial Of Service Attempt"; flow:to_server,established; content:"SELECT"; nocase; content:"geometrycollectionfromwkb"; distance:0; nocase; pcre:"/SELECT.+geometrycollectionfromwkb/si"; reference:url,www.securityfocus.com/bid/37297/info; reference:url,marc.info/?l=oss-security&m=125881733826437&w=2; reference:url,downloads.securityfocus.com/vulnerabilities/exploits/37297.txt; reference:cve,2009-4019; reference:url,doc.emergingthreats.net/2010491; classtype:attempted-dos; sid:2010491; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET DOS Possible MYSQL GeomFromWKB() function Denial Of Service Attempt"; flow:to_server,established; content:"SELECT"; nocase; content:"geometrycollectionfromwkb"; distance:0; nocase; pcre:"/SELECT.+geometrycollectionfromwkb/si"; reference:url,www.securityfocus.com/bid/37297/info; reference:url,marc.info/?l=oss-security&m=125881733826437&w=2; reference:url,downloads.securityfocus.com/vulnerabilities/exploits/37297.txt; reference:cve,2009-4019; reference:url,doc.emergingthreats.net/2010491; classtype:attempted-dos; sid:2010491; rev:2;)
 
 #temp disabled till we figure out all options
 #
@@ -110,11 +110,11 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET DOS Possible MYSQL GeomFr
 
 #by kevin ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET DOS Possible MySQL ALTER DATABASE Denial Of Service Attempt"; flow:established,to_server; content:"ALTER "; nocase; content:"DATABASE"; nocase; within:12; content:"|22|."; distance:0; content:"UPGRADE "; nocase; distance:0; content:"DATA"; nocase; within:8; pcre:"/ALTER.+DATABASE.+\x22\x2E(\x22|\x2E\x22|\x2E\x2E\x2F\x22).+UPGRADE.+DATA/si"; reference:url,securitytracker.com/alerts/2010/Jun/1024160.html; reference:url,dev.mysql.com/doc/refman/5.1/en/alter-database.html; reference:cve,2010-2008; reference:url,doc.emergingthreats.net/2011761; classtype:attempted-dos; sid:2011761; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET DOS Possible MySQL ALTER DATABASE Denial Of Service Attempt"; flow:established,to_server; content:"ALTER "; nocase; content:"DATABASE"; nocase; within:12; content:"|22|."; distance:0; content:"UPGRADE "; nocase; distance:0; content:"DATA"; nocase; within:8; pcre:"/ALTER.+DATABASE.+\x22\x2E(\x22|\x2E\x22|\x2E\x2E\x2F\x22).+UPGRADE.+DATA/si"; reference:url,securitytracker.com/alerts/2010/Jun/1024160.html; reference:url,dev.mysql.com/doc/refman/5.1/en/alter-database.html; reference:cve,2010-2008; reference:url,doc.emergingthreats.net/2011761; classtype:attempted-dos; sid:2011761; rev:2;)
 
 #by kevin ross, mike cox and joel esler
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET DOS Netgear DG632 Web Management Denial Of Service Attempt"; flow:established,to_server; content:"POST"; http_method; nocase; content:"/cgi-bin/firmwarecfg"; http_uri; nocase; reference:url, securitytracker.com/alerts/2009/Jun/1022403.html; reference:cve,2009-2256; reference:url,doc.emergingthreats.net/2010554; classtype:attempted-dos; sid:2010554; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET DOS Netgear DG632 Web Management Denial Of Service Attempt"; flow:established,to_server; content:"POST"; http_method; nocase; content:"/cgi-bin/firmwarecfg"; http_uri; nocase; reference:url, securitytracker.com/alerts/2009/Jun/1022403.html; reference:cve,2009-2256; reference:url,doc.emergingthreats.net/2010554; classtype:attempted-dos; sid:2010554; rev:3;)
 
 #by Bart Roos
 #
@@ -122,11 +122,11 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET DOS Netgear DG632 
 
 #by matt jonkman and waldo kitty
 #
-alert udp $EXTERNAL_NET 123 -> $HOME_NET 123 (msg:"ET DOS Potential Inbound NTP denial-of-service attempt (repeated mode 7 request)"; dsize:1; content:"|17|"; threshold:type limit, count 1, seconds 60, track by_src; reference:url,www.kb.cert.org/vuls/id/568372; reference:cve,2009-3563; reference:url,doc.emergingthreats.net/2010486; classtype:attempted-dos; sid:2010486; rev:2;)
+#alert udp $EXTERNAL_NET 123 -> $HOME_NET 123 (msg:"ET DOS Potential Inbound NTP denial-of-service attempt (repeated mode 7 request)"; dsize:1; content:"|17|"; threshold:type limit, count 1, seconds 60, track by_src; reference:url,www.kb.cert.org/vuls/id/568372; reference:cve,2009-3563; reference:url,doc.emergingthreats.net/2010486; classtype:attempted-dos; sid:2010486; rev:2;)
 
 #by matt jonkman and waldo kitty
 #
-alert udp $EXTERNAL_NET 123 -> $HOME_NET 123 (msg:"ET DOS Potential Inbound NTP denial-of-service attempt (repeated mode 7 reply)"; dsize:4; content:"|97 00 00 00|"; threshold:type limit, count 1, seconds 60, track by_src; reference:url,www.kb.cert.org/vuls/id/568372; reference:cve,2009-3563; reference:url,doc.emergingthreats.net/2010487; classtype:attempted-dos; sid:2010487; rev:2;)
+#alert udp $EXTERNAL_NET 123 -> $HOME_NET 123 (msg:"ET DOS Potential Inbound NTP denial-of-service attempt (repeated mode 7 reply)"; dsize:4; content:"|97 00 00 00|"; threshold:type limit, count 1, seconds 60, track by_src; reference:url,www.kb.cert.org/vuls/id/568372; reference:cve,2009-3563; reference:url,doc.emergingthreats.net/2010487; classtype:attempted-dos; sid:2010487; rev:2;)
 
 #by kevin ross
 #
@@ -249,9 +249,6 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS CVE-2013-0230 Miniupnp
 #alert tcp any any -> $HOME_NET 3128 (msg:"ET DOS Squid-3.3.5 DoS"; flow:established,to_server; content:"Host|3a| "; http_header; pcre:"/^Host\x3a[^\x3a\r\n]+?\x3a[^\r\n]{6}/Hmi"; classtype:attempted-dos; sid:2017154; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DOS Apple CoreText Exploit Specific string"; flow:established,from_server; file_data; content:"|D8 B3 D9 85 D9 8E D9 80 D9 8E D9 91 D9 88 D9 8F D9 88 D9 8F D8 AD D8 AE 20 CC B7 CC B4 CC 90 D8 AE 20 CC B7 CC B4 CC 90 D8 AE 20 CC B7 CC B4 CC 90 D8 AE 20 D8 A7 D9 85 D8 A7 D8 B1 D8 AA D9 8A D8 AE 20 CC B7 CC B4 CC 90 D8 AE|"; reference:url,techcrunch.com/2013/08/29/bug-in-apples-coretext-allows-specific-string-of-characters-to-crash-ios-6-os-x-10-8-apps/; classtype:bad-unknown; sid:2017397; rev:1;)
-
-#
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DOS Trojan.BlackRev V1.Botnet HTTP Login POST Flood Traffic Inbound"; flow:established,to_server; content:"POST"; http_method; content:"User-Agent|3A| Mozilla/4.0 (compatible|3B| Synapse)"; fast_pattern:24,20; http_header; content:"login="; http_client_body; depth:6; content:"$pass="; http_client_body; within:50; threshold: type both, count 5, seconds 60, track by_src; reference:url,www.btpro.net/blog/2013/05/black-revolution-botnet-trojan/; classtype:attempted-dos; sid:2017722; rev:1;)
 
 #
@@ -352,4 +349,13 @@ alert udp $EXTERNAL_NET 1434 -> $HOME_NET any (msg:"ET DOS MC-SQLR Response Inbo
 
 #
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DOS Bittorrent User-Agent inbound - possible DDOS"; flow:established,to_server; content:"User-Agent|3a| Bittorrent"; http_header; threshold: type both, count 1, seconds 60, track by_src; reference:url,torrentfreak.com/zombie-pirate-bay-tracker-fuels-chinese-ddos-attacks-150124/; classtype:attempted-dos; sid:2020702; rev:1;)
+
+#
+alert udp $HOME_NET 5093 -> $EXTERNAL_NET any (msg:"ET DOS Possible Sentinal LM  Application attack in progress Outbound (Response)"; dsize:>1390; content:"|7a 00 00 00 00 00 00 00 00 00 00 00|"; depth:12; threshold: type both,track by_src,count 10,seconds 60; classtype:attempted-dos; sid:2021170; rev:1;)
+
+#
+alert udp $EXTERNAL_NET 5093 -> $HOME_NET any (msg:"ET DOS Possible Sentinal LM Amplification attack (Response) Inbound"; dsize:>1390; content:"|7a 00 00 00 00 00 00 00 00 00 00 00|"; depth:12; threshold: type both,track by_src,count 10,seconds 60; classtype:attempted-dos; sid:2021171; rev:1;)
+
+#
+alert udp $EXTERNAL_NET any -> $HOME_NET 5093 (msg:"ET DOS Possible Sentinal LM Amplification attack (Request) Inbound"; dsize:6; content:"|7a 00 00 00 00 00|"; threshold: type both,track by_dst,count 10,seconds 60; classtype:attempted-dos; sid:2021172; rev:1;)
 

@@ -147,7 +147,7 @@ switch ($type)
 
 		    while (!$rg->EOF) 
 		    {			
-                if ($rg->fields["name"]=="")
+                if ($rg->fields["name"] == "")
                 {
 					$rg->fields["name"] = _("Unknown category");
 				}
@@ -155,13 +155,13 @@ switch ($type)
 		        $data[]  = $rg->fields["num"];
 				$label[] = $rg->fields["osname"];
 
-				$links[] =  "'$link'";
+				$links[] = $link;
                 
 				$rg->MoveNext();
 		    }
 		}
 		
-		$serie  = 'Operating Systems';
+		$serie  = _('Operating Systems');
 		
 		$colors = get_widget_colors(count($data));
 
@@ -184,7 +184,7 @@ switch ($type)
 		    while (!$rg->EOF) 
 		    {
 		    
-                if ($rg->fields["name"]=="")
+                if ($rg->fields["name"] == "")
                 {
 					$rg->fields["name"] = _("Unknown category");
 				}
@@ -192,13 +192,13 @@ switch ($type)
 		        $data[]  = $rg->fields["num"];
 				$label[] = $rg->fields["name"];
 				
-				$links[] =  "'$link'";
+				$links[] = $link;
 
 				$rg->MoveNext();
 		    }
 		}
 		
-		$serie  = 'Installed Software';
+		$serie  = _('Installed Software');
 		
 		$colors = get_widget_colors(count($data));
 

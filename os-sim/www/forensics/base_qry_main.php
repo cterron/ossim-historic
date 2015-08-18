@@ -72,6 +72,7 @@ $et = new EventTiming($debug_time_mode);
 $cs = new CriteriaState("base_qry_main.php", "&amp;new=1&amp;submit=" . gettext("Query+DB"));
 
 $new = ImportHTTPVar("new", VAR_DIGIT);
+$pag = ImportHTTPVar("pag", VAR_DIGIT);
 
 /* This call can include many values. */
 $submit = Util::htmlentities(ImportHTTPVar("submit", VAR_DIGIT | VAR_PUNC | VAR_LETTER, array(
@@ -286,9 +287,10 @@ if ($event_cache_auto_update == 1) UpdateAlertCache($db);
 <?php
 /* Dump some debugging information on the shared state */
 /* a browsing button was clicked -> increment view */
-if (is_numeric($submit))
+if (is_numeric($submit) || $pag!='')
 {
-    $qs->MoveView($submit);
+    $pagn = (is_numeric($submit)) ? $submit : $pag;
+    $qs->MoveView($pagn);
     $submit = gettext("Query DB");
 }
 //echo $submit." ".$qs->isCannedQuery()." ".$qs->GetCurrentSort()." ".$_SERVER["QUERY_STRING"];

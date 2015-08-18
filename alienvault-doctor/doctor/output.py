@@ -36,8 +36,14 @@ BLUE = '\033[1m\x1B[34m%s\033[0m'
 GREEN = '\033[1m\x1B[32m%s\033[0m'
 YELLOW = '\033[1m\x1B[33m%s\033[0m'
 RED = '\033[1m\x1B[31m%s\033[0m'
+MAGENTA = '\033[1m\x1B[35m%s\033[0m'
 EMPH = '\033[1m\x1B[37m%s\033[0m'
 __enabled = True
+
+
+def log_debug(string):
+    with open("/tmp/doctorlog", "a") as f:
+        f.write("%s\n" % string)
 
 
 class Output (object):

@@ -24,12 +24,6 @@ case "$1" in
 	done
 
 ## run original update scripts:
-# snort update:
-	srdpi="/var/lib/dpkg/info/snort-rules-default.postinst"
-	if [ -f "$srdpi" ]; then
-		echo " snort plugin additional update:"
-		/bin/bash "$srdpi" configure
-	fi
 
 # suricata update:
 	srdpi="/var/lib/dpkg/info/suricata-rules-default.postinst"

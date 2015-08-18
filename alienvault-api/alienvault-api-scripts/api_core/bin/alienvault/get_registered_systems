@@ -89,17 +89,18 @@ if __name__ == "__main__":
         print "Cannot retrieve system info"
         exit (-1)
 
-    system_data = dict([(x[1]['uuid'], {'hostname': x[1]['hostname'], 'admin_ip': x[1]['admin_ip'], 'vpn_ip': x[1]['vpn_ip']}) for x in system_list])
+    system_data = dict([(x[1]['uuid'], {'hostname': x[1]['hostname'], 'admin_ip': x[1]['admin_ip'], 'vpn_ip': x[1]['vpn_ip'], 'ha_ip': x[1]['ha_ip']}) for x in system_list])
     if options.systems_with_no_vpn:
-        system_data = dict([(x[1]['uuid'], {'hostname': x[1]['hostname'], 'admin_ip': x[1]['admin_ip'], 'vpn_ip': x[1]['vpn_ip']}) for x in system_list if not system_with_vpn(x)])
+        system_data = dict([(x[1]['uuid'], {'hostname': x[1]['hostname'], 'admin_ip': x[1]['admin_ip'], 'vpn_ip': x[1]['vpn_ip'], 'ha_ip': x[1]['ha_ip']}) for x in system_list if not system_with_vpn(x)])
     try:
         if options.output_list:
             output = []
             for system in system_data:
-                output.append("%s;%s;%s;%s" % (system,
+                output.append("%s;%s;%s;%s;%s" % (system,
                                                system_data[system]['hostname'],
                                                system_data[system]['admin_ip'],
-                                               system_data[system]['vpn_ip']))
+                                               system_data[system]['vpn_ip'],
+                                               system_data[system]['ha_ip']))
             output = "\n".join(output)
 
         elif options.output_pretty_print:

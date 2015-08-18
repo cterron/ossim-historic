@@ -409,7 +409,7 @@ alert http $HOME_NET any -> [72.20.18.2,72.20.18.3] any (msg:"ET ATTACK_RESPONSE
 
 #by Matt Jonkman
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via HTTP (linux style)"; flow:established,from_server; file_data; content:"root|3a|x|3a|0|3a|0|3a|root|3a|/root|3a|/"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2002034; classtype:misc-activity; sid:2002034; rev:12;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via HTTP (linux style)"; flow:established,from_server; file_data; content:"root|3a|x|3a|0|3a|0|3a|root|3a|/root|3a|/"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2002034; classtype:successful-recon-limited; sid:2002034; rev:12;)
 
 #by Matt Jonkman
 #
@@ -448,7 +448,7 @@ alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE comm
 alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE command error"; flow:established; content:"Bad command or filename"; nocase; classtype:bad-unknown; sid:2100495; rev:10;)
 
 #
-alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE file copied ok"; flow:established; content:"1 file|28|s|29| copied"; nocase; reference:bugtraq,1806; reference:cve,2000-0884; classtype:bad-unknown; sid:2100497; rev:14;)
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE file copied ok"; flow:established; content:"1 file|28|s|29| copied"; nocase; reference:bugtraq,1806; reference:cve,2000-0884; classtype:bad-unknown; sid:2100497; rev:14;)
 
 #
 alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned apache"; flow:from_server,established; content:"uid="; content:"|28|apache|29|"; classtype:bad-unknown; sid:2101886; rev:7;)
@@ -653,4 +653,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SysInterna
 
 #
 #alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE HSQLDB error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"org.hsqldb.jdbc"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020554; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET ATTACK_RESPONSE Metasploit Meterpreter Reverse HTTPS certificate"; flow:from_server,established; content:"|A3 0D 30 0B 30 09 06 03 55 1D 13 04 02 30 00|"; fast_pattern:only; content:"|16 03 03|"; pcre:"/^..\x0B.{9}\x30\x82..\x30\x82..\xA0\x03\x02\x01\x02\x02\x09.{9}/Rs"; content:"|30 0D 06 09 2A 86 48 86 F7 0D 01 01 0B 05 00 30|"; within:16; pcre:"/^.\x31.\x30.\x06\x03\x55\x04\x03\x0C.([a-z]{2,9})\x30.\x17\x0D[0-9]{12}Z\x17\x0D[0-9]{12}Z\x30.\x31.\x30.\x06\x03\x55\x04\x03\x0C.\g{1}\x30\x82../Rs"; content:"|30 0D 06 09 2A 86 48 86 F7 0D 01 01 01 05 00 03 82|"; within:17; pcre:"/^...\x30\x82..\x02\x82...{256,257}/Rs"; content:"|02 03 01 00 01 A3 0D 30 0B 30 09 06 03 55 1D 13 04 02 30 00 30 0D 06 09 2A 86 48 86 F7 0D 01 01 0B 05 00|"; within:36; reference:url,blog.didierstevens.com/; classtype:trojan-activity; sid:2021178; rev:1;)
 

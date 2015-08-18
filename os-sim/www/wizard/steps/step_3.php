@@ -73,7 +73,7 @@ $filters_w['where'] = ' hp.host_id=host.id AND hp.property_ref=3 AND (hp.value L
 $filters_w['limit'] = '1';
 
 $filter_l           = $filters_w;
-$filters_l['where'] = " hp.host_id=host.id AND hp.property_ref=3 AND hp.value LIKE '%linux%'";
+$filters_l['where'] = ' hp.host_id=host.id AND hp.property_ref=3 AND (hp.value LIKE "%linux%" OR hp.value LIKE "%alienvault%")';
 
 
 try

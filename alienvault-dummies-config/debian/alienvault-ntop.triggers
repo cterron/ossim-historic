@@ -1,5 +1,0 @@
-interest alienvault-ntop-restart
-interest alienvault-config-database-pass
-interest alienvault-config-framework-framework-ip
-interest alienvault-config-sensor-interfaces
-interest alienvault-config-sensor-networks

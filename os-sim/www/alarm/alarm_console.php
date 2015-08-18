@@ -62,27 +62,26 @@ $host_id         = GET('host_id');
 $net_id          = GET('net_id');
 $ctx             = GET('ctx');
 
+//OTX
+$otx_activity    = intval(GET('otx_activity'));
+$pulse_id        = GET('pulse_id');
 
-
-
-$query            = (GET('query') != "") ? GET('query') : "";
-$directive_id     = GET('directive_id');
-$intent           = intval(GET('intent'));
-$sensor_query     = GET('sensor_query');
-$tag              = GET('tag');
-$num_events       = GET('num_events');
-$num_events_op    = GET('num_events_op');
-$date_from        = GET('date_from');
-$date_to          = GET('date_to');
-$ds_id            = GET('ds_id');
-$ds_name          = GET('ds_name');
-$beep             = intval(GET('beep'));
-$num_alarms_page  = (GET('num_alarms_page') != "") ? intval(GET('num_alarms_page')) : 20;
-
+$query           = (GET('query') != "") ? GET('query') : "";
+$directive_id    = GET('directive_id');
+$intent          = intval(GET('intent'));
+$sensor_query    = GET('sensor_query');
+$tag             = GET('tag');
+$num_events      = GET('num_events');
+$num_events_op   = GET('num_events_op');
+$date_from       = GET('date_from');
+$date_to         = GET('date_to');
+$ds_id           = GET('ds_id');
+$ds_name         = GET('ds_name');
+$beep            = intval(GET('beep'));
+$num_alarms_page = (GET('num_alarms_page') != "") ? intval(GET('num_alarms_page')) : 20;
 
 list($tags_count, $tags) = Tag::get_tags_by_type($conn, 'alarm');
 
-//$asset_data
 $asset_sensors    = Av_sensor::get_list($conn, array(), FALSE, TRUE);
 $_groups_data     = Asset_group::get_list($conn);
 $asset_groups     = $_groups_data[0];
@@ -123,6 +122,8 @@ ossim_valid($host_id,         OSS_HEX, OSS_NULLABLE,                            
 ossim_valid($net_id,          OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Net ID"));
 ossim_valid($ctx,             OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("CTX"));
 ossim_valid($num_alarms_page, OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Field number of alarms per page"));
+ossim_valid($otx_activity,    OSS_BINARY, OSS_NULLABLE,                                     'illegal:' . _("Only OTX Pulse Activity"));
+ossim_valid($pulse_id,        OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Pulse ID"));
 
 if ( ossim_error() ) 
 {
@@ -154,6 +155,8 @@ $parameters['beep']                   = "beep="           .$beep;
 $parameters['host_id']                = "host_id="        .$host_id;
 $parameters['net_id']                 = "net_id="         .$net_id;
 $parameters['ctx']                    = "ctx="            .$ctx;
+$parameters['otx_activity']           = "otx_activity="   .$otx_activity;
+$parameters['pulse_id']               = "pulse_id="       .$pulse_id;
 
 
 $params_alarm = implode("&", $parameters);
@@ -163,12 +166,29 @@ $refresh_url  = "alarm_console.php?". $params_alarm;
 $autocomplete_keys = array('hosts');
 $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 
+$pulse_name = '';
+
+if ($pulse_id)
+{
+    try
+    {
+        $otx        = new Otx();
+        $_p_data    = $otx->get_pulse_detail($pulse_id, TRUE);
+        $pulse_name = $_p_data['name'];
+    }
+    catch (Exception $e) {}
+}
+
+
+//Cleaning the stats
+unset($_SESSION["_alarm_stats"]);
 
 //New alarm time flag for new beep alarm.
 $_SESSION['_alarm_last_refresh_time'] = gmdate("U");
 
 $refresh_time_secs = 300;
 
+$alarm_url = Alarm::get_alarm_path();
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -186,6 +206,7 @@ $refresh_time_secs = 300;
             array('src' => 'tipTip.css',                    'def_path' => TRUE),
             array('src' => 'jquery.dataTables.css',         'def_path' => TRUE),
             array('src' => 'jquery.dropdown.css',           'def_path' => TRUE),
+            array('src' => 'jquery.switch.css',             'def_path' => TRUE),
             array('src' => '/alarm/console.css',            'def_path' => TRUE),
             array('src' => 'av_dropdown_tag.css',           'def_path' => TRUE),
             array('src' => 'av_tags.css',                   'def_path' => TRUE)
@@ -195,22 +216,23 @@ $refresh_time_secs = 300;
 
         //JS Files
         $_files = array(
-            array('src' => 'jquery.min.js',                   'def_path' => TRUE),
-            array('src' => 'jquery-ui.min.js',                'def_path' => TRUE),
-            array('src' => 'utils.js',                        'def_path' => TRUE),
-            array('src' => 'notification.js',                 'def_path' => TRUE),
-            array('src' => 'token.js',                        'def_path' => TRUE),
-            array('src' => 'jquery.tipTip-ajax.js',           'def_path' => TRUE),
-            array('src' => 'greybox.js',                      'def_path' => TRUE),
-            array('src' => 'jquery.dataTables.js',            'def_path' => TRUE),
-            array('src' => 'jquery.dataTables.plugins.js',    'def_path' => TRUE),
-            array('src' => 'jquery.autocomplete.pack.js',     'def_path' => TRUE),
-            array('src' => 'jquery.sparkline.js',             'def_path' => TRUE),
-            array('src' => 'jquery.hotkeys.js',               'def_path' => TRUE),
-            array('src' => 'jquery.spin.js',                  'def_path' => TRUE),
-            array('src' => 'av_tags.js.php',                  'def_path' => TRUE),
-            array('src' => 'av_dropdown_tag.js',              'def_path' => TRUE),
-            array('src' => '/alarm/js/alarm_console.js.php',  'def_path' => FALSE)
+            array('src' => 'jquery.min.js',                     'def_path' => TRUE),
+            array('src' => 'jquery-ui.min.js',                  'def_path' => TRUE),
+            array('src' => 'utils.js',                          'def_path' => TRUE),
+            array('src' => 'notification.js',                   'def_path' => TRUE),
+            array('src' => 'token.js',                          'def_path' => TRUE),
+            array('src' => 'jquery.tipTip-ajax.js',             'def_path' => TRUE),
+            array('src' => 'greybox.js',                        'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.js',              'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.plugins.js',      'def_path' => TRUE),
+            array('src' => 'jquery.autocomplete.pack.js',       'def_path' => TRUE),
+            array('src' => 'jquery.dropdown.js',                'def_path' => TRUE),
+            array('src' => 'jquery.sparkline.js',               'def_path' => TRUE),
+            array('src' => 'jquery.switch.js',                  'def_path' => TRUE),
+            array('src' => 'jquery.hotkeys.js',                 'def_path' => TRUE),
+            array('src' => 'av_tags.js.php',                    'def_path' => TRUE),
+            array('src' => 'av_dropdown_tag.js',                'def_path' => TRUE),
+            array('src' => '/alarm/js/alarm_console.js.php',    'def_path' => FALSE)
         );
         
         Util::print_include_files($_files, 'js');
@@ -227,7 +249,6 @@ $refresh_time_secs = 300;
         var timeout_rfh  = false;        
         var flah_bg      = false;
         var tip_timeout  = null;
-        var quicktip     = false;
         var alarm_table  = false;
         var graph_change = true;
         var graph_filter = false;
@@ -257,15 +278,7 @@ $refresh_time_secs = 300;
                 $('#reload').text('0');
 
                 if(alarm_table)
-                {
-                    remove_tooltip();
-                    
-                    if (!graph_filter)
-                    {
-                        $('#alarm_graph').hide();
-                        $('#graph_overlay').show();                    
-                    }
-                    
+                {                    
                     alarm_table._fnAjaxUpdate();
                 }
                 if (timeout_rfh)
@@ -325,7 +338,7 @@ $refresh_time_secs = 300;
         {
             var status = that.checked;
 
-            $("input[type=checkbox]").each(function() 
+            $("input[type=checkbox].alarm_check").each(function() 
             {
                 if (this.id.match(/^check_[0-9A-Z]+/)) 
                 {
@@ -359,12 +372,13 @@ $refresh_time_secs = 300;
         }
         
         var showing_calendar = false;
-        
-        function calendar() {
+        function calendar() 
+        {
             showing_calendar = true;
             // CALENDAR
             
-            $('.date_filter').datepicker({
+            $('.date_filter').datepicker(
+            {
                 showOn: "both",
                 buttonText: "",
                 dateFormat: "yy-mm-dd",
@@ -401,20 +415,20 @@ $refresh_time_secs = 300;
             return alarms;
             
         }
+        
         function save_alarm_checked()
         {
             var checked = get_alarms_checked();
             
             var atoken  = Token.get_token("alarm_operations");
             
-            $.ajax({
-                type: "POST",
-                url: "alarm_ajax.php?token="+atoken,
-                async:false,
-                data: {"action": 3, "data": {"alarms": checked} },
-                success: function(msg){
-                    
-                }
+            $.ajax(
+            {
+                type   : "POST",
+                url    : "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
+                async  : false,
+                data   : {"action": 3, "data": {"alarms": checked} },
+                success: function(msg){}
             });
 
             return false;
@@ -428,7 +442,7 @@ $refresh_time_secs = 300;
             {
                 if(alt_pressed)
                 {
-                    GB_show_multiple('<?php echo _("Alarm Detail") ?>','alarm_detail.php?backlog=' + id,600,'80%');
+                    GB_show_multiple('<?php echo _("Alarm Detail") ?>', 'alarm_detail.php?backlog=' + id, 600, '80%');
                 }
                 else
                 {
@@ -440,7 +454,7 @@ $refresh_time_secs = 300;
                 var url = '<?php echo Util::get_acid_single_event_link("EVENTID") ?>';
                 if(alt_pressed)
                 {
-                    GB_show_multiple('<?php echo _("Event Detail") ?>',url.replace(/EVENTID/,id),600,'80%');
+                    GB_show_multiple('<?php echo _("Event Detail") ?>', url.replace(/EVENTID/,id), 600, '80%');
                 }
                 else
                 {
@@ -462,31 +476,31 @@ $refresh_time_secs = 300;
                 var params = "";
                 $(".alarm_check").each(function()
                 {
-                    if ( $(this).is(':checked') ) {
+                    if ($(this).is(':checked'))
+                    {
                         params += "&"+$(this).attr('name')+"=1";
                     }
                 });
                 
                 var atoken = Token.get_token("alarm_operations");
                 
-                $.ajax({
+                $.ajax(
+                {
                     type: "POST",
-                    url: "alarms_check_delete.php?token=" + atoken,
+                    url: "controllers/alarms_check_delete.php?token=" + atoken,
                     data: "background=1&only_close=1" + params,
                     success: function(msg)
                     {
                         $('#delete_data').html('<?php echo _("Reloading alarms ...") ?>');
                         document.location.href='<?php echo $refresh_url?>';
                     },
-                    error: function(XMLHttpRequest, textStatus, errorThrown) 
+                    error: function(XMLHttpRequest, textStatus, errorThrown)
                     {
                             $('#info_delete').hide();
                             notify(textStatus, 'nf_error');
                     }
                 });
-                
             });
-            
         }
 
         function open_alarm(id) 
@@ -504,7 +518,7 @@ $refresh_time_secs = 300;
                 $.ajax(
                 {
                     type: "POST",
-                    url: "alarm_ajax.php?token="+atoken,
+                    url: "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
                     dataType: "json",
                     data: {"action": 2, "data": {"id": id} },
                     success: function(data)
@@ -596,7 +610,7 @@ $refresh_time_secs = 300;
             
             $.ajax({
                 type: "POST",
-                url: "alarm_ajax.php?token="+atoken,
+                url: "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
                 async: false,
                 dataType: "json",
                 data: {"action": 7 },
@@ -669,7 +683,7 @@ $refresh_time_secs = 300;
                     $.ajax(
                     {
                         type: "POST",
-                        url: "alarms_check_delete.php?token=" + atoken,
+                        url: "controllers/alarms_check_delete.php?token=" + atoken,
                         data: "background=1" + params,
                         success: function(msg)
                         {
@@ -690,7 +704,6 @@ $refresh_time_secs = 300;
             {
                 var msg_delete = "<?php echo  Util::js_entities(_("Alarms should never be deleted unless they represent a false positive. Would you like to continue?"))?>"
                 
-                
                 av_confirm(msg_delete).done(function()
                 {
                     var msg_close = "<?php echo  Util::js_entities(_("Would you like to close the alarm instead of deleting it?"))?>";
@@ -705,7 +718,7 @@ $refresh_time_secs = 300;
                         
                         $.ajax({
                             type: "POST",
-                            url: "alarm_ajax.php?token="+atoken,
+                            url: "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
                             dataType: "json",
                             data: {"action": 4 },
                             success: function(data)
@@ -738,7 +751,7 @@ $refresh_time_secs = 300;
                         
                         $.ajax({
                             type: "POST",
-                            url: "alarm_ajax.php?token="+atoken,
+                            url: "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
                             dataType: "json",
                             data: {"action": 5},
                             success: function(data)
@@ -776,7 +789,7 @@ $refresh_time_secs = 300;
             $.ajax({
                 data:  { "plugin_id": $('#'+layer).attr('data-pid'), "plugin_sid": $('#'+layer).attr('data-sid') },
                 type: "GET",
-                url: "alarm_trend.php", 
+                url: "providers/alarm_trend.php", 
                 dataType: "json",
                 success: function(data)
                 { 
@@ -881,24 +894,26 @@ $refresh_time_secs = 300;
             return $.ajax(
             {
                 type: 'GET',
-                url:  'alarm_quicklook.php?backlog=' + alarm_data[1]
+                url:  'providers/alarm_tray.php?backlog=' + alarm_data[1]
             });           
         }
             
         function load_handlers()
         {
-            if (graph_change )
+            if (graph_change)
             {        
-                $('#alarm_graph').attr('src','alarm_graph.php');
+                display_graph(true);
             }
             else if (!graph_filter) // only if we are not filtering
             {
                 graph_change = true;
             }
+            
             // tipTip
             $('.tip').tipTip({maxWidth:'300px'});
             $('td.tipd').tipTip({defaultPosition:"right"});
-            $('.scriptinfo').tipTip({
+            $('.scriptinfo').tipTip(
+            {
                defaultPosition: "down",
                content: function (e) 
                {
@@ -906,7 +921,7 @@ $refresh_time_secs = 300;
                   
                   $.ajax(
                   {
-                      url: 'alarm_netlookup.php?ip=' + ip_data,
+                      url: "<?php echo $alarm_url['provider'] ?>alarm_netlookup.php?ip=" + ip_data,
                       success: function (response) 
                       {
                         e.content.html(response); // the var e is the callback function data (see above)
@@ -918,7 +933,7 @@ $refresh_time_secs = 300;
             });
 
             // Details icon
-            $('.go_details').click(function(e) 
+            $('.go_details').off('click').on('click', function(e) 
             {
                 e.stopPropagation();
                 
@@ -931,18 +946,34 @@ $refresh_time_secs = 300;
                 
             });
             
+            
+            // OTX icon
+            $('.otx_icon').off('click').on('click', function(e) 
+            {
+                e.stopPropagation();
+                
+                var backlog = $(this).parents('tr').attr('id');
+                var title   = "<?php echo Util::js_entities(_('OTX Details')) ?>";
+                var url     = "/ossim/otx/views/view_my_pulses.php?type=alarm&id=" + backlog;
+                
+                GB_show(title, url, 550, 700);
+                
+                return false;
+            });
+            
+            
             // stop propagation
-            $('a.stop, input.stop, td.stop').click(function(e) 
+            $('a.stop, input.stop, td.stop').off('click').on('click', function(e) 
             {
                 e.stopPropagation();
             });
+            
                 
-
-            $('.table_data tbody tr').on('click', function ()
+            $('.table_data tbody tr td').not(":first-child").not(":last-child").off('click').on('click', function ()
             {
                 n_clicks++;  //count clicks
                 
-                var row = this;
+                var row = $(this).parents('tr').first();
                 
                 $(this).disableTextSelect();
                 
@@ -964,44 +995,32 @@ $refresh_time_secs = 300;
                     tr_dblclick_function(row);  //perform double-click action
                 }
                 
-            }).on('dblclick', function(event) 
+            }).off('dblclick').on('dblclick', function(event) 
             {
                 event.preventDefault();
-            });
-             
-            
-            $('.HostReportMenu').on('mousedown', function(e)
-            {
-                if(e.which === 3)
-                {
-                    if(typeof quicktip.close_tiptip == 'function')
-                    {
-                        quicktip.close_tiptip();
-                    }
-                }
             });
             
             load_contextmenu();
 
             // input click
-            $('input[name^="check_"]').on('click',function() {
+            $('input[name^="check_"]').off('click').on('click', function() {
                 chk_actions();
             });
+            
+            $('#allcheck').prop('disabled', ($("input[type=checkbox].alarm_check").not("[disabled]").length < 1))
         }           
         
         function chk_actions()
         {
             if ($('input[name^="check_"]:checked').length > 0)
             {
-                $('#btn_ds').removeAttr('disabled');
-                $('#btn_cs').removeAttr('disabled');
-                $('#btn_al').removeAttr('disabled');
+                $('#button_action').prop('disabled', false);
+                $('#btn_al').removeClass('disabled');
             }   
             else
             {
-                $('#btn_ds').attr('disabled','disabled');
-                $('#btn_cs').attr('disabled','disabled');
-                $('#btn_al').attr('disabled','disabled');
+                $('#button_action').prop('disabled', true);
+                $('#btn_al').addClass('disabled');
                 
                 $('.apply_label_layer').empty();
             }         
@@ -1035,17 +1054,16 @@ $refresh_time_secs = 300;
 
         function set_graph_height(h)
         {
-               $('#alarm_graph').animate({ height: h+'px' }, 1000).show(); //height(h+'px').show();
-               $('#graph_overlay').hide();
+               $('#alarm_graph').animate({ height: h+'px' }, 1000).show();
         }
+
 
         function reset_intent()
         {
             graph_filter = false;
-            var newUrl = '<?php echo "alarm_console_ajax.php?" . implode("&", $parameters) ?>';
+            var newUrl = '<?php echo "providers/alarm_console_ajax.php?" . implode("&", $parameters) ?>';
             if(alarm_table)
             {
-                remove_tooltip();
                 time = refres_time;
                 graph_change = false;
                 alarm_table.fnReloadAjax(newUrl);
@@ -1056,6 +1074,7 @@ $refresh_time_secs = 300;
             set_graph_height(430);// 5*76+50 header
         }
         
+        
         function filter_by_intent(intent,txt,range)
         {
             graph_filter = true;
@@ -1065,34 +1084,78 @@ $refresh_time_secs = 300;
             unset($parameters_i["intent"]);
             unset($parameters_i["date_from"]);
             unset($parameters_i["date_to"]);
-            $url_without_intent = "alarm_console_ajax.php?" . implode("&", $parameters_i);
+            $url_without_intent = "providers/alarm_console_ajax.php?" . implode("&", $parameters_i);
             ?>
             var newUrl = '<?php echo $url_without_intent ?>&intent='+intent+'&date_from='+dates[0]+'&date_to='+dates[1];
             if(alarm_table)
             {
-                remove_tooltip();
                 time = refres_time;
                 graph_change = false;
                 $('#breadcrum').html('<a href="javascript:;" onclick="reset_intent()">All Alarms</a> > '+txt).addClass('marginbottom');
                 alarm_table.fnReloadAjax(newUrl);
             }            
         }
-
-        function get_container_offset()
+        
+        
+        function display_graph(show)
         {
-            return $('#graph_container').offset();
+            if (show && is_graph_enabled())
+            {
+                $('#graph_overlay').show();
+                $('#alarm_graph').hide().attr('src','views/alarm_graph.php');
+            }
+            else
+            {
+                $('#graph_overlay').hide();
+                $('#alarm_graph').contents().empty();
+                $('#alarm_graph').attr('src','').hide();
+            }
         }
-
+        
+        function postload_graph()
+        {
+            var src = $('#alarm_graph').attr('src');
+            
+            if (src)
+            {
+                $('#graph_overlay').hide()
+                $('#alarm_graph').show()
+            }
+        }
+        
+        function is_graph_enabled()
+        {
+            var key     = 'alienvault_<?php echo Session::get_session_user() ?>_show_graph';
+            var enabled = localStorage.getItem(key);
+            
+            return (enabled != 0) ? true : false; 
+        }
+        
+        function change_graph_enabled(status)
+        {
+            var key = 'alienvault_<?php echo Session::get_session_user() ?>_show_graph';
+            var val = (status) ? 1 : 0;
+            localStorage.setItem(key, val);
+        }
+        
+        
         var in_tooltip = false;
         function draw_tooltip(content)
         {
             $('#graph_container').append(content);
             in_tooltip = false;
-            $('#graph_container').find('.alarm-info').mouseover(function(){
+            
+            $('#graph_container').find('.alarm-info').mouseover(function()
+            {
                 in_tooltip = true;
             });
-            $('#graph_container').find('.alarm-info').mouseout(function(){
-                if (in_tooltip) remove_tooltip();
+            
+            $('#graph_container').find('.alarm-info').mouseout(function()
+            {
+                if (in_tooltip) 
+                {
+                    remove_tooltip();
+                }
             });
         }
         
@@ -1101,15 +1164,13 @@ $refresh_time_secs = 300;
             $('#graph_container').find('.alarm-info').remove();
         }
         
+        
         $(document).ready(function()
         {
-            var i_am_admin = true;
+            var i_am_admin = <?php echo (Session::am_i_admin()) ? 'true' : 'false' ?>;
 
-            <?php if (!Session::am_i_admin()){
-                echo 'i_am_admin = false';
-            }?>
-
-            var o = {
+            var o = 
+            {
                 'load_tags_url': '<?php echo AV_MAIN_PATH?>/tags/providers/get_dropdown_tags.php',
                 'manage_components_url': '<?php echo AV_MAIN_PATH?>/tags/controllers/tag_components_actions.php',
                 'allow_edit': i_am_admin,
@@ -1119,13 +1180,37 @@ $refresh_time_secs = 300;
                 'on_delete': remove_alarm_tag
             };
 
-            $('#btn_al').av_dropdown_tag(o);
-
+            var $alarm_dd = $('#btn_al').av_dropdown_tag(o);
+            $alarm_dd.off('click').on('click', function()
+            {
+                if (!$(this).hasClass('disabled'))
+                {
+                    $alarm_dd.show_dropdown();
+                }
+            });
+            
+            calendar();
+            
             $('.tags_edit').click(function (e)
             {
                 edit_tags('alarm');
             });
-
+            
+            $('#graph_toggle').toggles(
+            {
+                "on"   : is_graph_enabled(),
+                "text" : 
+                {
+                    "on"  : '<?php echo _('Yes')?>',
+                    "off" : '<?php echo _('No')?>'
+                }
+            }).on('toggle', function(e, status)
+            {
+                change_graph_enabled(status);
+                display_graph(status);
+            });
+        
+        
             $('#clean_date_filter').on('click', function()
             {
                 $('#date_from').val('');
@@ -1141,15 +1226,17 @@ $refresh_time_secs = 300;
             //Loading the alarm counter that reloads the alarms
             reload_alarms();
             
-            $('#graph_overlay').spin();
-            
+                        
             $("a.greybox2").click(function(e)
             {
                 e.stopPropagation();
+                
                 var t = this.title || $(this).attr('data-title') || this.href;
-                GB_show(t,this.href,550,'80%');
+                GB_show(t, this.href, 550, '80%');
+                
                 return false;
             });
+
 
             // Autocomplete
             var hosts = [<?php echo $hosts_str ?>];
@@ -1157,7 +1244,6 @@ $refresh_time_secs = 300;
             $("#src_ip").autocomplete(hosts, 
             {
                 minChars: 0,
-                width: 225,
                 matchContains: "word",
                 autoFill: false,
                 selectFirst: false,
@@ -1170,10 +1256,10 @@ $refresh_time_secs = 300;
                 $("#src_ip").val(item.ip);
             });
             
+            
             $("#dst_ip").autocomplete(hosts, 
             {
                 minChars: 0,
-                width: 225,
                 matchContains: "word",
                 autoFill: false,
                 selectFirst: false,
@@ -1186,10 +1272,45 @@ $refresh_time_secs = 300;
                 $("#dst_ip").val(item.ip);
             });
             
-            $("#ds_name").autocomplete('search_ds.php', 
+            $("#pulse_name").autocomplete('/ossim/otx/providers/otx_pulse_autocomplete.php?type=alarm', 
             {
                 minChars: 0,
-                width: 300,
+                matchContains: "word",
+                multiple: false,
+                autoFill: false,
+                formatItem: function(row, i, max, value) 
+                {
+                    return (value.split('###'))[1];
+                },
+                formatResult: function(data, value) 
+                {
+                    return (value.split('###'))[1];
+                }
+            }).result(function(event, item) 
+            {
+                var pulse_id = '';
+                if (typeof(item) != 'undefined' && item != null)
+                {
+                    var _aux_item = item[0].split('###');
+                    pulse_id      = _aux_item[0];
+                }
+                
+                $('#pulse_id').val(pulse_id);    
+                $('#otx_activity').prop('checked', false);
+                $('#btnsearch').trigger('click');
+            })
+            .on('input', function()
+            {
+                if ($(this).val() == '')
+                {
+                    $("#pulse_id").val('');
+                }                
+            });
+            
+            
+            $("#ds_name").autocomplete('providers/event_type_autocomplete.php', 
+            {
+                minChars: 0,
                 matchContains: "word",
                 multiple: false,
                 autoFill: false,
@@ -1205,10 +1326,7 @@ $refresh_time_secs = 300;
             {
                 $("#ds_id").val((item[0].split('###'))[0]);
             });
-            
-            <?php if (GET('src_ip') != "" || GET('dst_ip') != "" || GET('host_id') != "" || GET('net_id') != "" || $query != "" || $sensor_query != "" || $directive_id != "" || $num_events > 0 || $asset_group != "") { ?>
-            toggle_filters();
-            <?php } ?>
+
 
             $('td.tipd').click(function(e) 
             {
@@ -1236,7 +1354,7 @@ $refresh_time_secs = 300;
                 "bProcessing": true,
                 "bServerSide": true,
                 "bDeferRender": true,
-                "sAjaxSource": "alarm_console_ajax.php?<?php echo $params_alarm ?>",
+                "sAjaxSource": "providers/alarm_console_ajax.php?<?php echo $params_alarm ?>",
                 "iDisplayLength": <?php echo ($num_alarms_page > 0) ? $num_alarms_page : 20 ?>,
                 "bLengthChange": true,
                 "sPaginationType": "full_numbers",
@@ -1246,19 +1364,19 @@ $refresh_time_secs = 300;
                 "aaSorting": [[ <?php echo $order ?>, "<?php echo $torder ?>" ]],
                 "aoColumns": [
                     { "bSortable": false, sWidth: "30px" },
-                    { "bSortable": true, sWidth: "80px" },
+                    { "bSortable": true},
                     { "bSortable": true, sWidth: "60px" },
                     { "bSortable": false, "sClass": "left", "bVisible": false },
                     { "bSortable": true, "sClass": "left" },
                     { "bSortable": true, "sClass": "left" },
                     { "bSortable": true, sWidth: "50px" },
-                    { "bSortable": false, "sClass": "dt_wrap", sWidth: "80px" },
+                    { "bSortable": false, "sClass": "center", sWidth: "50px" },
                     { "bSortable": true, "sClass": "left nowrap" },
                     { "bSortable": true, "sClass": "left nowrap" },
                     { "bSortable": false, sWidth: "30px" }
                 ],
                 oLanguage : {
-                    "sProcessing": "&nbsp;<?php echo _('Loading alarms') ?> <img src='/ossim/pixmaps/loading3.gif' align='absmiddle'/>",
+                    "sProcessing": "&nbsp;<?php echo _('Loading alarms') ?> <img src='/ossim/pixmaps/loading3.gif'/>",
                     "sLengthMenu": "&nbsp;Show _MENU_ entries",
                     "sZeroRecords": "&nbsp;<?php echo _('No matching records found') ?>",
                     "sEmptyTable": "&nbsp;<?php echo _('No alarms found in the system') ?>",
@@ -1281,43 +1399,51 @@ $refresh_time_secs = 300;
                 {
                     var component_id = aData['DT_RowId'];
 
-                    if (true == draw_label)
+                    if (draw_label)
                     {
                         $.each(aData['tags'], function(index, tag) {
                             var $tag = draw_tag(tag, component_id, check_label_column);
                             $tag.appendTo($('td:eq(3)', nRow).find('.a_label_container'));
                         });
                     }
+                
+                    // No wrap for src/dst column
+                    var offset = ($('td',nRow).length == 11) ? 0 : 1;
+                    
+                    //src
+                    var $src = $('td:eq('+ (8 - offset) +')',nRow);
+
+                    if ($src.text().match(/\d+\.\d+\.\d+\.\d+/))
+                    {
+                        $src.attr("nowrap","nowrap");
+                    }
+                    else
+                    {
+                        $src.removeAttr("nowrap");
+                    }
+
+                    //dst                       
+                    var $dst = $('td:eq('+ (9 - offset) +')',nRow);
+                    if ($dst.text().match(/\d+\.\d+\.\d+\.\d+/))
+                    {
+                        $dst.attr("nowrap","nowrap");
+                    }
+                    else
+                    {
+                        $dst.removeAttr("nowrap");                    
+                    }
+                    
+                    if ($('td:eq('+ (5 - offset) +')',nRow).html() == '')
+                    {
+                        $('td:eq('+ (4 - offset) +')',nRow).attr('colspan', 2);
+                        $('td:eq('+ (5 - offset) +')',nRow).hide();
+                    }
+                    
                 },
                 "fnDrawCallback" : function(oSettings)
                 {
                     // Load callbacks, tiptips and more
                     load_handlers();
-                                        
-                    // No wrap for src/dst column
-                    $('.table_data tbody tr').each(function() 
-                    {
-                        //src
-                        if ($('td:eq(8)',this).text().match(/\d+\.\d+\.\d+\.\d+/))
-                        {
-                            $('td:eq(8)',this).attr("nowrap","nowrap");
-                        }
-                        else
-                        {
-                            $('td:eq(8)',this).removeAttr("nowrap");
-                        }
-
-                        //dst                       
-                        if ($('td:eq(9)',this).text().match(/\d+\.\d+\.\d+\.\d+/))
-                        {
-                            $('td:eq(9)',this).attr("nowrap","nowrap");
-                        }
-                        else
-                        {
-                            $('td:eq(9)',this).removeAttr("nowrap");                    
-                        }
-                    });
-
                     chk_actions();
                 },
                 "fnInitComplete": function()
@@ -1369,32 +1495,33 @@ $refresh_time_secs = 300;
                 }
             });
             
-                    
-            $(document).on('mouseleave', '.dataTables_wrapper', function(e)
-            {
-                var target = e.relatedTarget;
-
-                if(quicktip && $(target).attr('id') != 'tiptip_content')
-                {
-                    quicktip.close_tiptip();
-                    quicktip = false;
-                }
-                
-                $(document).on('click', '.ip_activity_quicklook', function()
-                {
-                    ip  = $(this).data('ip');
-                    url = "http://www.alienvault.com/apps/rep_monitor/ip/<? echo Session::is_pro() ? 'usm' : 'ossim' ?>/"+ip+"/";
-                    
-                    window.open(url, '_newtab');
-                });
-               
-            });
+            $('#alarm_graph').on('load', postload_graph);
 
             $('#dropdown-2').on('show', function(event,data)
             {
                 dd_alarm = data.trigger.data('backlog');
             });
-
+            
+            $('#otx_activity').on('change', function(e, val)
+            {
+                $("#pulse_id").val('');
+                $('#btnsearch').trigger('click');
+            });
+            
+            $('#no_resolv').on('click', function()
+            {
+                $('#btnsearch').trigger('click');
+            });
+            
+            $('#hide_closed').on('click', function()
+            {
+                $('#btnsearch').trigger('click');
+            });
+            
+            $('#beep').on('click', function()
+            {
+                $('#btnsearch').trigger('click');
+            });
         });
 
         var alt_pressed = false;
@@ -1499,28 +1626,39 @@ if ($net_id != "")
     }
 }
 
+?>
+    
+
+<?php
 if (!isset($_GET["hide_search"])) 
 {
     ?>
     
     <div id='info_delete'>
-        <img src='../pixmaps/loading3.gif' alt='<?php echo _("Deleting selected alarms")?>'/>
+        <img src='../pixmaps/loading3.gif'/>
         <span id='delete_data'><?php echo _("Deleting selected alarms.  Please, wait a few seconds")?>...</span>
     </div>
     
-    <div id='report_icon_container'>
-        <a href='../report/sec_report.php?section=all&type=alarm&back=alarm' class='tip greybox2' title='<?php echo _('Alarm Report') ?>' style='text-decoration:none;'>
-            <img src='../pixmaps/pie_chart.png' class="gray_img" border='0'/>
-        </a>
-    </div>
-    
-    <form method="get" id="queryform" name="filters">
-        
+    <div>
         <div class="filters uppercase">
-            <img id='search_arrow' src='/ossim/pixmaps/arrow_right.png' />
+            <img id='search_arrow' src='/ossim/pixmaps/arrow_down.png' />
             <a href='javascript:;' onclick="toggle_filters()"><?php echo _('Search and filter') ?></a>
         </div>
         
+        <div id='report_icon_container'>
+            <div id='graph_toggle_legend'> <?php echo _('Show Alarm Graph') ?></div>
+            <div id='graph_toggle' class='toggle_button'></div>
+            
+            <a href='../report/sec_report.php?section=all&type=alarm&back=alarm' class='tip greybox2' title='<?php echo _('Alarm Report') ?>' style='text-decoration:none;'>
+                <img src='../pixmaps/pie_chart.png' class="gray_img"/>
+            </a>
+        </div>
+    </div>
+    
+    <div class='clear_layer'></div>
+    
+    <form method="get" id="queryform" name="filters">
+               
         <div id='alarm_params'>
             <div class='p_column'>
                 
@@ -1577,7 +1715,7 @@ if (!isset($_GET["hide_search"]))
                 <?php
                 if ($date_from != '' && $date_to != '')
                 {
-                    $date_text  = '<a title="Clean date filter" href="javascript:void(0);" id="clean_date_filter" style="text-decoration: underline;font-weight: bold">' . _('Date') . '</a>';
+                    $date_text  = '<a title="'. Util::js_entities(_('Clean date filter')) .'" href="javascript:void(0);" id="clean_date_filter">' . _('Date') . '</a>';
                 }
                 else
                 {
@@ -1669,44 +1807,39 @@ if (!isset($_GET["hide_search"]))
                         echo '<option value="'. $t->get_id() .'" '.$selected.'>'. $t->get_name() .'</option>';
                     }
                     ?>
-                </select>
-                
-                <br/><br/>
+                </select><br/>
+                                
                 
                 <?php
                 $hide_closed     = ( $hide_closed == 1 ) ? 1 : 0;
                 $not_hide_closed = !$hide_closed;
                 $not_no_resolv   = !$no_resolv;
                 $not_beep        = !$beep;
+                $not_otx         = !$otx_activity;
                 
-                $checked_resolv  = ( $no_resolv )   ? " checked='checked'" : "";
-                $checked_hclosed = ( $hide_closed ) ? " checked='checked'" : "";
-                $checked_beep    = ( $beep )        ? " checked='checked'" : "";
+                $checked_resolv  = ($no_resolv)    ? " checked='checked'" : "";
+                $checked_hclosed = ($hide_closed)  ? " checked='checked'" : "";
+                $checked_beep    = ($beep)         ? " checked='checked'" : "";
+                $checked_otx     = ($otx_activity) ? " checked='checked'" : "";
                 
-                $no_resolv_url =  $hclosed_url = $refresh_url = $beep_url = "alarm_console.php?";
-                
-                $p_no_resolv              = $parameters;
-                $p_no_resolv['no_resolv'] = "no_resolv=".$not_no_resolv;
-                $no_resolv_url           .=  implode("&", $p_no_resolv);
-                
-                $p_hclosed                = $parameters;
-                $p_hclosed['hide_closed'] = "hide_closed=".$not_hide_closed;
-                $hclosed_url             .=  implode("&", $p_hclosed);
-                
-                $p_beep                   = $parameters;
-                $p_beep['beep']           = "beep=".$not_beep;
-                $beep_url                .=  implode("&", $p_beep);
-                
-                $refresh_url             .=  implode("&", $parameters);
+                $refresh_url    .= implode("&", $parameters);
                 ?>
-                <input style="border:none" name="no_resolv" type="checkbox" value="1" onclick="document.location='<?php echo $no_resolv_url?>'" <?php echo $checked_resolv?> />
-                <label class='line' for='no_resolve'><?php echo gettext("Do not resolve ip names"); ?></label><br/><br/>
                 
-                <input style="border:none" name="hide_closed" type="checkbox" value="1" onclick="document.location='<?php echo $hclosed_url?>'" <?php echo $checked_hclosed?> />
-                <label class='line' for='hide_closed'><?php echo gettext("Hide closed alarms"); ?></label><br/><br/>
+                <label for='pulse_name'><?php echo _('OTX Pulse')?></label> 
+                <input type="hidden" id="pulse_id" name="pulse_id" value="<?php echo $pulse_id ?>"/>
+                <input type="text" id="pulse_name" value="<?php echo $pulse_name ?>"/> <br/><br/>
                 
-                <input style="border:none" name="beep" type="checkbox" value="1" onclick="document.location='<?php echo $beep_url?>'" <?php echo $checked_beep?> />
-                <label class='line' for='beep'><?php echo gettext("Beep on new alarm"); ?></label><br/><br/>
+                <input id='otx_activity' name="otx_activity" type="checkbox" value="1" <?php echo $checked_otx ?> />
+                <label class='line' for='otx_activity'><?php echo _("Only OTX Pulse Activity"); ?></label><br/><br/>
+                
+                <input id="no_resolv" name="no_resolv" type="checkbox" value="1" <?php echo $checked_resolv?> />
+                <label class='line' for='no_resolv'><?php echo _("Do not resolve ip names"); ?></label><br/><br/>
+                
+                <input id="hide_closed"  name="hide_closed" type="checkbox" value="1" <?php echo $checked_hclosed?> />
+                <label class='line' for='hide_closed'><?php echo _("Hide closed alarms"); ?></label><br/><br/>
+                
+                <input id="beep" name="beep" type="checkbox" value="1" <?php echo $checked_beep?> />
+                <label class='line' for='beep'><?php echo _("Beep on new alarm"); ?></label><br/>
                 
             </div>
             
@@ -1720,12 +1853,17 @@ if (!isset($_GET["hide_search"]))
     <?php
 } 
 ?>
-     <!-- ALARM GRAPH -->
+    <!-- ALARM GRAPH -->
     
-     <div align="center" style="margin:10px 0 0 0" id="graph_container">
-         <div id="graph_overlay"></div>
-         <iframe src="" name="alarm_graph" id="alarm_graph" frameborder="0" style="display:none;overflow:hidden;width:100%;height:30px"></iframe>
-     </div>    
+    <div id="graph_container">
+        <div id="graph_overlay">
+            <?php echo _('Loading') ?> 
+            <img src='/ossim/pixmaps/loading3.gif' align='absmiddle'/>
+        </div>
+        <iframe src="" name="alarm_graph" id="alarm_graph" frameborder="0"></iframe>
+    </div>  
+     
+    <div class='clear_layer'></div>
 
     <!-- ALARM LIST -->
     <div id='alarm_list'>
@@ -1737,20 +1875,11 @@ if (!isset($_GET["hide_search"]))
         ?> 
             <div id ='alarm_console_button_list'>
                 
-                <button id="btn_al" class="button_labels av_b_secondary">
-                    <?php echo _("Apply Label")?>
-                </button>
+                <img id="btn_al" class="button_labels av_b_secondary" src="/ossim/pixmaps/label.png" />
             
-                <button id="btn_ds" class="button av_b_secondary" onclick="bg_delete();">
-                    <img src="style/img/trash_fill.png">
-                    <span><?php echo _("Delete selected")?></span>
-                </button>
-                
-                <button id="btn_cs" class="button av_b_secondary" onclick="bg_close();">
-                    <img src="style/img/unlock.png">
-                    <span><?php echo _("Close selected")?></span>
-                </button>
-                
+                <button id='button_action' class='small' data-dropdown="#dropdown-actions">
+                    <?php echo _('Actions') ?> &nbsp;&#x25be;
+                </button>               
             </div>
         <?php
         }
@@ -1759,26 +1888,26 @@ if (!isset($_GET["hide_search"]))
         <table class='table_data'>
             <thead>
                 <tr>
-                    <th class="center" id="chkall"><input type="checkbox" name="allcheck" onclick="checkall(this)"></th>
+                    <th class="center" id="chkall"><input type="checkbox" id="allcheck" name="allcheck" onclick="checkall(this)"></th>
                     
                     <th>
-                        <?php echo _("Date"); ?>
+                        <?php echo _("Date") ?>
                     </th>
                     
                     <th>
-                        <?php echo _("Status"); ?></a>
+                        <?php echo _("Status") ?></a>
                     </th>
                     
                     <th>
-                        <?php echo _("Labels"); ?>
+                        <?php echo _("Labels") ?>
                     </th>
 
                     <th>
-                        <?php echo _("Intent & Strategy"); ?>
+                        <?php echo _("Intent & Strategy") ?>
                     </th>
                     
                     <th>
-                        <?php echo _("Method");?>
+                        <?php echo _("Method") ?>
                     </th>
 
                     <th>
@@ -1786,15 +1915,15 @@ if (!isset($_GET["hide_search"]))
                     </th>
                     
                     <th>
-                        <?php echo _("Attack pattern"); ?>
+                        <?php echo _("OTX") ?>
                     </th>
                     
                     <th>
-                        <?php echo _("Source")?>
+                        <?php echo _("Source") ?>
                     </th>
 
                     <th>
-                        <?php echo _("Destination")?>
+                        <?php echo _("Destination") ?>
                     </th>
                     
                     <th>
@@ -1810,6 +1939,17 @@ if (!isset($_GET["hide_search"]))
     <a href="javascript:;" class="fright" style="padding-bottom:15px;" onclick="delete_all_alarms();">
         <?php echo _("Delete ALL"); ?>
     </a>
+    
+    
+    <div id="dropdown-actions"  class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
+        <ul class="dropdown-menu">
+            <li><a href="#1" id="btn_cs" onclick="bg_close();"><?php echo _('Close Alarm') ?></a></li>
+            <li><a href="#2" id="btn_ds" onclick="bg_delete();"><?php echo _('Delete Alarm') ?></a></li>
+        </ul>
+    </div>
 
 </body>
 </html>
+
+<?php
+$db->close();

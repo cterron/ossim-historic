@@ -33,7 +33,7 @@ from db.methods.system import get_system_ip_from_system_id
 from db.methods.system import db_system_update_hostname
 from db.methods.system import db_system_update_admin_ip
 from celerymethods.jobs.system import alienvault_asynchronous_reconfigure
-from celerymethods.utils import set_task_config, get_task_config
+from celerymethods.tasks.tasks import Scheduler
 from ansiblemethods.system.system import get_av_config
 from ansiblemethods.system.system import set_av_config
 from ansiblemethods.system.system import ansible_add_ip_to_inventory
@@ -41,7 +41,7 @@ from apimethods.system.cache import use_cache
 from apimethods.system.cache import flush_cache
 
 
-@use_cache(namespace="system")
+@use_cache(namespace="system_config")
 def get_system_config_general(system_id, no_cache=False):
     (success, system_ip) = ret = get_system_ip_from_system_id(system_id)
     if not success:
@@ -74,7 +74,7 @@ def get_system_config_general(system_id, no_cache=False):
     return (True, config_values)
 
 
-@use_cache(namespace="system")
+@use_cache(namespace="system_config")
 def get_system_config_alienvault(system_id, no_cache=False):
 
     (success, system_ip) = get_system_ip_from_system_id(system_id)
@@ -121,7 +121,7 @@ def set_system_config(system_id, set_values):
         api_log.error("system: set_config_general error: " + str(config_values))
         return (False, "Cannot set general configuration info: %s" % str(config_values))
 
-    flush_cache(namespace="system")
+    flush_cache(namespace="system_config")
 
     if 'general_hostname' in set_values:
         success, msg = db_system_update_hostname(system_id, set_values['general_hostname'])
@@ -165,6 +165,7 @@ def get_system_sensor_configuration(system_id):
 
     return (True, config_values)
 
+
 def set_system_sensor_configuration(system_id, set_values):
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
@@ -178,23 +179,20 @@ def set_system_sensor_configuration(system_id, set_values):
     return True, "OK"
 
 
-def set_system_config_telemetry_collection (enabled = False):
+def set_system_config_telemetry_enabled(enabled=False):
     """
-    Enable/Disable the local telemetry collection.
+    Enable the local telemetry collection.
     """
-    crontab = {'minute': 0, 'hour': 2, 'day_of_week': 0, 'day_of_month': '*', 'month_of_year': '*'}
-    return set_task_config ('monitor_check_platform_telemetry_data', \
-                            'celerymethods.tasks.monitor_tasks.monitor_check_platform_telemetry_data', \
-                            args = [], kwargs = {}, crontab = crontab, enabled = enabled, kind = 'default')
+    scheduler = Scheduler()
+    task = scheduler.get_task('monitor_check_platform_telemetry_data')
+    task.enabled = enabled
+    scheduler.update_task(task)
 
-def get_system_config_telemetry_collection ():
+
+def get_system_config_telemetry_enabled():
     """
     Get the local telemetry collection enabled flag.
     """
-    crontab = {'minute': 0, 'hour': 2, 'day_of_week': 0, 'day_of_month': '*', 'month_of_year': '*'}
-    (success, tasks) = get_task_config ('celerymethods.tasks.monitor_tasks.monitor_check_platform_telemetry_data', \
-                                        args = [], kwargs = {}, crontab = crontab, kind = 'default')
-
-    if success:
-        return (True, tasks[0]['enabled'])
-    return (False, "Default task 'monitor_check_platform_telemetry_data' does not exist")
+    scheduler = Scheduler()
+    task = scheduler.get_task('monitor_check_platform_telemetry_data')
+    return task.enabled

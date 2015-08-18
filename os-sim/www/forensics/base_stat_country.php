@@ -214,9 +214,9 @@ foreach ($countries as $country=>$num) {
 			<? if ($data['dstnum']>0) { ?><a href="base_stat_country_alerts.php?cc=<?=$data['code']?>&location=dstaddress"><?=Util::number_format_locale($data['dstnum'],0)?></a>
 			<? } else echo "0" ?>
 			</td>
-		<TD><TABLE class="transparent" cellpadding="0" cellspacing="0" WIDTH="100%">
+		<TD><TABLE class="transparent bar" cellpadding="0" cellspacing="0" WIDTH="100%">
 		  <TR>
-		   <TD style="background-color:#84C973;height:14px;width:<?php echo ($entry_width > 0) ? $entry_width."%" : "1px" ?>"><img src="../pixmaps/1x1.png"/></TD>
+		   <TD style="background-color:#84C973;width:<?php echo ($entry_width > 0) ? $entry_width."%" : "1px" ?>"><img src="../pixmaps/1x1.png"/></TD>
 		   <TD>&nbsp;</TD>
 		  </TR>
 		 </TABLE>

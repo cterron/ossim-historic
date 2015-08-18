@@ -345,19 +345,6 @@ sim_db_update_host_properties (SimDatabase        *database,
   // Specific code for the web interface
 }
 
-void
-sim_db_update_host_risk_level (SimDatabase  *database,
-                               SimHost      *host)
-{
-  gchar *query;
-
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  query = sim_host_level_get_update_clause (host);
-  sim_database_execute_no_query (database, query);
-  g_free (query);
-}
-
 /**
  * sim_db_update_server_version:
  * @database: #SimDatabase object
@@ -481,6 +468,13 @@ sim_db_insert_event (SimDatabase *database,
   {
     query = sim_event_extra_get_insert_clause (sim_database_get_conn (database), event);
     ossim_debug ("%s: extra_data query_values= %s", __func__, query);
+    sim_database_execute_no_query (database, query);
+    g_free (query);
+  }
+  if (g_hash_table_size (event->otx_data) > 0)
+  {
+    query = sim_event_pulses_get_insert_clause (sim_database_get_conn (database), event);
+    ossim_debug ("%s: otx_data query_values= %s", __func__, query);
     sim_database_execute_no_query (database, query);
     g_free (query);
   }

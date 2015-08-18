@@ -57,7 +57,7 @@
 class Autocomplete
 {
 
-    public static function get_autocomplete($conn, $keys)
+    public static function get_autocomplete($conn, $keys, $expire = 0)
     {
         Ossim_db::check_connection($conn);
 
@@ -69,13 +69,16 @@ class Autocomplete
 
             if(is_callable($_function))
             {
-                $_json = self::get_cache_file($conn, $k);
-
-                if(!$_json)
+                $_json = self::get_cache_file($conn, $k, $expire);
+                
+                if(empty($_json))
                 {
                     $_json = call_user_func_array($_function, array($conn));
-
-                    self::set_cache_file($k, $_json);
+                    
+                    if ($expire != -1)
+                    {
+                        self::set_cache_file($k, $_json);
+                    }
                 }
 
                 if(!empty($_json))
@@ -89,14 +92,14 @@ class Autocomplete
     }
 
 
-    public static function get_cache_file($conn, $type)
+    public static function get_cache_file($conn, $type, $expire = 0)
     {
         Ossim_db::check_connection($conn);
 
         $user     = Session::get_session_user();
         $c_file   = "autocomplete_" . md5("$type-$user");
 
-        return Cache_file::get_asset_data($c_file);
+        return Cache_file::get_asset_data($c_file, $expire);
     }
 
 
@@ -397,6 +400,37 @@ class Autocomplete
             }
 
         }
+
+        return implode(",\n", $json);
+    }
+    
+    public static function autocomplete_pulses()
+    {
+        $json = array();
+        $otx  = new Otx();
+
+        try
+        {
+            $filters = array(
+                'page'      => 0,
+                'page_rows' => -1
+            );
+            
+            list($total, $p_list) = $otx->get_pulse_list($filters);
+            
+            foreach ($p_list as $_pulse)
+            {
+                $json[] = json_encode(array
+                (
+                    'txt'    => 'Pulse: '. $_pulse['name'],
+                    'id'     => $_pulse['id'],
+                    'type'   => 'pulse',
+                    'name'   => $_pulse['name'],
+                    'prefix' => 'pulse'
+                ));
+            }
+        }
+        catch(Exception $e){}
 
         return implode(",\n", $json);
     }

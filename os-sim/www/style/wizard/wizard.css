@@ -1083,6 +1083,15 @@ a.button
     width: 145px;
 }
 
+.net_devices_col_box
+{
+    width: 145px;
+}
+.net_devices_col_add
+{
+    width: 40px;
+}
+
 #net_devices_container
 {
     position: relative;

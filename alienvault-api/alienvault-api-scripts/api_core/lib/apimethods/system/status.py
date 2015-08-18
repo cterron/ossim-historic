@@ -39,12 +39,12 @@ from ansiblemethods.system.status import alienvault_status as ans_alienvault_sta
 from ansiblemethods.system.status import cpu as ans_cpu
 from ansiblemethods.system.status import disk_usage as ans_disk_usage
 from ansiblemethods.system.status import package_list as ans_package_list
-from ansiblemethods.system.system import ping_system as ans_ping_system
+from ansiblemethods.system.system import ansible_ping_system
 from collections import namedtuple
-from ansiblemethods.system.system import get_system_setup_data
 from apimethods.system.cache import use_cache
-from apimethods.system.proxy import AVProxy
 from ansiblemethods.system.network import get_iface_list
+
+from apiexceptions.system import APICannotResolveSystemIP
 
 APIResult = namedtuple('APIResult', ['success', 'data'])
 
@@ -96,7 +96,7 @@ def system_status(system_id):
         return APIResult(success, system_ip)
 
 
-@use_cache(namespace="system")
+@use_cache(namespace="network_status")
 def network_status(system_id, no_cache=False):
     """
        Return the network facts.
@@ -111,11 +111,11 @@ def network_status(system_id, no_cache=False):
 
             On error, a message about it is returned in the *data* field.
     """
-    
+
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
         return False, system_ip
-    
+
     success, ifaces = get_iface_list(system_ip)
     if success:
         # Get the iface disk
@@ -129,7 +129,7 @@ def network_status(system_id, no_cache=False):
                     # iface_data = setup_data['ansible_' + iface]
                     if ifaces[iface].get('ipv4', None) is not None:
                         facts['interfaces'][iface]['ipv4'] = ifaces[iface]['ipv4']
-                        
+
                     facts['interfaces'][iface]['role'] = ifaces[iface]['role']
                     # Add the a "UP" flags
                     # if iface_data['active'] is True:
@@ -211,8 +211,8 @@ def cpu(system_id):
         return ans_cpu(system_ip)
     else:
         return APIResult(success, system_ip)
-        
-           
+
+
 def package_list(system_id):
     """
     Add a system usign a system id. Already in database
@@ -228,17 +228,18 @@ def package_list(system_id):
         return False, msg
 
     return True, msg
-    
-    
-def ping_system(system_id):
+
+
+@use_cache(namespace='ping_system', expire=1000)
+def ping_system(system_id, no_cache=False):
+    """ Run an ansible ping in the system
     """
-    get all the registered systems and ping information
-    """
-    (success, system_ip) = get_system_ip_from_system_id(system_id)
+    success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
-        return False, system_ip
-        
-    reachable, msg = ans_ping_system(system_ip)
-    msg = 'Yes' if reachable else 'No'
-    
-    return True, msg
+        raise APICannotResolveSystemIP(
+            system_id=system_id,
+            log="[ping system] {0}".format(str(system_ip)))
+
+    reachable, msg = ansible_ping_system(system_ip)
+
+    return reachable

@@ -276,82 +276,51 @@ class Software
 
 
     /**
-    * This function returns distinct available vendors from software_cpe table
+    * This function returns distinct available vendors from API
     *
-    * @param object  $conn   Database access object
-    * @param boolean $cache  [Optional] Use cached information
+    * @param string  $sensor_id   Sensor to get the plugins
     *
     * @throws Exception  If a connection error occurred
     *
     * @return array
     */
-    public static function get_hardware_vendors($conn, $cache = FALSE)
+    public static function get_hardware_vendors($sensor_id = 'local')
     {
-        Ossim_db::check_connection($conn);
+        $plugins = Plugin::get_plugins_from_api(Util::uuid_format($sensor_id), array('per_asset' => TRUE));
 
-        $vendors = array();
-
-        $query  = "SELECT DISTINCT substring_index(cpe, ':', 3) as cpe, vendor FROM software_cpe WHERE plugin!='' GROUP BY vendor ORDER BY vendor";
-
-        $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
-
-        if (!$rs)
+        // Consolidate Vendors
+        foreach ($plugins as $plugin_data)
         {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            $vendors[$plugin_data['vendor']] = ucfirst($plugin_data['vendor']);
         }
-
-        while (!$rs->EOF)
-        {
-            $vendors[$rs->fields['cpe']] = $rs->fields['vendor'];
-
-            $rs->MoveNext();
-        }
+        
+        asort($vendors);
 
         return $vendors;
     }
 
 
     /**
-    * This function returns distinct available models by vendor cpe from software_cpe table
+    * This function returns distinct available models by vendor from API
     *
-    * @param object  $conn   Database access object
-    * @param string  $cpe    Vendor cpe
-    * @param boolean $cache  [Optional] Use cached information
+    * @param string  $vendor      Vendor
+    * @param string  $sensor_id   Sensor to get the plugins
     *
     * @throws Exception  If a connection error occurred
     *
     * @return array
     */
-    public static function get_models_by_cpe($conn, $cpe, $cache = FALSE)
+    public static function get_models_by_vendor($vendor, $sensor_id = 'local')
     {
-        Ossim_db::check_connection($conn);
-
-        $models  = array();
-
-        $query = "SELECT DISTINCT substring_index(cpe, ':', 4) as mcpe, name FROM software_cpe WHERE cpe LIKE ? AND plugin!='' GROUP BY mcpe ORDER BY name";
-        $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . ':%' );
-
-        $rs = ($cache) ? $conn->CacheExecute($query, $param) : $conn->Execute($query, $param);
-
-        if (!$rs)
+        $plugins = Plugin::get_plugins_from_api(Util::uuid_format($sensor_id), array('per_asset' => TRUE));
+        
+        // Get models by vendor from total list
+        foreach ($plugins as $plugin_data)
         {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        }
-
-        /*
-        if (!$rs->EOF)
-        {
-            // Fill Unknown
-            $unknown_cpe          = $conn->GetOne("SELECT substring_index(?, ':', 3) as cpe", $rs->fields['cpe']);
-            $models[$unknown_cpe] = _('Unknown');
-        }
-        */
-
-        while (!$rs->EOF)
-        {
-            $models[$rs->fields['mcpe']] = $rs->fields['name'];
-
-            $rs->MoveNext();
+            if ($plugin_data['vendor'] == $vendor)
+            {
+                $models[$vendor.':'.$plugin_data['model']] = $plugin_data['model'];
+            }
         }
 
         return $models;
@@ -359,37 +328,28 @@ class Software
 
 
     /**
-    * This function returns distinct available cersions by vendor cpe from software_cpe table
+    * This function returns distinct available versions by vendor and model
     *
-    * @param object  $conn   Database access object
-    * @param string  $cpe    Model cpe
-    * @param boolean $cache  [Optional] Use cached information
+    * @param string  $vendor_model  Vendor and Model
+    * @param string  $sensor_id     Sensor to get the plugins
     *
     * @throws Exception  If a connection error occurred
     *
     * @return array
     */
-    public static function get_versions_by_cpe($conn, $cpe, $cache = FALSE)
+    public static function get_versions_by_model($vendor_model, $sensor_id = 'local')
     {
-        Ossim_db::check_connection($conn);
-
-        $versions  = array();
-
-        $query = "SELECT DISTINCT cpe, version FROM software_cpe WHERE cpe LIKE ? AND plugin!='' ORDER BY version";
-        $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . ':%' );
-
-        $rs = ($cache) ? $conn->CacheExecute($query, $param) : $conn->Execute($query, $param);
-
-        if (!$rs)
+        list($vendor, $model) = explode(':', $vendor_model);
+        
+        $plugins = Plugin::get_plugins_from_api(Util::uuid_format($sensor_id), array('per_asset' => TRUE));
+        
+        // Get models by vendor from total list
+        foreach ($plugins as $plugin_data)
         {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        }
-
-        while (!$rs->EOF)
-        {
-            $versions[$rs->fields['cpe']] = (preg_match('/%\d/',$rs->fields['version'])) ? urldecode($rs->fields['version']) : $rs->fields['version'];
-
-            $rs->MoveNext();
+            if ($plugin_data['vendor'] == $vendor && $plugin_data['model'] == $model)
+            {
+                $versions[$vendor.':'.$plugin_data['model'].':'.$plugin_data['version']] = $plugin_data['version'];
+            }
         }
 
         return $versions;
@@ -452,52 +412,6 @@ class Software
         return array($link, $default);
     }
     
-    
-    /**
-    * This function returns a filtered software list 
-    *
-    * @param object   $conn    Database access object
-    * @param string   $cpe     Model cpe
-    * @param boolean  $cache   [Optional] Use cached information
-    *
-    * @throws Exception  If a connection error occurred
-    *
-    * @return array      
-    */ 
-    public static function get_vmv_by_cpe($conn, $cpe, $cache = FALSE)
-    {
-        Ossim_db::check_connection($conn);
-
-        $vmv = array();
-        
-        $query  = "SELECT * FROM software_cpe WHERE cpe LIKE ? ORDER BY cpe DESC LIMIT 1";
-        $params = array($cpe."%");
-        
-        $conn->SetFetchMode(ADODB_FETCH_ASSOC);
-        
-        $rs = ($cache) ? $conn->CacheExecute($query, $params) : $conn->Execute($query, $params);
-
-        if (!$rs) 
-        {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        } 
-        
-        if (is_array($rs->fields)) 
-        {
-            $_name    = (substr_count($cpe, ':') < 3) ? '' : $rs->fields['name'];
-            $_version = (substr_count($cpe, ':') < 4) ? '' : $rs->fields['version'];
-                     
-            $vmv = array(            
-                'name'    => $_name,
-                'line'    => $rs->fields['line'],
-                'vendor'  => $rs->fields['vendor'],
-                'version' => $_version,
-                'plugin'  => $rs->fields['plugin']
-            );          
-        } 
-               
-        return $vmv; 
-    }
 }
 
 /* End of file software.inc */

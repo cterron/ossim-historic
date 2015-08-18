@@ -29,6 +29,8 @@
 
 from uuid import UUID
 from binascii import hexlify
+from datetime import datetime
+import pytz
 import socket
 import re
 import os
@@ -195,7 +197,7 @@ def set_owner_and_group(user, group, filename):
     try:
         uid = pwd.getpwnam(user).pw_uid
         gid = grp.getgrnam(group).gr_gid
-        os.chown(filename,int(uid), int(gid))
+        os.chown(filename, int(uid), int(gid))
     except Exception as err:
         api_log.error("Error setting the owner/group to the file %s <%s>" % (filename, str(err)))
         return False, "Error setting the owner/group to the file %s <%s>" % (filename, str(err))
@@ -212,11 +214,11 @@ def set_file_permissions(filename, mode):
 
 
 def set_ossec_file_permissions(filename):
-    success, result = set_owner_and_group("avapi","alienvault", filename)
+    success, result = set_owner_and_group("avapi", "alienvault", filename)
     if not success:
         return success,result
-    #read/write for user and group
-    success, result = set_file_permissions(filename, stat.S_IRGRP|stat.S_IWGRP|stat.S_IRUSR|stat.S_IWUSR)
+    # Read/write for user and group
+    success, result = set_file_permissions(filename, stat.S_IRGRP | stat.S_IWGRP | stat.S_IRUSR | stat.S_IWUSR)
     if not success:
         return success,result
     return True, ""
@@ -236,6 +238,7 @@ def is_valid_integer(value):
         value = int(value)
     except:
         return False
+
     return True
 
 
@@ -270,3 +273,48 @@ def secure_path_join(base_path, *args):
         return False, "Error building path: %s" % str(e)
 
     return True, normalized_path
+
+
+def utc_to_local(utc_date, timezone):
+    """Transform a utc date to a given timezone date:
+
+     To convert from string to date: datetime.strptime('2015-05-26 15:00:00', '%Y-%m-%d %H:%M:%S')
+
+    Args:
+        utc_date(date)   :  Date in UTC format
+        timezone(string) :  Local Timezone (IE: "Europe/Madrid")
+
+    Returns:
+        date (date) : Date converted to local timezone
+    """
+    try:
+        local_tz = pytz.timezone(timezone)
+        local_date = utc_date.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    except Exception as err:
+        api_log.error("[utc_to_local] There was an error converting the date to local time: %s" % str(err))
+        # Saving the utc_date as local date to avoid further errors
+        local_date = utc_date
+
+    return local_date
+
+
+def get_tz_offset(tz):
+    """Transform a timezone string to timezone offset:
+    Example: "Europe/Madrid" --> "+02:00"
+
+    Args:
+        tz(string): Timezone string ('Europe/Madrid')
+
+    Returns:
+        format_offset (string): Offset Timezone ('+03:00')
+    """
+    try:
+        offset = datetime.now(pytz.timezone(tz)).strftime('%z')
+        regexp = re.compile('(\+|\-)(\d\d)(\d\d)')
+        matcher = regexp.search(offset)
+        format_offset = "%s%s:%s" % (matcher.group(1), matcher.group(2), matcher.group(3))
+    except Exception as err:
+        api_log.error("[get_tz_offset] There was an error getting the timezone offset: %s" % str(err))
+        format_offset = '+00:00'
+
+    return format_offset

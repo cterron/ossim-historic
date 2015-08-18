@@ -505,7 +505,7 @@ class TestAVOssimSetupConfigHandlerChecks(unittest.TestCase):
         self.assertNotEqual(config.check_update_update_proxy("Invalid@Community"),AVConfigParserErrors.ALL_OK)
         self.assertEqual(config.check_update_update_proxy("disabled"),AVConfigParserErrors.ALL_OK)
         self.assertEqual(config.check_update_update_proxy("manual"),AVConfigParserErrors.ALL_OK)
-        self.assertEqual(config.check_update_update_proxy("alienvault-center"),AVConfigParserErrors.ALL_OK)
+        self.assertEqual(config.check_update_update_proxy("alienvault-proxy"),AVConfigParserErrors.ALL_OK)
         del config
 
 

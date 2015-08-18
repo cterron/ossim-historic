@@ -139,6 +139,11 @@ class Properties
                 $os_image = 'linux.png';
                 $alt      = 'Linux';
             }
+            elseif (preg_match('/alienvault/i', $os))
+            {
+                $os_image = 'linux.png';
+                $alt      = 'AlienVault OS';
+            }
             elseif (preg_match('/openbsd/i', $os))
             {
                 $os_image = 'openbsd.png';
@@ -169,10 +174,20 @@ class Properties
                 $os_image = 'solaris.png';
                 $alt      = 'Solaris';
             }
-            elseif (preg_match('/cisco|ios\/?11|ios\/?12|ios\/?13|ios\/?14|ios\/?15/i', $os))
+            elseif (preg_match('/san\-os|cisco|ios\s*\/?\s*11|ios\s*\/?\s*12|ios\s*\/?\s*13|ios\s*\/?\s*14|ios\s*\/?\s*15/i', $os))
             {
                 $os_image = 'cisco.png';
                 $alt      = 'Cisco';
+            }
+            elseif (preg_match('/esx\sserver/i', $os))
+            {
+                $os_image = 'vmware.png';
+                $alt      = 'VMware';
+            }
+            elseif (preg_match('/vxworks/i', $os))
+            {
+                $os_image = 'vxworks.png';
+                $alt      = 'VxWorks';
             }
             elseif (preg_match('/ios/i', $os))
             {

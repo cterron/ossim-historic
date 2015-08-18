@@ -500,7 +500,7 @@ if ($error)
 												<td class='res_item' id='service_vulns'>
 													<div class="item_result">
 														<img src="/ossim/pixmaps/status/quiz.png" alt="" align="absmiddle"/>
-														<strong><?php echo _('Vulnerability Scan Scheduled') ?></strong>
+														<strong><?php echo _('Vuln Scan Scheduled') ?></strong>
 													</div>
 												</td>
 											</tr>

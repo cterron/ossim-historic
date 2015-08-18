@@ -55,15 +55,7 @@
 #include "sim-db-command.h"
 #include "sim-geoip.h"
 #include "sim-idm.h"
-
-G_LOCK_EXTERN (s_mutex_config);
-G_LOCK_EXTERN (s_mutex_plugins);
-G_LOCK_EXTERN (s_mutex_plugin_sids);
-G_LOCK_EXTERN (s_mutex_inets);
-G_LOCK_EXTERN (s_mutex_host_levels);
-G_LOCK_EXTERN (s_mutex_net_levels);
-G_LOCK_EXTERN (s_mutex_events);
-G_LOCK_EXTERN (s_mutex_servers);
+#include "sim-parser.h"
 
 extern SimMain    ossim;
 extern guint sem_total_events_popped;
@@ -135,6 +127,12 @@ struct _SimSessionPrivate {
   time_t last_event_timestamp;
   // to signal that we has "changed" the IP 
   gboolean is_loopback;
+ // Type of session (old_parser, bson_parser)
+  session_type session_protocol;
+  SimParser * bson_parser;
+  gssize      (* io_read)     (SimSession *, gchar *, gsize);
+  gssize      (* io_write)    (SimSession *, gchar *, gsize);
+  gboolean    (* io_shutdown) (SimSession *);
 
 };
 
@@ -146,8 +144,18 @@ static void sim_session_config_frameworkd (SimSession *session,SimCommand *comma
 static void sim_session_config_default (SimSession *session,SimCommand *command);
 static void sim_session_cmd_agent_ping(SimSession *session, SimCommand *command);
 static void sim_session_cmd_idm_event(SimSession *session, SimCommand *command);
-static gboolean sim_session_write_final (SimSession *session, gchar *buffer, gssize count, gsize *bytes_writtenp);
+static gboolean sim_session_write_final (SimSession *session, gchar *buffer, gssize count, gssize *bytes_writtenp);
 static void sim_session_update_last_event_timestamp (SimSession * session);
+static gboolean sim_session_read_bytes (SimSession * session, guint8 * buffer, gsize bytes, gsize maxsize);
+static gboolean sim_session_read_event_legacy        (SimSession * session, gchar * buffer, gsize * n);
+static gboolean sim_session_read_event_bson          (SimSession * session, gchar * buffer, gsize * n, gsize);
+static SimCommand * sim_session_get_command_from_buffer (SimSession *session, gchar *buffer, gsize n);
+static gssize    sim_session_io_read           (SimSession * session, gchar * data, gsize data_len);
+static gssize    sim_session_io_write          (SimSession * session, gchar * data, gsize data_len);
+static gboolean  sim_session_io_shutdown       (SimSession * session);
+
+
+
 
 /* GType Functions */
 
@@ -195,6 +203,9 @@ sim_session_finalize (GObject  *gobject)
 	g_cond_free (session->_priv->initial_cond);
 	g_mutex_free (session->_priv->initial_mutex);
 	g_mutex_free (session->_priv->socket_mutex);
+
+  if (session->_priv->bson_parser)
+		g_object_unref (session->_priv->bson_parser);
 
   if(session->_priv)
   	g_free (session->_priv);
@@ -265,6 +276,9 @@ sim_session_instance_init (SimSession *session)
 	session->type = SIM_SESSION_TYPE_NONE;
 	session->_priv->hashSensors = g_hash_table_new_full (g_str_hash,g_str_equal,g_free,NULL);
   session->_priv->is_loopback = FALSE;
+  session->_priv->session_protocol = SIM_SESSION_LEGACY_PROTOCOL;
+  session->_priv->bson_parser = sim_parser_new();
+
 }
 
 /* Public Methods */
@@ -316,7 +330,96 @@ sim_session_new (GObject       *object,
     session->_priv->close = TRUE;
 
   g_message ("New session %s socket created", socket ? "with" : "without");
+  session->_priv->io_shutdown = &sim_session_io_shutdown;
+  session->_priv->io_read = &sim_session_io_read;
+  session->_priv->io_write = &sim_session_io_write;
+  session->_priv->cur_len = 0;
   return session;
+}
+// IO Functions
+
+/**
+ * sim_session_io_read:
+ *
+ */
+static gssize
+sim_session_io_read (SimSession * session, gchar * data, gsize data_len)
+{
+  GIOStatus   status = G_IO_STATUS_NORMAL;
+  GError    * error = NULL;
+  gsize       bytes_read = 0;
+
+  while ((status = g_io_channel_read_chars (session->_priv->io, data, data_len, &bytes_read, &error)) == G_IO_STATUS_AGAIN);
+  if ((status != G_IO_STATUS_NORMAL) && (status != G_IO_STATUS_EOF))
+  {
+    if (error)
+    {
+      g_message ("Cannot read from %s: %s", session->_priv->ip_str, error->message);
+      g_error_free (error);
+    }
+    else
+      g_message ("Cannot read from %s: Unknown error", session->_priv->ip_str);
+
+    sim_session_close (session);
+    return ((gssize)-1);
+  }
+
+  return ((gssize)bytes_read);
+}
+
+/**
+ * sim_session_io_write:
+ *
+ */
+static gssize
+sim_session_io_write (SimSession * session, gchar * data, gsize data_len)
+{
+  GIOStatus   status = G_IO_STATUS_NORMAL;
+  GError    * error = NULL;
+  gsize       bytes_written = 0;
+
+  status = g_io_channel_write_chars (session->_priv->io, data, data_len, &bytes_written, &error);
+  if ((status != G_IO_STATUS_NORMAL) && (status != G_IO_STATUS_NORMAL))
+  {
+    if (error)
+    {
+      g_message ("Cannot write to %s: %s", session->_priv->ip_str, error->message);
+      g_error_free (error);
+    }
+    else
+      g_message ("Cannot write to %s: Unknown error", session->_priv->ip_str);
+
+    sim_session_close (session);
+    return ((gssize)-1);
+  }
+
+  return ((gssize)bytes_written);
+}
+static gboolean
+sim_session_io_shutdown (SimSession * session)
+{
+  GIOStatus status = G_IO_STATUS_NORMAL;
+  gboolean  ret = TRUE;
+  GError  * error = NULL;
+
+  // Try to shut down a SSL connection first, if needed.
+
+  // Shut down the IO Channel; flush always.
+  status = g_io_channel_shutdown (session->_priv->io, TRUE, &error);
+  if (status != G_IO_STATUS_NORMAL)
+  {
+    if (error)
+    {
+      g_message ("Cannot shutdown connection to %s: %s", session->_priv->ip_str, error->message);
+      g_error_free (error);
+    }
+    else
+      g_message ("Cannot shutdown connection to %s: Unknown error", session->_priv->ip_str);
+
+    ret = FALSE;
+  }
+
+  return (ret);
 }
 
 void 
@@ -510,7 +613,7 @@ sim_session_cmd_connect (SimSession  *session,
   SimCommand  *cmd;
   SimSensor   *sensor = NULL;
   SimUuid    * id = NULL;
-  SimVersion sensor_four = {4, 0, 0};
+  SimVersion sensor_four = {4, 0, 0, 0};
 
   g_return_if_fail (SIM_IS_SESSION (session));
   g_return_if_fail (SIM_IS_COMMAND (command));
@@ -573,11 +676,34 @@ sim_session_cmd_connect (SimSession  *session,
       else
       {
         // Check if this sensor has a new ip address and update it.
+         // Check if this sensor has a new ip address and update it.
         SimInet * sensor_ia = sim_sensor_get_ia (sensor);
-        if (!(sim_inet_equal (session->_priv->ia, sensor_ia)))
+        SimSession *old_session;
+        /* Okey, we need to check if we have a session with this sensor id */
+        /* Sensor != NULL -> We know that this sensor exists */
+        /* BAD BEFORE CHANGE, we need to check if exists a Session with this id */
+        
+        old_session = sim_server_get_sensor_by_ia_port (session->_priv->server, sim_sensor_get_ia (sensor), session->_priv->port);
+        if (!old_session)
         {
-          sim_sensor_set_ia (sensor, session->_priv->ia);
-          sim_db_insert_sensor (ossim.dbossim, sensor);
+          if (!(sim_inet_equal (session->_priv->ia, sensor_ia)))
+          {
+            SimSensor * ref = g_object_ref (sensor);
+            sim_container_remove_sensor_from_hash_table (ossim.container, sensor);
+            sim_sensor_set_ia (sensor, g_object_ref (session->_priv->ia));
+            sim_db_insert_sensor (ossim.dbossim, sensor);
+            sim_container_add_sensor_to_hash_table (ossim.container, sensor);
+            g_object_unref (ref);
+
+          }
+        }
+        else
+        {
+          /* Well, we have a possible? active session with this ia */
+          /* Session not alive */
+          g_message ("Same sensor has connected from '%s'. Discarding new connection", sim_inet_get_canonical_name (old_session->_priv->ia));
+          sim_session_close (session);
+          return;
         }
       }
       // End testing for v4 sensors.
@@ -979,6 +1105,7 @@ sim_session_cmd_sensor (SimSession  *session,
 /*
  * Send to the session connected (master server or frameworkd) a list with the name of all the children servers connected.
  */
+#if 0
 static void
 sim_session_cmd_server_get_servers (SimSession  *session,
 																    SimCommand  *command)
@@ -1058,6 +1185,7 @@ sim_session_cmd_server_get_servers (SimSession  *session,
 		g_object_unref (cmd);
 	}
 }
+#endif
 
 /*
  * Receives from a children server the servers connected to it, or from other
@@ -1067,6 +1195,7 @@ sim_session_cmd_server_get_servers (SimSession  *session,
  * thanks to a query from this server (originated in a master server or a
  * frmaeworkd). And the query usually will be redirected up.
  */
+#if 0
 static void
 sim_session_cmd_server (SimSession  *session,
 											  SimCommand  *command)
@@ -1111,6 +1240,7 @@ sim_session_cmd_server (SimSession  *session,
 		g_object_unref (cmd);
 	}
 }
+#endif
 
 
 /*
@@ -3117,7 +3247,26 @@ sim_session_cmd_reload_post_correlation_sids (SimSession *session, SimCommand *c
   }
 }
 
-GIOStatus sim_session_read_event(SimSession *session, gchar *buffer, gsize *n)  //n = received bytes
+gboolean
+sim_session_read_event (SimSession * session, gchar * buffer, gsize * n,gsize maxsize)
+{
+  gboolean result = FALSE;
+  switch(session->_priv->session_protocol)
+  {
+    case SIM_SESSION_LEGACY_PROTOCOL:
+      result = sim_session_read_event_legacy (session, buffer, n);
+      break;
+    case SIM_SESSION_BSON_PROTOCOL:
+      result = sim_session_read_event_bson (session, buffer, n, maxsize);
+      break;
+    default:
+      g_message ("Unknown session protocol = %d", session->_priv->session_protocol);
+      result = FALSE;
+  }
+  return result;
+}
+static 
+gboolean sim_session_read_event_legacy (SimSession *session, gchar *buffer, gsize *n)  //n = received bytes
 {
   GIOStatus status=G_IO_STATUS_NORMAL;
 
@@ -3229,9 +3378,63 @@ GIOStatus sim_session_read_event(SimSession *session, gchar *buffer, gsize *n)  
 
 	ossim_debug ( "event(%zu)[status:%d]: %s ",*n,status,buffer);
 
-	return status;
+	return status == G_IO_STATUS_NORMAL ? TRUE : FALSE;
 }
 
+static gboolean
+sim_session_read_event_bson (SimSession * session, gchar * buffer, gsize * n, gsize maxsize)
+{
+  gboolean result = FALSE; 
+  g_return_val_if_fail (SIM_IS_SESSION(session), FALSE);
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (n != NULL, FALSE);
+  /* We have read 4 bytes */
+  if (sim_session_read_bytes (session, (guint8*)buffer, sizeof (gint32), maxsize))
+  {
+    /* The bson len includes the int32 bytes and the lending 0 */
+    if (sim_session_read_bytes (session, (guint8*)(buffer + 4) , (* (uint32_t *)buffer) - 4, maxsize-4))
+    {
+      result = TRUE;
+      *n = * (uint32_t *)buffer;
+    }
+  }
+  
+  return result;
+}
+
+static gboolean 
+sim_session_read_bytes (SimSession * session, guint8 * buffer, gsize bytes, gsize maxsize)
+{
+  gboolean result = TRUE;
+  gsize i = 0;
+  gboolean overflow = FALSE;
+  while (bytes > 0)
+  {
+    if (session->_priv->cur_len > 0 && session->_priv->ptr < session->_priv->cur_len)
+    {
+      if (i < maxsize)
+        buffer[i++] = session->_priv->ring[session->_priv->ptr++];
+      else
+        overflow = TRUE;
+      bytes--;
+    }
+    else
+    {
+      session->_priv->ptr = 0;
+      if ((session->_priv->cur_len = session->_priv->io_read (session, session->_priv->ring, RING_SIZE - 1)) <= 0)
+      {
+        result = FALSE;
+        break;
+      }  
+    }
+  }
+  if (overflow)
+  {
+    g_message ("Buffer overflow");
+    result = FALSE;
+  }
+  return result;
+}
 gboolean
 sim_session_check_iochannel_status (SimSession  * session, GIOStatus status)
 {
@@ -3270,88 +3473,85 @@ sim_session_check_iochannel_status (SimSession  * session, GIOStatus status)
  *
  *
  */
+
 gboolean
 sim_session_read (SimSession  *session)
 {
   SimCommand  *cmd = NULL;
   SimCommand  *res;
-  GIOStatus	status=G_IO_STATUS_AGAIN;
+  gboolean 	status=TRUE;
   gchar        buffer[BUFFER_SIZE+1];
+  gchar        *pbuf;
   gsize		     n;
-  gchar 			*buf;
-  gchar       *session_ip_str;
-  gboolean  break_conn;
-
+  gboolean  error;
+  uint32_t  templen;
   session->_priv->received = 0;  //set the initial number of received events to 0
 
-  g_return_val_if_fail (session != NULL, FALSE);
   g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
-
-  
+  // Well I need to be sure that the first data is connect. Leet use the "peek" method
+  // Read exactly 4 bytes 
+  error = sim_session_read_bytes (session, (guint8 *)buffer, 4, 4);
+  if (!error)
+  {
+    g_message("Can't read from session.Closing");
+    sim_session_close (session);
+    return FALSE;
+  } 
+  pbuf = buffer; /* Ñapa */
+  templen = *(uint32_t*)pbuf;
+  /* Well OJO little endian one!!!! " little endian one!!!! "*/
+  if (templen == 0x6e6e6f63)
+  {
+    /* This is a old connect. Read the event */
+    error = sim_session_read_event_legacy (session,(buffer + 4), &n );
+    session->_priv->session_protocol = SIM_SESSION_LEGACY_PROTOCOL;
+    n = n + 4;
+  }
+  else if (templen < (BUFFER_SIZE - 4))
+  {
+    error = sim_session_read_bytes (session, (guint8 *)(buffer +4), templen - 4, BUFFER_SIZE - 4);
+    session->_priv->session_protocol = SIM_SESSION_BSON_PROTOCOL;
+    n = templen;
+  }
+  else
+  {
+    error = TRUE;
+  }
+  if (!error)
+  {
+    g_message ("Can't read events from network");
+    sim_session_close (session);
+    return FALSE;
+  }
+  //status = G_IO_STATUS_NORMAL;
 
   //Let's ensure that the buffer is really clean before reading.. (this shouldn't be needed..)
-  while ((memset(buffer, 0, BUFFER_SIZE+1)||1)&& (!session->_priv->close) && status!=G_IO_STATUS_EOF && (status= sim_session_read_event(session, buffer, &n)) == G_IO_STATUS_NORMAL&& (n>0) && (!session->_priv->close) )
+  do
   {
-		ossim_debug ( "sim_session_read: Session : Entering while. Session %p", session);
-		ossim_debug ( "sim_session_read: strlen(buffer)=%zu; n=%zu", strlen(buffer),n);
-		ossim_debug ( "sim_session_read: Session (%p): Buffer: %s", session, buffer);
-		
     aux_recvd_msgs++;
 
     //sanity checks...
+#if 0
     if (status != G_IO_STATUS_NORMAL)
-		{
-			break_conn = sim_session_check_iochannel_status (session, status);
-			if (break_conn)
-				continue;
-			else
-				return FALSE;
-		}
-		
-		//FIXME: This not a OSSIM fixme, IMHO this is a GLib fixme. If strlen(buffer) > n, gscanner will crash
-		//This can be easily reproduced commenting the "if" below, and doing a telnet to the server port, and sending one event. After that, do
-		//a CTRL-C, and a quit. Next event will crash the server, and gdb will show:
-		//(gdb) bt
-		//#0  0xb7d8765e in g_scanner_scope_add_symbol () from /usr/lib/libglib-2.0.so.0
-		//#1  0xb7d88a52 in g_scanner_get_next_token () from /usr/lib/libglib-2.0.so.0
-		//#2  0x0807e840 in sim_command_scan (command=0x8397980,
-		//Also, scanner->buffer is not 0 in the next iteration. If we set it to 0, it still crashes.
-		//I'll be very glad is someone has some time to check what's happening) :)
-		if (strlen(buffer) != n)
-		{
-		  g_message ("Received error. Inconsistent data entry, closing socket. Received:%zu Buffer lenght: %zu", n, strlen(buffer));
-	  	return FALSE;
-		}
+    {
+      break_conn = sim_session_check_iochannel_status (session, status);
+      if (break_conn)
+        continue;
+      else
+        return FALSE;
+    }
+#endif
 
-    if (buffer == NULL)
-		{
-    	ossim_debug ( "sim_session_read: Buffer NULL");
-			return FALSE;
-		}
 
-		//FIXME: WHY the F*CK this happens?? strlen(buffer) sometimes is =1!!!
-		//g_message("Data received: -%s- Count: %d  n: %d",buffer,sim_strnlen(buffer,BUFFER_SIZE),n);	 
-		if (strlen (buffer) <= 2) 
-		{
-	    ossim_debug ( "sim_session_read: Buffer <= 2 bytes");
-			memset(buffer, 0, BUFFER_SIZE);
-			continue;
-		}
-		
-	  ossim_debug ( "sim_session_read: buffer address before:%s", buffer);
-		buf = sim_buffer_sanitize (buffer);		
-		
-	  ossim_debug ( "sim_session_read: buffer address after:%s", buffer);
-      session_ip_str = sim_inet_get_canonical_name (sim_session_get_ia (session));
-      cmd = sim_command_new_from_buffer (buf, sim_session_get_event_scan_fn (session), session_ip_str); //this gets the command and all of the parameters associated.
-      g_free (session_ip_str);
-      g_free(buf);
-
-		if (!cmd)
-		{
-		  g_message ("sim_session_read: error command null. Buffer: %s", buffer);
-			continue;
-		}
+    //FIXME: WHY the F*CK this happens?? strlen(buffer) sometimes is =1!!!
+    //g_message("Data received: -%s- Count: %d  n: %d",buffer,sim_strnlen(buffer,BUFFER_SIZE),n);
+    
+    
+    if ((cmd = sim_session_get_command_from_buffer (session, buffer, n)) == NULL)
+    {
+      g_message ("sim_session_read: error command null. Buffer: %s", buffer);
+      continue;
+    }
     ossim_debug ( "sim_session_read: Command from buffer type:%d ; id=%d",cmd->type,cmd->id);
 
 		if (session->_priv->sensor
@@ -3361,222 +3561,227 @@ sim_session_read (SimSession  *session)
 			g_object_unref (cmd);
 			continue;
 		}
-      
+
     if (cmd->type == SIM_COMMAND_TYPE_NONE)
-		{
-	  	ossim_debug ( "sim_session_read: error command type none");
-		  g_object_unref (cmd);
-			return FALSE;
-		}
+    {
+      ossim_debug ( "sim_session_read: error command type none");
+      g_object_unref (cmd);
+      return FALSE;
+    }
 
-		if (sim_session_get_is_initial (session))		//is this the session started in sim_container_new();?
-		{
-			ossim_debug ( "sim_session_read: This is a initial session load");
-			if	(cmd->type == SIM_COMMAND_TYPE_OK)	// 
-			{ 
-				ossim_debug ( "sim_session_read: Mutex lock in OK");
-				//this will permit to load data the first time the server gets data from rservers.
-				//Take a look at sim-container
-				if (session->_priv->fully_stablished == FALSE)	//we only need to do the mutex the first time, when we are not sure that the
-					sim_session_set_fully_stablished (session);		//connection is open
-				
-				ossim_debug ( "sim_session_read: Mutex unlock in OK");
-			}
-			else
-			{
-				g_message ("Error: someone has tried to connect to the server when it still hasn't loaded everything needed");
-        res = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-        res->id = cmd->id;
-
-        sim_session_write (session, res);
-        g_object_unref (res);
-				g_object_unref (cmd);
-				return FALSE;
-			}
-			memset(buffer, 0, BUFFER_SIZE);
-			g_object_unref (cmd);
-			continue; //we only want to listen database answer events.
-		}
-
-/*
-		//-- FIXI 
-		//No leak up until here!!
-		g_object_unref (cmd);
-		continue;
-		//--
-*/
     sim_session_update_last_data_timestamp (session);
 
-		//this messages can arrive from other servers (up in the architecture -a master server-, down in the
-		//architecture -a children server-, or at the same level -HA server-), from some sensor (an agent) or from the frameworkd.
+    //this messages can arrive from other servers (up in the architecture -a master server-, down in the
+    //architecture -a children server-, or at the same level -HA server-), from some sensor (an agent) or from the frameworkd.
     switch (cmd->type)
-		{
-	
-			case SIM_COMMAND_TYPE_CONNECT:															//from children server / frameworkd / sensor
-						sim_session_cmd_connect (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SERVER_GET_SENSORS:										//from frameworkd / master server
-						sim_session_cmd_server_get_sensors (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SENSOR:																// [from children server]-> To Master server / frameworkd 
-						sim_session_cmd_sensor (session, cmd);
-						break;	
-			case SIM_COMMAND_TYPE_SERVER_GET_SERVERS:										//from frameworkd / master server
-						sim_session_cmd_server_get_servers (session, cmd);
-						break;	
-			case SIM_COMMAND_TYPE_SERVER:																// [from children server]-> To Master server / frameworkd 
-						sim_session_cmd_server (session, cmd);
-						break;	
-			case SIM_COMMAND_TYPE_SERVER_GET_SENSOR_PLUGINS:						//from frameworkd / master server
-						sim_session_cmd_server_get_sensor_plugins (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SERVER_SET_DATA_ROLE:									//from frameworkd / master server
-						sim_session_cmd_server_set_data_role (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SENSOR_PLUGIN_START:									//from frameworkd / master server
-						sim_session_cmd_sensor_plugin_start (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SENSOR_PLUGIN_STOP:										//from frameworkd / master server
-						sim_session_cmd_sensor_plugin_stop (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SENSOR_PLUGIN_ENABLE:								//from frameworkd / master server
-						sim_session_cmd_sensor_plugin_enable (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SENSOR_PLUGIN_DISABLE:								//from frameworkd / master server
-						sim_session_cmd_sensor_plugin_disable (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_RELOAD_PLUGINS:
-						sim_session_cmd_reload_plugins (session, cmd);				// from frameworkd / master server
-						break;
-			case SIM_COMMAND_TYPE_RELOAD_SENSORS:												// from frameworkd / master server
-						sim_session_cmd_reload_sensors (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_RELOAD_HOSTS:													// from frameworkd / master server
-						sim_session_cmd_reload_hosts (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_RELOAD_NETS:													// from frameworkd / master server
-						sim_session_cmd_reload_nets (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_RELOAD_POLICIES:											// from frameworkd / master server
-						sim_session_cmd_reload_policies (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_RELOAD_DIRECTIVES:										// from frameworkd / master server
-						sim_session_cmd_reload_directives (session, cmd);
-						break;
-      case SIM_COMMAND_TYPE_RELOAD_SERVERS:                       // from frameworkd / master server
-            sim_session_cmd_reload_servers (session, cmd);
-            break;
-			case SIM_COMMAND_TYPE_RELOAD_ALL:														// from frameworkd / master server
-						sim_session_cmd_reload_all (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN:								//from sensor
-						sim_session_cmd_session_append_plugin (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_SESSION_REMOVE_PLUGIN:								//from sensor
-						sim_session_cmd_session_remove_plugin (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_PLUGIN_STATE_STARTED:									//from sensor (just information for the server)
-						sim_session_cmd_plugin_state_started (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_PLUGIN_STATE_UNKNOWN:									//from sensor
-						sim_session_cmd_plugin_state_unknown (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_PLUGIN_STATE_STOPPED:									//from sensor
-						sim_session_cmd_plugin_state_stopped (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_PLUGIN_ENABLED:												//from sensor
-						sim_session_cmd_plugin_enabled (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_PLUGIN_DISABLED:											//from sensor
-						sim_session_cmd_plugin_disabled (session, cmd);
-						break;
-						
-			case SIM_COMMAND_TYPE_EVENT:																//from sensor / server children
-						sim_session_cmd_event (session, cmd);
-                        sim_session_update_last_event_timestamp (session);
-						break;
-					
-			case SIM_COMMAND_TYPE_HOST_OS_EVENT:								        // from sensor / children server
-						sim_session_cmd_host_os_event (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_HOST_MAC_EVENT:												// from sensor / children server	
-						sim_session_cmd_host_mac_event (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_HOST_SERVICE_EVENT:										// from sensor / children server
-						sim_session_cmd_host_service_event (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_OK:																		//from *
-						sim_session_cmd_ok (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_ERROR:																//from *
-						sim_session_cmd_error (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_PONG:
-						sim_session_cmd_pong (session, cmd);									// from sensor
-						break;
-      case SIM_COMMAND_TYPE_DATABASE_QUERY:                       // from children server
-						ossim_debug ( "%s: SIM_COMMAND_TYPE_DATABASE_QUERY deprecated", __func__);
-				    break;                                                  
-	    case SIM_COMMAND_TYPE_DATABASE_ANSWER:                      // from master server
-						ossim_debug ( "%s: SIM_COMMAND_TYPE_DATABASE_ANSWER deprecated", __func__);
-            break;
-			case SIM_COMMAND_TYPE_SNORT_EVENT:
-					  sim_session_cmd_event (session, cmd);
-		   		break;
-      case SIM_COMMAND_TYPE_AGENT_DATE:                           //from sensor. still it doesn't do nothing
-          break;
-			case SIM_COMMAND_TYPE_SENSOR_GET_FRAMEWORK:
-			  sim_session_cmd_session_get_framework(session,cmd);
-			  break;
-			case SIM_COMMAND_TYPE_FRMK_GETDB:
-			  sim_session_cmd_session_get_frmk_getdb(session,cmd);
-					break;
-			case SIM_COMMAND_TYPE_AGENT_PING:
-        sim_session_cmd_agent_ping (session,cmd);
-				break;
-      case SIM_COMMAND_TYPE_IDM_EVENT:
-        /* Discard IDM events if we don't have session->sensor */
-        if (session->_priv->sensor)
-        {
-	        sim_session_cmd_idm_event(session,cmd);
-        }
-        else
-        {
-           g_message("Discarting idm event: The session has not been set correctly");
-        } 
-	      break;
-	    case SIM_COMMAND_TYPE_RELOAD_POST_CORRELATION_SIDS:
-  	    sim_session_cmd_reload_post_correlation_sids (session,cmd);
-				break;
-			default:
-						ossim_debug ( "sim_session_read: error command unknown type");
-						res = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-						res->id = cmd->id;
+    {
+    case SIM_COMMAND_TYPE_CONNECT:															//from children server / frameworkd / sensor
+     sim_session_cmd_connect (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SERVER_GET_SENSORS:										//from frameworkd / master server
+      sim_session_cmd_server_get_sensors (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR:																// [from children server]-> To Master server / frameworkd 
+      sim_session_cmd_sensor (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SERVER_GET_SENSOR_PLUGINS:						//from frameworkd / master server
+      sim_session_cmd_server_get_sensor_plugins (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SERVER_SET_DATA_ROLE:									//from frameworkd / master server
+      sim_session_cmd_server_set_data_role (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_START:									//from frameworkd / master server
+      sim_session_cmd_sensor_plugin_start (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_STOP:										//from frameworkd / master server
+      sim_session_cmd_sensor_plugin_stop (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_ENABLE:								//from frameworkd / master server
+      sim_session_cmd_sensor_plugin_enable (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_DISABLE:								//from frameworkd / master server
+      sim_session_cmd_sensor_plugin_disable (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_PLUGINS:
+      sim_session_cmd_reload_plugins (session, cmd);				// from frameworkd / master server
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_SENSORS:												// from frameworkd / master server
+      sim_session_cmd_reload_sensors (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_HOSTS:													// from frameworkd / master server
+      sim_session_cmd_reload_hosts (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_NETS:													// from frameworkd / master server
+      sim_session_cmd_reload_nets (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_POLICIES:											// from frameworkd / master server
+      sim_session_cmd_reload_policies (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_DIRECTIVES:										// from frameworkd / master server
+      sim_session_cmd_reload_directives (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_SERVERS:                       // from frameworkd / master server
+      sim_session_cmd_reload_servers (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_ALL:														// from frameworkd / master server
+      sim_session_cmd_reload_all (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN:								//from sensor
+      sim_session_cmd_session_append_plugin (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_SESSION_REMOVE_PLUGIN:								//from sensor
+      sim_session_cmd_session_remove_plugin (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_STATE_STARTED:									//from sensor (just information for the server)
+      sim_session_cmd_plugin_state_started (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_STATE_UNKNOWN:									//from sensor
+      sim_session_cmd_plugin_state_unknown (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_STATE_STOPPED:									//from sensor
+      sim_session_cmd_plugin_state_stopped (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_ENABLED:												//from sensor
+      sim_session_cmd_plugin_enabled (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_DISABLED:											//from sensor
+      sim_session_cmd_plugin_disabled (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_EVENT:																//from sensor / server children
+      sim_session_cmd_event (session, cmd);
+      sim_session_update_last_event_timestamp (session);
+      break;
+    case SIM_COMMAND_TYPE_HOST_OS_EVENT:								        // from sensor / children server
+			if (session->type == SIM_SESSION_TYPE_SENSOR && session->_priv->sensor != NULL)
+				sim_session_cmd_host_os_event (session, cmd);
+			else
+				g_message ("host-os-event only supported in a sensor session");
+      break;
+    case SIM_COMMAND_TYPE_HOST_MAC_EVENT:												// from sensor / children server	
+			if (session->type == SIM_SESSION_TYPE_SENSOR && session->_priv->sensor != NULL)
+				sim_session_cmd_host_mac_event (session, cmd);
+			else
+				g_message ("host-mac-event only supported in a sensor session");
+      break;
+    case SIM_COMMAND_TYPE_HOST_SERVICE_EVENT:										// from sensor / children server
+			if (session->type == SIM_SESSION_TYPE_SENSOR && session->_priv->sensor != NULL)
+				sim_session_cmd_host_service_event (session, cmd);
+			else
+				g_message ("host-service-event only supported in a sensor session");
+      break;
+    case SIM_COMMAND_TYPE_OK:																		//from *
+      sim_session_cmd_ok (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_ERROR:																//from *
+      sim_session_cmd_error (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_PONG:
+      sim_session_cmd_pong (session, cmd);									// from sensor
+      break;
+    case SIM_COMMAND_TYPE_DATABASE_QUERY:                       // from children server
+      ossim_debug ( "%s: SIM_COMMAND_TYPE_DATABASE_QUERY deprecated", __func__);
+      break;
+    case SIM_COMMAND_TYPE_DATABASE_ANSWER:                      // from master server
+      ossim_debug ( "%s: SIM_COMMAND_TYPE_DATABASE_ANSWER deprecated", __func__);
+      break;
+    case SIM_COMMAND_TYPE_SNORT_EVENT:
+      sim_session_cmd_event (session, cmd);
+      break;
+    case SIM_COMMAND_TYPE_AGENT_DATE:                           //from sensor. still it doesn't do nothing
+      break;
+    case SIM_COMMAND_TYPE_BACKLOG:
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_GET_FRAMEWORK:
+      sim_session_cmd_session_get_framework(session,cmd);
+      break;
+    case SIM_COMMAND_TYPE_FRMK_GETDB:
+      sim_session_cmd_session_get_frmk_getdb(session,cmd);
+      break;
+    case SIM_COMMAND_TYPE_AGENT_PING:
+      sim_session_cmd_agent_ping (session,cmd);
+      break;
+    case SIM_COMMAND_TYPE_IDM_EVENT:
+      /* Discard IDM events if we don't have session->sensor */
+      if (session->_priv->sensor)
+        sim_session_cmd_idm_event(session,cmd);
+      else
+      {
+        g_message("Discarding idm event: The session has not been set correctly");
+      }
+      break;
+    case SIM_COMMAND_TYPE_RELOAD_POST_CORRELATION_SIDS:
+      sim_session_cmd_reload_post_correlation_sids (session,cmd);
+      break;
+    default:
+      ossim_debug ( "sim_session_read: error command unknown type");
+      res = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
+      res->id = cmd->id;
 
-						sim_session_write (session, res);
-						g_object_unref (res);
-						break;
+      sim_session_write (session, res);
+      g_object_unref (res);
+      break;
 
-		}
+    }
 
     g_object_unref (cmd);
-		cmd = NULL;
+    cmd = NULL;
 
-		n=0;
-  	memset(buffer, 0, BUFFER_SIZE);
+    n=0;
+    aux_created_events++;
+    ossim_debug ( "sim_session_read: %d", aux_created_events);
 
-		aux_created_events++;
-		ossim_debug ( "sim_session_read: %d", aux_created_events);
+  } while ((!session->_priv->close) && status!=G_IO_STATUS_EOF && (status= sim_session_read_event(session, buffer, &n, BUFFER_SIZE)) == TRUE && (n>0) && (!sim_session_must_close(session)));
+  
+  sim_session_close (session);
+  ossim_debug ( "sim_session_read: exiting function in session: %p", session);
 
-	}
-	session->_priv->close=TRUE;
-	ossim_debug ( "sim_session_read: exiting function in session: %p", session);
-
-	//if(n==0)
-		//return FALSE;
   return TRUE;
 }
 
+static SimCommand *
+sim_session_get_command_from_buffer (SimSession *session, gchar *buffer, gsize n)
+{
+  g_return_val_if_fail (SIM_IS_SESSION (session), NULL);
+  g_return_val_if_fail (buffer != NULL, NULL);
+  SimCommand    *cmd = NULL;
+  gchar         *buf;
+  gchar         *session_ip_str;
+  (void)n; // Silence warning
+  
+  switch (session->_priv->session_protocol)
+  {
+    case SIM_SESSION_LEGACY_PROTOCOL:
+      if(strlen (buffer) <= 2)
+      {
+        ossim_debug ( "sim_session_read: Buffer <= 2 bytes");
+        
+      }
+      else
+      {
+        ossim_debug ( "sim_session_read: buffer address before:%s", buffer);
+        buf = sim_buffer_sanitize (buffer);
+        ossim_debug ( "sim_session_read: buffer address after:%s", buffer);
+        session_ip_str = sim_inet_get_canonical_name (sim_session_get_ia (session));
+        cmd = sim_command_new_from_buffer (buf, sim_session_get_event_scan_fn (session), session_ip_str); //this gets the command and all of the parameters associated.
+        g_free (session_ip_str);
+        g_free(buf);
+      }
+      break;
+    case SIM_SESSION_BSON_PROTOCOL:
+      cmd = sim_parser_bson (session->_priv->bson_parser, (const uint8_t *) buffer, n);
+      if (!cmd)
+      {
+        gchar *shex = sim_bin2hex ((uint8_t*)buffer, n);
+        g_message ("Can't parse the BSON len:%zu, strlen:%zu, BSON object:%s", n,strlen(shex), shex);
+        g_free (shex);
+      }
+      break;
+    default:
+      g_message ("Unsuported protocol %d",session->_priv->session_protocol); 
+      break;
+  }
+  return cmd;
+}
 /*
  * Send the command specified (usually it will be a SIM_COMMAND_TYPE_EVENT or something like that) 
  * to all the master servers (servers UP in the architecture).
@@ -3654,15 +3859,44 @@ sim_session_write (SimSession  *session,
                    SimCommand  *command)
 {
   gchar *str;
-  gsize n;
+  gsize n = 0;
+  bson_t *b;
+  switch (session->_priv->session_protocol)
+  { 
+    case SIM_SESSION_LEGACY_PROTOCOL:
+      str = sim_command_get_string (command);
+      if (!str)
+        break;
+      n = sim_session_write_from_buffer (session, str);
+      g_free (str);
+      break;
+    case SIM_SESSION_BSON_PROTOCOL:
+      b = sim_command_get_bson (command);
+      if (b)
+      {
+        gssize writebytes;
+        const uint8_t *data = bson_get_data (b);
+        gsize towrite = b->len;
+        while (towrite > 0)
+        {
+          data = &data[b->len - towrite]; 
+          if (!sim_session_write_final (session, (gchar *)data, towrite, &writebytes) && (gssize)writebytes == -1)
+          {
+            g_message ("Can't send command to sensor '%s' Protocol: '%s'",  session->_priv->ip_str,
+                       session->_priv->session_protocol ==  SIM_SESSION_BSON_PROTOCOL ? "BSON": "LEGACY" );
+            break;
+          }
+          towrite -= writebytes; 
+        }
+        n = b->len;
+        bson_destroy (b);
+      }
+      break;
+    default:
+      g_warning ("Bad session protocol '%d'", session->_priv->session_protocol);
+  
+  }
 
-  str = sim_command_get_string (command);
-  if (!str)
-    return 0;
-
-  n = sim_session_write_from_buffer (session, str);
-
-  g_free (str);
 
   return n;
 }
@@ -3672,7 +3906,7 @@ sim_session_write_from_buffer (SimSession *session,
                                gchar      *buffer)
 {
   gboolean ok;
-  gsize n = 0; //gsize = unsigned integer 32 bits
+  gssize n = 0; //gsize = unsigned integer 32 bits
 
   g_return_val_if_fail (SIM_IS_SESSION (session), 0);
 
@@ -3693,48 +3927,12 @@ sim_session_write_from_buffer (SimSession *session,
 }
 
 static gboolean
-sim_session_write_final (SimSession *session, gchar *buffer, gssize count, gsize *bytes_writtenp)
+sim_session_write_final (SimSession *session, gchar *buffer, gssize count, gssize *bytes_writtenp)
 {
-  GIOCondition conds;
-  GIOStatus status;
-  GError *err = NULL;
-  gboolean break_conn;
-
-  g_return_val_if_fail (session->_priv->io != NULL, 0);
-
-  g_debug ("%s: session %s: %s %ld", __func__, session->_priv->ip_str, buffer, (glong)count);
-
-  conds = g_io_channel_get_buffer_condition(session->_priv->io);
-
-  if ((conds&G_IO_HUP) || session->_priv->g_io_hup || session->_priv->close) //with this condition should be enought
-    return FALSE;
-
-  sim_util_block_signal (SIGPIPE);
-  status = g_io_channel_write_chars (session->_priv->io, buffer, count, bytes_writtenp, &err);
-  sim_util_unblock_signal (SIGPIPE);
-
-  if (status != G_IO_STATUS_NORMAL)
-    goto beach;
-
-  status = g_io_channel_flush(session->_priv->io, &err);
-
-  if (status != G_IO_STATUS_NORMAL)
-    goto beach;
-
-  return TRUE;
-
-beach:
-  if (status == G_IO_STATUS_ERROR)
-  {
-    g_debug ("%s: %s", __func__, err->message);
-    g_error_free (err);
-  }
-
-  break_conn = sim_session_check_iochannel_status (session, status);
-  if (!break_conn)
-    session->_priv->close = TRUE;
-
-  return FALSE;
+  gboolean ret = TRUE;
+  if ((*bytes_writtenp = session->_priv->io_write (session, buffer, count)) <= 0)
+    ret = FALSE;
+  return (ret);
 }
 
 /*

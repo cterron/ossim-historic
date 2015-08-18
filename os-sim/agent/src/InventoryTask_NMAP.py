@@ -29,8 +29,10 @@
 # Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 import time
+import string
 import nmap
 import xml.dom.minidom
+import re
 
 from InventoryTask import InventoryTask
 from Event import HostInfoEvent
@@ -93,6 +95,7 @@ class NMAP_TASK(InventoryTask):
 
             str_ports = ''
             software = set()
+            operative_system = set()
             hardware = set()
 
             ports = nmaphost.getElementsByTagName('ports')
@@ -108,20 +111,72 @@ class NMAP_TASK(InventoryTask):
                     portservices = port.getElementsByTagName('service')
                     if state != "open":
                         continue
-                    str_services = 'unknown'
+                    str_services = ''
+                    tunnel=''
+                    ocpe = ''
+                    product = ''
+                    version = ''
+                    extrainfo = ''
                     services = []
                     str_cpe = ''
                     for ps in portservices:
+                        try:
+                            product = ps.getAttributeNode('product').value
+                        except AttributeError:
+                            pass
+                        try:
+                            version = ps.getAttributeNode('version').value
+                        except AttributeError:
+                            pass
+                        try:
+                            extrainfo = ps.getAttributeNode('extrainfo').value
+                        except AttributeError:
+                            pass
+
                         service_name = ps.getAttributeNode('name').value
                         if service_name == '' or service_name is None:
-                            service_name = 'unknown'
+                            continue;
+                            
+                        try:
+                            tunnel = ps.getAttributeNode('tunnel').value
+                            if tunnel=='ssl' and service_name=='http':
+                                service_name = 'https'
+                        except AttributeError:
+                            pass
+                            
                         services.append(service_name)
+                            
+                        #create banner
+                        banner = []
+                        if product:
+                            banner.append(product)
+                        if version:
+                            banner.append(version)
+                        if extrainfo:
+                            banner.append(extrainfo)
 
                         for cpe in ps.getElementsByTagName('cpe'):
-                            if str_cpe:
-                                str_cpe += ','
-                            str_cpe += cpe.firstChild.nodeValue
-                            software.add (cpe.firstChild.nodeValue)
+                            if not banner:
+                                banner.append(' '.join([s[0].upper() + s[1:] for s in re.sub(':',' ',re.sub(r"^cpe:/.:", '', re.sub(r":+", ':', cpe.firstChild.nodeValue))).split(' ')]))
+
+                            ocpe = cpe.firstChild.nodeValue # save the original cpe
+
+                            cpe.firstChild.nodeValue += '|'
+                            cpe.firstChild.nodeValue += (' '.join(banner)).lstrip(' ')
+
+                            if cpe.firstChild.nodeValue.startswith('cpe:/o:'):
+                                operative_system.add (cpe.firstChild.nodeValue)
+                            elif cpe.firstChild.nodeValue.startswith('cpe:/h:'):
+                                hardware.add (cpe.firstChild.nodeValue)
+                            else:
+                                if str_cpe:
+                                    str_cpe += ','
+                                str_cpe += ocpe
+
+                                software.add (cpe.firstChild.nodeValue)
+
+                        if not str_cpe and banner:
+                            str_cpe = (' '.join(banner)).lstrip(' ')
 
                     if len(services) > 0:
                         str_services = ','.join(["%s" % s for s in services])
@@ -130,37 +185,52 @@ class NMAP_TASK(InventoryTask):
                     if str_cpe:
                         str_ports += '%s|%s|%s|%s' % (protocol, portnumber, str_services, str_cpe)
                     else:
-                        str_ports += '%s|%s|%s' % (protocol, portnumber,str_services)
+                        str_ports += '%s|%s|%s|unknown' % (protocol, portnumber,str_services)
 
             os = nmaphost.getElementsByTagName('os')
             if os:
                 str_os = ''
                 last_accuracy = 0
                 for os in nmaphost.getElementsByTagName('osclass'):
-                    # por aqui dentro se saca el cpe hardware
-                    accuracy = 0
+                    osfamily = ''
                     try:
-                        accuracy = os.getAttributeNode('accuracy').value
+                        osfamily = os.getAttributeNode('osfamily').value
                     except:
                         pass
-                    if accuracy > last_accuracy:
-                        last_accuracy = accuracy
-                        if os.getAttributeNode('osfamily') and os.getAttributeNode('osgen'):
-                            str_os = '%s|%s' % (os.getAttributeNode('osfamily').value, os.getAttributeNode('osgen').value)
-                        hardware.clear()
-                        for cpe in os.getElementsByTagName('cpe'):
-                            hardware.add(cpe.firstChild.nodeValue)
+
+                    if not osfamily in ['embedded', '', 'unknown']:
+                        accuracy = 0
+                        try:
+                            accuracy = os.getAttributeNode('accuracy').value
+                        except:
+                            pass
+                        if accuracy > last_accuracy:
+                            last_accuracy = accuracy
+                            if os.getAttributeNode('osfamily') and os.getAttributeNode('osgen'):
+                                str_os = '%s %s' % (osfamily, os.getAttributeNode('osgen').value)
+                            operative_system_new = set()
+                            hardware_new = set()
+                            for cpe in os.getElementsByTagName('cpe'):
+                                banner = ' '.join([s[0].upper() + s[1:] for s in re.sub(':',' ',re.sub(r"^cpe:/.:", '', re.sub(r":+", ':', cpe.firstChild.nodeValue))).split(' ')])
+                                if cpe.firstChild.nodeValue.startswith('cpe:/o:'):
+                                    operative_system_new.add(cpe.firstChild.nodeValue + '|' + banner)
+                                elif cpe.firstChild.nodeValue.startswith('cpe:/h:'):
+                                    hardware_new.add(cpe.firstChild.nodeValue + '|' + banner)
+                            if len(operative_system_new) > 0 or len(hardware_new) > 0:
+                                operative_system = operative_system_new
+                                hardware = hardware_new
 
                 if str_os != '':
                     host['os'] = str_os
 
             str_software = ''
+            software.update(operative_system)
             software.update(hardware)
             for s in software:
                 if str_software == '':
-                    str_software += '%s|' % (s)
+                    str_software += '%s' % (s)
                 else:
-                    str_software += ',%s|' % (s)
+                    str_software += ',%s' % (s)
 
             host['service'] = str_ports
             host['software'] = str_software

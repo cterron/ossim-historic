@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#
 # License:
 #
 #    Copyright (c) 2003-2006 ossim.net
@@ -156,12 +158,12 @@ class WSHandler:
 
       # Special value: @DEFAULT@
       if value == '@DEFAULT@':
-        logger.info ("Attribute '%s' has a default value" % str(key))
+        logger.debug ("Attribute '%s' has a default value" % str(key))
         value = self.__default[key]
 
       # This value may be a 'calculated' one.
       elif value == '@CALCULATED@':
-        logger.info ("Attribute '%s' has a calculated value" % str(key))
+        logger.debug ("Attribute '%s' has a calculated value" % str(key))
         try:
           formula = calculated_values[attr]
           trans_formula = re.sub('@(?=\S+@)', 'params["', formula)
@@ -180,11 +182,11 @@ class WSHandler:
       attrs += '%s="%s",' % (attr, value)
 
     ws_command = operation + '(' + attrs.rstrip(',') + ')'
-    logger.info ("Executing WS command: %s" % ws_command)
+    logger.debug ("Executing WS command: %s" % ws_command)
     try:
       ret = eval (ws_command)
     except Exception, msg:
       raise
 
-    logger.info ("WS return value: '%s'" % str(ret))
+    logger.debug ("WS return value: '%s'" % str(ret))
     return ret

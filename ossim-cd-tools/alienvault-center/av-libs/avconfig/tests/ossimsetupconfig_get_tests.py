@@ -450,7 +450,7 @@ class TestAVOssimSetupConfigHandlerGets(unittest.TestCase):
 
     def test_get_sensor_detectors(self):
         config = AVOssimSetupConfigHandler(TEST_FILES_PATH+"ossim_setup1.conf")
-        detector_list = 'ossec-single-line,pam_unix,prads,snortunified,ssh,sudo'
+        detector_list = 'ossec-single-line,pam_unix,prads,suricata,ssh,sudo'
         self.assertEqual(config.get_sensor_detectors(),detector_list)
         del config
         
@@ -469,7 +469,7 @@ class TestAVOssimSetupConfigHandlerGets(unittest.TestCase):
 
     def test_get_sensor_detectors_list(self):
         config = AVOssimSetupConfigHandler(TEST_FILES_PATH+"ossim_setup1.conf")
-        detector_list = ['ossec-single-line', 'pam_unix', 'prads', 'snortunified', 'ssh', 'sudo']
+        detector_list = ['ossec-single-line', 'pam_unix', 'prads', 'suricata', 'ssh', 'sudo']
         self.assertEqual(config.get_sensor_detectors_list(),detector_list)
         del config
         
@@ -556,7 +556,7 @@ class TestAVOssimSetupConfigHandlerGets(unittest.TestCase):
 
     def test_get_sensor_monitors(self):
         config = AVOssimSetupConfigHandler(TEST_FILES_PATH+"ossim_setup1.conf")
-        monitors_list = 'nmap-monitor, ntop-monitor, ossim-monitor, ping-monitor, whois-monitor, wmi-monitor'
+        monitors_list = 'nmap-monitor, ossim-monitor, ping-monitor, whois-monitor, wmi-monitor'
         self.assertEqual(config.get_sensor_monitors(),monitors_list)
         del config
         
@@ -574,7 +574,7 @@ class TestAVOssimSetupConfigHandlerGets(unittest.TestCase):
 
     def test_get_sensor_monitors_list(self):
         config = AVOssimSetupConfigHandler(TEST_FILES_PATH+"ossim_setup1.conf")
-        monitors_list = ['nmap-monitor', 'ntop-monitor', 'ossim-monitor', 'ping-monitor', 'whois-monitor', 'wmi-monitor']
+        monitors_list = ['nmap-monitor', 'ossim-monitor', 'ping-monitor', 'whois-monitor', 'wmi-monitor']
         self.assertEqual(config.get_sensor_monitors_list(),monitors_list)
         del config
         

@@ -442,10 +442,8 @@ sim_db_load_nets (SimDatabase *database,
 
   g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
 
-  query = g_strdup_printf ("SELECT id, name, ips, asset, "
-                           "net_qualification.compromise, net_qualification.attack, net.external_net "
-                           "FROM net LEFT JOIN net_qualification ON net.id = net_qualification.net_id "
-                           "WHERE ctx = %s", sim_uuid_get_db_string (context_id));
+  query = g_strdup_printf ("SELECT id, name, ips, asset, external_net "
+                           "FROM net WHERE ctx = %s", sim_uuid_get_db_string (context_id));
 
   net_list = sim_db_get_objects (database, query, (DMFunc) sim_net_new_from_dm);
 
@@ -473,8 +471,7 @@ sim_db_load_hosts (SimDatabase *database,
 
   g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
 
-  query = g_strdup_printf ("SELECT h.id, h.hostname, h.asset, hq.compromise, hq.attack, h.external_host FROM host h "
-                           "LEFT JOIN host_qualification hq ON h.id = hq.host_id "
+  query = g_strdup_printf ("SELECT h.id, h.hostname, h.asset, h.external_host FROM host h "
                            "WHERE ctx = %s GROUP BY h.id", sim_uuid_get_db_string (context_id));
 
   host_list = sim_db_get_objects (database, query, (DMFunc) sim_host_new_from_dm);
@@ -1960,26 +1957,13 @@ sim_db_delete_directives (SimDatabase * database,
                           SimUuid     * engine_id)
 {
   gchar * saqqara_pattern = "%SAQQARA%";
-  gchar * query = g_strdup_printf ("DELETE FROM plugin_sid WHERE plugin_id = 1505 AND name NOT LIKE '%s' AND plugin_ctx = %s",
+  gchar * query = g_strdup_printf ("DELETE FROM plugin_sid WHERE plugin_id = 1505 AND name NOT LIKE '%s' AND plugin_ctx = %s AND sid != 29998",
                                    saqqara_pattern, sim_uuid_get_db_string (engine_id));
 
   sim_database_execute_no_query (database, query);
   g_free (query);
 
   return;
-}
-
-void
-sim_db_delete_host_risk_level (SimDatabase  *database,
-                               SimHost      *host)
-{
-  gchar *query;
-
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  query = sim_host_level_get_delete_clause (host);
-  sim_database_execute_no_query (database, query);
-  g_free (query);
 }
 
 /**

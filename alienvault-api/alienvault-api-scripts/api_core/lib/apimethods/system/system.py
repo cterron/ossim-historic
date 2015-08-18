@@ -43,6 +43,8 @@ from db.methods.system import (
     get_system_ip_from_system_id,
     get_system_id_from_local,
     get_system_id_from_system_ip,
+    get_server_id_from_system_id,
+    get_sensor_id_from_system_id,
     db_add_system,
     db_remove_system,
     get_system_ip_from_local,
@@ -58,6 +60,8 @@ from db.methods.server import (
     get_server_ip_from_server_id)
 
 # Ansible methods
+from ansiblemethods.helper import fire_trigger
+
 from ansiblemethods.system.system import (
     get_system_setup_data,
     ansible_add_system,
@@ -74,8 +78,7 @@ from ansiblemethods.system.system import (
     ansible_download_release_info,
     ansible_get_log_lines,
     ansible_install_plugin,
-    ansible_restart_frameworkd,
-    ping_system)
+    ansible_restart_frameworkd)
 
 from ansiblemethods.system.about import (
     get_license_info,
@@ -108,7 +111,7 @@ from celerymethods.utils import (
 from celerymethods.jobs.system import alienvault_asynchronous_update
 
 from celerymethods.jobs.reconfig import alienvault_reconfigure
-from apimethods.system.otx import is_otx_enabled
+from apimethods.otx.otx import apimethod_is_otx_enabled
 
 # API methods
 from apimethods.utils import (
@@ -116,10 +119,13 @@ from apimethods.utils import (
     get_base_path_from_system_id,
     get_hex_string_from_uuid,
     is_valid_ipv4)
-
+from apimethods.system.status import ping_system
 from apimethods.system.cache import (
     use_cache,
     flush_cache)
+
+# API Exceptions
+from apiexceptions import APIException
 
 
 def get_all():
@@ -159,7 +165,7 @@ def get_local_info():
                     "the local system info"
         return False, error_msg
 
-@use_cache(namespace="system")
+
 def get_all_systems_with_ping_info(system_type=None):
     """
     get all the registered systems and ping information
@@ -173,13 +179,12 @@ def get_all_systems_with_ping_info(system_type=None):
         return ret
 
     systems = dict(system_list)
-    for system_id, system_data in systems.iteritems():
-        system_ip = system_data['admin_ip']
-        if system_data['vpn_ip'] != '':
-            system_ip = system_data['vpn_ip']
-
-        success, dummy_msg = ping_system(system_ip)
-        systems[system_id]['reachable'] = success
+    for system_id in systems:
+        try:
+            reachable = ping_system(system_id)
+        except APIException:
+            reachable = False
+        systems[system_id]['reachable'] = reachable
 
     return True, systems
 
@@ -346,7 +351,7 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
 
     if not system_info['admin_ip']:
         system_info['admin_ip'] = system_ip
-    if system_info['admin_ip'] != system_ip: 
+    if system_info['admin_ip'] != system_ip:
         # We're natted
         system_info['admin_ip'] = system_ip
     if add_to_database:
@@ -363,6 +368,21 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
             error_msg = "Something wrong happened inserting " + \
                         "the system into the database"
             return (False, error_msg)
+        else:
+            result, _ = get_system_ip_from_system_id (system_info['system_id'])
+            if not result:
+                error_msg = "System was not inserted, cannot continue"
+                return (False, error_msg)
+
+
+    # Now that the system is in the database, check if it is a server and
+    # open the firewall, if it is required.
+    if 'server' in system_info['profile']:
+        trigger_success, msg = fire_trigger(system_ip="127.0.0.1",
+                                            trigger="alienvault-add-server")
+        if not trigger_success:
+            api_log.error(msg)
+
 
     (success, msg) = create_directory_for_ossec_remote(system_info['system_id'])
     if not success:
@@ -410,19 +430,37 @@ def apimethod_delete_system(system_id):
                     "for the given system-id %s" % (str(system_ip))
         return success, error_msg
     # Check whether the remote system is reachable or not:
-    remote_system_is_reachable, msg = ping_system(system_ip)
+    try:
+        remote_system_is_reachable = ping_system(system_id, no_cache=True)
+    except APIException:
+        remote_system_is_reachable = False
+
     # 1 - Remove it from the database
     success, msg = db_remove_system(system_id)
     if not success:
         error_msg = "Cannot remove the system " + \
                     "from the database <%s>" % str(msg)
         return success, error_msg
-    # 2 - Remove the remote certificates
+
+    # 2 - Remove the firewall rules.
+    (success, sensor_id) = get_sensor_id_from_system_id(system_id)
+    if success:
+        trigger_success, msg = fire_trigger(system_ip="127.0.0.1",
+                                            trigger="alienvault-del-sensor")
+        if not trigger_success:
+            api_log.error(msg)
+    else:
+        trigger_success, msg = fire_trigger(system_ip="127.0.0.1",
+                                            trigger="alienvault-del-server")
+        if not trigger_success:
+            api_log.error(msg)
+
+    # 3 - Remove the remote certificates
     # success, msg = ansible_remove_certificates(system_ip)
     # if not success:
     #     return (success,
     #            "Error while removing the remote certificates: %s" % str(msg))
-    # 3 - Remove the local certificates and keys
+    # 4 - Remove the local certificates and keys
     success, local_ip = get_system_ip_from_local()
     if not success:
         error_msg = "Cannot retrieve the local ip " + \
@@ -435,7 +473,7 @@ def apimethod_delete_system(system_id):
     if not success:
         return success, "Cannot remove the local certificates <%s>" % str(msg)
 
-    # 4 - Remove it from the ansible inventory.
+    # 5 - Remove it from the ansible inventory.
     try:
         aim = AnsibleInventoryManager()
         aim.delete_host(system_ip)
@@ -447,7 +485,7 @@ def apimethod_delete_system(system_id):
                     "<%s>" % str(aim_error)
         return False, error_msg
 
-    # 5 - Try to connect to the child and remove the parent
+    # 6 - Try to connect to the child and remove the parent
     # using it's server_id
     success, own_server_id = get_server_id_from_local()
     if not success:
@@ -488,10 +526,32 @@ def sync_database_from_child(system_id):
                     "Error while getting the local ip: %s" % str(local_ip)
         return success, error_msg
 
-    # Get remote sync file if changed
-    remote_file_path = "/var/lib/alienvault-center/db/sync.sql"
+    # SQL file changed. Get it, check md5 and apply
+    # Get MD5SUM file for the SQL file
+    remote_md5file_path = "/var/lib/alienvault-center/db/sync.md5"
+    local_md5file_path = "%s" % get_base_path_from_system_id(system_id) + \
+                         "/sync_%s.md5" % system_id
+    (retrieved, msg) = rsync_pull(system_ip,
+                                  remote_md5file_path,
+                                  local_ip,
+                                  local_md5file_path)
+    if not retrieved and 'already in sync' not in msg:
+        return False, "[Apimethod sync_database_from_child] %s" % msg
+
+    # Check SQL file MD5
     local_file_path = "%s" % get_base_path_from_system_id(system_id) + \
                       "/sync_%s.sql" % system_id
+    with open(local_md5file_path) as m:
+        md5_read = m.readline()
+    p = Popen(['/usr/bin/md5sum', local_file_path], stdout=PIPE)
+    md5_calc, err = p.communicate()
+    if err:
+        return False, "[Apimethod sync_database_from_child] %s" % err
+    if str(md5_read.rstrip('\n')) in str(md5_calc):
+        return True, "[Apimethod sync_database_from_child] SQL already synced"
+
+    # Get remote sync file if changed
+    remote_file_path = "/var/lib/alienvault-center/db/sync.sql"
     (retrieved, msg) = rsync_pull(system_ip,
                                   remote_file_path,
                                   local_ip,
@@ -506,21 +566,7 @@ def sync_database_from_child(system_id):
                         "%s" % msg
             return False, false_msg
 
-    # SQL file changed. Get it, check md5 and apply
-    # Get MD5SUM file for the SQL file
-    remote_md5file_path = "/var/lib/alienvault-center/db/sync.md5"
-    local_md5file_path = "%s" % get_base_path_from_system_id(system_id) + \
-                         "/sync_%s.md5" % system_id
-    (retrieved, msg) = rsync_pull(system_ip,
-                                  remote_md5file_path,
-                                  local_ip,
-                                  local_md5file_path)
-    if not retrieved and 'already in sync' not in msg:
-        return False, "[Apimethod sync_database_from_child] %s" % msg
-
     # Check SQL file MD5
-    with open(local_md5file_path) as m:
-        md5_read = m.readline()
     p = Popen(['/usr/bin/md5sum', local_file_path], stdout=PIPE)
     md5_calc, err = p.communicate()
     if err:
@@ -997,7 +1043,7 @@ def make_tunnel_with_vpn(system_ip, password):
         success, data = set_system_vpn_ip(data, new_node_vpn_ip)
         if not success:
             return False, "Cannot set the new node vpn ip on the system table"
-    flush_cache(namespace="system")
+    flush_cache(namespace="support_tunnel")
     # Restart frameworkd
     print "Restarting ossim-framework"
     success, data = ansible_restart_frameworkd(system_ip=local_ip)
@@ -1168,7 +1214,7 @@ def get_system_tags(system_id='local'):
         tags.append('TRIAL')
     else:
         tags.append('NO-TRIAL')
-    if is_otx_enabled():
+    if apimethod_is_otx_enabled():
         tags.append('OTX')
     else:
         tags.append('NO-OTX')

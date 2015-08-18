@@ -67,28 +67,29 @@ function Av_map(map_id)
     }
     ?>
     
-    var _map_id    = '#' + map_id;    
-    var _map_key   = '<?php echo $map_key?>';
+    var _map_id       = '#' + map_id;    
+    var _map_key      = '<?php echo $map_key?>';
     
-    var _lat       = null;
-    var _lng       = null;
-    var _address   = ''; 
-    var _zoom      = 1;
+    var _lat          = null;
+    var _lng          = null;
+    var _address      = ''; 
+    var _zoom         = 1;
+    var _scroll_wheel = true;
     
     //Google Maps Objects
-    this.map       = null;
-    this.markers   = [];
-    this.lat_lng   = null;
+    this.map          = null;
+    this.markers      = [];
+    this.lat_lng      = null;
     
     
     //Inputs
-    var _lat_id      = '#latitude';
-    var _lng_id      = '#longitude';
-    var _country_id  = '#country';
-    var _sl_id       = '#search_location';
-    var _zoom_id     = '#zoom';    
-    var _center_zoom = true;
-    
+    var _lat_id       = '#latitude';
+    var _lng_id       = '#longitude';
+    var _country_id   = '#country';
+    var _sl_id        = '#search_location';
+    var _zoom_id      = '#zoom';    
+    var _center_zoom  = true;
+        
     // Set options
     this.set_options = function(options)
     {
@@ -169,6 +170,12 @@ function Av_map(map_id)
         _center_zoom = (opt === false) ? false : true;
     };
     
+    
+    //Set Scroll Wheel Zoom option
+    this.set_scroll_wheel = function(opt)
+    {
+        _scroll_wheel = (opt === false) ? false : true;
+    };
     
     // Get Longitude
     this.get_lng = function()
@@ -264,6 +271,7 @@ function Av_map(map_id)
         var map_options = {
             zoom: this.get_zoom(),
             center: this.lat_lng,
+            scrollwheel: _scroll_wheel,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             panControl: false,
             streetViewControl: false,

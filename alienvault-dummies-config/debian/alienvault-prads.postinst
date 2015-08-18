@@ -24,7 +24,7 @@ PRADS_CONFIG_FILE="/etc/prads/prads.conf"
 SENSOR_NETWORKS=$(grep networks "$OSSIM_SETUP_CONF_FILE" | cut -d'=' -f2 || true)
 SENSOR_DETECTORS=$(grep "^detectors=" "$OSSIM_SETUP_CONF_FILE" | cut -d'=' -f2 || true)
 PRADS_ENABLED=$(echo $SENSOR_DETECTORS | grep "prads" || echo "No")
-PROFILES=$(grep profile "$OSSIM_SETUP_CONF_FILE" | cut -d'=' -f2 || true)
+PROFILES=$(grep -m1 profile "$OSSIM_SETUP_CONF_FILE" | cut -d'=' -f2 || true)
 
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  change_prads_initd_file
@@ -100,10 +100,7 @@ configure_iface_scripts () {
     # Interface must not contain '_' in its name
     test_iface=$(echo $iface | grep "_" || echo "Valid")
     [ "$test_iface" = "Valid" ] || return 0
- 
-    test_package=$(COLUMNS=200 dpkg -l alienvault-10g-tools > /dev/null 2>&1 || echo "Not installed")
-    [ "$test_package" = "Not installed" ] || return 0
- 
+
     # initd files operations
     init_source="/etc/init.d/prads"
     init_dest="$init_source"_$iface

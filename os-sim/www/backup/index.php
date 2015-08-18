@@ -64,18 +64,6 @@ if (!$rs = $conn->Execute($query)) {
     exit;
 }
 
-// Executing
-$cmd = "ps ax | grep restoredb.pl | grep -v grep";
-$output = explode("\n",`$cmd`);
-foreach ($output as $line) {
-    if (preg_match("/restoredb\.pl\s+insert\s+([\d\,]+)/",$line,$found)) {
-        $aux = explode(",", $found[1]);
-        foreach ($aux as $d) {
-            $executing[$d]++;
-        }
-    }
-}
-
 // Delete
 while (!$rs->EOF) 
 {
@@ -158,6 +146,7 @@ if (GET('cleardatatables') != '' && Session::am_i_admin()) {
         $conn->Execute("TRUNCATE extra_data");
         $conn->Execute("TRUNCATE reputation_data");
         $conn->Execute("TRUNCATE idm_data");
+        $conn->Execute("TRUNCATE otx_data");
         $conn->Execute("COMMIT");
         $conn->Execute("SET AUTOCOMMIT=1");
         Util::memcacheFlush();

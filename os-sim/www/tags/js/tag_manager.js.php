@@ -223,6 +223,7 @@ $(document).ready(function ()
         'iDisplayLength': 5,
         'bPaginate': true,
         'bLengthChange': false,
+        "bSearchInputType": "search",
         'bJQueryUI': true,
         'aaSorting': [[0, "ASC"]],
         'aoColumns': [
@@ -294,6 +295,39 @@ $(document).ready(function ()
                 av_confirm(msg_confirm, keys).done(function () {
                     do_action(data, $av_info, [clear_form_fields, remove_row])
                 });
+            });
+        },
+        "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) 
+        {
+            oSettings.jqXHR = $.ajax( 
+            {
+                "dataType": 'json',
+                "type"    : "POST",
+                "url"     : sSource,
+                "data"    : aoData,
+                "success" : function (json) 
+                {                            
+                    $(oSettings.oInstance).trigger('xhr', oSettings);
+                    //This is for keeping pagination whe the page is back from alarm detail.
+                    oSettings.iInitDisplayStart = oSettings._iDisplayStart;
+                    if (json.iDisplayStart !== undefined) 
+                    {
+                        oSettings.iInitDisplayStart = json.iDisplayStart;
+                    }
+    
+                    fnCallback(json);
+                },
+                "error": function(data)
+                {
+                    //Check expired session
+                    var session = new Session(data, '');
+                    if (session.check_session_expired() == true)
+                    {
+                        session.redirect();
+                        return;
+                    }
+                    fnCallback({"sEcho": aoData[0].value, "iTotalRecords": 0, "iTotalDisplayRecords": 0, "aaData": ""});
+                }
             });
         }
     });

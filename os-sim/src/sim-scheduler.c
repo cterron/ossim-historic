@@ -69,7 +69,6 @@ static gpointer parent_class = NULL;
 */
 
 static time_t last  = 0;
-static time_t timer = 0;
 
 static time_t       update_vuln_assets_last_sec = 0;
 static time_t       unconfigured_sensors_last_sec = 0;
@@ -88,13 +87,8 @@ static void       sim_scheduler_task_remove_backlogs            (SimScheduler * 
                                                                  GTimeVal curr_time);
 static void       sim_scheduler_task_update_vuln_assets         (SimScheduler * scheduler,
                                                                  GTimeVal curr_time);
-static void       sim_scheduler_task_calculate                  (SimScheduler  *scheduler,
-                                                                 gpointer       data);
 
 
-static void       sim_scheduler_task_execute_at_interval        (SimScheduler * scheduler,
-                                                                 gpointer       data,
-                                                                 GTimeVal curr_time);
 static void       sim_scheduler_task_insert_host_plugin_sids    (SimScheduler * scheduler,
                                                                  GTimeVal curr_time);
 static void       sim_scheduler_show_stats                      (SimScheduler * scheduler,
@@ -191,47 +185,6 @@ sim_scheduler_new (SimConfig    *config)
   return scheduler;
 }
 
-/*
- * Recover the host and net levels of C and A
- */
-static void
-sim_scheduler_task_calculate (SimScheduler  *scheduler,
-                              gpointer       data)
-{
-  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
-
-  // unused parameter
-  (void) data;
-
-  sim_container_update_recovery (ossim.container, ossim.dbossim);
-}
-
-/*
- * Although this function is executed each second or so, only
- * do its job (executing other functions) each "interval" seconds approximately.
- *
- */
-void
-sim_scheduler_task_execute_at_interval (SimScheduler  *scheduler,
-                                        gpointer       data,
-                                        GTimeVal curr_time)
-{
-  SimConfig     *config;
-  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
-
-  if (curr_time.tv_sec < (last + timer))
-    return;
-
-  last = curr_time.tv_sec;
-  config = scheduler->_priv->config;
-
-  timer = config->scheduler.interval; //interval is 15 by default in config.xml
-
-  sim_scheduler_task_calculate (scheduler, data);//do the net and host level recovering
-
-  return;
-}
-
 /**
  * sim_scheduler_task_insert_host_plugin_sids:
  * @scheduler: a #SimScheduler object.
@@ -304,8 +257,6 @@ sim_scheduler_run (SimScheduler *scheduler)
     sim_scheduler_clean_group_alarm (scheduler); // Activate the clean of group alarms
     sim_scheduler_show_stats (scheduler, curr_time); //NOTE: comment or uncomment this if you want to see statistics
     sim_scheduler_unconfigured_sensors (curr_time);
-
-    sim_scheduler_task_execute_at_interval (scheduler, NULL, curr_time);//execute some tasks in the time interval defined in config.xml
   }
 
   return;

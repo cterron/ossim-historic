@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -33,6 +33,7 @@ import socket
 import threading
 import time
 import os
+import ast
 import Util
 from OssimDB import OssimDB
 from OssimConf import OssimConf
@@ -77,7 +78,7 @@ class HostInfo(object):
 
     def getHostServicesState(self):
         return self.__hostServicesState
-    
+
     def setHostId(self,value):
         """Returns the host id
         """
@@ -182,7 +183,6 @@ class NagiosMkLiveManager(threading.Thread):
 
     HOST_STATES = {0: "UP",1:"DOWN",2:"DOWN",3:"DOWN"}
     HOST_STATES_SEVERITY = {0: 0,1:10,2:10,3:10}
-    #SERVICE_STATES = {0: "UP",1:"WARNING",2:"CRITICAL",3:"UNKNOWN"}
     HOST_STATE_UP = 0
     HOST_STATE_WARNING = 1
     HOST_STATE_CRITICAL = 2
@@ -195,33 +195,14 @@ class NagiosMkLiveManager(threading.Thread):
     INDX_HOST_QUERY_HOST_NUMSERVICESHARDWARN = 4
     INDX_HOST_QUERY_HOST_NUMSERVICESHARDCRIT = 5
     INDX_HOST_QUERY_HOST_SERVICESSTATE = 6
-    '''
-    TODO:
-    (18:48:51) Pablo Catalina: (((W*0.5)+C)/float(SRV))*10
-    (18:49:05) Pablo Catalina: Columns: name address state num_services_hard_ok num_services_hard_warn num_services_hard_crit num_services_hard_unknown
-    '''
+
     def __init__(self):
         '''
         Constructor
         '''
         self.nagios_querys = {"hosts" : "GET hosts\nColumns: address name state num_services num_services_hard_warn num_services_hard_crit services_with_state\nOutputFormat: python\n",
-#                              "services": "GET services\nColumns:check_command host_name description state\nOutputFormat: python\n",
-#                              "hostgroups": "GET hostgroups\nColumns: name num_hosts num_hosts_down num_hosts_pending num_hosts_unreach num_hosts_up num_services num_services_hard_crit num_services_hard_ok num_services_hard_unknown num_services_hard_warn\nOutputFormat: python\n"
                               "hostgroups": "GET hostgroups\nColumns: name members_with_state \nOutputFormat: python\n",
                               "hostservices": "GET hosts\nColumns: address services_with_state\nOutputFormat: python\n"
-#                              "hostgroups": "GET hostgroups\n",
-#                              "servicegroups":"GET servicegroups\n",
-#                              "contactgroups": "GET contactgroups\n",
-#                              "servicesbygroup": "GET servicesbygroup\n",
-#                              "servicesbyhostgroup": "GET servicesbyhostgroup\n",
-#                              "hostsbygroup": "GET hostsbygroup\n",
-#                              "contacts": "GET contacts\n",
-#                              "commands":"GET commands\n",
-#                              "timeperiods" : "GET timeperiods\n",
-#                              "downtimes": "GET downtimes\n",
-                              #"comments": "GET comments\n",
-#                              "status": "GET status\nColumns: program_version\n",
-                              #"columns": "GET columns\n"
                          }
         self.connection = None #Unix socket connection ->nagios socket.
         self.host_list = [] # BP asset host member list
@@ -270,13 +251,11 @@ class NagiosMkLiveManager(threading.Thread):
         members = _DB.exec_query(query_host)
         del self.host_list[:]
         for host_member in members:
-            #logger.info("host member :%s"%  host_member['member'])
             self.host_list.append(host_member['member'])
         query_host_group = "select hex(id) as id from host_group;"
         members = _DB.exec_query(query_host_group)
         del self.host_list_groups[:]
         for host_group in members:
-            #logger.info("hot group :%s" % host_group['id'])
             self.host_list_groups.append(host_group['id'])
 
     def get_HostInfo_from_hostData(self,host_data):
@@ -286,17 +265,14 @@ class NagiosMkLiveManager(threading.Thread):
             host_state = float(host_data[NagiosMkLiveManager.INDX_HOST_QUERY_HOSTSTATE])
         except ValueError:
             logger.info("Invalid host state value: %s --> %s" % (host_ip,host_data[NagiosMkLiveManager.INDX_HOST_QUERY_HOSTSTATE]))
-            #return 0
         try:
             host_nservices = float(host_data[NagiosMkLiveManager.INDX_HOST_QUERY_HOST_NUMSERVICES])
         except ValueError:
             logger.info("Invalid host_nservices value: %s --> %s" % (host_ip,host_data[NagiosMkLiveManager.INDX_HOST_QUERY_HOST_NUMSERVICES]))
-            #return 0
         try:
             host_nservices_warn = float(host_data[NagiosMkLiveManager.INDX_HOST_QUERY_HOST_NUMSERVICESHARDWARN])
         except ValueError:
             logger.info("Invalid host_nservices_warn value: %s --> %s" % (host_ip,host_data[NagiosMkLiveManager.INDX_HOST_QUERY_HOST_NUMSERVICESHARDWARN]))
-            #return 0
         try:
             host_nservices_crit = float(host_data[NagiosMkLiveManager.INDX_HOST_QUERY_HOST_NUMSERVICESHARDCRIT])
         except ValueError:
@@ -307,15 +283,6 @@ class NagiosMkLiveManager(threading.Thread):
         for service in services_state_list:
             host_services_state[service[0]] = service[1]
 
-            #return 0
-#        severity = 0
-#        if host_state == NagiosMkLiveManager.HOST_STATE_UP and host_nservices > 0:
-#            severity = round((((host_nservices_warn*0.5)+host_nservices_crit)/host_nservices)*10)
-#        elif host_state == NagiosMkLiveManager.HOST_STATE_UP and host_nservices == 0:
-#            severity = 0
-#        else:
-#            severity = 10
-#        return int(severity)
         return (host_state,host_nservices,host_nservices_warn,host_nservices_crit,host_services_state)
 
     def getHostGroupIDFromGroupName(self,name):
@@ -348,13 +315,11 @@ class NagiosMkLiveManager(threading.Thread):
         """
         data  = self.getData(self.nagios_querys['hosts'])
         if data!= []:
-            #logger.info(data)
-            
             try:
-                data= eval(data)
+                data= ast.literal_eval(data)
             except Exception,e:
                 logger.info("Invalid nagios data: %s" % str(e) )
-                return 
+                return
             # Now, one host could have more than one IP address.
             # then we need to retreive all the services status for
             # each host_ip address.
@@ -379,7 +344,6 @@ class NagiosMkLiveManager(threading.Thread):
                     # Update status column accordingly (host_scan)
                     host_states={0:2, 1:1, 2:1, 3:0}
                     query = "UPDATE host_scan SET status = %d WHERE host_id = unhex('%s') AND plugin_id = %d AND plugin_sid = %d" % (host_states[host_state], host_id, 2007, 0)
-                    logger.info("%s" % query)
                     _DB.exec_query(query)
 
             for hostid,hostinfo in hostsData.iteritems():
@@ -413,19 +377,19 @@ class NagiosMkLiveManager(threading.Thread):
         """
         data  = self.getData(self.nagios_querys['hostgroups'])
         if data != []:
-            data= eval(data) 
+            data= ast.literal_eval(data)
             for hostgroup_data in data:
                 if len (hostgroup_data) == 2:
                     host_group_name = hostgroup_data[0]
                     host_group_id = self.getHostGroupIDFromGroupName(host_group_name)
                     if host_group_id in self.host_list_groups:#host group name
-                        # hostgroup_states=[] 
+                        # hostgroup_states=[]
                         for host in hostgroup_data[1]:
                             #From mk-livestatus-1.2.0b3/src/TableServicegroups.cc:62
                             #host[0] = hostname
                             #host[1] = host state
                             #host[2] =  has been checked
-                            
+
                             if len(host) == 3:
                                 # hostgroup_states.append(host[1])
                                 if host[1] != 0 and host[2] == 1:#host state
@@ -433,18 +397,8 @@ class NagiosMkLiveManager(threading.Thread):
                                     _DB.exec_query(query)
                                     query = "INSERT INTO bp_member_status (member_id, status_date, measure_type, severity) VALUES(0x%s, now(), '%s', %d);" % (host_group_id,'host_group_availability', NagiosMkLiveManager.HOST_STATES_SEVERITY [host[1]])
                                     _DB.exec_query(query)
-                                    logger.info("Updating Host Grop bp_member_status -> member:%s type: %s severity:%s" % (host_group_name,'host_group_availability',NagiosMkLiveManager.HOST_STATES_SEVERITY [host[1]]))
+                                    logger.info("Updating Host Group bp_member_status -> member:%s type: %s severity:%s" % (host_group_name,'host_group_availability',NagiosMkLiveManager.HOST_STATES_SEVERITY [host[1]]))
 
-                    # This could be a way of updating status column in host_group_scan 
-                    # hostgroup_state = 0         
-                    # if 3 in hostgroup_states:
-                    #     hostgroup_state = 2
-                    # elif 2 in hostgroup_states or 1 in hostgroup_states:
-                    #     hostgroup_state = 1
-                    # else:
-                    #     hostgroup_state = 0 
-                    
-                    # update_query="UPDATE host_group_scan SET status = %d WHERE host_group_id = unhex('%s') AND plugin_id = 2007 AND plugin_sid = 0" % (hostgroup_state, host_id)
 
 
     def run(self):
@@ -459,6 +413,3 @@ class NagiosMkLiveManager(threading.Thread):
             self.updataHostGroups()
 
             time.sleep(self.interval)
-if __name__ == "__main__":
-    ng = NagiosMkLiveManager()
-    ng.start()

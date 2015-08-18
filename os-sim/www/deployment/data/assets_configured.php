@@ -158,29 +158,28 @@ if ($rs = $conn->Execute($sql, $params))
 					"sInfoThousands": ",",
 					"sSearch": "",
 					"sUrl": ""
+				},
+				fnDrawCallback : function(){
+					$('.tip').tipTip();
+					$('.odd, .even').off('click');
+					$('.odd, .even').on('click', function()
+					{
+						var id = $(this).data('id');
+		
+						if(typeof(parent.GB_show) != 'function' || typeof(id) == 'undefined')
+						{
+							return false;
+						}
+		
+						var url	  = __cfg.asset.views + "asset_form.php?id=" + id;
+						var title = "<?php echo _('Edit Asset') ?>";
+		
+						parent.GB_show(title, url, "80%", "850", true);
+		
+					});
 				}
 				
 			});
-						
-			//TipTip
-			$('.tip').tipTip();
-			
-			$('.odd, .even').on('click', function()
-			{
-				var id = $(this).data('id');
-
-				if(typeof(parent.GB_show) != 'function' || typeof(id) == 'undefined') 
-				{
-    				return false;
-                }
-                
-                var url   = __cfg.asset.views + "asset_form.php?id=" + id;
-                var title = "<?php echo _('Edit Asset') ?>";
-				
-				parent.GB_show(title, url, "80%", "850", true);
-				
-			});
-						
 			
 		});
 		

@@ -40,8 +40,8 @@ var __dt_galarm      = null;
 var __timeout_search = false;
 var __interval       = null;
 var __open_groups    = {};
-var __ajax_url       = '<?php echo AV_MAIN_PATH ?>/alarm/alarm_group_ajax.php';
-
+var __ajax_url       = '<?php echo AV_MAIN_PATH ?>/alarm/controllers/alarm_group_actions.php';
+var __alarm_url      = <?php echo json_encode(Alarm::get_alarm_path()) ?>;
 
 
 /************************************************************************************/
@@ -243,7 +243,6 @@ function load_alarm_list()
     {
         __open_groups = {};
     });
-
 }
 
 
@@ -325,7 +324,7 @@ function check_background_tasks(times)
 	var atoken = Token.get_token("alarm_operations");
 	$.ajax(
 	{
-    	url      : "alarm_ajax.php?token="+atoken,
+    	url      : __alarm_url['controller'] + "alarm_actions.php?token="+atoken,
     	data     : {"action": 7},
         type     : "POST",
         dataType : "json",
@@ -425,7 +424,7 @@ function load_alarm_group_dt()
         "bProcessing"     : true,
         "bServerSide"     : true,
         "bDeferRender"    : true,
-        "sAjaxSource"     : "alarm_group_console_ajax.php",
+        "sAjaxSource"     : "providers/alarm_group_console_ajax.php",
         "iDisplayLength"  : 10,
         "bLengthChange"   : true,
         "sPaginationType" : "full_numbers",
@@ -616,7 +615,7 @@ function toggle_group()
         "bProcessing": true,
         "bServerSide": true,
         "bDeferRender": true,
-        "sAjaxSource": "alarm_group_response.php",
+        "sAjaxSource": "providers/alarm_group_response.php",
         "iDisplayLength": 15,
         "bLengthChange": false,
         "sPaginationType": "full_numbers",
@@ -627,12 +626,7 @@ function toggle_group()
             { "bSortable": false, "sClass": "left"},
             { "bSortable": false, "sClass": "center"},
             { "bSortable": false, "sClass": "center"},
-            <?php 
-            if (Session::is_pro() && Session::show_entities())
-            {
-                echo '{ "bSortable": false, "sClass": "left"},';
-            }
-            ?>
+            { "bSortable": false, "sClass": "center"},
             { "bSortable": false, "sClass": "center"},
             { "bSortable": false, "sClass": "left"},
             { "bSortable": false, "sClass": "left"},
@@ -1143,6 +1137,20 @@ function load_alarm_handler(table)
     $('.a_status', table).on('click', change_alarm_status);
     
     $('.alarm_expand', table).on('click', toggle_alarm);
+    
+    // OTX icon
+    $('.otx_icon').off('click').on('click', function(e) 
+    {
+        e.stopPropagation();
+        
+        var backlog = $(this).parents('tr').attr('id');
+        var title   = "<?php echo Util::js_entities(_('OTX Details')) ?>";
+        var url     = "/ossim/otx/views/view_my_pulses.php?type=alarm&id=" + backlog;
+        
+        GB_show(title, url, 600, '65%');
+        
+        return false;
+    });
 }
 
 
@@ -1293,7 +1301,7 @@ function change_alarm_status()
         var atoken = Token.get_token("alarm_operations");    
 		$.ajax(
 		{
-    		url: "alarm_ajax.php?token="+atoken,
+    		url: __alarm_url['controller'] + "alarm_actions.php?token="+atoken,
 			data:  params,
 			type: "POST",
 			dataType: "json",

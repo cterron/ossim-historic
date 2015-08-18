@@ -7,7 +7,7 @@
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; version 2 dated June, 1991.
+# the Free Software Foundation; version 2 dated June, 1991.
 #  You may not use, modify or distribute this program under any other version
 #  of the GNU General Public License.
 #
@@ -33,18 +33,20 @@ import time
 from db.methods.sensor import get_sensor_ip_from_sensor_id
 from ansiblemethods.sensor.nmap import ansible_run_nmap_scan, ansible_nmap_get_scan_progress, ansible_nmap_stop, \
     ansible_nmap_purge_scan_files, ansible_get_partial_results
-from apimethods.utils import create_local_directory, set_ossec_file_permissions, touch_file
+from apimethods.utils import create_local_directory
 from apimethods.sensor.sensor import get_base_path_from_sensor_id
 from db.redis.nmapdb import NMAPScansDB, NMAPScanCannotBeSaved
 from db.redis.redisdb import RedisDBKeyNotFound
 from apimethods.data.idmconn import IDMConnection
-from apimethods.sensor.exceptions.nmap import APIMethodNMAPScanKeyNotFound, APIMethodNMAPScanException, \
-    APIMethodNMAPScanCannotBeSaved, APIMethodNMAPScanCannotRetrieveBaseFolder, APIMethodNMAPScanCannotCreateLocalFolder, \
-    APIMethodNMAPScanReportNotFound, APIMethodNMAPScanCannotReadReport, APIMethodNMAPScanReportCannotBeDeleted, \
-    APIMethodNMAPScanCannotRun, APIMethodNMAPScanCannotRetrieveScanProgress
-from apimethods.sensor.exceptions.common import APIMethodCannotResolveSensorID
+from apiexceptions.nmap import APINMAPScanKeyNotFound, APINMAPScanException, \
+    APINMAPScanCannotBeSaved, APINMAPScanCannotRetrieveBaseFolder, APINMAPScanCannotCreateLocalFolder, \
+    APINMAPScanReportNotFound, APINMAPScanCannotReadReport, APINMAPScanReportCannotBeDeleted, \
+    APINMAPScanCannotRun, APINMAPScanCannotRetrieveScanProgress
+from apiexceptions.sensor import APICannotResolveSensorID
 import ast
 import api_log
+
+from celerymethods.utils import is_task_in_celery
 
 
 def get_nmap_directory(sensor_id):
@@ -55,20 +57,20 @@ def get_nmap_directory(sensor_id):
         destination_path: is an string containing the nmap folder when the method works properly or an
                          error string otherwise.
     Raises:
-        APIMethodNMAPScanCannotRetrieveBaseFolder
-        APIMethodNMAPScanCannotCreateLocalFolder
+        APINMAPScanCannotRetrieveBaseFolder
+        APINMAPScanCannotCreateLocalFolder
 
     """
     success, base_path = get_base_path_from_sensor_id(sensor_id)
     if not success:
-        raise APIMethodNMAPScanCannotRetrieveBaseFolder(base_path)
+        raise APINMAPScanCannotRetrieveBaseFolder(base_path)
     destination_path = base_path + "/nmap/"
 
     # Create directory if not exists
     success, msg = create_local_directory(destination_path)
     if not success:
         api_log.error(str(msg))
-        raise APIMethodNMAPScanCannotCreateLocalFolder(msg)
+        raise APINMAPScanCannotCreateLocalFolder(msg)
 
     return destination_path
 
@@ -92,25 +94,26 @@ def apimethod_run_nmap_scan(sensor_id, target, idm, scan_type, rdns, scan_timing
         nmap_report = The NMAP report or the filename where the report has been saved.
 
     Raises:
-        APIMethodNMAPScanCannotRun
-        APIMethodCannotResolveSensorID
-        APIMethodNMAPScanCannotRetrieveBaseFolder
-        APIMethodNMAPScanCannotCreateLocalFolder
+        APINMAPScanCannotRun
+        APICannotResolveSensorID
+        APINMAPScanCannotRetrieveBaseFolder
+        APINMAPScanCannotCreateLocalFolder
     """
 
     (result, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id, local_loopback=False)
     if result is False:
         api_log.error(
             "[apimethod_run_nmap_scan] Cannot retrieve the sensor ip from the given sensor id <%s>" % sensor_id)
-        raise APIMethodCannotResolveSensorID(sensor_id)
+        raise APICannotResolveSensorID(sensor_id)
 
     success, nmap_report = ansible_run_nmap_scan(sensor_ip=sensor_ip, target=target, scan_type=scan_type, rdns=rdns,
                                                  scan_timing=scan_timing, autodetect=autodetect, scan_ports=scan_ports,
                                                  job_id=job_id)
 
     if not success:
-        raise APIMethodNMAPScanCannotRun(nmap_report)
+        raise APINMAPScanCannotRun(nmap_report)
 
+    filename = None
     if save_to_file:
         base_path = get_nmap_directory(sensor_id)
 
@@ -122,6 +125,13 @@ def apimethod_run_nmap_scan(sensor_id, target, idm, scan_type, rdns, scan_timing
         conn = IDMConnection(sensor_id=sensor_id)
         if conn.connect():
             conn.send_events_from_hosts(nmap_report)
+            # once the events have been sent to the IDM, we don't need the report.
+            apimethods_nmap_purge_scan_files(job_id)
+            try:
+                if filename is not None:
+                    os.remove(filename)
+            except Exception:
+                pass
         else:
             api_log.error("[apimethod_run_nmap_scan] Cannot connect with the IDM Service")
 
@@ -133,15 +143,15 @@ def apimethod_get_nmap_scan(sensor_id, task_id):
     Args:
 
     Raises:
-        APIMethodNMAPScanCannotRetrieveBaseFolder
-        APIMethodNMAPScanCannotCreateLocalFolder
-        APIMethodNMAPScanReportNotFound
-        APIMethodNMAPScanCannotReadReport
+        APINMAPScanCannotRetrieveBaseFolder
+        APINMAPScanCannotCreateLocalFolder
+        APINMAPScanReportNotFound
+        APINMAPScanCannotReadReport
     """
     directory = get_nmap_directory(sensor_id)
     nmap_report_path = "{0}/nmap_report_{1}.json".format(directory, task_id)
     if not os.path.isfile(nmap_report_path):
-        raise APIMethodNMAPScanReportNotFound(nmap_report_path)
+        raise APINMAPScanReportNotFound(nmap_report_path)
 
     try:
         data = ''
@@ -149,7 +159,7 @@ def apimethod_get_nmap_scan(sensor_id, task_id):
             data = json.loads(f.read())
     except Exception as e:
         api_log.error("[apimethod_get_nmap_scan] {0}".format(str(e)))
-        raise APIMethodNMAPScanCannotReadReport(nmap_report_path)
+        raise APINMAPScanCannotReadReport(nmap_report_path)
 
     return data
 
@@ -162,22 +172,22 @@ def apimethod_delete_nmap_scan(sensor_id, task_id):
     Returns:
 
     Raises:
-        APIMethodNMAPScanCannotRetrieveBaseFolder
-        APIMethodNMAPScanReportNotFound
-        APIMethodNMAPScanCannotCreateLocalFolder
-        APIMethodNMAPScanReportCannotBeDeleted
+        APINMAPScanCannotRetrieveBaseFolder
+        APINMAPScanReportNotFound
+        APINMAPScanCannotCreateLocalFolder
+        APINMAPScanReportCannotBeDeleted
     """
     apimethod_nmapdb_delete_task(task_id)
     directory = get_nmap_directory(sensor_id)
     nmap_report_path = "{0}/nmap_report_{1}.json".format(directory, task_id)
     if not os.path.isfile(nmap_report_path):
-        raise APIMethodNMAPScanReportNotFound(nmap_report_path)
+        raise APINMAPScanReportNotFound(nmap_report_path)
 
     try:
         os.remove(nmap_report_path)
     except Exception as e:
         api_log.error("[apimethod_delete_nmap_scan] {0}".format(str(e)))
-        raise APIMethodNMAPScanReportCannotBeDeleted()
+        raise APINMAPScanReportCannotBeDeleted()
 
 
 def apimethod_monitor_nmap_scan(sensor_id, task_id):
@@ -186,8 +196,8 @@ def apimethod_monitor_nmap_scan(sensor_id, task_id):
         sensor_id: The sensor id where the NMAP is working.
         task_id: The celery task id that is launching the NMAP
     Raises
-        APIMethodCannotResolveSensorID
-        APIMethodNMAPScanCannotRetrieveScanProgress
+        APICannotResolveSensorID
+        APINMAPScanCannotRetrieveScanProgress
 
     """
 
@@ -195,12 +205,12 @@ def apimethod_monitor_nmap_scan(sensor_id, task_id):
     if result is False:
         api_log.error(
             "[apimethod_monitor_nmap_scan] Cannot retrieve the sensor ip from the given sensor id <%s>" % sensor_id)
-        raise APIMethodCannotResolveSensorID(sensor_id)
+        raise APICannotResolveSensorID(sensor_id)
     try:
         nhosts = ansible_nmap_get_scan_progress(sensor_ip=sensor_ip, task_id=task_id)
     except Exception as e:
         api_log.error("[apimethod_monitor_nmap_scan]  Cannot retrieve scan progress {0}".format(str(e)))
-        raise APIMethodNMAPScanCannotRetrieveScanProgress()
+        raise APINMAPScanCannotRetrieveScanProgress()
     return nhosts
 
 
@@ -232,11 +242,14 @@ def apimethod_get_nmap_scan_status(task_id):
     Returns:
         job(str): A python dic with the job information.
     Raises:
-        APIMethodNMAPScanKeyNotFound: When the given id doesn't exist
-        APIMethodNMAPScanException: When something wrong happen
+        APINMAPScanKeyNotFound: When the given id doesn't exist
+        APINMAPScanException: When something wrong happen
     """
 
     try:
+        # the nmap could be scheduled in celery but not launched.
+        # in this case there is no nmap status on the database.
+
         job = None
         db = NMAPScansDB()
         tries = 3
@@ -246,24 +259,49 @@ def apimethod_get_nmap_scan_status(task_id):
                 job = ast.literal_eval(raw_data)
                 tries = 0
             except RedisDBKeyNotFound:
-                #  Maybe the job is not in the database yet
+                # Maybe the job is not in the database yet
+                # check if the job is scheduled.
+                task = is_task_in_celery(task_id)
+                if task is not None:
+                    if task_id == task['id']:
+                        task_kwargs = ast.literal_eval(task['kwargs'])
+                        # La info va a de kwargs
+                        job = {"job_id": task['id'],
+                               "sensor_id": task_kwargs['sensor_id'],
+                               "idm": task_kwargs['idm'],
+                               "target_number": task_kwargs['targets_number'],
+                               "scan_params": {"target": task_kwargs['target'],
+                                               "scan_type": task_kwargs['scan_type'],
+                                               "rdns": task_kwargs['rdns'],
+                                               "autodetect": task_kwargs['autodetect'],
+                                               "scan_timing": task_kwargs['scan_timing'],
+                                               "scan_ports": task_kwargs['scan_ports']},
+                               "status": "In Progress",
+                               "scanned_hosts": 0,
+                               "scan_user": task_kwargs['scan_ports'],
+                               "start_time": int(time.time()),
+                               "end_time": -1,
+                               "remaining_time": -1
+                               }
+                        tries = 0
+
                 time.sleep(1)
             tries -= 1
     except Exception as e:
-        raise APIMethodNMAPScanException(str(e))
+        raise APINMAPScanException(str(e))
     finally:
         del db
     if job is None:
-        raise APIMethodNMAPScanKeyNotFound()
+        raise APINMAPScanKeyNotFound()
     return job
 
 
 def apimethods_stop_scan(task_id):
     """Stops the given scan id
     Raises:
-        APIMethodCannotResolveSensorID
-        APIMethodNMAPScanKeyNotFound
-        APIMethodNMAPScanException
+        APICannotResolveSensorID
+        APINMAPScanKeyNotFound
+        APINMAPScanException
     """
     # Stops the celery task.
     job = apimethod_get_nmap_scan_status(task_id)
@@ -272,12 +310,12 @@ def apimethods_stop_scan(task_id):
     apimethod_nmapdb_update_task(task_id, job)
     (result, sensor_ip) = get_sensor_ip_from_sensor_id(job["sensor_id"], local_loopback=False)
     if not result:
-        raise APIMethodCannotResolveSensorID(job["sensor_id"])
+        raise APICannotResolveSensorID(job["sensor_id"])
 
     base_path = get_nmap_directory(job["sensor_id"])
     success, result = ansible_nmap_stop(sensor_ip, task_id)
     if not success:
-        raise APIMethodNMAPScanException(str(result))
+        raise APINMAPScanException(str(result))
     job["status"] = "Finished"
     job["reason"] = "Stopped by the user"
     apimethod_nmapdb_update_task(task_id, job)
@@ -295,14 +333,15 @@ def apimethods_stop_scan(task_id):
                 with open(filename, "w") as f:
                     f.write(json.dumps(results))
         except Exception as e:
-            raise APIMethodNMAPScanException(str(e))
+            raise APINMAPScanException(str(e))
+
 
 def apimethods_nmap_purge_scan_files(task_id):
     """Purge the given scan files
     Raises:
-        APIMethodCannotResolveSensorID
-        APIMethodNMAPScanKeyNotFound
-        APIMethodNMAPScanException
+        APICannotResolveSensorID
+        APINMAPScanKeyNotFound
+        APINMAPScanException
     """
     # Stops the celery task.
     job = apimethod_get_nmap_scan_status(task_id)
@@ -318,15 +357,22 @@ def apimethods_nmap_purge_scan_files(task_id):
 def apimethod_nmapdb_add_task(task_id, task_data):
     """Add a new nmap task to the nmapdb
     Raises:
-        APIMethodNMAPScanCannotBeSaved
+        APINMAPScanCannotBeSaved
     """
+    rt = False
     try:
+
         db = NMAPScansDB()
         db.add(task_id, task_data)
+        rt = True
     except NMAPScanCannotBeSaved:
-        raise APIMethodNMAPScanCannotBeSaved()
+        api_log.error("[apimethod_nmapdb_add_task] NMAPScanCannotBeSaved - Cannot save task")
+        raise APINMAPScanCannotBeSaved()
+    except Exception as e:
+        api_log.error("[apimethod_nmapdb_add_task] Cannot save task %s" % str(e))
     finally:
         del db
+    return rt
 
 
 def apimethod_nmapdb_get_task(task_id):
@@ -336,15 +382,15 @@ def apimethod_nmapdb_get_task(task_id):
     Returns:
         job(str): A python dic with the job information.
     Raises:
-        APIMethodNMAPScanKeyNotFound: When the given id doesn't exist
-        APIMethodNMAPScanException: When something wrong happen"""
+        APINMAPScanKeyNotFound: When the given id doesn't exist
+        APINMAPScanException: When something wrong happen"""
     return apimethod_get_nmap_scan_status(task_id)
 
 
 def apimethod_nmapdb_update_task(task_id, task_data):
     """Update nmap task in the nmapdb
     Raises:
-        APIMethodNMAPScanCannotBeSaved
+        APINMAPScanCannotBeSaved
     """
     # When you add a new task if the task already exists, it updates it.
     apimethod_nmapdb_add_task(task_id, task_data)
@@ -353,7 +399,7 @@ def apimethod_nmapdb_update_task(task_id, task_data):
 def apimethod_nmapdb_delete_task(task_id):
     """Deelte
     Raises:
-        APIMethodNMAPScanCannotBeSaved
+        APINMAPScanCannotBeSaved
     """
     try:
         db = NMAPScansDB()
@@ -362,4 +408,3 @@ def apimethod_nmapdb_delete_task(task_id):
         raise
     finally:
         del db
-

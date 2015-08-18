@@ -121,7 +121,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 113 (msg:"GPL MISC ident version reques
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 119 (msg:"GPL MISC NNTP version overflow attempt"; flow:to_server,established; content:"version"; nocase; pcre:"/^version\x3a[^\n]{21}/smi"; reference:bugtraq,9382; reference:cve,2004-0045; classtype:attempted-admin; sid:2102426; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 4321 (msg:"GPL MISC rwhoisd format string attempt"; flow:to_server,established; content:"-soa %p"; reference:bugtraq,3474; reference:cve,2001-0838; classtype:misc-attack; sid:2101323; rev:7;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 4321 (msg:"GPL MISC rwhoisd format string attempt"; flow:to_server,established; content:"-soa %p"; reference:bugtraq,3474; reference:cve,2001-0838; classtype:misc-attack; sid:2101323; rev:7;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 513 (msg:"GPL MISC rlogin bin"; flow:to_server,established; content:"bin|00|bin|00|"; reference:arachnids,384; classtype:attempted-user; sid:2100602; rev:6;)
@@ -148,7 +148,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh root"; flow:to_s
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 79 (msg:"GPL MISC Finger remote command execution attempt"; flow:to_server,established; content:"|3B|"; reference:arachnids,379; reference:bugtraq,974; reference:cve,1999-0150; classtype:attempted-user; sid:2100326; rev:11;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 79 (msg:"GPL MISC Finger remote command pipe execution attempt"; flow:to_server,established; content:"|7C|"; reference:arachnids,380; reference:bugtraq,2220; reference:cve,1999-0152; classtype:attempted-user; sid:2100327; rev:10;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 79 (msg:"GPL MISC Finger remote command pipe execution attempt"; flow:to_server,established; content:"|7C|"; reference:arachnids,380; reference:bugtraq,2220; reference:cve,1999-0152; classtype:attempted-user; sid:2100327; rev:10;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin file write attempt"; flow:to_server,established; content:"/plugins/framework/script/tree.xms"; nocase; content:"WriteToFile"; nocase; reference:bugtraq,9973; classtype:web-application-activity; sid:2102549; rev:2;)
@@ -166,16 +166,16 @@ alert http $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin se
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 873 (msg:"GPL MISC rsyncd overflow attempt"; flow:to_server; byte_test:2,>,4000,0; content:"|00 00|"; depth:2; offset:2; reference:bugtraq,9153; reference:cve,2003-0962; reference:nessus,11943; classtype:misc-activity; sid:2102048; rev:7;)
 
 #
-alert tcp $EXTERNAL_NET any <> $HOME_NET 179 (msg:"GPL MISC BGP spoofed connection reset attempt"; flow:established; flags:RSF*; threshold:type both,track by_dst,count 10,seconds 10; reference:bugtraq,10183; reference:cve,2004-0230; reference:url,www.uniras.gov.uk/vuls/2004/236929/index.htm; classtype:attempted-dos; sid:2102523; rev:8;)
+#alert tcp $EXTERNAL_NET any <> $HOME_NET 179 (msg:"GPL MISC BGP spoofed connection reset attempt"; flow:established; flags:RSF*; threshold:type both,track by_dst,count 10,seconds 10; reference:bugtraq,10183; reference:cve,2004-0230; reference:url,www.uniras.gov.uk/vuls/2004/236929/index.htm; classtype:attempted-dos; sid:2102523; rev:8;)
 
 #
 #alert tcp $EXTERNAL_NET any <> $HOME_NET 179 (msg:"GPL MISC BGP invalid type 0"; flow:stateless; content:"|FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF|"; depth:16; content:"|00|"; within:1; distance:2; reference:bugtraq,6213; reference:cve,2002-1350; classtype:bad-unknown; sid:2102159; rev:12;)
 
 #
-alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS double free exploit attempt response"; flow:from_server,established; content:"free|28 29 3A| warning|3A| chunk is already free"; reference:bugtraq,6650; reference:cve,2003-0015; classtype:misc-attack; sid:2102010; rev:5;)
+#alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS double free exploit attempt response"; flow:from_server,established; content:"free|28 29 3A| warning|3A| chunk is already free"; reference:bugtraq,6650; reference:cve,2003-0015; classtype:misc-attack; sid:2102010; rev:5;)
 
 #
-alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid directory response"; flow:from_server,established; content:"E protocol error|3A| invalid directory syntax in"; reference:bugtraq,6650; reference:cve,2003-0015; classtype:misc-attack; sid:2102011; rev:5;)
+#alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid directory response"; flow:from_server,established; content:"E protocol error|3A| invalid directory syntax in"; reference:bugtraq,6650; reference:cve,2003-0015; classtype:misc-attack; sid:2102011; rev:5;)
 
 #
 alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid module response"; flow:from_server,established; content:"cvs server|3A| cannot find module"; content:"error"; distance:1; classtype:misc-attack; sid:2102013; rev:3;)
@@ -190,7 +190,7 @@ alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid user au
 alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS missing cvsroot response"; flow:from_server,established; content:"E protocol error|3A| Root request missing"; classtype:misc-attack; sid:2102012; rev:3;)
 
 #
-alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS non-relative path error response"; flow:from_server,established; content:"E cvs server|3A| warning|3A| cannot make directory CVS in /"; reference:bugtraq,9178; reference:cve,2003-0977; classtype:misc-attack; sid:2102317; rev:5;)
+#alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS non-relative path error response"; flow:from_server,established; content:"E cvs server|3A| warning|3A| cannot make directory CVS in /"; reference:bugtraq,9178; reference:cve,2003-0977; classtype:misc-attack; sid:2102317; rev:5;)
 
 #
 alert tcp $HOME_NET 5631 -> $EXTERNAL_NET any (msg:"GPL MISC Invalid PCAnywhere Login"; flow:from_server,established; content:"Invalid login"; depth:13; offset:5; classtype:unsuccessful-user; sid:2100511; rev:6;)
@@ -202,10 +202,10 @@ alert tcp $HOME_NET 5631 -> $EXTERNAL_NET any (msg:"GPL MISC Invalid PCAnywhere 
 #alert udp $EXTERNAL_NET any -> $HOME_NET 177 (msg:"GPL MISC xdmcp query"; content:"|00 01 00 03 00 01 00|"; classtype:attempted-recon; sid:2100517; rev:2;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"GPL MISC UPnP Location overflow"; content:"Location|3A|"; nocase; isdataat:128,relative; pcre:"/^Location\x3a[^\n]{128}/smi"; reference:bugtraq,3723; reference:cve,2001-0876; classtype:misc-attack; sid:2101388; rev:14;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"GPL MISC UPnP Location overflow"; content:"Location|3A|"; nocase; isdataat:128,relative; pcre:"/^Location\x3a[^\n]{128}/smi"; reference:bugtraq,3723; reference:cve,2001-0876; classtype:misc-attack; sid:2101388; rev:14;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"GPL MISC UPnP malformed advertisement"; content:"NOTIFY * "; nocase; reference:bugtraq,3723; reference:cve,2001-0876; reference:cve,2001-0877; reference:url,www.microsoft.com/technet/security/bulletin/MS01-059.mspx; classtype:misc-attack; sid:2101384; rev:9;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"GPL MISC UPnP malformed advertisement"; content:"NOTIFY * "; nocase; reference:bugtraq,3723; reference:cve,2001-0876; reference:cve,2001-0877; reference:url,www.microsoft.com/technet/security/bulletin/MS01-059.mspx; classtype:misc-attack; sid:2101384; rev:9;)
 
 #
 #alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"GPL MISC UPnP service discover attempt"; content:"M-SEARCH "; depth:9; content:"ssdp|3A|discover"; classtype:network-scan; sid:2101917; rev:7;)
@@ -214,10 +214,10 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"GPL MISC UPnP malformed adve
 #alert udp $EXTERNAL_NET any -> $HOME_NET 2048 (msg:"GPL MISC squid WCCP I_SEE_YOU message overflow attempt"; content:"|00 00 00 08|"; depth:4; byte_test:4,>,32,16; reference:bugtraq,12275; reference:cve,2005-0095; classtype:attempted-user; sid:2103089; rev:3;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 67 (msg:"GPL MISC bootp hardware address length overflow"; content:"|01|"; depth:1; byte_test:1,>,6,2; reference:cve,1999-0798; classtype:misc-activity; sid:2101939; rev:5;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 67 (msg:"GPL MISC bootp hardware address length overflow"; content:"|01|"; depth:1; byte_test:1,>,6,2; reference:cve,1999-0798; classtype:misc-activity; sid:2101939; rev:5;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 67 (msg:"GPL MISC bootp invalid hardware type"; content:"|01|"; depth:1; byte_test:1,>,7,1; reference:cve,1999-0798; classtype:misc-activity; sid:2101940; rev:4;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 67 (msg:"GPL MISC bootp invalid hardware type"; content:"|01|"; depth:1; byte_test:1,>,7,1; reference:cve,1999-0798; classtype:misc-activity; sid:2101940; rev:4;)
 
 #
 #alert udp $EXTERNAL_NET any -> $HOME_NET 9 (msg:"GPL MISC Ascend Route"; content:"NAMENAME"; depth:50; offset:25; reference:bugtraq,714; reference:cve,1999-0060; classtype:attempted-dos; sid:2100281; rev:6;)

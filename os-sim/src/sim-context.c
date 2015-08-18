@@ -769,103 +769,6 @@ sim_context_load_directive_plugin_sids (SimContext *context,
 }
 
 /*
- *  Host Risk levels
- */
-
-/**
- * sim_context_host_risk_level_is_zero:
- *
- * Returns %TRUE if host_level is zezo
- */
-static gboolean
-sim_context_host_risk_level_is_zero (gpointer key,
-                                     gpointer value,
-                                     gpointer user_data)
-{
-  SimHost *host = SIM_HOST (value);
-
-  // unused parameter
-  (void) key;
-  (void) user_data;
-
-  // Do not delete host loaded from db
-  if (sim_host_is_loaded_from_db (host))
-    return FALSE;
-  else
-    return (sim_host_level_is_zero (host));
-}
-
-/**
- * sim_context_update_host_level_recovery:
- * @context: #SimContext object
- * @recovery: gint recovery value
- *
- * Decrements @recovery in @context host_risk_levels,
- * updates database, and delete nets with zero C and A.
- */
-void
-sim_context_update_host_level_recovery (SimContext  *context,
-                                        gint         recovery)
-{
-  g_return_if_fail (SIM_IS_CONTEXT (context));
-  g_return_if_fail (recovery >= 0);
-
-  g_mutex_lock (context->priv->mutex_hosts_nets);
-
-  SIM_WHILE_HASH_TABLE (context->priv->hosts)
-  {
-    SimHost *host = (SimHost *) value;
-
-    if (sim_host_level_set_recovery (host, recovery) && sim_host_is_loaded_from_db (host))
-    {
-      sim_db_update_host_risk_level (context->priv->database, host);
-    }
-  }
-
-  /* Delete  */
-  g_hash_table_foreach_remove (context->priv->hosts,
-                               sim_context_host_risk_level_is_zero,
-                               NULL);
-  g_hash_table_foreach_remove (context->priv->host_ids,
-                               sim_context_host_risk_level_is_zero,
-                               NULL);
-
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
-}
-
-/*
- * Net Risk levels
- */
-
-/**
- * sim_context_update_net_level_recovery:
- * @context: #SimContext object
- * @recovery: gint recovery value
- *
- * Decrements @recovery in @context net_risk_levels,
- * updates @database, and delete nets with zero C and A.
- */
-void
-sim_context_update_net_level_recovery (SimContext  *context,
-                                       gint         recovery)
-{
-  g_return_if_fail (SIM_IS_CONTEXT (context));
-  g_return_if_fail (SIM_IS_DATABASE (context->priv->database));
-  g_return_if_fail (recovery >= 0);
-
-  g_mutex_lock (context->priv->mutex_hosts_nets);
-
-  SIM_WHILE_HASH_TABLE (context->priv->nets)
-  {
-    SimNet * net = (SimNet *)value;
-
-    sim_net_level_set_recovery (net, recovery);
-  }
-
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
-}
-
-/*
  * Hosts
  */
 
@@ -2408,13 +2311,11 @@ sim_context_test2 (void)
     gchar  *ip;
     gchar  *name;
     gint    asset;
-    gdouble c;
-    gdouble a;
     SimUuid *id;
 
   } h_data[] = {
-    {"192.168.1.1", "host1", 2, 1.0, 2.0, NULL},
-    {"192.168.5.5", "host2", 3, 3.0, 4.0, NULL}};
+    {"192.168.1.1", "host1", 2, NULL},
+    {"192.168.5.5", "host2", 3, NULL}};
 
   // Data for nets
   struct
@@ -2453,7 +2354,7 @@ sim_context_test2 (void)
   for (i = 0; i < G_N_ELEMENTS (h_data); i++)
   {
     SimInet *inet = sim_inet_new_from_string (h_data[i].ip);
-    SimHost *host = sim_host_new (inet, NULL, h_data[i].name, h_data[i].asset, h_data[i].c, h_data[i].a);
+    SimHost *host = sim_host_new (inet, NULL, h_data[i].name, h_data[i].asset);
     h_data[i].id = sim_host_get_id (host);
     g_object_unref (inet);
 

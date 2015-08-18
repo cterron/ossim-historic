@@ -46,7 +46,7 @@ $data = array();
 
 $cmd = "ps ax | grep updateplugins.pl | egrep -v 'grep'";
 
-$output = explode("\n",`$cmd`);
+$output = Util::execute_command($cmd, FALSE, 'array');
 
 $data['running'] = (preg_match('/updateplugins/',$output[0])) ? 'yes' : 'no';
 $data['lines']   = '';

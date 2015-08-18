@@ -55,7 +55,6 @@ MSG_RE_FRA="Reconfigure Ossim Framework"
 MSG_RE_PHP="Reconfigure Phpgacl"
 MSG_RE_SNO="Reconfigure Snort"
 MSG_RE_ACI="Reconfigure AcidBase"
-MSG_RE_NTO="Reconfigure Ntop"
 
 
 MSG_UP_TI="VMOSSIM Other"

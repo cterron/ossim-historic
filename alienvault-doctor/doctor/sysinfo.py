@@ -58,6 +58,14 @@ class Sysinfo (object):
     __metaclass__ = Singleton
 
     def __init__(self):
+        self.__successful_config = {
+            'basic': {'result': True, 'error': ''},
+            'network': {'result': True, 'error': ''},
+            'dbconf': {'result': True, 'error': ''},
+            'server': {'result': True, 'error': ''},
+            'sensor': {'result': True, 'error': ''}
+        }
+
         self.__alienvault_config = {
             'version': '',
             'versiontype': '',
@@ -109,6 +117,8 @@ class Sysinfo (object):
         }
 
         self.__parse_alienvault_config__()
+        self.__parse_alienvault_server_config__()
+        self.__parse_alienvault_sensor_config__()
         self.__parse_system_config__()
         self.__parse_hardware_config__()
         self.__parse_system_status__()
@@ -173,7 +183,7 @@ class Sysinfo (object):
                 Output.error('No hardware profile package or more than one installed, detection may be inaccurate')
             self.__alienvault_config['hw_profile'] = hw_profiles[0] if hw_profiles else 'UNKNOWN'
         else:
-            self.__alienvault_config['hw_profile'] = "UNKNOWN"
+            self.__alienvault_config['hw_profile'] = "ossim-free"
 
         # Find the version.
         versions = list(set(re.findall('^ii\s+(?:ossim-server|ossim-agent|ossim-framework|ossim-mysql)\s+(?:1|10):(?P<version>\S+)-\S+\s+', output, re.MULTILINE)))
@@ -196,8 +206,16 @@ class Sysinfo (object):
             line = setup_file[(setup_file.index('domain=') + 7):]
             self.__alienvault_config['domain'] = line[:line.index('\n')]
         except ValueError:
-            Output.error('Missing network configuration bits, check your ossim_setup.conf file')
-            sys.exit(default.error_codes['missing_network_config'])
+            error_msg = 'Missing network configuration bits, check your ossim_setup.conf file'
+            Output.error(error_msg)
+            self.__alienvault_config['admin_dns'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['admin_gateway'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['admin_netmask'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['hostname'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['domain'] = 'UNKNOWN (%s)' % error_msg
+            # sys.exit(default.error_codes['missing_network_config'])
+            self.__successful_config['network'] = {'result': False,
+                                                   'error': error_msg}
 
         try:
             self.__alienvault_config['admin_dns'] = map(lambda x: str(IPAddress(x)), self.__alienvault_config['admin_dns'])
@@ -206,8 +224,16 @@ class Sysinfo (object):
             self.__alienvault_config['admin_netmask'] = str(IPAddress(self.__alienvault_config['admin_netmask']))
             self.__alienvault_config['admin_network'] = str(IPNetwork('%s/%s' % (self.__alienvault_config['admin_ip'], self.__alienvault_config['admin_netmask'])))
         except Exception, msg:
-            Output.error('Invalid network configuration info, check your ossim_setup.conf file: %s' % str(msg))
-            sys.exit(default.error_codes['invalid_network_config'])
+            error_msg = 'Invalid network configuration info, check your ossim_setup.conf file: %s' % str(msg)
+            Output.error(error_msg)
+            self.__alienvault_config['admin_dns'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['admin_gateway'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['admin_ip'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['admin_netmask'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['admin_network'] = 'UNKNOWN (%s)' % error_msg
+            # sys.exit(default.error_codes['invalid_network_config'])
+            self.__successful_config['network'] = {'result': False,
+                                                   'error': error_msg}
 
         # Find MySQL properties.
         try:
@@ -218,17 +244,69 @@ class Sysinfo (object):
             line = setup_file[(setup_file.index('\ndb_ip=') + 7):]
             self.__alienvault_config['dbhost'] = line[:line.index('\n')]
         except ValueError:
-            Output.error('Missing MySQL configuration field, check your ossim_setup.conf file')
-            sys.exit(default.error_codes['missing_mysql_config'])
+            error_msg = 'Missing MySQL configuration field, check your ossim_setup.conf file'
+            Output.error(error_msg)
+            self.__alienvault_config['dbpass'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['dbuser'] = 'UNKNOWN (%s)' % error_msg
+            self.__alienvault_config['dbhost'] = 'UNKNOWN (%s)' % error_msg
+            # sys.exit(default.error_codes['missing_mysql_config'])
+            self.__successful_config['dbconf'] = {'result': False,
+                                                  'error': error_msg}
 
+        # HA configuration.
+        self.__alienvault_config['has_ha'] = (re.findall(r'^ha_heartbeat_start\=no$', setup_file, re.MULTILINE) == [])
+
+        # Configured network interfaces.
+        configured_interfaces = re.findall(r'^(?:interface\=|interfaces\=)(.*)$', setup_file, re.MULTILINE)
+        self.__alienvault_config['configured_network_interfaces'] = list(reduce(lambda x, y: x | y,
+                                                                                map(
+                                                                                    lambda x: set(re.sub(r'\s+', '', x).split(',')),
+                                                                                    configured_interfaces))) + ['lo']
+
+        # Last updated
+        update_files = filter(os.path.isfile, glob.glob("/var/log/alienvault/update/*"))
+        update_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        for update_file in update_files:
+            with open(update_file, 'r') as f:
+                if re.findall('code (?!0)', f.read(), re.MULTILINE) == []:
+                    self.__alienvault_config['last_updated'] = os.path.getmtime(update_file)
+                    break
+
+    def __parse_alienvault_sensor_config__(self):
+        # Sensor configuration.
+        if 'Sensor' in self.__alienvault_config['sw_profile']:
+            try:
+                setup_file = open(default.ossim_setup_file, 'r').read()
+                line = setup_file[(setup_file.index('\ndetectors=') + 11):]
+                self.__alienvault_config['detectors'] = line[:line.index('\n')].split(',')
+                line = setup_file[(setup_file.index('\nmonitors=') + 10):]
+                self.__alienvault_config['monitors'] = line[:line.index('\n')].split(',')
+            except ValueError:
+                error_msg = 'Missing Sensor configuration field, check your ossim_setup.conf file'
+                Output.error(error_msg)
+                self.__alienvault_config['detectors'] = ['UNKNOWN (%s)' % error_msg]
+                self.__alienvault_config['monitors'] = ['UNKNOWN (%s)' % error_msg]
+                # sys.exit(default.error_codes['missing_sensor_config'])
+                self.__successful_config['sensor'] = {'result': False,
+                                                      'error': error_msg}
+
+    def __parse_alienvault_server_config__(self):
         # Server configuration.
         if 'Server' in self.__alienvault_config['sw_profile']:
             try:
                 conn = MySQLdb.connect(host=self.__alienvault_config['dbhost'], user=self.__alienvault_config['dbuser'], passwd=self.__alienvault_config['dbpass'], db='alienvault')
                 conn.autocommit(True)
             except Exception, msg:
-                Output.error("Cannot connect to database: %s" % str(msg))
-                sys.exit(default.error_codes['cannot_connect_db'])
+                error_msg = "Cannot connect to database: %s" % str(msg)
+                Output.error(error_msg)
+                self.__alienvault_config['connected_servers'] = ['UNKNOWN (%s)' % error_msg]
+                self.__alienvault_config['connected_sensors'] = ['UNKNOWN (%s)' % error_msg]
+                self.__alienvault_config['connected_systems'] = ['UNKNOWN (%s)' % error_msg]
+                self.__alienvault_config['monitored_assets'] = 'UNKNOWN (%s)' % error_msg
+                self.__alienvault_config['registered_users'] = ['UNKNOWN (%s)' % error_msg]
+                # sys.exit(default.error_codes['cannot_connect_db'])
+                self.__successful_config['server'] = {'result': False,
+                                                      'error': error_msg}
 
             try:
                 cursor = conn.cursor()
@@ -248,36 +326,6 @@ class Sysinfo (object):
                 self.__alienvault_config['registered_users'] = int(users)
             except:
                 pass
-
-        # Sensor configuration.
-        if 'Sensor' in self.__alienvault_config['sw_profile']:
-            try:
-                line = setup_file[(setup_file.index('\ndetectors=') + 11):]
-                self.__alienvault_config['detectors'] = line[:line.index('\n')].split(',')
-                line = setup_file[(setup_file.index('\nmonitors=') + 10):]
-                self.__alienvault_config['monitors'] = line[:line.index('\n')].split(',')
-            except ValueError:
-                Output.error('Missing Sensor configuration field, check your ossim_setup.conf file')
-                sys.exit(default.error_codes['missing_sensor_config'])
-
-        # HA configuration.
-        self.__alienvault_config['has_ha'] = (re.findall(r'^ha_other_node_ip\=unconfigured$', setup_file, re.MULTILINE) == [])
-
-        # Configured network interfaces.
-        configured_interfaces = re.findall(r'^(?:interface\=|interfaces\=)(.*)$', setup_file, re.MULTILINE)
-        self.__alienvault_config['configured_network_interfaces'] = list(reduce(lambda x, y: x | y,
-                                                                                map(
-                                                                                    lambda x: set(re.sub(r'\s+', '', x).split(',')),
-                                                                                    configured_interfaces))) + ['lo']
-
-        # Last updated
-        update_files = filter(os.path.isfile, glob.glob("/var/log/alienvault/update/*"))
-        update_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-        for update_file in update_files:
-            with open(update_file, 'r') as f:
-                if re.findall('code (?!0)', f.read(), re.MULTILINE) == []:
-                    self.__alienvault_config['last_updated'] = os.path.getmtime(update_file)
-                    break
 
     # Parse system configuration and stuff.
     def __parse_system_config__(self):
@@ -383,6 +431,9 @@ class Sysinfo (object):
     def get_alienvault_config(self):
         return (self.__alienvault_config)
 
+    def get_successful_config(self):
+        return (self.__successful_config)
+
     def get_system_config(self):
         return (self.__system_config)
 
@@ -414,7 +465,8 @@ class Sysinfo (object):
             'License': self.__alienvault_config['license'],
             'Software profile': ', '.join(self.__alienvault_config['sw_profile']),
             'Hardware profile': self.__alienvault_config['hw_profile'],
-            'Last updated': time.ctime(self.__alienvault_config['last_updated']) if self.__alienvault_config['last_updated'] else "Freshly installed",
+            'Last updated': time.strftime("%a %b %d %H:%M:%S %Y %Z", time.localtime(self.__alienvault_config['last_updated'])) if self.__alienvault_config['last_updated'] else "Freshly installed",
+            'AV Doctor execution time': time.strftime("%a %b %d %H:%M:%S %Y %Z", time.localtime())
         }
 
         platform_info_extended = {

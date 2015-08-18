@@ -63,7 +63,7 @@ my $add_hosts                   = "yes";
 my $ossec_cfg                   = "/var/ossec/etc/ossec.conf";
 my $ldap_client_file            = "/etc/ldap/ldap.conf";
 my $avpassvulnscan              = "/usr/bin/alienvault-passvulnscan";
-my $squidconf			= "/etc/squid/squid.conf";
+my $squidconf                   = "/etc/squid/squid.conf";
 
 my $avgroup                     = "alienvault";
 
@@ -150,12 +150,9 @@ sub config_profile_framework() {
 	configure_apache_ssl_config_file();
 	configure_apache_configuration_files();
 	configure_default_security_apache();
-	configure_unlink_ntop();
 	configure_apache_dir_conf(); # revisar
 	configure_unlink_apache2_doc();
 	configure_ocs_server(); # revisar , ocs se instala por deb
-	configure_client_utilities(); # revisar + fix
-	#configure_update_ocs_ddbb();  # revisar
 	configure_ossim_agent_for_windows();
 	configure_update_snare_client(); # fix
 	configure_add_framework_host_in_db();
@@ -171,7 +168,7 @@ sub config_profile_framework() {
     update_avpassvuln();
 
      # config squid for alienvault-center
-	config_squid();
+     config_squid();
     # Encrypt DB passwords
     aes_encrypt_db();
 
@@ -241,12 +238,6 @@ sub aes_encrypt_db() {
 
     if ( $v_key_str == 1 ) {
         verbose_log("Framework Profile: Update password (AES_ENCRYPT)");
-
-#		"UPDATE jasperserver.JIUser SET `password` = AES_ENCRYPT('$db_pass','$key_str') WHERE `password` = '$db_pass' AND `username` = 'jasperadmin';",
-#		"UPDATE jasperserver.JIUser SET `password` = AES_ENCRYPT('$db_pass','$key_str') WHERE `password` = '$db_pass' AND `username` = 'anonymousUser';",
-#		"UPDATE jasperserver.JIJdbcDatasource SET `password` = AES_ENCRYPT('$db_pass','$key_str') WHERE `password` = '$db_pass' AND `username` = 'root' AND `connectionUrl` = 'jdbc:mysql://$db_host/datawarehouse';",
-#		"UPDATE jasperserver.JIJdbcDatasource SET `password` = AES_ENCRYPT('$db_pass','$key_str') WHERE `password` = '$db_pass' AND `username` = 'root' AND `connectionUrl` = 'jdbc:mysql://$db_host/ossim';",
-#		"UPDATE jasperserver.JIJdbcDatasource SET `password` = AES_ENCRYPT('$db_pass','$key_str') WHERE `password` = '$db_pass' AND `username` = 'root' AND `connectionUrl` = 'jdbc:mysql://$db_host/snort';",
 
         my @query_array = (
             "UPDATE alienvault.config SET `value` = AES_ENCRYPT('$db_pass','$key_str') WHERE `value` = '$db_pass' AND `conf` = 'snort_pass';",
@@ -1277,13 +1268,7 @@ EOF
 
 
 }
-sub configure_unlink_ntop(){
-	    # Get rid of old ntop config, if it's there.
-    my $apachentop_file = "/etc/apache2/conf.d/ntop.conf";
-    if ( -e $apachentop_file ) { unlink($apachentop_file); }
 
-
-}
 sub configure_apache_dir_conf(){
 	   # apache dir.conf file
     # Fix #1325, partly #1452
@@ -1312,36 +1297,7 @@ sub configure_ocs_server(){
 
     #1735
     verbose_log("Framework Profile: Configuring OCS");
-    my $ocsinventory_conf = "/etc/apache2/conf.d/ocsinventory.conf";
-    my $installer_ocsinventory_conf = "/usr/share/ossim-installer/ocs/ocsinventory.conf";
-    if ( !-f $ocsinventory_conf && -f $installer_ocsinventory_conf ) {
-        system(
-            "cp -rf /usr/share/ossim-installer/ocs/ocsinventory.conf /etc/apache2/conf.d/"
-        );
-    }
-    if ( -f $ocsinventory_conf ) {
-        debug_log("Updating ocsinventory.conf");
-        my $command
-            = "sed -i \"s:OCS_DB_HOST.*:OCS_DB_HOST $db_host:\" $ocsinventory_conf";
-        debug_log("$command");
-        system($command);
-    
-        $command
-            = "sed -i \"s:OCS_DB_USER.*:OCS_DB_USER root:\" $ocsinventory_conf";
-        debug_log("$command");
-        system($command);
-    
-        $command
-            = "sed -i \"s:OCS_DB_PWD.*:OCS_DB_PWD $db_pass:\" $ocsinventory_conf";
-        debug_log("$command");
-        system($command);
-    }
 
-    #my ( $from, $to ) = qw{
-    #    /usr/share/ocsinventory-server/ocsreports/
-    #    /usr/share/ossim/www/ocsreports
-    #};
-    #symlink $from, $to unless -f $to;
     system("rm -f /usr/share/ossim/www/ocsreports");
 
     ## cambiar variables
@@ -1364,56 +1320,6 @@ sub configure_ocs_server(){
 
 }
 
-sub configure_client_utilities(){
-	    ################# FIX ###############
-
-    verbose_log("Framework Profile: Configure client utilities");
-
-    debug_log("Config OCS agent");
-    debug_log("Config OCSNG_WIN32_AGENT");
-    system(
-        "cd /usr/share/ossim/www/downloads/; unzip -oq OCSNG_WIN32_AGENT_1.02_repack; cd OCSNG_WIN32_AGENT_1.01_repack; mv 127.0.0.1.exe $framework_host.exe  $stdout $stderr"
-    );
-
-    system(
-        "echo \"OcsAgentSetup.exe /S /SERVER:$framework_host\" > /usr/share/ossim/www/downloads/OCSNG_WIN32_AGENT_1.01_repack/install.bat"
-    );
-
-    system(
-        "echo \"OcsAgentSetup.exe /S /SERVER:$framework_host\" > /usr/share/ossim/www/downloads/OCSNG_WIN32_AGENT_1.01_repack/install.bat"
-    );
-
-    debug_log("Config OCS inventory agent");
-    system(
-        "echo \"\%ProgramFiles\%\\OCS Inventory Agent\\OCSInventory.exe /FORCE /SERVER:$framework_host\" > /usr/share/ossim/www/downloads/OCSNG_WIN32_AGENT_1.01_repack/inventorize_now.bat"
-    );
-
-    my $command
-        = "sed -i \"s:ossim_pass=.*:ossim_pass=$db_pass:\" $framework_file";
-    debug_log("$command");
-    system($command);
-
-    system(
-        "cd /usr/share/ossim/www/downloads/; rm -f OCSNG_WIN32_AGENT_1.01_repack.zip; zip -q OCSNG_WIN32_AGENT_1.02_repack.zip OCSNG_WIN32_AGENT_1.01_repack/*; rm -rf OCSNG_WIN32_AGENT_1.01_repack;"
-    );
-
-}
-sub configure_update_ocs_ddbb(){
-	    verbose_log("Framework Profile: Update ocs ddbb");
-#    my $ocsdbconfigfile = "/usr/share/ossim/www/ocsreports/dbconfig.inc.php";
-    my $ocsdbconfigfile = "/usr/share/ocsinventory-server/ocsreports/dbconfig.inc.php";
-    open DBCONFIGOCS, "> $ocsdbconfigfile"
-        or warning("Error open file: $ocsdbconfigfile");
-    print DBCONFIGOCS "<?php\n";
-    print DBCONFIGOCS "\$_SESSION[\"SERVEUR_SQL\"]=\"$db_host\";\n";
-    print DBCONFIGOCS "\$_SESSION[\"COMPTE_BASE\"]=\"root\";\n";
-    print DBCONFIGOCS "\$_SESSION[\"PSWD_BASE\"]=\"$db_pass\";\n";
-    print DBCONFIGOCS "?>\n";
-    close(DBCONFIGOCS);
-
-    system("chown www-data:${avgroup} $ocsdbconfigfile");
-
-}
 sub configure_ossim_agent_for_windows(){
 
     # agent for windows
@@ -1732,8 +1638,12 @@ sub update_avpassvuln {
 
 sub config_squid {
     console_log("Configuring Squid proxy for updates");
-    my @avsystem=`alienvault-api get_registered_systems --list | awk -F';' '{print \$3"/32"}'`;
-    my $acl = join(" ",@avsystem); $acl =~ s/\n//g;
+    # admin_ip;vpn_ip;ha_ip
+    my @avsystem=`alienvault-api get_registered_systems --list | perl -npe 's/.*?;(\\d+\\.\\d+\\.*?)/\$1/'`;
+    my $acl = join(" ",@avsystem);
+    $acl =~ s/;/ /g;
+    $acl =~ s/\s+/ /g;
+    $acl =~ s/\n//g;
 
     my $squid3_path = "/etc/squid3/squid.conf";
 
@@ -1813,7 +1723,7 @@ sub config_squid {
 	
      }
 
-     if ( $config{'update_proxy'} eq "alienvault-center" ) {
+     if ( $config{'update_proxy'} =~ /^alienvault-/ ) {
 
         $command = "sed -i \"s/^cache_peer.*//\" $squidconf";
         #cache_peer $proxy_dns parent $proxy_port 0 no-query login=$proxy_user$proxy_pass no-digest ever_direct allow all

@@ -106,8 +106,8 @@ class ControlManager():
         self.__keep_processing = False
 
 
-    def process(self, conn, data):
-        self.__myaddr = conn.getsockname()
+    def process(self, addr, data):
+        self.__myaddr = addr
         if not self.__keep_processing:
             return []
         action = Utils.get_var("action=\"([^\"]+)\"", data)

@@ -52,12 +52,10 @@ if [ "$CURRENT_RUNLEVEL" = "unknown" ] || [ "$CURRENT_RUNLEVEL" = S ] || [ "$CUR
         rm -f /var/log/news/* 2> /dev/null
         rm -f /var/log/fsck/* 2> /dev/null
         rm -f /var/log/exim4/* 2> /dev/null
-        rm -f /var/log/ntop/* 2> /dev/null
         rm -f /var/log/mysql/* 2> /dev/null
         rm -f /var/log/nessus/* 2> /dev/null
         rm -f /var/log/sysstat/* 2> /dev/null
         rm -f /var/log/snort/* 2> /dev/null
-        rm -rf /var/lib/ntop/rrd/interfaces/eth0/hosts/* 2> /dev/null
         rm -f /var/spool/mail/* 2> /dev/null
         rm /home/vmuser/.bash_history 2> /dev/null
         rm /root/.bash_history 2> /dev/null

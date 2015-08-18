@@ -193,7 +193,7 @@ def get_packages_info():
         state['pending_updates'] = True
         state['total_packages_with_updates_available'] = len(output)
         package_name_list = [x['package-name'] for x in state['available_updates']]
-        feed = ["alienvault-crosscorrelation", "alienvault-directives", "snort-rules-default", "suricata-rules-default", "alienvault-cpe", "alienvault-plugins", "alienvault-plugin-sids"]
+        feed = ["alienvault-crosscorrelation", "alienvault-directives", "suricata-rules-default", "alienvault-cpe", "alienvault-plugins", "alienvault-plugin-sids"]
         state['pending_feed_updates'] = any(x in feed for x in package_name_list)
 
     return True, state

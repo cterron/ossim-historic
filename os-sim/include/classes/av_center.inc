@@ -723,11 +723,13 @@ class Av_center
     /**
      * This method returns the system list stored in AlienVault API
      *
+     * @param  boolean    $only_reachable   To check or not if the systems are up
+     *
      * @throws Exception  If a connection error occurred
      *
      * @return array
      */
-    public static function get_avc_list_from_api()
+    public static function get_avc_list_from_api($only_reachable = FALSE)
     {
         $client = new Alienvault_client();
 
@@ -747,12 +749,15 @@ class Av_center
 
             foreach ($response['data']['systems'] as $system_id => $s_data)
             {
-                $res['data'][$system_id] = array(
-                    "admin_ip"  => $s_data['admin_ip'],
-                    "hostname"  => $s_data['hostname'],
-                    "full_name" => $s_data['hostname'].' ['.$s_data['admin_ip'].']',
-                    "profile"   => $s_data['profile']
-                );
+                if (!$only_reachable || self::is_system_reachable($system_id))
+                {
+                    $res['data'][$system_id] = array(
+                        "admin_ip"  => $s_data['admin_ip'],
+                        "hostname"  => $s_data['hostname'],
+                        "full_name" => $s_data['hostname'].' ['.$s_data['admin_ip'].']',
+                        "profile"   => $s_data['profile']
+                    );
+                }
             }
         }
 
@@ -1165,11 +1170,50 @@ class Av_center
             return $res;
         }
 
+        // Remove 'sensor_detectors' info, we'll send it through /plugins/detector/enabled blueprint
+        $selected_plugins = explode(',', $data['sensor_detectors']);
+        unset($data['sensor_detectors']);
+        
+        
         $res = self::set_config_data($system_id, $data, 'alienvault');
 
+        
+        // Additional call to set the sensor plugins
+        if ($res['status'] != 'error')
+        {
+            $sensor_id = 'local';
+            
+            if ($system_id != 'local')
+            {
+                $db = new Ossim_db();
+                $conn = $db->connect();
+            
+                $sensor_ids = Av_center::get_component_id_by_system($conn, $system_id, 'sensor');
+            
+                $db->close();
+            
+                if (is_array($sensor_ids) && !empty($sensor_ids))
+                {
+                    $sensor_id = $sensor_ids['canonical'];
+                }
+            }
+            
+            $client   = new Alienvault_client();
+            
+            $response = $client->sensor($sensor_id)->set_plugins($selected_plugins);
+            
+            $response = @json_decode($response, TRUE);
+            
+            if (!$response || $response['status'] == 'error')
+            {
+                $res['status'] = 'error';
+                $res['data']   = sprintf(_('System error! Configuration not applied [%s]'), $client->get_error_message($response));
+            }
+        }
+        
         return $res;
     }
-
+    
 
     /**
      * This method returns system detectors status

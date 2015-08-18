@@ -54,7 +54,7 @@ $avc_list = Av_center::get_avc_list($conn);
         array('src' => '/av_center/js/codemirror/codemirror.css',               'def_path' => FALSE),
         array('src' => 'tree.css',                                              'def_path' => TRUE),
         array('src' => 'jquery.autocomplete.css',                               'def_path' => TRUE),
-        array('src' => '/av_center/js/jqplot/jquery.jqplot.css',                'def_path' => FALSE),
+        array('src' => '/js/jqplot/jquery.jqplot.css',                          'def_path' => FALSE),
         array('src' => 'xbreadcrumbs.css',                                      'def_path' => TRUE),
         array('src' => 'tipTip.css',                                            'def_path' => TRUE),
         array('src' => 'jquery.dataTables.css',                                 'def_path' => TRUE),

@@ -54,7 +54,6 @@ from api.blueprints.sensor import interfaces
 from api.blueprints.sensor import ossec_agent
 from api.blueprints.sensor import detector
 from api.blueprints.sensor import ossec
-from api.blueprints.sensor import ntop
 from api.blueprints.sensor import ossec_configuration
 # server
 from api.blueprints.server import server
@@ -66,6 +65,16 @@ from api.blueprints.job import common
 from api.blueprints.job import reconfig
 
 # Apps
+from api.blueprints.system import backup
+from api.blueprints.system import doctor
+from api.blueprints.system import email
+from api.blueprints.system import license as avlicense
+from api.blueprints.system import config
+from api.blueprints.system import status as system_status
+from api.blueprints.system import otx
+from api.blueprints.system import support
+# Host
+from api.blueprints.host import host as host_config
 from api.blueprints.apps import nmap
 
 # Attach blueprints.
@@ -85,7 +94,6 @@ app.register_blueprint(detector.blueprint, url_prefix=API_URL_BEGIN + 'sensor')
 app.register_blueprint(ossec_agent.blueprint, url_prefix=API_URL_BEGIN + 'sensor')
 app.register_blueprint(ossec.blueprint, url_prefix=API_URL_BEGIN + 'sensor')
 app.register_blueprint(ossec_configuration.blueprint, url_prefix=API_URL_BEGIN + 'sensor')
-app.register_blueprint(ntop.blueprint, url_prefix=API_URL_BEGIN + 'sensor')
 
 # server
 app.register_blueprint(server.blueprint, url_prefix=API_URL_BEGIN + 'server')
@@ -112,5 +120,7 @@ app.register_blueprint(host.blueprint, url_prefix=API_URL_BEGIN + 'data/host')
 app.register_blueprint(reconfig.blueprint, url_prefix=API_URL_BEGIN + 'job')
 app.register_blueprint(common.blueprint, url_prefix=API_URL_BEGIN + 'job')
 
+# host
+app.register_blueprint(host_config.blueprint, url_prefix=API_URL_BEGIN + 'host')
 # apps
 app.register_blueprint(nmap.blueprint, url_prefix=API_URL_BEGIN + 'nmap')

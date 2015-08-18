@@ -357,6 +357,14 @@ sim_uuid_is_valid_string (const gchar *str)
     return FALSE;
 }
 
+gchar *
+sim_uuid_to_base64(SimUuid *id)
+{
+  g_return_val_if_fail (SIM_IS_UUID(id), NULL);
+  return g_base64_encode ((guchar*)id->priv->id, 16);
+}
+
+
 
 #ifdef USE_UNITTESTS
 

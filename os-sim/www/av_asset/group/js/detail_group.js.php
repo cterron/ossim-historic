@@ -257,6 +257,13 @@ function av_group_detail(o)
                 __self.reload_section('history');
             }
         }
+        else if (url.match(/base_qry_alert/))
+        {
+            if (typeof(params) == 'object' && typeof params['url_detail'] != 'undefined')
+            {
+                go_to(params['url_detail']);
+            }
+        }
     }
     
     
@@ -271,23 +278,6 @@ function av_group_detail(o)
     {        
         var __self = this;
         
-        if (__self.perms['edit'])
-        {
-            $("[data-bind='delete_asset']").on('click', function()
-            {
-                var msg  = "<?php echo _('Are you sure you want to delete this group?') ?>";
-                
-                av_confirm(msg, __confirm_keys).done(function()
-                {
-                    __self.delete_asset();
-                });
-            });  
-        }
-        else
-        {
-            $("[data-bind='delete_asset']").addClass('disabled');
-        }
-
         $("[data-bind='export-asset']").on('click', function()
         {
             __self.export_asset();
@@ -428,6 +418,29 @@ function av_group_detail(o)
         //Section Tabs
         this.actions = 
         [
+            {
+                "id"    : "edit",
+                "name"  : "<?php echo _('Edit') ?>",
+                "perms" : "edit",
+                "action": function()
+                {
+                    __self.edit_asset(); 
+                }
+            },
+            {
+                "id"    : "delete",
+                "name"  : "<?php echo _('Delete') ?>",
+                "perms" : "delete",
+                "action": function()
+                {
+                    var msg  = "<?php echo _('Are you sure you want to delete this group?') ?>";
+                
+                    av_confirm(msg, __confirm_keys).done(function()
+                    {
+                        __self.delete_asset();
+                    });
+                }
+            },
             {
                 "id"    : "nmap_scan",
                 "name"  : "<?php echo _('Run Asset Scan') ?>",

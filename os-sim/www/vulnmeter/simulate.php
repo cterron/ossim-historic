@@ -68,9 +68,12 @@ if ($sched_id > 0)
     $split_jobs = TRUE;
     
     // login the user
-
     $session = new Session($user, '', '');
     $session->login(TRUE);
+
+    $dbpass = $conn->GetOne('SELECT pass FROM users WHERE login = ?', array($user));
+    $client = new Alienvault_client($user);
+    $client->auth()->login($user,$dbpass);
 }
 else
 {
@@ -94,66 +97,96 @@ $targets         = array();
 $selected_ids    = array(); // This array will content all the selected sensor IDs
 $local_sensor_id = NULL;
 
-foreach($id_targets as $id_target) if (trim($id_target) != '')
+foreach ($id_targets as $id_target)
 {
-    $id_target = trim($id_target);
-
-    ossim_set_error(false);
-
-    if (preg_match("/^!/",$target))
+    if (trim($id_target) != '')
     {
-        continue;
-    }
-    if (preg_match("/^([a-f\d]{32})#(hostgroup|netgroup)$/i", $id_target, $found))
-    {
-        $assets_groups[$found[1]] = $found[2];
-        
-        continue;
-    }
-    else if(preg_match("/^[a-f\d]{32}#\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/i", $id_target))
-    {
-        list($asset_id, $ip_target) = explode("#", $id_target);
+        $id_target = trim($id_target);
 
-        ossim_valid($asset_id, OSS_HEX, OSS_NULLABLE , 'illegal: Asset id'); // asset id
+        ossim_set_error(FALSE);
 
-        if (ossim_error())
+        if (!preg_match('/^!/', $id_target))
         {
-            $error_message .= _("Invalid target").": " . Util::htmlentities($id_target) . "<br/>";
+            // ID && (hostgroup || netgroup)
+            if (preg_match('/^([a-f\d]{32})#(hostgroup|netgroup)$/i', $id_target, $found))
+            {
+                $assets_groups[$found[1]] = $found[2];
+
+                continue;
+            }
+
+            // ID && (IP || CIDR)
+            else if (preg_match('/^[a-f\d]{32}#\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?$/i', $id_target, $found))
+            {
+                // Clean /32 mask to avoid "Error in host specification" OpenVAS error
+                if (!empty($found[1]) && $found[1] == '/32')
+                {
+                    $id_target = substr($id_target, 0, -3);
+                }
+
+                list($asset_id, $ip_target) = explode('#', $id_target);
+
+                ossim_valid($asset_id, OSS_HEX, OSS_NULLABLE, 'illegal: Asset id');
+
+                if (ossim_error())
+                {
+                    $error_message .= _('Invalid target').': '.Util::htmlentities($id_target).'<br/>';
+                }
+
+                ossim_valid($ip_target, OSS_IP_CIDR_0, 'illegal:'._('Target'));
+
+                if (ossim_error())
+                {
+                    $error_message .= _('Invalid target').': '.Util::htmlentities($id_target).'<br/>';
+                }
+            }
+
+            // IP || CIDR
+            else if (preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?$/', $id_target, $found))
+            {
+                // Clean /32 mask to avoid "Error in host specification" OpenVAS error
+                if (!empty($found[1]) && $found[1] == '/32')
+                {
+                    $id_target = substr($id_target, 0, -3);
+                }
+
+                ossim_valid($id_target, OSS_IP_CIDR_0, 'illegal:'._('Target'));
+
+                if (ossim_error())
+                {
+                    $error_message .= _('Invalid target').': '.Util::htmlentities($id_target).'<br/>';
+                }
+            }
+
+            // Hostname
+            else
+            {
+                ossim_valid($id_target, OSS_FQDNS, 'illegal: Host name');
+
+                if (ossim_error())
+                {
+                    $error_message .= _('Invalid target').': '.Util::htmlentities($id_target).'<br/>';
+                }
+            }
+
+            if (!ossim_error())
+            {
+                $targets[$id_target] = array();
+            }
         }
-
-        ossim_valid($ip_target, OSS_NULLABLE, OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, '\.\,\/\!', 'illegal:' . _("Target"));
-
-        if (ossim_error())
-        {
-            $error_message .= _("Invalid target").": " . Util::htmlentities($id_target) ."<br/>";
-        }
-    }
-    else if(!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/",$id_target))
-    {
-        ossim_valid($id_target, OSS_FQDNS , 'illegal: Host name'); // asset id
-
-        if (ossim_error())
-        {
-            $error_message .= _("Invalid target").": " . Util::htmlentities($id_target) . "<br/>";
-        }
-    }
-
-    if (!ossim_error())
-    {
-        $targets[$id_target] = array();
     }
 }
 
-if(empty($targets) && empty($assets_groups))
+if (empty($targets) && empty($assets_groups))
 {
     $config_nt = array(
-            'content' => _("Targets not found").((!empty($error_message)) ? "<br/>".$error_message : ""),
-            'options' => array (
-                'type'          => 'nf_warning',
-                'cancel_button' => false
-            ),
-            'style'   => 'width: 80%; margin: 20px auto; text-align: left;'
-        );
+        'content' => _('Targets not found').((!empty($error_message)) ? '<br/>'.$error_message : ''),
+        'options' => array(
+            'type'          => 'nf_warning',
+            'cancel_button' => FALSE
+        ),
+        'style'   => 'width: 80%; margin: 20px auto; text-align: left;'
+    );
 
     $nt = new Notification('nt_1', $config_nt);
     $nt->show();

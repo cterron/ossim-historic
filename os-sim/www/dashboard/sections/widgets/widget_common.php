@@ -251,22 +251,22 @@ function rgbToHex($rgb)
 function get_widget_colors($steps=0) 
 { 
 	$chart_color = array(
-		"#fac800",	
-		"#7d71bd",
-		"#2fc9e5",
-		"#c12fe5",
-		"#ff8a00",
-		"#f65dc9",
-		"#1e2ad1",
-		"#00fcff",
-		"#94cf05",
-		"#fa0000"
+		"#FAC800",
+		"#7D71BD",
+		"#2FC9E5",
+		"#B722E8",
+		"#FF8A00",
+		"#F65DC9",
+		"#1E2AD1",
+		"#837B67",
+		"#9455F8",
+		"#1881FA"
 	);
 	
 	$color_result = array();
 	$total        = count($chart_color);
 	
-	for($i=0; $i <$steps; $i++)
+	for($i = 0; $i < $steps; $i++)
 	{
 		$color_result[] = '"'. $chart_color[($i%$total)] .'"';
 	}

@@ -200,37 +200,35 @@ function deploy_agents($conn, $wizard)
     elseif ($os == 'windows')
     {
         $jobs = array();
-        
+
         foreach ($hosts as $h)
         {
             $ips = Asset_host_ips::get_ips_to_string($conn, $h);
             $ips = explode(',', $ips);
-            
-            
+
             foreach ($ips as $ip)
             {
                 try
                 {
                     //Adding job to deploy ossec.
-                    $name       = 'Windows-' . str_replace('.', '-', $ip);
-                    $job        = Welcome_wizard::launch_ossec_deploy($name, $ip, $username, $domain, $password);
-                
+                    $job = Welcome_wizard::launch_ossec_deploy($h, $ip, $username, $password, $domain);
+
                     $jid        = md5($h . $ip);
                     $jobs[$jid] = array(
                         'job_id' => $job['job_id'],
-                        'agent'  => $name . '('. $ip .')'
+                        'agent'  => Asset_host::get_name_by_id($conn, $h)
                     );
-            
+
                 }
                 catch(Exception $e)
                 {
                      Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
-                
+
                 $total_ip++;
             }
         }
-        
+
         //Saving the jobs IDs in the wizard object
         $wizard->set_step_data('deploy_jobs', $jobs);
     }
@@ -367,7 +365,7 @@ function check_deploy_status($conn, $wizard)
                     {
                         unset($jobs[$id]);
                         
-                        $_msg = $job['agent'] . ': ' .  _("Couldn't complete windows OSSEC agent deploy: ") . $state['job_status'];
+                        $_msg = $job['agent'] . ': ' .  _("Couldn't complete windows HIDS agent deploy: ") . $state['job_status'];
                         Av_exception::write_log(Av_exception::USER_ERROR, $_msg);
                     }
                 }

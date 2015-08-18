@@ -51,11 +51,7 @@ $asset_groups = $_groups_data[0];
 $autocomplete_keys = array('hosts');
 $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 
-
-
-
 $db->close();
-
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -77,7 +73,7 @@ $db->close();
             array('src' => '/alarm/console.css',            'def_path' => TRUE),
             array('src' => 'av_tags.css',                   'def_path' => TRUE)
         );
-        
+
         Util::print_include_files($_files, 'css');
 
         //JS Files
@@ -92,21 +88,21 @@ $db->close();
             array('src' => 'jquery.dataTables.js',                  'def_path' => TRUE),
             array('src' => 'jquery.dataTables.plugins.js',          'def_path' => TRUE),
             array('src' => 'jquery.autocomplete.pack.js',           'def_path' => TRUE),
-            array('src' => 'jquery.placeholder.js',                 'def_path' => TRUE),   
-            array('src' => '/alarm/js/alarm_group_list.js.php',     'def_path' => FALSE),            
+            array('src' => 'jquery.placeholder.js',                 'def_path' => TRUE),
+            array('src' => '/alarm/js/alarm_group_list.js.php',     'def_path' => FALSE)
         );
-        
+
         Util::print_include_files($_files, 'js');
 
         require '../host_report_menu.php';
-        
+
     ?>
 
 	<script type="text/javascript">
 
         $(document).ready(function()
         {
-        
+
             load_alarm_list();
         });
 
@@ -114,25 +110,24 @@ $db->close();
 </head>
 
 <body>
-    
+
     <div id='bg_container'></div>
 
     <div id='ag_notif'></div>
-    
-    
+
+
     <div class="filters uppercase">
         <img id='search_arrow' src='/ossim/pixmaps/arrow_right.png' />
         <a href='javascript:;' onclick="toggle_filters()"><?php echo _('Search and filter') ?></a>
     </div>
-    
-    
-    
-    
+
+    <div class='clear_layer'></div>
+
     <div id='alarm_group_params'>
         <form id='filter_group_alarms'>
-        
+
             <div class='p_column'>
-                
+
                 <label for='group_type'><?php echo _('Group By')?></label>
                 <select id="group_type" class='ag_param' name="group_type" >
     			    <option value='all'><?php echo _('Alarm Name, Src/Dst, Date') ?></option>
@@ -140,16 +135,16 @@ $db->close();
     			    <option value='name' selected><?php echo _('Alarm Name') ?></option>
     			    <option value='similar'><?php echo _('Similar Alarms') ?></option>
     			</select>
-        				            
+
                 <label for='alarm_name'><?php echo _('Alarm name') ?></label>
                 <input type="search" id="alarm_name" class='ag_param' name="alarm_name" value="">
-                
+
                 <label for='src_ip'><?php echo _('Source IP Address') ?></label>
-                <input type="search" id="src_ip" class='ag_param' name="src_ip" value=""/> 
-                
+                <input type="search" id="src_ip" class='ag_param' name="src_ip" value=""/>
+
                 <label for='dst_ip'><?php echo _('Destination IP Address') ?></label>
                 <input type='search' id='dst_ip' class='ag_param' name='dst_ip' value=''>
-                
+
                 <label for='asset_group'><?php echo _('Asset Group') ?></label>
                 <select id='asset_group' class='ag_param' name='asset_group'>
                     <option value=''><?php echo (count($asset_groups) > 0) ? '' : '- '._('No groups found').' -' ?></option>
@@ -162,7 +157,7 @@ $db->close();
                     }
                     ?>
                 </select>
-                
+
                 <label><?php echo _('Date') ?></label>
                 <div class="datepicker_range">
                     <div class='calendar_from'>
@@ -179,11 +174,11 @@ $db->close();
                         </div>
                     </div>
                 </div>
-                        
+
             </div>
-            
+
             <div class='p_column'>
-            
+
                 <label for='sensor_query'><?php echo _('Sensor')?></label>
                 <select name="sensor_query" class='ag_param' id="sensor_query">
     				<option value=""></option>
@@ -194,7 +189,7 @@ $db->close();
     				}
     				?>
     			</select>
-    			
+
                 <label for='intent'><?php echo _('Intent') ?></label>
                 <select id="intent" class='ag_param' name="intent">
                     <option value="0"></option>
@@ -205,37 +200,35 @@ $db->close();
                     }
                     ?>
                 </select>
-                
+
                 <label for='directive_id'><?php echo _('Directive ID') ?></label>
                 <input type="search" id="directive_id" class='ag_param' name="directive_id" value="">
-                
+
                 <!--<label for='num_alarms_page'><?php echo _('Num. alarm groups per page') ?></label>
                 <input type="search" id="num_alarms_page" name="num_alarms_page" value="">-->
-                           
+
                 <label for='num_events_op'><?php echo _('Number of events in alarm') ?></label>
                 <select id='num_events_op' class='ag_param' name='num_events_op'>
                     <option value="less"><=</option>
                     <option value="more">>=</option>
                 </select>
                 <input type='search' class='ag_param' id='num_events' name='num_events' value=''>
-                
+
                 <label for='tag'><?php echo _('Label') ?></label>
-                <select id='tag' class='ag_param' name='tag'> 
+                <select id='tag' class='ag_param' name='tag'>
                     <option value=''></option>
-                    <?php 
+                    <?php
                     foreach ($tags as $t)
                     {
                         echo '<option value="'. $t->get_id() .'">'. $t->get_name() .'</option>';
                     }
                     ?>
-                </select> 
+                </select>
                 
-                
-        
             </div>
-            
+
             <div class='p_column'>
-                
+
                 <label for='show_options'><?php echo _('Show') ?></label>
                 <select id="show_options" class='ag_param' name="show_options">
     				<option value="1"><?php echo _('All Groups') ?></option>
@@ -243,7 +236,7 @@ $db->close();
     				<option value="3"><?php echo _('Groups Without Owner') ?></option>
     				<option value="4"><?php echo _('My Groups & Without Owner') ?></option>
     			</select>
-    			
+
     			<label for='refresh_time'>
     			     <?php echo _('Autorefresh') ?>
     			     <a id='refresh_now' href="javascript:;" >[ <?php echo _('Refresh Now') ?> ]</a>
@@ -255,36 +248,36 @@ $db->close();
     				<option value="180000"><?php echo _('3 Minutes') ?></option>
     				<option value="600000"><?php echo _('10 Minutes') ?></option>
     			</select>
-    			
+
     			<br/><br/>
-                <input id='no_resolv' class='ag_param' type='checkbox' name='no_resolv' value='1'> 
+                <input id='no_resolv' class='ag_param' type='checkbox' name='no_resolv' value='1'>
                 <label class='line' for='a_resolve'><?php echo _('Do not resolve IP Names') ?></label><br/>
-                
-                <input id='hide_closed' class='ag_param' type='checkbox' name='hide_closed' value='1' checked > 
+
+                <input id='hide_closed' class='ag_param' type='checkbox' name='hide_closed' value='1' checked >
                 <label class='line' for='hide_closed'><?php echo _('Hide Closed Alarms') ?></label><br/>
-                
+
             </div>
-            
+
             <div class='clear_layer'></div>
-            
+
         </form>
     </div>
-    
-    
+
+
     <div id='body_ga'>
-        
+
         <div id='header_rga'>
-    
+
             <button type="button" disabled id='b_close_selected'>
                 <img src='style/img/unlock.png' height="14px" align="absmiddle" style="padding-right:8px"/>
                 <span><?php echo _('Close selected') ?></span>
             </button>
-        
+
             <?php
             if (Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete"))
             {
                 ?>
-        
+
                 <button type="button" disabled id='b_delete_selected' class='av_b_secondary'>
                     <img src='style/img/trash_fill.png' height="14px" align="absmiddle" style="padding-right:8px"/>
                     <span><?php echo _('Delete selected') ?></span>
@@ -292,10 +285,10 @@ $db->close();
                 <?php
             }
             ?>
-        
+
         </div>
-    
-    
+
+
         <table id='t_grouped_alarms' class='table_data'>
             <thead>
                 <tr>
@@ -312,13 +305,13 @@ $db->close();
                     <th><?php echo _('Action')?></th>
                 </tr>
             </thead>
-    
+
             <tbody><tr><td></td></tr></tbody>
         </table>
-        
-        
+
+
     </div>
-    
+
     <div id='footer_ga'>
         <?php
         if (Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete"))
@@ -329,7 +322,7 @@ $db->close();
         }
         ?>
     </div>
-    
+
     <div id='alarm_list_template'>
         <table class='table_data alarm_list'>
             <thead>
@@ -338,20 +331,15 @@ $db->close();
                     <th><?php echo _('Alarm Name') ?></th>
                     <th><?php echo _('Events') ?></th>
                     <th><?php echo _('Risk') ?></th>
-                    <?php 
-                    if (Session::is_pro() && Session::show_entities()) 
-                    { 
-                        echo '<th>' . _('Context') . '</th>';
-                    } 
-                    ?>
                     <th><?php echo _('Duration') ?></th>
+                    <th><?php echo _('OTX') ?></th>
                     <th><?php echo _('Source') ?></th>
                     <th><?php echo _('Destination') ?></th>
                     <th><?php echo _('Status') ?></th>
                     <th><?php echo _('Action') ?></th>
                 </tr>
             </thead>
-    
+
             <tbody><tr><td></td></tr></tbody>
         </table>
     </div>

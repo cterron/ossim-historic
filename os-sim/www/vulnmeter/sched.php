@@ -318,7 +318,7 @@ if (in_array ($action, array ('create_scan', 'edit_sched', 'rerun_scan', 'save_s
         'D'   => array('name' => _('Daily')),
         'W'   => array('name' => _('Day of the Week')),
         'M'   => array('name' => _('Day of the Month')),
-        'NW'  => array('name' => _('N<sup>th</sup> weekday of the month'))
+        'NW'  => array('name' => _('N<sup>th</sup> week of the month'))
     );
     
     // date to fill the form
@@ -376,9 +376,9 @@ if (in_array ($action, array ('create_scan', 'edit_sched', 'rerun_scan', 'save_s
         
         $selected_time_hour = $time_hour;
         $selected_time_min  = $time_min;
-        
+
         $selected_nweekday  = $nthweekday;
-        
+
         $selected_frequency = $time_interval;
         
         foreach ($s_methods as $m => $method_data)
@@ -452,7 +452,7 @@ if (in_array ($action, array ('create_scan', 'edit_sched', 'rerun_scan', 'save_s
     {
         $frequencies[$i]['selected'] = ($i == $selected_frequency) ? 'selected="selected"' : '';
     }
-    
+
     foreach ($nweekday as $number => $data)
     {
         $nweekday[$number]['selected'] = ($number == $selected_nweekday) ? 'selected="selected"' : '';
@@ -575,7 +575,7 @@ if ($action == 'save_scan')
         
         submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $schedule_type, $not_resolve, $user, $entity, $targets, $scheduled_status,
                     $hosts_alive, $sid, $send_email, $timeout, $scan_locally, $dayofweek, $dayofmonth, $ROYEAR, $ROMONTH, $ROday, $time_hour, $time_min,
-                    $time_interval, $sched_id, $biyear, $bimonth, $biday, $nthweekday, $tz, $daysMap, $ip_exceptions_list);
+                    $time_interval, $sched_id, $biyear, $bimonth, $biday, $nthdayofweek, $nthweekday, $tz, $daysMap, $ip_exceptions_list);
     }
 }
 else if ($action == 'edit_sched')
@@ -656,7 +656,7 @@ else if ($action == 'edit_sched')
     $selected_time_hour = ltrim($found[4], '0');
     $selected_time_min  = ltrim($found[5], '0');
     
-    if ($schedule_type == 'O')
+    if ($database['schedule_type'] == 'O')
     {
         $selected_year      = $found[1];
         $selected_month     = $found[2];
@@ -728,6 +728,13 @@ else if ($action == 'edit_sched')
     foreach ($s_methods as $type => $method_data)
     {
         $s_methods[$type]['selected'] = ($type == $database['schedule_type']) ? 'selected="selected"' :  '';
+    }
+
+    // Nth Week
+
+    foreach ($nweekday as $number => $data)
+    {
+        $nweekday[$number]['selected'] = ($number == $database['day_of_month']) ? 'selected="selected"' : '';
     }
 }
 else if ($action == 'rerun_scan')
@@ -1210,6 +1217,8 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
                 switch_credentials(select_name);
 			});
 
+            toggle_scan_locally(false);
+
 		}
 		
 		function toggle_section(id){
@@ -1239,7 +1248,7 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
             $("#mjob").removeAttr("disabled");
         }
 
-	    function toggle_scan_locally(){
+	    function toggle_scan_locally(simulate){
             if($("#hosts_alive").is(":checked")) {
                 $("#scan_locally").removeAttr("disabled");
             }
@@ -1250,8 +1259,11 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
 
                 $("#scan_locally").attr("disabled","disabled");
             }
-            
-            simulation();
+
+            if (simulate == true)
+            {
+                simulation();
+            }
         }
         
         var flag = 0;
@@ -1680,7 +1692,7 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
                         <br>
                         <table width="100%">
                             <tr>
-                                <th align="right"><?echo _('N<sup>th</sup> weekday') ?></th>
+                                <th align="right"><?echo _('N<sup>th</sup> week') ?></th>
                                 <td colspan="2" class="noborder">
                                     <select name='nthweekday'>
                                         <?php
@@ -1844,7 +1856,7 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
             </tr>
     	    <tr>
         	    <td valign="top" width="15%" class="job_option noborder"><br>
-    	            <input onclick="toggle_scan_locally()" type="checkbox" id="hosts_alive" name="hosts_alive" value="1" <?php echo $hosts_alive_data['disabled'] . ' ' . $hosts_alive_data['checked'] ?>><?php echo _('Only scan hosts that are alive (greatly speeds up the scanning process)'); ?><br><br>
+                    <input onclick="toggle_scan_locally(true)" type="checkbox" id="hosts_alive" name="hosts_alive" value="1" <?php echo $hosts_alive_data['disabled'] . ' ' . $hosts_alive_data['checked'] ?>><?php echo _('Only scan hosts that are alive (greatly speeds up the scanning process)'); ?><br><br>
         	        
     	            <input type="checkbox" id="scan_locally" name="scan_locally" value="1" <?php echo $scan_locally_checked ?> /><?php echo _('Pre-Scan locally<br>(do not pre-scan from scanning sensor)');?><br><br>
                     <input type="checkbox" id="not_resolve" name="not_resolve" value="1" <?php echo $resolve_names_checked ?>  /><?php echo _('Do not resolve names');?>
@@ -1906,7 +1918,7 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
 
 function submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $schedule_type, $not_resolve, $user, $entity, $targets, $scheduled_status,
                      $hosts_alive, $sid, $send_email, $timeout, $scan_locally, $dayofweek, $dayofmonth, $ROYEAR, $ROMONTH, $ROday, $time_hour,
-                     $time_min, $time_interval, $sched_id, $biyear, $bimonth, $biday, $nthweekday, $tz, $daysMap, $ip_exceptions_list)
+                     $time_min, $time_interval, $sched_id, $biyear, $bimonth, $biday, $nthdayofweek, $nthweekday, $tz, $daysMap, $ip_exceptions_list)
 {
     $db     = new ossim_db();
     $dbconn = $db->connect();
@@ -2087,12 +2099,12 @@ function submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $sched
             {
                 // if it is a future date
                 $array_time = array('month'=> $bbimonth, 'day' => $bbiday, 'year' => $bbiyear);
-                
-                $requested_run = weekday_month(strtolower($daysMap[$dayofweek]['text']), $nthweekday, $btime_hour, $btime_min, $array_time);
+
+                $requested_run = weekday_month(strtolower($daysMap[$nthdayofweek]['text']), $nthweekday, $btime_hour, $btime_min, $array_time);
             }
             else
             {
-                $requested_run = weekday_month(strtolower($daysMap[$dayofweek]['text']), $nthweekday, $btime_hour, $btime_min);
+                $requested_run = weekday_month(strtolower($daysMap[$nthdayofweek]['text']), $nthweekday, $btime_hour, $btime_min);
             }
         
             preg_match("/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/", $requested_run, $found);
@@ -2101,6 +2113,7 @@ function submit_scan($SVRid, $job_name, $ssh_credential, $smb_credential, $sched
             $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
         
             $dayofmonth = $nthweekday;
+            $dayofweek = $nthdayofweek;
       
             break;
         default:
@@ -2342,7 +2355,7 @@ function weekday_month($day, $nth, $h, $m, $start_date = array())
     $current_year  = ($start_date['year']!="")  ? $start_date['year']  : date('Y');
     $current_month = ($start_date['month']!="") ? $start_date['month'] : date('m');
     $current_day   = ($start_date['day']!="")   ? $start_date['day']   : date('d');
-    
+
     if(empty($start_date)) {
         //Current timestamp
         $today  = mktime(date('H'), date('i'), 0, $current_month, $current_day, $current_year);

@@ -83,7 +83,7 @@ require_once 'av_init.php';
         {
             __self.fadeOut(100, function ()
             {
-                $_notification_title.text(title);
+                $_notification_title.html(title);
                 $_notification_date.text(date);
                 $_notification_description.html(description);
                 $_notification_actions.html(actions);

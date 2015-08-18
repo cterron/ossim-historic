@@ -88,6 +88,11 @@ $extra_filters = array(
         'id'     => 13,
         'filter' => 'location',
         'name'   => Util::js_entities(_('Location'))
+    ),
+    25 => array(
+        'id'     => 25,
+        'filter' => 'plugin',
+        'name'   => Util::js_entities(_('Plugin'))
     )
 );
 

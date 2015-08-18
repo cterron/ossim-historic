@@ -78,7 +78,7 @@ class KDB_Sintax
         $this->_control_line     = '^{(.+)}$';
 
         //Reg Exp for a generic variable
-        $this->_generic_variable = '(\$[A-Za-z_]+)';
+        $this->_generic_variable = '(\$[A-Za-z_\d?]+)';
 
         //Reg Exp for a generic value
         $this->_generic_value    = '"(.*)"';
@@ -139,7 +139,7 @@ class KDB_Sintax
                 'sample' => '{INCLUDE 43001}'
             ),
             '$INCLUDE ID SECTION' => array(
-                'help' => _("Include a section of a KDB Docuement") ,
+                'help' => _("Include a section of a KDB Document") ,
                 'sample' => '{INCLUDE 43001 INTRODUCTION}'
             ),
             'SECTION' => array(
@@ -509,19 +509,19 @@ class KDB_Sintax
                 'sample' => '{ IF $SRCIP NOT IN NETGROUPS }'
             ),
             'EMPTY' => array(
-                'help' => _("Checks if the variable is not empty") ,
+                'help' => _("Checks if the variable is empty") ,
                 'sample' => '{ IF $USERDATA1 EMPTY }'
             ),
             'NOT EMPTY' => array(
-                'help' => _("Checks if the variable is empty") ,
+                'help' => _("Checks if the variable is not empty") ,
                 'sample' => '{ IF $USERDATA1 NOT EMPTY }'
             ),
             'CONTAINS' => array(
-                'help' => _("Checks if the variable does not contains an string") ,
+                'help' => _("Checks if the variable contains a string") ,
                 'sample' => '{ IF $USERDATA1 CONTAINS "text" }'
             ),
             'NOT CONTAINS' => array(
-                'help' => _("Checks if the variable contains an string") ,
+                'help' => _("Checks if the variable does not contain a string") ,
                 'sample' => '{ IF $USERDATA1 NOT CONTAINS "text" }'
             ),
             'MORE THAN' => array(

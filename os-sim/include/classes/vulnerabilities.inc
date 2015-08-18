@@ -1609,7 +1609,7 @@ class Vulnerabilities
 
         if ($sautoenable == "C")
         {
-            $query  = "select t1.cid, t1.status from vuln_nessus_settings_category as t1, vuln_nessus_category as t2 where sid=$sid";
+            $query  = "select t1.cid, t1.status from vuln_nessus_settings_category as t1 where sid=$sid";
             $result = $dbconn->execute($query);
 
             while (!$result->EOF)
@@ -1632,7 +1632,7 @@ class Vulnerabilities
         }
         elseif($sautoenable == "F")
         {
-            $query  = "select t1.fid, t1.status from vuln_nessus_settings_family as t1, vuln_nessus_family as t2 where sid=$sid";
+            $query  = "select t1.fid, t1.status from vuln_nessus_settings_family as t1 where sid=$sid";
             $result = $dbconn->execute($query);
 
             while (!$result->EOF)
@@ -1842,8 +1842,7 @@ class Vulnerabilities
                     if ($sautoenable == "C")
                     {
                         $query = "select t1.cid, t1.status
-                              from vuln_nessus_settings_category as t1,
-                                   vuln_nessus_category as t2
+                              from vuln_nessus_settings_category as t1
                               where sid=$sid";
 
                         $result = $dbconn->execute($query);
@@ -1885,8 +1884,7 @@ class Vulnerabilities
                     elseif($sautoenable == "F")
                     {
                         $query = "select t1.fid, t1.status
-                                    from vuln_nessus_settings_family as t1,
-                                    vuln_nessus_category as t2
+                                    from vuln_nessus_settings_family as t1
                                     where sid=$sid";
 
                         $result = $dbconn->execute($query);

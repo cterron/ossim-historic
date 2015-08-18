@@ -79,11 +79,6 @@ if ($profile == "all-in-one") {
     my $sth = $conn->prepare($query);
     $sth->execute();
 
-    # Update default ntop link
-
-    my $query = "UPDATE config set value = \"http://$ip:3000\" where conf = \"ntop_link\";";
-    my $sth = $conn->prepare($query);
-    $sth->execute();
 } #end if all-in-one
 
 sub replace_ip{

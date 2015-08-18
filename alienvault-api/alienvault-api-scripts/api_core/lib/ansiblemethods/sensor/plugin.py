@@ -32,8 +32,11 @@ import api_log
 import re
 import json
 import os
+import yaml
 from ansiblemethods.ansiblemanager import Ansible
-from ansiblemethods.helper import ansible_is_valid_response
+from ansiblemethods.helper import ansible_is_valid_response, fetch_file
+
+from apiexceptions.plugin import APICannotGetSensorPlugins
 
 ansible = Ansible()
 
@@ -132,27 +135,57 @@ def get_plugin_list_by_location(system_ip, location=""):
     return plugin_hash
 
 
-def get_all_available_plugins(system_ip, only_detectors=False):
+def ansible_get_sensor_plugins(system_ip):
+    """ Get the plugins of a sensor
+    Args:
+        system_ip
+    Returns
+        Dictionary with the plugins available and enable on the sensor:
+        {'enabled': {'monitor': <list of monitor plugins enabled>,
+                     'detector': <list of detector plugins enabled>,
+                     'device': {<device_id>: <list of plugins enabled in the device>}},
+         'plugins': { <plugin_name>: {"cfg_version": <cfg version>,
+                                      "last_modification": <last modification>,
+                                      "legacy": <bool>,
+                                      "model": <model>,
+                                      "name": <name>,
+                                      "path": <plugin full file path>,
+                                      "per_asset": <bool>,
+                                      "plugin_id": <plugin_id>,
+                                      "shipped": <bool>,
+                                      "type": <detector|monitor>,
+                                      "vendor": <vendor>,
+                                      "source": <source>,
+                                      "location": <location>,
+                                      "version": <version>}}}
     """
-    Returns JSON with all available plugins in the system
-    @param system_ip: the host system ip
-    """
-    plugin_list = []
-    host_list = []
-    host_list.append(system_ip)
-    response = ansible.run_module(host_list, "av_plugins", "")
-    if system_ip in response['dark']:
-        return (False, "get_all_available_plugins : " + response['dark'][system_ip]['msg'])
-    else:
-        for plugin, value in response['contacted'][system_ip]['data'].iteritems():
-            try:
-                if only_detectors and value['pname'].endswith('-monitor'):
-                    continue
+    response = ansible.run_module([system_ip], "av_plugins", "")
+    if not ansible_is_valid_response(system_ip, response):
+        raise APICannotGetSensorPlugins(
+            log="[ansible_get_sensor_plugins] {0}".format(response))
 
-                plugin_list.append(value['pname'])
-            except Exception:
-                pass
-    return (True, list(set(plugin_list)))
+    try:
+        plugins = response['contacted'][system_ip]['data']
+        # Fugly hack to replace ossec and suricata references in enabled plugins
+        plugins['enabled']['detectors'] = ["AlienVault_NIDS" if p == "suricata" else p for p in plugins['enabled']['detectors']]
+        plugins['enabled']['detectors'] = ["AlienVault_HIDS" if p == "ossec-single-line" else p for p in plugins['enabled']['detectors']]
+        plugins['enabled']['detectors'] = ["AlienVault_HIDS-IDM" if p == "ossec-idm-single-line" else p for p in plugins['enabled']['detectors']]
+        plugins['enabled']['detectors'] = ["availability_monitoring" if p == "nagios" else p for p in plugins['enabled']['detectors']]
+        
+        for asset_id in plugins['enabled']['devices']:
+            plugins['enabled']['devices'][asset_id] = ["availability_monitoring" if p == "nagios" else p for p in plugins['enabled']['devices'][asset_id]]
+        
+        # Fugly hack to replace ossec and suricata references in available plugins
+        plugins['plugins']['AlienVault_NIDS'] = plugins['plugins'].pop('suricata')
+        plugins['plugins']['AlienVault_HIDS'] = plugins['plugins'].pop('ossec-single-line')
+        plugins['plugins']['AlienVault_HIDS-IDM'] = plugins['plugins'].pop('ossec-idm-single-line')
+        plugins['plugins']['availability_monitoring'] = plugins['plugins'].pop('nagios')
+
+    except KeyError:
+        raise APICannotGetSensorPlugins(
+            log="[ansible_get_sensor_plugins] {0}".format(response))
+
+    return plugins
 
 
 def get_plugin_package_version(system_ip):
@@ -207,7 +240,7 @@ def ansible_check_plugin_integrity(system_ip):
 
         #alienvault-doctor -l agent_rsyslog_conf_integrity.plg,agent_plugins_integrity.plg --output-type=ansible
         doctor_args = {}
-        doctor_args['plugin_list'] = 'agent_rsyslog_conf_integrity.plg,agent_plugins_integrity.plg'
+        doctor_args['plugin_list'] = '0008_agent_rsyslog_conf_integrity.plg,0006_agent_plugins_integrity.plg'
         doctor_args['output_type'] = 'ansible'
 
         response = ansible.run_module(host_list=[system_ip], module="av_doctor", args=doctor_args)
@@ -238,29 +271,29 @@ def ansible_check_plugin_integrity(system_ip):
 
         AGENT_PLUGINS_PATH = "/etc/ossim/agent/plugins/"
         RSYSLOG_FILES_PATH = "/etc/rsyslog.d/"
-        agent_rsyslog_dict = json.loads(data['data'].strip())['Agent rsyslog configuration files integrity']
-        agent_plugins_dict = json.loads(data['data'].strip())['Agent plugins integrity']
-        if not agent_rsyslog_dict['checks']['Default agent rsyslog files integrity']['result']:
+        agent_rsyslog_dict = json.loads(data['data'].strip())['0008 Agent rsyslog configuration files integrity']
+        agent_plugins_dict = json.loads(data['data'].strip())['0006 Agent plugins integrity']
+        if agent_rsyslog_dict['checks']['00080001']['result'] == 'failed':
             output['rsyslog_integrity_check_passed'] = False
-            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['Default agent rsyslog files integrity']['detail'])
+            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['00080001']['detail'])
             for rsyslog_file in rsyslog_files:
                 output['rsyslog_files_changed'].append(os.path.normpath(RSYSLOG_FILES_PATH + rsyslog_file))
 
-        if not agent_rsyslog_dict['checks']['Default agent rsyslog files installed']['result']:
+        if agent_rsyslog_dict['checks']['00080002']['result'] == 'failed':
             output['all_rsyslog_files_installed'] = False
-            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['Default agent rsyslog files installed']['detail'])
+            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['00080002']['detail'])
             for rsyslog_file in rsyslog_files:
                 output['rsyslog_files_removed'].append(os.path.normpath(RSYSLOG_FILES_PATH + rsyslog_file))
 
-        if not agent_plugins_dict['checks']['Default agent plugins integrity']['result']:
+        if agent_plugins_dict['checks']['00060001']['result'] == 'failed':
             output['plugins_integrity_check_passed'] = False
-            plugins_changed = pattern.findall(agent_plugins_dict['checks']['Default agent plugins integrity']['detail'])
+            plugins_changed = pattern.findall(agent_plugins_dict['checks']['00060001']['detail'])
             for plugin in plugins_changed:
                 output['plugins_changed'].append(os.path.normpath("/" + plugin))
 
-        if not agent_plugins_dict['checks']['Default agent plugins installed']['result']:
+        if agent_plugins_dict['checks']['00060002']['result'] == 'failed':
             output['all_plugins_installed'] = False
-            plugins_removed = pattern.findall(agent_plugins_dict['checks']['Default agent plugins installed']['detail'])
+            plugins_removed = pattern.findall(agent_plugins_dict['checks']['00060002']['detail'])
             for plugin in plugins_removed:
                 if AGENT_PLUGINS_PATH in plugin:
                     output['plugins_removed'].append(os.path.normpath(plugin))
@@ -268,7 +301,43 @@ def ansible_check_plugin_integrity(system_ip):
                     output['plugins_removed'].append(os.path.normpath(AGENT_PLUGINS_PATH + plugin))
 
     except Exception, e:
-        response = "Error checking agent plugins and agent rsyslog files integrity: %s" % str(e)
+        api_log.error("[ansible_check_plugin_integrity] Error: %s" % str(e))
+        output = "Error checking agent plugins and agent rsyslog files integrity: %s" % str(e)
         rc = False
 
     return rc, output
+
+
+def ansible_get_agent_config_yml(sensor_ip):
+    """Get config.yml file and parse it"""
+    config_file = '/etc/ossim/agent/config.yml'
+    local_file = '/var/tmp/{0}{1}'.format(sensor_ip, config_file)
+    device_list = {}
+    try:
+        success, dst = fetch_file(sensor_ip, config_file, '/var/tmp')
+    except Exception as exc:
+        api_log.error("[ansible_get_agent_config_yml] Error: %s" % str(exc))
+        return False, str(exc)
+    if not os.path.exists(local_file):
+        api_log.info("[ansible_get_agent_config_yml] File {0} not found in {1}".format(config_file, local_file))
+    else:
+        try:
+            with open(local_file, 'r') as f:
+                content = yaml.load(f.read())
+            if "plugins" in content:
+                for plg in content['plugins']:
+                    for path,info in plg.iteritems():
+                        if "DEFAULT" in info:
+                            data = info['DEFAULT']
+                            device_list[data['device_id']] = [] # Support more than one plugin per asset
+                for plg in content['plugins']:
+                    for path,info in plg.iteritems():
+                        if "DEFAULT" in info:
+                            data = info['DEFAULT']
+                            device_list[data['device_id']].append(data['pid']) # Support more than one plugin per asset
+            os.remove(local_file)
+        except Exception as exc:
+            api_log.error("[ansible_get_agent_config_yml] Unable to parse yml: %s" % str(exc))
+            return False, str(exc)
+
+    return True, device_list

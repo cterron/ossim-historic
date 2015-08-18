@@ -7,48 +7,79 @@
 /*
 Reload ajax with new url
 */
-$.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
+
+jQuery.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
 {
-    if ( typeof sNewSource != 'undefined' && sNewSource != null )
-    {
-        oSettings.sAjaxSource = sNewSource;
-    }
-    this.oApi._fnProcessingDisplay( oSettings, true );
-    var that = this;
-    var iStart = oSettings._iDisplayStart;
+	// DataTables 1.10 compatibility - if 1.10 then `versionCheck` exists.
+	// 1.10's API has ajax reloading built in, so we use those abilities
+	// directly.
+	if ( jQuery.fn.dataTable.versionCheck ) {
+		var api = new jQuery.fn.dataTable.Api( oSettings );
 
-    oSettings.fnServerData( oSettings.sAjaxSource, [], function(json)
-    {
-        /* Clear the old information from the table */
-        that.oApi._fnClearTable( oSettings );
+		if ( sNewSource ) {
+			api.ajax.url( sNewSource ).load( fnCallback, !bStandingRedraw );
+		}
+		else {
+			api.ajax.reload( fnCallback, !bStandingRedraw );
+		}
+		return;
+	}
 
-        /* Got the data - add it to the table */
-        var aData =  (oSettings.sAjaxDataProp !== "") ?
-            that.oApi._fnGetObjectDataFn( oSettings.sAjaxDataProp )( json ) : json;
+	if ( sNewSource !== undefined && sNewSource !== null ) {
+		oSettings.sAjaxSource = sNewSource;
+	}
 
-        for ( var i=0 ; i<json.aaData.length ; i++ )
-        {
-            that.oApi._fnAddData( oSettings, json.aaData[i] );
-        }
+	// Server-side processing should just call fnDraw
+	if ( oSettings.oFeatures.bServerSide ) {
+		this.fnDraw();
+		return;
+	}
 
-        oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
-        that.fnDraw();
+	this.oApi._fnProcessingDisplay( oSettings, true );
+	var that = this;
+	var iStart = oSettings._iDisplayStart;
+	var aData = [];
 
-        if ( typeof bStandingRedraw != 'undefined' && bStandingRedraw === true )
-        {
-            oSettings._iDisplayStart = iStart;
-            that.fnDraw( false );
-        }
+	this.oApi._fnServerParams( oSettings, aData );
 
-        that.oApi._fnProcessingDisplay( oSettings, false );
+	oSettings.fnServerData.call( oSettings.oInstance, oSettings.sAjaxSource, aData, function(json) {
+		/* Clear the old information from the table */
+		that.oApi._fnClearTable( oSettings );
 
-        /* Callback user function - for event handlers etc */
-        if ( typeof fnCallback == 'function' && fnCallback != null )
-        {
-            fnCallback( oSettings );
-        }
-    }, oSettings );
-}
+		/* Got the data - add it to the table */
+		var aData =  (oSettings.sAjaxDataProp !== "") ?
+			that.oApi._fnGetObjectDataFn( oSettings.sAjaxDataProp )( json ) : json;
+
+		for ( var i=0 ; i<aData.length ; i++ )
+		{
+			that.oApi._fnAddData( oSettings, aData[i] );
+		}
+
+		oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+
+		that.fnDraw();
+
+		if ( bStandingRedraw === true )
+		{
+			oSettings._iDisplayStart = iStart;
+			that.oApi._fnCalculateEnd( oSettings );
+			that.fnDraw( false );
+		}
+
+		that.oApi._fnProcessingDisplay( oSettings, false );
+
+		/* Callback user function - for event handlers etc */
+		if ( typeof fnCallback == 'function' && fnCallback !== null )
+		{
+			fnCallback( oSettings );
+		}
+	}, oSettings );
+};
+
+
+
+
+
 
 
 $.fn.dataTableExt.oApi.fnSetFilteringDelay = function ( oSettings, iDelay ) {

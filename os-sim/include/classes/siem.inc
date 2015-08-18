@@ -52,6 +52,10 @@
 
 class Siem 
 {   
+    const OTX_PULSE_SID = 29998;
+    const OTX_PULSE_ID  = 1701;
+    const OTX_UNKNOWN   = 'No information available. You are no longer subscribed to this pulse.';
+    
     public $conn;
 
 
@@ -68,7 +72,6 @@ class Siem
     
     
     public $perms_bypass;
-    
     
     /**
     * Class constructor
@@ -839,8 +842,31 @@ class Siem
         
         $fields["src_userdomain"] = implode(", ",$srcud);
         $fields["dst_userdomain"] = implode(", ",$dstud);
-        
-        
+
+        // OTX Data
+        $row['pulse'] = _(self::OTX_UNKNOWN);
+        if ($row['plugin_id'] == self::OTX_PULSE_ID || $row['plugin_sid'] == self::OTX_PULSE_SID)
+        {
+            $sql   = "SELECT hex(pulse_id) as pulse_id FROM otx_data WHERE event_id = UNHEX(?) limit 1";
+            $rs    = $this->conn->Execute($sql, array($eid));
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+            }
+            else
+            {
+                if (!$rs->EOF)
+                {
+                    $otx   = new Otx();
+                    $pulse = $otx->get_pulse_detail(strtolower($rs->fields['pulse_id']), TRUE);
+                    if (!empty($pulse['name']))
+                    {
+                        $row['pulse'] = Util::htmlentities(trim($pulse['name']), ENT_NOQUOTES);
+                    }
+                }
+            }
+        }
+
         // Signature
         $signature = _("Unknown Event");
         if ($row['plugin_id'] != "" && $row['plugin_sid'] != "")
@@ -855,7 +881,7 @@ class Siem
             {
                 if (!$rs->EOF)
                 {
-                    $signature = $this->translate_signature($rs->fields['name'], $row);
+                    $signature = self::translate_signature($rs->fields['name'], $row);
                 }
             }
         }
@@ -988,13 +1014,14 @@ class Siem
         return $fields;
     }
     
-    private function translate_signature($name, $arr)
+    public static function translate_signature($name, $arr)
     {
         $translations = array(
             "/SRC_IP/"     => 'inet_ntop($arr["ip_src"])',
             "/DST_IP/"     => 'inet_ntop($arr["ip_dst"])',
             "/SRC_PORT/"   => '$arr["layer4_sport"]',
             "/DST_PORT/"   => '$arr["layer4_dport"]',
+            "/PULSE/"      => '$arr["pulse"]',
             "/PROTOCOL/"   => 'Protocol::get_protocol_by_number($arr["ip_proto"], TRUE)',
             "/PLUGIN_ID/"  => '$arr["plugin_id"]',
             "/PLUGIN_SID/" => '$arr["plugin_sid"]',
@@ -1073,14 +1100,17 @@ class Siem
     public static function has_events($conn, $type, $id)
     {
         Ossim_db::check_connection($conn);
-    
+
+        $params = array($id, $id);
+
         if ($type == "host")
         {
             $sql = "SELECT EXISTS(SELECT src_host as id FROM alienvault_siem.ac_acid_event WHERE src_host=UNHEX(?) UNION SELECT dst_host as id FROM alienvault_siem.ac_acid_event WHERE dst_host=UNHEX(?)) as bool";
         }
         elseif ($type == "net")
         {
-            $sql = "SELECT EXISTS(SELECT ac.src_host as id FROM alienvault_siem.ac_acid_event ac, alienvault.host_net_reference r WHERE ac.src_host=r.host_id AND r.net_id = UNHEX(?) UNION SELECT ac.dst_host as id FROM alienvault_siem.ac_acid_event ac, alienvault.host_net_reference r WHERE ac.dst_host=r.host_id AND r.net_id = UNHEX(?)) as bool";
+            $sql = "SELECT EXISTS(SELECT n1.net_id FROM alienvault_siem.ac_acid_event ac, net ne, net_cidrs n, net ne1, net_cidrs n1 WHERE ne.id = n.net_id AND ne1.id = n1.net_id AND n.begin <= n1.begin AND n1.end <= n.end AND ne.ctx = ne1.ctx AND n.net_id = UNHEX(?) AND n1.net_id=ac.src_net UNION SELECT n1.net_id FROM alienvault_siem.ac_acid_event ac, net ne, net_cidrs n, net ne1, net_cidrs n1 WHERE ne.id = n.net_id AND ne1.id = n1.net_id AND n.begin <= n1.begin AND n1.end <= n.end AND ne.ctx = ne1.ctx AND n.net_id = UNHEX(?) AND n1.net_id=ac.dst_net) as bool";
+            $params = array($id, $id);
         }
         elseif ($type == "group")
         {
@@ -1088,9 +1118,9 @@ class Siem
             $where = self::make_perms_where();
             $sql   = "SELECT EXISTS(SELECT acid_event.src_host as id FROM alienvault_siem.ac_acid_event acid_event, alienvault.host_group_reference r WHERE acid_event.src_host=r.host_id AND r.host_group_id = UNHEX(?) $where UNION SELECT acid_event.dst_host as id FROM alienvault_siem.ac_acid_event acid_event, alienvault.host_group_reference r WHERE acid_event.dst_host=r.host_id AND r.host_group_id = UNHEX(?) $where) as bool";
         }
-    
-        $rs = $conn->Execute($sql, array($id, $id));
-    
+
+        $rs = $conn->Execute($sql, $params);
+
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
@@ -1099,7 +1129,237 @@ class Siem
         return ($rs->fields["bool"]) ? TRUE : FALSE;
     }
     
-}
+    
+    /**
+    * This function gets the pulses for a given event. 
+    *
+    * @param object   $conn         Database access object
+    * @param string   $event_id     Event ID.
+    * @param string   $alarm_event  Alarm ID of the event or FALSE.
+    * @param string   $cache        Wheter or not cache the query
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return array
+    */
+    public static function get_event_pulses($conn, $event_id, $alarm_event = FALSE, $cache = FALSE)
+    {
+        $pulse_list = array();
+        $params     = array($event_id);
+        
+        if ($alarm_event === FALSE)
+        {
+            $sql = "SELECT DISTINCT HEX(otx_data.pulse_id) AS pulse_id 
+                    FROM alienvault_siem.otx_data 
+                    WHERE otx_data.event_id=UNHEX(?)";
+        }
+        else
+        {
+            $sql = "SELECT DISTINCT HEX(o.pulse_id) AS pulse_id 
+                    FROM otx_data o FORCE INDEX (pulse), alarm a, otx_data o2 
+                    WHERE o.event_id=UNHEX(?) AND a.backlog_id=UNHEX(?) AND o2.event_id=a.event_id AND o2.pulse_id=o.pulse_id";
+            
+            $params[] = $alarm_event;
+        }
+        
+        $rs  = ($cache) ? $conn->CacheExecute($sql, $params) : $conn->Execute($sql, $params);
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $p_id  = $rs->fields['pulse_id'];
 
-/* End of file siem.inc */
-/* Location: ../include/classes/siem.inc */
+            try
+            {
+                $otx        = new Otx();
+                $pulse_data = $otx->get_pulse_detail($p_id, TRUE);  //Set hide_iocs to true because we only want the name and descr of the pulse.           
+            }
+            catch(Exception $e)
+            {
+                $rs->MoveNext();
+                continue;
+            } 
+            
+            $pulse_list[$p_id] = array(
+                'id'    => $p_id,
+                'name'  => $pulse_data['name'],
+                'descr' => $pulse_data['description'],
+            );
+
+            $rs->MoveNext();
+        }
+        
+        return $pulse_list;
+    }
+    
+    
+    /**
+    * This function gets the pulse info of a given pulse id from an event. 
+    *
+    * @param object   $conn        Database access object
+    * @param string   $event_id    Event ID.
+    * @param string   $pulse_id    Pulse ID.
+    * @param string   $from_alarm  Wheter or not the event is in event or acid_event table.
+    * @param string   $cache       Wheter or not cache the query
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return array
+    */
+    public static function get_pulse_data_from_event($conn, $event_id, $pulse_id, $from_alarm = FALSE, $cache = FALSE)
+    {
+        $indicators = array();
+        $params     = array($event_id, $pulse_id);    
+        
+        if (!$from_alarm)
+        {
+            $sql = "SELECT DISTINCT otx_data.ioc_hash, otx_data.ioc_value 
+                        FROM alienvault_siem.otx_data 
+                        WHERE otx_data.event_id=UNHEX(?) AND otx_data.pulse_id=UNHEX(?)";
+        }
+        else
+        {
+            $sql = "SELECT DISTINCT otx_data.ioc_hash, otx_data.ioc_value 
+                        FROM otx_data 
+                        WHERE otx_data.event_id=UNHEX(?) AND otx_data.pulse_id=UNHEX(?)";
+        }
+
+        $rs  = ($cache) ? $conn->CacheExecute($sql, $params) : $conn->Execute($sql, $params);
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        try
+        {
+            $otx    = new Otx();
+            $p_data = $otx->get_pulse_detail($pulse_id);
+        }
+        catch(Exception $e)
+        {
+            return $pulse;
+        }
+        
+        $indicators = array();
+        while (!$rs->EOF)
+        {
+            $ioc_h = $rs->fields['ioc_hash'];
+            $ioc_v = $rs->fields['ioc_value'];
+            
+            $indicators[$ioc_h] = array(
+                'hash'  => $ioc_h,
+                'type'  => $p_data['indicators'][$ioc_h]['type'], 
+                'value' => $ioc_v
+            );
+
+            $rs->MoveNext();
+        }
+        
+        $pulse = array(
+            'name'  => $p_data['name'],
+            'descr' => $p_data['description'],
+            'iocs'  => $indicators
+        );
+        
+        return $pulse;        
+    }
+    
+    
+    /**
+    * This function gets the reputation for a given event. 
+    *
+    * @param object   $conn        Database access object
+    * @param string   $event_id    Event ID.
+    * @param string   $from_alarm  Wheter or not the event is in event or acid_event table.
+    * @param string   $cache       Wheter or not cache the query
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return array
+    */
+    public static function get_event_reputation($conn, $event_id, $from_alarm = FALSE, $cache = FALSE)
+    {
+        $rep_list = array();
+        $params   = array($event_id);    
+        
+        if (!$from_alarm)
+        {
+            $sql = "SELECT DISTINCT INET6_NTOA(r.rep_ip_src) AS src_ip, r.rep_prio_src, r.rep_rel_src, r.rep_act_src, INET6_NTOA(r.rep_ip_dst) AS dst_ip, r.rep_prio_dst, r.rep_rel_dst, r.rep_act_dst 
+                FROM alienvault_siem.reputation_data r, alienvault_siem.acid_event 
+                WHERE r.event_id=UNHEX(?) AND r.event_id = acid_event.id AND (r.rep_prio_src > 0 OR r.rep_prio_dst > 0)";
+        }
+        else
+        {
+            $sql = "SELECT DISTINCT INET6_NTOA(src_ip) AS src_ip, rep_prio_src, rep_rel_src, rep_act_src, INET6_NTOA(dst_ip) AS dst_ip, rep_prio_dst, rep_rel_dst, rep_act_dst 
+                FROM event 
+                WHERE id=UNHEX(?) AND (rep_prio_src > 0 OR rep_prio_dst > 0)";
+        }
+
+        $rs  = ($cache) ? $conn->CacheExecute($sql, $params) : $conn->Execute($sql, $params);
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            if ($rs->fields['rep_prio_src'] > 0)
+            {
+                $rep_list[] = array(
+                    'origin'      => _('Source'),
+                    'value'       => $rs->fields['src_ip'],
+                    'activity'    => str_replace(';', ', ',$rs->fields['rep_act_src']),
+                    'reliability' => $rs->fields['rep_rel_src'],
+                    'priority'    => $rs->fields['rep_prio_src'],
+                );
+            }
+            elseif ($rs->fields['rep_prio_dst'] > 0)
+            {
+                
+                $rep_list[] = array(
+                    'origin'      => _('Destination'),
+                    'value'       => $rs->fields['dst_ip'],
+                    'activity'    => str_replace(';', ', ',$rs->fields['rep_act_dst']),
+                    'reliability' => $rs->fields['rep_rel_dst'],
+                    'priority'    => $rs->fields['rep_prio_dst'],
+                );
+            }
+
+            $rs->MoveNext();
+        }
+        
+        return $rep_list;
+    }
+
+    /**
+     * This function executes the query to otx_data db table and gets unique pulse ids
+     *
+     * @param object   $conn        Database access object
+     *
+     * @return array Pulse ID list
+     */
+    public static function get_unique_pulses($conn)
+    {
+        $sql = "SELECT DISTINCT HEX(pulse_id) AS pulse FROM alienvault_siem.otx_data";
+        
+        $list = array();
+    
+        if (!$rs = $conn->Execute($sql))
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        else
+        {
+            while (!$rs->EOF)
+            {
+                $list[$rs->fields['pulse']] = $rs->fields['pulse'];
+                $rs->MoveNext();
+            }
+        }
+
+        return $list;
+    }
+}

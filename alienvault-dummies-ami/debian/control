@@ -8,9 +8,10 @@ Homepage: http://www.alienvault.com/
 
 Package: alienvault-ami-aio-6x1gb
 Architecture: all
-Depends: ${misc:Depends}, alienvault-dummy-sensor, alienvault-dummy-server, alienvault-dummy-framework, alienvault-dummy-database
+Depends: ${misc:Depends}, alienvault-dummy-sensor, alienvault-dummy-server, alienvault-dummy-framework, alienvault-dummy-database, alienvault-suricata-ami-server-sensor
 Description: Metapackage for AlienVault all in one 6x1GB AMI components
 
+#TODO: currently only alienvault-ami-aio-6x1gb is generated, add alienvault-suricata for the rest of images
 Package: alienvault-ami-usm-standard
 Architecture: all
 Depends: ${misc:Depends}, alienvault-dummy-sensor, alienvault-dummy-server, alienvault-dummy-framework, alienvault-dummy-database

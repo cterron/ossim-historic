@@ -487,7 +487,10 @@ switch($step)
 			
 			$_SESSION[$wr_key]['step'] = 3;
 			
-			if(!$pro || $widget_type == 'rss' || $widget_type == 'image' || $widget_type == 'report' || $widget_type == 'url' || $widget_type == 'flow')
+			$_c1 = !$pro;
+			$_c2 = in_array($widget_type, array('rss', 'image', 'report', 'url', 'flow'));
+			
+			if($_c1 || $_c2)
 			{
 				$link = 'wizard.php?step=4&next=1';
 				header ("Location: $link");		
@@ -1794,14 +1797,14 @@ switch($widget_type)
 			if($pro)
 			{ 	
 			
-				if($widget_id == '9001' || $widget_id == '9002')
+				if(in_array($widget_id, array(9001, 9002, 14001)))
 				{
 					?>
 					<script>
 						$(document).ready(function(){
 							$('#autocomplete_assets').hide();
 							$("#atree").dynatree("disable");
-							$('#assets_notif').text('<?php echo _('This configuration cannot be applied to this widget') ?>');
+							$('#assets_notif').text("<?php echo _('This configuration cannot be applied to this widget') ?>");
 						});
 					</script>
 					<?php
@@ -1810,7 +1813,7 @@ switch($widget_type)
 		?>			
 			<tr>
 				<td class="nobborder">						
-					<div id='assets_notif' style='marfin:0 auto;text-align:center;font-size:12px;padding-top:10px;'></div>
+					<div id='assets_notif' style='margin:0 auto;text-align:center;font-size:12px;padding-top:10px;'></div>
 					<input type="hidden" id="assets" name="widget_asset" value="<?php echo $widget_asset;?>"/>								
 					
 					<table border="0" width="100%" class="transparent">																	

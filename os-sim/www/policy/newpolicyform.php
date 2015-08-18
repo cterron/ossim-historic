@@ -116,7 +116,7 @@ if ($utz == "0" || $utz == "")
 
 if (preg_match("/Localtime/", $utz))
 {
-    $utz = trim(`head -1 /etc/timezone`);
+    $utz = trim(Util::execute_command('head -1 /etc/timezone', FALSE, 'string'));
 }
 	
 //This is the default timezone, It's needed to save in case u delete the time range condition
@@ -504,7 +504,7 @@ if ( $utz == "0" || $utz == "" )
 
 if ( preg_match("/Localtime/", $utz) )
 {
-	$utz = trim(`head -1 /etc/timezone`);
+    $utz = trim(Util::execute_command('head -1 /etc/timezone', FALSE, 'string'));
 }		
 
 if ($insert != "") 
@@ -2117,7 +2117,7 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 				<table class='noborder policy_header' align='center' width='100%'>
 					<tr>
 						<td class="center nobborder">
-							<span><?php echo _("Active")?>: *</span>
+							<span><?php echo _("Enable")?>: *</span>
 							<input type="radio" name="active" value="1" <?php echo ($active == 1) ? "checked='checked'" : "" ?>/> <?php echo _("Yes"); ?>
 							<input type="radio" name="active" value="0" <?php echo ($active == 0) ? "checked='checked'" : "" ?>/> <?php echo _("No"); ?>
 						</td>

@@ -43,203 +43,214 @@ require_once 'av_init.php';
         
         opt = $.extend(
         {
-	        "selectable": false,
-	        "language": "default",
-	        "pagination": "default",
-	        "dt_params": {},
-            "load_params" : [],
-            "on_before_ajax": function(){},
+	        "selectable"      : false,
+	        "num_rows"        : 10,
+	        "language"        : "default",
+	        "pagination"      : "default",
+	        "search"          : false,
+	        "dt_params"       : {},
+            "load_params"     : [],
+            "with_tray"       : false,
+            "on_before_ajax"  : function(){},
             "on_complete_ajax": function(){},
-            "on_success_ajax": function(){},
-            "on_error_ajax": function(){},
-            "on_draw_row": function(){},
-            "on_finish_draw": function(){}
+            "on_success_ajax" : function(){},
+            "on_error_ajax"   : function(){},
+            "on_draw_row"     : function(){},
+            "on_finish_draw"  : function(){},
+            "on_row_click"    : function(){},
+            "on_row_dbl_click": function(){},
+            "on_open_tray"    : function(){},
+            "on_close_tray"   : function(){},
+            "on_action_status_change": function(){}
         }, opt || {});
-       
-		var t_name = $(this).data('name');
+       	
 		
-		this.addClass('av_table_wrapper');
-        this.selection_type = 'manual';
-        
-        this.db = new av_session_db(t_name + '_db_datatables');
-        this.db.clean_checked();
-        
 		
-
-		this.dt_actions = $('<div></div>',
-        {
-	       "class": "av_table_actions",
-	       "data_bind": "table_actions"
-        }).prependTo(this);
-        
-        this.dt_msg_sel = $('<div></div>',
-        {
-	       "class": "av_table_msg_selection",
-	       "data_bind": "msg-selection"
-        }).prependTo(this).hide();
-        
-
-        var dt_cfg =
-        {
-            "iDisplayLength": 10,
-            "bLengthChange": true,
-            "sPaginationType": "full_numbers",
-            "bFilter": false,
-            "aLengthMenu": [10, 20, 50],
-            "bJQueryUI": true,
-            "aaSorting": [[ 0, "desc" ]],
-            "oLanguage": get_dt_languages(opt.language, opt.pagination),
-            "fnRowCallback": function(nRow, aData, iDrawIndex, iDataIndex)
+		this.init = function()
+		{
+    		this.addClass('av_table_wrapper');
+            this.selection_type = 'manual';
+            
+            var t_name = $(this).data('name');
+            this.db    = new av_session_db(t_name + '_db_datatables');
+            this.db.clean_checked();
+            
+    		
+    		this.dt_actions = $('<div></div>',
             {
-				if (__self.is_selectable())
-				{
+    	       "class"    : "av_table_actions",
+    	       "data_bind": "table_actions"
+            }).prependTo(this);
+            
+            this.dt_msg_sel = $('<div></div>',
+            {
+    	       "class": "av_table_msg_selection",
+    	       "data_bind": "msg-selection"
+            }).prependTo(this).hide();
+            
+            
+            this.sel_msg = translate_language(dt_selection_msg, opt.language);
+            
+            var dt_cfg =
+            {
+                "iDisplayLength": opt.num_rows,
+                "bLengthChange": true,
+                "sPaginationType": "full_numbers",
+                "bFilter": opt.search,
+                "aLengthMenu": [10, 20, 50],
+                "bJQueryUI": true,
+                "aaSorting": [[0, "desc"]],
+                "oLanguage": get_dt_languages(opt.language, opt.pagination),
+                "fnRowCallback": function(nRow, aData, iDrawIndex, iDataIndex)
+                {
+    				if (__self.is_selectable())
+    				{
         				var input_val = aData['DT_RowId'];
         				
         				var input_disabled = (typeof aData['DT_RowData'] != 'undefined' && typeof aData['DT_RowData'].editable != 'undefined' && aData['DT_RowData'].editable == false) ? true : false;
         				
         				var input = $('<input>',
-                    {
-                        'type'  : 'checkbox',
-                        'value'  : input_val,
-                        'class'  : 'item_check ' + __self.check_class,
-                        'data-id': input_val,
-                        'change' : function()
                         {
-                            __self.manage_check(this)
-                        },
-                        'click'  : function(e)
+                            'type'  : 'checkbox',
+                            'value'  : input_val,
+                            'class'  : 'item_check ' + __self.check_class,
+                            'data-id': input_val,
+                            'change' : function()
+                            {
+                                __self.manage_check(this)
+                            },
+                            'click'  : function(e)
+                            {
+                                //To avoid to open the tray bar when clicking on the checkbox.
+                                e.stopPropagation();
+                            },
+                            'disabled' : input_disabled 
+                        }).appendTo($("td:nth-child(1)", nRow))
+            
+                        if (__self.db.is_checked(input_val) || __self.selection_type == 'all')
                         {
-                            //To avoid to open the tray bar when clicking on the checkbox.
-                            e.stopPropagation();
-                        },
-                        'disabled' : input_disabled 
-                    }).appendTo($("td:nth-child(1)", nRow))
-        
-                    if (__self.db.is_checked(input_val) || __self.selection_type == 'all')
-                    {
-                        input.prop('checked', true)
-                    }
-				}
-				
-				opt.on_draw_row(__self, nRow, aData, iDrawIndex, iDataIndex);
-				
-            },
-            "fnInitComplete": function(oSettings, json) 
-            {				
-	            if (__self.is_selectable())
-				{
-		            $("[data-bind='chk-all-rows']").on('change', function()    
-		            {            
-		                $('.item_check:enabled').prop('checked', $(this).prop('checked')).trigger('change');
-		            });
-		            
-		            $("[data-bind='msg-selection']").on('click', function()    
-		            {            
-		                __self.check_all_items();
-		            });
-		            
-		            __self.manage_item_selection();
-	            }
-	            
-				opt.on_finish_draw(__self, oSettings, json);
-            },            
-            "fnServerData": function ( sSource, aoData, fnCallback, oSettings )
-            {
-                $.each(opt.load_params, function(i, v)
-                {
-	                aoData.push(v);
-                });
-                
-                oSettings.jqXHR = $.ajax(
-                {
-                    "dataType": 'json',
-                    "type": "POST",
-                    "url": sSource,
-                    "data": aoData,
-                    "beforeSend": function(jqXHR, settings)
-                    {
-						opt.on_before_ajax(__self, jqXHR, settings);
-                    },
-                    "success": function (json)
-                    {
-                        //DataTables Stuffs
-                        $(oSettings.oInstance).trigger('xhr', oSettings);
-                        fnCallback(json);
-                        
-						opt.on_success_ajax(__self, json);
-                    },
-                    "error": function(jqXHR, textStatus, errorThrown)
-                    {
-                        //Check expired session
-                        var session = new Session(jqXHR, '');
+                            input.prop('checked', true)
+                        }
+    				}
+    				
+    				__self.bind_row_click(nRow);
     
-                        if (session.check_session_expired() == true)
-                        {
-                            session.redirect();
-                            return;
-                        }
-                        //DataTables Stuffs
-                        var json =
-                        {
-                            "sEcho": aoData[0].value,
-                            "iTotalRecords": 0,
-                            "iTotalDisplayRecords": 0,
-                            "aaData": ""
-                        }
-                        
-                        fnCallback(json);
-                        
-						opt.on_error_ajax(__self, jqXHR, textStatus, errorThrown);
-                    },
-                    "complete": function(jqXHR, textStatus)
+    				opt.on_draw_row(__self, nRow, aData, iDrawIndex, iDataIndex);
+                },
+                "fnInitComplete": function(oSettings, json) 
+                {			
+                    opt.on_finish_draw(__self, oSettings, json);
+	    
+    	            if (__self.is_selectable())
+    				{
+    		            $("[data-bind='chk-all-rows']", __self).on('change', function()    
+    		            {            
+    		                $('.item_check:enabled').prop('checked', $(this).prop('checked')).trigger('change');
+    		            });
+    		            
+    		            $("[data-bind='msg-selection']", __self).on('click', function()    
+    		            {            
+    		                __self.check_all_items();
+    		            });
+    		            
+    		            __self.manage_item_selection();
+    	            }
+                },            
+                "fnServerData": function (sSource, aoData, fnCallback, oSettings)
+                {
+                    $.each(opt.load_params, function(i, v)
                     {
-						__self.hide_search_loading();
-						
-						if (__self.is_selectable())
+    	                aoData.push(v);
+                    });
+                                    
+                    oSettings.jqXHR = $.ajax(
+                    {
+                        "dataType": 'json',
+                        "type": "POST",
+                        "url": sSource,
+                        "data": aoData,
+                        "beforeSend": function(jqXHR, settings)
                         {
-                            __self.manage_item_selection();
-						}
-						
-						opt.on_complete_ajax(__self, jqXHR, textStatus);	
+                            __self.show_search_loading();
+                            
+    						opt.on_before_ajax(__self, jqXHR, settings);
+                        },
+                        "success": function (json)
+                        {
+                            //DataTables Stuffs
+                            $(oSettings.oInstance).trigger('xhr', oSettings);
+                            fnCallback(json);
+                            
+    						opt.on_success_ajax(__self, json);
+                        },
+                        "error": function(jqXHR, textStatus, errorThrown)
+                        {
+                            //Check expired session
+                            var session = new Session(jqXHR, '');
+        
+                            if (session.check_session_expired() == true)
+                            {
+                                session.redirect();
+                                return;
+                            }
+                            //DataTables Stuffs
+                            var json =
+                            {
+                                "sEcho": aoData[0].value,
+                                "iTotalRecords": 0,
+                                "iTotalDisplayRecords": 0,
+                                "aaData": ""
+                            }
+                            
+                            fnCallback(json);
+                            
+    						opt.on_error_ajax(__self, jqXHR, textStatus, errorThrown);
+                        },
+                        "complete": function(jqXHR, textStatus)
+                        {				
+                            __self.hide_search_loading();
+                            		
+    						if (__self.is_selectable())
+                            {
+                                __self.manage_item_selection();
+    						}
+    						
+    						opt.on_complete_ajax(__self, jqXHR, textStatus);	
+                        }
+                    });
+                },
+                "fnPreDrawCallback": function ()
+                {
+                    if (typeof $.fn.select2 == 'function')
+                    {
+                        $('.dataTables_length select', __self).select2(
+                        {
+                            hideSearchBox: true
+                        });
                     }
-                });
+                },
             }
-        }
-        
-        dt_cfg = $.extend(dt_cfg, opt.dt_params);
-        
-        
-        if (opt.ajax_url)
-        {
-	        dt_cfg["bProcessing"]  = true;
-            dt_cfg["bServerSide"]  = true;
-            dt_cfg["bDeferRender"] = true;
-            dt_cfg["sAjaxSource"]  = opt.ajax_url;
-        }
-        
-
-        this.dt = $('.table_data', this).dataTable(dt_cfg);
+            
+            dt_cfg = $.extend(dt_cfg, opt.dt_params);
+            
+            
+            if (opt.ajax_url)
+            {
+    	        dt_cfg["bProcessing"]  = true;
+                dt_cfg["bServerSide"]  = true;
+                dt_cfg["bDeferRender"] = true;
+                dt_cfg["sAjaxSource"]  = opt.ajax_url;
+            }
+            
+            this.dt = $('.table_data', this).dataTable(dt_cfg);
 		
-		
-		this.show_search_loading = function()
-		{
-    		
 		}
-		
-		
-		this.hide_search_loading = function()
-		{
-    		
-    		
-		}
-		
-		
+				
 		this.is_selectable = function()
 		{
     		return (opt.selectable === true);
 		}
-		
-		
+				
 		this.reload_ajax = function()
 		{
 			try
@@ -257,9 +268,116 @@ require_once 'av_init.php';
 				this.dt.fnDraw();
 			}
 			catch (Err){}
-		}
+		}	
 		
+		
+		this.show_search_loading = function()
+        {
+            $('.table_data tbody', __self).prepend('<div class="dt_list_loading"><div/>');
+            $('.dataTables_processing', __self).css('visibility', 'visible');
+            $('.table_data input', __self).prop('disabled', true);
+            $('.dataTables_length select', __self).prop('disabled', true);
+            $('.dt_footer', __self).hide();
+        }
         
+        
+        this.hide_search_loading = function()
+        {
+            $('.table_data .dt_list_loading', __self).remove();
+            $('.dataTables_processing', __self).css('visibility', 'hidden');  
+            $('.table_data input', __self).prop('disabled', false);
+            $('.dataTables_length select', __self).prop('disabled', false);
+            $('.dt_footer', __self).show();
+        }
+		
+		
+		this.bind_row_click = function(row)
+        {
+            var click_delay = 300
+            var n_clicks    = 0
+            var click_timer = null;
+            
+            var __self      = this;
+            
+            $(row).on('click', function()
+            {
+                $(this).disableTextSelect();
+    
+                n_clicks++;  //count clicks
+    
+                if(n_clicks === 1) //Single click event
+                {
+                    click_timer = setTimeout(function()
+                    {
+                        $(this).enableTextSelect();
+    
+                        n_clicks = 0; //reset counter
+    
+                        //Executing the single click callback
+                        if (opt.with_tray)
+        				{
+            				__self.open_tray(row)
+                        }
+                        
+                        opt.on_row_click(__self, $(row));
+    
+                    }, click_delay);
+                }
+                else //Double click event
+                {
+                    clearTimeout(click_timer);  //prevent single-click action
+                    n_clicks = 0;               //reset counter
+    
+                    //Executing the double click callback
+                    opt.on_row_dbl_click(__self, $(row));
+                }
+    
+            }).off('dblclick').on('dblclick', function(e)
+            {
+                e.preventDefault();
+            });
+        }
+		
+				
+        this.open_tray = function(row)
+        {
+            var __self = this;
+            
+            if (__self.dt.fnIsOpen(row))
+            {
+                $(row).next('tr').find('#tray_container').slideUp(300, function()
+                {
+                    opt.on_close_tray(__self, $(this));
+                    __self.dt.fnClose(row);
+                });
+            }
+            else
+            {
+                var wrapper = $('<div></div>',
+                {
+                    'id'   : 'tray_container',    
+                    'class': 'list_tray'
+                }).css('visibility', 'hidden');
+            
+                $('<div></div>',
+                {
+                    'class': 'tray_triangle clear_layer'
+                }).appendTo(wrapper);
+                
+                
+
+                opt.on_open_tray(__self, $(row), wrapper);
+                
+                        
+                __self.dt.fnOpen(row, wrapper, 'tray_details');
+                
+                wrapper.slideDown(300, function()
+                {
+                    $(this).css('visibility', 'visible');
+                });
+            }
+        }
+		
         
     
 	    /**************************************************************************/
@@ -304,21 +422,21 @@ require_once 'av_init.php';
 	        $('[data-bind="chk-all-rows"]', __self).prop('checked', (c_all > 0 && c_all == c_check));
 	        
 	        if (this.selection_type == 'manual' && c_all > 0 && c_all == c_check && f_all > c_all)
-	        {
-	            var text1 = "<?php echo _('You have selected ### assets. ') ?>".replace('###', c_all);
-	            var text2 = "<?php echo _('Select ### assets.') ?>".replace('###', $.number(f_all));
+	        {   
+	            var msg_select = __self.sel_msg['select'].replace('___SELECTED___', c_all);
+	            var msg_all    = __self.sel_msg['all'].replace('___ALL___', $.number(f_all));
 	            
 	            __self.dt_msg_sel.empty();
 	            
 	            $('<span></span>',
 	            {
-	                'text': text1
+	                'text': msg_select + ' '
 	            }).appendTo(__self.dt_msg_sel);
 	            
 	            $('<a></a>',
 	            {
 	                'class': 'av_link',
-	                'text': text2,
+	                'text' : msg_all,
 	                'click': function()
 	                {
     	                __self.check_all_items()
@@ -379,15 +497,25 @@ require_once 'av_init.php';
     	    
     	    if (num_hosts == 0)
             {
-                $('[data-bind="avt_action"]', __self).prop('disabled', true).addClass('disabled av_b_disabled');
+                $('[data-selection="avt_action"]', __self).prop('disabled', true).addClass('disabled av_b_disabled');
             }
             else
             {
-                $('[data-bind="avt_action"]', __self).prop('disabled', false).removeClass('disabled av_b_disabled');
+                $('[data-selection="avt_action"]', __self).prop('disabled', false).removeClass('disabled av_b_disabled');
             }
+            
+            opt.on_action_status_change(num_hosts);
     	    
 	    }
 	    
+	    
+	    this.reset_selection = function()
+		{
+    		this.db.clean_checked();
+    		this.selection_type = 'manual';
+    		
+		}
+		
 	    
 	    this.get_selection = function()
 	    {
@@ -406,7 +534,7 @@ require_once 'av_init.php';
 		            var val = $(elem).val();
 		            
 	                items[id] = val;
-	            })
+	            });
 	        }
 	        else
 	        {
@@ -423,13 +551,15 @@ require_once 'av_init.php';
 	        return selection
 		}
 		
+		this.init();
+		
 	    return this;
     }
     
     /*******************************************************************************************/
     /*************************           PRIVATE FUNCTIONS            **************************/
     /*******************************************************************************************/
-    
+        
     function get_dt_languages(l_id, p_id)
     {
         var lang = (dt_lng[l_id]) ? dt_lng[l_id] : dt_lng["default"];
@@ -438,6 +568,12 @@ require_once 'av_init.php';
         lang["oPaginate"] = pag;
         
         return lang;
+    }
+    
+    
+    function translate_language(lang, key)
+    {
+        return (lang[key]) ? lang[key] : lang["default"];
     }
     
     
@@ -613,6 +749,21 @@ require_once 'av_init.php';
             "sInfoThousands": ",",
             "sSearch": "<?php echo _('Search') ?>:",
             "sUrl": ""
+        },
+        "ports":
+        {
+            "sProcessing": "&nbsp;<?php echo _('Loading') ?> <img src='/ossim/pixmaps/loading3.gif' align='absmiddle'/>",
+            "sLengthMenu": "&nbsp;_MENU_ <?php echo _('Ports') ?>",
+            "sZeroRecords": "&nbsp;<?php echo _('No matching ports found') ?>",
+            "sEmptyTable": "&nbsp;<?php echo _('No ports found in the system') ?>",
+            "sLoadingRecords": "&nbsp;<?php echo _('Loading') ?>...",
+            "sInfo": "&nbsp;<?php echo _('Showing _START_ to _END_ of _TOTAL_ ports') ?>",
+            "sInfoEmpty": "&nbsp;<?php echo _('Showing 0 to 0 of 0 ports') ?>",
+            "sInfoFiltered": "(<?php echo _('filtered from _MAX_ total ports') ?>)",
+            "sInfoPostFix": "",
+            "sInfoThousands": ",",
+            "sSearch": "<?php echo _('Search') ?>:",
+            "sUrl": ""
         }
         
     }
@@ -625,6 +776,31 @@ require_once 'av_init.php';
             "sPrevious": "&lt; <?php echo _('Previous') ?>",
             "sNext":     "<?php echo _('Next') ?> &gt;",
             "sLast":     ""
+        }
+    }
+    
+    
+    var dt_selection_msg =
+    {
+        "defalt":
+        {
+            "select": "<?php echo _('You have selected ___SELECTED___ items on this page.') ?>",
+            "all"   : "<?php echo _('Select all ___ALL___ items.') ?>"
+        },
+        "assets":
+        {
+            "select": "<?php echo _('You have selected ___SELECTED___ assets on this page.') ?>",
+            "all"   : "<?php echo _('Select all ___ALL___ assets.') ?>"
+        },
+        "networks":
+        {
+            "select": "<?php echo _('You have selected ___SELECTED___ networks on this page.') ?>",
+            "all"   : "<?php echo _('Select all ___ALL___ networks.') ?>"
+        },
+        "groups":
+        {
+            "select": "<?php echo _('You have selected ___SELECTED___ groups on this page.') ?>",
+            "all"   : "<?php echo _('Select all ___ALL___ groups.') ?>"
         }
     }
           

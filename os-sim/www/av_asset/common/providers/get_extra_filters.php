@@ -791,6 +791,86 @@ function model_list($conn, $page, $search)
 
 
 
+/*
+ * Function to get the list of plugins
+*
+* @param  $conn     object   DB Connection.
+* @param  $page     integer  Current Page of the list.
+* @param  $search   string   Search string.
+*
+* @return  array    The total of elements and the elements.
+*/
+function plugin_list($conn, $page, $search)
+{
+    $filters  = array();
+
+    $filters['limit'] = get_query_limits($page);
+
+    if ($search != '')
+    {
+        $search = utf8_decode($search);
+        $search = escape_sql($search, $conn);
+        
+        $filters['where'] = " (plugin.name LIKE '%$search%' OR plugin.description LIKE '%$search%')";
+    }
+
+    try
+    {
+        list($plugins, $total) = Asset_host_scan::get_all_plugins($conn, '', $filters, TRUE);
+    }
+    catch(Exception $e)
+    {
+        $return['error'] = TRUE;
+        $return['msg']   = $e->getMessage();
+
+        return $return;
+    }
+
+    if ($total > 0)
+    {
+        $selected = get_selected_values(25);
+    }
+
+    $list = array();
+
+    // Special filter "No Plugin Enabled" PID = 0
+    if (count($plugins) > 0 && $search == '')
+    {
+        $_chk    = ($selected[0] != '') ? TRUE : FALSE;
+        $_plugin = array(
+                'id'      => 0,
+                'name'    => _('No Plugin Enabled'),
+                'class'   => 'italic exclusive',
+                'checked' => $_chk
+        );
+        
+        $list[] = $_plugin; 
+    }
+    
+    //Going through the list to format the elements properly:
+    foreach($plugins as $p_id => $p_data)
+    {
+        $_chk    = ($selected[$p_id] != '') ? TRUE : FALSE;
+        $_plugin = array(
+                'id'      => $p_id,
+                'name'    => ucwords($p_data['name']),
+                'title'   => $p_data['description'],
+                'checked' => $_chk
+        );
+    
+        $list[] = $_plugin;
+    }
+
+    $data['total']   = intval($total);
+    $data['list']    = $list;
+
+    $return['error'] = FALSE;
+    $return['data']  = $data;
+
+    return $return;
+}
+
+
 
 /******************************  AUX FUNCTIONS  ******************************/
 
@@ -913,7 +993,8 @@ if($action != '' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SER
            'operating_system' => 'operating_system_list',
            'group'            => 'group_list',
            'model'            => 'model_list',
-           'label'            => 'label_list'
+           'label'            => 'label_list',
+           'plugin'           => 'plugin_list'
         );
 
         try

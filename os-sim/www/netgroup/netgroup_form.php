@@ -52,8 +52,6 @@ if (ossim_error())
 
 $networks  = array();
 
-$conf        = $GLOBALS['CONF'];
-$threshold_a = $threshold_c = $conf->get_conf('threshold');
 $descr       = '';
 
 if ($id != '')
@@ -65,8 +63,6 @@ if ($id != '')
 		$ngname       = $net_group->get_name();
 		$ctx          = $net_group->get_ctx();
 		$descr        = $net_group->get_descr();
-		$threshold_c  = $net_group->get_threshold_c();
-		$threshold_a  = $net_group->get_threshold_a();
 		$obj_networks = Net_group::get_networks($conn, $net_group->get_id());
 			
 		foreach($obj_networks as $net) 
@@ -501,8 +497,7 @@ $paths = Asset::get_path_url(FALSE);
         </div>
 
     	<form name='ng_form' id='ng_form' method="POST" action="<?php echo $action;?>">
-        	<input type="hidden" name="threshold_a" id='threshold_a' class='vfield' value="<?php echo $threshold_a?>"/>
-            <input type="hidden" name="threshold_c" id='threshold_c' class='vfield' value="<?php echo $threshold_c?>"/>
+        	
     		<input type="hidden" name="id" id="id" class='vfield' value="<?php echo $id ?>"/>
     		<input type="hidden" name="insert" value="insert"/>
     		<input type="hidden" name="rrd_profile" value=""/>

@@ -35,25 +35,22 @@ require_once 'av_init.php';
 
 if (!Session::am_i_admin())
 {
-	 $config_nt = array(
-		'content' => _("You do not have permission to see this section"),
-		'options' => array (
-			'type'          => 'nf_error',
-			'cancel_button' => false
-		),
-		'style'   => 'width: 60%; margin: 30px auto; text-align:center;'
-	); 
-					
-	$nt = new Notification('nt_1', $config_nt);
-	$nt->show();
-	
-	die();
+     $config_nt = array(
+        'content' => _("You do not have permission to see this section"),
+        'options' => array (
+            'type'          => 'nf_error',
+            'cancel_button' => false
+        ),
+        'style'   => 'width: 60%; margin: 30px auto; text-align:center;'
+    ); 
+                    
+    $nt = new Notification('nt_1', $config_nt);
+    $nt->show();
+    
+    die();
 }
 
-$db   = new ossim_db();
-$conn = $db->connect();
-
-$_system_list_data = Av_center::get_avc_list($conn);
+$_system_list_data = Av_center::get_avc_list_from_api(TRUE);
 $default_system_id = strtolower(Util::get_default_uuid());
 
 if ($_system_list_data['status'] != 'success')
@@ -251,7 +248,7 @@ $checking_msg = _('Checking for backups in progress');
                         $selected = ($system_id == $default_system_id) ? ' selected' : '';
                         ?>
                         <option value="<?php echo $system_id ?>" <?php echo $selected ?>>
-                            <?php echo $system_data['name'].' ['.$system_data['admin_ip'].']' ?>
+                            <?php echo $system_data['hostname'].' ['.$system_data['admin_ip'].']' ?>
                         </option>
                         <?php
                     }
@@ -364,4 +361,3 @@ $checking_msg = _('Checking for backups in progress');
 </html>
 
 <?php
-$db->close();

@@ -75,7 +75,7 @@ class Cache_file
 
         $file_path = AV_CACHE_DIR.'/'.$file;
 
-        if(file_exists($file_path))
+        if(file_exists($file_path) && $expire != -1)
         {
             $current_time  = gmdate('U');
             $file_time     = gmdate('U', filemtime($file_path));
@@ -119,7 +119,7 @@ class Cache_file
 
         $cache_time = strtotime($rs->fields['value'] . ' GMT');
 
-        if (file_exists($file_path) && !empty($cache_time))
+        if (file_exists($file_path) && !empty($cache_time) && $expire != -1)
         {
             $file_time    = gmdate('U', filemtime($file_path));
             $current_time = gmdate('U');

@@ -130,7 +130,7 @@ function Av_tabs(tab_config)
         {
             __tab_data = __self.tabs[__self.selected].ajax_options.data;
         }
-
+        
         this.object = $("#" + __self.id).tabs({
             selected: __self.selected,
             spinner: "",
@@ -188,17 +188,13 @@ function Av_tabs(tab_config)
 
                     $(ui.panel).hide();
 
-                    var __loading = "<div id='c_loading' style='display: none;'><div><img src='/ossim/pixmaps/loading.gif'/></div></div>";
+                    var __loading = $('<div class="c_loading"/>').hide().html("<div><img src='/ossim/pixmaps/loading.gif'/></div>");
+                        
+                    $('#' + __self.id + ' .ui-tabs-panel:first').before(__loading);
 
-                    $('.ui-tabs-panel:first').before(__loading);
-
-                    $('#c_loading').css({"display": "none", "position": "relative", "width" : "100%", "margin" : "auto", "z-index" : "-999"});
-                    $('#c_loading div').css({"position": "absolute", "width" : "100%"});
-                    $('#c_loading img').css({"position": "absolute", "top" : "50%", "left" : "50%", "margin-top" : "-16px", "margin-left" : "-16px"});
-
-                    $('#c_loading').height(__height);
-                    $('#c_loading div').height(__height);
-                    $("#c_loading").show();
+                    __loading.find('div').css({"position": "absolute", "width" : "100%"}).height(__height);
+                    __loading.find('img').css({"position": "absolute", "top" : "50%", "left" : "50%", "margin-top" : "-16px", "margin-left" : "-16px"});
+                    __loading.css({"display": "none", "position": "relative", "width" : "100%", "margin" : "auto", "z-index" : "-999"}).height(__height).show();
                 
                      __self.tabs[__self.selected].load_callback();
                 }
@@ -216,8 +212,7 @@ function Av_tabs(tab_config)
     {
         var __self = this;
 
-        $("#c_loading").remove();
-
+        $('#' + __self.id + ' .c_loading').remove();
         $('#' + __self.id + ' .ui-tabs-panel:not(.ui-tabs-hide)').show();
     };
 

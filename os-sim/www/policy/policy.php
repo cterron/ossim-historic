@@ -284,7 +284,7 @@ $default = array
 		false
 	) ,
 	"resend_events" => array(
-		_('R. Events'),
+		_('Resend Events'),
 		30,
 		'false',
 		'center',

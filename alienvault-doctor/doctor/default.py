@@ -28,13 +28,14 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-verbose = False
+verbose = 0
 doctor_cfg_file = '/etc/ossim/doctor/doctor.cfg'
 ossim_setup_file = '/etc/ossim/ossim_setup.conf'
 ossim_license_file = '/etc/ossim/ossim.lic'
 plugin_list = 'all'
 category_list = 'all'
 severity_list = 'all'
+appliance_type_list = 'current'
 plugin_dir = '/etc/ossim/doctor/plugins'
 output_type = 'none'
 valid_output_types = ['none', 'file', 'ansible', 'support']
@@ -59,4 +60,4 @@ error_codes = {'invalid_dir': -1,
 exit_codes = {'all_good': 0,
               'ftp_upload_failed': 1}
 
-severity = ['High', 'Medium', 'Low']
+severity = ['Emerg', 'Critical', 'Alert', 'Error', 'Warning', 'Notice', 'Info', 'Debug']

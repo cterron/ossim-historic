@@ -55,8 +55,7 @@ def connect_tunnel(system_id, case_id):
     return True, ''
 
 
-
-@use_cache(namespace="system")
+@use_cache(namespace="support_tunnel")
 def status_tunnel(system_id, no_cache=False):
     """
         Get the status of tunnels in system :system_id:

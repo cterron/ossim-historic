@@ -322,8 +322,9 @@ class Security_report
                                 ORDER BY occurrences
                                 $order_type LIMIT $limit"
                                 : 
-                                "SELECT sum(acid_event.cnt) AS occurrences, plugin_id, plugin_sid, ip_src, ip_dst, hex(ctx) as ctx, hex(src_host) as src_host, hex(dst_host) as dst_host 
+                                "SELECT sum(acid_event.cnt) AS occurrences, plugin_sid.name as sig_name, acid_event.plugin_id, acid_event.plugin_sid, ip_src, ip_dst, hex(ctx) as ctx, hex(src_host) as src_host, hex(dst_host) as dst_host
                                 FROM alienvault_siem.po_acid_event as acid_event
+                                LEFT JOIN alienvault.plugin_sid ON plugin_sid.plugin_id=acid_event.plugin_id AND plugin_sid.sid=acid_event.plugin_sid
                                 WHERE 1=1 AND acid_event.plugin_id <> 1505 $where 
                                 GROUP BY plugin_id, plugin_sid, ip_src, ip_dst, ctx, src_host, dst_host
                                 ORDER BY occurrences
@@ -834,7 +835,7 @@ class Security_report
         }
         else
         {
-            list($ajoin,$where) = self::make_where_alarm($this->ossim_conn, $from_date, $to_date, $plugin_list, array('assets' => $assets, 'ctxs' => $sensors));
+            list($ajoin, $where) = self::make_where_alarm($this->ossim_conn, $from_date, $to_date, $plugin_list, array('assets' => $assets, 'ctxs' => $sensors));
         }
         
         if ($type == 'event')
@@ -1364,6 +1365,8 @@ class Security_report
             $ctx_where .= " AND a.backlog_id=ac.id_alarm AND ac.id_ctx in ($ctxs)";
             $join      .= " ,alarm_ctxs ac";
         }
+        
+        $join .= ', backlog b';
 
         // date filter
         if (!preg_match("/\d+\:\d+:\d+/",$date_from) && !preg_match("/\d+\:\d+:\d+/",$date_to)) 
@@ -1371,7 +1374,7 @@ class Security_report
             list ($date_from,$date_to) = self::normalize_date($date_from,$date_to);
         }
 
-        $where = "$ctx_where $plugin_where AND (a.timestamp BETWEEN '".escape_sql($date_from, $conn)."' AND '".escape_sql($date_to, $conn)."')";
+        $where = " AND a.backlog_id=b.id AND b.timestamp<>'1970-01-01 00:00:00' $ctx_where $plugin_where AND (a.timestamp BETWEEN '".escape_sql($date_from, $conn)."' AND '".escape_sql($date_to, $conn)."')";
 
         return array($join, $where);
     }

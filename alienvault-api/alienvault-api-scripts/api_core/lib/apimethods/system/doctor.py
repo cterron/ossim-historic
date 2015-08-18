@@ -27,6 +27,7 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
+import re
 from db.methods.system import get_system_ip_from_system_id
 
 from ansiblemethods.system.system import get_doctor_data
@@ -57,6 +58,9 @@ def get_support_info (system_id, ticket):
         file_uploaded = True
     elif data['contacted'][ip]['rc'] == 1:
         file_name = data['contacted'][ip]['data'].replace('\n', '')
+        # Clean to extract the filename
+        file_name = re.sub(r'.*\/var\/ossim', '/var/ossim', file_name)
+        file_name = re.sub(r'\.doctor.*', '.doctor', file_name)
     else:
         return (False, "Error Calling support tool")
 

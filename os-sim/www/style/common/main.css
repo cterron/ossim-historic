@@ -60,6 +60,12 @@ body
     overflow-x: auto !important;
 }
 
+_::-webkit-full-page-media, _:future, :root #body_scroll
+{
+    overflow-x: hidden !important; 
+}
+
+
 .version_color 
 {
     background-color:#132917;

@@ -337,8 +337,8 @@ class Asset_host_sensors
         while (!$rs->EOF)
         {
             $sensors[$rs->fields['sensor_id']] = array(
-                 'name'  => $rs->fields['name'],
-                 'ip'    => $rs->fields['sensor_ip']
+                'name'  => $rs->fields['name'],
+                'ip'    => $rs->fields['sensor_ip']
             );
 
             $rs->MoveNext();

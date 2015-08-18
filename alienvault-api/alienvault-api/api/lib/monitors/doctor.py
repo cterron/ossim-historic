@@ -58,22 +58,26 @@ class MonitorPlatformTelemetryData(Monitor):
     def __init__(self):
         Monitor.__init__(self, MonitorTypes.MONITOR_PLATFORM_TELEMETRY_DATA)
         self.message = 'Platform Telemetry Data Monitor Enabled'
-        self.__strike_zone_plugins = ['agent_plugins_exist.plg', 'agent_plugins_integrity.plg', 'agent_rsyslog_conf_integrity.plg',
-                                      'alienvault_ami_aio_6x1gb_disk_size.plg', 'alienvault_ami_logger_standard_disk_size.plg',
-                                      'alienvault_ami_sensor_remote_disk_size.plg', 'alienvault_ami_sensor_standard_6x1gb_disk_size.plg',
-                                      'alienvault_ami_usm_standard_disk_size.plg', 'alienvault_dummies.plg', 'alienvault_hw_aio_6x1gb_disk_size.plg',
-                                      'alienvault_hw_logger_enterprise_disk_size.plg', 'alienvault_hw_logger_standard_disk_size.plg',
-                                      'alienvault_hw_sensor_enterprise_ids_2x10gb_disk_size.plg', 'alienvault_hw_sensor_enterprise_ids_6x1gb_disk_size.plg',
-                                      'alienvault_hw_sensor_remote_disk_size.plg', 'alienvault_hw_sensor_standard_2x10gb_disk_size.plg',
-                                      'alienvault_hw_sensor_standard_6x1gb_disk_size.plg', 'alienvault_hw_usm_database_disk_size.plg',
-                                      'alienvault_hw_usm_enterprise_disk_size.plg', 'alienvault_hw_usm_standard_disk_size.plg',
-                                      'alienvault_vmware_aio_6x1gb_disk_size.plg', 'alienvault_vmware_logger_standard_disk_size.plg',
-                                      'alienvault_vmware_sensor_remote_disk_size.plg', 'alienvault_vmware_sensor_remote_lite_disk_size.plg',
-                                      'alienvault_vmware_sensor_standard_6x1gb_disk_size.plg', 'alienvault_vmware_usm_standard_disk_size.plg',
-                                      'bash_history.plg', 'current_network_config.plg', 'default_fs.plg', 'default_hw.plg', 'default_server_packages.plg',
-                                      'hosts_file.plg', 'kernel_configuration.plg', 'mysql_history.plg', 'netlink_status.plg', 'network_routing.plg',
-                                      'packages_installed.plg', 'percona_logrotate.plg', 'pkg_checksum.plg', 'resolv_file.plg', 'schema_version.plg',
-                                      'unsupported_installation.plg', 'vm_requirements.plg']
+        self.__strike_zone_plugins = ['0005_agent_plugins_exist.plg',
+                                      '0006_agent_plugins_integrity.plg',
+                                      '0008_agent_rsyslog_conf_integrity.plg',
+                                      '0009_alienvault_dummies.plg',
+                                      '0013_bash_history.plg',
+                                      '0018_current_network_config.plg',
+                                      '0025_default_hw.plg',
+                                      '0026_default_repositories.plg',
+                                      '0027_default_server_packages.plg',
+                                      '0029_disk_size.plg',
+                                      '0031_hosts_file.plg',
+                                      '0033_kernel_configuration.plg',
+                                      '0034_mysql_history.plg',
+                                      '0035_netlink_status.plg',
+                                      '0037_network_routing.plg',
+                                      '0041_pkg_checksum.plg',
+                                      '0045_resolv_file.plg',
+                                      '0047_schema_version.plg',
+                                      '0054_unsupported_installation.plg',
+                                      '0056_vm_requirements.plg']
 
     def __check_internet_connection__(self, url='https://telemetry.alienvault.com:443'):
         """

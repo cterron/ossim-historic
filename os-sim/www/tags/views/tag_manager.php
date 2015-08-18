@@ -119,29 +119,30 @@ if (ossim_error())
               enctype="multipart/form-data">
 
             <fieldset>
-                <legend>Name</legend>
+                <legend><?php echo _('Name') ?></legend>
                 <input type="text" id="tag_name" name="tag_name" class="vfield" maxlength="30"/>
             </fieldset>
 
             <fieldset>
-                <legend>Style</legend>
+                <legend><?php echo _('Style') ?></legend>
                 <?php for ($i = 1; $i <= 24; $i++)
                 {
                     echo '<span class="tag_style av_tag_'.$i.'">'._('Label').'</span>';
-                } ?>
+                } 
+                ?>
             </fieldset>
 
             <fieldset class="tag_preview">
-                <legend>Preview</legend>
-                <span id="tag_preview" class="av_tag_1">Label</span>
+                <legend><?php echo _('Preview') ?></legend>
+                <span id="tag_preview" class="av_tag_1"><?php echo _('Label') ?></span>
             </fieldset>
 
             <input type="hidden" id="tag_id" name="tag_id" class="vfield" value=""/>
-            <input type="hidden" id="tag_type" name="tag_type" class="vfield" value="<?php echo $tag_type?>"/>
+            <input type="hidden" id="tag_type" name="tag_type" class="vfield" value="<?php echo $tag_type ?>"/>
             <input type="hidden" id="tag_class" name="tag_class" class="vfield" value=""/>
             <input type="hidden" id="action" name="action" class="vfield" value="save_tag"/>
 
-            <input type="button" name="send" id="send" value="<?php echo _('Save')?>"/>
+            <input type="button" name="send" id="send" value="<?php echo _('Save') ?>"/>
 
         </form>
     </div>

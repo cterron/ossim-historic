@@ -67,6 +67,7 @@
 #include "sim-alarm-stats.h"
 #include "sim-geoip.h"
 #include "sim-server-api.h"
+#include "sim-parser.h"
 
 
 #define OSSIM_CONFIGURATION_FILE_ERROR	2
@@ -100,6 +101,7 @@ sim_register_types (void)
   sim_command_register_type ();
   sim_host_register_type ();
   sim_session_register_type ();
+  sim_parser_register_type ();
 
   return;
 }
@@ -230,7 +232,7 @@ main (int argc, char *argv[])
     sim_network_register_tests (unittests);
     sim_context_register_tests (unittests);
     sim_rule_register_tests (unittests);
-    sim_policy_register_tests (unittests);
+    //sim_policy_register_tests (unittests);
     sim_role_register_tests (unittests);
     sim_engine_register_tests (unittests);
     sim_uuid_register_tests (unittests);

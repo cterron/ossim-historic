@@ -1082,3 +1082,14 @@ function notify_warning(txt)
 	
 	return nt.show();
 }
+
+String.prototype.ucwords = function () {
+    return this.replace(/\w+/g, function(a){ 
+          return a.charAt(0).toUpperCase() + a.slice(1).toLowerCase()
+    })
+}
+
+String.prototype.urfirst = function () {
+     return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase()
+}
+                                    

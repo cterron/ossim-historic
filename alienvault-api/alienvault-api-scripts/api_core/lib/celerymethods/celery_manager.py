@@ -40,7 +40,8 @@ from celery.signals import task_postrun
 logger = celery.utils.log.get_logger("celery")
 
 import apimethods.utils
-from db.methods.job import get_job_status,cleanup_jobs,update_job_data
+from db.methods.job import get_job_status as db_get_job_status
+from db.methods.job import cleanup_jobs,update_job_data
 
 @task_postrun.connect
 def close_session(*args, **kwargs):
@@ -103,7 +104,7 @@ class CeleryManager(threading.Thread):
         job_status = None
 
         job_id_bytes = apimethods.utils.get_bytes_from_uuid(job_id)
-        job_status = get_job_status(job_id_bytes)
+        job_status = db_get_job_status(job_id_bytes)
         if job_status:
             return pickle.loads(job_status.info)
         else:

@@ -204,17 +204,17 @@ if ($action == 'save_changes')
 
     	if(is_array($_POST['sensor_detectors']) && !empty($_POST['sensor_detectors']))
     	{
-        	//Change deprecated plugin Ossec_av_format by ossec-single-line
+            //Change deprecated plugin Ossec_av_format by AlienVault_HIDS
 
         	$s_detectors = array_flip($_POST['sensor_detectors']);
 
         	if (array_key_exists('ossec_av_format', $s_detectors))
     		{
     			unset($s_detectors['ossec_av_format']);
-    			unset($s_detectors['ossec-single-line']);
+                unset($s_detectors['AlienVault_HIDS']);
 
     			$s_detectors   = array_flip($s_detectors);
-    			$s_detectors[] = 'ossec-single-line';
+                $s_detectors[] = 'AlienVault_HIDS';
     			$_POST['sensor_detectors'] = $s_detectors;
     		}
 

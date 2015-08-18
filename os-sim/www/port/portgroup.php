@@ -137,7 +137,7 @@ $layout      = load_layout($name_layout, $category);
 			if (com=='<?=_("Delete selected")?>') {
 				//Delete host by ajax
 				if (typeof(items[0]) != 'undefined') {
-					if (confirm("<?php echo Util::js_entities(_("Are you sure to delete the selected port group?")) ?>")) {
+					if (confirm("<?php echo Util::js_entities(_("Are you sure you want to delete the selected port group?")) ?>")) {
 						$("#flextable").changeStatus('<?=_("Deleting port group")?>...',false);
                         var dtoken = Token.get_token("delete_portgroup");
 						$.ajax({
@@ -194,7 +194,7 @@ $layout      = load_layout($name_layout, $category);
 			if (com=='delete') {
 
 				if (typeof(port) != 'undefined') {
-					if (confirm("<?php echo Util::js_entities(_("Are you sure to delete this port group?")) ?>")) {
+					if (confirm("<?php echo Util::js_entities(_("Are you sure you want to delete this port group?")) ?>")) {
 						$("#flextable").changeStatus('<?=_("Deleting port group")?>...',false);
                         var dtoken = Token.get_token("delete_portgroup");
 						$.ajax({

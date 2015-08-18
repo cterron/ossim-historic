@@ -150,7 +150,7 @@ query_cache_type=1
 #log_bin=/var/log/mysql/mysql-bin.log
 auto_increment_increment=1
 auto_increment_offset=1
-expire_logs_days=10
+expire_logs_days=2
 max_binlog_size=100M
 #binlog_do_db=include_database_name
 #binlog_ignore_db=include_database_name
@@ -162,7 +162,7 @@ log_bin_trust_function_creators=OFF
 # InnoDB
 innodb_file_per_table=1
 innodb_fast_shutdown=0
-innodb_buffer_pool_size=128M
+innodb_buffer_pool_size=134217728
 innodb_additional_mem_pool_size=8M
 #innodb_flush_method=fsync
 innodb_log_buffer_size=8M
@@ -199,7 +199,7 @@ EOF
         echo "Enabling high memory config..."
 
         sed -i "s/^innodb_additional_mem_pool_size=.*/innodb_additional_mem_pool_size=20M/" $MYSQL_CONF_FILE
-        sed -i "s/^innodb_buffer_pool_size=.*/innodb_buffer_pool_size=512M/" $MYSQL_CONF_FILE
+        sed -i "s/^innodb_buffer_pool_size=.*/innodb_buffer_pool_size=536870912/" $MYSQL_CONF_FILE
         sed -i "s/^innodb_flush_log_at_trx_commit=.*/innodb_flush_log_at_trx_commit=2/" $MYSQL_CONF_FILE
         sed -i "s/^sort_buffer_size=.*/sort_buffer_size=50M/" $MYSQL_CONF_FILE
         sed -i "s/^query_cache_limit=.*/query_cache_limit=64M/" $MYSQL_CONF_FILE

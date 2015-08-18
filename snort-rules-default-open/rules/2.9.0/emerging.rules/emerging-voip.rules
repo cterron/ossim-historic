@@ -64,11 +64,11 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP REGISTER Message Flo
 
 #By Shirkdog and Blake Hartstein
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET VOIP Centrality IP Phone (PA-168 Chipset) Session Hijacking"; flow:established,to_server; content:"POST"; nocase; http_method; content:"/g"; nocase; http_uri; content:"back=++Back++"; nocase; http_client_body; pcre:"/^\/g($|[?#])/Ui"; reference:url,www.milw0rm.com/exploits/3189; reference:url,doc.emergingthreats.net/bin/view/Main/2003329; reference:cve,2007-0528; classtype:attempted-user; sid:2003329; rev:7;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET VOIP Centrality IP Phone (PA-168 Chipset) Session Hijacking"; flow:established,to_server; content:"POST"; nocase; http_method; content:"/g"; nocase; http_uri; content:"back=++Back++"; nocase; http_client_body; pcre:"/^\/g($|[?#])/Ui"; reference:url,www.milw0rm.com/exploits/3189; reference:url,doc.emergingthreats.net/bin/view/Main/2003329; reference:cve,2007-0528; classtype:attempted-user; sid:2003329; rev:7;)
 
 #by Blake Hartstein of Demarc
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP SIP UDP Softphone INVITE overflow"; dsize:>1000; content:"INVITE"; depth:6; nocase; pcre:"/\r?\n\r?\n/R"; isdataat:1000,relative; reference:bugtraq,16213; reference:cve,2006-0189; reference:url,doc.emergingthreats.net/bin/view/Main/2002848; classtype:attempted-user; sid:2002848; rev:7;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP SIP UDP Softphone INVITE overflow"; dsize:>1000; content:"INVITE"; depth:6; nocase; pcre:"/\r?\n\r?\n/R"; isdataat:1000,relative; reference:bugtraq,16213; reference:cve,2006-0189; reference:url,doc.emergingthreats.net/bin/view/Main/2002848; classtype:attempted-user; sid:2002848; rev:7;)
 
 #by Blake Hartstein of Demarc
 #
@@ -94,7 +94,7 @@ alert ip any any -> any 5060 (msg:"GPL VOIP SIP 407 Proxy Authentication Require
 alert ip any any -> any 5060 (msg:"GPL VOIP SIP INVITE message flooding"; content:"INVITE"; depth:6; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:2100158; rev:4;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"GPL VOIP EXPLOIT SIP UDP Softphone overflow attempt"; content:"|3B|branch|3D|"; content:"a|3D|"; pcre:"/^a\x3D[^\n]{1000,}/smi"; reference:bugtraq,16213; reference:cve,2006-0189; classtype:misc-attack; sid:2100223; rev:2;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"GPL VOIP EXPLOIT SIP UDP Softphone overflow attempt"; content:"|3B|branch|3D|"; content:"a|3D|"; pcre:"/^a\x3D[^\n]{1000,}/smi"; reference:bugtraq,16213; reference:cve,2006-0189; classtype:misc-attack; sid:2100223; rev:2;)
 
 #
 alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP Possible Modified Sipvicious OPTIONS Scan"; content:"OPTIONS "; depth:8; content:"ccxllrlflgig|22|<sip|3A|100"; nocase; distance:0; reference:url,code.google.com/p/sipvicious/; reference:url,blog.sipvicious.org/; classtype:attempted-recon; sid:2011422; rev:2;)

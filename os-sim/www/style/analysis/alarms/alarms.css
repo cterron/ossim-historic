@@ -86,7 +86,6 @@ if (!headers_sent())
     padding-left: 0px;
 }
 
-
 #event_detail .table_list
 {
     border-bottom: none;
@@ -102,14 +101,14 @@ if (!headers_sent())
 .filters
 {
     margin-top: 0px;
+    line-height: 16px;
 }
 
 #alarm_params
 {
     position: relative;
     clear: both;
-    margin: 5px 15px 25px 15px;
-    display: none;
+    margin: 5px 15px 0px 15px;
     clear: both;
 }
 
@@ -164,20 +163,24 @@ if (!headers_sent())
     margin: 0;
 }
 
+.calendar
+{
+    margin-left: 20px;    
+}
 
 .calendar_from 
 {
-    margin-left: 24px;
-    width: 31%;
+    width: 40%;
 }
 .calendar_to
 {
-    width: 31%;
+    width: 40%;
+    padding-left: 0;
 }
 
 .calendar_separator
 {
-    width: 18%;
+    width: 10%;
 }
 
 .datepicker_range input
@@ -202,3 +205,31 @@ td.nowrap
     white-space: nowrap;
 }
 
+
+#btn_al
+{
+    height: 20px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+#graph_toggle_legend
+{
+    float: left;
+    margin-right: 7px;
+    line-height: 20px;
+}
+
+#graph_toggle
+{
+    float: left;
+    margin-right: 20px;
+    width: 50px;
+    height: 18px;
+    position: relative;    
+}
+
+.otx_icon
+{
+    height: 22px;
+}

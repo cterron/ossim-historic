@@ -1,26 +1,14 @@
-ossim-downloads (5.0.2-0) stable; urgency=low
+ossim-downloads (5.1.0-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 13 May 2015 06:43:02 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 29 Jun 2015 11:29:20 -0400
 
-ossim-downloads (5.0.1.1-0) stable; urgency=low
-
-  * New release
-
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Tue, 12 May 2015 17:52:39 -0400
-
-ossim-downloads (5.0.1-0) stable; urgency=low
+ossim-downloads (5.1-0) unstable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 13 Apr 2015 11:29:32 -0400
-
-ossim-downloads (5.0.0-0) stable; urgency=low
-
-  * New release
-
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:53:58 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:54:36 -0400
 
 ossim-downloads (5.0-0) unstable; urgency=low
 

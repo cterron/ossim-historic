@@ -162,7 +162,7 @@ switch($type){
 		$limit          = ($chart_info['top'] != '')? $chart_info['top'] : 10;
 
 		//Link to the forensic site.
-		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&sort_order=time_d&hmenu=Forensics&smenu=Forensics&utc=1";
+		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("Y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("Y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&sort_order=time_d&hmenu=Forensics&smenu=Forensics&utc=1";
 		
 		$forensic_link = Menu::get_menu_url($link, 'analysis', 'security_events');
 		//Sql Query
@@ -194,7 +194,7 @@ switch($type){
 		{
 			$data[]  = $events;
 			$label[] =  _($txt_pt[$st]);
-			$links[] = "'$forensic_link&sourcetype=".urlencode($st)."'";
+			$links[] = $forensic_link . '&sourcetype=' . urlencode($st);
 		}
 		
 		$colors = get_widget_colors(count($data));
@@ -214,7 +214,7 @@ switch($type){
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
 		
 		//Link to the forensic site.
-		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]= &time[0][1]=>=&time[0][8]= &time[0][9]=AND&time[1][1]=<=&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query DB&num_result_rows=-1&sort_order=time_d&hmenu=Forensics&smenu=Forensics&utc=1";
+		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]= &time[0][1]=>=&time[0][8]= &time[0][9]=AND&time[1][1]=<=&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("Y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("Y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query DB&num_result_rows=-1&sort_order=time_d&hmenu=Forensics&smenu=Forensics&utc=1";
 		$forensic_link = Menu::get_menu_url($link, 'analysis', 'security_events');
 
 		//Sql Query
@@ -234,7 +234,7 @@ switch($type){
                 $name    = Category::get_name_by_id($conn, $rg->fields["category_id"]);
                 $data[]  = $rg->fields["num_events"];
                 $label[] = $name;
-                $links[] = "'$forensic_link&category%5B1%5D=&category%5B0%5D=".$rg->fields["category_id"]."'";
+                $links[] = $forensic_link . '&category%5B1%5D=&category%5B0%5D=' . $rg->fields["category_id"];
                 
                 $rg->MoveNext();
 		    }
@@ -290,7 +290,7 @@ switch($type){
             }
             else
             {
-            	$logger_link    = "'" . Menu::get_menu_url('/ossim/ossem/index.php', 'analysis', 'raw_logs') . "'";
+            	$logger_link    = Menu::get_menu_url('/ossim/ossem/index.php', 'analysis', 'raw_logs');
             }
 			
 			$siem_links[$lbl]   = $siem_link;
@@ -412,11 +412,11 @@ switch($type){
 				$rs->MoveNext();
 			}
 			
-			$links[] = "'".Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz)."&date_to=".gmdate("Y-m-d",$timetz), "analysis", "alarms") . "'";
-			$links[] = "'".Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_1Ago_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*$_1Ago_day)), "analysis", "alarms") . "'";
-			$links[] = "'".Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_2Ago_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*($_1Ago_day+1))), "analysis", "alarms") . "'";
-			$links[] = "'".Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_Week_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*($_2Ago_day+1))), "analysis", "alarms") . "'";
-			$links[] = "'".Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_2Week_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*($_Week_day+1))), "analysis", "alarms") . "'";
+			$links[] = Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz)."&date_to=".gmdate("Y-m-d",$timetz), "analysis", "alarms");
+			$links[] = Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_1Ago_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*$_1Ago_day)), "analysis", "alarms");
+			$links[] = Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_2Ago_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*($_1Ago_day+1))), "analysis", "alarms");
+			$links[] = Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_Week_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*($_2Ago_day+1))), "analysis", "alarms");
+			$links[] = Menu::get_menu_url("/ossim/alarm/alarm_console.php?num_alarms_page=50&hmenu=Alarms&smenu=Alarms&hour=00&minutes=00&hide_closed=0&date_from=".gmdate("Y-m-d",$timetz-(86400*$_2Week_day))."&date_to=".gmdate("Y-m-d",$timetz-(86400*($_Week_day+1))), "analysis", "alarms");
 
 		} 
 		else 

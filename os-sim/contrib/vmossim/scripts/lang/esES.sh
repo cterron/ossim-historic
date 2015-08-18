@@ -54,7 +54,6 @@ MSG_RE_FRA="Reconfigurar Ossim Framework"
 MSG_RE_PHP="Reconfigurar Phpgacl"
 MSG_RE_SNO="Reconfigurar Snort"
 MSG_RE_ACI="Reconfigurar AcidBase"
-MSG_RE_NTO="Reconfigurar Ntop"
 
 
 MSG_UP_TI="Otrás tareas"

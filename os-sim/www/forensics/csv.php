@@ -81,6 +81,7 @@ $current_cols_titles = array(
     "IP_PORTSRC"             => _("Source"),
     "IP_PORTDST"             => _("Destination"),
     "SENSOR"                 => _("Sensor"),
+    "OTX"                    => _("OTX"),
     "IP_SRC"                 => _("Src IP"),
     "IP_DST"                 => _("Dst IP"),
     "IP_SRC_FQDN"            => _("Src IP FQDN"),
@@ -261,11 +262,19 @@ while (!$result->EOF)
                 {
                     $coldata = $found[1];
                 }
-
+                elseif (preg_match("/otx_icon_gray/", $coldata))
+                {
+                    $coldata = "No";
+                }
+                elseif (preg_match("/otx_icon/", $coldata))
+                {
+                    $coldata = "Yes";
+                }
+                
                 $coldata = preg_replace("/\<img [^\>]+\>/", "", $coldata);
-                $coldata = preg_replace("/\<br\>/", "", $coldata);
+                $coldata = preg_replace("/\<br\>/", " ", $coldata);
                 $coldata = str_replace(";", ",", $coldata);
-                $csv_body .= $coldata;
+                $csv_body .= trim($coldata);
 
                 $flag = TRUE;
             }

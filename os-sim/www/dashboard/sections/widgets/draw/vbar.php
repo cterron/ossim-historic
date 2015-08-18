@@ -34,7 +34,6 @@ require_once 'av_init.php';
 
 Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 
-
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -95,7 +94,8 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
     
     <script class="code" type="text/javascript">
     
-		var links = [<?php echo $links; ?>];
+        var tooltip_legend = <?php echo $tooltip ?>;
+		var links = <?php echo $links ?>;
 
 		function myClickHandler(ev, gridpos, datapos, neighbor, plot) 
 		{
@@ -129,8 +129,8 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
                     try
                     {
                         var index   = neighbor.data[0] - 1;
-                        var tooltip = plot.axes.xaxis.ticks[index];
-                        
+                        var tooltip = tooltip_legend[index] ? tooltip_legend[index] : plot.axes.xaxis.ticks[index];
+
                         tooltip += '<br/>';
                         tooltip +=  '<strong>(' + format_dot_number(neighbor.data[1]) +  ')</strong>';
                     }
@@ -160,7 +160,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 			$.jqplot.eventListenerHooks.push(['jqplotMouseMove', myMoveHandler]);
 			$.jqplot.eventListenerHooks.push(['jqplotClick', myClickHandler]); 
 			
-			line1 = [<?php echo $data; ?>];
+			line1 = <?php echo $data ?>;
 			plot1 = $.jqplot('chart', [line1], 
 			{					
 				series:
@@ -170,7 +170,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 						{
     						show: false 
     				    },
-    				    label: '<?php echo $serie; ?>', 
+    				    label: "<?php echo $serie ?>", 
     				    renderer:$.jqplot.BarRenderer 
     				}
 				], 
@@ -211,7 +211,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 					xaxis:
 					{
 						renderer:$.jqplot.CategoryAxisRenderer,
-						ticks:[<?php echo strtoupper($label) ?>],
+						ticks: <?php echo $label ?>,
 						<?php 
         				if ($hide_x_axis) 
         				{ 

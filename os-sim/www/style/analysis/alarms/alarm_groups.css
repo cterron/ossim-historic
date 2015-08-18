@@ -43,6 +43,11 @@ if (!headers_sent())
     cursor: pointer;
 }
 
+.otx_icon
+{
+    height: 22px;
+}
+
 .gname, .aname
 {
     white-space: nowrap;

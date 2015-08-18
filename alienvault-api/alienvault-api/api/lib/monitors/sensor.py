@@ -28,15 +28,22 @@
 #
 
 from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
-#from api.lib.messages import *
-#from ansiblemethods.system.system import get_service_status
-from ansiblemethods.sensor.network import get_pfring_stats
-from apimethods.sensor.plugin import get_plugin_package_info_from_sensor_id, get_plugin_package_info_local, check_plugin_integrity
+from ansiblemethods.system.about import get_is_professional
+from apimethods.sensor.network import get_network_stats
+from apimethods.sensor.plugin import (get_plugin_package_info_from_sensor_id,
+                                      get_plugin_package_info_local,
+                                      check_plugin_integrity,
+                                      get_sensor_plugins_enabled_by_asset)
 from apimethods.utils import compare_dpkg_version
 
-#from db.methods.data import get_snort_suricata_events_in_the_last_24_hours
-from db.methods.system import get_systems,get_sensor_id_from_system_id
-from apimethods.utils import get_uuid_string_from_bytes
+from db.methods.system import (get_systems,
+                               get_sensor_id_from_system_id,
+                               get_system_ip_from_local)
+
+from db.methods.host import update_host_plugins
+
+from apiexceptions import APIException
+
 import celery.utils.log
 logger = celery.utils.log.get_logger("celery")
 
@@ -47,6 +54,7 @@ class MonitorSensorIDS(Monitor):
     def __init__(self):
         Monitor.__init__(self, MonitorTypes.MONITOR_SENSOR_IDS_ENABLED)
         self.message = 'Sensor Services Enabled'
+
     def start(self):
         """
         Starts the monitor activity
@@ -118,6 +126,7 @@ class MonitorVulnerabilityScans(Monitor):
         """
         Monitor.__init__(self, MonitorTypes.MONITOR_SENSOR_VULNERABILITY_SCANS)
         self.message = 'Monitor Sensor Scan Jobs'
+
     def start(self):
         """
         Starts the monitor activity
@@ -156,65 +165,6 @@ class MonitorVulnerabilityScans(Monitor):
         #         str(e)))
         #     rt = False
         return rt
-
-
-class MonitorNetflowEnabled(Monitor):
-    def __init__(self):
-        '''
-        Constructor
-        '''
-        Monitor.__init__(self, MonitorTypes.SENSOR_NETFLOW_ENABLED)
-
-    def start(self):
-        """
-        Start the monitor
-
-        :return: True on success, False otherwise
-        """
-        #TODO
-        pass
-
-
-class MonitorAvailabilityMonitoringEnabled(Monitor):
-    def __init__(self):
-        '''
-        Constructor
-        '''
-        Monitor.__init__(self, MonitorTypes.SENSOR_AVAILABILITY_MONITORING_ENABLED)
-
-    def start(self):
-        """
-        Start the monitor
-
-        :return: True on success, False otherwise
-        """
-        #TODO
-        pass
-
-
-class MonitorAvailabilityMonitoringEnabled(Monitor):
-    def __init__(self):
-        '''
-        Constructor
-        '''
-        Monitor.__init__(self, MonitorTypes.SENSOR_AVAILABILITY_MONITORING_ENABLED)
-
-    def start(self):
-        pass
-
-
-class MonitorOssecAgentsReports(Monitor):
-    def __init__(self):
-        Monitor.__init__(self, MonitorTypes.SENSOR_HAS_OSSEC_AGENTS_REPORTING)
-
-    def start(self):
-        """
-        Start the monitor
-
-        :return: True on success, False otherwise
-        """
-        #TODO
-        pass
 
 
 class MonitorSensorLocation(Monitor):
@@ -287,7 +237,7 @@ class MonitorSensorDroppedPackages(Monitor):
                     logger.warning("Sensor (%s) ID not found" % sensor_ip)
                     continue
                 logger.info("Getting dropped packets for sensor_ip %s" % sensor_ip)
-                sensor_stats = get_pfring_stats(sensor_ip)
+                sensor_stats = get_network_stats(sensor_ip)
                 # print sensor_stats
                 try:
                     packet_lost_average = sensor_stats["contacted"][sensor_ip]["stats"]["packet_lost_average"]
@@ -376,6 +326,16 @@ class MonitorPluginIntegrity(Monitor):
         #Remove the previous monitor data.
         self.remove_monitor_data()
 
+        success, local_ip = get_system_ip_from_local(local_loopback=False)
+        if not success:
+            logger.error("Cannot retrieve local system IP: %s" % str(local_ip))
+            return False
+
+        # Check if this is professional or not.
+        success, is_pro = get_is_professional(local_ip)
+        if not (success and is_pro):
+            return True
+
         # Iterate over the sensors.
         result, systems = get_systems(system_type="Sensor")
 
@@ -396,6 +356,64 @@ class MonitorPluginIntegrity(Monitor):
                 except Exception as e:
                     logger.error("[MonitorPluginIntegrity] Error: %s" % str(e))
             else:
-                logger.error("Can't obtain integrity plugin information for system '%s'", system_id)
+                logger.error("Can't obtain integrity plugin information from system '%s'", system_id)
+
+        return True
+
+
+class MonitorUpdateHostPlugins(Monitor):
+    """
+        Check all /etc/ossim/agent/config.yml and update host_scan table
+    """
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_UPDATE_HOST_PLUGINS)
+        self.message = 'Update Host Plugins Monitor started'
+
+    def start(self):
+        """ Starts the monitor activity
+        """
+        # Remove the previous monitor data.
+        self.remove_monitor_data()
+
+        # Iterate over the sensors.
+        success, systems = get_systems(system_type="Sensor")
+
+        if not success:
+            logger.error("[MonitorUpdateHostPlugins] "
+                         "Can't retrieve the system info: {0}".format(str(systems)))
+            return False
+
+        assets = {}
+        for (system_id, system_ip) in systems:
+            success, sensor_id = get_sensor_id_from_system_id(system_id)
+            if not success:
+                logger.error("[MonitorUpdateHostPlugins] "
+                             "Can't resolve senor_id of system {0}: {1}".format(system_id, sensor_id))
+                continue
+
+            try:
+                sensor_plugins = get_sensor_plugins_enabled_by_asset(sensor_id=sensor_id,
+                                                                     no_cache=True)
+            except APIException as e:
+                logger.error("[MonitorUpdateHostPlugins] "
+                             "Can't obtain plugin information from system {0}: {1}".format(
+                                 system_id, str(e)))
+                continue
+
+            # Add asset plugin sids to assets list
+            try:
+                for asset, asset_plugins in sensor_plugins.iteritems():
+                    if asset not in assets:
+                        assets[asset] = []
+                    assets[asset] += [plugin['plugin_id'] for plugin in asset_plugins.values()]
+            except KeyError as e:
+                logger.warning("[MonitorUpdateHostPlugins] "
+                               "Bad format in plugins enabled by asset: {0}".format(str(e)))
+
+        success, msg = update_host_plugins(data=assets)
+        if not success:
+            logger.error("[MonitorUpdateHostPlugins] "
+                         "Can't update host plugin information: {0}".format(msg))
+            return False
 
         return True

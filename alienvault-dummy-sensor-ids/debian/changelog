@@ -1,26 +1,14 @@
-alienvault-dummy-sensor-ids (5.0.2-0) stable; urgency=low
+alienvault-dummy-sensor-ids (5.1.0-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 13 May 2015 06:43:03 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 29 Jun 2015 11:29:21 -0400
 
-alienvault-dummy-sensor-ids (5.0.1.1-0) stable; urgency=low
-
-  * New release
-
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Tue, 12 May 2015 17:52:40 -0400
-
-alienvault-dummy-sensor-ids (5.0.1-0) stable; urgency=low
+alienvault-dummy-sensor-ids (5.1-0) unstable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 13 Apr 2015 11:29:34 -0400
-
-alienvault-dummy-sensor-ids (5.0.0-0) stable; urgency=low
-
-  * New release
-
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:53:59 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:54:37 -0400
 
 alienvault-dummy-sensor-ids (5.0-0) unstable; urgency=low
 

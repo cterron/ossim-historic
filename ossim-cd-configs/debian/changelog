@@ -1,26 +1,14 @@
-ossim-cd-configs (5.0.2-0) stable; urgency=low
+ossim-cd-configs (5.1.0-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 13 May 2015 06:43:01 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 29 Jun 2015 11:29:19 -0400
 
-ossim-cd-configs (5.0.1.1-0) stable; urgency=low
-
-  * New release
-
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Tue, 12 May 2015 17:52:38 -0400
-
-ossim-cd-configs (5.0.1-0) stable; urgency=low
+ossim-cd-configs (5.1-0) unstable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 13 Apr 2015 11:29:31 -0400
-
-ossim-cd-configs (5.0.0-0) stable; urgency=low
-
-  * New release
-
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:53:57 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 26 Mar 2015 08:54:35 -0400
 
 ossim-cd-configs (5.0-0) unstable; urgency=low
 

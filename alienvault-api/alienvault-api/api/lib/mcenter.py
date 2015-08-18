@@ -51,6 +51,8 @@ def save_messages_revision(revision):
         data = {"revision": revision}
         with open(revision_packed_path, 'wb') as handle:
             pickle.dump(data, handle)
+        if os.path.isfile(revision_packed_path):
+            os.chmod(revision_packed_path, 0600)
     except Exception as e:
         app.logger.error("Cannot save messages revision: %s" % str(e))
         return False

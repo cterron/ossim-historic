@@ -129,11 +129,11 @@ catch (Exception $e)
 $autodetected = array(
     'level' => $a_level,
     'link'  => array(
-        AV_MAIN_PATH . '/av_inventory/index.php', 
-        'environment', 
-        'assets', 
+        AV_MAIN_PATH . '/av_schedule_scan/views/list.php?s_type=nmap',
+        'environment',
+        'assets',
         'scheduler'
-    )  
+    )
 );
 
 
@@ -142,20 +142,24 @@ $autodetected = array(
  */
 try
 {
-    $is_hids = $asset_object->is_hids_enabled($conn);
+    $is_hids = $asset_object->get_hids_status($conn);
 
     switch (intval($is_hids))
     {
         case 0:
-            $h_level = 'red';
+            $h_level = 'gray';
         break;
 
         case 1:
-            $h_level = 'green';
+            $h_level = 'red';
         break;
 
         case 2:
             $h_level = 'yellow';
+        break;
+
+        case 3:
+            $h_level = 'green';
         break;
 
         default;
@@ -167,14 +171,27 @@ catch (Exception $e)
     $h_level = 'gray';
 }
 
+//Setting default sensor
+if ($asset_type == 'group')
+{
+    $sensors = $asset_object->get_sensors($conn);
+}
+else
+{
+    $sensors = $asset_object->get_sensors()->get_sensors();
+}
+
+$sensors = array_keys($sensors);
+$default_sensor = $sensors[0];
+
 $hids = array(
     'level' => $h_level,
     'link'  => array(
-        AV_MAIN_PATH . '/ossec/status.php', 
-        'environment', 
-        'detection', 
+        AV_MAIN_PATH . '/ossec/views/ossec_status/status.php?sensor_id='.$default_sensor,
+        'environment',
+        'detection',
         'hids'
-    )  
+    )
 );
 
 
@@ -194,11 +211,11 @@ catch (Exception $e)
 $vulnerabilities = array(
     'level' => $v_level,
     'link'  => array(
-        AV_MAIN_PATH . '/vulnmeter/manage_jobs.php', 
-        'environment', 
-        'vulnerabilities', 
+        AV_MAIN_PATH . '/vulnmeter/manage_jobs.php',
+        'environment',
+        'vulnerabilities',
         'scan_jobs'
-    )  
+    )
 );
 
 

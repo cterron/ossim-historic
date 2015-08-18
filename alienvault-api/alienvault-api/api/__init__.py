@@ -83,8 +83,12 @@ from celerymethods.celery_manager import CeleryManager
 cm = CeleryManager()
 cm.start()
 
-from celerymethods.utils import restore_tasks_to_db
-restore_tasks_to_db()
+try:
+    from celerymethods.tasks.tasks import Scheduler
+    scheduler = Scheduler()
+    scheduler.restore_tasks_to_db()
+except Exception as e:
+    app.logger.error("Error loading tasks to scheduler: '{0}'".format(str(e)))
 
 from apimethods.system.cache import flush_cache
 try:
@@ -101,6 +105,14 @@ try:
         app.logger.info("Messages have been successfully loaded")
 except Exception, msg:
     app.logger.warning("Error loading messages in database")
+
+# Log permissions
+try:
+    if os.path.isdir("/var/log/alienvault/api"):
+        for api_logfile in os.listdir("/var/log/alienvault/api"):
+            os.chmod("/var/log/alienvault/api/%s" % api_logfile, 0644)
+except Exception as e:
+    pass
 
 # Purge celery-once references from redis
 from celery_once.helpers import queue_once_key

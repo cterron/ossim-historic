@@ -72,51 +72,58 @@ function show_notification(msg, type, id, hide)
 }
 
 function goto_help(id) {
-
+	
 	var link    = '';
 	var caption = '';
-
+	
 	switch(id){
-
+	
 		case 'service_passive':
 		case 'service_ids':
-
+			
+			caption = '<?php echo _("AlienVault Center")?>';
 			link    = '<?php echo Menu::get_menu_url("../av_center/index.php", "configuration", "deployment", "components")?>';
-
-		break;
+			
+			break;
 
 		case 'service_vulns':
-
+			
+			caption = '<?php echo _("Vulnerabilities")?>';
+			
 			_net_id = $('#net_id_selected').val();
-			_opts   = '&action=create_scan&hosts_alive=1&scan_locally=1&net_id='+_net_id;
+			_opts   = '&action=create_scan&hosts_alive=1&scan_locally=1&net_id='+_net_id;			
 			link    = '<?php echo Menu::get_menu_url("../vulnmeter/sched.php", "environment", "vulnerabilities", "scan_jobs")?>'+_opts;
-
-		break;
-
+			
+			break;	
+			
 		case 'service_active':
-
-			link = '<?php echo Menu::get_menu_url("../av_inventory/index.php", "environment", "assets", "scheduler", "asset_discovery")?>';
-
-		break;
-
+			
+			caption = '<?php echo _("Schedule Scan - Asset Discovery")?>';
+			link = '<?php echo Menu::get_menu_url("../av_schedule_scan/views/list.php?s_type=nmap", "environment", "assets", "scheduler", "asset_discovery")?>';
+			
+			break;
+				
 		case 'service_netflow':
-
+				
+			caption = '<?php echo _("Sensors")?>';
+			
 			link = '<?php echo Menu::get_menu_url("../sensor/sensor.php", "configuration", "deployment", "components", "sensors")?>';
-
-		break;
-
+			
+			break;
+				
 	}
-
+	
 	if(link != '')
 	{
-		$('#'+id).on('click', function(event)
-		{
-            event.preventDefault();
-
-            document.location.href = link;
-		});
+		$('#'+id).on('click', function() 
+		{		
+            var height  = '70%';
+            var width   = '65%';    
+            
+            GB_show(caption, link, height, width);
+		});	
 	}
-
+	
 	return false;
 }
 

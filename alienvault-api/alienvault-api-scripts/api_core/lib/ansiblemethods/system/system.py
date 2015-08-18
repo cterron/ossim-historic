@@ -35,6 +35,7 @@ import os.path
 import api_log
 from base64 import b64decode
 from os.path import basename
+from apiexceptions.ansible import APIAnsibleError, APIAnsibleBadResponse
 from ansiblemethods.ansiblemanager import Ansible, PLAYBOOKS
 from ansiblemethods.helper import (
     parse_av_config_response,
@@ -405,7 +406,7 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
     return (result, response)
 
 
-def ping_system(system_ip):
+def ansible_ping_system(system_ip):
     try:
         response = ansible.run_module(host_list=[system_ip],
                                       module="ping", args="")
@@ -829,6 +830,7 @@ def ansible_get_asynchronous_command_log_file(system_ip, log_file):
         rc_file_path = response['contacted'][system_ip]['dest']
         if not os.path.exists(rc_file_path):
             return False, "The local async command log file doesn't exist"
+	os.chmod(rc_file_path, 0644)
 
     except Exception as err:
         error_msg = "An error occurred while retrieving the async command " + \
@@ -1088,3 +1090,34 @@ def ansible_restart_frameworkd(system_ip):
         response = "Error restarting frameworkd: %s" % str(e)
         rc = False
     return (rc, response)
+
+
+def ansible_get_otx_key(system_ip):
+    """
+    Get the OTX Key of a given system.
+
+    Args:
+        system_ip (str): ip of the host where we will get the OTX key
+
+    Returns:
+        key (str): OTX key or empty string
+    """
+    query = """SELECT AES_DECRYPT(value, (SELECT value FROM config WHERE conf='encryption_key')) AS "token"
+               FROM config
+               WHERE conf = 'open_threat_exchange_key';"""
+
+    command = """echo "%s" | ossim-db
+              """ % query
+    try:
+        response = ansible.run_module(host_list=[system_ip],
+                                      module="shell",
+                                      use_sudo="True",
+                                      args=command)
+    except Exception, exc:
+        raise APIAnsibleBadResponse(str(exc))
+
+    success, msg = ansible_is_valid_response(system_ip, response)
+    if success:
+        return response['contacted'][system_ip]['stdout'].replace('token\n', '')
+    else:
+        raise APIAnsibleBadResponse(str(msg))

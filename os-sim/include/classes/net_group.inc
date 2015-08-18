@@ -54,29 +54,19 @@ class Net_group
 	public $name;
 
 
-    public $threshold_c;
-
-
-    public $threshold_a;
-
-
     public $rrd_profile;
 
 
     public $descr;
 
 
-    public function __construct($id, $ctx, $name, $threshold_c, $threshold_a, $rrd_profile, $descr, $foundrows = 0) 
+    public function __construct($id, $ctx, $name, $rrd_profile, $descr, $foundrows = 0) 
     {
         $this->id = $id;
         
         $this->ctx = $ctx;
-    	
-    	$this->name = stripslashes($name);
         
-        $this->threshold_c = $threshold_c;
-        
-        $this->threshold_a = $threshold_a;
+        $this->name = stripslashes($name);
         
         $this->rrd_profile = $rrd_profile;
         
@@ -101,18 +91,6 @@ class Net_group
     public function get_name() 
     {
         return $this->name;
-    }
-
-
-    public function get_threshold_c() 
-    {
-        return $this->threshold_c;
-    }
-
-
-    public function get_threshold_a() 
-    {
-        return $this->threshold_a;
     }
 
 
@@ -173,7 +151,7 @@ class Net_group
         {
             if (!$rs->EOF) 
             {
-                $object = new self($rs->fields['id'], $rs->fields['ctx'], stripslashes($rs->fields['name']) , $rs->fields['threshold_c'], $rs->fields['threshold_a'], stripslashes($rs->fields['rrd_profile']) , stripslashes($rs->fields['descr']) , 1);
+                $object = new self($rs->fields['id'], $rs->fields['ctx'], stripslashes($rs->fields['name']), stripslashes($rs->fields['rrd_profile']) , stripslashes($rs->fields['descr']) , 1);
             }
         }
         
@@ -268,8 +246,7 @@ class Net_group
                         
             while (!$rs->EOF) 
 			{
-            	$list[] = new self($rs->fields['id'], $rs->fields['ctx'], stripslashes($rs->fields['name']) , $rs->fields['threshold_c'], 
-                    $rs->fields['threshold_a'], stripslashes($rs->fields['rrd_profile']), stripslashes($rs->fields['descr']), $foundrows);
+                $list[] = new self($rs->fields['id'], $rs->fields['ctx'], stripslashes($rs->fields['name']), stripslashes($rs->fields['rrd_profile']), stripslashes($rs->fields['descr']), $foundrows);
                
                 $rs->MoveNext();
             }
@@ -316,56 +293,6 @@ class Net_group
     }
 
 
-    public function get_compromise($conn, $net_group_id) 
-    {
-        Ossim_db::check_connection($conn);
-        
-        $compromise = 0;
-        $networks = self::get_networks($conn, $net_group_id);
-        
-        foreach($networks as $network) 
-        {
-            $net_id   = $network->get_net_id();
-            $net_list = Asset_net_qualification::get_list($conn, "WHERE net_id = UNHEX('$net_id')");
-            
-            if (is_array($net_list)) 
-            {
-                foreach($net_list as $net) 
-                {
-                    $compromise+= $net->get_compromise();
-                }
-            }
-        }
-        
-        return $compromise;
-    }
-
-
-    public function get_attack($conn, $net_group_id) 
-    {
-        Ossim_db::check_connection($conn);
-        
-        $attack = 0;
-        $networks = self::get_networks($conn, $net_group_id);
-        
-        foreach($networks as $network) 
-        {
-            $net_id   = $network->get_net_id();
-            $net_list = Asset_net_qualification::get_list($conn, "WHERE net_id = UNHEX('$net_id')");
-            
-            if (is_array($net_list)) 
-            {
-                foreach($net_list as $net) 
-                {
-                    $attack+= $net->get_attack();
-                }
-            }
-        }
-        
-        return $attack;
-    }
-
-
     public function get_related_sensors($conn, $net_group_id) 
     {
         Ossim_db::check_connection($conn);
@@ -403,25 +330,21 @@ class Net_group
     }  
 
 
-    public static function insert($conn, $ctx, $name, $threshold_c, $threshold_a, $rrd_profile, $nets, $descr) 
+    public static function insert($conn, $ctx, $name, $rrd_profile, $nets, $descr) 
     {
         Ossim_db::check_connection($conn);
         
-        settype($threshold_c, 'int');
-        settype($threshold_a, 'int');
         $rrd_profile = Util::htmlentities($rrd_profile);
         $name = str_replace(' ', '_', $name);
         
         $new_id = Util::uuid();
         
-        $query = "INSERT INTO net_group (id, ctx, name, threshold_c, threshold_a, rrd_profile, descr) VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO net_group (id, ctx, name, rrd_profile, descr) VALUES (UNHEX(?), UNHEX(?), ?, ?, ?)";
         
         $params = array(
             $new_id,
             $ctx,
-        	$name,
-            $threshold_c,
-            $threshold_a,
+            $name,
             $rrd_profile,
             $descr
         );
@@ -439,18 +362,16 @@ class Net_group
     }
 
 
-    public static function update($conn, $id, $ctx, $name, $threshold_c, $threshold_a, $rrd_profile, $nets, $descr) 
+    public static function update($conn, $id, $ctx, $name, $rrd_profile, $nets, $descr) 
     {    
         Ossim_db::check_connection($conn);
         
-        $query = "UPDATE net_group SET ctx = UNHEX(?), name = ?, threshold_c = ?, threshold_a = ?, rrd_profile = ?, descr = ? 
+        $query = "UPDATE net_group SET ctx = UNHEX(?), name = ?, rrd_profile = ?, descr = ? 
             WHERE id = UNHEX(?)";
         
         $params = array(
             $ctx,
-        	$name,
-            $threshold_c,
-            $threshold_a,
+            $name,
             $rrd_profile,
             $descr,
             $id
@@ -528,76 +449,6 @@ class Net_group
 				
 		return 0;
 	}
-
-
-    public static function netthresh_c($conn, $id) 
-    {
-        Ossim_db::check_connection($conn);
-        
-        $params = array($id);
-        $query  = "SELECT * FROM net_group WHERE id = UNHEX(?)";
-                
-        $rs = $conn->Execute($query, $params);		
-		
-        if (!$rs) 
-        {
-            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-            
-            $conf = $GLOBALS['CONF'];
-            
-            $threshold = $conf->get_conf('threshold');            
-        }
-        else
-        {
-            if (!$rs->EOF)
-            {
-                $threshold = $rs->fields['threshold_c'];
-            }
-            else
-            {
-                $conf = $GLOBALS['CONF'];
-            
-                $threshold = $conf->get_conf('threshold');    
-            }
-        }
-            
-        return $threshold;     
-    }
-
-
-    public static function netthresh_a($conn, $id) 
-    {
-        Ossim_db::check_connection($conn);
-        
-        $params = array($id);
-        $query  = "SELECT * FROM net_group WHERE id = UNHEX(?)";
-                
-        $rs = $conn->Execute($query, $params);		
-		
-        if (!$rs) 
-        {
-            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-            
-            $conf = $GLOBALS['CONF'];
-            
-            $threshold = $conf->get_conf('threshold');            
-        }
-        else
-        {
-            if (!$rs->EOF)
-            {
-                $threshold = $rs->fields['threshold_a'];
-            }
-            else
-            {
-                $conf = $GLOBALS['CONF'];
-            
-                $threshold = $conf->get_conf('threshold');    
-            }
-        }
-            
-        return $threshold;     
-    }
 
 
     public static function isNetInGroup($conn, $net_group, $net) 

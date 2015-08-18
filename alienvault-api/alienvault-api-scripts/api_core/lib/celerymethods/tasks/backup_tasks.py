@@ -65,6 +65,12 @@ fh.setFormatter(frmt)
 # add the Handler to the logger
 notifier.addHandler(fh)
 
+# touch the file and change its permissions
+if not os.path.isfile("/var/log/alienvault/api/backup-notifications.log"):
+    open("/var/log/alienvault/api/backup-notifications.log","a").close()
+if oct(os.stat("/var/log/alienvault/api/backup-notifications.log").st_mode & 0777) != '0644':
+    os.chmod("/var/log/alienvault/api/backup-notifications.log", 0644)
+
 
 def make_system_backup_by_system_ip(system_ip, backup_type, method="auto"):
     """

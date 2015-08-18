@@ -31,15 +31,14 @@
 #
 # GLOBAL IMPORTS
 #
-import os, sys, time, re, socket
-from time import sleep
+import os
+import sys
+import time
 
 #
 # LOCAL IMPORTS
 #
-from Profiler import TimeProfiler
 from Detector import Detector
-from Event import Event, EventOS, EventMac, EventService, EventHids, EventIdm
 from Logger import Logger
 from SSHConnection import SSHConnection
 from ParserLog import RuleMatch

@@ -74,7 +74,7 @@ else
             {
                 //Because of the design we use now that new message always.
                 //$msg = $wizard->get_step_data('deploy_error_msg');
-                $msg = _('There are errors during HIDs deployment. You will have the ability to a more advanced deployment once you are using AlienVault');
+                $msg = _('There are errors during HIDS deployment. You will have the ability to a more advanced deployment once you are using AlienVault');
             }
             elseif ($step == 1 && $confirm)
             {

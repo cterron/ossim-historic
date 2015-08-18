@@ -385,8 +385,17 @@ def get_current_plugins_by_type(plugin_type):
                 if re.match("([0-9\w\-]+\.cfg)", basename):
                     pname = os.path.splitext(basename)[0]  
                     plugin_list.append(pname)
+
+        if plugin_list:
+            plugin_list = ["AlienVault_NIDS" if p == "suricata" else p for p in plugin_list]
+            plugin_list = ["AlienVault_HIDS" if p == "ossec-single-line" else p for p in plugin_list]
+            plugin_list = ["availability_monitoring" if p == "nagios" else p for p in plugin_list]
+            plugin_list = ["AlienVault_HIDS-IDM" if p == "ossec-idm-single-line" else p for p in plugin_list]
+            plugin_list.sort()
     except Exception, e:
         print "error: %s" % str(e)
+
+
     return plugin_list
 
 

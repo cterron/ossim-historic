@@ -10,7 +10,10 @@
 if [ "$1" == '--orphans' ]; then
 
     dpkg --status alienvault-professional > /dev/null 2>&1 && is_pro=1 || is_pro=0
+    ENGINE=$(echo "SELECT engine FROM information_schema.tables WHERE table_name='acid_event' AND table_schema='alienvault_siem'"|ossim-db mysql|tail -1)
+    PREGZ="/usr/share/doc/ossim-mysql/contrib/misc/alienvault_siem_pre_rebuild.sql.gz"
     PRE="/usr/share/doc/ossim-mysql/contrib/misc/alienvault_siem_pre_rebuild.sql"
+    POSTGZ="/usr/share/doc/ossim-mysql/contrib/misc/alienvault_siem_post_rebuild.sql.gz"
     POST="/usr/share/doc/ossim-mysql/contrib/misc/alienvault_siem_post_rebuild.sql"
     alias df='df'
     alias du='du'
@@ -21,17 +24,23 @@ if [ "$1" == '--orphans' ]; then
     if [ $DF -lt $DU ]; then
         echo "Not enough free space available. It needs at least $DU MB"
     else
-        gunzip /usr/share/doc/ossim-mysql/contrib/misc/*gz 2> /dev/null
-        if [ -f "$PRE" ] && [ -f "$POST" ]; then
+        if ([ -f "$PREGZ" ] || [ -f "$PRE" ]) && ([ -f "$POSTGZ" ] || [ -f "$POST" ]); then
             echo -n "Preparing tables..."
-            cat "$PRE" | ossim-db alienvault_siem
+            if [ -f "$PREGZ" ]; then
+                zcat "$PREGZ" | ossim-db alienvault_siem
+            else
+                cat "$PRE" | ossim-db alienvault_siem
+            fi
             if [ $is_pro -eq 1 ]; then
+                echo "DROP TRIGGER IF EXISTS count_acid_event;" | ossim-db alienvault_siem
+            fi
+            if [ "ENGINE" == "TokuDB" ]; then
                 echo "alter table acid_event engine=tokudb;" | ossim-db alienvault_siem
                 echo "alter table extra_data engine=tokudb;" | ossim-db alienvault_siem
                 echo "alter table idm_data engine=tokudb;" | ossim-db alienvault_siem
                 echo "alter table reputation_data engine=tokudb;" | ossim-db alienvault_siem
+                echo "alter table otx_data engine=tokudb;" | ossim-db alienvault_siem
                 echo "alter table po_acid_event engine=tokudb;" | ossim-db alienvault_siem
-                echo "DROP TRIGGER IF EXISTS count_acid_event;" | ossim-db alienvault_siem
             fi
             echo "done."
             echo -n "Fix orphans devices, this may take a while."
@@ -40,8 +49,15 @@ if [ "$1" == '--orphans' ]; then
             echo -n "Cleaning orphans, this may take a while."
             echo "CALL _delete_orphans();" | ossim-db alienvault_siem | perl -npe 'BEGIN{$|=1} s/\n//'
             echo "done."
+            echo -n "Generating system tables, this may take a while."
+            echo "CALL fill_tables('','');" | ossim-db alienvault_siem
+            echo "done."
             echo -n "Purging temporary tables..."
-            cat "$POST" | ossim-db alienvault_siem
+            if [ -f "$POSTGZ" ]; then
+                zcat "$POSTGZ" | ossim-db alienvault_siem
+            else
+                cat "$POST" | ossim-db alienvault_siem
+            fi
             echo "done."
             echo -n "Verifying counters.."
             CNT=`echo "select count(*) as total from acid_event;" | ossim-db alienvault_siem | tail -1`

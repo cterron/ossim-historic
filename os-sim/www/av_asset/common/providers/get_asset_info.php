@@ -75,6 +75,8 @@ function get_asset_info($conn, $asset_id)
             $devices[$device_id] = $d_name;
         }
     }
+    
+    $os_data = $asset->get_os();
 
     $data = array(
         'id'            => $asset_id,
@@ -85,7 +87,7 @@ function get_asset_info($conn, $asset_id)
         'fqdn'          => $asset->get_fqdns(),
         'asset_value'   => $asset->get_asset_value(),
         'icon'          => base64_encode($asset->get_icon()),
-        'os'            => $asset->get_os(),
+        'os'            => $os_data['value'],
         'model'         => $asset->get_model(),
         'sensors'       => $sensors,
         'networks'      => $networks,

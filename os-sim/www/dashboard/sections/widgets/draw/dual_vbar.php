@@ -90,7 +90,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 
 	<script class="code" type="text/javascript">
 
-		var links = [<?php echo $links ?>];
+		var links = <?php echo $links ?>;
 
 		function myClickHandler(ev, gridpos, datapos, neighbor, plot) 
 		{
@@ -150,8 +150,8 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 			$.jqplot.eventListenerHooks.push(['jqplotClick', myClickHandler]); 
 			$.jqplot.eventListenerHooks.push(['jqplotMouseMove', myMoveHandler]);
 						
-			line1 = [<?php echo $data1 ?>];
-			line2 = [<?php echo $data2 ?>];
+			line1 = <?php echo $data1 ?>;
+			line2 = <?php echo $data2 ?>;
 			
 			plot1 = $.jqplot('chart', [line1, line2], 
 			{
@@ -162,7 +162,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 					   {
 					       show: false 
 					   }, 
-					   label: '<?php echo $serie1; ?>', 
+					   label: "<?php echo $serie1 ?>", 
 					   renderer: $.jqplot.BarRenderer 
 				    }, 
 					{ 
@@ -170,7 +170,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 					   { 
 					       show: false 
 					   }, 
-					   label:'<?php echo $serie2; ?>', 
+					   label:"<?php echo $serie2 ?>", 
 					   renderer: $.jqplot.BarRenderer 
 				    },
 				],                                    
@@ -216,7 +216,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 					xaxis:
 					{
 						renderer:$.jqplot.CategoryAxisRenderer,
-						ticks:[<?php echo strtoupper($label) ?>]
+						ticks: <?php echo $label ?>
 					}, 
 					yaxis:
 					{
@@ -232,7 +232,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 					renderer: $.jqplot.EnhancedLegendRenderer,
 					rendererOptions: 
 					{
-    					numberColumns: <?php echo $legend_columns; ?>
+    					numberColumns: <?php echo $legend_columns ?>
     				},
 					show: true, 
 					location: 's',

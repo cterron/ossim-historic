@@ -144,7 +144,7 @@ foreach($assets as $_id => $asset_data)
     $_dev  = '';
 
     $windows_os = preg_grep("/^windows|microsoft/i", $os);
-    $linux_os   = preg_grep("/linux/i", $os);
+    $linux_os   = preg_grep("/linux|alienvault/i", $os);
 
     if (count($windows_os) > 0)
     {

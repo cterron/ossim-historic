@@ -45,9 +45,8 @@ from time import sleep
 #
 
 from Detector import Detector
-from Event import Event, EventOS, EventMac, EventService, EventHids
+from Event import Event
 from Logger import Logger
-from Config import Plugin
 #
 # GLOBAL VARIABLES
 #

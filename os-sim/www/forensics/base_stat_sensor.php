@@ -171,7 +171,7 @@ else
 while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $device_id = $myrow['device_id'];
     list($myrow['name'],$myrow['sensor_ip']) = explode(' - ',GetSensorName($myrow['sensor_id'], $db, true));
-    $sensor_ip = ($myrow['name'] == _('Unknown')) ? 'N/A' : $myrow['sensor_ip'];
+    $sensor_ip = ($myrow['name'] == 'N/A') ? 'N/A' : $myrow['sensor_ip'];
     $device_ip = ($myrow['device_ip'] != '') ? $myrow['device_ip'].($myrow['interface'] != '' ? ':'.$myrow['interface'] : '') : '-';
     $sname     = $myrow['name'];
     

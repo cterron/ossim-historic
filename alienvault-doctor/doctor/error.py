@@ -33,7 +33,7 @@ class DoctorError (Exception):
     Class DoctorError.
     General exception for the Doctor
     '''
-    def __init__(self, msg, plugin):
+    def __init__(self, msg, plugin, **kargs):
         self.msg = msg
         self.plugin = plugin
 
@@ -54,10 +54,12 @@ class PluginError (DoctorError):
     PluginError class.
     Define an error exception for the Plugin class.
     '''
-    pass
+    def __init__(self, plugin_data={}, **kargs):
+        self.plugin_data = plugin_data
+        super(PluginError, self).__init__(**kargs)
 
 
-class CheckError (DoctorError):
+class CheckError (PluginError):
     '''
     Class CheckError.
     Exceptions for the Check class

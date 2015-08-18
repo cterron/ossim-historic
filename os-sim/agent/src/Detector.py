@@ -138,19 +138,6 @@ class Detector(threading.Thread):
 
     def _event_os_cached(self, event):
 
-        if isinstance(event, Event.EventOS):
-            import string
-            current_os = string.join(string.split(event["os"]), ' ')
-            previous_os = self.os_hash.get(event["host"], '')
-
-            if current_os == previous_os:
-                return True
-
-            else:
-                # Fallthrough and add to cache
-                self.os_hash[event["host"]] = \
-                    string.join(string.split(event["os"]), ' ')
-
         return False
 
 

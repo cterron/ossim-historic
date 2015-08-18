@@ -26,6 +26,7 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
+import os
 import logging
 from datetime import datetime,timedelta
 
@@ -54,6 +55,11 @@ fh.setFormatter(frmt)
 # add the Handler to the logger
 notifier.addHandler(fh)
 
+# touch the file and change its permissions
+if not os.path.isfile("/var/log/alienvault/api/logger-notifications.log"):
+    open("/var/log/alienvault/api/logger-notifications.log","a").close()
+if oct(os.stat("/var/log/alienvault/api/logger-notifications.log").st_mode & 0777) != '0644':
+    os.chmod("/var/log/alienvault/api/logger-notifications.log", 0644)
 
 def clean_logger():
     # First obtain the logger conf from

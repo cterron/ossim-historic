@@ -223,19 +223,11 @@ a.button
 
 
 /* Actions  Buttons */
-#action_buttons
-{
-    position: absolute;
-    right: 0;
-    top: 5px;   
-    z-index: 10; 
-}
 
-.img_action
+.av_table_actions
 {
-    cursor: pointer;
-    height: 18px;
-    margin-left: 10px;
+    top: 25px;
+    z-index: 9999;    
 }
 
 #save_button 

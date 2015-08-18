@@ -183,8 +183,8 @@ elseif (POST('action') == 'display_avc')
                                 $vp_class    = ' progress-grey';
                                 $vp_percent  = '0.00';
                                 
-
-                                $node_name  = "<span class='bold'>".$avc_data['name']."</span>";
+                                $system_name = Util::htmlentities($avc_data['name'].' ['.$avc_data['admin_ip'].']');
+                                $node_name   = "<span class='bold'>".$avc_data['name']."</span>";
 
                                 if (!empty($avc_data['vpn_ip']))
                                 {
@@ -201,7 +201,7 @@ elseif (POST('action') == 'display_avc')
                                                   'Database'  => array(utf8_encode(_('Database'))     , AV_PIXMAPS_DIR.'/theme/storage.png'));
                                 ?>
                                 
-                                <tr id='row_<?php echo $system_id?>' class='<?php echo $tr_class;?>'>
+                                <tr id='row_<?php echo $system_id?>' data-name="<?php echo $system_name?>" class='<?php echo $tr_class;?>'>
                                     <td class='<?php echo $td_class?> td_nodename'>
                                         <div><a class='more_info'><?php echo $node_name?></a></div>
                                         

@@ -107,11 +107,6 @@ class Util
                 {
                     $taxonomy = $rs->fields;
                     $name     = $rs->fields['kingdom'] . ' &mdash; ' . $rs->fields['category'] . ' &mdash; ' . $rs->fields['subcategory'];
-
-                    if ($format == 'string')
-                    {
-                        return $name;
-                    }
                 }
             }
         }
@@ -119,18 +114,19 @@ class Util
         {
             if ($format == 'string' && $taxonomy['id'] != '')
             {
-                return $taxonomy['kingdom'] . ' &mdash; ' . $taxonomy['category'] . ' &mdash; ' . $taxonomy['subcategory'];
+                $name = $taxonomy['kingdom'] . ' &mdash; ' . $taxonomy['category'] . ' &mdash; ' . $taxonomy['subcategory'];
             }
         }
         // If not, translate meta tags
 
         $translations = array(
-            '/SRC_IP/'     => array('func' => 'get_src_ip', 'parameters' => array()),
-            '/DST_IP/'     => array('func' => 'get_dst_ip', 'parameters' => array()),
-            '/SRC_PORT/'   => array('func' => 'get_src_port', 'parameters' => array()),
-            '/DST_PORT/'   => array('func' => 'get_dst_port', 'parameters' => array()),
-            '/PROTOCOL/'   => array('func' => 'get_protocol', 'parameters' => array()),
-            '/PLUGIN_ID/'  => array('func' => 'get_plugin_id', 'parameters' => array()),
+            '/SRC_IP/'     => array('func' => 'get_src_ip',     'parameters' => array()),
+            '/PULSE/'      => array('func' => '',               'parameters' => array()),
+            '/DST_IP/'     => array('func' => 'get_dst_ip',     'parameters' => array()),
+            '/SRC_PORT/'   => array('func' => 'get_src_port',   'parameters' => array()),
+            '/DST_PORT/'   => array('func' => 'get_dst_port',   'parameters' => array()),
+            '/PROTOCOL/'   => array('func' => 'get_protocol',   'parameters' => array()),
+            '/PLUGIN_ID/'  => array('func' => 'get_plugin_id',  'parameters' => array()),
             '/PLUGIN_SID/' => array('func' => 'get_plugin_sid', 'parameters' => array()),
             '/FILENAME/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'filename')),
             '/USERDATA/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata')),
@@ -147,6 +143,11 @@ class Util
 
         foreach ($translations as $k => $v)
         {
+            if (!preg_match($k, $name))
+            {
+                continue;
+            }
+            
             switch ($k)
             {
                 case '/PROTOCOL/':
@@ -155,6 +156,25 @@ class Util
 
                     $parameters  = array($d_param);
                     $replacement = call_user_func_array('Protocol::get_protocol_by_number', $parameters);
+
+                    break;
+                    
+                case '/PULSE/':
+                    
+                    $replacement = '';
+                    try
+                    {
+                        $pulse_id = $alarm->get_event_data($conn, 'filename');
+                        if ($pulse_id)
+                        {
+                            $otx         = new Otx();
+                            $pulse       = $otx->get_pulse_detail($pulse_id, TRUE);
+                            $replacement = $pulse['name'];
+                        }
+                    }
+                    catch (Exception $e) {}
+                    
+                    $replacement = ($replacement != '') ? $replacement : _('No information available. You are no longer subscribed to this pulse.');
 
                     break;
 
@@ -578,28 +598,6 @@ class Util
     }
 
     /**
-     * Function graph_image_link
-     *
-     * @param string $ip
-     * @param string $type
-     * @param string $what
-     * @param string $start
-     * @param string $end
-     * @param string $zoom
-     * @param string $range
-     *
-     * @return string
-     */
-    public static function graph_image_link($ip, $type, $what, $start, $end, $zoom, $range)
-    {
-        $cgi_link = 'show_image.php';
-
-        return "$cgi_link?range=$range&id=" . urlencode(
-            $ip
-        ) . "&what=$what&start=$start&end=$end&type=$type&zoom=$zoom";
-    }
-
-    /**
      * Function get_number_mark
      *
      * @return string
@@ -851,7 +849,7 @@ class Util
      *
      * @return string
      */
-    public static function htmlentities($string, $flag = ENT_QUOTES, $charset = 'ISO-8859-1')
+    public static function htmlentities($string, $flag = ENT_QUOTES, $charset = 'ISO-8859-1', $double_encode = FALSE)
     {
         if (mb_detect_encoding($string.' ', 'UTF-8,ISO-8859-1') == 'ISO-8859-1')
         {
@@ -859,6 +857,12 @@ class Util
         }
 
         $string = mb_convert_encoding($string, 'HTML-ENTITIES', 'UTF-8');
+
+        if ($double_encode)
+        {
+            $rpl    = array("&lt;" => "&amp;lt;", "&gt;" => "&amp;gt;");
+            $string = strtr($string, $rpl);
+        }
 
         return @htmlentities($string, $flag, $charset, FALSE);
     }
@@ -1199,6 +1203,30 @@ class Util
 
         // return $y,$m,$d,$h,$u,$s,$utc
         return $time;
+    }
+    
+    
+    /**
+     * Function get_date_from_utc()
+     *
+     * @param string $date    Date to format
+     * @param array  $params  Array of params (format and empty_msg)
+     *
+     * @return string
+     */
+    public static function get_date_from_utc($date, $params = array())
+    {
+        $format = ($params['format'])    ? $params['format']    : 'Y-m-d H:i:s';
+        $msg    = ($params['empty_msg']) ? $params['empty_msg'] : '';
+        
+        if (!empty($date))
+        {
+            return gmdate($format, strtotime($date . ' GMT') + (3600 * self::get_timezone()));
+        }
+        else
+        {
+            return $msg;
+        }
     }
 
     /**
@@ -2022,6 +2050,30 @@ class Util
     }
 
     /**
+     * Function set_default_os
+     *
+     * Set 'AlienVault OS'
+     *
+     * @param object  $conn
+     *
+     * @return void
+     */
+    public static function set_default_os($conn)
+    {
+        Ossim_db::check_connection($conn);
+
+        $rs = $conn->Execute("CALL _host_default_os()");
+
+        if (!$rs)
+        {
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        $rs->Close();
+    }
+
+
+    /**
      * Function get_sanitize_query_string
      *
      * PRE: $data must be $_GET array
@@ -2519,7 +2571,7 @@ class Util
                 $file_check = AV_MAIN_ROOT_PATH . $_file['src'];
             }
 
-            $file_check = preg_replace("/(\.css|\.js)\?.*/", "\\1", $file_check);
+            $file_check = preg_replace("/(\.css|\.js|\.js\.php)\?.*/", "\\1", $file_check);
 
             if (file_exists($file_check))
             {
@@ -2682,60 +2734,6 @@ class Util
 
 
     /**
-     * This function try to activate a OTX user
-     *
-     * @param string $token UUID
-     *
-     * @return string
-     */
-    public static function get_otx_username($token)
-    {
-        // API CALL
-        $client = new Alienvault_client();
-
-        $response = $client->system()->get_otx_user($token);
-        $response = @json_decode($response, TRUE);
-
-        if (!$response || $response['status'] == 'error')
-        {
-            $exp_msg = $client->get_error_message($response);
-
-            switch ($exp_msg)
-            {
-                case 'ERROR_CONNECTION':
-                    $error_msg = _('Limited or no connectivity: Make sure your network connection is active and try again.');
-                    break;
-
-                case 'ERROR_NOT_REGISTERED_TOKEN':
-                    $error_msg = _('The OTX token you have entered is not valid.');
-                    break;
-
-                default:
-                    $error_msg = _('Sorry, operation was not completed due to an error when processing the request') . " [$exp_msg]." . _('Please Try Again Later.');
-
-            }
-
-            Av_exception::throw_error(Av_exception::USER_ERROR, $error_msg);
-        }
-
-        $username = $response['data']['username'];
-
-        if (empty($username))
-        {
-            Av_exception::throw_error(Av_exception::USER_ERROR, _('The OTX token you have entered is not valid.'));
-        }
-
-        // Set token & username
-        $config = new Config();
-        $config->update("open_threat_exchange", "yes");
-        $config->update("open_threat_exchange_username", $username);
-        $config->update("open_threat_exchange_key", $token);
-        $config->update("open_threat_exchange_last", "1969-01-01 00:00:00");
-
-        return $username;
-    }
-
-    /**
      * This function set @disable_calc_perms variable to enable/disable user perm calculation
      *
      * @param object   $conn            Database access object
@@ -2803,8 +2801,26 @@ class Util
     {
         return floor($from / $limit) + 1;
     }
-    
-    
+
+    /**
+     * Function get_sess_cookie
+     *
+     * Returns value for sess cookie
+     *
+     * @return string
+     */
+    public static function get_sess_cookie()
+    {
+        $sess_id  = @substr(preg_replace("/[^a-zA-Z0-9]/",'',$_COOKIE['sess']),0,36);
+
+        if (empty($sess_id))
+        {
+            $sess_id = 'default';
+        }
+
+        return $sess_id;
+    }
+
     /**
      * Function to execute a bash command
      * 
@@ -2877,7 +2893,11 @@ class Util
             }
             elseif ($return_var > 0)
             {
-                Av_exception::write_log(Av_exception::USER_ERROR, _('Warning executing command, return value = 1'));
+                if (file_exists('/tmp/debug_cmd'))
+                {
+                    error_log("Last return value = 1\n", 3, "/tmp/cmd");
+                }
+                // Av_exception::write_log(Av_exception::USER_ERROR, _('Warning executing command, return value = 1'));
             }
         }
         // Only execute

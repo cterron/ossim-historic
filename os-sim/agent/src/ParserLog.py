@@ -31,24 +31,20 @@
 #
 # GLOBAL IMPORTS
 #
-import os, sys, time, re, socket
-from time import sleep
-import pdb
+import os, time, re
 import pyinotify #deb package python-pyinotify
 # python-pyinotify version 0.7.1-1
-from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
 from threading import Lock
 #
 # LOCAL IMPORTS
 #
-from Profiler import TimeProfiler
 from Detector import Detector
-from Event import Event, EventOS, EventMac, EventService, EventHids, EventIdm
+from Event import Event,EventIdm
 from Logger import Logger
-from TailFollow import TailFollow
 from TailFollowBookmark import TailFollowBookmark
 import glob
 logger = Logger.logger
+
 
 class RuleMatch:
 
@@ -194,14 +190,6 @@ class RuleMatch:
 
         if self.rule['event_type'] == Event.EVENT_TYPE:
             event = Event()
-        elif self.rule['event_type'] == EventOS.EVENT_TYPE:
-            event = EventOS()
-        elif self.rule['event_type'] == EventMac.EVENT_TYPE:
-            event = EventMac()
-        elif self.rule['event_type'] == EventService.EVENT_TYPE:
-            event = EventService()
-        elif self.rule['event_type'] == EventHids.EVENT_TYPE:
-            event = EventHids()
         elif self.rule['event_type'] == EventIdm.EVENT_TYPE:
             event = EventIdm()
         else:
@@ -212,10 +200,6 @@ class RuleMatch:
         for key, value in self.rule.iteritems():
             if key not in ["regexp", "precheck"]:
                 event[key] = self.plugin.get_replace_value(value.encode('utf-8'), self.groups, self._replace_assessment[key])
-        # if log field is present in the plugin,
-        #   use it as a custom log field          (event['log'])
-        # else, 
-        #   use original event has log attribute  (self.log)
         if self.log and not event['log'] and "log" in event.EVENT_ATTRS:
             event['log'] = self.log.encode('utf-8')
         return event
@@ -235,6 +219,8 @@ class FileEventHandler(pyinotify.ProcessEvent):
         pathname =   os.path.join(event.path, event.name)
         logger.info("File: %s has been created!" % pathname)
         self.__ptrTail(pathname)
+
+
 class ParserLog(Detector):
 
     def __init__(self, conf, plugin, conn):
@@ -246,8 +232,8 @@ class ParserLog(Detector):
         self.__tailLock = Lock()
         self.stop_processing = False
         self.__locations = []
-        self.__watchdog =pyinotify.WatchManager()
-        self.__notifier= None#pyinotify.ThreadedNotifier(self.__watchdog, FileEventHandler())
+        self.__watchdog = pyinotify.WatchManager()
+        self.__notifier = None  #pyinotify.ThreadedNotifier(self.__watchdog, FileEventHandler())
         self.__startNotifier = False
         self.__tails = []
         self.__monitorLocations = []

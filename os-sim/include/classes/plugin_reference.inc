@@ -156,18 +156,18 @@ class Plugin_reference
      *
      * @return int
      */
-	function get_foundrows()
-	{
+    function get_foundrows()
+    {
         return $this->foundrows;
     }
-	
-	/**
-	 * This function returns the total count of references
-	 * 
-	 * @param  object $conn
-	 * 
-	 * @return int
-	 */
+    
+    /**
+     * This function returns the total count of references
+     * 
+     * @param  object $conn
+     * 
+     * @return int
+     */
     function get_count($conn)
     {
         Ossim_db::check_connection($conn);
@@ -195,42 +195,42 @@ class Plugin_reference
      * 
      * @return int
      */
-	static function get_list($conn, $args = "")
-	{
-	    Ossim_db::check_connection($conn);
-		
-		$iffoundrows = preg_match("/LIMIT/i", $args) ? true : false;
+    static function get_list($conn, $args = "")
+    {
+        Ossim_db::check_connection($conn);
+        
+        $iffoundrows = preg_match("/LIMIT/i", $args) ? true : false;
         $cfrows      = ( $iffoundrows ) ? "SQL_CALC_FOUND_ROWS " : "";
-		$query       = ossim_query("SELECT $cfrows plugin_reference.plugin_id,
-            		        plugin_reference.plugin_sid,
-            		        plugin_reference.reference_id,
-            		        plugin_reference.reference_sid 
-            		        FROM plugin_reference $args");
-		
-		$list = array();
-		
-		$rs = $conn->Execute($query);
-		
+        $query       = ossim_query("SELECT $cfrows plugin_reference.plugin_id,
+                            plugin_reference.plugin_sid,
+                            plugin_reference.reference_id,
+                            plugin_reference.reference_sid 
+                            FROM plugin_reference $args");
+        
+        $list = array();
+        
+        $rs = $conn->Execute($query);
+        
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         } 
-		else 
-		{	
-			$foundrows = 0;
-			if ($iffoundrows) 
-			{
-			    $rf = $conn->Execute("SELECT FOUND_ROWS() as total");
+        else 
+        {   
+            $foundrows = 0;
+            if ($iffoundrows) 
+            {
+                $rf = $conn->Execute("SELECT FOUND_ROWS() as total");
                 if (!$rf)
                 {
-					Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                    Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
                 else
                 { 
-					$foundrows = $rf->fields["total"];
+                    $foundrows = $rf->fields["total"];
                 }
             }
-		
+        
             while (!$rs->EOF)
             {
                 $list[] = new self(
@@ -246,7 +246,7 @@ class Plugin_reference
         return $list;
     }
 
-	
+    
     /**
      * This function inserts a new row in plugin_reference table
      * 
@@ -258,15 +258,20 @@ class Plugin_reference
      * 
      * @return int
      */
-	static function new_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2)
-	{
-	    Ossim_db::check_connection($conn);
-	    
-		$query = ossim_query("INSERT INTO plugin_reference (plugin_id,plugin_sid,reference_id,reference_sid) 
-		        VALUES (?, ?, ?, ?)");
+    static function new_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2)
+    {
+        Ossim_db::check_connection($conn);
+
+        if (!self::check_rule($conn, $plugin_id1, $plugin_sid1))
+        {
+            Av_exception::throw_error(Av_exception::USER_ERROR, _('Unable to set cross-correlation rule. Selected "Data Source" and "Event Type" are included in another rule'));
+        }
+
+        $query = ossim_query("INSERT INTO plugin_reference (plugin_id,plugin_sid,reference_id,reference_sid) 
+                VALUES (?, ?, ?, ?)");
         
-		$params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2);
-		
+        $params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2);
+        
         if (!$conn->Execute($query, $params))
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
@@ -278,31 +283,31 @@ class Plugin_reference
             
             return 0;
         }
-	}
+    }
 
 
-	/**
-	 * This function deletes a row from the plugin_reference table
-	 * 
-	 * @param object $conn
-	 * @param int    $plugin_id1
-	 * @param int    $plugin_id2
-	 * @param int    $plugin_sid1
-	 * @param int    $plugin_sid2
-	 * 
-	 * @return int
-	 */
-	static function delete_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2)
-	{
-	    Ossim_db::check_connection($conn);
-	    
-		$query = ossim_query("DELETE FROM plugin_reference WHERE 
-		        plugin_id = ? AND plugin_sid = ? AND reference_id = ? AND reference_sid = ?");
+    /**
+     * This function deletes a row from the plugin_reference table
+     * 
+     * @param object $conn
+     * @param int    $plugin_id1
+     * @param int    $plugin_id2
+     * @param int    $plugin_sid1
+     * @param int    $plugin_sid2
+     * 
+     * @return int
+     */
+    static function delete_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2)
+    {
+        Ossim_db::check_connection($conn);
         
-		$params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2);
-		
-		$rs = $conn->Execute($query, $params);
-		
+        $query = ossim_query("DELETE FROM plugin_reference WHERE 
+                plugin_id = ? AND plugin_sid = ? AND reference_id = ? AND reference_sid = ?");
+        
+        $params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2);
+        
+        $rs = $conn->Execute($query, $params);
+        
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
@@ -313,35 +318,40 @@ class Plugin_reference
             Log_action::log(91, $infolog);
             return 0;
         }
-	}
+    }
 
 
-	/**
-	 * This function modifies a rule in plugin_reference table
-	 * 
-	 * @param object $conn
-	 * @param int    $plugin_id1
-	 * @param int    $plugin_id2
-	 * @param int    $plugin_sid1
-	 * @param int    $plugin_sid2
-	 * @param int    $id1
-	 * @param int    $id2
-	 * @param int    $sid1
-	 * @param int    $sid2
-	 * 
-	 * @return int
-	 */
-	static function change_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2, $id1, $id2, $sid1, $sid2)
-	{
-	    Ossim_db::check_connection($conn);
-	    
-		$query = ossim_query("UPDATE plugin_reference SET plugin_id = ?, plugin_sid = ?, reference_id = ?, reference_sid = ? 
-		        WHERE plugin_id = ? AND reference_id = ? AND plugin_sid = ? AND reference_sid = ?");
-		
-		$params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2, $id1, $id2, $sid1, $sid2);
-		
-		$rs = $conn->Execute($query, $params);
-		
+    /**
+     * This function modifies a rule in plugin_reference table
+     * 
+     * @param object $conn
+     * @param int    $plugin_id1
+     * @param int    $plugin_id2
+     * @param int    $plugin_sid1
+     * @param int    $plugin_sid2
+     * @param int    $id1
+     * @param int    $id2
+     * @param int    $sid1
+     * @param int    $sid2
+     * 
+     * @return int
+     */
+    static function change_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2, $id1, $id2, $sid1, $sid2)
+    {
+        Ossim_db::check_connection($conn);
+
+        if (!self::check_rule($conn, $plugin_id1, $plugin_sid1))
+        {
+            Av_exception::throw_error(Av_exception::USER_ERROR, _('Unable to set cross-correlation rule. Selected "Data Source" and "Event Type" are included in another rule'));
+        }
+
+        $query = ossim_query("UPDATE plugin_reference SET plugin_id = ?, plugin_sid = ?, reference_id = ?, reference_sid = ? 
+                WHERE plugin_id = ? AND reference_id = ? AND plugin_sid = ? AND reference_sid = ?");
+        
+        $params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2, $id1, $id2, $sid1, $sid2);
+        
+        $rs = $conn->Execute($query, $params);
+        
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
@@ -356,7 +366,42 @@ class Plugin_reference
 
             return 0;
         }
-	}
+    }
+
+
+    /**
+     * This function check if exists another rule for given id/sid pair
+     * 
+     * @param object $conn
+     * @param int    $plugin_id
+     * @param int    $plugin_sid
+     * 
+     * @return int
+     */
+    static function check_rule($conn, $plugin_id, $plugin_sid)
+    {
+        Ossim_db::check_connection($conn);
+
+        $query = ossim_query("SELECT count(*) as total FROM plugin_reference WHERE plugin_id = ? AND plugin_sid = ?");
+
+        $params = array($plugin_id, $plugin_sid);
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        else
+        {
+            if (intval($rs->fields['total']) > 1)
+            {
+                return FALSE;
+            }
+        }
+
+        return TRUE;
+    }
 }
 
 /* End of file plugin_reference.inc */

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -23,7 +23,6 @@ configure_sudoers(){
     grep --fixed-strings --quiet "%sudo ALL=(ALL) ALL" /etc/sudoers || echo "%sudo ALL=(ALL) ALL" >> /etc/sudoers
 }
 
-. /usr/share/debconf/confmodule
 
 if [ "$OSSIM_DEBUG" = "TRUE" ];then
    set -x
@@ -32,17 +31,31 @@ fi
 chown avapi:alienvault /usr/share/alienvault/api_core/bin/alienvault/virtual_env_run
 chmod 0750 /usr/share/alienvault/api_core/bin/alienvault/virtual_env_run
 
-#chmod 755 /etc/ansible/facts.d/*.fact 1>&2  > /dev/null && exit 0
+EVENT_STATS_FOLDER="/var/lib/ossim/rrd/event_stats"
+mkdir -p $EVENT_STATS_FOLDER
+chown avapi:alienvault -R $EVENT_STATS_FOLDER
+chmod 750 -R $EVENT_STATS_FOLDER
 
-TOREMOVE=(
-	/etc/ansible/facts.d/avalaible_plugins.fact
-	/etc/ansible/facts.d/enabled_plugins.fact
-	/etc/ansible/facts.d/alienvault_center.fact
-)
-for item in ${TOREMOVE[*]}
+#chmod 755 /etc/ansible/facts.d/*.fact 1>&2  > /dev/null && exit
+
+rm -f /etc/ansible/facts.d/avalaible_plugins.fact
+rm -f /etc/ansible/facts.d/enabled_plugins.fact
+rm -f /etc/ansible/facts.d/alienvault_center.fact
+
+# Set log file permissions
+API_LOG_DIR="/var/log/alienvault/api"
+API_LOG="$API_LOG_DIR/api.log"
+API_BACKUP_NOTIF_LOG="$API_LOG_DIR/backup-notifications.log"
+API_LOGGER_NOTIF_LOG="$API_LOG_DIR/logger-notifications.log"
+[ -d "$API_LOG_DIR" ] || mkdir -p -m 0750 "$API_LOG_DIR"
+for logfile in $API_LOG $API_BACKUP_NOTIF_LOG $API_LOGGER_NOTIF_LOG
 do
-	rm -f $item
+    [ -f "$logfile" ] || touch "$logfile"
+    chmod 644 "$logfile"*
 done
+chown avapi:alienvault $API_LOG_DIR -R
+
+
 
 case "$1" in
     configure)

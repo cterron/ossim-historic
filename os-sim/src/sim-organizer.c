@@ -99,15 +99,12 @@ static void       sim_organizer_store_event                     (SimOrganizer *o
 
 /* Risk levels */
 static void       sim_organizer_risk_levels                     (SimEvent     *event);
-static void       sim_organizer_update_host_c_risk_level        (SimEvent     *event);
-static void       sim_organizer_update_host_a_risk_level        (SimEvent     *event);
-static void       sim_organizer_update_net_c_risk_level         (SimEvent     *event);
-static void       sim_organizer_update_net_a_risk_level         (SimEvent     *event);
 
 /* insert functions */
 static void sim_organizer_snort_idm_data_insert                 (SimDatabase  *db_snort,
                                                                  SimEvent     *event);
-
+static void sim_organizer_snort_pulses_insert                   (SimDatabase *db_snort,
+                                                                 SimEvent * event);
 /* GType Functions */
 
 static void
@@ -536,110 +533,13 @@ sim_organizer_reprioritize(SimOrganizer *organizer, SimEvent *event,
   //with the "old" priority. Its needed to re-write the data and modify the priority (if the policy modifies it, of course).
 }
 
-/**
- * sim_organizer_update_host_c_risk_level:
- * @event: a #SimEvent
- *
- * If there is any host_level in context for @event src ip
- * then update C risk
- * else create new host_level with C risk
- */
-static void
-sim_organizer_update_host_c_risk_level (SimEvent *event)
-{
-  SimHost *host;
-
-  host = sim_context_get_host_by_inet (event->context, event->src_ia);
-
-  if (host)
-  {
-    sim_host_update_c (host, event->risk_c);
-    sim_db_update_host_risk_level (ossim.dbossim, host); /* DB update */
-    g_object_unref (host);
-  }
-  else
-  {
-    /* Create new host */
-    host = sim_host_new (event->src_ia, NULL, "", DEFAULT_ASSET, event->risk_c, 0);
-    if (host)
-    {
-      sim_context_append_host (event->context, host);
-      sim_db_update_host_risk_level (ossim.dbossim, host); /* DB insert */
-      g_object_unref (host);
-    }
-  }
-}
-
-/**
- * sim_organizer_update_host_a_risk_level:
- * @event: a #SimEvent
- *
- * If there is any host_level in context for @event dst ip
- * then update A risk
- * else create new host_level with A risk
- */
-static void
-sim_organizer_update_host_a_risk_level (SimEvent *event)
-{
-  SimHost *host;
-
-  host = sim_context_get_host_by_inet (event->context, event->dst_ia);
-  if (host)
-  {
-    sim_host_update_a (host, event->risk_a);
-    sim_db_update_host_risk_level (ossim.dbossim, host); /* DB update */
-    g_object_unref (host);
-  }
-  else
-  {
-    /* Create new host_level */
-    host = sim_host_new (event->dst_ia, NULL, "", DEFAULT_ASSET, 0, event->risk_a);
-    if (host)
-    {
-      sim_context_append_host (event->context, host);
-      sim_db_update_host_risk_level (ossim.dbossim, host); /* DB insert */
-      g_object_unref (host);
-    }
-  }
-}
-
-/**
- * sim_organizer_update_net_c_risk_level:
- * @event: a #SimEvent
- *
- * Get the @event dst ip closest net in homenet
- */
-static void
-sim_organizer_update_net_c_risk_level (SimEvent *event)
-{
-  if (!event->src_net)
-    return;
-
-  sim_net_plus_c (event->src_net, event->risk_c);
-}
-
-/**
- * sim_organizer_update_net_a_risk_level:
- * @event: a #SimEvent
- *
- * Get the @event src ip closest net in homenet
- */
-static void
-sim_organizer_update_net_a_risk_level (SimEvent *event)
-{
-  if (!event->dst_net)
-    return;
-
-  sim_net_plus_a (event->dst_net, event->risk_a);
-}
 
 /**
  * sim_organizer_risk_levels:
  * @organizer: #SimOrganizer
  * @event: a #SimEvent
  *
- * 1.- Update everything's C and A. If there is not local DB, it only will update memory, enough to forward events.
- * 2.- Calculate Risk. If Risk >= 1 then transform the event into an alarm
+ * Calculate Risk. If Risk >= 1 then transform the event into an alarm
  */
 static void
 sim_organizer_risk_levels (SimEvent *event)
@@ -655,10 +555,6 @@ sim_organizer_risk_levels (SimEvent *event)
   ossim_debug ("%s: priority:%d asset:%d reliability:%d risk_c:%f", __func__,
                event->priority, event->asset_src, event->reliability, event->risk_c);
 
-  /* Updates Host and Net Level C */
-  sim_organizer_update_host_c_risk_level (event);
-  sim_organizer_update_net_c_risk_level (event);
-
   /* Attack risk */
   event->asset_dst = sim_context_get_inet_asset (event->context, event->dst_ia);
 
@@ -671,10 +567,6 @@ sim_organizer_risk_levels (SimEvent *event)
 
   ossim_debug ("%s: priority:%d asset:%d reliability:%d risk_a:%f", __func__,
                event->priority, event->asset_dst, event->reliability, event->risk_a);
-
-  /* Updates Host and Net Level A */
-  sim_organizer_update_host_a_risk_level (event);
-  sim_organizer_update_net_a_risk_level (event);
 }
 
 /*
@@ -782,7 +674,9 @@ sim_organizer_snort_event_update_acid_event(SimDatabase *db_snort,
   conn = sim_database_get_conn (db_snort);
 
   if (event->time_str)
-    timestamp = g_strdup_printf ("%s", event->time_str);
+  {
+    timestamp = sim_str_escape(event->time_str, conn, 0);
+  }
   else
   {
     timestamp = g_new0 (gchar, TIMEBUF_SIZE);
@@ -881,6 +775,7 @@ sim_organizer_snort_event_insert(SimDatabase *db_snort, SimEvent *event,
   sim_organizer_snort_extra_data_insert(db_snort, event);
   sim_organizer_snort_reputation_data_insert(ossim.dbsnort, event);
   sim_organizer_snort_idm_data_insert (ossim.dbsnort, event);
+  sim_organizer_snort_pulses_insert (ossim.dbsnort, event);
 
   //sim_organizer_snort_ossim_event_insert (db_snort, event, sid, cid);
 }
@@ -1177,6 +1072,7 @@ sim_organizer_snort(SimOrganizer *organizer, SimEvent *event)
     sim_organizer_snort_extra_data_insert(ossim.dbsnort, event);
     sim_organizer_snort_reputation_data_insert(ossim.dbsnort, event);
     sim_organizer_snort_idm_data_insert (ossim.dbsnort, event);
+    sim_organizer_snort_pulses_insert (ossim.dbsnort, event);
   }
 }
 
@@ -1336,5 +1232,18 @@ sim_organizer_run_role (SimOrganizer *organizer,
 
   return;
 }
+static void
+sim_organizer_snort_pulses_insert (SimDatabase *db_snort, SimEvent *event)
+{
+  gchar *query = NULL;
 
+  g_return_if_fail (SIM_IS_DATABASE (db_snort));
+  g_return_if_fail (SIM_IS_EVENT (event));
+
+  if (g_hash_table_size (event->otx_data) == 0)
+    return;
+  query = sim_event_pulses_get_insert_clause (sim_database_get_conn (db_snort), event);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+}
 // vim: set tabstop=2:

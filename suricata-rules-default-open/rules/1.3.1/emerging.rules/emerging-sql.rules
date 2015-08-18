@@ -925,7 +925,7 @@ alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 139 (msg:"GPL SQL sp_password passwo
 alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 139 (msg:"GPL SQL xp_cmdshell program execution"; flow:to_server,established; content:"x|00|p|00|_|00|c|00|m|00|d|00|s|00|h|00|e|00|l|00|l|00|"; offset:32; nocase; classtype:attempted-user; sid:2100681; rev:7;)
 
 #
-alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 139 (msg:"GPL SQL xp_printstatements possible buffer overflow"; flow:to_server,established; content:"x|00|p|00|_|00|p|00|r|00|i|00|n|00|t|00|s|00|t|00|a|00|t|00|e|00|m|00|e|00|n|00|t|00|s|00|"; offset:32; nocase; reference:bugtraq,2041; reference:cve,2000-1086; reference:url,www.microsoft.com/technet/security/bulletin/MS00-092.mspx; classtype:attempted-user; sid:2100690; rev:10;)
+#alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 139 (msg:"GPL SQL xp_printstatements possible buffer overflow"; flow:to_server,established; content:"x|00|p|00|_|00|p|00|r|00|i|00|n|00|t|00|s|00|t|00|a|00|t|00|e|00|m|00|e|00|n|00|t|00|s|00|"; offset:32; nocase; reference:bugtraq,2041; reference:cve,2000-1086; reference:url,www.microsoft.com/technet/security/bulletin/MS00-092.mspx; classtype:attempted-user; sid:2100690; rev:10;)
 
 #
 alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 1433 (msg:"GPL SQL MSSQL shellcode attempt 2"; flow:to_server,established; content:"H|00|%|00|x|00|w|00 90 00 90 00 90 00 90 00 90 00|3|00 C0 00|P|00|h|00|.|00|"; classtype:shellcode-detect; sid:2100693; rev:7;)
@@ -949,13 +949,13 @@ alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 3306 (msg:"GPL SQL MYSQL root login 
 alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 3306 (msg:"GPL SQL MYSQL show databases attempt"; flow:to_server,established; content:"|0F 00 00 00 03|show databases"; classtype:protocol-command-decode; sid:2101776; rev:4;)
 
 #
-alert tcp $SQL_SERVERS 139 -> $EXTERNAL_NET any (msg:"GPL SQL sa login failed"; flow:from_server,established; content:"Login failed for user 'sa'"; offset:83; reference:bugtraq,4797; reference:cve,2000-1209; classtype:attempted-user; sid:2100680; rev:10;)
+#alert tcp $SQL_SERVERS 139 -> $EXTERNAL_NET any (msg:"GPL SQL sa login failed"; flow:from_server,established; content:"Login failed for user 'sa'"; offset:83; reference:bugtraq,4797; reference:cve,2000-1209; classtype:attempted-user; sid:2100680; rev:10;)
 
 #
-alert tcp $SQL_SERVERS 1433 -> $EXTERNAL_NET any (msg:"GPL SQL sa brute force failed login attempt"; flow:from_server,established; content:"Login failed for user 'sa'"; threshold:type threshold, track by_src, count 5, seconds 2; reference:bugtraq,4797; reference:cve,2000-1209; reference:nessus,10673; classtype:unsuccessful-user; sid:2103152; rev:4;)
+#alert tcp $SQL_SERVERS 1433 -> $EXTERNAL_NET any (msg:"GPL SQL sa brute force failed login attempt"; flow:from_server,established; content:"Login failed for user 'sa'"; threshold:type threshold, track by_src, count 5, seconds 2; reference:bugtraq,4797; reference:cve,2000-1209; reference:nessus,10673; classtype:unsuccessful-user; sid:2103152; rev:4;)
 
 #
-alert tcp $SQL_SERVERS 1433 -> $EXTERNAL_NET any (msg:"GPL SQL sa brute force failed login unicode attempt"; flow:from_server,established; content:"L|00|o|00|g|00|i|00|n|00| |00|f|00|a|00|i|00|l|00|e|00|d|00| |00|f|00|o|00|r|00| |00|u|00|s|00|e|00|r|00| |00|'|00|s|00|a|00|'|00|"; threshold:type threshold, track by_src, count 5, seconds 2; reference:bugtraq,4797; reference:cve,2000-1209; reference:nessus,10673; classtype:unsuccessful-user; sid:2103273; rev:4;)
+#alert tcp $SQL_SERVERS 1433 -> $EXTERNAL_NET any (msg:"GPL SQL sa brute force failed login unicode attempt"; flow:from_server,established; content:"L|00|o|00|g|00|i|00|n|00| |00|f|00|a|00|i|00|l|00|e|00|d|00| |00|f|00|o|00|r|00| |00|u|00|s|00|e|00|r|00| |00|'|00|s|00|a|00|'|00|"; threshold:type threshold, track by_src, count 5, seconds 2; reference:bugtraq,4797; reference:cve,2000-1209; reference:nessus,10673; classtype:unsuccessful-user; sid:2103273; rev:4;)
 
 #
 alert tcp $SQL_SERVERS 1433 -> $EXTERNAL_NET any (msg:"GPL SQL sa login failed"; flow:from_server,established; content:"Login failed for user 'sa'"; reference:bugtraq,4797; reference:cve,2000-1209; reference:nessus,10673; classtype:unsuccessful-user; sid:2100688; rev:11;)

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -76,7 +76,7 @@ class OssimMiniConf :
         except IOError, e:
             logger.error("Error opening OSSIM configuration file (%s)" % e)
             sys.exit()
-       
+
         pattern = re.compile("^(\S+)\s*=\s*(\S+)")
 
         for line in config:
@@ -84,7 +84,7 @@ class OssimMiniConf :
             if result is not None:
                 (key, item) = result.groups()
                 self[key] = item
-       
+
         config.close()
 
 
@@ -94,11 +94,6 @@ class OssimConf (OssimMiniConf) :
         self.__configfile = config_file
         OssimMiniConf.__init__(self, config_file)
         self._get_db_conf()
-#        if os.path.isfile(Const.ENCRYPTION_KEY_FILE):
-#            config = ConfigParser.ConfigParser()
-#            config.readfp(open(Const.ENCRYPTION_KEY_FILE))
-#            self["encryptionKey"] = config.get('key-value', 'key')
-
 
     def _get_db_conf(self):
 
@@ -106,7 +101,6 @@ class OssimConf (OssimMiniConf) :
         db = OssimDB(self[VAR_DB_HOST], self[VAR_DB_SCHEMA], self[VAR_DB_USER], self[VAR_DB_PASSWORD])
         db.connect()
         #Reads all the frameworkd configuration values.
-        #query = "select * from config where conf like 'frameworkd_%%'"
         query = "select * from config"
         fmk_table_values = db.exec_query(query)
         for row in fmk_table_values:
@@ -114,8 +108,6 @@ class OssimConf (OssimMiniConf) :
 
         query = ''
         if not self._conf.has_key(VAR_KEY_FILE):
-            #logger.error("Invalid value for %s int the database" % VAR_KEY_FILE)
-            #return
             self._conf[VAR_KEY_FILE] = '/etc/ossim/framework/db_encryption_key'
         keyfile = self._conf[VAR_KEY_FILE]
         useEncryption = False
@@ -145,11 +137,5 @@ class OssimConf (OssimMiniConf) :
                             self[row["conf"]] = hash[0]["value"]
                         else:
                             logger.error("No database value for conf: %s" % row["conf"])
-
-
-if __name__ == "__main__":
-    c = OssimConf(DEFAULT_CONFIG_FILE)
-    print c
-
 
 # vim:ts=4 sts=4 tw=79 expandtab:

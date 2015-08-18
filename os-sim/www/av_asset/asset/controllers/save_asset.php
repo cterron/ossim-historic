@@ -52,8 +52,6 @@ $validate = array(
     'sboxs[]'       =>  array('validation' => 'OSS_ALPHA, OSS_SCORE, OSS_PUNC, OSS_AT',        'e_message'  =>  'illegal:' . _('Sensors')),
     'os'            =>  array('validation' => 'OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT',         'e_message'  =>  'illegal:' . _('Operating System')),
     'model'         =>  array('validation' => 'OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT',         'e_message'  =>  'illegal:' . _('Model')),
-    'threshold_a'   =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('Threshold A')),
-    'threshold_c'   =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('Threshold C')),
     'devices[]'     =>  array('validation' => 'OSS_DIGIT, OSS_PUNC, OSS_NULLABLE',             'e_message'  =>  'illegal:' . _('Devices')),
     'latitude'      =>  array('validation' => 'OSS_NULLABLE, OSS_DIGIT, OSS_SCORE, OSS_PUNC',  'e_message'  =>  'illegal:' . _('Latitude')),
     'longitude'     =>  array('validation' => 'OSS_NULLABLE, OSS_DIGIT, OSS_SCORE, OSS_PUNC',  'e_message'  =>  'illegal:' . _('Longitude')),
@@ -129,8 +127,6 @@ $asset_value  = POST('asset_value');
 $latitude     = POST('latitude');
 $longitude    = POST('longitude');
 $zoom         = POST('zoom');
-$threshold_a  = POST('threshold_a');
-$threshold_c  = POST('threshold_c');
 $os           = POST('os');
 $model        = POST('model');
 $sensors      = $_POST['sboxs'];
@@ -188,7 +184,7 @@ if (empty($validation_errors))
 
             if ($cnd_1 && !$cnd_2)
             {
-                $validation_errors['asset_ip'] = sprintf(_("Error! The IP %s is not allowed.  Please check your asset and network settings"), $ip);
+                $validation_errors['asset_ip'] = sprintf(_("Error! The IP %s is not allowed. Please check with your account admin for more information"), $ip);
 
                 break;
             }
@@ -329,9 +325,18 @@ else
                 $host->set_location($latitude, $longitude, $zoom);
 
                 $host->set_asset_value($asset_value);
-                $host->set_threshold_c($threshold_c);
-                $host->set_threshold_a($threshold_a);
-                $host->set_os($os);
+
+
+                $os_data = array(
+                    "value"  => $os,
+                    "source"  => array(
+                        "id"  => 1
+                    )
+                );
+
+                $host->set_os($os_data);
+
+                
                 $host->set_model($model);
 
                 $host->set_devices($devices);

@@ -363,6 +363,7 @@ function fill_filter_list(data, page)
         var id    = value.id;
         var name  = value.name;
         var extra = value.extra;
+        var title = value.title;
         var cls   = value.class;
         var chk   = (value.checked) ? true : false;
         var value = '';
@@ -389,10 +390,13 @@ function fill_filter_list(data, page)
             "data-id": id
         });
         
+        
+        var _tip_title = (typeof title != 'undefined' && title != '') ? title : name;
+        
         $("<label></label>", 
         {
             "class" : "filter_list_input",
-            "title" : name
+            "title" : _tip_title
         }).append(input).append(name).appendTo('#column_'+col);
         
         i++;
@@ -403,6 +407,7 @@ function fill_filter_list(data, page)
     
     set_pagination(total, page);
     
+    activate_search_inputs();
 }
 
 
@@ -418,6 +423,20 @@ function activate_search_inputs()
     $('#filter_search_input').prop("disabled", false);
     $('body').css('cursor', 'default');
     
+    var _exclusive = $('.exclusive').prev();
+    
+    if (typeof _exclusive != 'undefined')
+    {
+        if (_exclusive.attr('checked') == 'checked')
+        {
+            $('.filter_list_input input').prop("disabled", true);
+            _exclusive.prop("disabled", false);
+        }
+        else if ($('.filter_list_input input:checked').length > 0)
+        {
+            _exclusive.prop("disabled", true);
+        }
+    }
 }
 
 

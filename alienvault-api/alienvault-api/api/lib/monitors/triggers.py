@@ -65,6 +65,10 @@ class TriggerCondition(object):
         "MONITOR_SYSTEM_CHECK_DB": 16,
         "MONITOR_WEBUI_DATA": 18,
         "MONITOR_SYSTEM_REBOOT_NEEDED": 20,
+        "MONITOR_DOWNLOAD_PULSES": 21,
+        "MONITOR_UPDATE_HOST_PLUGINS": 22,
+        "MONITOR_INSECURE_VPN": 23,
+        "MONITOR_FEDERATED_OTX_KEY": 24,
         "CHECK_TRIGGERS": 1500,
     }
 

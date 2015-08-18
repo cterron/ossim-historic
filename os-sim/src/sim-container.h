@@ -114,6 +114,9 @@ void            sim_container_load_sensors                      (SimContainer * 
 void            sim_container_reload_sensors                    (SimContainer  *container);
 void            sim_container_add_sensor_to_hash_table          (SimContainer * container,
                                                                  SimSensor    * sensor);
+void            sim_container_remove_sensor_from_hash_table     (SimContainer * container,
+                                                                 SimSensor * sensor);
+
 SimSensor *     sim_container_get_sensor_by_name                (SimContainer  *container,
                                                                  const gchar   *name);
 void            sim_container_set_sensor_by_id                  (SimContainer * container,
@@ -225,8 +228,6 @@ SimContext *      sim_container_get_context_by_name             (SimContainer  *
                                                                  gchar         *context_name);
 SimContext *      sim_container_get_engine_ctx                  (SimContainer  *container);
 void              sim_container_update_sensor_events            (SimContainer  *container);
-void              sim_container_update_recovery                 (SimContainer  *container,
-                                                                 SimDatabase   *database);
 guint             sim_container_get_total_backlogs              (SimContainer  *container);
 void              sim_container_remove_expired_backlogs         (SimContainer  *container);
 void              sim_container_remove_expired_group_alarms     (SimContainer  *container);

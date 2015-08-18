@@ -28,7 +28,7 @@ cmd="
 cd
 exit_code=0
 source /usr/share/alienvault/api_core/bin/activate
-python /usr/share/alienvault/api_core/bin/alienvault/\"$1\"  ${@:2};  exit_code=\$?
+python -W ignore::UserWarning /usr/share/alienvault/api_core/bin/alienvault/\"$1\"  ${@:2};  exit_code=\$?
 deactivate
 exit \$exit_code
 "

@@ -93,7 +93,7 @@ function draw_nets_by_os($conn, $data)
     }
     else
     {
-        $os_sql = 'AND hp.value LIKE "%linux%"';
+        $os_sql = 'AND (hp.value LIKE "%linux%" OR hp.value LIKE "%alienvault%")';
     }
 
     $sql = "SELECT DISTINCT hex(n.id) AS id, n.name AS name, n.ips as cidr
@@ -177,7 +177,7 @@ function draw_hosts_by_nets_os($conn, $data)
     }
     else
     {
-        $os_sql = 'AND hp.value LIKE "%linux%"';
+        $os_sql = 'AND (hp.value LIKE "%linux%" OR hp.value LIKE "%alienvault%")';
     }
 
     

@@ -333,7 +333,7 @@ class Nmap_parser
                                     if (!empty($os))
                                     {
                                         $os_gen = (string)$osclass->attributes()->osgen;
-                                        $os    .= (!empty($os_gen)) ? '/'.$os_gen : '';
+                                        $os    .= (!empty($os_gen)) ? ' '.$os_gen : '';
                                     }
 
                                     //Setting Operating System -> Add first valid
@@ -487,6 +487,7 @@ class Nmap_parser
             'scanned_ips' => array()
         );
 
+
         if(json_last_error() == JSON_ERROR_NONE && !empty($json['result']))
         {
             self::set_sensor($sensor_id);
@@ -575,7 +576,7 @@ class Nmap_parser
                             if (!empty($os))
                             {
                                 $os_gen = $osclass['osgen'];
-                                $os    .= (!empty($os_gen)) ? '/'.$os_gen : '';
+                                $os    .= (!empty($os_gen)) ? ' '.$os_gen : '';
                             }
 
                             //Setting Operating System -> Add first valid

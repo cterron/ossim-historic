@@ -65,13 +65,9 @@ my $server_hostname;
 my $server_ip;
 my $framework_host;
 my $framework_port;
-my $ossim_user;
 my $db_pass;
 my $db_pass_last;
 my $db_host;
-my $snort_user;
-my $osvdb_user;
-my @rservers_arr;
 # FIXME
 my ( $stdout, $stderr ) = ( q{}, q{} );
 
@@ -106,10 +102,6 @@ sub config_profile_server() {
         $server_uuid = $current_uuid if ($current_uuid);
     }
 
-    $ossim_user = "root";
-    $snort_user = "root";
-    $osvdb_user = "root";
-
     my @profiles_arr;
 
     if ( $config{'profile'} eq "all-in-one" ) {
@@ -118,8 +110,6 @@ sub config_profile_server() {
     else {
         @profiles_arr = split( /,\s*/, $config{'profile'} );
     }
-
-    @rservers_arr = split( /;\s*/, ( $config{'rservers'} // q{} ) );
 
     foreach my $profile (@profiles_arr) {
 
@@ -139,10 +129,8 @@ sub config_profile_server() {
 
     verbose_log("System UUID: $server_uuid");
 
-    configure_server_config_file();
     configure_server_reputation();
     configure_server_database();
-    # configure_server_new_path();
     configure_server_monit();
     configure_server_add_host();
     configure_server_reputation_cron();
@@ -162,86 +150,9 @@ sub config_profile_server() {
 
     return %reset;
 
-## cross correlate :
-## INSERT IGNORE INTO alienvault.server_role values ('server',0,0,1,0,0,0,0,1,0);
 }
 
 ###################################################
-
-
-sub configure_server_config_file(){
-
-    # TODO: this can be removed when ossim-server.postinst handles db configuration triggers, hostname trigger 
-    if ( -f $servercfg ) {
-        my $command
-            = "sed -i \"s:<server .*:<server port=\\\"$server_port\\\" name=\\\"$server_hostname\\\" ip=\\\"0.0.0.0\\\" id=\\\"$server_uuid\\\"\/>:\" $servercfg";
-        debug_log("$command");
-        system($command);
-        $command
-            = "sed -i \"s:<framework .*:<framework name=\\\"$server_hostname\\\"  ip=\\\"$framework_host\\\" port=\\\"$framework_port\\\"\/>:\" $servercfg";
-        debug_log("$command");
-        system($command);
-
-        $command
-            = "sed -i \"s:<datasource name=\\\"ossimDS\\\" .*:<datasource name=\\\"ossimDS\\\" provider=\\\"MySQL\\\" dsn=\\\"PORT=3306;USER=$ossim_user;PASSWORD=$db_pass;DATABASE=alienvault;HOST=$db_host\\\"\/>:\" $servercfg";
-        debug_log("$command");
-        system($command);
-
-        $command
-            = "sed -i \"s:<datasource name=\\\"snortDS\\\" .*:<datasource name=\\\"snortDS\\\" provider=\\\"MySQL\\\" dsn=\\\"PORT=3306;USER=$snort_user;PASSWORD=$db_pass;DATABASE=alienvault_siem;HOST=$db_host\\\"\/>:\" $servercfg";
-        debug_log("$command");
-        system($command);
-
-        $command
-            = "sed -i \"s:<datasource name=\\\"osvdbDS\\\" .*:<datasource name=\\\"osvdbDS\\\" provider=\\\"MySQL\\\" dsn=\\\"PORT=3306;USER=$osvdb_user;PASSWORD=$db_pass;DATABASE=alienvault_siem;HOST=$db_host\\\"\/>:\" $servercfg";
-        debug_log("$command");
-        system($command);
-
-        $command
-            = "sed -i \"s:sig_pass=.*:sig_pass=\\\"$db_pass\\\":\" $servercfg";
-        debug_log("$command");
-        system($command);
-
-        `cat $servercfg | grep -v rserver | grep -v "</config>" > /tmp/tmp.rserver.xml`;
-
-        if ( $config{'server_pro'} eq "yes" ) {
-
-            if ( $config{'rservers'} ne "no" ) {
-
-                if (@rservers_arr) {
-                    `echo "  <rservers>" >> /tmp/tmp.rserver.xml`;
-                    foreach (@rservers_arr) {
-                        my @cm = split( /;\s*/, $_ );
-                        foreach (@cm) {
-                            my @cms = split( /,\s*/, $_ );
-                            my ( $name, $ip, $port, $primary, $priority )
-                                = @cms;
-                            my $msg
-                                = "<rserver name=\\\"$name\\\" ip=\\\"$ip\\\" port=\\\"$port\\\" primary=\\\"$primary\\\" priority=\\\"$priority\\\"/>";
-                            system(
-                                "echo \"    $msg\" >> /tmp/tmp.rserver.xml");
-                            debug_log("$msg");
-                        }
-
-                    }
-                    `echo "  </rservers>" >> /tmp/tmp.rserver.xml`;
-                }
-            }
-        }
-
-        `echo "</config>" >> /tmp/tmp.rserver.xml ; mv /tmp/tmp.rserver.xml $servercfg`;
-
-
-		}
-
-		#my $idm_p = `cat $servercfg | grep "<idm "`;
-		#if ( $idm_p eq "" ){
-		#	my $command="sed -i \"s:</config>:<idm port=\\\"40002\\\" ip=\\\"0.0.0.0\\\"/>\\n</config>:\" $servercfg";
-		#	debug_log("$command");
-		#	system($command);
-		#}
-
-}
 
 sub configure_server_reputation(){
 
@@ -282,38 +193,6 @@ sub configure_server_database(){
     debug_log($command);
     system($command);
 
-#    verbose_log(
-#        "Server Profile: Updating alienvault.config table (default_context_id)");
-#    my $command
-#        = "echo \"INSERT IGNORE INTO config (conf, value) VALUES ('default_context_id', UUID());\" | ossim-db";
-#    debug_log($command);
-#    system($command);
-
-#    verbose_log(
-#        "Server Profile: Updating alienvault.config table (default_engine_id)");
-#    my $command
-#        = "echo \"INSERT IGNORE INTO config (conf, value) VALUES ('default_engine_id', UUID());\" | ossim-db";
-#    debug_log($command);
-#    system($command);
-
-
-# host_uuid , actualizar server_id en 2 registros de acl_entities:
-
-    # -- acl_entities
-#    verbose_log(
-#        "Server Profile: Updating acl_entities table");
-#    my $command
-#        = "echo \"INSERT IGNORE INTO acl_entities VALUES ((SELECT UNHEX(REPLACE (value, '-', '')) from config where conf like 'default_context_id'), (SELECT UNHEX(REPLACE (value, '-', '')) from config where conf like 'server_id'), 'My Company', 'admin', NULL, 'GMT', NULL, 'context');\" | ossim-db";
-#    debug_log($command);
-#    system($command);
-#
-#    my $command
-#        = "echo \"INSERT IGNORE INTO acl_entities VALUES ((SELECT UNHEX(REPLACE (value, '-', '')) from config where conf like 'default_engine_id'), (SELECT UNHEX(REPLACE (value, '-', '')) from config where conf like 'server_id'), 'Default Engine', 'admin', NULL, 'GMT', NULL, 'engine');\" | ossim-db";
-#    debug_log($command);
-#    system($command);
-
-
-
     my $tmz = `cat /etc/timezone`;
     $tmz =~ s/\n//g;
     $tmz =~ s/ //g;
@@ -329,15 +208,6 @@ sub configure_server_database(){
         = "echo \"UPDATE acl_entities SET server_id = (SELECT UNHEX(REPLACE (value, '-', '')) FROM config WHERE conf LIKE 'server_id'), timezone = '$tmz' WHERE id = (SELECT UNHEX(REPLACE (value, '-', '')) FROM config WHERE conf LIKE 'default_context_id');\" | ossim-db";
     debug_log($command);
     system($command);
-
-    # -- corr_engine_contexts
-#    verbose_log(
-#        "Server Profile: Updating corr_engine_contexts");
-#    my $command
-#        = "echo \"INSERT IGNORE INTO corr_engine_contexts VALUES ((SELECT UNHEX(REPLACE (value, '-', '')) from config where conf like 'default_engine_id'), (SELECT UNHEX(REPLACE (value, '-', '')) from config where conf like 'default_context_id'), 'Default');\" | ossim-db";
-#    debug_log($command);
-#    system($command);
-
 
     # -- server
     # n fwd servers could be inserted before local server entry, by avcenter, so we need to search for local uuid
@@ -376,31 +246,6 @@ sub configure_server_database(){
     debug_log($command);
     system($command);
         
-}
-
-# config new path for directives and user, disable some entities...
-sub configure_server_new_path(){
-
-   my $new_engine_id = `echo "select value from config where conf like 'default_engine_id'"| ossim-db | tail -1 $stdout $stderr`; $new_engine_id =~ s/\n//g;
-
-    system("mkdir -p /etc/ossim/server/$new_engine_id") if ( ! -d "/etc/ossim/server/$new_engine_id" ) ;
-
-    if ( ! -f "/etc/ossim/server/$new_engine_id/user.xml" ) {
-			my $ucont = '<?xml version=\"1.0\" encoding=\"UTF-8\"?>';
-
-			system ("echo \"$ucont\" > /etc/ossim/server/$new_engine_id/user.xml");
-
-	}
-
-    if ( ! -f "/etc/ossim/server/$new_engine_id/directives.xml" ) {
-	    if ( -f "/usr/share/alienvault-directives-free/d_clean/templates/directives.xml" ) {
-		system ("cp -af /usr/share/alienvault-directives-free/d_clean/templates/directives.xml /etc/ossim/server/$new_engine_id/");
-	    } elsif ( -f "/usr/share/alienvault-directives-pro/d_clean/templates/directives.xml" ) {
-		system ("cp -af /usr/share/alienvault-directives-pro/d_clean/templates/directives.xml /etc/ossim/server/$new_engine_id/");
-	    } else {
-		verbose_log("Server Profile: directives.xml template not found");
-	    }
-    }
 }
 
 sub configure_server_monit() {

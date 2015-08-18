@@ -94,7 +94,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
     
     <script class="code" type="text/javascript">
     
-		var links     = [<?php echo $links; ?>];		
+		var links     = <?php echo $links ?>;		
 		var isShowing = -1;
 				
 		function myMoveHandler(ev, gridpos, datapos, neighbor, plot) 
@@ -175,7 +175,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
                         barPadding: 8
                     }
                 },
-                series: [<?php echo $label;?>],
+                series: [<?php echo $label ?>],
                 grid:
 				{
 				    background: 'transparent',
@@ -190,7 +190,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
                 if ($colors != "") 
                 {   
                 ?>
-                    seriesColors: [ <?php echo $colors; ?> ], 
+                    seriesColors: [ <?php echo $colors ?> ], 
                 <?php 
                 } 
                 ?>
@@ -210,7 +210,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
                     xaxis:
                     {
                         renderer:$.jqplot.CategoryAxisRenderer,
-                        ticks:[<?php echo strtoupper($ticksValue) ?>]
+                        ticks: <?php echo $ticksValue ?>
                     },
                     yaxis:
                     {

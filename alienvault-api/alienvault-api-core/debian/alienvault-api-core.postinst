@@ -76,6 +76,12 @@ case "$1" in
         chown avapi:alienvault /var/log/alienvault/api -R
         chown avapi:alienvault /usr/share/alienvault/api_core -R
 
+	# Set log file permissions
+        for logfile in $(ls -1 /var/log/alienvault/api/) ; do
+            chmod 644 /var/log/alienvault/api/$logfile
+        done 
+        chown avapi:alienvault /var/log/alienvault/api -R
+  
         ## Ansible related
         set_system_id
 

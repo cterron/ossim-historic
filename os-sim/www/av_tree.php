@@ -34,8 +34,6 @@
 
 set_time_limit(0);
 
-ini_set('memory_limit', '2048M');
-
 require_once 'av_init.php';
 
 Session::useractive();

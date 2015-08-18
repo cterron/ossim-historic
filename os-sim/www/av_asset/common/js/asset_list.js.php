@@ -38,21 +38,193 @@ require_once 'av_init.php';
 
 function av_list()
 {
-    this.cfg = <?php echo Asset::get_path_url() ?>;
-    
-    this.ajax_url = this.cfg.common.controllers + 'asset_filter_ajax.php';
-    
-    this.selection_type = 'manual'; //manual or filter
-    
-    
-    this.datatables_assets = {};
-    
+    this.cfg        = <?php echo Asset::get_path_url() ?>;
+    this.ajax_url   = this.cfg.common.controllers + 'asset_filter_ajax.php';
     this.asset_type = '';
+    this.perms      = {};
+    this.table      = {};
+    this.actions    = {};
+
+    this.confirm_keys =
+    {
+        "yes": "<?php echo Util::js_entities(_('Yes')) ?>",
+        "no": "<?php echo Util::js_entities(_('No')) ?>"
+    };    
+ 
     
-    this.db = null;
-    
-    this.perms = {};
-    
+    this.init_list = function()
+    {
+        var __self = this;
+        
+        /* Line to prevent the autocomplete in the browser */ 
+        $('input').attr('autocomplete','off');
+        
+         //All available Actions 
+        this.actions = 
+        {
+            "edit":
+            {
+                "id"    : "edit",
+                "name"  : "<?php echo _('Edit') ?>",
+                "perms" : "edit",
+                "action": function()
+                {
+                    __self.edit_selection();
+                }
+            },
+            "delete":
+            {
+                "id"    : "delete",
+                "name"  : "<?php echo _('Delete') ?>",
+                "perms" : "delete",
+                "action": function()
+                {
+                    var n_assets = __self.get_num_selected_assets();
+                    var msg      = "";
+
+                    if (__self.asset_type == 'asset')
+                    {
+                        msg = "<?php echo Util::js_entities(_('Are you sure you want to permanently delete ### asset(s)?'))?>".replace('###', n_assets);
+                    }
+                    else if (__self.asset_type == 'group')
+                    {
+                        msg = "<?php echo Util::js_entities(_('Are you sure you want to permanently delete ### group(s)?'))?>".replace('###', n_assets);
+                    }
+                    else
+                    {
+                        msg = "<?php echo Util::js_entities(_('Are you sure you want to permanently delete ### network(s)?'))?>".replace('###', n_assets);
+                    }
+
+                    av_confirm(msg, __self.confirm_keys).done(function()
+                    {
+                        __self.delete_selection();
+                    });
+                }
+            },
+            "nmap_scan":
+            {
+                "id"    : "nmap_scan",
+                "name"  : "<?php echo _('Run Asset Scan') ?>",
+                "perms" : "nmap",
+                "action": function()
+                {
+                    __self.asset_scan();
+                }
+            },
+            "vulnerability_scan":
+            {
+                "id"    : "vulnerability_scan",
+                "name"  : "<?php echo _('Run Vulnerability Scan') ?>",
+                "perms" : "vulnerabilities",
+                "action": function()
+                {
+                    __self.vuln_scan();
+                }
+            },
+            "enable_monitoring":
+            {
+                "id"    : "enable_monitoring",
+                "name"  : "<?php echo _('Enable Availability Monitoring') ?>",
+                "perms" : "availability",
+                "action": function()
+                {
+                    __self.toggle_monitoring('enable');
+                }
+            },
+            "disable_monitoring":
+            {
+                "id"    : "disable_monitoring",
+                "name"  : "<?php echo _('Disable Availability Monitoring') ?>",
+                "perms" : "availability",
+                "action": function()
+                {
+                    __self.toggle_monitoring('disable');
+                }
+            },
+            "add_to_group":
+            {
+                "id"    : "add_to_group",
+                "name"  : "<?php echo _('Create/Add to Group') ?>",
+                "perms" : "",
+                "action": function()
+                {
+                    __self.save_to_group();
+                }
+            },
+            "add_note":
+            {
+                "id"    : "add_note",
+                "name"  : "<?php echo _('Add Note') ?>",
+                "perms" : "",
+                "action": function()
+                {
+                    __self.add_note();
+                }
+            },
+            "add_host":
+            {
+                "id"    : "add_host",
+                "name"  : "<?php echo _('Add Host') ?>",
+                "perms" : "create",
+                "action": function()
+                {
+                    __self.add_asset();
+                }
+            },
+            "add_network":
+            {
+                "id"    : "add_net",
+                "name"  : "<?php echo _('Add Network') ?>",
+                "perms" : "create",
+                "action": function()
+                {
+                    __self.add_asset();
+                }
+            },
+            "import_csv":
+            {
+                "id"    : "import_csv",
+                "name"  : "<?php echo _('Import CSV') ?>",
+                "perms" : "create",
+                "action": function()
+                {
+                    __self.import_csv();
+                }
+            },
+            "import_siem":
+            {
+                "id"    : "import_siem",
+                "name"  : "<?php echo _('Import From SIEM') ?>",
+                "perms" : "create",
+                "action": function()
+                {
+                    __self.import_siem();
+                }
+            },
+            "discover_new_assets":
+            {
+                "id"    : "discover_new_assets",
+                "name"  : "<?php echo _('Scan for New Assets') ?>",
+                "perms" : "create",
+                "action": function()
+                {
+                    __self.discover_new_assets();
+                }
+            },
+            "deploy_hids_agents":
+            {
+                "id"    : "deploy_hids_agents",
+                "name"  : "<?php echo _('Deploy HIDS Agents') ?>",
+                "perms" : "deploy_agents",
+                "action": function()
+                {
+                    __self.deploy_hids_agents();
+                }
+            }
+        }
+
+        __self.draw_dropdown_options($('[data-bind="dropdown-actions"]'), __self.allowed_actions);
+    }
     
     /**************************************************************************/
     /***************************  FILTER FUNCTIONS  ***************************/
@@ -83,10 +255,10 @@ function av_list()
     		beforeSend: function()
     		{
         	   __self.disable_search_inputs();
-        	   __self.show_search_loading();
     		},
     		success: function(data)
     		{
+        		
         		if (!data.error)
         		{
                     if (del_value)
@@ -100,13 +272,11 @@ function av_list()
                             __self.create_tag(tag_label, id, value);
                         }
                     }
-                    
                     __self.reload_table();
         		}
         		else
         		{
-        			__self.enable_search_inputs();
-        			__self.hide_search_loading();
+            		__self.enable_search_inputs();
             		show_notification('asset_notif', data.msg, 'nf_error', 5000, true);
         		}
     		},
@@ -121,7 +291,6 @@ function av_list()
                 }
                 
                 __self.enable_search_inputs();
-	    		__self.hide_search_loading();
 	    		
                 show_notification('asset_notif', errorThrown, 'nf_error', 5000, true);
     		}
@@ -204,9 +373,7 @@ function av_list()
                     }
     
                     __self.remove_all_filters();
-                    
                     __self.reload_table();
-
                 }
                 catch(Err)
                 {
@@ -256,7 +423,7 @@ function av_list()
     
     this.reload_table = function()
     {
-        this.datatables_assets.fnDraw();
+        this.table.reload_table();
     }
     
     
@@ -273,56 +440,8 @@ function av_list()
     
         return false;
     }
-    
-    
-    
-    /**************************************************************************/
-    /****************************  TRAY FUNCTIONS  ****************************/
-    /**************************************************************************/
-    
-    this.load_tray = function(row)
-    {
-        var __self = this;
-        var id     = $(row).attr('id');
-        
-        if (__self.datatables_assets.fnIsOpen(row))
-        {
-            $(row).next('tr').find('#tray_container').slideUp(300, function()
-            {
-                __self.datatables_assets.fnClose(row);
-            });
-        }
-        else
-        {
-            var wrapper = $('<div></div>',
-            {
-                'id'   : 'tray_container',    
-                'class': 'list_tray'
-            }).css('visibility', 'hidden');
-        
-            $('<div></div>',
-            {
-                'class': 'tray_triangle clear_layer'
-            }).appendTo(wrapper);
-            
-            $(wrapper).AV_asset_indicator(
-            {
-                'asset_type' : this.asset_type,
-                'asset_id'   : id,
-                'class'      : 'circle_tray',
-                'perms'      : this.perms
-            }).hide();
-            
-            __self.datatables_assets.fnOpen(row, wrapper, 'tray_details');
-            
-            wrapper.slideDown(300, function()
-            {
-                $(this).css('visibility', 'visible');
-            });
-        }
-    }
-    
-    
+
+   
         
     /**************************************************************************/
     /***************************  ACTION FUNCTIONS  ***************************/
@@ -332,11 +451,96 @@ function av_list()
     this.add_asset = function(){};
     
     /* Function to open export hosts page  */
-    this.export_selection = function(){};
+    this.export_selection = function(){};    
     
-    /* Function to delete all hosts which match with filter criteria */
-    this.delete_selection = function(){}; 
-    
+    /* Function to delete all assets which match with filter criteria */
+    this.delete_selection = function(){
+        
+        var __self = this;
+        
+        __self.save_selection().done(function()
+        {
+            //AJAX data
+
+            var h_data = 
+            {
+                "token" : Token.get_token("delete_" + __self.asset_type + "_bulk")
+            };
+
+            var _msg = "";
+
+            if (__self.asset_type == 'asset')
+            {
+                _msg = '<?php echo Util::js_entities(_("Deleting asset(s)... Please Wait")) ?>';
+            }
+            else if (__self.asset_type == 'group')
+            {
+                _msg = '<?php echo Util::js_entities(_("Deleting group(s)... Please Wait")) ?>';
+            }
+            else
+            {
+                _msg = '<?php echo Util::js_entities(_("Deleting network(s)... Please Wait")) ?>';
+            }
+
+            $.ajax(
+            {
+                type: "POST",
+                url: __self.cfg[__self.asset_type].controllers  + "bk_delete.php",
+                data: h_data,
+                dataType: "json",
+                beforeSend: function()
+                {
+                    $('#asset_notif').empty();
+
+                    show_loading_box('main_container', _msg , '');
+                },
+                success: function(data)
+                {
+                    hide_loading_box();
+
+                    __self.restart_search();
+
+                    show_notification('asset_notif', data.data, 'nf_success', 15000, true);
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+                    //Checking expired session
+                    var session = new Session(XMLHttpRequest, '');
+                    if (session.check_session_expired() == true)
+                    {
+                        session.redirect();
+                        return;
+                    }
+
+                    hide_loading_box();
+                    
+                    var _msg  = XMLHttpRequest.responseText;
+                    
+                    var _type = (_msg.match(/policy/)) ? 'nf_warning' : 'nf_error';
+
+                    show_notification('asset_notif', _msg, _type, 15000, true);
+
+                    __self.reload_table();
+                }
+            });
+        });
+    };
+
+
+    /*  Function to open edit assets form lightbox */
+    this.edit_selection = function()
+    {
+        var __self = this;
+
+        __self.save_selection().done(function()
+        {
+            var url   = __self.cfg.asset.views + "asset_form.php?edition_type=bulk&asset_type=" + __self.asset_type;
+            var title = "<?php echo Util::js_entities(_('Edit Assets')) ?>";
+
+            GB_show(title, url, '600', '825');
+
+        });
+    }
     
     /*  Function to open new host form lightbox  */
     this.add_note = function()
@@ -351,7 +555,6 @@ function av_list()
             GB_show(title, url, '350', '500');
             
         });
-
     }
     
     
@@ -428,165 +631,122 @@ function av_list()
                     show_notification('asset_notif', error, 'nf_error', 5000, true);
                 }
             });
-            
         });
     }
 
 
-    /*  Function to open new host form lightbox  */
-    this.show_tags = function(elem)
+    /*  Function to open deploy HIDS form lightbox  */
+    this.deploy_hids_agents = function()
+    {
+        var __self = this;
+
+        __self.save_selection().done(function()
+        {
+            var url   = __self.cfg.common.views  + 'bk_deploy_hids_form.php?type=' + __self.asset_type;
+            var title = "<?php echo Util::js_entities(_('Deploy HIDS Agents')) ?>";
+
+            GB_show(title, url, '60%', '750');
+        });
+    }
+
+
+    this.init_labels = function(elem)
     {
         var __self = this;
         
-        this.save_selection((__self.asset_type != 'asset')).done(function()
+        var labels = $("<img/>",
         {
-            elem.show_dropdown();
+            "id"            : "label_selection",
+            "class"         : "avt_action avt_img disabled",
+            "src"           : "/ossim/pixmaps/label.png",
+            "data-selection": "avt_action"
+        });
+
+        var av_dropdown_tag = labels.av_dropdown_tag( 
+        {
+            'load_tags_url'        : '<?php echo AV_MAIN_PATH?>/tags/providers/get_dropdown_tags.php',
+            'manage_components_url': '<?php echo AV_MAIN_PATH?>/tags/controllers/tag_components_actions.php',
+            'allow_edit'           : __self.perms.admin,
+            'tag_type'             : 'asset',
+            'select_from_filter'   : true,
+            'show_tray_triangle'   : true,
+            'on_save'              : function (status, data)
+            {
+                if (status == 'OK')
+                {
+                    show_notification('asset_notif', data['components_added_msg'], 'nf_success', 5000, true);
+                }
+                else
+                {
+                    show_notification('asset_notif', data, 'nf_error', 5000, true);
+                }
+            },
+            'on_delete'            : function (status, data)
+            {
+                if (status == 'OK')
+                {
+                    show_notification('asset_notif', data['components_deleted_msg'], 'nf_success', 5000, true);
+                }
+                else
+                {
+                    show_notification('asset_notif', data, 'nf_error', 5000, true);
+                }
+            }
+        });
+        
+        labels.appendTo(elem);
+        
+        labels.off('click').on('click', function()
+        {
+            if (!__self.action_enabled(this))
+            {
+                return false;
+            }
+            else
+            {
+                __self.save_selection((__self.asset_type != 'asset'));
+                av_dropdown_tag.show_dropdown();
+            }
         });
     }
-    
     
     
     /**************************************************************************/
     /*************************  SELECTION FUNCTIONS  **************************/
     /**************************************************************************/
-    
-    this.manage_check_selection = function(input)
-    {
-        var __self = this;
-        
-        if($(input).prop('checked'))
-        {
-            __self.db.save_check($(input).val());
-        }
-        else
-        {
-            __self.db.remove_check($(input).val());
-        }
-        
-        if (__self.selection_type == 'filter')
-        {
-            __self.db.clean_checked();
-            $('.asset_check:checked').each(function()
-            {
-                __self.db.save_check($(this).val());
-            });
-        }
-        
-        __self.selection_type = 'manual';
-        __self.manage_asset_selection();
-    }
-    
-    
+
     this.update_asset_counter = function()
     {
-        num = this.get_all_asset_filter();
+        num = this.table.get_total_items();
         
         $('#num_assets').text(this.number(num));
     }
-    
-    
-    this.manage_asset_selection = function()
-    {
-        var c_all   = $('.asset_check').length;
-        var c_check = $('.asset_check:checked').length;
-        var f_all   = this.get_all_asset_filter();
         
-        $('[data-bind="chk-all-assets"]').prop('checked', (c_all > 0 && c_all == c_check));
-        
-        if (this.selection_type == 'manual' && c_all > 0 && c_all == c_check && f_all > c_all)
-        {
-            var elem = $('[data-bind="msg-selection"]')
-            
-            var text1 = "<?php echo _('You have selected ### assets on this page.') ?>".replace('###', c_all);
-            var text2 = "<?php echo _('Select all ### assets.') ?>".replace('###', this.number(f_all));
-            
-            $('span', elem).text(text1);
-            $('a', elem).text(text2);
-            
-            elem.show();
-        }
-        else
-        {
-            $('[data-bind="msg-selection"]').hide();
-        }
-                        
-        this.update_asset_counter();        
-        this.update_button_status();
-    }
-    
-    
-    this.check_all_manual = function()
-    {
-        var status = $('[data-bind="chk-all-assets"]').prop('checked');
-        $('.asset_check').prop('checked', status).trigger('change');
-    }
-    
-    
-    this.check_all_filter = function()
-    {
-        $('[data-bind="msg-selection"]').hide();
-        this.selection_type = 'filter';
-        this.update_asset_counter();
-    }
-    
-    
-    this.get_all_asset_filter = function()
-    {
-        try
-        {
-            return this.datatables_assets.fnSettings()._iRecordsTotal;
-        }
-        catch(Err)
-        {
-            return 0;
-        }
-    }
-    
-    
     this.get_num_selected_assets = function()
     {
-        if (this.selection_type == 'filter')
-        {
-            return this.get_all_asset_filter();
-        }
-        else
-        {
-            return $('.asset_check:checked').length
-        }
+        return this.table.get_selected_items();
     }
     
     
     this.save_selection = function(members)
     {
-        members    = (typeof members != 'boolean') ? 0 : ~~members; 
+        members  = (typeof members != 'boolean') ? 0 : ~~members; 
         
-        var all    = 1;
-        var assets = [];
-        
-        if (this.selection_type == 'manual')
-        {
-            all = 0;
-            
-            $('.asset_check:checked').each(function(id, elem)
-            {
-                assets.push($(elem).val());
-            })
-        }
-           
+        var sel  = this.table.get_selection();
         var data =
         {
             "asset_type"  : this.asset_type,
-            "assets"      : assets,
-            "all"         : all,
+            "assets"      : sel['items'],
+            "all"         : sel['all'],
             "save_members": members
         };
 
         var token = Token.get_token("save_selection");  
         return $.ajax(
         {
-            type: "POST",
-            url: this.cfg.common.controllers  + "save_selection.php",
-            data: {"action": "save_list_selection", "token": token, "data": data},
+            type    : "POST",
+            url     : this.cfg.common.controllers  + "save_selection.php",
+            data    : {"action": "save_list_selection", "token": token, "data": data},
             dataType: "json"
         }).fail(function(obj)
         {
@@ -600,43 +760,7 @@ function av_list()
             
             show_notification('asset_notif', obj.responseText, 'nf_error', 15000, true);
         });
-        
     } 
-    
-    
-    this.save_members = function(id)
-    {
-        var __self = this;
-        
-        var data   =
-        {
-            "asset_id"   : id,
-            "asset_type" : __self.asset_type,
-            "member_type": 'asset',
-            "all"        : 1
-        };
-                
-        var token = Token.get_token("save_selection");
-        return $.ajax(
-        {
-            type: "POST",
-            url: this.cfg.common.controllers  + "save_selection.php",
-            data: {"action": "save_member_selection", "token": token, "data": data},
-            dataType: "json"
-        }).fail(function(obj)
-        {
-            //Checking expired session
-            var session = new Session(obj, '');
-            if (session.check_session_expired() == true)
-            {
-                session.redirect();
-                return;
-            }
-            
-            show_notification('asset_notif', obj.responseText, 'nf_error', 15000, true);
-        });
-    }
-    
     
     
     /**************************************************************************/
@@ -702,50 +826,7 @@ function av_list()
     /**************************************************************************/
     /***************************  DRAW FUNCTIONS  *****************************/
     /**************************************************************************/
-    
-    this.draw_asset_list = function(){};
-    
-     
-    this.update_button_status = function()
-    {
-        var num_hosts = this.get_num_selected_assets();
-        
-        if (num_hosts == 0)
-        {
-            $('#delete_selection').addClass('disabled');
-            $('#label_selection').addClass('disabled');
-            $('#edit_selection').addClass('disabled');
-            $('[data-bind="export-selection"]').addClass('disabled');
-            
-            $('#button_action').addClass('av_b_disabled');
-            $('[data-bind="dropdown-actions"]').removeAttr('id');
-        }
-        else
-        {
-            $('#delete_selection').removeClass('disabled');
-            $('#label_selection').removeClass('disabled');
-            $('#edit_selection').removeClass('disabled');
-            $('[data-bind="export-selection"]').removeClass('disabled');
-            
-            $('#button_action').removeClass('av_b_disabled');
-            $('[data-bind="dropdown-actions"]').attr('id', 'dropdown-actions');
-        }
-        
-        if (!this.perms['delete'])
-        {
-            $('#delete_selection').addClass('disabled');
-
-            $('#edit_selection').addClass('disabled');            
-        }
-        
-        if (!this.perms['create'])
-        {
-            $('#button_add').addClass('av_b_disabled');
-            
-            $('[data-bind="dropdown-add"]').removeAttr('id');
-        }
-    }
-    
+           
     this.action_enabled = function(elem)
     {
         if ($(elem).hasClass('disabled') || $(elem).hasClass('av_b_disabled'))
@@ -755,28 +836,7 @@ function av_list()
         
         return true;
     }
-    
-    this.show_search_loading = function()
-    {
-        $('.table_data tbody').prepend('<div class="dt_list_loading"><div/>');
-        $('.dataTables_processing').css('visibility', 'visible');
-        $('.table_data input').prop('disabled', true);
-        $('.dataTables_length select').prop('disabled', true);
-        $('.dt_footer').hide();
         
-    }
-    
-    
-    this.hide_search_loading = function()
-    {
-        $('.table_data .dt_list_loading').remove();
-        $('.dataTables_processing').css('visibility', 'hidden');  
-        $('.table_data input').prop('disabled', false);
-        $('.dataTables_length select').prop('disabled', false);
-        $('.dt_footer').show();
-        
-    }
-    
     
     this.disable_search_inputs = function()
     {
@@ -818,11 +878,8 @@ function av_list()
         //Restart range selectors
         this.disable_range_selector('all');
         
-        this.db.clean_checked();
-        
-        this.selection_type = 'manual';
-        $('.asset_check').prop('checked', false).trigger('change');
-    
+        this.clean_checked();
+            
         //Removing filter tags
         $("#tags_filters .tagit-choice").remove();
     
@@ -834,6 +891,11 @@ function av_list()
         $('.date_filter').datepicker("option", {minDate: null, maxDate: null});
     }
     
+    
+    this.clean_checked = function()
+    {
+        this.table.reset_selection();
+    }
     
     this.disable_range_selector = function(filter)
     {
@@ -860,6 +922,52 @@ function av_list()
     }
     
     
+    this.draw_dropdown_options = function(dropdown, options)
+    {   
+        var __self    = this;
+        var flag_hide = true;
+        
+        var ul = $('<ul/>',
+        {
+            'class': 'dropdown-menu'
+        });
+        
+        options.forEach(function(i,v)
+        {   
+            
+            if (!__self.actions[i] || __self.perms[__self.actions[i].perms] === false)
+            {
+                return true;
+            }
+
+            var item = __self.actions[i];
+            var li   = $('<li/>').appendTo(ul);
+            
+            $('<a/>',
+            {
+                "href" : "#" + v,
+                "id"   : item.id,
+                "text" : item.name,
+                "click": function()
+                {
+                    item.action();
+                }
+            }).appendTo(li);
+
+            flag_hide = false;
+        });
+        
+        if (!flag_hide)
+        {
+            ul.appendTo(dropdown);
+        }
+        else
+        {
+            $('[data-dropdown="#'+ dropdown.attr('id') +'"]').prop('disabled', true);
+            dropdown.hide();
+        }   
+    }
+    
     /**************************************************************************/
     /***************************  EXTRA FUNCTIONS  ****************************/
     /**************************************************************************/
@@ -879,6 +987,7 @@ function av_list()
         }
     }
     
+    
     this.number = function(n)
     {
         if (typeof $.number == 'function')
@@ -889,6 +998,6 @@ function av_list()
         {
             return n;
         }
-    }
+    }    
 
 }

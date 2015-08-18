@@ -36,19 +36,19 @@ require_once 'av_init.php';
 // Check permissions
 if (!Session::am_i_admin())
 {
-	 $config_nt = array(
-		'content' => _("You do not have permission to see this section"),
-		'options' => array (
-			'type'          => 'nf_error',
-			'cancel_button' => false
-		),
-		'style'   => 'width: 60%; margin: 30px auto; text-align:center;'
-	);
+     $config_nt = array(
+        'content' => _("You do not have permission to see this section"),
+        'options' => array (
+            'type'          => 'nf_error',
+            'cancel_button' => false
+        ),
+        'style'   => 'width: 60%; margin: 30px auto; text-align:center;'
+    );
 
-	$nt = new Notification('nt_1', $config_nt);
-	$nt->show();
+    $nt = new Notification('nt_1', $config_nt);
+    $nt->show();
 
-	die();
+    die();
 }
 
 $asset_id   = GET('asset_id');
@@ -61,7 +61,7 @@ ossim_valid($sensor_id,  OSS_HEX, OSS_NULLABLE,  'illegal:' . _('Sensor ID'));
 
 if (ossim_error()) 
 {
-	die(ossim_error());
+    die(ossim_error());
 }
 
 // Database Object
@@ -80,7 +80,7 @@ $asset_types = array(
 $not_allowed = FALSE;
 
 
-//Getting the vendors
+//Getting the asset info
 try
 {
     if (isset($_GET['asset_id']) && isset($_GET['asset_type']))
@@ -119,8 +119,6 @@ try
         }
         else
         {
-            $vendors = Software::get_hardware_vendors($conn, TRUE);
-            
             if ($asset_type == 'group')
             {
                 $related_sensors = $asset_object->get_sensors($conn);
@@ -149,7 +147,6 @@ try
 }
 catch(Exception $e)
 {
-    $vendors  = array();
     Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
 }
 
@@ -178,10 +175,10 @@ if ($not_allowed)
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	
-	<title> <?php echo _('AlienVault ' . (Session::is_pro() ? 'USM' : 'OSSIM')); ?> </title>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
-	<meta http-equiv="Pragma" content="no-cache"/>
+    
+    <title> <?php echo _('AlienVault ' . (Session::is_pro() ? 'USM' : 'OSSIM')); ?> </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
 
     <?php
 
@@ -202,103 +199,84 @@ if ($not_allowed)
 
         //JS Files
         $_files = array(
-            array('src' => 'jquery.min.js',             'def_path' => TRUE),
-            array('src' => 'jquery-ui.min.js',          'def_path' => TRUE),
-            array('src' => 'utils.js',                  'def_path' => TRUE),
-            array('src' => 'notification.js',           'def_path' => TRUE),
-            array('src' => 'token.js',                  'def_path' => TRUE),
-            array('src' => 'jquery.tipTip.js',          'def_path' => TRUE),
-            array('src' => 'jquery.select.js',          'def_path' => TRUE),
-            array('src' => 'jquery.dataTables.js',      'def_path' => TRUE),
-            array('src' => 'av_plugin_select.js.php',   'def_path' => TRUE),
-            array('src' => '/av_asset/common/js/asset_plugin_list.js.php', 'def_path' => FALSE),
+            array('src' => 'jquery.min.js',                                    'def_path' => TRUE),
+            array('src' => 'jquery-ui.min.js',                                 'def_path' => TRUE),
+            array('src' => 'utils.js',                                         'def_path' => TRUE),
+            array('src' => 'notification.js',                                  'def_path' => TRUE),
+            array('src' => 'token.js',                                         'def_path' => TRUE),
+            array('src' => 'jquery.tipTip.js',                                 'def_path' => TRUE),
+            array('src' => 'jquery.select.js',                                 'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.js',                             'def_path' => TRUE),
+            array('src' => 'av_plugin_select.js.php?sensor='.$selected_sensor, 'def_path' => TRUE),
+            array('src' => '/av_asset/common/js/asset_plugin_list.js.php',     'def_path' => FALSE),
         );
 
         Util::print_include_files($_files, 'js');
 
     ?>
 
-	<script type="text/javascript">
+    <script type="text/javascript">
 
-    	var __vendor_list = <?php echo json_encode($vendors) ?>;
-    	
-    	function apply_plugin_callback(data)
-    	{
-        	if (typeof data != 'undefined' && data != null)
-    		{
-                if (data.error)
-                {
-                    $('#gb_b_apply').removeClass('av_b_processing');
-                    show_notification('plugin_notif', data.msg, 'nf_error', 7500, true);
-                }
-                else
-                {
-                    if(typeof(top.frames['main'].force_reload) != 'undefined')
-                    {
-                        top.frames['main'].force_reload = 'plugins';
-                    }
-
-                    parent.GB_close();
-                }
+    /* This function saves the changes and closes de lightbox
+     *
+     * @param   data    Response from selectors jQuery plugin to know if there was some error
+     */
+    function apply_plugin_callback(data)
+    {
+        if (typeof data != 'undefined' && data != null)
+        {
+            if (data.error)
+            {
+                $('#gb_b_apply').removeClass('av_b_processing');
+                show_notification('plugin_notif', data.msg, 'nf_error', 7500, true);
             }
             else
             {
-                $('#gb_b_apply').removeClass('av_b_processing');
-                show_notification('plugin_notif', "<?php echo _('Sorry, operation was not completed due to an error when processing the request. Try again later.') ?>", 'nf_error', 7500, true);
+                if(typeof(top.frames['main'].force_reload) != 'undefined')
+                {
+                    top.frames['main'].force_reload = 'plugins';
+                }
+
+                parent.GB_close();
             }
-    	}
-
-    	
-
-    /*
-     * This function is called from av_plugin_select.js when it exists
-     * Instead of the default _get_selected_plugins()
-     * It returns the currently saved plugins between pages
-     */
-    function get_saved_plugins()
-    {
-        if (av_plugin_list.page_modified)
-        {
-            av_plugin_list.save_plugins();
         }
-        
-        return av_plugin_list.saved_plugins;
+        else
+        {
+            $('#gb_b_apply').removeClass('av_b_processing');
+            show_notification('plugin_notif', "<?php echo _('Sorry, operation was not completed due to an error when processing the request. Try again later.') ?>", 'nf_error', 7500, true);
+        }
     }
 
 
-    // Global plugin list object with dataTable in edit_mode
-    var av_plugin_list;
 
-	
-	$(document).ready(function()
-	{
+    /*************** Initialization ******************/
+    $(document).ready(function()
+    {
 
-	    // DataTable for asset plugin list
-	    var __p_config = {
-		    'maxrows'    : 8,
-	        'edit_mode'  : 1,
-	        'sensor_id'  : '<?php echo $selected_sensor ?>',
-	        'asset_data' : {
+        // DataTable for asset plugin list
+        var __p_config = {
+            'maxrows'    : 8,
+            'edit_mode'  : 1,
+            'sensor_id'  : '<?php echo $selected_sensor ?>',
+            'asset_data' : {
                 "asset_id"   : '<?php echo $asset_id ?>',
                 "asset_type" : '<?php echo $asset_type ?>'
-	        }
+            }
         }
 
-	    av_plugin_list = new Av_plugin_list(__p_config);
-	    av_plugin_list.draw();
+        var av_plugin_list = new Av_plugin_list(__p_config);
+        av_plugin_list.draw();
 
-	    
-	    // Button handlers
+        
+        // Button handlers
         $(document).on('change', '.select_plugin', function()
         {
             $('#gb_b_apply').prop("disabled", false);
         });
 
-        $('#default_sensor').on('change', function()
+        $(document).on('click', '.select2-remove-button', function()
         {
-            av_plugin_list.sensor_id = $('#default_sensor').val();
-            
-            av_plugin_list.dt_obj.fnDraw();
+            $('#gb_b_apply').prop("disabled", false);
         });
 
         $('#gb_b_apply').on('click', function()
@@ -310,16 +288,47 @@ if ($not_allowed)
 
             $(this).addClass('av_b_processing');
 
-            av_apply_plugin(apply_plugin_callback);
+            av_plugin_list.apply_changes(apply_plugin_callback);
             
         });
         
         $('#gb_b_cancel').on('click', function()
         {
             parent.GB_hide();
-        });        
-        
-	});
+        }); 
+
+
+        // Sensor selector
+        var _prev_sensor = false;
+
+        $('#default_sensor').on('focus', function ()
+        {
+            _prev_sensor = this.value;
+
+        }).on('change', function()
+        {
+            // Some changes are made for the selected sensor: Must Apply first
+            if ($('#gb_b_apply').prop("disabled") == false)
+            {
+                var _cur_sensor = this.value;
+                this.value = _prev_sensor;
+                var keys = {"yes": "<?php echo Util::js_entities(_('Yes')) ?>","no": "<?php echo Util::js_entities(_('No')) ?>"};
+                var msg  = "<?php echo _('The changes made to the selected sensor will be lost. Are you sure to change the sensor?') ?>";
+                
+                av_confirm(msg, keys).done(function()
+                {
+                    $('#default_sensor').val(_cur_sensor);
+                    presaved_data = {};
+                    $('#gb_b_apply').prop("disabled", true);
+                    av_plugin_list.change_sensor($('#default_sensor').val());
+                });
+            }
+            else
+            {
+                av_plugin_list.change_sensor($('#default_sensor').val());
+            }
+        });
+    });
 
   </script>
 
@@ -331,11 +340,7 @@ if ($not_allowed)
         
     <div id='plugin_container'>
         
-        <div class='plugin_title'>
-        <?php 
-            echo _('Confirm the vendor, model and version of the device shown. Click the button to enable the data source plugin for this asset.');    
-        ?>
-        </div>
+        <!-- <div class='plugin_title'></div> -->
 
         <div class='related_sensor' style='<?php echo (count($related_sensors)<=1) ? 'display:none' : '' ?>'>
         <form>
@@ -374,7 +379,7 @@ if ($not_allowed)
                     <th><?php echo _('Vendor') ?></th>
                     <th><?php echo _('Model') ?></th>
                     <th><?php echo _('Version') ?></th>
-                    <!--<th><button id='add_plugin' class='av_b_secondary'>+</button></th>-->
+                    <th class='plugin_column_add'></th>
                 </tr>
             </thead>   
                      
@@ -395,7 +400,7 @@ if ($not_allowed)
         </button>
         
         <button id='gb_b_apply' disabled>
-            <?php echo _('Apply') ?>
+            <?php echo _('Save') ?>
         </button>
         
     </div>

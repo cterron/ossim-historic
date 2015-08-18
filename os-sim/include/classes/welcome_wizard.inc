@@ -732,8 +732,6 @@ class Welcome_wizard
         $host_data['external']    = 0;
         $host_data['sboxs'][]     = $s_id;
         $host_data['nagios']      = 0;
-        $host_data['threshold_a'] = 30;
-        $host_data['threshold_c'] = 30;
 
         //Getting the time elapsed during the scan
         $time   = $scan_results['nmap_data']['elapsed'];
@@ -1087,7 +1085,6 @@ class Welcome_wizard
             }
             
             Asset::report_changes($conn, 'net');
-            
         }
         catch (Exception $e){}
     }
@@ -1102,32 +1099,22 @@ class Welcome_wizard
     /**
      * This function launchs an ossec deployment
      *
-     * @param  string  $name      Agent Name
-     * @param  string  $ip        Agent IP
-     * @param  string  $username  Agent User Name
-     * @param  string  $domain    Agent Domain
-     * @param  string  $pass      Agent Password
+     * @param  string  $asset_id      Asset ID
+     * @param  string  $w_ip          Windows IP
+     * @param  string  $w_username    Windows username
+     * @param  string  $w_password    Windows password
+     * @param  string  $w_domain      [Optional] Windows domain
      *
      * @throws Exception  If there is a connection or API error
      *
      * @return  array
      */
-    public static function launch_ossec_deploy($name, $ip, $username, $domain, $pass)
+    public static function launch_ossec_deploy($asset_id, $w_ip, $w_username, $w_password, $w_domain = NULL)
     {
-        //Create agent
-        $db   = new Ossim_db();
-        $conn = $db->connect();
-
-        $sensor_id = Av_sensor::get_default_sensor($conn);
-
-        $db->close();
-
-        Ossec_agent::create($sensor_id, $name, $ip);
-
         // API CALL
         $client = new Alienvault_client();
 
-        $response = $client->sensor()->launch_ossec_deploy($name, $ip, $username, $domain, $pass);
+        $response = $client->sensor()->launch_ossec_deploy($asset_id, $w_ip, $w_username, $w_password, $w_domain, NULL);
         $response = @json_decode($response, TRUE);
 
         if (!$response || $response['status'] == 'error')

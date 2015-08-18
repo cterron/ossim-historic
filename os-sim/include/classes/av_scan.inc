@@ -263,7 +263,7 @@ class Av_scan
                 {
                     $e_msg = _("Warning! Unable to select the scanning sensor using automatic mode.<br/><br/>
                     It could be because some assets are not associated with a valid scanning sensor or there is no common sensor to scan all assets.<br/>
-                    Please, remove these assets from the select box or choose an specific sensor");
+                    Please, remove these assets from the select box or choose a specific sensor");
 
                     Av_exception::throw_error(Av_exception::USER_ERROR, $e_msg);
                 }
@@ -1499,6 +1499,9 @@ class Av_scan
 
         if (is_array($target_list) && !empty($target_list))
         {
+            $scan_format = array();
+            $av_format   = array();
+
             foreach ($target_list as $target)
             {
                 //Inventoried assets

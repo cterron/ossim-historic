@@ -3,7 +3,6 @@
 # Reputation feedback
 #
 # vrt@alienvault.com
-# aortega@alienvault.com
 
 import MySQLdb
 import os
@@ -28,11 +27,13 @@ global log_file
 global protocol
 global curlrc
 global lockfile
+global pulse_url
 
 protocol = "https" # http or https
 repu_server = "reputation.alienvault.com"
 repu_url = "/cb502fcbda6339ac65e76e31bcf6f8f2_feedback/post_info.php"
 repu_url_all = "/cb502fcbda6339ac65e76e31bcf6f8f2_feedback/post_info_all.php"
+pulse_url = "/cb502fcbda6339ac65e76e31bcf6f8f2_feedback/post_pulse_data.php"
 repu_config = "/cb502fcbda6339ac65e76e31bcf6f8f2_feedback/feedback_config"
 config_file = "/etc/ossim/ossim_setup.conf"
 db_encryption_file = "/etc/ossim/framework/db_encryption_key"
@@ -288,6 +289,21 @@ def getDataDst_total(since, cursor, condition):
 
 	return data
 
+
+def getPulseData(since, cursor):
+	data = {}
+	#sql = "select distinct lower(hex(pulse_id)),ioc_value,count(*) from alienvault_siem.otx_data inner join alienvault_siem.acid_event where acid_event.id=otx_data.event_id and acid_event.timestamp >= FROM_UNIXTIME("+str(since)+") and acid_event.timestamp < UTC_TIMESTAMP();"
+	sql = "select distinct lower(hex(pulse_id)),ioc_value,count(*) from alienvault_siem.otx_data inner join alienvault_siem.acid_event where acid_event.id=otx_data.event_id and acid_event.timestamp >= FROM_UNIXTIME("+str(since)+") and acid_event.timestamp < UTC_TIMESTAMP() group by ioc_value;"
+	cursor.execute(sql)
+	events =  cursor.fetchall()
+	if events:
+		for e in events:
+			if len(e) == 3 and e[0] and e[1] and e[2]:
+				data[e[1]] = {"cnt":int(e[2]), "pulse_id":e[0]}
+
+	return data
+
+
 def fromConfigToSql(config):
 	sql_append = ""
 	first_p = True
@@ -437,12 +453,21 @@ except:
 	write_repu_log("Error-feedback: Something went wrong while getting data from database (all feedback step)")
 	exit_proc()
 
+#Get Pulse data
+try:
+	pulse_data = getPulseData(last_time, dbcursor)
+	#print pulse_data
+except:
+	write_repu_log("Error-feedback: Something went wrong while getting data from database (Pulse step)")
+	exit_proc()
+
 if (preview == True):
 	# Print information
 	print "{\"reputation_destin\":" + str(data_dst).replace("\'", "\"") + "}"
 	print "{\"reputation_source\":" + str(data_src).replace("\'", "\"") + "}"
 	print "{\"reputation_destin_all\":" + str(data_dst_all).replace("\'", "\"") + "}"
 	print "{\"reputation_source_all\":" + str(data_src_all).replace("\'", "\"") + "}"
+	print  "{\"pulse_data\":" + str(pulse_data).replace("\'", "\"") + "}"
 	write_repu_log("Message-feedback: Running in --preview mode, information wont be sent")
 	exit_proc()
 
@@ -453,6 +478,26 @@ except:
 	exit_proc()
 
 # Send to our server
+try:
+	write_repu_log("Message-feedback: Sending information (Pulse step)")
+	data_to_send = base64.urlsafe_b64encode(str(pulse_data))
+	http_params = urllib.urlencode({'client_id': client_id, 'info': data_to_send})
+	url = "%s://%s%s" % (protocol, repu_server, pulse_url)
+	proxy = read_curl_config()
+	c = pycurl.Curl()
+	c.setopt(pycurl.URL, url)
+	c.setopt(pycurl.SSL_VERIFYPEER, 0)
+	c.setopt(pycurl.POSTFIELDS, http_params)
+	c.setopt(pycurl.HTTPHEADER, ["Host: %s" % repu_server])
+	if proxy:
+        	c.setopt(pycurl.PROXY, proxy)
+	c.perform()
+	c.close()
+	write_repu_log("Message-feedback: Information sent (Pulse step)")
+except:
+       	write_repu_log("Error-feedback: Unable to send information (Pulse step)")
+       	exit_proc()
+
 try:
 	write_repu_log("Message-feedback: Sending information (reputation step)")
 	data_to_send = base64.urlsafe_b64encode("%s#%s" % (str(data_dst), str(data_src)))

@@ -48,8 +48,6 @@ $validate = array(
     'descr'         =>  array('validation' => 'OSS_ALL, OSS_NULLABLE',                         'e_message'  =>  'illegal:' . _('Description')),
     'asset_value'   =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('Asset value')),
     'sboxs[]'       =>  array('validation' => 'OSS_ALPHA, OSS_SCORE, OSS_PUNC, OSS_AT',        'e_message'  =>  'illegal:' . _('Sensors')),
-    'threshold_a'   =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('Threshold A')),
-    'threshold_c'   =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('Threshold C')),
     'owner'         =>  array('validation' => 'OSS_ALPHA, OSS_PUNC, OSS_NULLABLE',             'e_message'  =>  'illegal:' . _('Owner'))
 );
 
@@ -116,8 +114,6 @@ $h_icon      = POST('h_icon');
 $external    = POST('external');
 $descr       = POST('descr');
 $asset_value = POST('asset_value');
-$threshold_a = POST('threshold_a');
-$threshold_c = POST('threshold_c');
 $sensors     = $_POST['sboxs'];
 $owner       = POST('owner');
 
@@ -155,7 +151,7 @@ if (empty($validation_errors))
     {
         if (!Asset_net::is_cidr_in_my_nets($conn, $ips_string, $ctx))
         {
-            $validation_errors['cidr'] = _('The CIDR is not allowed.  Please check your asset and network settings');
+            $validation_errors['cidr'] = _('The CIDR is not allowed. Please check with your account admin for more information');
         }
     }
 
@@ -173,7 +169,7 @@ if (empty($validation_errors))
 
             if (!empty($net_ids))
             {
-                $validation_errors['cidr'] = sprintf(_("The CIDR %s is not allowed.  Please check your asset and network settings"), $cidr);
+                $validation_errors['cidr'] = sprintf(_("The CIDR %s is not allowed. Please check with your account admin for more information"), $cidr);
 
                 break;
             }
@@ -183,7 +179,7 @@ if (empty($validation_errors))
                 {
                     if (!Asset_net::is_cidr_in_my_nets($conn, $cidr, $ctx))
                     {
-                        $validation_errors['cidr'] = sprintf(_("The CIDR %s is not allowed.  Please check your asset and network settings"), $cidr);
+                        $validation_errors['cidr'] = sprintf(_("The CIDR %s is not allowed. Please check with your account admin for more information"), $cidr);
 
                         break;
                     }
@@ -311,8 +307,7 @@ if ($data['status'] != 'error')
             $net->set_external($external);
 
             $net->set_asset_value($asset_value);
-            $net->set_threshold_c($threshold_c);
-            $net->set_threshold_a($threshold_a);
+
             $net->set_owner($owner);
 
             $net->set_sensors($sensors);

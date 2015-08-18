@@ -58,6 +58,7 @@ from shutil import rmtree, copy
 from commands import getstatusoutput
 import sys
 import os
+import re
 import tarfile
 
 
@@ -96,7 +97,7 @@ class AVVpn:
         self.__ca = '/etc/openvpn/AVinfraestructure/keys/ca.crt'
         self.__cert = '/etc/openvpn/AVinfraestructure/keys/alienvcd.crt'
         self.__key = '/etc/openvpn/AVinfraestructure/keys/alienvcd.key'
-        self.__pem = '/etc/openvpn/AVinfraestructure/keys/dh1024.pem'
+        self.__pem = '/etc/openvpn/AVinfraestructure/keys/dh1024.pem' if os.path.isfile('/etc/openvpn/AVinfraestructure/keys/dh1024.pem') else '/etc/openvpn/AVinfraestructure/keys/dh2048.pem'
         self.__user = 'nobody'
         self.__group = 'nogroup'
         self.__verb = 3
@@ -166,6 +167,27 @@ class AVVpn:
             file.writelines(lines)
             file.close()
 
+            # Prepare the file to let the VPN client the key_size used
+            key_size_file = ""
+            key_size = 2048
+            if self.__pem == "/etc/openvpn/AVinfraestructure/keys/dh1024.pem":
+                key_size_file = "%s/1024.keysize" % client_folder
+                key_size = 1024
+            else:
+                key_size_file = "%s/2048.keysize" % client_folder
+
+            # Modify vars so that KEY_SIZE is properly updated
+            with open(self.__opvars, "r") as f:
+                out_fname = self.__opvars + ".tmp"
+                out = open(out_fname, "w")
+                for line in f:
+                    out.write(re.sub("KEY_SIZE=.*$", "KEY_SIZE=%d" % key_size, line))
+                out.close()
+                os.rename(out_fname, self.__opvars)
+
+            with open(key_size_file, "a") as f:
+                f.write("Dummy content")
+
             copy(self.__ca, client_folder)
             copy("/usr/share/doc/openvpn/examples/easy-rsa/2.0/openssl.cnf", client_folder)
 
@@ -187,6 +209,7 @@ class AVVpn:
             tar.add("%s" % client_configuration_file)
             tar.close()
 
+            os.remove(key_size_file)
             os.remove(client_configuration_file)
             rmtree(client_folder)
 

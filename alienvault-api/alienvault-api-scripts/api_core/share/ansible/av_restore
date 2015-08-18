@@ -48,7 +48,6 @@ import yaml
 import shutil
 import sys
 import os.path
-import time
 import logging
 sys.path.append("/usr/share/alienvault-center/av-libs/")
 from avconfig import ossimsetupconfig
@@ -394,11 +393,11 @@ def run_restore(backup_type='configuration',
     """ Restore a backup
     """
     log_path = "/var/log/alienvault/backup/"
-    log_file_preffix = "backup_%s_" % backup_type
-    log_file_appendix = "%s.log" % str(int(time.time()))
-    log_file = "%s%s%s" % (log_path, log_file_preffix, log_file_appendix)
+    log_file_name = "restore_%s.log" % backup_type
     if not os.path.exists(log_path):
         os.makedirs(log_path)
+
+    log_file = os.path.join(log_path, log_file_name)
     formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(message)s',
                                   datefmt='%b %d %I:%M:%S')
     restore_log = logging.getLogger('run_restore')
@@ -406,6 +405,8 @@ def run_restore(backup_type='configuration',
     fh = logging.FileHandler(log_file)
     fh.setFormatter(formatter)
     restore_log.addHandler(fh)
+
+    os.chmod(log_file, 0640)
 
     if backup_file is None or backup_file == '':
         msg = "Backup file to restore needed"

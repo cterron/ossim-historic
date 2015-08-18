@@ -77,11 +77,13 @@ class AVConfigParserErrors():
     UNKNOWN_AVSYSCONFIG_ERROR = 3000
     CANNOT_SAVE_AVSYSCONFIG = 3001
     INVALID_NETWORK_INTERFACE = 3002
-    NETWORK_INTERFACE_DOWN = 3003
+    INCOMPLETE_NETWORK_INTERFACE = 3003
     HOSTS_ENTRY_NOT_FOUND = 3004
     INCOMPLETE_AVVPN_ENTRY = 3005
     INVALID_AVVPN_ENTRY_FIELD = 3006
     CANNOT_LAUNCH_TRIGGERS = 3007
+    CANNOT_OVERWRITE_ADMIN_IP = 3008
+    CANNOT_OVERWRITE_ADMIN_IFACE = 3009
 
     # setup fields errors:
     VALUE_NOT_VALID_IP = 5000
@@ -123,7 +125,7 @@ class AVConfigParserErrors():
                       1028: "Error. Invalid proxy password value.Allowed values ASCII characters {8,16}",
                       1029: "Error. Invalid proxy user value.Allowed values ASCII characters {4,16} (whitespaces not allowed)",
                       1030: "Error. Invalid proxy port value.Allowed values [0,65535]",
-                      1031: "Error. Invalid update proxy value. Allowed values: [disabled, manual, alienvault-center]",
+                      1031: "Error. Invalid update proxy value. Allowed values: [disabled, manual, alienvault-proxy]",
                       1032: "Error. Invalid database username.Allowed values ASCII characters {8,16}",
                       1033: "Error. Invalid admin interface.",
                       1034: "Error. Please enter a valid email relay server. ",
@@ -151,11 +153,13 @@ class AVConfigParserErrors():
                       3000: "Unknown sysconfig error",
                       3001: "Cannot save sysconfig",
                       3002: "Invalid network interface",
-                      3003: "Network interface is down",
+                      3003: "Network interface configuration is incomplete",
                       3004: "Invalid entry in /etc/hosts",
                       3005: "Incomplete entry in /etc/alienvault/network/vpn.conf",
                       3006: "Invalid field value for entry in /etc/alienvault/network/vpn.conf",
                       3007: "Cannot launch configuration triggers",
+                      3008: "Cannot overwrite administrator IP address",
+                      3009: "Cannot overwrite administrator interface",
                       5000: "Please enter a valid IP address"
                       }
 

@@ -108,6 +108,7 @@
 					var left = parseInt(org_elem.offset()['left']);
 					var org_width = parseInt(org_elem.outerWidth());
 					var org_height = parseInt(org_elem.outerHeight());
+					
 					var tip_w = tiptip_holder.outerWidth();
 					var tip_h = tiptip_holder.outerHeight();
 					var w_compare = Math.round((org_width - tip_w) / 2);

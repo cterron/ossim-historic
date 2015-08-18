@@ -33,14 +33,14 @@ VERSION = "0.0.1"
 DOCUMENTATION = """
 author: Cristobal Rosa <crosa@alienvault.com>
 module: av_nmap
-short_description: This module allows the user to launch an NMAP from a given system 
+short_description: This module allows the user to launch an NMAP from a given system
 description:
-    - This module allows the user to run a remote NMAP within the given system. 
+    - This module allows the user to run a remote NMAP within the given system.
 version_added: "%s"
 options:
   target:
     description:
-      - IP address of the component where the NMAP will be executed. 
+      - IP address of the component where the NMAP will be executed.
     default: 'all'
     required: True
   scan_type:
@@ -56,13 +56,13 @@ options:
   scan_timming:
     description:
       - Set the timming template. (From the NMAP documentation - The template names are paranoid (0),
-                 sneaky (1), polite (2), normal (3), aggressive (4), and insane (5) 
+                 sneaky (1), polite (2), normal (3), aggressive (4), and insane (5)
     default: T3
     choices: [T0, T1, T2, T3, T4, T5]
   autodetect:
-    description: 
+    description:
       - Aggressive scan options. Presently this enables OS detection (-O), version scanning (-sV), script scanning (-sC) and traceroute (--traceroute).
-  scan_port: 
+  scan_port:
     description:
       - Only scan specified ports
   job_id:
@@ -73,7 +73,7 @@ options:
 EXAMPLES = """
 ansible 192.168.5.84 -s -m av_nmap -a "target=192.168.5.84 scan_type=ping rdns=off job_id=26d6ca8e-db76-490e-8896-831d6307a3f2"
 ansible 192.168.7.154 -s -m av_nmap -a "target=192.168.5.1-84 scan_type=full rdns=off job_id=26d6ca8e-db76-490e-8896-831d6307a3f2"
-ansible 192.168.1.39 -s -m av_nmap -a "target=192.168.1.0/24 autodetect=on scan_type=fast rdns=off scan_timming=T4 job_id=26d6ca8e-db76-490e-8896-831d6307a3f2"
+ansible 192.168.254.10 -s -m av_nmap -a "target=192.168.8.0/24 autodetect=on scan_type=fast rdns=off scan_timming=T4 job_id=0f5437d2-ea19-4d5b-9180-f4b2cc579c58"
 """
 
 import re
@@ -396,13 +396,16 @@ class PortScanner(object):
         return (self._nmap_version_number, self._nmap_subversion_number)
 
 
-    def listscan(self, hosts='127.0.0.1'):
+    def listscan(self, hosts='127.0.0.1', timing='T3'):
         """
         do not scan but interpret target hosts and return a list a hosts
         """
         assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
 
-        self.scan(hosts, arguments='-sL -sn -PE -n')
+        args='-sL -sn -PE -n'
+        if timing:
+            args='{0} -{1}'.format(args,timing)
+        self.scan(hosts, arguments=args)
         return self.all_hosts()
 
 
@@ -472,6 +475,7 @@ class PortScanner(object):
 
 
         scan_result = {}
+
 
         dom = xml.dom.minidom.parseString(self._nmap_last_output)
 
@@ -596,9 +600,21 @@ class PortScanner(object):
                 cpe = []
                 try:
                     ostype = dport.getAttributeNode('type').value
+                except AttributeError:
+                    pass
+                try:
                     vendor = dport.getAttributeNode('vendor').value
+                except AttributeError:
+                    pass
+                try:
                     osfamily = dport.getAttributeNode('osfamily').value
+                except AttributeError:
+                    pass
+                try:
                     osgen = dport.getAttributeNode('osgen').value
+                except AttributeError:
+                    pass
+                try:
                     accuracy = dport.getAttributeNode('accuracy').value
                 except AttributeError:
                     pass
@@ -608,16 +624,17 @@ class PortScanner(object):
                 for cpes in dport.getElementsByTagName('cpe'):
                     cpe.append(cpes.childNodes[0].data)
 
-                scan_result['scan'][host]['osclass'].append(
-                    {
-                        'type': ostype,
-                        'vendor': vendor,
-                        'osfamily': osfamily,
-                        'osgen': osgen,
-                        'accuracy': accuracy,
-                        'cpe': cpe
-                        }
-                    )
+                if not osfamily in ['embedded']:
+                    scan_result['scan'][host]['osclass'].append(
+                        {
+                            'type': ostype,
+                            'vendor': vendor,
+                            'osfamily': osfamily,
+                            'osgen': osgen,
+                            'accuracy': accuracy,
+                            'cpe': cpe
+                            }
+                        )
 
             for dport in dhost.getElementsByTagName('osmatch'):
                 # <osmatch name="Linux 2.6.31" accuracy="98" line="30043"/>
@@ -626,7 +643,13 @@ class PortScanner(object):
                 line = ''
                 try:
                     name = dport.getAttributeNode('name').value
+                except AttributeError:
+                    pass
+                try:
                     accuracy = dport.getAttributeNode('accuracy').value
+                except AttributeError:
+                    pass
+                try:
                     line = dport.getAttributeNode('line').value
                 except AttributeError:
                     pass
@@ -669,7 +692,7 @@ class PortScanner(object):
 
     def list_modulus(self, hosts, x):
         """
-        returns a sublist of hosts modulus x 
+        returns a sublist of hosts modulus x
         """
         global SCAN_THREADS
         listh = []
@@ -770,7 +793,7 @@ class PortScannerAsync(object):
         return
 
 
-    def scan(self, hosts='127.0.0.1', ports=None, arguments='-sV', callback=None):
+    def scan(self, hosts='127.0.0.1', ports=None, arguments='-sV', timing='T3', callback=None):
         """
         Scan given hosts in a separate process and return host by host result using callback function
 
@@ -800,7 +823,7 @@ class PortScannerAsync(object):
         global G_OUTPUT_TARGETS_FILE
         global SCAN_THREADS
 
-        host_list = self._nm.listscan(hosts)
+        host_list = self._nm.listscan(hosts, timing)
         # Write targets file
         with open(G_OUTPUT_TARGETS_FILE, "a") as r:
             for h in host_list:
@@ -885,7 +908,7 @@ def run_nmap(target, scan_type, rdns, timing, autodetect, scan_ports):
         args = get_scan_filter(scan_type, rdns, timing, autodetect, scan_ports)
         if scan_type != 'ping':
             nmap_worker = PortScannerAsync()
-            nmap_worker.scan(hosts=target, arguments=args, callback=callback_result)
+            nmap_worker.scan(hosts=target, arguments=args, timing=timing, callback=callback_result)
             while nmap_worker.still_scanning():
                 nmap_worker.wait(0)   # you can do whatever you want but I choose to wait after the end of the scan
         else:
@@ -912,7 +935,7 @@ def run_nmap(target, scan_type, rdns, timing, autodetect, scan_ports):
         except Exception as e:
             return False, "Cannot write the output scan file"
     except Exception as err:
-        return False, "NMAP Scan fail"
+        return False, "Asset Discovery Scan fail: %s" % str(err)
     return True, results
 
 
@@ -964,7 +987,7 @@ def main():
     if os.path.isfile(G_OUTPUT_FILE):
         os.remove(G_OUTPUT_FILE)
     if os.path.isfile(G_OUTPUT_TARGETS_FILE):
-        os.remove(G_OUTPUT_FILE)
+        os.remove(G_OUTPUT_TARGETS_FILE)
 
     with open(G_OUTPUT_FILE, "w") as r:
         r.write("")

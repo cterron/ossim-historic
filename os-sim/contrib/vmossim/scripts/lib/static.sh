@@ -21,9 +21,9 @@ CURRENT_RUNLEVEL=`runlevel | cut -f2 -d\ `
 ### Profiles config
 AVAIL_PROFILES="all-in-one sensor server"
 # Services: same as init script in debian etch
-ALLSERVICES="mysql mysql-ndb-mgm mysql-ndb ossim-framework ossim-server nagios2 ossim-agent apache2 nessusd osirismd osirisd ntop snort"
-SERV_ALLINONE="mysql-ndb-mgm mysql mysql-ndb apache2 ossim-agent ossim-server ossim-framework nagios2 nessusd osirismd osirisd ntop snort"
-SERV_SENSOR="ossim-agent nessusd osirisd ntop snort"
+ALLSERVICES="mysql mysql-ndb-mgm mysql-ndb ossim-framework ossim-server nagios2 ossim-agent apache2 nessusd osirismd osirisd snort"
+SERV_ALLINONE="mysql-ndb-mgm mysql mysql-ndb apache2 ossim-agent ossim-server ossim-framework nagios2 nessusd osirismd osirisd snort"
+SERV_SENSOR="ossim-agent nessusd osirisd snort"
 SERV_SERVER="mysql-ndb-mgm mysql mysql-ndb apache2 ossim-server ossim-framework nagios2 osirismd osirisd"
 
 ### Network configuration

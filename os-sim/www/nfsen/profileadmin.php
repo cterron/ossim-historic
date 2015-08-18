@@ -792,7 +792,7 @@ Ex. 72, 72h, 4d 12h, 14days etc. ', this, event, '200px')"><IMG SRC="icons/help.
 	</td>
 	<td>
 		<a href="#null" style="float:right;" onMouseover="showhint('<b>1:1 profile</b><br>\
-This is the classic NfSen profile where each selected input channel maps to a channel in the new profile. \
+This is the classic Netflow profile where each selected input channel maps to a channel in the new profile. \
 All channels in the profile have the same filter.<br>\
 <b>individual channels</b><br>A profile may contain any number of independant channels, \
 where each channel has it\'s own filter. The source for each channel can be any number of \
@@ -812,7 +812,7 @@ input channels.', this, event, '200px')"><IMG SRC="icons/help.png" border="0" al
 	</td>
 	<td>
 		<a href="#null" style="float:right;" onMouseover="showhint('<b>Real Profile</b><br>\
-Data for this profile is recorded and maintained separartly. Traditionally NfSen profile type.<br> \
+Data for this profile is recorded and maintained separartly. Traditionally Netflow profile type.<br> \
 <b>Shadow Profile</b><br>Profile does not record any data. Any processing is based on live profile data \
 with the channel filter applied. Only channel related graphic data is stored for this \
 profile.', this, event, '200px')"><IMG SRC="icons/help.png" border="0" alt="help icon"></a>

@@ -75,9 +75,16 @@ try
     {
         case 'delete_scan':
 
-            $av_scan = Av_scan::get_object_from_file($scan_file);
+            try
+            {
+                $av_scan = Av_scan::get_object_from_file($scan_file);
 
-            $av_scan->delete_scan();
+                $av_scan->delete_scan();
+            }
+            catch(Exception $e)
+            {
+                ;
+            }
 
             Cache_file::remove_file($scan_file);
 
@@ -89,9 +96,16 @@ try
 
         case 'stop_scan':
 
-            $av_scan = Av_scan::get_object_from_file($scan_file);
-
-            $av_scan->stop();
+            try
+            {
+                $av_scan = Av_scan::get_object_from_file($scan_file);
+    
+                $av_scan->stop();
+            }
+            catch(Exception $e)
+            {
+                ;
+            }
 
             $data['status'] = 'success';
             $data['data']   = _('Asset scan has been stopped');
@@ -220,30 +234,6 @@ try
 
         case 'scan_status':
 
-            /*
-            $scan_status = array(
-                'message'  => _('Scanning test'),
-                'status'   => array(
-                    'code'  => 1,
-                    'descr' => Av_scan::ST_SCANNING_HOSTS
-                ),
-                'progress' => array(
-                    'percent' => 90,
-                    'current' => 18,
-                    'total'   => 20,
-                    'time'    => Welcome_wizard::format_time(2567) . ' ' . _('remaining')
-                )
-            );
-
-            $data['status'] = 'success';
-            $data['data']   = $scan_status;
-
-            echo json_encode($data);
-
-            exit();
-            */
-
-
             $av_scan = Av_scan::get_object_from_file($scan_file);
 
             if (!is_object($av_scan) || empty($av_scan))
@@ -344,24 +334,31 @@ try
 
         case 'download_scan_report':
 
-            $av_scan = Av_scan::get_object_from_file($scan_file);
+            try
+            {
+                $av_scan = Av_scan::get_object_from_file($scan_file);
 
-            $scan_report = $av_scan->download_scan_report();
+                $scan_report = $av_scan->download_scan_report();
+
+                if (!empty($scan_report))
+                {
+                    $nmap_parser = new Nmap_parser();
+                    $scan_report = $nmap_parser->parse_json($scan_report, $av_scan->get_sensor());
+
+                    file_put_contents($scan_report_file, serialize($scan_report));
+                }
+
+                $av_scan->delete_scan();
+
+                Cache_file::remove_file($scan_file);
+            }
+            catch(Exception $e)
+            {
+                ;
+            }
 
             $data['status'] = 'success';
             $data['data']   = NULL;
-
-            if (!empty($scan_report))
-            {
-                $nmap_parser = new Nmap_parser();
-                $scan_report = $nmap_parser->parse_json($scan_report, $av_scan->get_sensor());
-
-                file_put_contents($scan_report_file, serialize($scan_report));
-            }
-
-            $av_scan->delete_scan();
-
-            Cache_file::remove_file($scan_file);
 
         break;
     }

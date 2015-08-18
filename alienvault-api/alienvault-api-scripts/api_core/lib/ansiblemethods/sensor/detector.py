@@ -28,6 +28,7 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
+import re
 from  ansiblemethods.ansiblemanager import Ansible
 from ansiblemethods.helper import parse_av_config_response
 from apimethods.system.cache import flush_cache
@@ -43,7 +44,14 @@ def get_sensor_detectors (system_ip):
                                   module="av_config",
                                   args="sensor_detectors=True op=get",
                                   use_sudo=True)
-    return parse_av_config_response(response, system_ip)
+    parsed_return = parse_av_config_response(response, system_ip)
+    # Fugly hack to replace ossec and suricata references in enabled plugins
+    parsed_return[1]['sensor_detectors'] = ["AlienVault_NIDS" if p == "suricata" else p for p in parsed_return[1]['sensor_detectors']]
+    parsed_return[1]['sensor_detectors'] = ["AlienVault_HIDS" if p == "ossec-single-line" else p for p in parsed_return[1]['sensor_detectors']]
+    parsed_return[1]['sensor_detectors'] = ["AlienVault_HIDS-IDM" if p == "ossec-idm-single-line" else p for p in parsed_return[1]['sensor_detectors']]
+    parsed_return[1]['sensor_detectors'] = ["availability_monitoring" if p == "nagios" else p for p in parsed_return[1]['sensor_detectors']]
+
+    return parsed_return
 
 
 def set_sensor_detectors (system_ip, plugins):
@@ -76,8 +84,11 @@ def get_sensor_detectors_from_yaml(system_ip):
 
 
 def set_sensor_detectors_from_yaml(system_ip, plugins):
+    
+    # Patch to match with the real plugin file nagios.cfg
+    plugins = re.sub(r"availability_monitoring", "nagios", plugins)
+    
     rc = True
-    flush_cache(namespace="sensor_plugins")
     try:
         response = ansible.run_module(host_list=[system_ip],
                                       module='av_sensor_yaml',

@@ -57,6 +57,7 @@ include/classes/Process.inc
 include/classes/process.inc
 include/classes/providers/asec.inc
 include/classes/av_license.inc
+include/classes/alarm_delete.inc
 include/geoip.inc
 include/geoipcity.inc
 include/geoipregionvars.php

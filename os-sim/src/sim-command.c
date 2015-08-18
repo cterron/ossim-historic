@@ -2390,7 +2390,8 @@ sim_command_connect_scan (SimCommand    *command,
 						sim_version_parse (scanner->value.v_string,
                                &(command->data.connect.sensor_ver->major),
                                &(command->data.connect.sensor_ver->minor),
-                               &(command->data.connect.sensor_ver->micro));
+                               &(command->data.connect.sensor_ver->micro),
+                               &(command->data.connect.sensor_ver->nano));
 						break;
 
 
@@ -4998,6 +4999,12 @@ sim_command_event_scan_base64 (SimCommand    *command,
         break;
       }
 
+      if (!sim_util_is_hex_string (scanner->value.v_string))
+      {
+        command->type = SIM_COMMAND_TYPE_NONE;
+        break;
+      }
+
       command->data.event.binary_data = g_strdup (scanner->value.v_string);
       break;
 
@@ -7411,6 +7418,9 @@ sim_command_get_event (SimCommand     *command)
   GString      * aux;
   SimInet      * inet;
   SimNetwork   * home_net;
+  gboolean       error = FALSE;
+  bson_iter_t    iter;
+  bson_iter_t    itarray;
 
   g_return_val_if_fail (SIM_IS_COMMAND (command), NULL);
 
@@ -7842,6 +7852,44 @@ sim_command_get_event (SimCommand     *command)
   /* is remote (forwarded event) */
   if (command->data.event.is_remote)
     event->is_remote = TRUE;
+  /* Pulse stuff */
+  if (command->data.event.pulses)
+  {
+    /* expand the bson pulses */
+    if (bson_iter_init (&iter, command->data.event.pulses))
+    {
+      while (bson_iter_next (&iter) && !error)
+      {
+        const gchar *key;
+        key = bson_iter_key (&iter);
+        if (BSON_ITER_HOLDS_ARRAY(&iter) && bson_iter_recurse (&iter, &itarray))
+        {
+          /* Now iterate over each array member */
+          while (bson_iter_next (&itarray))
+          {
+            /* I assume that only have keys */
+            const gchar *ioc;
+            //ioc = bson_iter_key (&itarray); /* This is a md5 hex string */
+            ioc =  bson_iter_utf8(&itarray, NULL);
+            sim_event_add_ioc (event, key, ioc);
+          }
+          
+        }
+        else
+        {
+          error = TRUE;
+        }
+      
+      }
+    }
+  }
+  if (error)
+  {
+    g_message ("Can't convert cmd to event: Bad BSON in pulse data");
+    sim_event_unref (event);
+    event = NULL;
+  }
+ 
 
   return event;
 }
@@ -9486,5 +9534,90 @@ sim_command_idm_event_parse_username (const gchar *username)
   return ret;
 }
 
+bson_t *
+sim_command_get_bson (SimCommand *cmd)
+{
+  g_return_val_if_fail (cmd != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_COMMAND (cmd), NULL);
+  gboolean error = FALSE;
+  bson_t child;
+  bson_t * b_object = bson_new();
+  SimUuid *sim_uuid;
+  uuid_t *bin_uuid; 
+  switch (cmd->type)
+  {
+    case SIM_COMMAND_TYPE_PING:
+      bson_append_document_begin (b_object, "ping", -1, &child);
+      BSON_APPEND_INT64 (&child, "timestamp", time(NULL));
+      bson_append_document_end (b_object, &child);
+      break;
+    case SIM_COMMAND_TYPE_OK:
+      bson_append_document_begin (b_object, "ok", -1, &child);
+      BSON_APPEND_INT32 (&child, "id", cmd->id);
+      bson_append_document_end (b_object, &child);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_ENABLE:
+      bson_append_document_begin (b_object, "sensor-plugin-enable", -1, &child);
+      BSON_APPEND_INT32 (&child, "plugin_id", cmd->data.sensor_plugin_enable.plugin_id);
+      BSON_APPEND_INT32 (&child, "id", cmd->id);
+      if (cmd->data.sensor_plugin_enable.servername != NULL)
+        BSON_APPEND_UTF8  (&child, "servername", cmd->data.sensor_plugin_enable.servername);
+      BSON_APPEND_UTF8  (&child, "sensor", cmd->data.sensor_plugin_enable.sensor);
+      bson_append_document_end (b_object, &child);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_DISABLE:
+      bson_append_document_begin (b_object, "sensor-plugin-disable", -1, &child);
+      BSON_APPEND_INT32 (&child, "plugin_id", cmd->data.sensor_plugin_disable.plugin_id);
+      BSON_APPEND_INT32 (&child, "id", cmd->id);
+      if (cmd->data.sensor_plugin_disable.servername != NULL)
+        BSON_APPEND_UTF8  (&child, "servername", cmd->data.sensor_plugin_disable.servername);
+      BSON_APPEND_UTF8  (&child, "sensor", cmd->data.sensor_plugin_disable.sensor);
+      bson_append_document_end (b_object, &child);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_START:
+      bson_append_document_begin (b_object, "sensor-plugin-start", -1, &child);
+      BSON_APPEND_INT32 (&child, "plugin_id", cmd->data.sensor_plugin_start.plugin_id);
+      BSON_APPEND_INT32 (&child, "id", cmd->id);
+      if (cmd->data.sensor_plugin_start.servername != NULL)
+        BSON_APPEND_UTF8  (&child, "servername", cmd->data.sensor_plugin_start.servername);
+      BSON_APPEND_UTF8  (&child, "sensor", cmd->data.sensor_plugin_start.sensor);
+      bson_append_document_end (b_object, &child);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_STOP:
+      bson_append_document_begin (b_object, "sensor-plugin-stop", -1, &child);
+      BSON_APPEND_INT32 (&child, "plugin_id", cmd->data.sensor_plugin_stop.plugin_id);
+      BSON_APPEND_INT32 (&child, "id", cmd->id);
+      if (cmd->data.sensor_plugin_stop.servername != NULL)
+        BSON_APPEND_UTF8  (&child, "servername", cmd->data.sensor_plugin_stop.servername);
+      BSON_APPEND_UTF8  (&child, "sensor", cmd->data.sensor_plugin_stop.sensor);
+      bson_append_document_end (b_object, &child);
+      break;
+    case SIM_COMMAND_TYPE_WATCH_RULE:
+      bson_append_document_begin (b_object, "watch-rule", -1, &child);
+      BSON_APPEND_UTF8 (&child, "str", cmd->data.watch_rule.str);
+      bson_append_document_end (b_object, &child);
+      break;
+    case SIM_COMMAND_TYPE_NOACK:
+      bson_append_document_begin (b_object, "noack", -1, &child);
+      BSON_APPEND_INT32  (&child, "id", cmd->id);
+      sim_uuid = sim_uuid_new_from_string (cmd->data.noack.your_sensor_id);
+      bin_uuid = sim_uuid_get_uuid (sim_uuid);
+      BSON_APPEND_BINARY (&child, "your_sensor_id", BSON_SUBTYPE_UUID, *bin_uuid, 16);
+      g_object_unref (sim_uuid);
+      bson_append_document_end (b_object, &child);
+      break;
+
+    default:
+      g_warning ("BSON for type '%d' not implemmented", cmd->type);
+      error = TRUE;
+      break;
+  }
+  if (error)
+  {
+    bson_destroy (b_object);
+    b_object = NULL;
+  }
+  return b_object;
+}
 // vim: set tabstop=2:
 

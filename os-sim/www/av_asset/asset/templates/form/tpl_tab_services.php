@@ -94,7 +94,7 @@ $db->close();
                             {
                                 ?>
                                 <select name="s_ip" id="s_ip">
-                                    <option value=""><?php echo _('Service IP')?></option>
+                                    <option value=""><?php echo _('IP Address')?></option>
                                     <?php
                                     foreach ($ips as $ip_aux)
                                     {

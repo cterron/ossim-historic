@@ -690,7 +690,7 @@ else {
           $stt = _("On Hold");
           break;
        case "NW":
-          $stt = _("N<sup>th</sup> weekday of the month");
+          $stt = _("N<sup>th</sup> week of the month");
           break;
        default:
           $stt="&nbsp;";

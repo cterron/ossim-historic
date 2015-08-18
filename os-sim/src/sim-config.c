@@ -208,8 +208,6 @@ sim_config_instance_init (SimConfig *config)
 
   config->directive.filename = NULL;
 
-  config->scheduler.interval = 0;
-
   config->server.id = NULL;
   config->server.name = NULL;
   config->server.ip = NULL;

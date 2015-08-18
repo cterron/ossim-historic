@@ -33,19 +33,35 @@ from tempfile import NamedTemporaryFile
 import os
 import os.path
 import shutil
-
+import uuid
+import json
 
 import api_log
+
 from ansiblemethods.sensor.plugin import (get_plugin_package_info,
-                                          ansible_check_plugin_integrity)
+                                          ansible_check_plugin_integrity,
+                                          ansible_get_sensor_plugins)
+from ansiblemethods.sensor.detector import set_sensor_detectors_from_yaml
 from ansiblemethods.system.util import fetch_if_changed
 from ansiblemethods.system.system import install_debian_package
 from apimethods.system.system import check_update_and_reconfig_status
+from apimethods.system.cache import use_cache
+from apimethods.system.cache import flush_cache
+
 from db.methods.sensor import get_sensor_ip_from_sensor_id
 from db.methods.system import (get_system_id_from_local,
                                get_system_ip_from_local,
                                get_system_ip_from_system_id)
+from ansiblemethods.system.about import get_is_professional
 from db.methods.sensor import get_newest_plugin_system
+from db.methods.data import get_asset_ip_from_id
+
+from celerymethods.jobs.alienvault_agent_restart import restart_alienvault_agent
+from celery_once import AlreadyQueued
+
+from apiexceptions.sensor import APICannotResolveSensorID
+from apiexceptions.plugin import APICannotSetSensorPlugins
+from apiexceptions.common import APIInvalidInputFormat
 
 
 def get_plugin_package_info_from_sensor_id(sensor_id):
@@ -106,6 +122,10 @@ def check_plugin_integrity(system_id="local"):
     if not success:
         api_log.error(str(system_ip))
         return False, "Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
+
+    success, is_pro = get_is_professional(system_ip)
+    if not (success and is_pro):
+        return (True, "Skipping plugin integrity check in non professional system")
 
     success, data = ansible_check_plugin_integrity(system_ip)
     if not success:
@@ -198,3 +218,139 @@ def update_newest_plugin_sids():
         result = False
         emsg = str(excep)
     return (result, emsg)
+
+
+@use_cache(namespace='sensor_plugins')
+def get_sensor_plugins(sensor_id, no_cache=False):
+    """ Get the plugins of a sensor
+    Raise:
+        APICannotGetSensorPlugins
+    """
+    success, sensor_ip = get_sensor_ip_from_sensor_id(sensor_id)
+    if not success:
+        raise APICannotResolveSensorID(
+            sensor_id=sensor_id,
+            log='[get_sensor_plugins] Error getting sensor ip: {0}'.format(str(sensor_ip)))
+
+    plugins = ansible_get_sensor_plugins(system_ip=sensor_ip)
+
+    return plugins
+
+
+def get_sensor_plugins_enabled_by_asset(sensor_id, asset_id=None, no_cache=False):
+    """ Get the list of plugins enabled in a sensor by asset
+    Params:
+        sensor_id (UUID): sensor id
+        asset_id (UUID): filter for a specific asset
+    Return:
+        dictionary with the plugins enabled by asset in the sensor
+        filtered by asset_id if provided
+    Raises:
+        APICannotResolveSensorID
+        APICannotGetSensorPlugins
+    """
+    asset_plugins = {}
+    sensor_data = get_sensor_plugins(sensor_id=sensor_id,
+                                     no_cache=no_cache)
+    if 'enabled' in sensor_data:
+        asset_plugins = sensor_data['enabled'].get('devices', {})
+    if asset_id is not None:
+        asset_plugins = dict((key, value) for key, value in asset_plugins.iteritems() if key == asset_id)
+
+    # Fill the plugin info
+    plugins = {}
+    for (asset, plugin_list) in asset_plugins.iteritems():
+        for plugin in plugin_list:
+            if plugin in sensor_data['plugins']:
+                if asset not in plugins:
+                    plugins[asset] = {}
+                plugins[asset][plugin] = sensor_data['plugins'][plugin]
+            else:
+                api_log.warning("[get_sensor_plugins_enabled_by_asset] "
+                                "plugin '{0}' enabled in asset '{1}' in sensor '{2}' Not found".format(
+                                    plugin, asset, sensor_id))
+    return plugins
+
+
+def set_sensor_plugins_enabled_by_asset(sensor_id, assets_info):
+    """ Set the list of plugins enabled in a sensor by asset
+    Params:
+        sensor_id (UUID): sensor id
+        assets_info (dict or json string):
+           {"<asset_id>": ["<plugin_1>",
+                           "<plugin_2>",
+                           ...],
+            ...}
+    Return:
+        the id of the agent restart job
+    """
+    (success, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id)
+    if not success:
+        raise APICannotResolveSensorID(
+            sensor_id=sensor_id,
+            log="[set_sensor_plugins_enabled_by_asset] "
+            "Error getting Sensor ip: %s".format(sensor_ip))
+
+    try:
+        plugins = {}
+        if isinstance(assets_info, basestring):
+            assets_info = json.loads(assets_info)
+
+        for asset_id, asset_plugins in assets_info.iteritems():
+            asset_id = str(uuid.UUID(asset_id))
+            asset_ips = get_asset_ip_from_id(asset_id=asset_id)
+            if asset_ips == []:
+                api_log.error("Cannot resolve ips for asset '{0}'".format(asset_id))
+                continue
+
+            plugins[asset_id] = {'device_ip': asset_ips[0],
+                                 'plugins': asset_plugins}
+    except Exception as e:
+        raise APIInvalidInputFormat(
+            log="[set_sensor_plugins_enabled_by_asset] "
+            "Invalid asset_info format: '{0}'".format(str(e)))
+
+    try:
+        (success, data) = set_sensor_detectors_from_yaml(sensor_ip, str(plugins))
+    except Exception as e:
+        raise APICannotSetSensorPlugins(
+            log="[set_sensor_plugins_enabled_by_asset] "
+            "Cannot set asset plugins: '{0}'".format(str(e)))
+    if not success:
+        api_log.error("[set_sensor_plugins_enabled_by_asset] "
+                      "Cannot set asset plugins: '{0}'".format(str(data)))
+        raise APICannotSetSensorPlugins(
+            log="[set_sensor_plugins_enabled_by_asset] "
+            "Cannot set asset plugins: '{0}'".format(str(data)))
+
+    # Flush sensor plugin cache and Update host plugin info
+    flush_cache("sensor_plugins")
+    # Import here to avoid circular imports
+    from celerymethods.tasks.monitor_tasks import monitor_update_host_plugins
+    try:
+        monitor_update_host_plugins.delay()
+    except AlreadyQueued:
+        api_log.info("[set_sensor_plugins_enabled_by_asset] "
+                     "monitor update host plugins already queued")
+
+    # Restart the alienvault agent
+    job = restart_alienvault_agent.delay(sensor_ip=sensor_ip)
+
+    return job.id
+
+
+def get_sensor_detector_plugins(sensor_id):
+    """ Get the list of plugins with type 'detector' in a sensor
+    Args:
+        sensor_id (UUID): sensor is
+    Return:
+        dictionary with the detector plugins in the sensor
+    Raise:
+        APICannotResolveSensorID
+        APICannotGetSensorPlugins
+    """
+    plugin_info = get_sensor_plugins(sensor_id)
+    all_plugins = plugin_info.get('plugins', {})
+    plugins = dict((key, value) for key, value in all_plugins.iteritems() if value.get('type', '') == 'detector')
+
+    return plugins

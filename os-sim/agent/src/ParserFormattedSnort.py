@@ -35,17 +35,15 @@ import stat
 import socket
 import zlib
 import re
-from binascii import hexlify,unhexlify
-from optparse import OptionParser
-from time import time, localtime, mktime, strptime, strftime, sleep
-from base64 import b64encode
+from binascii import hexlify
+from time import time, sleep
 import glob
 from Logger import Logger
 from Detector import Detector
 from Event import Event
 
 logger = Logger.logger
-#Unified2_common.h
+#  Unified2_common.h
 SNORT_FILE_HEADER_SIZE = 8
 
 UNIFIED2_EVENT = 1

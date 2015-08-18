@@ -176,6 +176,7 @@ Toggles.prototype.bindEvents = function() {
   };
 
   // if click is enabled and toggle isn't within the clicker element (stops double binding)
+  self.el.off('click');
   if (self.opts['click'] && (!self.opts['clicker'] || !self.opts['clicker'].has(self.el).length)) {
     self.el.on('click', clickHandler);
   }
@@ -186,6 +187,7 @@ Toggles.prototype.bindEvents = function() {
   }
 
   // bind up dragging stuff
+  self.els.blob.off('mousedown');
   if (self.opts['drag'] && !self.selectType) self.bindDrag();
 };
 
@@ -259,7 +261,7 @@ Toggles.prototype.bindDrag = function() {
   });
 };
 
-Toggles.prototype.toggle = function(state) {
+Toggles.prototype.toggle = function(state, noAnimate, noEvent) {
   var self = this;
 
   // check we arent already in the desired state
@@ -273,7 +275,7 @@ Toggles.prototype.toggle = function(state) {
   self.els.on.toggleClass('active', active);
   self.checkbox.prop('checked', active);
 
-  self.el.trigger(self.opts['event'], active);
+  if (!noEvent) self.el.trigger(self.opts['event'], active);
 
   if (self.selectType) return;
 
@@ -282,7 +284,7 @@ Toggles.prototype.toggle = function(state) {
   // move the toggle!
   self.els.inner.stop().animate({
     'marginLeft': margin
-  }, self.opts['animate']);
+  }, noAnimate ? 0 : self.opts['animate']);
 };
 
     $.fn['toggles'] = function(opts) {

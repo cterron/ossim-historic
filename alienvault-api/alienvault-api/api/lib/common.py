@@ -97,6 +97,15 @@ def make_error(message, status_code, additional_headers=None):
     return response
 
 
+def make_error_from_exception(exception):
+    """ Return a suitable HTML or JSON error message response using a exception
+    Args:
+        exception: an APIException
+    """
+    return make_error(message=str(exception),
+                      status_code=exception.http_code)
+
+
 def make_bad_request(message):
     """Return a JSON error message for bad requests"""
     return make_error(message='Bad request: ' + str(message), status_code=400)

@@ -208,21 +208,157 @@ class System_provider extends Provider
      ************************** OTX **********************************
      *****************************************************************/
 
-
+     
     /**
-     * This method returns the general system configuration
+     * This method returns the otx configuration
      *
-     * @return string in JSON format
+     * @return array with API response
      */
-    public function get_otx_user($token)
+    public function get_otx_info()
     {
-        $params   = array('token' => $token);
-        
-        $response = $this->conn->do_request('/system/otx/username', $params);
+        $params   = array();
+        $response = $this->conn->do_request("/system/otx/", $params);
 
         return $response;
     }
     
+    
+    /**
+     * This method activates the otx account with a given token.
+     *
+     * @return array with API response
+     */
+    public function activate_otx($token)
+    {
+        $params   = array();
+        $response = $this->conn->do_request("/system/otx/$token", $params, 'POST');
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method deactivate the OTX account by removing the OTX variables from config.
+     *
+     * @return array with API response
+     */
+    public function remove_otx()
+    {
+        $params   = array();
+        $response = $this->conn->do_request("/system/otx/", $params, 'DELETE');
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method enables the var that that enables the OTX contribution.
+     *
+     * @return array with API response
+     */
+    public function enable_contribution()
+    {
+        $params   = array();
+        $response = $this->conn->do_request("/system/otx/contribute/", $params, 'POST');
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method disables the var that enables the OTX contribution.
+     *
+     * @return array with API response
+     */
+    public function disable_contribution()
+    {
+        $params   = array();
+        $response = $this->conn->do_request("/system/otx/contribute/", $params, 'DELETE');
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method returns the list of pulses the user is subscribed to.
+     *
+     * @return array with API response
+     */
+    public function get_pulse_list($filters)
+    {
+        $response = $this->conn->do_request("/system/otx/pulse/", $filters);
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method returns the detail of a given pulse.
+     *
+     * @return array with API response
+     */
+    public function get_pulse_detail($pulse, $params = array())
+    {
+        $response = $this->conn->do_request("/system/otx/pulse/$pulse", $params);
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method returns a summary of the otx in your system.
+     *
+     * @return array with API response
+     */
+    public function get_pulse_stats()
+    {
+        $params   = array();
+        $response = $this->conn->do_request("/system/otx/pulse/stats/summary/", $params);
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method returns the top pulses.
+     *
+     * @return array with API response
+     */
+    public function get_top_pulses($params)
+    {
+        $response = $this->conn->do_request("/system/otx/pulse/stats/top/", $params);
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method returns the detail of a given pulse.
+     *
+     * @return array with API response
+     */
+    public function get_events_from_all_pulses($params)
+    {
+        $response = $this->conn->do_request("/system/otx/pulse/stats/event_trend/", $params);
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method returns the detail of a given pulse.
+     *
+     * @return array with API response
+     */
+    public function get_events_from_top_pulses($params)
+    {
+        $response = $this->conn->do_request("/system/otx/pulse/stats/event_top/", $params);
+
+        return $response;
+    }
+    
+    
+        
     
     /*****************************************************************
      ********************* CONFIGURATION *****************************

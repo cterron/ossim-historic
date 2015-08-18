@@ -68,7 +68,7 @@ function print_form($import_type)
                 'checked' => FALSE
             ),
             'help' => array(
-                'Version 4.x.x or higher' => array(
+                'Version 4.x.x, 5.x.x' => array(
                     'format'  => _('"IPs(IP1,IP2,...)";"Hostname";"FQDNs(FQDN1,FQDN2,...)";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Asset ID";"External Asset";"Device Types(Type1,Type2,...)"'),
                     'header'  => '"IPs";"Hostname";"FQDNs";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Asset ID";"External Asset";"Device Type"',
                     'example' => '"192.168.10.3";"Host-1";"www.example-1.es,www.example-2.es";"'._('Short description').'";"2";"Windows";"23.78";"121.45";"379D45C0BBF22B4458BD2F8EE09ECCC2";0;"Server:Mail Server"'
@@ -449,7 +449,7 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
         return $summary;
     }
 
-        Util::disable_perm_triggers($conn, TRUE);
+    Util::disable_perm_triggers($conn, TRUE);
 
     foreach ($data as $k => $v)
     {
@@ -473,7 +473,6 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
             continue;
         }
 
-
         //Clean values
         $param = array();
 
@@ -484,22 +483,23 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
         {
             $parameter = trim($field);
 
-                        if ($index == 0)
-                        {
-                            $pattern   = '/^\"|^\'/';
-                $param[]   = preg_replace($pattern, '', $parameter);
+            if ($index == 0)
+            {
+                $pattern = '/^\"|^\'/';
+                $param[] = preg_replace($pattern, '', $parameter);
             }
             else if ($index == $max_index)
             {
-                            $pattern   = '/\"$|\'$/';
-                $param[]   = preg_replace($pattern, '', $parameter);
+                $pattern = '/\"$|\'$/';
+                $param[] = preg_replace($pattern, '', $parameter);
             }
-                else
-                {
-                            $param[] = $parameter;
-                        }
-                        $index++;
-                }
+            else
+            {
+                $param[] = $parameter;
+            }
+
+            $index++;
+        }
 
         //Values
         $is_in_db = FALSE;
@@ -655,7 +655,6 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
 
         if (!empty($os) && !preg_match($os_pattern, $os))
         {
-
            $warning_msg = _('Operating System unknown');
 
            $summary['by_hosts'][$num_line]['warnings']['Operating System'] = $warning_msg;
@@ -842,13 +841,12 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
                         }
                         else
                         {
-
                             $cnd_1 = Session::get_net_where() != '' && !Session::only_ff_net();
                             $cnd_2 = Asset_host::is_ip_in_cache_cidr($conn, $ip, $ctx, TRUE);
 
                             if ($cnd_1 && !$cnd_2)
                             {
-                                $c_error_msg = sprintf(_("Error! The IP %s is not allowed.  Please check your asset and network settings"), $csv_ips);
+                                $c_error_msg = sprintf(_("Error! The IP %s is not allowed. Please check with your account admin for more information"), $csv_ips);
 
                                 $summary['by_hosts'][$num_line]['errors']['IP'] = $c_error_msg;
                                 $summary['general']['statistics']['errors']++;
@@ -1394,7 +1392,6 @@ if ($_POST['import_assets'] == 1)
 
             //Setting all handlers
             bind_import_actions();
-
         });
     </script>
 </head>

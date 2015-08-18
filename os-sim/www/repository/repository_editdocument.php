@@ -462,7 +462,7 @@ $db->close();
 							<div id="help">
 								<?php
 								$config_nt = array(
-									'content' => _("Select a language element from the lists to see its meaning. Click on full references in case of need a more detailed description"),
+									'content' => _("Select a language element from the lists to see its meaning"),
 									'options' => array (
 										'type'          => 'nf_info',
 										'cancel_button' => false

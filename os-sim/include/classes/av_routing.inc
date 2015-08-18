@@ -101,7 +101,7 @@ class Av_routing
         ),
         'SN_MESSAGE_WARNING_24_HOURS_WITHOUT_EVENTS_2'    => array(
             'type'         => 'menu',
-            'menu_options' => array('environment', 'assets', 'asset_discovery', NULL),
+            'menu_options' => array('environment', 'assets', 'assets', NULL),
             'params'       => array(
                 'action'    => 'custom_scan',
                 'sensor'    => 'automatic',
@@ -191,10 +191,13 @@ class Av_routing
         //'MESSAGE_LICENSE_VIOLATION_1'                       => array(),
         'SN_MESSAGE_OTX_CONNECTION_1'                     => array(
             'type'         => 'menu',
-            'menu_options' => array('configuration', 'administration', 'main', NULL),
-            'params'       => array(
-                'open' => 5
-            )
+            'menu_options' => array('configuration', 'otx', 'otx', NULL),
+            'params'       => array()
+        ),
+        'SN_MESSAGE_HIDS_AGENTS_NOT_LINKED'                     => array(
+            'type'         => 'menu',
+            'menu_options' => array('environment', 'detection', 'hids', 'agents'),
+            'params'       => array()
         ),
         //'SN_MESSAGE_BACKUP_RUNNING_1'                       => array(),
         'EXT_TRACK_USAGE_INFORMATION'                     => array(

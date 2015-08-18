@@ -52,7 +52,6 @@ function show_notif($msg, $type)
 }
 
 
-
 $back  = intval(GET('back'));
 $notif = GET('notif');
 
@@ -69,8 +68,8 @@ $filter_val  = GET("filter_value");
 $cond_filter = $filter_id != '' && $filter_val != '';
 
 
-$db          = new ossim_db();
-$conn        = $db->connect();
+$db   = new ossim_db();
+$conn = $db->connect();
 
 //Getting the object with the filters. Unserialize needed.
 $filter_list = Filter_list::retrieve_filter_list_session();
@@ -81,21 +80,21 @@ if (!($filter_list instanceof Filter_asset_list) || !$back || $cond_filter)
     try
     {
         $filter_list = new Filter_asset_list($conn);
-        
+
         if ($cond_filter)
         {
-             $filter_list->modify_filter($filter_id, $filter_val, 0);
+            $filter_list->modify_filter($filter_id, $filter_val, 0);
         }
-        
+
         $filter_list->store_filter_list_session();
     }
     catch(Exception $e)
     {
         show_notif( $e->getMessage(), 'nf_error');
     }
-    
+
 }
-    
+
 $cont = $filter_list->get_num_filter_added();
 
 if ($cont > 0)
@@ -105,11 +104,11 @@ if ($cont > 0)
         $filter_list->force_reload();
         $filter_list->apply_filter_search($conn);
     }
-    catch(Exception $e) 
-    {            
+    catch(Exception $e)
+    {
         show_notif( $e->getMessage(), 'nf_error');
     }
-    
+
 }
 
 $filters    = $filter_list->get_filters();
@@ -143,34 +142,36 @@ $av_to   = ($flag_av) ? $filters[6]->get_to() : 5;
 //Availability
 $availability_status = $filters[17]->get_values();
 
+//HIDS
+$hids_status = $filters[26]->get_values();
+
 
 // Getting Filter Legends
-$f_legend = Filter_list::get_filter_legends(); 
+$f_legend = Filter_list::get_filter_legends();
 
 
 // Getting Permissions:
 $perm_add  = Session::can_i_create_assets();
 
-
-$perms     = array
-(
+$perms = array (
+    'admin'           => Session::am_i_admin(),
     'create'          => $perm_add,
     'delete'          => $perm_add,
     'vulnerabilities' => Session::logcheck_bool('environment-menu', 'EventsVulnerabilitiesScan'),
     'alarms'          => Session::logcheck_bool('analysis-menu', 'ControlPanelAlarms'),
     'events'          => Session::logcheck_bool('analysis-menu', 'EventsForensics'),
-    'availability'    => Session::logcheck_bool('environment-menu', 'MonitorsAvailability')
+    'availability'    => Session::logcheck_bool('environment-menu', 'MonitorsAvailability'),
+    'deploy_agents'   => Session::logcheck_bool('environment-menu', 'EventsHidsConfig'),
+    'nmap'            => Session::logcheck_bool('environment-menu', 'ToolsScan')
 );
-
 
 switch ($notif)
 {
     case 'delete':
         $msg = _('Asset has been permanently deleted.');
         show_notif($msg, 'nf_success');
-        
+
     break;
-    
 }
 
 ?>
@@ -197,10 +198,11 @@ switch ($notif)
             array('src' => 'av_dropdown_tag.css',           'def_path' => TRUE),
             array('src' => 'jquery.select.css',             'def_path' => TRUE),
             array('src' => 'av_tags.css',                   'def_path' => TRUE),
+            array('src' => 'av_table.css',                  'def_path' => TRUE),
             array('src' => '/assets/asset_list_view.css',   'def_path' => TRUE),
             array('src' => 'assets/asset_indicators.css',   'def_path' => TRUE)
         );
-        
+
         Util::print_include_files($_files, 'css');
 
 
@@ -222,51 +224,65 @@ switch ($notif)
             array('src' => 'jquery.placeholder.js',                         'def_path' => TRUE),
             array('src' => 'av_tags.js.php',                                'def_path' => TRUE),
             array('src' => 'av_dropdown_tag.js',                            'def_path' => TRUE),
+            array('src' => 'av_table.js.php',                               'def_path' => TRUE),
             array('src' => 'jquery.select.js',                              'def_path' => TRUE),
             array('src' => 'av_storage.js.php',                             'def_path' => TRUE),
             array('src' => '/av_asset/common/js/asset_list.js.php',         'def_path' => FALSE),
+            array('src' => '/av_asset/common/js/asset_list_bind.js.php',    'def_path' => FALSE),
             array('src' => '/av_asset/common/js/asset_indicators.js.php',   'def_path' => FALSE),
-            array('src' => '/av_asset/asset/js/list_asset.js.php',          'def_path' => FALSE)
+            array('src' => '/av_asset/asset/js/list_asset.js.php',          'def_path' => FALSE),
         );
-        
+
         Util::print_include_files($_files, 'js');
 
     ?>
 
     <script type='text/javascript'>
-        
-        var __asset_list = new av_asset_list(<?php echo json_encode($perms) ?>);
-    
-        //Double click issue variables
-        var click_delay  = 300, n_clicks = 0, click_timer = null;
-        
-        $(document).ready(function() 
+
+        var __asset_list = null;
+
+        /**********  LIGHTBOX EVENTS  **********/
+
+        function GB_onclose(url, params)
         {
+            __asset_list.handle_close_lightbox(url, params);
+        }
+
+
+        function GB_onhide(url, params)
+        {
+            __asset_list.handle_hide_lightbox(url, params);
+        }
+
+
+        $(document).ready(function()
+        {
+            __asset_list = new av_asset_list(<?php echo json_encode($perms)?>);
+
             if (!<?php echo $back ?>)
             {
-                __asset_list.db.clean_checked();
+                __asset_list.clean_checked();
             }
-            
-            load_search_handlers();
-            
+
+            load_search_handlers(__asset_list);
+
+
             //DISABLING SLIDERS
-            <?php 
+            <?php
             if (!$flag_vulns)
             {
                 echo "$('#vulns_slider .ui-slider').slider('disable');";
             }
-            
+
             if (!$flag_av)
             {
                 echo "$('#asset_value_slider .ui-slider').slider('disable');";
             }
             ?>
-            
         });
-        // End of document.ready
-        
+
     </script>
-    
+
 
 </head>
 
@@ -276,33 +292,33 @@ switch ($notif)
             <div class='filter_left_section'>
                 <input id='search_filter' data-bind="search-asset" class='input_search_filter' name='search_filter' type="search" value="" placeholder="<?php echo _('Search') ?>">
             </div>
- 
+
             <div class='filter_left_section'>
                 <div class='filter_left_title'>
                     <input id='filter_3' class='value_filter input_search_filter' data-id='3' type="checkbox" <?php echo ($_alarms) ? 'checked' : '' ?> ><?php echo _('Has Alarms') ?>
                 </div>
             </div>
-            
-            
+
+
              <div class='filter_left_section'>
                 <div class='filter_left_title'>
                     <input id='filter_4' class='value_filter input_search_filter' data-id='4' type="checkbox" <?php echo ($_events) ? 'checked' : '' ?> ><?php echo _('Has Events') ?>
                 </div>
             </div>
-            
-            
+
+
             <div class='filter_left_section'>
                 <div class='filter_left_title'>
                     <input id='filter_5' class='input_search_filter' type="checkbox" <?php echo ($flag_vulns) ? 'checked' : '' ?> ><?php echo _('Vulnerabilities') ?>
                 </div>
-                
+
                 <div id='vulns_slider' class='filter_left_slider'>
         			<select class='filter_range' id="vrangeA">
             			<?php
             			foreach ($f_legend['vulns'] as $v_id => $v_name)
             			{
                 			$selected = ($vulns_from == $v_id) ? "selected='selected'" : '';
-                			
+
                 			echo "<option value='$v_id' $selected>$v_name</option>";
             			}
             			?>
@@ -312,7 +328,7 @@ switch ($notif)
             			foreach ($f_legend['vulns'] as $v_id => $v_name)
             			{
                 			$selected = ($vulns_to == $v_id) ? "selected='selected'" : '';
-                			
+
                 			echo "<option value='$v_id' $selected>$v_name</option>";
             			}
             			?>
@@ -330,7 +346,7 @@ switch ($notif)
             			foreach ($f_legend['asset_value'] as $a_id => $a_name)
             			{
                 			$selected = ($av_from == $a_id) ? "selected='selected'" : '';
-                			
+
                 			echo "<option value='$a_id' $selected>$a_name</option>";
             			}
             			?>
@@ -340,23 +356,39 @@ switch ($notif)
             			foreach ($f_legend['asset_value'] as $a_id => $a_name)
             			{
                 			$selected = ($av_to == $a_id) ? "selected='selected'" : '';
-                			
+
                 			echo "<option value='$a_id' $selected>$a_name</option>";
             			}
             			?>
         			</select>
                 </div>
-            
+
             </div>
-            
+
             <br/>
-            
+
+            <div class='filter_left_section'>
+                <div class='filter_left_title'>
+                    <?php echo _('HIDS Status') ?>
+                </div>
+                <div id='filter_26' class='filter_left_content hids_status_input' data-filter='26'>
+                    <?php
+                    foreach ($f_legend['hids'] as $_id => $_name)
+                    {
+                        $checked = ($hids_status === $_id) ? 'checked' : '';
+                        echo "<input class='input_search_filter' type='radio' name='hids_status' $checked value='$_id'><span>$_name</span></br>";
+                    }
+                    ?>
+                </div>
+            </div>
+
+
             <div class='filter_left_section'>
                 <div class='filter_left_title'>
                     <?php echo _('Availability Status') ?>
                 </div>
                 <div id='filter_17' class='filter_left_content availability_status_input' data-filter='17'>
-                    <?php 
+                    <?php
                     foreach ($f_legend['availability'] as $_id => $_name)
                     {
                         $checked = ($availability_status === $_id) ? 'checked' : '';
@@ -365,14 +397,14 @@ switch ($notif)
                     ?>
                 </div>
             </div>
-            
-            
+
+
             <div class='filter_left_section'>
                 <div class='filter_left_title'>
                     <?php echo _('Show Assets Added') ?>
                 </div>
                 <div id='filter_1' class='filter_left_content asset_date_input' data-filter='1'>
-                    <?php 
+                    <?php
                     foreach ($f_legend['date_ranges'] as $d_id => $d_name)
                     {
                         $checked = ($d_created == $d_id) ? 'checked' : '';
@@ -387,7 +419,7 @@ switch ($notif)
                             <input id='date_to_1' data-filter='1' class='input_search_filter date_filter' type="input" value="<?php echo $d_c_to ?>">
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
 
@@ -396,7 +428,7 @@ switch ($notif)
                     <?php echo _('Last Updated') ?>
                 </div>
                 <div id='filter_2' class='filter_left_content asset_date_input' data-filter='2'>
-                    <?php 
+                    <?php
                     foreach ($f_legend['date_ranges'] as $d_id => $d_name)
                     {
                         $checked = ($d_updated == $d_id) ? 'checked' : '';
@@ -420,31 +452,31 @@ switch ($notif)
                 <?php echo _('More Filters') ?>
             </a>
 
-            
+
         </div>
-        
-        
+
+
         <div class="content">
-            
+
             <div id="asset_notif"></div>
             <div id='content_header'>
-                
+
                 <div id='asset_section_title'>
                     <?php echo _('Assets') ?>
                 </div>
-                
+
                 <div id='action_add_buttons'>
-                    
-                    <a href='javascript:;' id='button_add' class='button av_b_secondary' data-dropdown="#dropdown-add">
+
+                    <button id='button_add' class='button av_b_secondary' data-dropdown="#dropdown-add">
                         <?php echo _('Add Assets') ?> &nbsp;&#x25be;
-                    </a>
-                    
-                    <img id='export_selection' class='disabled tiptip' data-bind="export-selection" data-title="<?php echo _('Select assets to export') ?>" src="/ossim/pixmaps/download-big.png"/>
-                    
+                    </button>
+
+                    <img id='export_selection' class='disabled tiptip' data-selection="avt_action" data-bind="export-selection" data-title="<?php echo _('Select assets to export') ?>" src="/ossim/pixmaps/download-big.png"/>
+
                 </div>
-                
+
                 <div id='as_tags'>
-                    
+
                     <ul id='tags_filters'>
                     <?php
                         foreach ($filters as $f_id => $_filter)
@@ -452,171 +484,57 @@ switch ($notif)
                             if ($_filter->is_active())
                             {
                                 $tag_params = $_filter->get_tag_params($conn);
-                                
+
                                 foreach($tag_params as $tag_id => $tag_name)
                                 {
                                     $tag_label  = Util::htmlentities($tag_name);
                                     $tag_class  = md5("label_$tag_id") . ' filter_' . $f_id;
-                                    
+
                                     echo '<li class="'. $tag_class .'" data-info="'. $tag_id .'">'. $tag_label .'</li>';
                                 }
                             }
-                            
                         }
-                    ?>   
+                    ?>
 
                     </ul>
-                    
+
                     <div id='result_search'>
-                    
+
                         <div id='num_assets'>0</div>
                         <span><?php echo _('Assets') ?></span>
-                        
+
                     </div>
-                    
+
                     <div id='restart_search'>
                         <a href='javascript:;' data-bind="restart-search"><?php echo _('Clear All Filters') ?></a>
                     </div>
-                    
+
                     <div class='clear_layer'></div>
-                    
+
                 </div>
-                
+
                 <div class='clear_layer'></div>
-                
+
             </div>
 
+
+
             <div id='content_result'>
-                
-                <div id='action_buttons'>
-                    
-                    <a href='javascript:;' id='button_action' class='button av_b_disabled small' data-dropdown="#dropdown-actions">
-                        <?php echo _('Actions') ?> &nbsp;&#x25be;
-                    </a>
-                    
-                    <img id='label_selection' class='img_action disabled' src="/ossim/pixmaps/label.png"/>
-                    
-                    <img id='edit_selection' class='img_action disabled' src="/ossim/pixmaps/edit.png"/>
-                    
-                    <img id='delete_selection' class='img_action disabled' src="/ossim/pixmaps/delete-big.png"/>
-    
-                </div>
-            
-                <div id='msg_selection' data-bind='msg-selection'>
-                    <span></span>
-                    <a href='javascript:;' data-bind='chk-all-filter'></a>
-                </div>
-                <table class='noborder table_data' width="100%" align="center">
-                    <thead>
-                        <tr>
-                            <th>
-                                <input type='checkbox' data-bind='chk-all-assets'>  
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Hostname') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('IP') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Device Type') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Operating System') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Asset Value') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Vuln Scan Scheduled') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Availability Configured') ?>
-                            </th>
-                            
-                            <th></th>
 
-                        </tr>
-                    </thead>
-                    
-                    <tbody>
-                        <!-- Do not delete, this is to show the first "Loading" message -->
-                        <tr><td colspan="9"></td></tr>
-                    </tbody>
-                    
-                </table>
+                <?php include AV_MAIN_ROOT_PATH . '/av_asset/common/templates/tpl_dt_assets.php' ?>
 
-            </div>  
-            
+            </div>
+
+
+
         </div>
-        
+
     </div>
-    
-    <div id="dropdown-add" data-bind="dropdown-add" class="dropdown dropdown-secondary dropdown-close dropdown-tip dropdown-anchor-right">
-    
-		<ul class="dropdown-menu">
-			<?php
-			if (Session::can_i_create_assets() == TRUE)
-			{
-    			?>
-    			<li><a href="#1" data-bind="add-asset"><?php echo _('Add Host') ?></a></li>
-    			<?php
-			}
-			?>			
-			
-			<li><a href="#2" data-bind="import-csv"><?php echo _('Import CSV') ?></a></li>
-			
-			<?php
-			if (Session::can_i_create_assets() == TRUE)
-			{
-    			?>
-    			<li><a href="#3" data-bind="import-siem"><?php echo _('Import From SIEM') ?></a></li>
-    			<?php
-			}
-			?>
-		</ul>		
-	</div>
-	
-	
-	<div id="dropdown-actions" data-bind="dropdown-actions" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
-		<ul class="dropdown-menu">
-    		<?php 
-            if (Session::logcheck_bool('environment-menu', 'ToolsScan'))
-    		{
-            ?>
-                <li><a href="#1" data-bind="asset-scan"><?php echo _('Run Asset Scan') ?></a></li>
-            <?php
-            }
-            if (Session::logcheck_bool('environment-menu', 'EventsVulnerabilitiesScan'))
-            {
-            ?>
-			    <li><a href="#2" data-bind="vuln_scan"><?php echo _('Run Vulnerability Scan') ?></a></li>
-			<?php
-            }
-            if (Session::logcheck_bool('environment-menu', 'MonitorsAvailability'))
-            {
-			?>
-                <li><a href="#3" data-bind="enable-monitoring"><?php echo _('Enable Availability Monitoring') ?></a></li>
-                <li><a href="#4" data-bind="disable-monitoring"><?php echo _('Disable Availability Monitoring') ?></a></li>
-            <?php
-            }
-            ?>
-            <li><a href="#5" data-bind="save-to-group"><?php echo _('Create/Add to Group') ?></a></li>
-            
-            <li><a href="#6" data-bind="add-note"><?php echo _('Add Note') ?></a></li>
-            
-		</ul>		
-	</div>
+
+    <div id="dropdown-add" data-bind="dropdown-add" class="dropdown dropdown-secondary dropdown-close dropdown-tip dropdown-anchor-right"></div>
+    <div id="dropdown-actions" data-bind="dropdown-actions" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right"></div>
 
 </body>
-
 </html>
 
 <?php

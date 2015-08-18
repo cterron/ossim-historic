@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -46,7 +46,6 @@ ossim_setup = OssimMiniConf(config_file='/etc/ossim/ossim_setup.conf')
 #
 from ActionMail import ActionMail
 from ActionExec import ActionExec
-from ActionSyslog import *
 from Logger import Logger
 from OssimConf import OssimConf
 from OssimDB import OssimDB
@@ -89,26 +88,7 @@ class Action(threading.Thread):
     def get_mail_server_data(self):
         """Retrieves the email server configuration from the database.
         """
-        # #11742 - Use the ossim_setup file instead of the avcenter database.
-
-        # if not self.__component_id:
-        #     self.__component_id = Util.get_my_component_id()
-        # query = "select mailserver_relay,mailserver_relay_port, mailserver_relay_passwd,\
-        #         mailserver_relay_user from avcenter.current_local \
-        #         where uuid='%s';" % self.__component_id
-        # mail_server_info = self.__db.exec_query(query)
-        # if len(mail_server_info) > 1:
-        #     self.__email_server_relay_enabled = False
-        #     logger.error("Invalid mail server relay configuration, there's more than one configuration \
-        #                  for the same uuid: %s" % self.__component_id)
-        #     return
-        # if len(mail_server_info) == 0:
-        #     self.__email_server_relay_enabled = False
-        #     logger.error("Invalid mail server relay configuration, there's no configuration \
-        #                  for the uuid: %s" % self.__component_id)
-        #     return
         try:
-            #data = mail_server_info[0]
             server = ossim_setup['mailserver_relay']                #data['mailserver_relay']
             server_port = ossim_setup['mailserver_relay_port']      #data['mailserver_relay_port']
             server_user = ossim_setup['mailserver_relay_user']      #data['mailserver_relay_user']
@@ -119,7 +99,7 @@ class Action(threading.Thread):
                 self.__email_server_relay_enabled = False
                 return
             self.__email_server = server
-            
+
             try:
                 self.__email_server_port = int(server_port)
             except ValueError:
@@ -134,13 +114,12 @@ class Action(threading.Thread):
             import traceback
             traceback.print_exc()
             logger.error("Error getting the email server configuration: %s" % str(e))
-        
-    
+
     def parseRequest(self, request):
         """Builds a hash with the request info
-            
+
              request example:
-            
+
              event date="2005-06-16 13:06:18" plugin_id="1505" plugin_sid="4"
              risk="8" priority="4" reliability="10" event_id="297179"
              backlog_id="13948" src_ip="192.168.1.10" src_port="1765"
@@ -402,11 +381,9 @@ class Action(threading.Thread):
                             if replace == 'DATE':
                                 value_to_replace += " (UTC time)"
                             email_message = re.sub(replace_variable, value_to_replace, email_message)
-                            # email_message = email_message.replace(replace, replaces[replace])
                     use_local_server = not self.__email_server_relay_enabled
                     m = ActionMail(self.__email_server,self.__email_server_port,self.__email_server_user,
                                    self.__email_server_passwd, use_local_server)
-                    # logger.info(email_message)
 
                     for mail in email_to:
                         m.sendmail(email_from,
@@ -430,9 +407,6 @@ class Action(threading.Thread):
                     c.execCommand(action)
                     del(c)
 
-            elif action['name'] == 'syslog':
-                pass
-#                syslog(self.__request) 
             elif action['name'] == 'ticket':
                 descr = action['descr']
                 plugin_id = int(self.__request.get('plugin_id', ''))

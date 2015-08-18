@@ -105,7 +105,7 @@ span.loading, div.loading
 
 
 /* Asset icon */
-#asset_icon, .asset_icon
+#asset_icon, .asset_icon, .action_icon
 {
     vertical-align: middle;
     border: none !important;
@@ -113,7 +113,7 @@ span.loading, div.loading
     max-height: 16px;
 }
 
-.asset_icon.w16
+.asset_icon.w16, .action_icon.w16
 {
     max-width: 16px;
     max-height: 16px;
@@ -123,4 +123,11 @@ span.loading, div.loading
 {
     max-width: 32px;
     max-height: 32px;
+}
+
+img.newticket
+{
+    height:17px;
+    width:17px;
+    vertical-align: text-bottom;
 }

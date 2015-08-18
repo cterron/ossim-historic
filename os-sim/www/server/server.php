@@ -220,6 +220,11 @@ switch ($msg)
         $msg_class = 'nf_success';
         break;
         
+    case 'deletesystemfirst':
+        $msg_text  = _('Removing the server from this page is not allowed. To remove the server, please go to AlienVault Center and delete the system from the component list.');
+        $msg_class = 'nf_error';
+        break;
+        
     case 'nodeleteremote':
         $msg_text  = _('Unable to delete a parent server. Go to Configuration->Deployment->AlienVault Center and delete the system');
         $msg_class = 'nf_error';
@@ -307,7 +312,7 @@ $db->close();
 	<script type='text/javascript'>
 	
     	var msg_no_select = "<?php echo Util::js_entities(_('You must select a server')) ?>";
-    	var msg_delete    = "<?php echo Util::js_entities(_('Do you want to delete this server?')) ?>";
+    	var msg_delete    = "<?php echo Util::js_entities(_('Are you sure you want to delete the server?')) ?>";
     	var confirm_keys  = {"yes": "<?php echo _('Yes') ?>", "no": "<?php echo _('No') ?>"};
     	
     	function edit_server(id)

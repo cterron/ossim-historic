@@ -26,8 +26,15 @@ message_ids: {
     $MESSAGE_OTX_CONNECTION: "00000000-0000-0000-0000-000000010025",
     $MESSAGE_BACKUP_RUNNING: "00000000-0000-0000-0000-000000010026",
     $MESSAGE_SYSTEM_REBOOT_NEEDED: "00000000-0000-0000-0000-000000010027",
-    $MESSAGE_MCSERER_CANNOT_CONNECT: "00000000-0000-0000-0000-000000010028",
-    $MESSAGE_TELEMETRY_SERVER_CANNOT_CONNECT: "00000000-0000-0000-0000-000000010029"
+    $MESSAGE_MCSERVER_CANNOT_CONNECT: "00000000-0000-0000-0000-000000010028",
+    $MESSAGE_TELEMETRY_SERVER_CANNOT_CONNECT: "00000000-0000-0000-0000-000000010029",
+    $MESSAGE_OTX_CANNOT_DOWNLOAD_PULSES: "00000000-0000-0000-0000-000000010030",
+    $MESSAGE_HIDS_AGENTS_NOT_DEPLOYED: "00000000-0000-0000-0000-000000010031",
+    $MESSAGE_HIDS_AGENTS_NOT_LINKED: "00000000-0000-0000-0000-000000010032",
+    $MESSAGE_HIDS_AGENTS_DEPLOYED: "00000000-0000-0000-0000-000000010033",
+    $MESSAGE_INSECURED_VPN: "00000000-0000-0000-0000-000000010034",
+    $MESSAGE_FEDERATED_OTX_KEY: "00000000-0000-0000-0000-000000010035",
+    $MESSAGE_OLD_OTX_KEY: "00000000-0000-0000-0000-000000010036"
 }
 
 message_sources:
@@ -141,7 +148,7 @@ messages: [
      message_role: "admin",
      action_role: "admin",
      title: "Configured DNS is external",
-     description: "The configured Domain Name Server is external to your environment. This will cause your asset names won't be discovered. At TIMESTAMP.",
+     description: "The configured Domain Name Server is external to your environment. As a result, your asset names won't be discovered. At TIMESTAMP.",
      actions: "*Configure an internal DNS:\n##Go to ''AlienVault console'' (alienvault-setup)\n##''System Preferences / Configure Network / Name Server DNS''.",
      alternative_actions: "",
      source: "monitor"
@@ -365,17 +372,17 @@ messages: [
    {
      id: "$MESSAGE_SYSTEM_REBOOT_NEEDED",
      level: Warning,
-     type: Update,
+     type: Deployment,
      message_role: "admin",
      action_role: "admin",
-     title: "A system reboot is required",
-     description: "A recent update needs a system reboot to finish properly.",
-     actions: "*Please reboot the system.",
+     title: "Reboot required to complete upgrade process",
+     description: "Your AlienVault device requires a reboot to properly complete the upgrade process. Please reboot the following device:\n\nHostname: HOSTNAME\nIP: IP_ADDRESS",
+     actions: "To reboot, login to the AlienVault console via SSH and choose 'Reboot Appliance'.\nOnce the reboot is finished, the upgrade will be complete.",
      alternative_actions: "",
      source: "monitor"
    },
    {
-     id: "$MESSAGE_MCSERER_CANNOT_CONNECT",
+     id: "$MESSAGE_MCSERVER_CANNOT_CONNECT",
      level: Warning,
      type: Deployment,
      message_role: "admin",
@@ -397,5 +404,90 @@ messages: [
      actions: "*Please make sure that the server telemetry.alienvault.com can be reached through port 443.",
      alternative_actions: "",
      source: "monitor"
+   },
+   {
+     id: "$MESSAGE_HIDS_AGENTS_DEPLOYED",
+     level: Info,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "HIDS agent successfully deployed to ASSET_DESCR",
+     description: "HIDS agent successfully deployed to ASSET_DESCR. You can now view the status of the HIDS agent from the asset views",
+     actions: "",
+     alternative_actions: "",
+     source: "ad-hoc"
+   },
+   {
+     id: "$MESSAGE_HIDS_AGENTS_NOT_DEPLOYED",
+     level: Warning,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Unable to deploy HIDS agent to ASSET_DESCR",
+     description: "Unable to deploy the following HIDS agent to ASSET_DESCR.\nAGENT_DESCR\n\nPlease make sure that:\n*The asset is running on Windows XP or above.\n*There is not a firewall blocking the incoming connections to this asset.\n*The user has the correct permissions to install software in this asset.\n*If the asset is NOT a member of a Windows domain, User Account Control (UAC) must be disabled.\n\nPlease remediate the error below and try again.\nThe following error occurred:\n*ERROR",
+     actions: "",
+     alternative_actions: "",
+     source: "ad-hoc"
+   },
+   {
+     id: "$MESSAGE_HIDS_AGENTS_NOT_LINKED",
+     level: Warning,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Unable to find associated assets for NUM_ASSETS HIDS agents",
+     description: "We were unable to match NUM_ASSETS HIDS agents with assets from the asset inventory.\n\nYou will not be able to see agent related information from the asset views unless you connect the agent to an asset.",
+     actions: "To connect the remaining HIDS agents with an asset from your asset inventory, follow the instructions below:\n\n* Go to the [AV_PATH/av_routing.php?action_type=SN_MESSAGE_HIDS_AGENTS_NOT_LINKED HIDS Agents page] to review the list of agents\n* All agents that do not have an asset under the asset column have not been connected to an asset\n* To connect the agent to an asset, click on the \"link\" icon under Actions and select the asset\n",
+     alternative_actions: "",
+     source: "ad-hoc"
+   },
+   {
+     id: "$MESSAGE_OTX_CANNOT_DOWNLOAD_PULSES",
+     level: Warning,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Unable to download your OTX subscriptions",
+     description: "There was an error downloading your OTX subscriptions. This means that you are not getting the latest information and updates from OTX.",
+     actions: "*Please make sure that the server otx.alienvault.com can be reached.",
+     alternative_actions: "",
+     source: "monitor"
+   },
+   {
+     id: "$MESSAGE_INSECURED_VPN",
+     level: Error,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Your VPN configuration is not secure",
+     description: "Your existing VPN configuration was set up using a set of keys that is vulnerable to the Logjam vulnerability (CVE-2015-4000) reported on May 20, 2015. Please follow the instructions below to reconfigure the VPN environment to avoid any potential security issues.\n\n(Note: all previous VPN configuration will be lost)",
+     actions: "From the AlienVault console, please perform the following:\n* Disable VPN (Alienvault-Setup > System Preferences > Configure Network > Setup VPN > Enable/Disable VPN). Make sure it is set to 'no' and apply changes\n* Configure VPN server (Alienvault-Setup > System Preferences > Configure Network > Setup VPN > Configure VPN Server). Apply changes\n* Enable VPN (Alienvault-Setup > System Preferences > Configure Network > Setup VPN > Enable/Disable VPN). Set to 'yes' and apply changes\n* Configure VPN client (Alienvault-Setup > System Preferences > Configure Network > Setup VPN > Configure VPN Client). Apply changes.\n\nFor more information, please refer to [https://www.alienvault.com/doc-repo/usm/setup-and-configuration/AlienVault-USM-5.x-Configuring-VPN.pdf Configuring a VPN in AlienVault 5.x]",
+     alternative_actions: "",
+     source: "monitor"
+   },
+   {
+     id: "$MESSAGE_FEDERATED_OTX_KEY",
+     level: Error,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Different OTX account key used",
+     description: "For avoid inconsistence, the same OTX account key should be used across all the USM in the environment.",
+     actions: "",
+     alternative_actions: "",
+     source: "monitor"
+   },
+   {
+     id: "$MESSAGE_OLD_OTX_KEY",
+     level: Info,
+     type: Alienvault,
+     message_role: "admin",
+     action_role: "admin",
+     title: "OTX account upgrade available",
+     description: "We've updated OTX with new functionality that will make collaborative defense easier and more effective! However, it appears that your OTX account has not been upgraded and you may be missing out on the new features we've added. To take advantage of the new OTX, please re-authenticate your account by [https://otx.alienvault.com/accounts/usm/?exists=true signing up for an upgraded OTX account] using the same email address used for your original OTX account. Once your account is created and verified, you will automatically get access to the latest features in OTX.",
+     actions: "If you cannot remember or do not have access to that email address, please follow the instructions below:\n* [https://otx.alienvault.com/accounts/usm/?exists=true Create an upgraded OTX account] using a new email address\n* Once you have verified your email address, go to your new OTX account and copy the OTX key\n* Open up your AlienVault installation and navigate to Configuration > Open Threat Exchange\n* Remove existing OTX key and paste your new OTX key in the space provided and click 'Connect OTX Account'\n* You will now get access to the latest features in OTX and get real-time insight into emerging threats in your environment",
+     alternative_actions: "",
+     source: "monitor"
    }
 ]
+

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -34,6 +34,7 @@
 #
 import random, threading, time
 import os
+import ast
 from threading import Timer, Lock
 
 import socket
@@ -45,7 +46,6 @@ import Util
 from OssimDB import OssimDB
 from OssimConf import OssimConf
 from DBConstantNames import *
-from ApacheNtopProxyManager import ApacheNtopProxyManager
 #
 # GLOBAL VARIABLES
 #
@@ -64,10 +64,8 @@ class ControlManager:
                               conf[VAR_DB_PASSWORD])
         self.__myDB_connected = self.__myDB.connect ()
         self.__transaction_timeout = 60
-        self.__ntop_apache_manager = ApacheNtopProxyManager(conf)
         self.__control = DoControl(self)
         self.__control.start()
-        self.__ntop_configuration_checked = False
         self.__mutexRquest = Lock()
 
 
@@ -91,10 +89,8 @@ class ControlManager:
                 query = 'select task_inventory.task_name, host_source_reference.id as task_type, host_source_reference.name as task_type_name, task_inventory.task_period, host_source_reference.relevance as task_reliability, task_inventory.task_enable, task_inventory.task_params from host_source_reference, sensor inner join task_inventory on sensor.id = task_inventory.task_sensor where sensor.id = unhex("%s") and host_source_reference.id=task_inventory.task_type;' % agent_id.replace('-','')
 
             tmp = self.__myDB.exec_query(query)
-            logger.info(tmp)
             new_command = 'action="refresh_inventory_task" inventory_task_list={'
             tasks = []
-            logger.info(tmp)
             for task in tmp:
                 #Remove -A when the scan is a ping scan.
                 params = task['task_params']
@@ -151,9 +147,8 @@ class ControlManager:
         else:
             query = 'select host.hostname as hostname,inet6_ntoa(host_ip.ip) as ip,host.fqdns as fqdns from host,host_ip \
                     where host.id=host_ip.host_id and host.id in (select host_id from host_sensor_reference where sensor_id=unhex("%s"));' % agent_id.replace('-','')
-        
+
         tmp = self.__myDB.exec_query(query)
-        logger.info(query)
         new_command = 'action="refresh_asset_list" list={'
         sendCommand = False
         for host in tmp:
@@ -166,12 +161,7 @@ class ControlManager:
             host_cmd += ';'
             sendCommand = True
             new_command += host_cmd
-        new_command[:-1]
         new_command += '}'
-        # add this connection to the transaction map
-        #transaction = self.__transaction_id_get()
-        #self.transaction_map[transaction] = {'socket':requestor, 'time':time.time()}
-        # append the transaction to the message for tracking
         if sendCommand:
             if self.control_agents.has_key(requestor.getRequestorIP()):
                 try:
@@ -228,13 +218,10 @@ class ControlManager:
                 connection.shutdown(socket.SHUT_WR)
                 datahost = connection.recv(100000000)
                 connection.close()
-        #        print datahost
-                dd = eval(datahost)
+                dd = ast.literal_eval(datahost)
                 strxml = "<nagiosdiscovery>"
                 for row in dd:
                     if len(row) == 3:
-                        
-                        
                         hostip = row[0]
                         hostname = row[1]
                         host_state = row[2]
@@ -246,7 +233,7 @@ class ControlManager:
                         connection.shutdown(socket.SHUT_WR)
                         data = connection.recv(100000000)
                         connection.close()
-                        host_services = eval(data)
+                        host_services = ast.literal_eval(data)
                         strxml += "<services>"
                         for s in host_services:
                             if len(s) == 3:
@@ -292,7 +279,6 @@ class ControlManager:
                 self.__control_agents_connection_ip_vs_sensor_ip[self.get_agent_ip_from_sensor_table(requestor.getRequestorIP())] = requestor.getRequestorIP()
                 # indicate we're good to go
                 response = 'ok id="%s"\n' % id
-                self.__ntop_apache_manager.refreshDefaultNtopConfiguration(first_sensor_name=id, must_reload=True)
                 timer = Timer(5.0, self.refreshAgentCache, (requestor, requestor.getRequestorIP(), id,))
                 timer.start()
                 timer = Timer(10.0, self.refreshAgentInventoryTasks, (requestor, requestor.getRequestorIP(), id,))
@@ -363,7 +349,6 @@ class ControlManager:
                         for key in page_keys:
                             names += "%s=%s|" % (self.control_agents[key].getRequestorID(), self.get_agent_ip_from_sensor_table(key))
                         names = names[:-1]
-                        #names = "|".join(page_keys)
                     else:
                         names = ""
                     response += ' page_size="%d" names="%s" errno="0" error="Success." ackend\n' % (real_size, names)

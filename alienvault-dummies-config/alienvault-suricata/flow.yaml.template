@@ -1,6 +1,0 @@
-flow:
-  emergency-recovery: <emergency_recovery>
-  hash-size: <hash_size>
-  memcap: <memcap>
-  prealloc: <prealloc>
-  prune-flows: <prune_flows>

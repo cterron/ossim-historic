@@ -199,7 +199,7 @@ switch($type)
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
 		
 		//Link to the forensic site.
-		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timetz-$range)."&time[0][3]=".gmdate("d",$timetz-$range)."&time[0][4]=".gmdate("y",$timetz-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timetz)."&time[1][3]=".gmdate("d",$timetz)."&time[1][4]=".gmdate("y",$timetz)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
+		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timetz-$range)."&time[0][3]=".gmdate("d",$timetz-$range)."&time[0][4]=".gmdate("Y",$timetz-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timetz)."&time[1][3]=".gmdate("d",$timetz)."&time[1][4]=".gmdate("Y",$timetz)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
 		$forensic_link = Menu::get_menu_url($link, 'analysis', 'security_events');
 
 		//Sql Query
@@ -219,7 +219,7 @@ switch($type)
 							
 		        $data[]  = $rg->fields["num_events"];
 				$label[] = inet_ntop($rg->fields["name"]);
-                $links[] = "'$forensic_link".urlencode("&category[0]=19&ip_addr[0][0]= &ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=".$rg->fields["name"]."&ip_addr[0][8]=+&ip_addr[0][9]=+&ip_addr_cnt=1")."'";
+                $links[] = $forensic_link . urlencode("&category[0]=19&ip_addr[0][0]= &ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=".$rg->fields["name"]."&ip_addr[0][8]=+&ip_addr[0][9]=+&ip_addr_cnt=1");
 		        
 				$rg->MoveNext();
 		    }
@@ -242,7 +242,7 @@ switch($type)
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
 		
 		//Link to the forensic site.
-		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]= &time[0][1]=>=&time[0][8]= &time[0][9]=AND&time[1][1]=<=&time[0][2]=".gmdate("m",$timetz-$range)."&time[0][3]=".gmdate("d",$timetz-$range)."&time[0][4]=".gmdate("y",$timetz-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timetz)."&time[1][3]=".gmdate("d",$timetz)."&time[1][4]=".gmdate("y",$timetz)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
+		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]= &time[0][1]=>=&time[0][8]= &time[0][9]=AND&time[1][1]=<=&time[0][2]=".gmdate("m",$timetz-$range)."&time[0][3]=".gmdate("d",$timetz-$range)."&time[0][4]=".gmdate("Y",$timetz-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timetz)."&time[1][3]=".gmdate("d",$timetz)."&time[1][4]=".gmdate("Y",$timetz)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
 		$forensic_link = Menu::get_menu_url($link, 'analysis', 'security_events');
 
 		//Sql Query
@@ -261,7 +261,7 @@ switch($type)
 		    {			
 		        $data[]  = $rg->fields["num_events"];
 				$label[] = inet_ntop($rg->fields["name"]);
-		        $links[] = "'$forensic_link".urlencode("&category[0]=19&ip_addr[0][0]= &ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=".$rg->fields["name"]."&ip_addr[0][8]= &ip_addr[0][9]= &ip_addr_cnt=1")."'";
+		        $links[] = $forensic_link . urlencode("&category[0]=19&ip_addr[0][0]= &ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=".$rg->fields["name"]."&ip_addr[0][8]= &ip_addr[0][9]= &ip_addr_cnt=1");
 		        
 
 				$rg->MoveNext();
@@ -285,7 +285,7 @@ switch($type)
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
 		
 		//Link to the forensic site.
-		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]= &time[0][1]=>=&time[0][8]= &time[0][9]=AND&time[1][1]=<=&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query DB&sig_type=1&sig[0]==&sig[1]=QQQ&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
+		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]= &time[0][1]=>=&time[0][8]= &time[0][9]=AND&time[1][1]=<=&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("Y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("Y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query DB&sig_type=1&sig[0]==&sig[1]=QQQ&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
 		$forensic_link = Menu::get_menu_url($link, 'analysis', 'security_events');
 
 		//Sql Query
@@ -364,7 +364,7 @@ switch($type)
 		$limit         = ($chart_info['top'] != '')? $chart_info['top'] : 10;
 		
 		//Link to the forensic site.
-		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
+		$link          = "/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("Y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("Y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
 		$forensic_link = Menu::get_menu_url($link, 'analysis', 'security_events');
 
 		//Sql Query
@@ -384,7 +384,7 @@ switch($type)
 							
 		        $data[]  = $rg->fields["num_events"];
 				$label[] = $rg->fields["name"];
-                $links[] = "'$forensic_link".urlencode("&plugin=".$rg->fields["plugin_id"])."'";
+                $links[] = $forensic_link . urlencode("&plugin=".$rg->fields["plugin_id"]);
 		        
 				$rg->MoveNext();
 		    }
@@ -458,9 +458,6 @@ switch($type)
 		$geoloc->close();
 		
 	break;
-		
-		
-	
 			
 }
 
@@ -468,4 +465,3 @@ $db->close();
 
 //Now the handler is called to draw the proper widget, this is: any kind of chart, tag_cloud, etc...
 require 'handler.php';
-

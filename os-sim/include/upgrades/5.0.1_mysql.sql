@@ -1,4 +1,5 @@
 USE alienvault;
+SET AUTOCOMMIT=0;
 
 -- Cleaning filter table before modifying it.
 TRUNCATE `user_host_filter`;
@@ -421,8 +422,8 @@ DELIMITER ;
 
 
 REPLACE INTO config (conf, value) VALUES ('latest_asset_change', utc_timestamp());
-REPLACE INTO config (conf, value) VALUES ('last_update', '2015-05-12');
-REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.0.1');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2015-04-21');
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.0.0');
 
 COMMIT;
 -- NOTHING BELOW THIS LINE / NADA DEBAJO DE ESTA LINEA

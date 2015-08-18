@@ -4,12 +4,12 @@ USER=`grep ^user= /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`
 PASS=`grep ^pass= /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`
 HOST=`grep ^db_ip= /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`
 ADMIN_IP=`grep ^admin_ip= /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`
-OK=`mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault server_forward_role | grep -c "server_forward_role"`
+ONLYDELETE=`mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault server_forward_role | grep -c "server_forward_role"`
 #
-if [ $OK -eq 0 ]; then
-    echo "No values at server_forward_role."
-    exit;
-fi
+#if [ $ONLYDELETE -eq 0 ]; then
+#    echo "No values at server_forward_role."
+#    exit;
+#fi
 if [ ! -d /var/lib/alienvault-center/db/ ]; then
         echo "Needed target directory /var/lib/alienvault-center/db/ doesn't exists."
         exit;
@@ -29,33 +29,49 @@ echo "SET @disable_calc_perms=1;" >> $TMPFILE
 
 # 
 # System ID
-SYSID=`echo "select concat('0x',hex(id)) as id from alienvault.system where admin_ip=inet6_aton('$ADMIN_IP')"|ossim-db|sed -e '1,${ /^id/d }'`
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "id not in  ($SYSID)" alienvault system >> $TMPFILE
+SYSIDS=`echo "select concat('0x',hex(id)) as id from alienvault.system where admin_ip<>inet6_aton('$ADMIN_IP')"|ossim-db|sed -e '1,${ /^id/d }'|xargs|sed 's/ /,/g'`
+if [ ! -z "$SYSIDS" ]; then
+    echo "delete from alienvault.system where id in ($SYSIDS);" >> $TMPFILE
+    if [ $ONLYDELETE -gt 0 ]; then
+        mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "id in ($SYSIDS)" alienvault system >> $TMPFILE
+    fi
+else
+    if [ $ONLYDELETE -gt 0 ]; then
+        mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault system >> $TMPFILE
+    fi
+fi
 #
 # ENTITIES
 CTXS=`echo "select concat('0x',hex(id)) as ctx from acl_entities where entity_type in ('context','engine')"|ossim-db|sed -e '1,${ /^ctx/d }'|xargs|sed 's/ /,/g'`
 ONLYCTXS=`echo "select concat('0x',hex(id)) as ctx from acl_entities where entity_type in ('context')"|ossim-db|sed -e '1,${ /^ctx/d }'|xargs|sed 's/ /,/g'`
 ONLYENGINES=`echo "select concat('0x',hex(id)) as ctx from acl_entities where entity_type in ('engine')"|ossim-db|sed -e '1,${ /^ctx/d }'|xargs|sed 's/ /,/g'`
 SEIDS=`echo "select concat('0x',hex(server_id)) as ctx from acl_entities where entity_type in ('engine')"|ossim-db|sed -e '1,${ /^ctx/d }'|xargs|sed 's/ /,/g'`
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "entity_type in ('context','engine')" alienvault acl_entities >> $TMPFILE
-echo "select unhex(replace(value,'-','')) into @ctx from config where conf='default_context_id';" >> $TMPFILE
-echo "update acl_entities set parent_id=@ctx where hex(parent_id)='00000000000000000000000000000000' and id in ($CTXS);" >> $TMPFILE
+echo "delete from alienvault.acl_entities where id in ($CTXS);" >> $TMPFILE
 echo "delete from corr_engine_contexts where event_ctx in ($CTXS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "event_ctx in ($CTXS)" alienvault corr_engine_contexts >> $TMPFILE
-echo "select unhex(replace(value,'-','')) into @engine from config where conf='default_engine_id';" >> $TMPFILE
-echo "replace into corr_engine_contexts (engine_ctx, event_ctx, descr) select @engine,id,'' from acl_entities where id in ($ONLYCTXS) and id not in (select c.event_ctx from corr_engine_contexts c,acl_entities a where a.id=c.event_ctx and a.server_id not in ($SEIDS));" >> $TMPFILE
-echo "replace into corr_engine_contexts (engine_ctx, event_ctx, descr) select @engine,id,'' from acl_entities where id in ($ONLYENGINES) and id not in (select c.event_ctx from corr_engine_contexts c,acl_entities a where a.id=c.event_ctx and a.server_id not in ($SEIDS));" >> $TMPFILE
+if [ $ONLYDELETE -gt 0 ]; then
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "entity_type in ('context','engine')" alienvault acl_entities >> $TMPFILE
+    echo "select unhex(replace(value,'-','')) into @ctx from config where conf='default_context_id';" >> $TMPFILE
+    echo "update acl_entities set parent_id=@ctx where hex(parent_id)='00000000000000000000000000000000' and id in ($CTXS);" >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "event_ctx in ($CTXS)" alienvault corr_engine_contexts >> $TMPFILE
+    echo "select unhex(replace(value,'-','')) into @engine from config where conf='default_engine_id';" >> $TMPFILE
+    echo "replace into corr_engine_contexts (engine_ctx, event_ctx, descr) select @engine,id,'' from acl_entities where id in ($ONLYCTXS) and id not in (select c.event_ctx from corr_engine_contexts c,acl_entities a where a.id=c.event_ctx and a.server_id not in ($SEIDS));" >> $TMPFILE
+    echo "replace into corr_engine_contexts (engine_ctx, event_ctx, descr) select @engine,id,'' from acl_entities where id in ($ONLYENGINES) and id not in (select c.event_ctx from corr_engine_contexts c,acl_entities a where a.id=c.event_ctx and a.server_id not in ($SEIDS));" >> $TMPFILE
+fi
+
 #
 # SERVERS
 SERVERS=`echo "select concat('0x',hex(id)) as server from server where id in (select server_id from acl_entities where id in ($CTXS))"|ossim-db|sed -e '1,${ /^server/d }'|xargs|sed 's/ /,/g'`
-echo "delete from server where id in ($SERVERS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "id in ($SERVERS)" alienvault server >> $TMPFILE
-echo "delete from server_role where server_id in ($SERVERS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "server_id in ($SERVERS)" alienvault server_role >> $TMPFILE
 echo "delete from server_forward_role where server_src_id in ($SERVERS) OR server_dst_id in ($SERVERS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "server_src_id in ($SERVERS) OR server_dst_id in ($SERVERS)" alienvault server_forward_role >> $TMPFILE
-echo "delete from server_hierarchy where child_id in ($SERVERS) OR parent_id in ($SERVERS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "child_id in ($SERVERS) OR parent_id in ($SERVERS)" alienvault server_hierarchy >> $TMPFILE
+if [ $ONLYDELETE -gt 0 ]; then
+    echo "delete from server_role where server_id in ($SERVERS);" >> $TMPFILE
+    echo "delete from server where id in ($SERVERS);" >> $TMPFILE
+    echo "delete from server_hierarchy where child_id in ($SERVERS) OR parent_id in ($SERVERS);" >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "id in ($SERVERS)" alienvault server >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "server_id in ($SERVERS)" alienvault server_role >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "server_src_id in ($SERVERS) OR server_dst_id in ($SERVERS)" alienvault server_forward_role >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "child_id in ($SERVERS) OR parent_id in ($SERVERS)" alienvault server_hierarchy >> $TMPFILE
+fi
+
 #
 # TAGS ALARM
 echo "
@@ -101,15 +117,17 @@ mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --
 # SENSORS
 SENSORS=`echo "select concat('0x',hex(id)) as sensor from sensor, sensor_properties where sensor_properties.sensor_id=sensor.id AND sensor.name != '(null)' and sensor_properties.version != ''"|ossim-db|sed -e '1,${ /^sensor/d }'|xargs|sed 's/ /,/g'`
 echo "delete sensor.* from sensor,acl_sensors where sensor.id=acl_sensors.sensor_id and acl_sensors.entity_id in ($CTXS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor -w "id in ($SENSORS)" >> $TMPFILE
 echo "delete from acl_sensors where sensor_id in ($SENSORS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault acl_sensors -w "sensor_id in ($SENSORS)" >> $TMPFILE
 echo "delete from sensor_properties where sensor_id in ($SENSORS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor_properties -w "sensor_id in ($SENSORS)" >> $TMPFILE
 echo "delete from locations where ctx in ($CTXS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault locations >> $TMPFILE
 echo "delete from location_sensor_reference where sensor_id in ($SENSORS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault location_sensor_reference -w "sensor_id in ($SENSORS)" >> $TMPFILE
+if [ $ONLYDELETE -gt 0 ]; then
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor -w "id in ($SENSORS)" >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault acl_sensors -w "sensor_id in ($SENSORS)" >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor_properties -w "sensor_id in ($SENSORS)" >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault locations >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault location_sensor_reference -w "sensor_id in ($SENSORS)" >> $TMPFILE
+fi
 #
 # REPAIR SENSOR_ID NULL IN ALIENVAULT.SYSTEM
 echo "
@@ -146,7 +164,6 @@ DROP PROCEDURE fix_sensor_id;
 echo "CREATE TEMPORARY TABLE IF NOT EXISTS tmp_delete_assets (id binary(16) NOT NULL, PRIMARY KEY (id));" >> $TMPFILE
 echo "insert into tmp_delete_assets select id from host where ctx in ($CTXS);" >> $TMPFILE
 echo "delete from host where ctx in ($CTXS);" >> $TMPFILE
-echo "delete ht FROM host_types ht            LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
 echo "delete ht FROM host_sensor_reference ht LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
 echo "delete ht FROM host_ip ht               LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
 echo "delete ht FROM host_net_reference ht    LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
@@ -154,24 +171,29 @@ echo "delete ht FROM host_properties ht       LEFT JOIN tmp_delete_assets h ON h
 echo "delete ht FROM host_services ht         LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
 echo "delete ht FROM host_software ht         LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
 echo "delete ht FROM host_types ht            LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_ip >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_sensor_reference >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_types >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_services >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_properties >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_software >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_types >> $TMPFILE
+echo "delete ht FROM host_scan ht             LEFT JOIN tmp_delete_assets h ON ht.host_id=h.id WHERE h.id is not null;" >> $TMPFILE
+if [ $ONLYDELETE -gt 0 ]; then
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_ip >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_sensor_reference >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_services >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_properties >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_software >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_types >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_scan >> $TMPFILE
+fi
 #
 # NETS
 echo "delete net_sensor_reference.* from net,net_sensor_reference where net.id=net_sensor_reference.net_id and net.ctx in ($CTXS);" >> $TMPFILE
 echo "delete net_cidrs.* from net,net_cidrs where net.id=net_cidrs.net_id and net.ctx in ($CTXS);" >> $TMPFILE
 echo "delete host_net_reference.* from net,host_net_reference where host_net_reference.net_id=net.id and net.ctx in ($CTXS);" >> $TMPFILE
 echo "delete from net where ctx in ($CTXS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault net >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault net_sensor_reference >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault net_cidrs >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_net_reference >> $TMPFILE
+if [ $ONLYDELETE -gt 0 ]; then
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault net >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault net_sensor_reference >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault net_cidrs >> $TMPFILE
+    mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault host_net_reference >> $TMPFILE
+fi
 #
 # PLUGIN SIDS
 mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault plugin_sid >> $TMPFILE

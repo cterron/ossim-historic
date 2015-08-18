@@ -164,7 +164,7 @@ $sensor_list = preg_replace('/:$/i', '', $sensor_list);
 		$(document).ready(function() 
 		{
 			var width = $('body').css('width').replace(/px/g, '') - 25;
-			var url   = '<?php echo "/ossim/nfsen/rrdgraph.php?cmd=get-detailsgraph&profile=./live&arg=$sensor_list+$type+flows+$begind+$begind+$end+$begind+$end+####+$height" ?>';
+			var url   = "<?php echo "/ossim/nfsen/rrdgraph.php?cmd=get-detailsgraph&profile=./live&arg=$sensor_list+$type+flows+$begind+$begind+$end+$begind+$end+####+$height" ?>";
 			
 			url = url.replace('####', width);			
 			$("#flow").html("<img src='"+url+"' border='0' height='<?php echo $height - 10?>px' width='"+width+"px'align='middle'>");

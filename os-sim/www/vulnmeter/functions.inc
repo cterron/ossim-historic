@@ -681,7 +681,7 @@ function stats_networks_hosts($type, $filter="", $graph="hosts") {
 
     if (!empty($perms_where))
     {
-        $query = "SELECT count(*) as vulnerability, vulns_list.hostip, HEX(vulns_list.ctx) as ctx FROM
+        $query = "SELECT count(*) as vulnerability, vulns_list.hostip, vulns_list.ctx as ctx FROM
                   (SELECT DISTINCT HEX(lr.ctx) as ctx, lr.hostIP, lr.app, lr.service, lr.port, lr.protocol, lr.scriptid, lr.risk, lr.msg FROM
                    vuln_nessus_latest_results lr, host, host_ip hi
                    WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where $queryf AND falsepositive='N') as vulns_list
@@ -689,7 +689,7 @@ function stats_networks_hosts($type, $filter="", $graph="hosts") {
     }
     else
     {
-        $query = "SELECT count(*) as vulnerability, vulns_list.hostip, HEX(vulns_list.ctx) as ctx FROM
+        $query = "SELECT count(*) as vulnerability, vulns_list.hostip, vulns_list.ctx as ctx FROM
                   (SELECT DISTINCT HEX(lr.ctx) as ctx, lr.hostIP, lr.app, lr.service, lr.port, lr.protocol, lr.scriptid, lr.risk, lr.msg FROM
                    vuln_nessus_latest_results lr
                    WHERE 1=1 $queryf AND falsepositive='N') as vulns_list GROUP BY hostip ORDER BY vulnerability DESC LIMIT 1000";
@@ -1693,7 +1693,7 @@ function check_host ( $eval_hostname, $eval_hostip ) {
 		$bip_resolve = false;		
 	}
 	
-	$res = shell_exec("ping -c 1 -w 1 $lookup_ip");
+	$res = Util::execute_command("ping -c 1 -w 1 ?", array($lookup_ip), 'string');
 	if (preg_match('/rtt/', $res, $out)) {
    		$balive = true;
  	} else {
@@ -3200,7 +3200,7 @@ function exists_feed_tables($dbconn)
 
 function extract_fields($description)
 {    
-    $fields_regexp = "(Summary|Solution|Overview|Synopsis|Description|See also|Plugin output|References|Vulnerability Detection|Vulnerability Insight|Impact|Impact Level|Affected Software\/OS|Fix|Information about this scan)";
+    $fields_regexp = "(Insight|CVSS Base Score|Vulnerability Detection Method|Vulnerability Detection Result|CVSS Base Vector|Summary|Solution|Overview|Synopsis|Description|See also|Plugin output|References|Vulnerability Detection|Vulnerability Insight|Impact|Impact Level|Affected Software\/OS|Fix|Information about this scan)";
 
     $results = array();
 

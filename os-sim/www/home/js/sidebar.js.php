@@ -93,6 +93,7 @@ function load_sidebar_data()
     load_events_trend();
 }
 
+
 function remove_schedule(type)
 {
     if (TIMEOUT_LIST[type]['timeout'])
@@ -102,12 +103,14 @@ function remove_schedule(type)
     }
 }
 
+
 function schedule_method(type)
 {
     remove_schedule(type);
-    
-    TIMEOUT_LIST[type]['timeout'] = setTimeout(TIMEOUT_LIST[type]['function'], TIMEOUT_LIST[type]['delay']);   
+
+    TIMEOUT_LIST[type]['timeout'] = setTimeout(TIMEOUT_LIST[type]['function'], TIMEOUT_LIST[type]['delay']);
 }
+
 
 
 
@@ -177,15 +180,15 @@ function load_trial_status()
             {
                 $('#notif_status').html("<?php echo _('It was not possible to load the trial status') ?>");
             }
-
         }
     });
 }
 
+
 function load_open_tickets()
 {
     remove_schedule('tickets');
-    
+
     var id = '#notif_tickets';
 
     $.ajax({
@@ -199,7 +202,7 @@ function load_open_tickets()
             $(id).removeClass('nl_tickets');
         },
         success: function(response)
-        {            
+        {
             if(typeof(response) == 'undefined' || response.error)
             {
 
@@ -208,11 +211,10 @@ function load_open_tickets()
             else
             {
                 var tickets = response.output
-                
+
                 $(id).text(tickets.text);
                 $(id).addClass('nl_tickets');
             }
-
         },
         error: function(data)
         {
@@ -230,14 +232,13 @@ function load_open_tickets()
         },
         complete: schedule_method('tickets')
     });
-
 }
 
 
 function load_events_trend()
 {
     remove_schedule('trend');
-    
+
     var id = '#notif_eps';
 
     $.ajax({
@@ -274,7 +275,7 @@ function load_events_trend()
                     maxSpotColor: false,
                     spotColor: false,
                     chartRangeMin:0,
-                    tooltipFormatter: function(a,b,c) 
+                    tooltipFormatter: function(a,b,c)
                     {
                         var label = c.y + ((c.y == '1')? ' <?php echo _('Event')?>' : ' <?php echo _('Events')?>');
                         if(typeof(labels[c.x]) != 'undefined')
@@ -285,9 +286,7 @@ function load_events_trend()
                          return label;
                     }
                 });
-
             }
-
         },
         error: function(data)
         {
@@ -305,14 +304,13 @@ function load_events_trend()
         },
         complete: schedule_method('trend')
     });
-
 }
 
 
 function load_system_eps()
 {
     remove_schedule('eps');
-    
+
     var id = '#notif_eps';
 
     $.ajax({
@@ -324,11 +322,9 @@ function load_system_eps()
         {
             $(id).html(spinner_img).removeClass('nl_siem');
             $('#resume_eps').removeClass('nl_siem');
-            $('.nl_siem').off('click');
-
         },
         success: function(response)
-        {            
+        {
             if(typeof(response) == 'undefined' || response.error)
             {
                 $('#resume_eps').text('-');
@@ -337,11 +333,9 @@ function load_system_eps()
             else
             {
                 var eps = response.output
-                
+
                 $('#resume_eps').text(eps.readable).addClass('nl_siem');
                 $(id).text(eps.text + ' EPS').addClass('nl_siem');
-                
-                $('.nl_siem').on('click', nl_siem);
             }
 
         },
@@ -362,14 +356,13 @@ function load_system_eps()
         },
         complete: schedule_method('eps')
     });
-
 }
 
 
 function load_monitored_devices()
 {
     remove_schedule('devices');
-    
+
     var id = '#notif_devices';
 
     $.ajax({
@@ -393,7 +386,7 @@ function load_monitored_devices()
             else
             {
                 var devices = response.output
-                
+
                 $(id).text(devices.text);
                 $(id).addClass('nl_devices');
             }
@@ -414,14 +407,13 @@ function load_monitored_devices()
         },
         complete: schedule_method('devices')
     });
-
 }
 
 
 function load_unresolved_alarms()
 {
     remove_schedule('alarms');
-    
+
     var id = '#notif_alarms';
 
     $.ajax({
@@ -432,7 +424,6 @@ function load_unresolved_alarms()
         beforeSend: function()
         {
             $(id).html(spinner_img).removeClass('nl_alarms');
-            $('.nl_alarms').off('click');
         },
         success: function(response)
         {
@@ -445,26 +436,24 @@ function load_unresolved_alarms()
             }
             else
             {
-            	if(typeof(response.output) == 'object')
-            	{
-            		var data = response.output;
+                if(typeof(response.output) == 'object')
+                {
+                    var data = response.output;
 
-	                $('#resume_alarm_count').text(data.alarms.readable).addClass('nl_alarms');
-	                
-	                $(id).text(data.alarms.text).addClass('nl_alarms');
-	                
-	                $('.nl_alarms').on('click', nl_alarms);
+                    $('#resume_alarm_count').text(data.alarms.readable).addClass('nl_alarms');
 
-	                // New Alarms
-				    if (data.new_alarms > 0 && notify.isSupported)
-				    {
-						var new_alarms_desc = data.new_alarms_desc.split("|");
-						for (var i = 0; i < new_alarms_desc.length; i++)
-						{
-							av_notification ('<?php echo Util::js_entities(_("New alarm")) ?>', new_alarms_desc[i], (i % 4) + 1);
-						}
-				    }
-			    }
+                    $(id).text(data.alarms.text).addClass('nl_alarms');
+
+                    // New Alarms
+                    if (data.new_alarms > 0 && notify.isSupported)
+                    {
+                        var new_alarms_desc = data.new_alarms_desc.split("|");
+                        for (var i = 0; i < new_alarms_desc.length; i++)
+                        {
+                            av_notification ('<?php echo Util::js_entities(_("New alarm")) ?>', new_alarms_desc[i], (i % 4) + 1);
+                        }
+                    }
+                }
             }
 
         },
@@ -491,7 +480,7 @@ function load_unresolved_alarms()
 function load_active_sensors()
 {
     remove_schedule('sensors');
-    
+
     $.ajax({
         data: {"action": 'sensor_status', "bypassexpirationupdate": "1"},
         type: "POST",
@@ -515,7 +504,7 @@ function load_active_sensors()
             {
                 var sensors = response.output
                 var s_label = sensors.active.text + '/' + sensors.total.text;
-                
+
                 $('#notif_sensors').text(s_label + ' ' + "<?php echo _('Sensors Active') ?>");
                 $('#notif_sensors').addClass('nl_sensors');
 
@@ -544,7 +533,6 @@ function load_active_sensors()
                     $('#semaphore_led3').css('background-color', '');
                 }
             }
-
         },
         error: function(data)
         {
@@ -561,7 +549,6 @@ function load_active_sensors()
         },
         complete: schedule_method('sensors')
     });
-
 }
 
 
@@ -575,161 +562,113 @@ function load_active_sensors()
 
 function bind_notif_links()
 {
-
-    $(document).on('click', '.nl_trial', function()
+    $('#notif_container').on('click', '.nl_trial', function()
     {
         var url = "<?php echo AV_MAIN_PATH ?>/session/trial/trial_status.php?window=1";
-        
+
         params = {
-            caption       : "<?php echo _('Trial Status') ?>", 
-            url           : url, 
+            caption       : "<?php echo _('Trial Status') ?>",
+            url           : url,
             height        : '80%',
             width         : '80%',
             close_overlay : false
         };
-        
-    	LB_show(params);
 
+        LB_show(params);
+        $('#notif_bt').trigger('click');
     });
 
 
     <?php
-	if (Session::am_i_admin())
-	{
+    if (Session::menu_perms("configuration-menu", "PolicySensors"))
+    {
         ?>
-        $(document).on('click', '.nl_otx', function()
+        $('#notif_container').on('click', '.nl_sensors', function()
         {
-            var url = "<?php echo Menu::get_menu_url(AV_MAIN_PATH.'/conf/index.php?section=otx', 'configuration', 'administration', 'main');?>";
-            
+            var url = "<?php echo Menu::get_menu_url('/sensor/sensor.php', 'configuration', 'deployment', 'components', 'sensors'); ?>";
+
             av_menu.load_content(url);
+            $('#notif_bt').trigger('click');
 
-	        return false;
+            return false;
         });
-
-	    $(document).on('click', '.nl_updates', function()
-	    {
-	        var url = "<?php echo Menu::get_menu_url('/av_center/index.php', 'configuration', 'deployment', 'components', 'alienvault_center'); ?>";
-
-	        av_menu.load_content(url);
-
-	        return false;
-	    });
-
-	    $(document).on('click', '.nl_device_exceed', function()
-	    {
-	        var url = "http://www.alienvault.com/contact/license";
-
-	        new_window = window.open(url);
-
-	        return false;
-
-	        if (window.focus)
-            {
-                new_window.focus();
-            }
-	    });
-	    
-	    $(document).on('click', '.nl_backup_running', function()
-	    {
-	        var url = "<?php echo Menu::get_menu_url('/backup/index.php', 'configuration', 'administration', 'backups', 'backups_events'); ?>";
-
-	        av_menu.load_content(url);
-
-	        return false;
-	    });
-
-
-	    <?php
+        <?php
     }
 
-	if (Session::menu_perms("configuration-menu", "PolicySensors"))
-	{
-	    ?>
-	    $(document).on('click', '.nl_sensors', function()
-	    {
-	        var url = "<?php echo Menu::get_menu_url('/sensor/sensor.php', 'configuration', 'deployment', 'components', 'sensors'); ?>";
+    if (Session::menu_perms("analysis-menu", "IncidentsIncidents"))
+    {
+        ?>
+        $('#notif_container').on('click', '.nl_tickets', function()
+        {
+            var url = "<?php echo Menu::get_menu_url('/incidents/index.php?status=Open', 'analysis', 'tickets'); ?>";
 
-	        av_menu.load_content(url);
 
-	        return false;
-	    });
-	    <?php
-    }
+            av_menu.load_content(url);
+            $('#notif_bt').trigger('click');
 
-	if (Session::menu_perms("analysis-menu", "IncidentsIncidents"))
-	{
-	    ?>
-	    $(document).on('click', '.nl_tickets', function()
-	    {
-	        var url = "<?php echo Menu::get_menu_url('/incidents/index.php?status=Open', 'analysis', 'tickets'); ?>";
-
-	        av_menu.load_content(url);
-
-	        return false;
-	    });
-	    <?php
+            return false;
+        });
+        <?php
     }
 
     if(Session::menu_perms("environment-menu", "PolicyHosts"))
     {
-    ?>
-
-        $(document).on('click', '.nl_devices', function()
+        ?>
+        $('#notif_container').on('click', '.nl_devices', function()
         {
             var url = "<?php echo Menu::get_menu_url('/av_asset/asset/index.php', 'environment', 'assets', 'assets'); ?>";
 
             av_menu.load_content(url);
+            $('#notif_bt').trigger('click');
 
             return false;
-
         });
+        <?php
+    }
 
+
+    if (Session::menu_perms("analysis-menu", "ControlPanelAlarms"))
+    {
+        ?>
+        $('#notif_container').on('click', '.nl_alarms', function()
+        {
+            var url = "<?php echo Menu::get_menu_url('/alarm/alarm_console.php?hide_closed=1', 'analysis', 'alarms'); ?>";
+
+            av_menu.load_content(url);
+            
+            if ($(this).attr('id') != 'resume_alarm_count')
+            {
+                $('#notif_bt').trigger('click');
+            }
+
+            return false;
+        });
+        <?php
+    }
+
+
+    if (Session::menu_perms("analysis-menu", "EventsForensics"))
+    {
+        ?>
+        
+        $('#notif_container').on('click', '.nl_siem', function(e)
+        {            
+            console.log($(this));
+            var url = "<?php echo Menu::get_menu_url('/forensics/base_qry_main.php?clear_allcriteria=1&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d', 'analysis', 'security_events'); ?>";
+
+            av_menu.load_content(url);
+            
+            if ($(this).attr('id') != 'resume_eps')
+            {
+                $('#notif_bt').trigger('click');
+            }
+            
+            return false;
+        });
         <?php
     }
     ?>
-
 }
-
-function nl_siem(e)
-{
-	<?php
-	if (Session::menu_perms("analysis-menu", "EventsForensics"))
-	{
-	    ?>
-        e.stopImmediatePropagation();
-
-        var url = "<?php echo Menu::get_menu_url('/forensics/base_qry_main.php?clear_allcriteria=1&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d', 'analysis', 'security_events'); ?>";
-
-        av_menu.load_content(url);
-
-        
-	    <?php
-    }
-    ?>
-    
-    return false;
-}
-
-function nl_alarms(e)
-{
-	<?php
-	if (Session::menu_perms("analysis-menu", "ControlPanelAlarms"))
-	{
-	    ?>
-		e.stopImmediatePropagation();
-
-	    var url = "<?php echo Menu::get_menu_url('/alarm/alarm_console.php?hide_closed=1', 'analysis', 'alarms'); ?>";
-
-	    av_menu.load_content(url);
-
-	    
-	    <?php
-	}
-	?>
-	
-	return false;
-}
-
 
 
 /*******************************************/

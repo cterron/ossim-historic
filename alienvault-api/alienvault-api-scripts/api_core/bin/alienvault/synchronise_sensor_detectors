@@ -94,7 +94,7 @@ def main():
         logger.error("Cannot retrieve the resources status from heartbeat...")
         exit(0)
     if "all" in output:
-        logger.error("I have the resources")
+        logger.info("I have the resources")
         exit(0)
     # If all is ok, output should be none, otherwise the system could be making a transition between nodes or something worst.
     if "none" not in output:

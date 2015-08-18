@@ -639,7 +639,7 @@ if ($login != '')
 					onLazyRead: function(dtnode){
 						dtnode.appendAjax({
 							url: "../tree.php",
-							data: {key: dtnode.data.key}
+							data: {key: dtnode.data.key, page: dtnode.data.page}
 						});
 					}
 				});
@@ -1143,7 +1143,7 @@ if ($login != '')
 				<tr>
 					<th><label for="tzone"><?php echo _('Timezone'). required();?></label></th>
 					<td class="nobborder">
-						<?php $tzone = (preg_match("/Localtime/", $tzone)) ? trim(`head -1 /etc/timezone`) : $tzone;?>
+						<?php $tzone = (preg_match("/Localtime/", $tzone)) ? trim(Util::execute_command('head -1 /etc/timezone', FALSE, 'string')) : $tzone;?>
 						<select name="tzone" id="tzone" class='vfield'>
 							<?php  
 							foreach($tzlist as $tz) 
@@ -1182,6 +1182,19 @@ if ($login != '')
 				} 
 				
 				?>
+				<tr><td class="nobborder" colspan='2' style='height: 10px;'></td></tr>
+				
+				<!-- Current Password -->
+				<tr>
+					<th>
+					    <label for="c_pass"><?php echo _('Enter your current password') . required();?></label>
+					</th>
+					<td class="nobborder">
+						<input type="password" name="c_pass" id="c_pass" autocomplete="off" class='vfield'/>
+						<input type="hidden" name="last_pass_change" id="last_pass_change" class='vfield' value="<?php echo $last_pass_change;?>"/>
+					</td>
+				</tr>
+				
 				<tr><td class="nobborder" colspan='2' style='height: 10px;'></td></tr>
 				
 				<?php
@@ -1525,26 +1538,10 @@ if ($login != '')
 							</table>
 						</td>
 					</tr>
-					
-					<tr><td class="nobborder" colspan='2' style='height: 20px;'></td></tr>
+					<tr><td class="nobborder" colspan='2' style='height: 10px;'></td></tr>
 					<?php
 				}
 				?>
-								
-					
-				<!-- Current Password -->
-				<tr>
-					<th>
-					    <label for="c_pass"><?php echo _('Enter your current password') . required();?></label>
-					</th>
-					<td class="nobborder">
-						<input type="password" name="c_pass" id="c_pass" autocomplete="off" class='vfield'/>
-						<input type="hidden" name="last_pass_change" id="last_pass_change" class='vfield' value="<?php echo $last_pass_change;?>"/>
-					</td>
-				</tr>								
-				
-				<tr><td class="nobborder" colspan='2' style='height: 15px;'></td></tr>
-				
 				<!-- Actions -->
 				<tr>
 					<td class="center noborder" colspan="2">
@@ -1559,7 +1556,9 @@ if ($login != '')
 						?>
 					</td>
 				</tr>
-		
+
+				<tr><td class="nobborder" colspan='2' style='height: 10px;'></td></tr>
+
 			</table>
 						
 		</form>

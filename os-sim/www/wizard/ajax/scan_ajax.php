@@ -378,7 +378,6 @@ function schedule_scan($conn, $wizard, $data)
     $sensor_id = Av_sensor::get_default_sensor($conn);
     $name      = _('Default_wizard_scan');
     $type      = 5;
-    $enable    = 1;
 
     $targets   = array();
 
@@ -396,7 +395,7 @@ function schedule_scan($conn, $wizard, $data)
     $targets   = implode(' ', $targets);
     $params    = $targets .'#-T3 -A -sS -F';
 
-    Inventory::insert($conn, $sensor_id, $name, $type, $period, $params, $enable, $targets);
+    Inventory::insert($conn, $sensor_id, $name, $type, $period, $params, $targets);
 
     $response['error'] = FALSE;
     $response['data']  = array();

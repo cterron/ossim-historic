@@ -154,3 +154,10 @@ div.btnseparator
     width: 100%;
     z-index:99;
 }
+
+#directives_notif
+{
+    position: absolute;
+    width: 100%;
+    margin-top: 20px;
+}

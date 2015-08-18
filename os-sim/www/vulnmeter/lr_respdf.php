@@ -72,7 +72,6 @@
 /***********************************************************/
 
 #error_reporting(E_ALL);
-ini_set('memory_limit', '1500M');
 ini_set("max_execution_time","720");
 
 define('FPDF_FONTPATH','inc/font/');
@@ -790,16 +789,17 @@ foreach ($arrResults as $hostIP_ctx=>$scanData) {
             $info  .= "\n$exception"; 
         }
         $info .= "\n".$vuln["pname"];
-        $info .= "\nRisk:". $actual_risk;
-        $info .= "\nApplication:".$vuln["application"];
-        $info .= "\nPort:".$vuln["port"];
-        $info .= "\nProtocol:".$vuln["protocol"];
-        $info .= "\nScriptID:".$vuln["scriptid"]."\n\n";
+        $info .= "\nRisk: ". $actual_risk;
+        $info .= "\nApplication: ".$vuln["application"];
+        $info .= "\nPort: ".$vuln["port"];
+        $info .= "\nProtocol: ".$vuln["protocol"];
+        $info .= "\nScriptID: ".$vuln["scriptid"]."\n\n";
 
         #$info=htmlspecialchars_decode($info);
         $msg=trim($vuln['msg']);
         $msg=htmlspecialchars_decode($msg);
         $msg=preg_replace('/^\n+/','',$msg);
+        $msg= str_replace("&amp;","&", $msg);
         $msg= str_replace("&#039;","'", $msg);
         $msg = str_replace("\\r", "", $msg);
         $info .= $msg;

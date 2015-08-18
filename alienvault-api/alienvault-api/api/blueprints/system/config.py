@@ -30,6 +30,7 @@
 from flask import Blueprint, request
 from uuid import UUID
 from api.lib.common import make_ok, make_error, document_using
+from api.lib.common import make_error_from_exception
 from api.lib.auth import admin_permission
 from api.lib.utils import accepted_url, first_init_admin_access
 from apimethods.utils import is_json_true
@@ -37,8 +38,10 @@ from apimethods.utils import BOOL_VALUES
 from apimethods.system.config import (get_system_config_general,
                                       get_system_config_alienvault)
 from apimethods.system.config import set_system_config
-from apimethods.system.config import set_system_config_telemetry_collection, get_system_config_telemetry_collection
+from apimethods.system.config import set_system_config_telemetry_enabled
+from apimethods.system.config import get_system_config_telemetry_enabled
 
+from apiexceptions import APIException
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -117,7 +120,7 @@ def set_config_general(system_id):
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
                'framework_framework_ip': str,
-               'sensor_detectors': str,
+               'sensor_detectors': {'type': str, 'optional': True},
                'sensor_interfaces': str,
                'sensor_mservers': str,
                'sensor_networks': str,
@@ -148,12 +151,13 @@ def set_config_alienvault(system_id):
 @accepted_url({'enabled': {'type': str, 'values': BOOL_VALUES}})
 def set_telemetry_collection_config():
     if not first_init_admin_access():
-        return make_error ('Request forbidden -- authorization will not help', 403)
+        return make_error('Request forbidden -- authorization will not help', 403)
 
     enabled = is_json_true(request.args.get('enabled'))
-    (success, msg) = set_system_config_telemetry_collection(enabled=enabled)
-    if not success:
-        return make_error(msg, 400)
+    try:
+        set_system_config_telemetry_enabled(enabled=enabled)
+    except APIException as e:
+        return make_error_from_exception(e)
 
     return make_ok()
 
@@ -161,10 +165,11 @@ def set_telemetry_collection_config():
 @blueprint.route('/telemetry', methods=['GET'])
 def get_telemetry_collection_config():
     if not first_init_admin_access():
-        return make_error ('Request forbidden -- authorization will not help', 403)
+        return make_error('Request forbidden -- authorization will not help', 403)
 
-    (success, enabled) = get_system_config_telemetry_collection()
-    if not success:
-        return make_error(enabled, 400)
+    try:
+        enabled = get_system_config_telemetry_enabled()
+    except APIException as e:
+        return make_error_from_exception(e)
 
     return make_ok(enabled=enabled)

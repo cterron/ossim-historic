@@ -44,6 +44,8 @@
 #include "sim-alarm-stats.h"
 #include "os-sim.h"
 
+#define SIM_DIRECTIVE_PULSE_ID_TIMEOUT 86400
+#define SIM_DIRECTIVE_PULSE_ID_COUNT 10000
 
 struct _SimDirectivePrivate
 {
@@ -81,6 +83,7 @@ struct _SimDirectivePrivate
   GHashTable    *backlog_refs;   // Backlogs Array References
 
   SimAlarmStats *alarm_stats;
+  SimUuid       *uuid;
 };
 
 static gpointer parent_class = NULL;
@@ -1179,6 +1182,10 @@ sim_rule_print(rule);
 						else	
 							sim_rule_append_generic_text (rule, aux, SIM_RULE_VAR_USERDATA9);
             break;
+      case SIM_RULE_VAR_PULSE_ID:
+            sim_rule_set_pulse_id (rule, sim_rule_get_pulse_id (rule_up));
+            break;
+
 			default:
 						break;
 		}
@@ -1861,6 +1868,11 @@ void sim_directive_purge_db_backlogs(SimDatabase *db)
   sim_database_execute_no_query (db, "DELETE id FROM idm_data id LEFT JOIN backlog_event be ON id.event_id = be.event_id "
                                      " WHERE be.event_id IS NULL");
 
+  // Deleting rows in otx_data
+  ossim_debug ("%s: Deleting rows from otx_data table without event", __FUNCTION__);
+  sim_database_execute_no_query (db, "DELETE id FROM otx_data id LEFT JOIN backlog_event be ON id.event_id = be.event_id "
+                                     " WHERE be.event_id IS NULL");
+
   // Deleting rows from alarm_ctxs without alarm
 	ossim_debug	("%s: Deleting rows from alarm_ctxs table without alarm", __FUNCTION__);
   sim_database_execute_no_query (db, "DELETE ac FROM alarm_ctxs ac LEFT JOIN alarm a ON ac.id_alarm = a.backlog_id "
@@ -2306,6 +2318,55 @@ gchar *
 sim_directive_alarm_stats_generate (SimDirective *directive)
 {
   return sim_alarm_stats_to_json (directive->_priv->alarm_stats);
+}
+
+const char *
+sim_directive_get_uuid (SimDirective * directive)
+{
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
+  return  sim_uuid_get_string(directive->_priv->uuid);
+}
+
+SimDirective *
+sim_directive_create_pulse_backlog (const gchar *pulse_id)
+{
+  SimDirective *directive;
+  SimRule *rule_root, *rule_second;
+  gchar *rule_name;
+  directive = sim_directive_new ();
+  directive->_priv->loaded_from_file = FALSE;
+  directive->_priv->id = SIM_DIRECTIVE_PULSE_ID;
+  directive->_priv->priority = 10;
+  directive->_priv->name = g_strdup ("OTX Pulse: PULSE");
+  
+  
+  /* Ok, create the rules */
+  /* The "root" rule match de pulse_id */
+  rule_root = sim_rule_new ();  
+  rule_root->type = SIM_EVENT_TYPE_DETECTOR;
+  /* New rule */
+  sim_rule_set_pulse_id (rule_root, pulse_id);
+  rule_name = g_strdup_printf ("Rule pulse_id '%s'", pulse_id);
+  sim_rule_set_time_out (rule_root, SIM_DIRECTIVE_PULSE_ID_TIMEOUT);
+  sim_rule_set_name (rule_root, rule_name);
+  sim_rule_set_reliability(rule_root, 10);
+  sim_rule_add_plugin_id (rule_root, SIM_PLUGIN_ID_ANY);
+  sim_rule_set_pulse_id (rule_root, pulse_id);
+  g_free (rule_name);
+  directive->_priv->rule_root = g_node_new (rule_root); /* Root node */
+  rule_second = sim_rule_new ();
+  rule_second->type = SIM_EVENT_TYPE_DETECTOR;
+  rule_name = g_strdup_printf ("Rule pulse_id '%s' timeout '%d' count '%d'", pulse_id, SIM_DIRECTIVE_PULSE_ID_TIMEOUT, SIM_DIRECTIVE_PULSE_ID_COUNT);
+  sim_rule_set_name (rule_second, rule_name);
+  g_free (rule_name);
+  sim_rule_set_reliability(rule_second, 10);
+  sim_rule_set_time_out (rule_second, SIM_DIRECTIVE_PULSE_ID_TIMEOUT);
+  //sim_rule_set_count (rule_second,  SIM_DIRECTIVE_PULSE_ID_COUNT);
+  sim_rule_set_occurrence (rule_second, SIM_DIRECTIVE_PULSE_ID_COUNT);
+  sim_rule_add_plugin_id (rule_second, SIM_PLUGIN_ID_ANY);
+  sim_rule_set_pulse_id (rule_second, pulse_id);
+  g_node_append_data (directive->_priv->rule_root, rule_second);
+  return directive;
 }
 
 #ifdef USE_UNITTESTS

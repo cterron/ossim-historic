@@ -56,10 +56,6 @@ sub get_database {
     my $db_host         = $config{'database_ip'};
     my $db_pass         = $config{'database_pass'};
 
-    my $ossim_user = "root";
-    my $snort_user = "root";
-    my $osvdb_user = "root";
-
     my @profiles_arr;
 
     if ( $config{'profile'} eq "all-in-one" ) {

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -50,8 +50,6 @@
 | frameworkd_nfsen_config_dir           | /etc/nfsen/nfsen.conf                                |
 | frameworkd_nfsen_monit_config_dir     | /etc/monit/alienvault/nfcapd.monitrc                 |
 | frameworkd_notificationfile           | /var/log/ossim/framework-notifications.log           |
-| frameworkd_ntop_proxy_apache_template | /etc/ossim/framework/ntop_proxy_apache_template.conf |
-| frameworkd_ntop_rewrite_conf_file     | /etc/apache2/conf.d/default-ntop.conf                |
 | frameworkd_optimizedb                 | 1                                                    |
 | frameworkd_port                       | 40003                                                |
 | frameworkd_rrd_bin                    | /usr/bin/rrdtool                                     |
@@ -73,13 +71,8 @@ VAR_FRAMEWORK_ADDRESS='frameworkd_address'
 VAR_KEY_FILE = 'frameworkd_keyfile'
 VAR_KEY = 'frameworkd_aes_key'
 VAR_LOG_DIR = 'frameworkd_log_dir'
-VAR_NTOP_APACHE_PROXY_TEMPLATE = 'frameworkd_ntop_proxy_apache_template'
-VAR_NTOP_REWRITE_CONF_FILE = 'frameworkd_ntop_rewrite_conf_file'
 VAR_RRD_BINARY = 'frameworkd_rrd_bin'
 VAR_RRD_TIME_PERIOD = 'frameworkd_rdd_period'
-VAR_LOAD_NETWORK_AUTODISCOVERY = 'frameworkd_network_auto_discovery' #Obsolete
-VAR_LOAD_NEDI_AUTODISCOVERY = 'frameworkd_nedi_autodiscovery' #Obsolete
-VAR_LOAD_OCS_AUTODISCOVERY = 'frameworkd_ocsi_enable' #Obsolete
 VAR_BUSINESSPROCESSES_PERIOD = 'frameworkd_businessprocesses_period'
 VAR_NAGIOS_MKL_PERIOD = 'frameworkd_nagios_mkl_period'
 VAR_SCHEDULED_PERIOD = 'frameworkd_scheduled_period'
@@ -92,15 +85,6 @@ VAR_NOTIFYMANAGER_FILE = 'frameworkd_notificationfile'
 #NAGIOS
 VAR_NAGIOS_SOCK_PATH = 'frameworkd_nagios_sock_path'
 VAR_NAGIOS_CFG = 'nagios_cfgs'
-
-#NESSUS
-VAR_NESSUS_USER = 'frameworkd_nessus_user'
-VAR_NESSUS_PASSWD = 'frameworkd_nessus_pass'
-VAR_NESSUS_HOST = 'frameworkd_nessus_host'
-VAR_NESSUS_PORT = 'frameworkd_nessus_port'
-VAR_NESSUS_PATH = 'frameworkd_nessus_path'
-VAR_NESSUS_RPT_PATH = 'frameworkd_nessus_rpt_path'
-VAR_NESSUS_DISTRIBUTED = 'frameworkd_nessus_distributed'
 
 VAR_USE_HTTPS = 'frameworkd_usehttps'
 #From ossim_setup.conf

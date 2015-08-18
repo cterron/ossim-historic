@@ -23,7 +23,7 @@ $cmd = "/usr/share/ossim/scripts/snortlogtopcap.py -u ? -p ?";
 Util::execute_command("$cmd >> /dev/null 2>&1", array($binary, $tmpfile));
 #
 ?>
-<div class='siem_detail_subsection_payload'><?php echo _("pcap File") . ":&nbsp;&nbsp;" . PrintPcapDownload($db, $eid) ?></div>
+<div class='siem_detail_subsection_payload'><?php echo _("pcap File") . "&nbsp;" . PrintPcapDownload($db, $eid) ?></div>
 <link rel="stylesheet" type="text/css" href="../style/tree.css" />
 <script type="text/javascript" src="../js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="../js/jquery.tmpl.1.1.1.js"></script>
@@ -33,38 +33,38 @@ var loading = '<br/><img src="../pixmaps/loading3.gif" border="0" align="absmidd
 var layer = '#pcapcontainer';
 var nodetree = null;
 function load_tree(filter) {
-	$('#pcaploading').html(loading);
-	$.ajax({
-		type: "GET",
-		url: "base_payload_tshark_tree.php",
-		data: "id=<?php echo $eid?>",
-		success: function(msg) { 
-			//alert (msg);
-			$(layer).html(msg);
-			$(layer).dynatree({
-				clickFolderMode: 2,
-				imagePath: "../forensics/styles",
-				onActivate: function(dtnode) {
-					//alert(dtnode.data.url);
-				},
-				onDeactivate: function(dtnode) {}
-			});
-			nodetree = $(layer).dynatree("getRoot");
-			$('#pcaploading').html("");
-		}
-	});
+    $('#pcaploading').html(loading);
+    $.ajax({
+        type: "GET",
+        url: "base_payload_tshark_tree.php",
+        data: "id=<?php echo $eid?>",
+        success: function(msg) { 
+            //alert (msg);
+            $(layer).html(msg);
+            $(layer).dynatree({
+                clickFolderMode: 2,
+                imagePath: "../forensics/styles",
+                onActivate: function(dtnode) {
+                    //alert(dtnode.data.url);
+                },
+                onDeactivate: function(dtnode) {}
+            });
+            nodetree = $(layer).dynatree("getRoot");
+            $('#pcaploading').html("");
+        }
+    });
 }
 </script>
 <style type='text/css'>
-	.dynatree-container {
-		border:none !important;
-		margin-top: 0px;
-	}
-	span.dynatree-folder a	{ font-weight:normal; }
-	.container {
-		line-height:16px
-	}
-	
+    .dynatree-container {
+        border:none !important;
+        margin-top: 0px;
+    }
+    span.dynatree-folder a  { font-weight:normal; }
+    .container {
+        line-height:16px
+    }
+    
 </style>
 <div id="pcaploading"></div>
 <div id="pcapcontainer" style="padding-left:20px"></div>

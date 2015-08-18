@@ -3,7 +3,8 @@
 #
 # see: dh_installdeb(1)
 
-set -e
+# FIXME: reenable and test again
+#set -e
 
 # summary of how this script can be called:
 #        * <postinst> `configure' <most-recently-configured-version>
@@ -23,6 +24,7 @@ MAILNAME_FILE="/etc/mailname"
 NETWORK_INTERFACES_FILE="/etc/network/interfaces"
 NETWORK_INTERFACES_FILE_BACKUP="/etc/network/interfaces.bak"
 NETWORK_INTERFACES_FILE_TMP="/etc/network/interfaces.tmp"
+ALIENVAULT_NETWORK_INTERFACES="/etc/alienvault/network/interfaces.conf"
 
 NEW_INTERFACE=$(grep -w interface "$OSSIM_SETUP_FILE" | cut -d'=' -f2)
 NEW_ADMIN_IP=$(grep -w admin_ip "$OSSIM_SETUP_FILE" | cut -d'=' -f2)
@@ -109,7 +111,7 @@ update_domain_name(){
 }
 
 
-update_network_interfaces() {
+update_admin_interface() {
 
     validate_network_interfaces_file
     # 1. create a backup for interfaces file
@@ -254,7 +256,7 @@ update_network_interfaces() {
 update_admin_ip(){
     #sed -i "s/address $OLD_ADMIN_IP/address $NEW_ADMIN_IP/g" $NETWORK_INTERFACES_FILE
     # Search for XPATH
-    xpath=$(augtool  match /files/etc/network/interfaces/iface[address = \"$OLD_ADMIN_IP\"]|sed -e 's/ //g'| cut -f 1 -d '=')
+    xpath=$(augtool  match /files${NETWORK_INTERFACES_FILE}/iface[address = \"$OLD_ADMIN_IP\"]|sed -e 's/ //g'| cut -f 1 -d '=')
     netmask=$(augtool get "$xpath/netmask" |sed -e 's/ //g'|cut -f 2 -d '=')
     network=$(ipcalc -n $NEW_ADMIN_IP/$netmask|sed -n 's/^Network:\s*\([^/]*\)\s*\(.*\)/\1/p')
     broadcast=$(ipcalc -n $NEW_ADMIN_IP/$netmask|sed -n 's/^Broadcast:\s*\(\([0-9]\{1,3\}\.\)\{3\}\([0-9]\)\{1,3\}\)\s*\(.*\)/\1/p')
@@ -273,7 +275,7 @@ EOF
 
 update_admin_netmask(){
     #sed -i "s/netmask $OLD_ADMIN_NETMASK/netmask $NEW_ADMIN_NETMASK/g" $NETWORK_INTERFACES_FILE
-    xpath=$(augtool match /files/etc/network/interfaces/iface[.=\"$NEW_INTERFACE\"]|sed -e 's/ //g'| cut -f 1 -d '=')
+    xpath=$(augtool match /files${NETWORK_INTERFACES_FILE}/iface[.=\"$NEW_INTERFACE\"]|sed -e 's/ //g'| cut -f 1 -d '=')
     ipaddr=$(augtool get "$xpath/address"|sed -e s'/s //g'| cut -f 2 -d '=')
     network=$(ipcalc -n $ipaddr/$NEW_ADMIN_NETMASK|sed -n 's/^Network:\s*\([^/]*\)\s*\(.*\)/\1/p')
     broadcast=$(ipcalc -n $ipaddr/$NEW_ADMIN_NETMASK|sed -n 's/^Broadcast:\s*\(\([0-9]\{1,3\}\.\)\{3\}\([0-9]\)\{1,3\}\)\s*\(.*\)/\1/p')
@@ -305,36 +307,410 @@ update_admin_dns() {
     NEEDS_INTERFACE_RESTART="new"
 }
 
-update_sensor_interfaces() {
-    AUG_INTERFACES_PATH="/files/etc/network/interfaces/iface"
-    ADMIN_INTERFACE=$(grep "^interface=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2)
-    SENSOR_INTERFACES=$(grep "^interfaces=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 | tr ',' '\n')
-    NETWORK_INTERFACES=$(augtool match /files/etc/network/interfaces/iface | awk '{ print $3 }' | grep -v lo  || true)
 
-    UNCONFIGURED_INTERFACES=$(echo "$SENSOR_INTERFACES" | grep -Fv "$NETWORK_INTERFACES" || true)
-    DELETED_INTERFACES=$(echo "$NETWORK_INTERFACES" | grep -Fv "$SENSOR_INTERFACES" | grep -v "$ADMIN_INTERFACE" || true)
+#
+# This method aims to migrate all the network configuration into /etc/alienvault/network/interfaces.conf.
+#
+migrate_network_interfaces(){
+    # Check if the migration is needed.
+    ADMIN_INTERFACE=$(grep "^interface=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 || true)
+    ADMIN_IP=$(grep "^admin_ip=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 || true)
+    ADMIN_NETMASK=$(grep "^admin_netmask=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 || true)
+    # Replace commas by blank spaces
+    ADMIN_DNS=$(grep "^admin_dns=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 | tr ',' ' ' || true)
+    ADMIN_GATEWAY=$(grep "^admin_gateway=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 || true)
 
-    for UIFACE in $UNCONFIGURED_INTERFACES; do
-        augtool << EOF
-set /files/etc/network/interfaces/auto[last()+1]/1 ${UIFACE}
-set /files/etc/network/interfaces/iface[last()+1] ${UIFACE}
-set /files/etc/network/interfaces/iface[.='${UIFACE}']/family inet
-set /files/etc/network/interfaces/iface[.='${UIFACE}']/method manual
-set /files/etc/network/interfaces/iface[.='${UIFACE}']/up[1] "ifconfig \$IFACE 0.0.0.0 up"
-set /files/etc/network/interfaces/iface[.='${UIFACE}']/up[2] "ip link set \$IFACE promisc on"
-set /files/etc/network/interfaces/iface[.='${UIFACE}']/down[1] "ip link set \$IFACE promisc off"
-set /files/etc/network/interfaces/iface[.='${UIFACE}']/down[2] "ifconfig \$IFACE down"
+    # Get network interfaces located in /etc/alienvault/network/interfaces.conf
+    AUGTOOL_OUTPUT=$(augtool << EOF
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+match /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/address
+quit
+EOF
+)
+
+    # If the file is empty or does not exist, treat this as a "migration" from the
+    # old configuration files to the new one.
+    [ "$(echo ${AUGTOOL_OUTPUT} | cut -d ' ' -f 3)" != "$ADMIN_IP" ] || [ "$1" = "FORCE" ] || return 0
+
+    #
+    # All available interfaces. They will just be added to the file as "not enabled".
+    #
+    ALL_INTERFACES=$(ip link show | grep -v lo | grep -v "link/" | awk '{ print $2 }' | tr -d ":" || true)
+    for AIFACE in $ALL_INTERFACES; do
+        augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/address TBD
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/netmask TBD
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/network TBD
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/broadcast TBD
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/gateway TBD
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/dns-nameservers TBD
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/dns-search TBD
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/administration no
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/log_management no
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/monitor no
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/enabled no
 save
 quit
 EOF
-        ifup --force $UIFACE
     done
 
-    for DIFACE in $DELETED_INTERFACES; do
+    #
+    # Network interfaces configured for network monitoring, in /etc/ossim/ossim_setup.conf.
+    # All have standard options.
+    #
+    MONITOR_INTERFACES=$(grep "^interfaces=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 | tr ',' '\n' || true)
+    for MIFACE in $MONITOR_INTERFACES; do
+        augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${MIFACE}/monitor yes
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${MIFACE}/enabled yes
+save
+quit
+EOF
+    done
+
+    #
+    # Interfaces configured in /etc/network/interfaces, that are not set up for network monitoring,
+    # i.e. have IP addresses.
+    #
+    NETWORK_INTERFACES=$(augtool match /files${NETWORK_INTERFACES_FILE}/*/address | grep -oE "iface\[.*\]" | grep -v "0\.0\.0\.0" | xargs -I {} augtool get /files${NETWORK_INTERFACES_FILE}/{}/ | awk '{ print $3}' || true)
+    for NIFACE in $NETWORK_INTERFACES; do
+        ADDRESS=$(augtool << EOF | awk '{ print $5 }'
+get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/address
+quit
+EOF
+               )
+        [ -z "$ADDRESS" ] || augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/address ${ADDRESS}
+save
+quit
+EOF
+
+        NETMASK=$(augtool << EOF | awk '{ print $5 }'
+get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/netmask
+quit
+EOF
+               )
+        [ -z "$NETMASK" ] || augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/netmask ${NETMASK}
+save
+quit
+EOF
+
+        NETWORK=$(augtool << EOF | awk '{ print $5 }'
+get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/network
+quit
+EOF
+               )
+        [ -z "$NETWORK" ] || augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/network ${NETWORK}
+save
+quit
+EOF
+
+        BROADCAST=$(augtool << EOF | awk '{ print $5 }'
+get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/broadcast
+quit
+EOF
+                 )
+        [ -z "$BROADCAST" ] || augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/broadcast ${BROADCAST}
+save
+quit
+EOF
+
+        GATEWAY=$(augtool << EOF | awk '{ print $5 }'
+get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/gateway
+quit
+EOF
+               )
+        [ -z "$GATEWAY" ] || augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/gateway ${GATEWAY}
+save
+quit
+EOF
+
+        DNSNAMESERVERS=$(augtool << EOF | awk -F'dns-nameservers = ' '{ print $2 }'
+get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/dns-nameservers
+quit
+EOF
+                      )
+        [ -z "$DNSNAMESERVERS" ] || augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/dns-nameservers "${DNSNAMESERVERS}"
+save
+quit
+EOF
+
+        DNSSEARCH=$(augtool << EOF | awk '{ print $5 }'
+get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/dns-search
+quit
+EOF
+                 )
+        [ -z "$DNSSEARCH" ] || augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/dns-search ${DNSSEARCH}
+save
+quit
+EOF
+
+        augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/log_management yes
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/enabled yes
+save
+quit
+EOF
+    done
+
+    #
+    # Administration network interface.
+    #
+    augtool << EOF >/dev/null
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/address ${ADMIN_IP}
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/netmask ${ADMIN_NETMASK}
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/gateway ${ADMIN_GATEWAY}
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/dns-nameservers "${ADMIN_DNS}"
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/administration yes
+set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/enabled yes
+save
+quit
+EOF
+
+}
+
+
+update_network_interfaces() {
+    # Check if the migration process needs to be run.
+    migrate_network_interfaces ""
+
+    # Now, get all the interfaces ready to be configured and proceed...
+    ENABLED_NETWORK_INTERFACES=$(augtool << EOF | grep -oE "eth." || true
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+match /files${ALIENVAULT_NETWORK_INTERFACES}/*/enabled yes
+quit
+EOF
+                              )
+
+
+    for EIFACE in $ENABLED_NETWORK_INTERFACES; do
+        # Get interface roles.
+        IS_MONITOR_INTERFACE=$(augtool << EOF | grep -oE "eth." || true
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+match /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/monitor yes
+quit
+EOF
+                            )
+        IS_ADMINISTRATION_INTERFACE=$(augtool << EOF | grep -oE "eth." || true
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+match /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/administration yes
+quit
+EOF
+                                   )
+        IS_LOG_MANAGEMENT_INTERFACE=$(augtool << EOF | grep -oE "eth." || true
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+match /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/log_management yes
+quit
+EOF
+                            )
+
+        # Reset the previous configuration first, and set common parameters.
+        ifconfig $EIFACE -promisc
+        augtool << EOF >/dev/null
+rm /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']
+rm /files${NETWORK_INTERFACES_FILE}/auto[child::1 = '${EIFACE}']
+set /files${NETWORK_INTERFACES_FILE}/auto[last()+1]/1 ${EIFACE}
+set /files${NETWORK_INTERFACES_FILE}/iface[last()+1] ${EIFACE}
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/family inet
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/method static
+save
+quit
+EOF
+
+        #
+        # Only applies to administration or log management interfaces.
+        #
+        if [ ! -z "$IS_ADMINISTRATION_INTERFACE" ] || [ ! -z "$IS_LOG_MANAGEMENT_INTERFACE" ]; then
+            # Set IP addresses.
+            ADDRESS=$(augtool << EOF | awk '{ print $3 }'
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/address
+quit
+EOF
+                   )
+            if [ ! -z "$ADDRESS" ] && [ "$ADDRESS" != "TBD" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/address ${ADDRESS}
+save
+quit
+EOF
+            fi
+
+            NETMASK=$(augtool << EOF | awk '{ print $3 }'
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/netmask
+quit
+EOF
+                   )
+            if [ ! -z "$NETMASK" ] && [ "$NETMASK" != "TBD" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/netmask ${NETMASK}
+save
+quit
+EOF
+            fi
+
+            NETWORK=$(augtool << EOF | awk '{ print $3 }'
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/network
+quit
+EOF
+                   )
+            if [ ! -z "$NETWORK" ] && [ "$NETWORK" != "TBD" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/network ${NETWORK}
+save
+quit
+EOF
+            fi
+
+            BROADCAST=$(augtool << EOF | awk '{ print $3 }'
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/broadcast
+quit
+EOF
+                     )
+            if [ ! -z "$BROADCAST" ] && [ "$BROADCAST" != "TBD" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/broadcast ${BROADCAST}
+save
+quit
+EOF
+            fi
+        fi
+
+        #
+        # Only the administration interface can have a gateway and a dns servers.
+        # If two or more interfaces have these options, some of them won't work.
+        #
+        if [ ! -z "$IS_ADMINISTRATION_INTERFACE" ]; then
+
+            GATEWAY=$(augtool << EOF | awk '{ print $3 }'
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/gateway
+quit
+EOF
+                   )
+            if [ ! -z "$GATEWAY" ] && [ "$GATEWAY" != "TBD" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/gateway ${GATEWAY}
+save
+quit
+EOF
+            fi
+
+            DNSNAMESERVERS=$(augtool << EOF | awk -F'dns-nameservers = ' '{ print $2 }'
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/dns-nameservers
+quit
+EOF
+                          )
+            if [ ! -z "$DNSNAMESERVERS" ] && [ "$DNSNAMESERVERS" != "TBD" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/dns-nameservers "${DNSNAMESERVERS}"
+save
+quit
+EOF
+            fi
+
+            DNSSEARCH=$(augtool << EOF | awk '{ print $3 }'
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/dns-search
+quit
+EOF
+                     )
+            if [ ! -z "$DNSSEARCH" ] && [ "$DNSSEARCH" != "TBD" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/dns-search ${DNSSEARCH}
+save
+quit
+EOF
+            fi
+        fi
+
+        #
+        # Monitor interfaces will be set to manual.
+        #
+        if [ ! -z "$IS_MONITOR_INTERFACE" ]; then
+            if [ -z "$IS_ADMINISTRATION_INTERFACE" ] && [ -z "$IS_LOG_MANAGEMENT_INTERFACE" ]; then
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/method manual
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/up[1] "ifconfig \$IFACE 0.0.0.0 up"
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/up[2] "ip link set \$IFACE promisc on"
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/down[1] "ip link set \$IFACE promisc off"
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/down[2] "ifconfig \$IFACE down"
+save
+quit
+EOF
+            else
+                augtool << EOF >/dev/null
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/method static
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/up[1] "ip link set \$IFACE promisc on"
+set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/down[1] "ip link set \$IFACE promisc off"
+save
+quit
+EOF
+            fi
+        fi
+
+        restart_interface $EIFACE
+    done
+
+    #
+    # Lastly, delete remaining interfaces.
+    #
+    DISABLED_NETWORK_INTERFACES=$(augtool << EOF | grep -oE "eth." || true
+set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+load
+match /files${ALIENVAULT_NETWORK_INTERFACES}/*/enabled no
+quit
+EOF
+                               )
+    for DIFACE in $DISABLED_NETWORK_INTERFACES; do
         ifdown --force $DIFACE
-        augtool <<EOF
-rm /files/etc/network/interfaces/iface[.='${DIFACE}']
-rm /files/etc/network/interfaces/auto[child::1 = '${DIFACE}']
+        augtool <<EOF >/dev/null
+rm /files${NETWORK_INTERFACES_FILE}/iface[.='${DIFACE}']
+rm /files${NETWORK_INTERFACES_FILE}/auto[child::1 = '${DIFACE}']
 save
 quit
 EOF
@@ -345,16 +721,17 @@ EOF
     sed -i '/\(ifconfig\|eth\)/d' /etc/rc.local
 }
 
-
 case "$1" in
     configure)
         validate_network_interfaces_file
 
         # Fix updates that move interfaces to the right place.
-        dpkg-trigger --no-await alienvault-config-sensor-interfaces
+        update_network_interfaces
     ;;
 
     triggered)
+        UPDATE=0
+        MIGRATE=0
         for trigger in $2
         do
             case "$trigger" in
@@ -362,7 +739,7 @@ case "$1" in
                     update_domain_name
                     ;;
                 alienvault-config-system-interface)
-                    update_network_interfaces
+                    update_admin_interfaces
                     ;;
                 alienvault-config-system-admin-ip)
                     if [ "$NEW_INTERFACE" = "$OLD_INTERFACE" ]; then
@@ -384,8 +761,11 @@ case "$1" in
                         update_admin_dns
                     fi
                     ;;
-                alienvault-config-sensor-interfaces)
-                    update_sensor_interfaces
+                alienvault-network-interfaces-config)
+                    UPDATE=1
+                    ;;
+                alienvault-network-interfaces-migrate)
+                    MIGRATE=1
                     ;;
                 *)
                     echo "postinst called with unknown trigger \`$2'">&2
@@ -393,6 +773,14 @@ case "$1" in
                 ;;
             esac
         done
+
+        if [ $MIGRATE -eq 1 ]; then
+            migrate_network_interfaces "FORCE"
+        fi
+
+        if [ $UPDATE -eq 1 ]; then
+            update_network_interfaces
+        fi
     ;;
     abort-upgrade|abort-remove|abort-deconfigure)
     ;;

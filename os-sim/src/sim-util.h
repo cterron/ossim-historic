@@ -75,6 +75,7 @@ struct _SimVersion
   guint8 major;
   guint8 minor;
   guint8 micro;
+  guint8 nano;
 };
 
 
@@ -114,6 +115,7 @@ inline gulong     sim_ipchar_2_ulong                      (gchar               *
 gchar *           sim_mac_to_db_string                    (const gchar         *mac);
 guint8 *          sim_mac_to_bin                          (const gchar         *mac);
 gchar *           sim_bin_to_mac                          (const guint8        *bin);
+gboolean          sim_util_is_hex_string                  (const gchar         *string);
 inline gboolean   sim_string_is_number                    (gchar               *string,
                                                            gboolean             may_be_float);
 inline gchar *    sim_string_remove_char                  (gchar               *string,
@@ -184,12 +186,12 @@ gchar *           sim_str_escape                          (const gchar         *
                                                            GdaConnection       *connection,
                                                            gsize                can_have_nulls);
 gboolean          sim_version_match                       (SimVersion * a, SimVersion * b);
-void              sim_version_parse                       (const gchar *string, guint8 *major, guint8 *minor, guint8 *micro);
+void              sim_version_parse                       (const gchar *string, guint8 *major, guint8 *minor, guint8 *micro, guint8 *nano);
 
 guint             sim_parse_month_day                     (guint day, guint month, guint year);
 
 gboolean          sim_socket_send_simple                  (GSocket* socket, const gchar *buffer);
-
+gboolean          sim_util_is_pulse_id                    (const gchar *string);
 //Small Semaphore Implementation
 struct _GSemaphore
 {

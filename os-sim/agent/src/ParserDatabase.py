@@ -31,20 +31,14 @@
 #
 # GLOBAL IMPORTS
 #
-import os
-import re
-import socket
-import sys
 import time
 
 #
 # LOCAL IMPORTS
 #
-from Config import Plugin
 from Detector import Detector
-from Event import Event, EventOS, EventMac, EventService, EventHids,EventIdm
+from Event import Event, EventIdm
 from Logger import Logger
-import pdb
 
 #
 # GLOBAL VARIABLES

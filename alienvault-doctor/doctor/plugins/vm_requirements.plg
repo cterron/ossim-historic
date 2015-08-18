@@ -1,8 +1,0 @@
-[properties]
-name=VM requirements
-description=Issues a warning if a VM does not meet the required hardware to run.
-category=system
-type=command
-strike_zone=True
-requires=@files:/usr/bin/lshw;@hardware:@is_vm@,@cores@>=4,@mem@>=8
-command=lshw

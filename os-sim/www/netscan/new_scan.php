@@ -208,7 +208,7 @@ catch(Exception $e)
         {
             if (typeof parent.GB_hide == 'function')
             {
-                top.frames['main'].notify(msg, type, true);
+                top.frames['main'].show_notification('asset_notif', msg, type, 15000, true);
                 parent.GB_hide();
             }
 
@@ -246,7 +246,7 @@ catch(Exception $e)
             if ($close)
             {
                 $msg = sprintf(_('Asset scan in progress for %s assets'), count($targets));
-                echo 'hide_window("'. $msg .'", "nf_success");';
+                echo 'hide_window("'. Util::js_entities($msg) .'", "nf_success");';
             }
             ?>
         });

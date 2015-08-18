@@ -565,6 +565,11 @@ if (POST('ajax_validation_all') == TRUE)
                         $exp_user = $login;
                     }
                 }
+                // Special case LDAP
+                if ($error == 0 && $login_method == 'ldap')
+                {
+                    Session::change_pass($conn, $login, $login, NULL, FALSE);
+                }
             }
 
             if ($language_changed)

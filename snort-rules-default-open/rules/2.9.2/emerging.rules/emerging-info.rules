@@ -47,13 +47,13 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO WinUpack Modified PE 
 alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO WinUpack Modified PE Header Outbound"; flow:established; content:"|4d 5a 4b 45 52 4e 45 4c 33 32 2e 44 4c 4c 00 00|"; fast_pattern:only; reference:url,doc.emergingthreats.net/bin/view/Main/WinPEHeaders; classtype:bad-unknown; sid:2003615; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Adobe PDF in HTTP Flowbit Set"; flow:from_server,established; file_data; content:"%PDF-"; within:5; flowbits:set,ET.pdf.in.http; flowbits:noalert; reference:cve,CVE-2008-2992; reference:bugtraq,30035; reference:secunia,29773; classtype:not-suspicious; sid:2015671; rev:6;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Adobe PDF in HTTP Flowbit Set"; flow:from_server,established; file_data; content:"%PDF-"; within:5; flowbits:set,ET.pdf.in.http; flowbits:noalert; reference:cve,CVE-2008-2992; reference:bugtraq,30035; reference:secunia,29773; classtype:not-suspicious; sid:2015671; rev:6;)
 
 #
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to 3322.org Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|04|3322|03|org"; fast_pattern; distance:0; nocase; reference:url,isc.sans.edu/diary.html?storyid=3266; reference:url,isc.sans.edu/diary.html?storyid=5710; reference:url,google.com/safebrowsing/diagnostic?site=3322.org/; reference:url,www.mywot.com/en/scorecard/3322.org; classtype:misc-activity; sid:2012171; rev:6;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Suspicious Purported MSIE 7 with terse HTTP Headers GET to PHP"; flow:established,to_server; content:".php"; http_uri; nocase; content:"|20|HTTP/1.1|0d 0a|User-Agent|3a 20|Mozilla/4.0 (compatible|3b 20|MSIE 7.0|3b 20|Windows NT 5.1)|0d 0a|Host|3a 20|"; fast_pattern; content:"|0d 0a|Cache-Control|3a 20|no-cache|0d 0a 0d 0a|"; within:50; classtype:trojan-activity; sid:2012384; rev:3;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Suspicious Purported MSIE 7 with terse HTTP Headers GET to PHP"; flow:established,to_server; content:".php"; http_uri; nocase; content:"|20|HTTP/1.1|0d 0a|User-Agent|3a 20|Mozilla/4.0 (compatible|3b 20|MSIE 7.0|3b 20|Windows NT 5.1)|0d 0a|Host|3a 20|"; fast_pattern; content:"|0d 0a|Cache-Control|3a 20|no-cache|0d 0a 0d 0a|"; within:50; classtype:trojan-activity; sid:2012384; rev:3;)
 
 #
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to 3322.net Domain *.8866.org"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|04|8866|03|org"; fast_pattern; distance:0; nocase; reference:url,isc.sans.edu/diary.html?storyid=6739; reference:url,google.com/safebrowsing/diagnostic?site=8866.org/; reference:url,www.mywot.com/en/scorecard/8866.org; classtype:misc-activity; sid:2012738; rev:6;)
@@ -188,7 +188,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request 
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Possible URL List or Clickfraud URLs Delivered To Client"; flow:established,from_server; file_data; content:"http|3a|//"; within:7; content:"|7C|http|3a|//"; distance:0; content:"|0D 0A|http|3a|//"; distance:0; content:"|7C|http|3a|//"; distance:0; classtype:trojan-activity; sid:2014149; rev:2;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a 3322.org.cn Domain"; flow:to_server,established; content:"Host|3a| "; http_header; content:".3322.org.cn|0D 0A|"; within:50; http_header; classtype:bad-unknown; sid:2014289; rev:2;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a 3322.org.cn Domain"; flow:to_server,established; content:"Host|3a| "; http_header; content:".3322.org.cn|0D 0A|"; within:50; http_header; classtype:bad-unknown; sid:2014289; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.sytes.net Domain"; flow:established,to_server; content:".sytes.net|0D 0A|";  http_header; classtype:bad-unknown; sid:2018219; rev:5;)
@@ -296,7 +296,7 @@ alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to a
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.slyip.com Domain"; flow:established,to_server; content:".slyip.com|0D 0A|"; http_header; classtype:bad-unknown; sid:2014507; rev:4;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DNS Query to a *.slyip.net Dynamic DNS Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:4; content:"|05|slyip|03|net|00|"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2014508; rev:5;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DNS Query to a *.slyip.net Dynamic DNS Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:4; content:"|05|slyip|03|net|00|"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2014508; rev:5;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.slyip.net Domain"; flow:established,to_server; content:".slyip.net|0D 0A|"; http_header; classtype:bad-unknown; sid:2014509; rev:3;)
@@ -332,10 +332,10 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO EXE - Served 
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO EXE Download With Content Type Specified As Empty"; flow:established,to_client; content:"Content-Type|3A 20 0D 0A|"; http_header; file_data; content:"MZ"; within:2; isdataat:80,relative; content:"This program "; distance:0; content:"PE|00|"; distance:0; reference:md5,d51218653323e48672023806f6ace26b; classtype:trojan-activity; sid:2014567; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Potential Malicious PDF (EmbeddedFiles) improper case"; flow:from_server,established; file_data; content:"%PDF"; within:4; content:"/EmbeddedFiles"; within:128; nocase; content:!"/EmbeddedFiles"; distance:-14; within:14; reference:url,blog.didierstevens.com/2009/07/01/embedding-and-hiding-files-in-pdf-documents/; classtype:trojan-activity; sid:2014575; rev:3;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Potential Malicious PDF (EmbeddedFiles) improper case"; flow:from_server,established; file_data; content:"%PDF"; within:4; content:"/EmbeddedFiles"; within:128; nocase; content:!"/EmbeddedFiles"; distance:-14; within:14; reference:url,blog.didierstevens.com/2009/07/01/embedding-and-hiding-files-in-pdf-documents/; classtype:trojan-activity; sid:2014575; rev:3;)
 
 #
-alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET INFO RuggedCom Banner with MAC"; flow:to_client,established; content:"Rugged Operating System"; content:"Copyright |28|c|29| RuggedCom"; distance:0; content:"MAC Address|3A|"; distance:0; flowbits:set,ET.RUGGED.BANNER; reference:url,www.exploit-db.com/exploits/18779/; reference:url,arstechnica.com/business/news/2012/04/backdoor-in-mission-critical-hardware-threatens-power-traffic-control-systems.ars; classtype:attempted-admin; sid:2014645; rev:3;)
+#alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET INFO RuggedCom Banner with MAC"; flow:to_client,established; content:"Rugged Operating System"; content:"Copyright |28|c|29| RuggedCom"; distance:0; content:"MAC Address|3A|"; distance:0; flowbits:set,ET.RUGGED.BANNER; reference:url,www.exploit-db.com/exploits/18779/; reference:url,arstechnica.com/business/news/2012/04/backdoor-in-mission-critical-hardware-threatens-power-traffic-control-systems.ars; classtype:attempted-admin; sid:2014645; rev:3;)
 
 #
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to 3322.net Domain *.2288.org"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|04|2288|03|org|00|"; fast_pattern; distance:0; threshold: type limit, count 1, track by_src, seconds 300; classtype:misc-activity; sid:2014779; rev:6;)
@@ -401,7 +401,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Compressed Ex
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 21 (msg:"ET INFO FTP STOR to External Network"; flow:established,to_server; content:"STOR "; depth:5; classtype:misc-activity; sid:2015016; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Potential Common Malicious JavaScript Loop"; flow:established,to_client; file_data; content:"for("; distance:0; content:"|3B|"; within:20; content:">=0|3B|"; fast_pattern; within:10; content:"--)"; within:10; pcre:"/for\x28[^\x3D\r\n]*[0-9]{1,6}\x2D[0-9]{1,5}\x3B[^\x3D\r\n]\x3E\x3D0\x3B[^\x29\r\n]\x2D\x2D\x29/"; classtype:bad-unknown; sid:2015045; rev:2;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Potential Common Malicious JavaScript Loop"; flow:established,to_client; file_data; content:"for("; distance:0; content:"|3B|"; within:20; content:">=0|3B|"; fast_pattern; within:10; content:"--)"; within:10; pcre:"/for\x28[^\x3D\r\n]*[0-9]{1,6}\x2D[0-9]{1,5}\x3B[^\x3D\r\n]\x3E\x3D0\x3B[^\x29\r\n]\x2D\x2D\x29/"; classtype:bad-unknown; sid:2015045; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Java .jar request to dotted-quad domain"; flow:established,to_server; content:".jar"; http_uri; fast_pattern:only; content:" Java/1"; http_header; pcre:"/^Host: \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\r?$/Hmi"; classtype:bad-unknown; sid:2015483; rev:2;)
@@ -449,7 +449,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Suspicious Wi
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Suspicious Windows NT version 9 User-Agent"; flow:established,to_server; content:"Windows NT 9"; nocase; http_header; fast_pattern:only; pcre:"/^User-Agent\x3a[^\r\n]+Windows NT 9/Hmi"; classtype:trojan-activity; sid:2015822; rev:1;)
 
 #
-alert udp $HOME_NET 5355 -> any any (msg:"ET INFO LLNMR query response to wpad"; content:"|80 00 00 01 00 01|"; offset:2; depth:6; content:"|04|wpad|00 00 01 00 01 04|wpad|00 00 01 00 01|"; distance:0; isdataat:7,relative; classtype:misc-activity; sid:2015842; rev:2;)
+#alert udp $HOME_NET 5355 -> any any (msg:"ET INFO LLNMR query response to wpad"; content:"|80 00 00 01 00 01|"; offset:2; depth:6; content:"|04|wpad|00 00 01 00 01 04|wpad|00 00 01 00 01|"; distance:0; isdataat:7,relative; classtype:misc-activity; sid:2015842; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Suspicious Windows NT version 1 User-Agent"; flow: established,to_server; content:"Windows NT 1"; nocase; http_header; content:!"0"; within:1; http_header; pcre:"/^User-Agent\x3a[^\r\n]+Windows NT 1/Hmi"; classtype:trojan-activity; sid:2015898; rev:3;)
@@ -518,10 +518,10 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Java Serializ
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Serialized Data request"; flow:established,to_server; content:" Java/1"; http_header; content:".ser"; http_uri; pcre:"/\.ser$/U"; classtype:bad-unknown; sid:2016504; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO file possibly containing Serialized Data file"; flow:to_client,established; file_data; content:"PK"; within:2; content:".serPK"; flowbits:isset,ET.http.javaclient.vulnerable; classtype:trojan-activity; sid:2016505; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO file possibly containing Serialized Data file"; flow:to_client,established; file_data; content:"PK"; within:2; content:".serPK"; flowbits:isset,ET.http.javaclient.vulnerable; classtype:trojan-activity; sid:2016505; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Serialized Java Applet (Used by some EKs in the Wild)"; flow:established,from_server; file_data; content:"<embed"; nocase; content:"object"; distance:0; nocase; pcre:"/^[\r\n\s]*=[\r\n\s]*[\x22\x27][^\x22\x27]+\.ser[\x22\x27]/Ri"; content:"application/x-java-"; fast_pattern:only; classtype:trojan-activity; sid:2016510; rev:3;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Serialized Java Applet (Used by some EKs in the Wild)"; flow:established,from_server; file_data; content:"<embed"; nocase; content:"object"; distance:0; nocase; pcre:"/^[\r\n\s]*=[\r\n\s]*[\x22\x27][^\x22\x27]+\.ser[\x22\x27]/Ri"; content:"application/x-java-"; fast_pattern:only; classtype:trojan-activity; sid:2016510; rev:3;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO GET Minimal HTTP Headers Flowbit Set"; flow:established,to_server; content:"GET"; http_method; content:!"Accept"; http_header; content:!"If-"; http_header; content:!"Referer|3A|"; http_header; content:!"User-Agent|3A|"; http_header; fast_pattern; content:!"Content"; http_header; flowbits:set,min.gethttp; flowbits:noalert; classtype:bad-unknown; sid:2016537; rev:1;)
@@ -623,7 +623,7 @@ alert tcp any any -> any $HTTP_PORTS (msg:"ET INFO ClearTextAuth - HTTP - http_c
 alert tcp any any -> any $HTTP_PORTS (msg:"ET INFO ClearTextAuth - HTTP - http_uri contains pasa="; flow:established,to_server; content:"pasa="; http_uri; nocase; fast_pattern:only; pcre:"/(?<=(\?|&))pasa=(?!&)./Ui"; classtype:policy-violation; sid:2017081; rev:2;)
 
 #
-alert tcp any any -> any $HTTP_PORTS (msg:"ET INFO ClearTextAuth - HTTP - http_client_body contains pasa form"; flow:established,to_server; content:"name=|22|pasa|22|"; http_client_body; classtype:policy-violation; sid:2017082; rev:1;)
+#alert tcp any any -> any $HTTP_PORTS (msg:"ET INFO ClearTextAuth - HTTP - http_client_body contains pasa form"; flow:established,to_server; content:"name=|22|pasa|22|"; http_client_body; classtype:policy-violation; sid:2017082; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO JJEncode Encoded Script"; flow:established,from_server; file_data; content:"$$$$|3a|(![]+|22 22|)["; pcre:"/^(?P<global_var>((?!(\]\,__\$\x3a\+\+)).)+)]\,__\$\x3a\+\+(?P=global_var)/R"; classtype:bad-unknown; sid:2017127; rev:1;)
@@ -632,82 +632,82 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO JJEncode Enco
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO JNLP embedded file"; flow:established,to_client; file_data; content:"jnlp"; content:"PD94bWwgdmVyc2lvbj0"; distance:0; classtype:bad-unknown; sid:2017197; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 1"; flow:established,from_server; file_data; content:"|22|e|22|+|22|val|22|"; classtype:trojan-activity; sid:2017206; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 1"; flow:established,from_server; file_data; content:"|22|e|22|+|22|val|22|"; classtype:trojan-activity; sid:2017206; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 2"; flow:established,from_server; file_data; content:"|22|ev|22|+|22|al|22|"; classtype:trojan-activity; sid:2017207; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 3"; flow:established,from_server; file_data; content:"|22|e|22|+|22|v|22|+|22|al|22|"; classtype:trojan-activity; sid:2017208; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 3"; flow:established,from_server; file_data; content:"|22|e|22|+|22|v|22|+|22|al|22|"; classtype:trojan-activity; sid:2017208; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 4"; flow:established,from_server; file_data; content:"|22|e|22|+|22|v|22|+|22|a|22|+|22|l|22|"; classtype:trojan-activity; sid:2017209; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 4"; flow:established,from_server; file_data; content:"|22|e|22|+|22|v|22|+|22|a|22|+|22|l|22|"; classtype:trojan-activity; sid:2017209; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 5"; flow:established,from_server; file_data; content:"|22|ev|22|+|22|a|22|+|22|l|22|"; classtype:trojan-activity; sid:2017210; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 5"; flow:established,from_server; file_data; content:"|22|ev|22|+|22|a|22|+|22|l|22|"; classtype:trojan-activity; sid:2017210; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 6"; flow:established,from_server; file_data; content:"|22|e|22|+|22|va|22|+|22|l|22|"; classtype:trojan-activity; sid:2017211; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 6"; flow:established,from_server; file_data; content:"|22|e|22|+|22|va|22|+|22|l|22|"; classtype:trojan-activity; sid:2017211; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 1"; flow:established,from_server; file_data; content:"|27|e|27|+|27|val|27|"; classtype:trojan-activity; sid:2017212; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 1"; flow:established,from_server; file_data; content:"|27|e|27|+|27|val|27|"; classtype:trojan-activity; sid:2017212; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 2"; flow:established,from_server; file_data; content:"|27|ev|27|+|27|al|27|"; classtype:trojan-activity; sid:2017213; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 3"; flow:established,from_server; file_data; content:"|27|eva|27|+|27|l|27|"; classtype:trojan-activity; sid:2017214; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 3"; flow:established,from_server; file_data; content:"|27|eva|27|+|27|l|27|"; classtype:trojan-activity; sid:2017214; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 4"; flow:established,from_server; file_data; content:"|27|e|27|+|27|v|27|+|27|al|27|"; classtype:trojan-activity; sid:2017215; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 4"; flow:established,from_server; file_data; content:"|27|e|27|+|27|v|27|+|27|al|27|"; classtype:trojan-activity; sid:2017215; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 5"; flow:established,from_server; file_data; content:"|27|e|27|+|27|v|27|+|27|a|27|+|27|l|27|"; classtype:trojan-activity; sid:2017216; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 5"; flow:established,from_server; file_data; content:"|27|e|27|+|27|v|27|+|27|a|27|+|27|l|27|"; classtype:trojan-activity; sid:2017216; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 6"; flow:established,from_server; file_data; content:"|27|ev|27|+|27|a|27|+|27|l|27|"; classtype:trojan-activity; sid:2017217; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 6"; flow:established,from_server; file_data; content:"|27|ev|27|+|27|a|27|+|27|l|27|"; classtype:trojan-activity; sid:2017217; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 7"; flow:established,from_server; file_data; content:"|27|e|27|+|27|va|27|+|27|l|27|"; classtype:trojan-activity; sid:2017218; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String (Single Q) 7"; flow:established,from_server; file_data; content:"|27|e|27|+|27|va|27|+|27|l|27|"; classtype:trojan-activity; sid:2017218; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 7"; flow:established,from_server; file_data; content:"|22|eva|22|+|22|l|22|"; classtype:trojan-activity; sid:2017219; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Eval String 7"; flow:established,from_server; file_data; content:"|22|eva|22|+|22|l|22|"; classtype:trojan-activity; sid:2017219; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 1"; flow:established,from_server; file_data; content:"|27|s|27|+|27|plit|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017220; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 1"; flow:established,from_server; file_data; content:"|27|s|27|+|27|plit|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017220; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 2"; flow:established,from_server; file_data; content:"|27|sp|27|+|27|lit|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017221; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 2"; flow:established,from_server; file_data; content:"|27|sp|27|+|27|lit|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017221; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 3"; flow:established,from_server; file_data; content:"|27|s|27|+|27|p|27|+|27|lit|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017222; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 3"; flow:established,from_server; file_data; content:"|27|s|27|+|27|p|27|+|27|lit|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017222; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 4"; flow:established,from_server; file_data; content:"|27|spl|27|+|27|it|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017223; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 4"; flow:established,from_server; file_data; content:"|27|spl|27|+|27|it|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017223; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 5"; flow:established,from_server; file_data; content:"|27|sp|27|+|27|l|27|+|27|it|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017224; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 6"; flow:established,from_server; file_data; content:"|27|s|27|+|27|pl|27|+|27|it|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017225; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 6"; flow:established,from_server; file_data; content:"|27|s|27|+|27|pl|27|+|27|it|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017225; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 7"; flow:established,from_server; file_data; content:"|27|s|27|+|27|p|27|+|27|l|27|+|27|it|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017226; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 7"; flow:established,from_server; file_data; content:"|27|s|27|+|27|p|27|+|27|l|27|+|27|it|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017226; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 8"; flow:established,from_server; file_data; content:"|27|spli|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017227; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 8"; flow:established,from_server; file_data; content:"|27|spli|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017227; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 9"; flow:established,from_server; file_data; content:"|27|sp|27|+|27|l|27|+|27|i|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017228; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 9"; flow:established,from_server; file_data; content:"|27|sp|27|+|27|l|27|+|27|i|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017228; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 10"; flow:established,from_server; file_data; content:"|27|sp|27|+|27|li|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017229; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 10"; flow:established,from_server; file_data; content:"|27|sp|27|+|27|li|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017229; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 11"; flow:established,from_server; file_data; content:"|27|spl|27|+|27|i|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017230; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 11"; flow:established,from_server; file_data; content:"|27|spl|27|+|27|i|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017230; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 12"; flow:established,from_server; file_data; content:"|27|s|27|+|27|pli|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017231; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 12"; flow:established,from_server; file_data; content:"|27|s|27|+|27|pli|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017231; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Single Q) 13"; flow:established,from_server; file_data; content:"|27|s|27|+|27|p|27|+|27|l|27|+|27|i|27|+|27|t|27|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017232; rev:1;)
@@ -716,22 +716,22 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Sp
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 1"; flow:established,from_server; file_data; content:"|22|s|22|+|22|plit|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017233; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 2"; flow:established,from_server; file_data; content:"|22|sp|22|+|22|lit|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017234; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 2"; flow:established,from_server; file_data; content:"|22|sp|22|+|22|lit|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017234; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 3"; flow:established,from_server; file_data; content:"|22|s|22|+|22|p|22|+|22|lit|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017235; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 3"; flow:established,from_server; file_data; content:"|22|s|22|+|22|p|22|+|22|lit|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017235; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 4"; flow:established,from_server; file_data; content:"|22|spl|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017236; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 4"; flow:established,from_server; file_data; content:"|22|spl|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017236; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 5"; flow:established,from_server; file_data; content:"|22|sp|22|+|22|l|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017237; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 5"; flow:established,from_server; file_data; content:"|22|sp|22|+|22|l|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017237; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 6"; flow:established,from_server; file_data; content:"|22|s|22|+|22|pl|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017238; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 6"; flow:established,from_server; file_data; content:"|22|s|22|+|22|pl|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017238; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 7"; flow:established,from_server; file_data; content:"|22|s|22|+|22|p|22|+|22|l|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017239; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 7"; flow:established,from_server; file_data; content:"|22|s|22|+|22|p|22|+|22|l|22|+|22|it|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017239; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 8"; flow:established,from_server; file_data; content:"|22|spli|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017240; rev:1;)
@@ -740,13 +740,13 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Sp
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 9"; flow:established,from_server; file_data; content:"|22|sp|22|+|22|l|22|+|22|i|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017241; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 10"; flow:established,from_server; file_data; content:"|22|sp|22|+|22|li|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017242; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 10"; flow:established,from_server; file_data; content:"|22|sp|22|+|22|li|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017242; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 11"; flow:established,from_server; file_data; content:"|22|spl|22|+|22|i|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017243; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 12"; flow:established,from_server; file_data; content:"|22|s|22|+|22|pli|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017244; rev:1;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 12"; flow:established,from_server; file_data; content:"|22|s|22|+|22|pli|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017244; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Obfuscated Split String (Double Q) 13"; flow:established,from_server; file_data; content:"|22|s|22|+|22|p|22|+|22|l|22|+|22|i|22|+|22|t|22|"; nocase; flowbits:set,ET.JS.Obfus.Func; classtype:bad-unknown; sid:2017245; rev:1;)
@@ -761,16 +761,19 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Adobe PKG Dow
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Reassigned Eval Function 1"; flow:established,from_server; file_data; content:"=(eval)|3b|"; classtype:bad-unknown; sid:2017334; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Reassigned Eval Function 2"; flow:established,from_server; file_data; content:"=[|22|eval|22|]|3b|"; classtype:bad-unknown; sid:2017335; rev:2;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Reassigned Eval Function 2"; flow:established,from_server; file_data; content:"=[|22|eval|22|]|3b|"; classtype:bad-unknown; sid:2017335; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Reassigned Eval Function 3"; flow:established,from_server; file_data; content:"=[|27|eval|27|]|3b|"; classtype:bad-unknown; sid:2017336; rev:2;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Reassigned Eval Function 3"; flow:established,from_server; file_data; content:"=[|27|eval|27|]|3b|"; classtype:bad-unknown; sid:2017336; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Iframe For IP Address Site"; flow:established,to_client; file_data; content:"iframe src=|22|http|3A|//"; nocase; distance:0; pcre:"/^\d{1,3}\x2E\d{1,3}\x2E\d{1,3}\x2E\d{1,3}[^\r\n]*\x3C\x2Fiframe\x3E/Ri"; classtype:bad-unknown; sid:2017342; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO InetSim Response from External Source Possible SinkHole"; flow:from_server,established; content:"Server|3a| INetSim HTTP Server"; http_header; classtype:bad-unknown; sid:2017363; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPCIOUS Non-standard base64 charset used for encoding"; flow:established,from_server; file_data; content:" & 15) << 4)"; fast_pattern; content:"(|22|"; content:!"|22|"; within:65; content:"|22|"; distance:65; within:1; content:!"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"; distance:-66; within:62; content:!"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"; distance:-66; within:62; content:!"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; distance:-66; within:62; content:!"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; distance:-66; within:62; content:!"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz"; distance:-66; within:62; content:!"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; distance:-66; within:62; flowbits:set,et.exploitkitlanding; classtype:bad-unknown; sid:2017364; rev:6;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO SUSPICIOUS Java request to UNI.ME Domain Set 1"; flow:to_server,established; content:" Java/1."; http_header; pcre:"/^Host\:[^\r\n]+?\.(?:c(?:o(?:l(?:leg(?:e(?:(?:confidential|-station|prowler)\.net|s?explained\.com)|iate(?:explained|info)\.com)|(?:o(?:rado-springs-jobs|nexplained)|umnexplore)\.com)|m(?:p(?:uter(?:explained\.com|themes\.net)|assiondefinition\.com)|m(?:oditylingerie|unesinfo|ercekid)\.com)|n(?:ce(?:rtparis\.net|ptsets\.com)|trolwedding\.com)|(?:(?:rnell|upon)explained|peguide)\.com|7\.us)|a(?:(?:(?:mpaign|talog|det)explained|n(?:cersexplained|adadaycore)|p(?:itali[sz]eguide|ricornhi)|b(?:leexplained|indynamic))\.com|r(?:(?:tograph(?:yanalysis|erwhat)|cinomas?explained|scratch-remover|eblack)\.com|insurance-compare\.net)|ce\.us)|h(?:(?:a(?:r(?:med-episodes|les-proxy|tpixel)|p(?:elsinfo|terball)|nnelexplained)|ristmas(?:gift-ideas|motion)|inesenewyearboom|eckingwatch)\.com|(?:orizo|urros)\.es)|(?:e(?:l(?:lularexplained|iac-diet)|ntigrade(?:explained|info))|(?:li(?:nical|ck)|ustomized)explained|r(?:uiseshipdating|iticsmart)|pu-benchmark|nc-cs)\.com|8\.biz|z\.cc)|a(?:(?:ll(?:about(?:(?:(?:collegi|gradu)at|yal)e|s(?:eminary|tudent)|(?:facul|varsi)ty|bestsellers|academic|teaching|harvard|ucla|pro)|babyours)|n(?:(?:tipodesbi|alyzelan)d|onymous-film)|(?:mericas-nexttopmode|gentsbal)l|r(?:chitectureice|lingtonwriter)|c(?:ademicexplaine|tionmo)d|ero(?:flotinfo|bicfund))\.com|u(?:(?:toma(?:tedexplained|kers24)|stralia-airlines|xiliaryverb)\.com|di(?:t(?:jewellery\.com|report\.net)|o-planet\.com))|p(?:(?:rilfools(?:hotel|spin)|ple-airport)\.com|[fh]i\.biz)|ir(?:(?:bnb-coupon|waysinfo)\.com|portshuttleseattle\.net)|v(?:enue(?:domain|hello)\.com|li\.biz)|\.e\.gy)|b(?:(?:a(?:c(?:helorexplained|kpackscope)|by(?:online-shop|revision)|(?:rcelonarea|ggagecoo)l|s(?:icexplained|escope)|ttle-field-3)|e(?:(?:st-hoteldeal|er-calorie|t-award)s|nefitexplained)|u(?:y-invite|dgetyep)|logger-com)\.com|r(?:(?:o(?:adbandinternet-providers|king(?:explained|guide))|unomarsalbum|yan-college)\.com|ea(?:st(?:cancertattoos\.net|explained\.com)|dmachine-recipes\.com))|o(?:(?:(?:om(?:ing|s)|nd)explained|tany(?:explained|info)|dybuildingdomains|rrowings?24)\.com|stoncolleges\.net)|irthcertificatetemplate\.net|3g\.biz)|d(?:e(?:(?:(?:(?:benture|posit)explaine|alershipislan)d|n(?:guefevertreatment|verhowto)|ductguide|veloptea)\.com|(?:xterstreaming|ciduoustrees)\.net)|o(?:(?:ctorate(?:s?explained|info)|llar-converter|gwalking-jobs|texplained|mainsknow)\.com|wnload(?:starcraft|-films|ubuntu)\.net)|(?:a(?:ncecentralsonglist|rtmouthexplained)|na-replication|hcp-server|vd-codec|rivewww)\.com|i(?:(?:s(?:count|ease)explained|nnerparty-recipes|walifile)\.com|rect-golf\.net))|e(?:(?:a(?:r(?:fulexplained|th-clinic)|sy(?:-costumes|repayment))|conomic(?:save|24))\.com|\.gy)|4(?:(?:4qs|h5)\.com|[jp]\.org|ql\.biz)|3(?:vt\.info|gb\.biz|q\.org)|2(?:eat\.com|sf\.biz|u\.se)|8(?:c1\.net|x\.biz)|7(?:c\.org|p\.biz)|11r\.(?:biz|us))(\x3a\d{1,5})?\r?$/Hmi"; classtype:bad-unknown; sid:2017457; rev:1;)
@@ -1062,4 +1065,10 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Dotted Quad H
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Dotted Quad Host MZ Response"; flow:established,to_client; flowbits:isset,http.dottedquadhost; file_data; content:"MZ"; within:2; content:"PE|00 00|"; distance:0; classtype:bad-unknown; sid:2021076; rev:1;)
+
+#
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Executable Downloaded from Google Cloud Storage"; flow:established,to_client; content:"x-goog-generation|3a 20|"; http_header; fast_pattern; content:"x-goog-metageneration|3a 20|"; http_header; content:"x-goog-stored-content-encoding|3a 20|"; http_header; content:"x-goog-stored-content-length|3a 20|"; http_header; content:"x-goog-hash|3a 20|"; http_header; file_data; content:"MZ"; within:2; reference:md5,e742e844d0ea55ef9f1c68491c702120; classtype:trojan-activity; sid:2021216; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO User-Agent (wininet)"; flow:established,to_server; content:"User-Agent|3a 20|wininet|0d 0a|"; http_header; flowbits:set,ET.wininet.UA; flowbits:noalert; classtype:misc-activity; sid:2021311; rev:2;)
 

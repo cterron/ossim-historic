@@ -104,14 +104,14 @@ $fqdns       = $asset->get_fqdns();
 $external    = $asset->get_external();
 $location    = $asset->get_location();
 $asset_value = $asset->get_asset_value();
-$threshold_a = $asset->get_threshold_a();
-$threshold_c = $asset->get_threshold_c();
-$os          = $asset->get_os();
+$os_data     = $asset->get_os();
+$os          = $os_data['value'];
 $model       = $asset->get_model();
 
 
 //CTX name
 $ctx_name = (empty($ctx)) ? _('None') : Session::get_entity_name($conn, $ctx);
+$ctx_name = Util::utf8_encode2($ctx_name);
 
 
 //Icon
@@ -124,7 +124,7 @@ $server_obj = Server::get_server_by_ctx($conn, $ctx);
 $s_name = '';
 $s_ip   = '';
 
-if ($r_server)
+if ($server_obj)
 {
     $s_name = $server_obj->get_name();
     $s_ip   = $server_obj->get_ip();
@@ -170,8 +170,6 @@ $data['data']   = array(
     'external'      => $external,
     'fqdns'         => $fqdns,
     'asset_value'   => $asset_value,
-    'threshold_c'   => $threshold_c,
-    'threshold_a'   => $threshold_a,
     'location'      => $location,
     'icon'          => $icon,
     'os'            => $os,

@@ -10,14 +10,12 @@ Homepage: http://www.alienvault.com
 Package: alienvault-dummy-sensor
 Architecture: all
 Pre-Depends: alienvault-dummy-common (>= ${source:Upstream-Version}), postpone
-Depends: ${shlibs:Depends}, ${misc:Depends}, libpfring, pfring, daq, fprobe, ossim-agent, tcpreplay, dsniff, ngrep, tshark, nmap, mrtg, geoip-database, libgeoip1, python-libpcap, prads, libdaq0, dnsutils, smbclient, nsis, wmi-client,
- snort,
+Depends: ${shlibs:Depends}, ${misc:Depends}, fprobe, ossim-agent, ngrep, tshark, nmap, mrtg, geoip-database, libgeoip1, prads, dnsutils, smbclient, wmi-client,
  ossim-contrib (>= 1:${source:Upstream-Version}),
  ossim-downloads (>= ${source:Upstream-Version}),
  ossim-geoip (>= ${source:Upstream-Version})| ossim-geoip-pro (>= ${source:Upstream-Version}),
- alienvault-ntop (>= ${source:Upstream-Version}),
  alienvault-openvas (>= ${source:Upstream-Version}),
- alienvault-openvas-feed,
+ alienvault-openvas8-feed,
  alienvault-ossec (>= ${source:Upstream-Version}),
  alienvault-prads (>= ${source:Upstream-Version}),
  alienvault-suricata (>= ${source:Upstream-Version}),
@@ -25,7 +23,9 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libpfring, pfring, daq, fprobe, oss
  alienvault-rsyslog (>= ${source:Upstream-Version}),
  alienvault-plugins,
  alienvault-plugin-sids,
- suricata-rules-default
+ suricata-rules-default,
+ alienvault-redis-server-otx (>= ${source:Upstream-Version}),
+ alienvault-rhythm (>= ${source:Upstream-Version})
 Description: MetaPackage for alienvault sensor components
  This package installs all the needed packages for alienvault sensor profile.
 

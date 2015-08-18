@@ -55,7 +55,7 @@ else PrintBASESubHeader($page_title, $page_title, $cs->GetBackLink() , 1);
 
 // Use accumulate tables only when timestamp criteria is not hour sensitive
 $use_ac  = $criteria_clauses[3];
-$nevents = "AND acid_event.plugin_id=PLUGINID AND acid_event.plugin_sid=PLUGINSID";
+$nevents = " AND acid_event.plugin_id=PLUGINID AND acid_event.plugin_sid=PLUGINSID";
 $where   = ($criteria_clauses[1] != "") ? " WHERE " . $criteria_clauses[1] : " ";
 
 // use po_acid_event
@@ -201,7 +201,7 @@ if (file_exists('/tmp/debug_siem'))
 session_write_close();
 $result = $qs->ExecuteOutputQuery($sql, $db);
 if ($result->baseRecordCount()==0 && $use_ac) { $result = $qs->ExecuteOutputQuery($sql, $db); }
-$event_cnt = $qs->GetCalcRows($criteria_clauses[2], $result->baseRecordCount(), $db);
+$event_cnt = $qs->GetCalcRows($criteria_clauses[9], $result->baseRecordCount(), $db);
 
 ($debug_time_mode >= 1) ? $et->Mark("Retrieve Query Data") : '';
 // if ($debug_mode == 1) {

@@ -26,34 +26,38 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
-import json
 from uuid import UUID
-import os
 from flask import Blueprint, request, current_app
-from ansiblemethods.sensor.detector import get_sensor_detectors, \
-    set_sensor_detectors, \
-    get_sensor_detectors_from_yaml, \
-    set_sensor_detectors_from_yaml
-from ansiblemethods.sensor.plugin import get_all_available_plugins
-from api.lib.common import make_ok, \
-    make_error, \
-    make_bad_request, \
-    document_using
+from ansiblemethods.sensor.detector import (
+    get_sensor_detectors,
+    set_sensor_detectors)
+from api.lib.common import (
+    make_ok,
+    make_error,
+    make_bad_request,
+    make_error_from_exception,
+    document_using)
 from api.lib.utils import accepted_url
+from apimethods.sensor.plugin import (
+    get_sensor_plugins_enabled_by_asset,
+    set_sensor_plugins_enabled_by_asset,
+    get_sensor_detector_plugins)
+
 from db.methods.sensor import get_sensor_ip_from_sensor_id
-from db.methods.data import get_asset_ip_from_id
 from celerymethods.jobs.reconfig import alienvault_reconfigure
-from celerymethods.jobs.alienvault_agent_restart import restart_alienvault_agent
-from api.lib.auth import admin_permission
+from api.lib.auth import (
+    admin_permission,
+    logged_permission)
+
+from apiexceptions import APIException
 
 blueprint = Blueprint(__name__, __name__)
 
 
-@blueprint.route('/<sensor_id>/detector', methods=['GET'])
-@document_using('static/apidocs/sensor/detector.html')
+@blueprint.route('/<sensor_id>/plugins/detector/enabled', methods=['GET'])
 @admin_permission.require(http_exception=403)
 @accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}})
-def get_sensor_detector(sensor_id):
+def bp_get_sensor_plugins_detector_enabled(sensor_id):
     """
     Return the [sensor]/plugin list from ossim_setup.conf of sensor
     """
@@ -72,13 +76,14 @@ def get_sensor_detector(sensor_id):
     return make_ok(plugins=data)
 
 
-@blueprint.route('/<sensor_id>/detector', methods=['PUT'])
-@document_using('static/apidocs/sensor/detector.html')
+@blueprint.route('/<sensor_id>/plugins/detector/enabled', methods=['PUT'])
 @admin_permission.require(http_exception=403)
-@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}, 'plugins': str})
-def put_sensor_detector(sensor_id):
+@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
+               'plugins': str})
+def bp_put_sensor_plugins_detector_enabled(sensor_id):
     """
     Set the [sensor]/detectors list on ossim_setup.conf of the sensor
+    plugins: Comma separate list of detector plugins to activate. Must exists in the machine
     """
     # Get the 'plugins' param list, with contains the detector plugins
     # It must be a comma separate list
@@ -104,119 +109,65 @@ def put_sensor_detector(sensor_id):
     return make_ok(job_id_reconfig=job.id)
 
 
-def get_plugin_get_request_from_yml(yml_data, device_id=None):
-    if yml_data == {} or yml_data is None or yml_data == "":
-        return {}
-    device_plugins = {}
-    for plugin in yml_data['plugins']:
-        for key, value in plugin.iteritems():
-            device = value['DEFAULT']['device_id']
-            cpe = value['DEFAULT'].get('cpe', "cpe:none")
-            pid = value['DEFAULT'].get('pid', "none")
-            if not device_plugins.has_key(device):
-                device_plugins[device] = {}
-            device_plugins[device][os.path.splitext(os.path.basename(key))[0]] = {'cpe': cpe, 'plugin_id': pid}
-    result_data = {}
-    if device_id is not None:
-        if device_plugins.has_key(device_id):
-            print device_plugins.has_key(device_id)
-            result_data = {str(device_id): device_plugins[str(device_id)]}
-    else:
-        result_data = device_plugins
-    return result_data
-
-
-@blueprint.route('/<sensor_id>/plugins', methods=['GET'])
+@blueprint.route('/<sensor_id>/plugins/asset/enabled', methods=['GET'])
 @document_using('static/apidocs/sensor/plugins.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
-               'device_id': {'type': UUID, 'optional': True}})
-def get_sensor_detector_by_device(sensor_id):
+               'asset_id': {'type': UUID, 'optional': True}})
+def bp_get_sensor_plugins_asset_enabled(sensor_id):
     """
-    Return the [sensor]/plugin list for a given sensor
+    Return the plugins enabled by asset in a sensor filtered by asset_id
     :param sensor_id: The sensor which we want to get the data
-    :param device_id: Filter by device (canonical uuid)
+    :param asset_id: Filter by asset (canonical uuid)
     """
-    (success, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id)
-    if not success:
-        current_app.logger.error("detector: get_sensor_detector: Bad 'sensor_id'")
-        return make_bad_request("Bad sensor_id")
-
-    device_id = request.args.get('device_id', None)
-
-    # Now call the ansible module to obtain the [sensor]/iface
-    (success, data) = get_sensor_detectors_from_yaml(sensor_ip)
-    if not success:
-        current_app.logger.error("detector: get_sensor_detector_by_device: %s" % str(data))
-        return make_error("Error getting sensor plugins", 500)
+    asset_id = request.args.get('asset_id', None)
     try:
-        yaml_data = get_plugin_get_request_from_yml(data['contacted'][sensor_ip]['plugins'], device_id)
-    except:
-        return make_error("Something wrong while parsing the yml file. %s" % data, 500)
-    # Now format the list by a dict which key is the sensor_id and the value if the list of ifaces
-    return make_ok(plugins=yaml_data)
+        plugins = get_sensor_plugins_enabled_by_asset(sensor_id=sensor_id,
+                                                      asset_id=asset_id)
+    except APIException as e:
+        return make_error_from_exception(e)
+
+    return make_ok(plugins=plugins)
 
 
-@blueprint.route('/<sensor_id>/plugins', methods=['POST'])
-@document_using('static/apidocs/sensor/detector.html')
+@blueprint.route('/<sensor_id>/plugins/asset/enabled', methods=['POST'])
 @admin_permission.require(http_exception=403)
-@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}, 'plugins': str})
-def put_sensor_detector_by_device(sensor_id):
+@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
+               'plugins': str})
+def bp_post_sensor_plugins_asset_enabled(sensor_id):
     """
-    Set the [sensor]/detectors list on config.yml of the sensor
+    Set the plugins enabled by asset (config.yml) in the sensor
+    plugins: JSON string: {<asset_id>: [
+                              <plugin_name>,
+                              ...],
+                           ...}
     """
-    # Get the 'plugins' param list, with contains the detector plugins
+    # Get the 'plugins' param list, with contains json with the  plugins
     # It must be a comma separate list
     plugins = request.form['plugins']
     if plugins is None:
         current_app.logger.error("detector: put_sensor_detector error: Missing parameter 'plugins'")
         return make_bad_request("Missing parameter plugins")
 
-    (success, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id)
-    if not success:
-        current_app.logger.error("detector: put_sensor_detector error: Bad 'sensor_id'")
-        return make_bad_request("Bad sensor_id")
-    plugins_hash = {}
     try:
-        plugins = json.loads(plugins)
-        for device_id, plugins in plugins.iteritems():
-            ips = get_asset_ip_from_id(device_id)
-            if len(ips) > 0:
-                plugins_hash[device_id] = {"device_ip": ips[0],  # A device  should never have more than one IP
-                                           "plugins": plugins}
-    except Exception:
-        return make_bad_request("Invalid JSON: %s , p=%s" % ("", str(plugins)))
-    try:
-        (success, data) = set_sensor_detectors_from_yaml(sensor_ip, str(plugins_hash))
-    except Exception as err:
-        return make_error("Something wrong happen while getting the yaml information %s" % str(err))
-    if not success:
-        current_app.logger.error("detector: put_sensor_detector error %s" % data)
-        return make_error("Error setting sensor detector plugins: %s" % data, 500)
+        job_id = set_sensor_plugins_enabled_by_asset(sensor_id, plugins)
+    except APIException as e:
+        return make_error_from_exception(e)
 
-    # Now restart the alienvault agent
-    job = restart_alienvault_agent.delay(sensor_ip=sensor_ip)
-    # Now format the list by a dict which key is the sensor_id and the value if the list of ifaces
-    return make_ok(result=data, jobid=job.id)
+    return make_ok(jobid=job_id)
 
 
-@blueprint.route('/<sensor_id>/detector/all', methods=['GET'])
-@document_using('static/apidocs/sensor/all.html')
-@admin_permission.require(http_exception=403)
+@blueprint.route('/<sensor_id>/plugins/detector', methods=['GET'])
+@logged_permission.require(http_exception=403)
 @accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}})
-def get_available_plugins(sensor_id):
+def bp_get_sensor_detector_plugins(sensor_id):
     """
-    Return the [sensor]/plugin list for a given sensor
+    Return the plugins of type 'detector' in a sensor
     :param sensor_id: The sensor which we want to get the data
     """
-    (success, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id)
-    if not success:
-        current_app.logger.error("detector: get_sensor_detector: Bad 'sensor_id'")
-        return make_bad_request("Bad sensor_id")
+    try:
+        plugins = get_sensor_detector_plugins(sensor_id)
+    except APIException as e:
+        return make_error_from_exception(e)
 
-    # Now call the ansible module to obtain the [sensor]/iface
-    (success, data) = get_all_available_plugins(sensor_ip, only_detectors=True)
-    if not success:
-        current_app.logger.error("detector: get_all_available_detector_plugins: %s" % str(data))
-        return make_error("Error getting available plugins", 500)
-    return make_ok(plugins=data)
+    return make_ok(plugins=plugins)

@@ -166,9 +166,10 @@ void              sim_session_set_g_io_hup                    (SimSession  *sess
 
 void              sim_session_cmd_host_os_event               (SimSession  *session,
                                                                SimCommand  *command);
-GIOStatus         sim_session_read_event                      (SimSession  *session,
+gboolean          sim_session_read_event                      (SimSession  *session,
                                                                gchar       *buffer,
-                                                               gsize       *n);
+                                                               gsize       *n,
+                                                               gsize       maxsize);
 gboolean          sim_session_check_iochannel_status          (SimSession  *session,
                                                                GIOStatus    status);
 void              sim_session_reload                          (SimSession  *session,

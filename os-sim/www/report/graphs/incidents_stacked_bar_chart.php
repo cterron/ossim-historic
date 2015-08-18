@@ -33,7 +33,6 @@
 
 
 set_time_limit(180);
-ini_set('memory_limit', '1024M');
 ini_set('session.bug_compat_warn','off');
 
 require_once 'av_init.php';

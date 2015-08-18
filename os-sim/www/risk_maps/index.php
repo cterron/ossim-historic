@@ -916,7 +916,7 @@ $assets            = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                 onLazyRead: function(dtnode){
                     dtnode.appendAjax({
                         url: "../tree.php?key=assets|sensors",
-                        data: {key: dtnode.data.key}
+                        data: {key: dtnode.data.key, page: dtnode.data.page}
                     });
                 }
             });
@@ -1566,7 +1566,7 @@ require '../host_report_menu.php';
 
 <table class='noborder' border='0' cellpadding='0' cellspacing='0'>
     <?php
-        $maps = explode("\n",`ls -1 'maps'`);
+        $maps = Util::execute_command("ls -1 'maps'", FALSE, 'array');
         $i = 0;
         $n = 0;
         $linkmaps = '';
@@ -1584,8 +1584,8 @@ require '../host_report_menu.php';
             $n = str_replace("map", '', str_replace(".jpg", '', $ico));
 
             //Getting the permissions and the name of the map to show as tittle
-            $query  = "SELECT name, perm FROM risk_maps WHERE map = '$n'";
-            $result = $conn->Execute($query);
+            $query  = "SELECT name, perm FROM risk_maps WHERE map = ?";
+            $result = $conn->Execute($query, array($n));
 
             $map_name = $ico;
             $map_perm = array();

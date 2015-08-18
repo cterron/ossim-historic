@@ -139,7 +139,7 @@ define('OSS_PORT', 'func:valid_port');  //	Valid port number or pair port-protoc
 define('OSS_PROTOCOL', 'tcp | udp | icmp');
 define('OSS_CCLASS', 'func:valid_cclass'); // C-class 0.0.0 and 255.255.255 allowed
 define('OSS_IP_ADDR', 'func:valid_ip');
-define('OSS_IP_ADDR_0', 'func:valid_ip_2'); // IP address 0.0.0.0. allowed)
+define('OSS_IP_ADDR_0', 'func:valid_ip_2'); // IP address 0.0.0.0 allowed
 define('OSS_IP_CIDR', 'func:valid_cidr'); // CIDR 0.0.0.0/xx allowed
 define('OSS_IP_CIDR_0', 'func:valid_ipcidr_00'); // IP or CIDR format (0.0.0.0 and 0.0.0.0/xx allowed, included 0.0.0.0/0)
 define('OSS_IP_ADDRCIDR', 'func:valid_ipcidr'); // IP OR CIDR format (CIDR 0.0.0.0/xx allowed)
@@ -1002,7 +1002,7 @@ function validate_form_fields($type, $validate)
 			$value = is_string($values[$k]) ? trim($values[$k]) : $values[$k];
 		}
 
-		eval("ossim_valid(\$value, ".$validate_rules[$k]['validation'].", '".$validate_rules[$k]['e_message']."');");
+		eval("ossim_valid(\$value, ".$validate_rules[$k]['validation'].", \"".$validate_rules[$k]['e_message']."\");");
 
 		if ($GLOBALS['ossim_last_error'] !== FALSE)
 		{

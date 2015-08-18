@@ -37,12 +37,21 @@ from xml.dom.minidom import parseString
 
 import api_log
 from ansiblemethods.ansiblemanager import Ansible, PLAYBOOKS
-from ansiblemethods.helper import read_file, \
-    ansible_is_valid_response, \
-    ansible_is_valid_playbook_response
-from ansiblemethods.sensor.network import get_sensor_interfaces,\
-    set_sensor_interfaces
+
+from ansiblemethods.helper import (
+    read_file,
+    file_exist,
+    ansible_is_valid_response,
+    ansible_is_valid_playbook_response,
+    fire_trigger
+)
+
+from ansiblemethods.sensor.network import (get_sensor_interfaces,
+                                           set_sensor_interfaces)
+
 from ansiblemethods.system.system import get_av_config, set_av_config
+
+from apiexceptions.system import APICannotRetrieveOssimSetup
 
 ansible = Ansible()
 
@@ -920,4 +929,31 @@ def set_interfaces_roles(system_ip,interface_roles):
         if not success:
             return False, result_ifaces
 
+    # Regenerate /etc/alienvault/network/interfaces
+    # It should be done until all the interface management is ported to use lib av_config
+    fire_trigger(system_ip=system_ip,
+                 trigger="alienvault-network-interfaces-migrate",
+                 execute_trigger=False)
+
     return True, result_ifaces
+
+
+def ansible_check_insecure_vpn(system_ip):
+    """ Check if a VPN is insecure: Logjam vulnerability (CVE-2015-4000)
+
+        @param system_ip    The system IP where we're going to check if the vulnerability is present
+    """
+    #First we get the VPN config.
+    success, vpn_config = get_av_config(system_ip, {'vpn_config': ''})
+    if success:
+        for iface, config in vpn_config['vpn_config'].items():
+            #Check that the VPN is enabled and we are the VPN server
+            if config['enabled'] == 'yes' and config['role'] == 'server':
+                #If this file is present then we are vulnerable.
+                file_name = "/etc/openvpn/AVinfrastructure/keys/dh1024.pem"
+                if file_exist(system_ip, file_name):
+                    return True
+    else:
+        raise APICannotRetrieveOssimSetup(system_ip, str(vpn_config))
+
+    return False

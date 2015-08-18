@@ -83,7 +83,7 @@ $orders_by_columns = array(
     '4' => 'os',            // Order by Operating System
     '5' => 'host.asset',    // Order by Asset Value
     '6' => 'vuln',          // Order by Vulnerabilities
-    '7' => 'avail'          // Order by Availability
+    '7' => 'hids'           // Order by HIDS
 );
 
 
@@ -150,7 +150,7 @@ foreach ($asset_list as $_id => $asset_data)
     $_res[] = $asset_data['os'];           //OS
     $_res[] = $asset_data['asset_value'];  //Asset Value
     $_res[] = $asset_data['vuln_scan'];    //Vulnerability Scan
-    $_res[] = $asset_data['availability']; // Availability Configured
+    $_res[] = $asset_data['hids']; // HIDS
     $_res[] = '';
 
     $data[] = $_res;

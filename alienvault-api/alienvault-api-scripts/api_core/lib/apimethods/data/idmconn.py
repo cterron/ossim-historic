@@ -40,6 +40,7 @@ class IDMConnection():
     """Class that manages the connection with an ossim-server"""
 
     CONNECT_MESSAGE = 'connect id="{0}" type="web" sensor_id="{1}"\n'
+    CONNECT_MESSAGE_2 = 'connect id="{0}" type="web"\n'
     CONNECTION_TIMEOUT = 30
 
     def __init__(self, ip="127.0.0.1", port=40002, sensor_id=None):
@@ -51,8 +52,9 @@ class IDMConnection():
         self.__ip = ip
         self.__port = port
         self.__sequence_id = 1
-        # Need a cannonical uuid
-        self.__sensor_id = str(uuid.UUID(sensor_id))
+        self.__sensor_id = sensor_id if sensor_id is None else str(uuid.UUID(sensor_id))
+
+
     #################################################################
     #                   GETTERS/SETTERS
     #################################################################
@@ -131,7 +133,12 @@ class IDMConnection():
                     continue
                 # Send the connection message:
                 self.sequence_id += 1
-                connect_message = self.CONNECT_MESSAGE.format(self.sequence_id, self.sensor_id)
+
+                if self.sensor_id is None:
+                    connect_message = self.CONNECT_MESSAGE_2.format(self.sequence_id)
+                else:
+                    connect_message = self.CONNECT_MESSAGE.format(self.sequence_id, self.sensor_id)
+
                 api_log.error("IDM connector - Send: {0}".format(connect_message))
                 if not self.send(connect_message):
                     api_log.error("IDM connector - Cannot send the connection message")
@@ -220,7 +227,7 @@ class IDMConnection():
                             if port_cpe:
                                 for cpe in port_cpe:
                                     if not banner:
-                                        banner.append(' '.join([s[0].upper() + s[1:] for s in re.sub(':',' ',re.sub(r"^cpe:/.:",'',cpe)).split(' ')]))
+                                        banner.append(' '.join([s[0].upper() + s[1:] for s in re.sub(':',' ',re.sub(r"^cpe:/.:", '', re.sub(r":+", ':', cpe))).split(' ')]))
                                     cpe += '|'
                                     cpe += (' '.join(banner)).lstrip(' ')
                                     if cpe.startswith('cpe:/o:'):
@@ -247,3 +254,22 @@ class IDMConnection():
                 self.send(str(h))
             except Exception as e:
                 api_log.error("IDM connector, cannot send the event {0}".format(str(e)))
+
+    def reload_hosts(self):
+        """Builds an IDM message to reload the hosts"""
+        try:
+            self.sequence_id += 1
+
+            message = 'reload-hosts id="' + str(self.sequence_id) + '"\n'
+
+            api_log.info("Sending the reload host message")
+
+            self.send(message)
+
+            connection_message_response = self.recv()
+
+            if not self.__process_connection_message_response(connection_message_response):
+                api_log.error("Server connector - Cannot connect to the server, invalid response")
+
+        except Exception as e:
+            api_log.debug("Server connector, cannot send the reload host message")

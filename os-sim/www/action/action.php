@@ -103,15 +103,18 @@ $layout      = load_layout($name_layout, $category);
                 {
                     if (typeof(id) != 'undefined') 
                     {
-                        $("#flextable").changeStatus('<?=_("Deleting action")?>...',false);
-                        $.ajax({
-                            type: "GET",
-                            url: "deleteaction.php?id="+urlencode(id),
-                            data: "",
-                            success: function(msg) {
-                                $("#flextable").flexReload();
-                            }
-                        });
+                        if (confirm("<?php echo Util::js_entities(_('Are you sure you want to delete the selected action?')) ?>"))
+                        {
+                            $("#flextable").changeStatus('<?=_("Deleting action")?>...',false);
+                            $.ajax({
+                                type: "GET",
+                                url: "deleteaction.php?id="+urlencode(id),
+                                data: "",
+                                success: function(msg) {
+                                    $("#flextable").flexReload();
+                                }
+                            });
+                        }
                     }
                     else 
                     {
@@ -141,17 +144,20 @@ $layout      = load_layout($name_layout, $category);
         			//Delete host by ajax
         			if (typeof(items[0]) != 'undefined') 
         			{
-        				$("#flextable").changeStatus('<?=_("Deleting action")?>...',false);
-        				
-        				$.ajax(
-        				{
-    						type: "GET",
-    						url: "deleteaction.php?id="+urlencode(items[0].id.substr(3)),
-    						data: "",
-    						success: function(msg) {
-    							$("#flextable").flexReload();
-    						}
-        				});
+                        if (confirm("<?php echo Util::js_entities(_('Are you sure you want to delete the selected action?')) ?>"))
+                        {
+            				$("#flextable").changeStatus('<?=_("Deleting action")?>...',false);
+            				
+            				$.ajax(
+            				{
+        						type: "GET",
+        						url: "deleteaction.php?id="+urlencode(items[0].id.substr(3)),
+        						data: "",
+        						success: function(msg) {
+        							$("#flextable").flexReload();
+        						}
+            				});
+                        }
         			}
         			else 
         			{

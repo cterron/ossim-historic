@@ -395,8 +395,9 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                     }
                 }
                 
-                $sql  = "SELECT hex(acid_event.id) as id " . $action_sql . $tmp;
-                $sql2 = "SELECT count(acid_event.id) " . $action_sql . $tmp;
+                $sql  = "SELECT hex(acid_event.id) as id " . preg_replace("/.._acid_event (as)?/",'',$action_sql) . $tmp;
+                $cnt  = (preg_match("/.._acid_event/",$action_sql)) ? "sum(acid_event.cnt) " : "count(acid_event.id) ";
+                $sql2 = "SELECT " . $cnt . $action_sql . $tmp;
             }
             /* Ports listing */
             else if ($context == PAGE_STAT_PORTS)
@@ -432,7 +433,12 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 $sql  = "SELECT hex(acid_event.id) as id FROM acid_event WHERE " . $tmp;
                 $sql2 = "SELECT count(acid_event.id) FROM acid_event WHERE " . $tmp;
             }
-            
+
+            if (file_exists('/tmp/debug_siem'))
+            {
+                error_log("Delete: $sql\n$sql2\n", 3, "/tmp/siem");
+            }
+
             // If acting on alerts by signature or sensor, count the number of alerts
             if (($context == PAGE_STAT_ALERTS) || ($context == PAGE_STAT_SENSOR) || ($context == PAGE_STAT_CLASS) || ($context == PAGE_STAT_IPLINK) || ($context == PAGE_STAT_UADDR) || ($context == PAGE_STAT_PORTS))
             {
@@ -456,7 +462,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 
                 fputs($f, "INSERT IGNORE INTO del_$rnd ".str_replace("hex(acid_event.id) as id","acid_event.id,DATE_FORMAT(acid_event.timestamp, '%Y-%m-%d %H:00:00')",$sql).";\n");
                 fputs($f, "SELECT min(timestamp),max(timestamp) FROM del_$rnd INTO @date_from,@date_to;\n");
-		fputs($f, "CREATE TEMPORARY TABLE tmp_delete (id binary(16) NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY;\n");
+                fputs($f, "CREATE TEMPORARY TABLE tmp_delete (id binary(16) NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY;\n");
                 fputs($f, "SET AUTOCOMMIT=0;\n");
                 
                 for ($k = 0; $k < $total_aux; $k += $block)
@@ -479,6 +485,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                     fputs($f, "DELETE aux FROM acid_event aux LEFT JOIN tmp_delete t ON aux.id=t.id WHERE t.id IS NOT NULL;\n");
                     fputs($f, "DELETE aux FROM idm_data aux LEFT JOIN tmp_delete t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                     fputs($f, "DELETE aux FROM reputation_data aux LEFT JOIN tmp_delete t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
+                    fputs($f, "DELETE aux FROM otx_data aux LEFT JOIN tmp_delete t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                     fputs($f, "DELETE aux FROM extra_data aux LEFT JOIN tmp_delete t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                     fputs($f, "DELETE d FROM del_$rnd d, tmp_delete t WHERE t.id=d.id;TRUNCATE TABLE tmp_delete;\n\n");
                     fputs($f, "COMMIT;\n");
@@ -487,6 +494,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 fputs($f, "DELETE aux FROM acid_event aux LEFT JOIN del_$rnd t ON aux.id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "DELETE aux FROM idm_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "DELETE aux FROM reputation_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
+                fputs($f, "DELETE aux FROM otx_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "DELETE aux FROM extra_data aux LEFT JOIN del_$rnd t ON aux.event_id=t.id WHERE t.id IS NOT NULL;\n");
                 fputs($f, "CALL fill_tables(DATE_FORMAT(@date_from, '%Y-%m-%d %H:00:00'),DATE_FORMAT(@date_to, '%Y-%m-%d %H:59:59'));\n");
                 fputs($f, "TRUNCATE TABLE del_$rnd;\nDROP TABLE tmp_delete;\n");
@@ -781,6 +789,7 @@ function PurgeAlert($id, $db, $deltmp, $j, $perc, $f) {
         "idm_data",
         "reputation_data",
         "extra_data",
+        "otx_data",
         "acid_event"
     );
     $del_cnt = 0;

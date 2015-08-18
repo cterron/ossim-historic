@@ -200,7 +200,7 @@ class Ossec
 
         if ($data['data'] === FALSE)
         {
-            $exp_msg = _('Error! Failed to get the OSSEC configuration file. You do not have enough access privileges');
+            $exp_msg = _('Error! Failed to get the HIDS configuration file. You do not have enough access privileges');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -222,7 +222,7 @@ class Ossec
     public static function set_configuration_file($sensor_id, $new_conf)
     {
         $data['status']  = 'success';
-        $data['msg']     = _('OSSEC configuration file updated successfully');
+        $data['msg']     = _('HIDS configuration file updated successfully');
         $data['data']    = $new_conf;
 
         $conf_file = Ossec_utilities::get_real_path($sensor_id, self::CONF_PATH);
@@ -235,10 +235,10 @@ class Ossec
             $new_conf = preg_replace($pattern, '<email_notification>no</email_notification>', $new_conf);
 
             $system_name = (Session::is_pro()) ? 'AlienVault' : 'OSSIM';
-            $warning_msg = '<div style="padding: 3px 0px 3px 15px;">'._('OSSEC email notification is not supported. Please, use '.$system_name.' email notifications instead').'.</div>';
+            $warning_msg = '<div style="padding: 3px 0px 3px 15px;">'._('HIDS email notification is not supported. Please, use '.$system_name.' email notifications instead').'.</div>';
 
             $data['status'] = 'warning';
-            $data['msg']    = _('OSSEC configuration file updated with warnings:').'<br/>'. $warning_msg;
+            $data['msg']    = _('HIDS configuration file updated with warnings:').'<br/>'. $warning_msg;
             $data['data']   = $new_conf;
         }
 
@@ -249,7 +249,7 @@ class Ossec
         {
             $new_conf = preg_replace($pattern, '', $new_conf);
 
-            $warning_msg = '<div style="padding: 3px 0px 3px 15px;">'._('OSSEC not compiled with support for \'mysql\'').'.</div>';
+            $warning_msg = '<div style="padding: 3px 0px 3px 15px;">'._('HIDS not compiled with support for \'mysql\'').'.</div>';
 
             if ($data['status'] == 'warning')
             {
@@ -258,7 +258,7 @@ class Ossec
             else
             {
                 $data['status'] = 'warning';
-                $data['msg']    = _('OSSEC configuration file updated with warnings:').'<br/>'. $warning_msg;
+                $data['msg']    = _('HIDS configuration file updated with warnings:').'<br/>'. $warning_msg;
             }
 
             $data['data'] = $new_conf;
@@ -266,7 +266,7 @@ class Ossec
 
         if (@file_put_contents($conf_file, $new_conf, LOCK_EX) === FALSE)
         {
-            $exp_msg = _('Error! Failed to set OSSEC configuration file. You do not have enough access privileges');
+            $exp_msg = _('Error! Failed to set HIDS configuration file. You do not have enough access privileges');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }

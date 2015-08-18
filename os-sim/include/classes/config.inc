@@ -311,13 +311,7 @@ class Config
             'rrdtool_path'        => '/usr/bin/',
             'mrtg_path'           => '/usr/bin/',
             'mrtg_rrd_files_path' => '/var/lib/ossim/rrd/',
-            'rrdpath_host'        => '/var/lib/ossim/rrd/host_qualification/',
-            'rrdpath_net'         => '/var/lib/ossim/rrd/net_qualification/',
-            'rrdpath_global'      => '/var/lib/ossim/rrd/global_qualification/',
-            'rrdpath_level'       => '/var/lib/ossim/rrd/level_qualification/',
              
-            'ntop_link'           => 'http://localhost/ntop', // Links: Links to other applications
-            'use_ntop_rewrite'    => '0',
             'ossim_link'          => '/ossim/',
             'nagios_link'         => '/nagios/',
             'use_munin'           => '0',
@@ -421,7 +415,6 @@ class Config
         $default_debian_values = array(
             'adodb_path',   '/usr/share/php/adodb/',  // PHP: PHP Configuration (graphs, acls, database api)
 
-            'rrdpath_ntop', '/var/lib/ntop/rrd',   // RRD: RRD Configuration (graphing)
             'font_path',    '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf',
 
             'event_viewer', 'base', // ACID: Acid cache configuration

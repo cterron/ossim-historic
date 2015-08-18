@@ -33,16 +33,22 @@
 from flask import Blueprint, request
 from api.lib.utils import accepted_url
 from uuid import UUID
-from api.lib.common import make_ok, make_bad_request, make_error, document_using
+from api.lib.common import (
+    make_ok,
+    make_error,
+    make_error_from_exception,
+    document_using)
 from api.lib.auth import admin_permission
 from apimethods.system.status import system_all_info
-from apimethods.system.status import system_status
 from apimethods.system.status import network_status
 from apimethods.system.status import alienvault_status
-from apimethods.system.status import cpu
-from apimethods.system.status import disk_usage
 from apimethods.system.status import package_list
 from apimethods.system.status import ping_system
+from apimethods.utils import (
+    is_json_true,
+    BOOL_VALUES)
+
+from apiexceptions import APIException
 import api_log
 
 
@@ -95,8 +101,8 @@ def get_network_status(system_id):
         api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
         return make_error("Cannot retrieve network status for system %s" % system_id, 500)
     return make_ok(**result)
-    
-    
+
+
 @blueprint.route('/<system_id>/status/alienvault', methods=['GET'])
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
@@ -121,8 +127,7 @@ def get_alienvault_status(system_id):
         api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
         return make_error("Cannot retrieve AlienVault status for system %s" % system_id, 500)
     return make_ok(**result)
-    
-    
+
 
 @blueprint.route('/<system_id>/status/installed_packages', methods=['GET'])
 @document_using('static/apidocs/system.html')
@@ -139,19 +144,19 @@ def get_alienvault_packages(system_id):
         no_cache (boolean): Flag to indicate whether load cached data or fresh one.
 
     """
-    
     success, result = package_list(system_id)
     if not success:
         api_log.error("Cannot retrieve installed packages status for system_id %s. Error: %s" % (system_id, str(result)))
         api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
         return make_error("Cannot retrieve installed packages status for system %s" % system_id, 500)
     return make_ok(**result)
-    
+
 
 @blueprint.route('/<system_id>/status/ping', methods=['GET'])
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
-@accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']},
+               'no_cache': {'optional': True, 'values': BOOL_VALUES}})
 def is_system_reachable(system_id):
     """Find out if a system is reachable or not.
 
@@ -162,14 +167,10 @@ def is_system_reachable(system_id):
         system_id (str): String with system id (uuid) or local
 
     """
-    
-    success, result = ping_system(system_id)
-    
-    if not success:
-        api_log.error("Cannot find out if system is reachable for system_id %s. Error: %s" % (system_id, str(result)))
-        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
-        
-        return make_error("Cannot find out if system is reachable for system %s" % system_id, 500)
-        
-    return make_ok(reachable=result)
-    
+    no_cache = is_json_true(request.args.get('no_cache', None))
+    try:
+        reachable = ping_system(system_id, no_cache=no_cache)
+    except APIException as e:
+        make_error_from_exception(e)
+
+    return make_ok(reachable=reachable)

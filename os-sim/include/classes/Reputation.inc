@@ -727,7 +727,8 @@ class Reputation
     */
     public static function getlabslink($ip)
     {
-        return 'http://www.alienvault.com/apps/rep_monitor/ip/'.(Session::is_pro() ? 'usm' : 'ossim')."/$ip/";
+        // OLD LINK  http://www.alienvault.com/apps/rep_monitor/ip/usm/$ip/
+        return Otx::OTX_URL . "indicator/ip/$ip/";
     }
 
 
@@ -953,6 +954,27 @@ class Reputation
 
         return $activities;
     }
+    
+    
+    /**
+    * This function flush the reputation from session
+    *
+    * @return void
+    */
+    public static function flush_raputation_from_session()
+    {
+        foreach ($_SESSION as $k => $v) 
+        {
+            if (preg_match("/^_repinfodb/",$k)) 
+            {
+                unset($_SESSION[$k]);
+            }
+        }
+    }
+    
+    
+    
+    
 }
 
 /* End of file Reputation.inc */

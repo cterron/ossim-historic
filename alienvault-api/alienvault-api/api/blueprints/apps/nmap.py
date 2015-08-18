@@ -16,7 +16,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-#  along with this package; if not, write to the Free Software
+# along with this package; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 #  MA  02110-1301  USA
 #
@@ -26,7 +26,8 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
-from flask import Blueprint, request, jsonify
+import time
+from flask import Blueprint, request
 from flask.ext.login import current_user
 from api.lib.auth import admin_permission, logged_permission
 from api.lib.utils import accepted_url
@@ -40,11 +41,12 @@ from uuid import UUID
 from celerymethods.jobs.nmap import run_nmap_scan, monitor_nmap_scan
 from apimethods.sensor.nmap import apimethod_get_nmap_scan, apimethod_delete_nmap_scan, apimethod_get_nmap_scan_status, \
     apimethods_stop_scan, apimethod_get_nmap_scan_list
-from apimethods.sensor.exceptions.nmap import APIMethodNMAPScanKeyNotFound, APIMethodNMAPScanException, \
-    APIMethodNMAPScanCannotRetrieveBaseFolder, APIMethodNMAPScanCannotCreateLocalFolder, \
-    APIMethodNMAPScanReportNotFound, APIMethodNMAPScanCannotReadReport, APIMethodNMAPScanReportCannotBeDeleted
-from apimethods.sensor.exceptions.common import APIMethodCannotResolveSensorID
+from apiexceptions.nmap import APINMAPScanKeyNotFound, APINMAPScanException, \
+    APINMAPScanCannotRetrieveBaseFolder, APINMAPScanCannotCreateLocalFolder, \
+    APINMAPScanReportNotFound, APINMAPScanCannotReadReport, APINMAPScanReportCannotBeDeleted
+from apiexceptions.sensor import APICannotResolveSensorID
 
+# from apimethods.sensor.nmap import apimethod_nmapdb_add_task
 from api import app
 
 blueprint = Blueprint(__name__, __name__)
@@ -146,9 +148,12 @@ def do_nmap_scan():
     if len(ftargets) < 1:
         return make_error("No valid targets to scan", 500)
 
-    job = run_nmap_scan.delay(sensor_id=sensor_id, target=','.join(ftargets), targets_number=targets_number,
+    job = run_nmap_scan.delay(sensor_id=sensor_id, target=','.join(ftargets),
+                              targets_number=targets_number,
                               scan_type=scan_type,
-                              rdns=rdns, scan_timing=scan_timing, autodetect=autodetect, scan_ports=scan_ports, idm=idm,
+                              rdns=rdns, scan_timing=scan_timing,
+                              autodetect=autodetect,
+                                scan_ports=scan_ports, idm=idm,
                               user=current_user.login)
     monitor_nmap_scan.delay(sensor_id=sensor_id, task_id=job.id)
     return make_ok(job_id=job.id)
@@ -163,11 +168,11 @@ def delete_nmap_scan(task_id):
     sensor_id = request.args.get('sensor_id', None)
     try:
         apimethod_delete_nmap_scan(sensor_id=sensor_id, task_id=task_id)
-    except (APIMethodNMAPScanCannotRetrieveBaseFolder,
-            APIMethodNMAPScanCannotCreateLocalFolder,
-            APIMethodNMAPScanReportCannotBeDeleted) as e:
+    except (APINMAPScanCannotRetrieveBaseFolder,
+            APINMAPScanCannotCreateLocalFolder,
+            APINMAPScanReportCannotBeDeleted) as e:
         return make_error(str(e), 500)
-    except APIMethodNMAPScanReportNotFound as e:
+    except APINMAPScanReportNotFound as e:
         return make_error(str(e), 404)
     except:
         return make_error("Cannot Delete the report", 500)
@@ -185,9 +190,9 @@ def get_nmap_scan(task_id):
 
     try:
         data = apimethod_get_nmap_scan(sensor_id=sensor_id, task_id=task_id)
-    except (APIMethodNMAPScanCannotRetrieveBaseFolder, APIMethodNMAPScanCannotCreateLocalFolder, APIMethodNMAPScanCannotReadReport) as e:
+    except (APINMAPScanCannotRetrieveBaseFolder, APINMAPScanCannotCreateLocalFolder, APINMAPScanCannotReadReport) as e:
         return make_error(str(e), 500)
-    except APIMethodNMAPScanReportNotFound as e:
+    except APINMAPScanReportNotFound as e:
         return make_error(str(e), 404)
     except:
         return make_error(data, 500)
@@ -202,9 +207,9 @@ def get_nmap_scan(task_id):
 def get_nmap_scan_status(task_id):
     try:
         job = apimethod_get_nmap_scan_status(task_id)
-    except APIMethodNMAPScanKeyNotFound:
+    except APINMAPScanKeyNotFound:
         return make_error("Task id not found", 404)
-    except APIMethodNMAPScanException as exp:
+    except APINMAPScanException as exp:
         app.logger.error("Cannot retrieve the scan status {0}".format(str(exp)))
         return make_error("Cannot retrieve the scan status for the given task", 500)
     return make_ok(result=job)
@@ -217,11 +222,11 @@ def get_nmap_scan_status(task_id):
 def stop_scan(task_id):
     try:
         apimethods_stop_scan(task_id)
-    except APIMethodCannotResolveSensorID:
+    except APICannotResolveSensorID:
         return make_error("Cannot retrieve the task status", 404)
-    except APIMethodNMAPScanKeyNotFound:
+    except APINMAPScanKeyNotFound:
         return make_error("Cannot retrieve the task status", 404)
-    except APIMethodNMAPScanException as exp:
+    except APINMAPScanException:
         return make_error("Cannot stop the scan", 500)
 
     return make_ok(result=True)

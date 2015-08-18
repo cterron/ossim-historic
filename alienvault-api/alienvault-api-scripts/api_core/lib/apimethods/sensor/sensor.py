@@ -29,15 +29,17 @@
 #
 from db.methods.sensor import get_sensor_ip_from_sensor_id
 from db.methods.system import get_system_id_from_local
-from db.methods.sensor import get_system_id_from_sensor_id
 from db.methods.sensor import get_base_path
-from apimethods.utils import  get_base_path_from_system_id
+from apimethods.utils import get_base_path_from_system_id
+from ansiblemethods.helper import fire_trigger
 from ansiblemethods.system.system import set_av_config, ansible_add_system
 from ansiblemethods.sensor.detector import get_sensor_detectors_from_yaml
 from ansiblemethods.sensor.service import get_service_status_by_ip
 from ansiblemethods.sensor.plugin import get_plugin_package_version as ans_get_plugin_package_info
 from celerymethods.jobs.reconfig import job_alienvault_reconfigure
 from apimethods.system.cache import use_cache
+from apiexceptions.sensor import (APICannotAddSensor,
+                                  APICannotSetSensorContext)
 
 import api_log
 
@@ -81,7 +83,29 @@ def add_sensor(sensor_id, password):
     (success, response) = ansible_add_system(local_system_id=local_system_id,
                                              remote_system_ip=system_ip,
                                              password=password)
+
     return (success, response)
+
+
+def apimethod_add_sensor(sensor_id, password, ctx):
+
+    if password is not None:
+        (success, response) = add_sensor(sensor_id, password)
+        if not success:
+            raise APICannotAddSensor(sensor_id,
+                                     log=str(response))
+
+    (success, job_id) = set_sensor_context(sensor_id, ctx)
+    if not success:
+        raise APICannotSetSensorContext(sensor_id)
+
+    trigger_success, msg = fire_trigger(system_ip="127.0.0.1",
+                                        trigger="alienvault-new-sensor")
+
+    if not trigger_success:
+        api_log.error(msg)
+
+    return job_id
 
 
 def get_base_path_from_sensor_id(sensor_id):
@@ -104,16 +128,18 @@ def get_plugins_from_yaml(sensor_id, no_cache=False):
     if not rt:
         return False, "Can't retrieve the system id"
     return get_sensor_detectors_from_yaml(admin_ip)
-    
+
+
 def get_service_status_by_id(sensor_id):
     """
-    Return a list of processes with their statuses (snort, suricata, prads, ntop and ossec)
+    Return a list of processes with their statuses (suricata, prads and ossec)
     """
     (success, ip) = get_sensor_ip_from_sensor_id(sensor_id)
     if not success:
         return False, ip
 
     return get_service_status_by_ip(ip)
+
 
 def get_plugin_package_info(sensor_id):
     """
@@ -122,6 +148,6 @@ def get_plugin_package_info(sensor_id):
     """
     (success, ip) = get_sensor_ip_from_sensor_id(sensor_id)
     if success:
-        return ans_get_plugin_package_info (ip)
+        return ans_get_plugin_package_info(ip)
     else:
         return (False, ip)

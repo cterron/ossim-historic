@@ -106,7 +106,6 @@ my @directories = (
 "rrdpath_global",
 "rrdpath_host",
 "rrdpath_net",
-"rrdpath_ntop",
 "rrdtool_lib_path",
 "rrdtool_path",
 "snort_path",
@@ -118,9 +117,6 @@ my @directories = (
 my @links = (
 "acid_link",
 "graph_link",
-"graph_ntop",
-"ntop_link",
-"ntop_link_ext",
 "nagios_link",
 "ossim_link"
 );

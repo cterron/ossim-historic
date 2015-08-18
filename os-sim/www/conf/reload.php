@@ -55,18 +55,6 @@ if ($what == 'policies')
 {
 	Session::logcheck('configuration-menu', 'PolicyPolicy');
 }
-elseif ($what == 'tasks')
-{
-    // Log check by s_type
-    if (GET('s_type') == 'ocs')
-    {
-        Session::logcheck('configuration-menu', 'AlienVaultInventory');
-    }
-    else
-    {
-        Session::logcheck('environment-menu', 'AlienVaultInventory');
-    }
-}
 else 
 {	
 	Session::logcheck('configuration-menu', 'PolicyServers'); // Who manage server can reload server conf
@@ -128,43 +116,23 @@ if (strncmp($out, 'ok id="1"', 9) != 0)
         Web_indicator::set_off('Reload_' . $what);
     }
     
-    // ReloadPolicy key deprecated, now using Reload_policies always
-    // Reset main indicator if no more policy reload need
-    /*
-    if (!Web_indicator::is_on('Reload_policies') && !Web_indicator::is_on('Reload_sensors') && !Web_indicator::is_on('Reload_plugins') && !Web_indicator::is_on('Reload_directives') && !Web_indicator::is_on('Reload_servers')) {
-        Web_indicator::set_off('ReloadPolicy');
-    }
-    */
-    
     $error  = sprintf(_("Unable to connect to %s server. Please, wait until it's available again or check if it's running at %s"), Session::is_pro() ? "USM" : "OSSIM", "$address:$port");
+    
     echo ossim_error($error);
     exit();
 }
 
-// ********** Reload action: 3 modes ***********
+// ********** Reload action: 2 modes ***********
 // Note: Since 01/09/2014 the Directive_editor::reload_directives() is unified here
 //       And reload_plugins does the same action (ossim-server restart)
 
-// 1-. Frameworkd socket mode
-if($what == 'tasks')
-{
-    try
-    {
-        $frcon = new Frameworkd_socket();
-        $frcon->write("control action=\"refresh_inventory_task\"\n");
-    }
-    catch(Exception $e)
-    {
-        $error = _('An error occurred while updating Agent cache...');
-        echo ossim_error($error);
-    }
-}
-// 2-. Server daemon hard restart mode
-elseif ($what == 'directives' || $what == 'plugins')
+
+// 1-. Server daemon hard restart mode
+if ($what == 'directives' || $what == 'plugins')
 {
     Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
 }
-// 3-. Server socket mode
+// 2-. Server socket mode
 else
 {
     $in  = 'reload-' . $what . ' id="2"' . "\n";
@@ -180,6 +148,7 @@ else
         exit;
     }
     
+    @socket_shutdown($socket);
     @socket_close($socket);
 }
 

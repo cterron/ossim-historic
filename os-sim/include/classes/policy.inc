@@ -965,7 +965,7 @@ class Policy
         $rs = $conn->Execute($query, $params);
         if (!$rs) 
         {
-            Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
             
             return FALSE;            
         } 

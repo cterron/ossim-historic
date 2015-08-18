@@ -58,6 +58,22 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
 
+-- -----------------------------------------------------
+-- Table `otx_data`
+-- -----------------------------------------------------
+RENAME TABLE otx_data TO _otx_data;
+CREATE TABLE IF NOT EXISTS `otx_data` (
+  `event_id` BINARY(16) NOT NULL,
+  `pulse_id` BINARY(16) NOT NULL,
+  `ioc_hash` VARCHAR(32) NOT NULL,
+  `ioc_value` VARCHAR(2048) NULL,
+  INDEX `ioc` (`ioc_value`(255) ASC),
+  INDEX `pulse` (`pulse_id` ASC),
+  PRIMARY KEY (`event_id`, `pulse_id`, `ioc_hash`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
 CREATE TABLE IF NOT EXISTS tmp_events (id binary(16) NOT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB;
 
 SELECT sleep(10) into @sleep;
@@ -182,6 +198,11 @@ DROP PROCEDURE IF EXISTS `delete_events`$$
 CREATE PROCEDURE delete_events( tmp_table VARCHAR(64) )
 BEGIN
     SET @query = CONCAT('DELETE aux FROM alienvault_siem.reputation_data aux LEFT JOIN ',tmp_table,' tmp ON tmp.id=aux.event_id WHERE tmp.id IS NOT NULL');
+    PREPARE sql_query from @query;
+    EXECUTE sql_query;
+    DEALLOCATE PREPARE sql_query;
+
+    SET @query = CONCAT('DELETE aux FROM alienvault_siem.otx_data aux LEFT JOIN ',tmp_table,' tmp ON tmp.id=aux.event_id WHERE tmp.id IS NOT NULL');
     PREPARE sql_query from @query;
     EXECUTE sql_query;
     DEALLOCATE PREPARE sql_query;
@@ -422,6 +443,7 @@ BEGIN
     WHILE @num_events > 0 DO
        INSERT IGNORE INTO _ttmp_events SELECT id FROM alienvault_siem.tmp_events LIMIT 100000;
        INSERT IGNORE INTO alienvault_siem.reputation_data SELECT aux.* FROM alienvault_siem._reputation_data aux, _ttmp_events t WHERE aux.event_id=t.id;
+       INSERT IGNORE INTO alienvault_siem.otx_data SELECT aux.* FROM alienvault_siem._otx_data aux, _ttmp_events t WHERE aux.event_id=t.id;
        INSERT IGNORE INTO alienvault_siem.idm_data SELECT aux.* FROM alienvault_siem._idm_data aux, _ttmp_events t WHERE aux.event_id=t.id;
        INSERT IGNORE INTO alienvault_siem.extra_data SELECT aux.* FROM alienvault_siem._extra_data aux, _ttmp_events t WHERE aux.event_id=t.id;
        INSERT IGNORE INTO alienvault_siem.acid_event SELECT aux.* FROM alienvault_siem._acid_event aux, _ttmp_events t WHERE aux.id=t.id;

@@ -96,7 +96,7 @@ $type_id = array("Security_DB_Events"                => "33",
 				 "SIEM_Events_Unique_IP_Links"       => "37");
 
 
-$fields = array( "Security_DB_Events"                => "dataV1, dataV2, dataV3, dataV4, dataV5, dataV6, dataV10, dataV11",
+$fields = array( "Security_DB_Events"                => "dataV1, dataV2, dataV3, dataV4, dataV5, dataV6, dataV10, dataV11, dataI1",
 				 "Security_DB_Unique_Events"         => "dataV1, dataV2, dataI2, dataI3",
 				 "Security_DB_Sensors"               => "dataV7, dataV8, dataV1, dataI2",
 				 "Security_DB_Unique_Address"        => "dataV1, cell_data, dataV11, dataI3, dataV3, dataV4",

@@ -141,8 +141,16 @@ if (GET('id_delete') != "")
 <?php
 if (is_uploaded_file($_FILES['atchfile']['tmp_name'])) 
 {
-    // Correct format xxxxxxx.yyy
-    if (preg_match("/\.(...?.?)$/", $_FILES['atchfile']['name'])) 
+    // Correct format of File Name
+    ossim_valid($_FILES['atchfile']['name'], OSS_FILENAME, 'illegal:' . _("File Name"));
+    
+    if (ossim_error())
+    {
+        $error        = TRUE;
+        $info_error   = _("File type or name not allowed");
+    }
+    
+    else 
 	{
         // Insert file row in DB
         $filename = Repository::attach($conn, $id_document, $_FILES['atchfile']['name']);
@@ -167,16 +175,10 @@ if (is_uploaded_file($_FILES['atchfile']['tmp_name']))
 		}
 		
 	}
-    // Incorrect format, can't get file type without extension
-    else 
-	{
-        $error        = TRUE;
-		$info_error   = _("File type not allowed");
-    }
 }
 else
 {
-	$info_error   = _("'No file was uploaded");
+	$info_error   = _("No file was uploaded");
 }
 
 

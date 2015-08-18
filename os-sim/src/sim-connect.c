@@ -89,7 +89,7 @@ sim_connect_send_alarm(gpointer data)
   gint port;
 
   GInetAddr* addr = NULL;
-  hostname = g_strdup(config->framework.host);
+  hostname = g_strdup("127.0.0.1");
   port = config->framework.port;
   gint iter=0;
 	guint inx = 0;

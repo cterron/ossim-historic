@@ -79,7 +79,7 @@ include_once ("$BASE_path/base_stat_common.php");
     </head>
 
     <body>
-        <center><div id="plotareaglobal" class="plot" style="text-align:center;margin:12px 15px 0px 0px;"></div></center>
+        <center><div id="plotareaglobal" class="plot" style="text-align:center;margin:0px;"></div></center>
 
         <?php
         $qs = new QueryState();
@@ -121,7 +121,7 @@ include_once ("$BASE_path/base_stat_common.php");
 
             $qs->SaveReportData($gdata,$graph_report_type);
             //print_r($xlabels);print_r($xticks);print_r ($x);print_r ($y);
-            $plot = plot_graphic("plotareaglobal", 60, 800, $x, $y, $xticks, $xlabels, true, 'base_qry_main.php?num_result_rows=-1&current_view=-1');
+            $plot = plot_graphic("plotareaglobal", 60, 700, $x, $y, $xticks, $xlabels, false, 'base_qry_main.php?num_result_rows=-1&current_view=-1');
             //echo "PLOT:".Util::htmlentities($plot).".";
             echo $plot;
 

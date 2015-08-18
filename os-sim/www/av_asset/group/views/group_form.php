@@ -71,8 +71,6 @@ $id          = $asset_group->get_id();
 $name        = $asset_group->get_name();
 $owner       = $asset_group->get_owner();
 $descr       = $asset_group->get_descr();
-$threshold_a = $asset_group->get_threshold('a');
-$threshold_c = $asset_group->get_threshold('c');
 $nagios      = Asset_group_scan::is_plugin_in_group($conn, $id, 2007);
 
 
@@ -198,7 +196,7 @@ $db->close();
                         //Try - Catch to avoid if this launch an error, the lightbox must be closed.
                         try
                         {
-                            top.frames['main'].notify('<?php echo $_message?>', 'nf_success', true);
+                            top.frames['main'].show_notification('asset_notif', "<?php echo $_message ?>", 'nf_success', 15000, true);
                         }
                         catch(Err){}
                         
@@ -234,8 +232,6 @@ $db->close();
 
     <form method="POST" name="ag_form" id="ag_form" action="">
 
-        <input type="hidden" name="threshold_a" id="threshold_a" class="vfield" value="<?php echo $threshold_a?>"/>
-        <input type="hidden" name="threshold_c" id="threshold_c" class="vfield" value="<?php echo $threshold_c?>"/>
         <input type="hidden" class='vfield' name="id" id="id" value="<?php echo $id?>"/>
 
         <table id='t_container'>

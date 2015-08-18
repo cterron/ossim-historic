@@ -82,7 +82,7 @@ function get_alarm_life($end, $begin, $text = ''){
 		return '-';
 	}
 	
-	return "$diff <span class='small'>$unit $text</span>";
+	return "$diff <span>$unit $text</span>";
 	
 	
 }

@@ -74,6 +74,18 @@ header("Content-type: text/css");
 	cursor: pointer;
 }
 
+.dropdown .dropdown-menu LI > A.disabled
+{
+	color: lightgray !important;
+}
+
+.dropdown .dropdown-menu LI > A.disabled:hover
+{
+	color: lightgray !important;
+	background-color: inherit !important;
+	cursor: default !important;
+}
+
 .dropdown .dropdown-menu .dropdown-divider {
 	font-size: 1px;
 	border-top: solid 1px #E5E5E5;

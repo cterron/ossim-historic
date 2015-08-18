@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  License:
+# License:
 #
 #  Copyright (c) 2014 AlienVault
 #  All rights reserved.
@@ -40,11 +40,15 @@ from db.models.alienvault import (
     Sensor,
     Host_Sensor_Reference,
     System,
-    Sensor_Properties
+    Sensor_Properties,
+    Acl_Sensors,
+    Acl_Entities
 )
 from db.methods.system import (
     get_system_id_from_system_ip,
-    get_system_ip_from_local
+    get_system_ip_from_local,
+    get_system_id_from_local,
+    get_sensor_id_from_system_id
 )
 from db.methods.api import get_monitor_data
 import api_log
@@ -58,10 +62,15 @@ from apimethods.utils import (
     get_ip_str_from_bytes,
     get_ip_bin_from_str,
     get_uuid_string_from_bytes,
-    compare_dpkg_version
+    compare_dpkg_version,
+    is_valid_uuid
 )
 
+from apiexceptions.sensor import APICannotResolveSensorID
+from apiexceptions.system import APICannotResolveLocalSystemID
+
 from avconfig.ossimsetupconfig import AVOssimSetupConfigHandler
+
 ossim_setup = AVOssimSetupConfigHandler()
 #
 # I would prefer this constant defined in one file
@@ -79,7 +88,8 @@ def get_system_id_from_sensor_id(sensor_id, output='str'):
     sensor_id_bin = get_bytes_from_uuid(sensor_id)
 
     try:
-        sensor_ids = [x.id for x in db.session.query(System).filter(System.sensor_id == sensor_id_bin).order_by(System.id).all()]
+        sensor_ids = [x.id for x in
+                      db.session.query(System).filter(System.sensor_id == sensor_id_bin).order_by(System.id).all()]
     except NoResultFound, msg:
         return (False, "No sensor ip address found with sensor id '%s'" % str(sensor_id))
     except MultipleResultsFound, msg:
@@ -95,23 +105,39 @@ def get_system_id_from_sensor_id(sensor_id, output='str'):
 
 @require_db
 def get_sensor_by_sensor_id(sensor_id):
-    """Returns a Sensor object given a sensor id"""
-    sensor = None
+    """Returns a Sensor object given a Sensor ID"""
     try:
-        rc, sensor_ip = get_sensor_ip_from_sensor_id(sensor_id, local_loopback=False)
-        if not rc:
-            return False, "Can't retrieve the sensor ip"
-        sensors = get_sensor_from_alienvault(sensor_ip)
-        if len(sensors) > 0:
-            sensor = sensors[0]
+        # Getting Sensor ID for local system
+        if sensor_id.lower() == 'local':
+            (success, system_id) = get_system_id_from_local()
+
+            if not success:
+                raise APICannotResolveLocalSystemID()
+
+            (success, local_sensor_id) = get_sensor_id_from_system_id(system_id)
+
+            if success and local_sensor_id:
+                sensor_id = local_sensor_id
+
+        if not is_valid_uuid(sensor_id):
+            raise APICannotResolveSensorID(sensor_id)
+
+        # Getting sensor information
+        success = True
+        sensor_id_bin = get_bytes_from_uuid(sensor_id.lower())
+        data = db.session.query(Sensor).filter(Sensor.id == sensor_id_bin).one()
     except NoResultFound:
-        return False, "No sensor found with the given ID"
+        success = False
+        data = "No sensor found with the given ID"
     except MultipleResultsFound:
-        return False, "More than one sensor found with the given ID"
+        success = False
+        data = "More than one sensor found with the given ID"
     except Exception as ex:
         db.session.rollback()
-        return False, "Something wrong happen while retrieving the sensors  %s" % str(ex)
-    return True, sensor
+        success = False
+        data = "Something wrong happen while retrieving the sensor {0}".format(ex)
+
+    return success, data
 
 
 @require_db
@@ -252,7 +278,8 @@ def get_sensor_id_from_system_id(system_id):
 def get_sensor_properties(sensor_id):
     result = True
     try:
-        properties = db.session.query(Sensor_Properties).filter(Sensor_Properties.sensor_id == get_bytes_from_uuid(sensor_id)).one()
+        properties = db.session.query(Sensor_Properties).filter(
+            Sensor_Properties.sensor_id == get_bytes_from_uuid(sensor_id)).one()
         message = {'has_nagios': bool(properties.has_nagios),
                    'has_ntop': bool(properties.has_ntop),
                    'has_vuln_scanner': bool(properties.has_vuln_scanner),
@@ -359,7 +386,8 @@ def check_any_orphan_sensor():
         Checks the existance of sensors which have not been inserted in the system
     """
     try:
-        result = db.session.query(Sensor, Sensor_Properties).filter(Sensor_Properties.sensor_id == Sensor.id).filter(Sensor.name == '(null)').filter(Sensor_Properties.version != '').one()
+        result = db.session.query(Sensor, Sensor_Properties).filter(Sensor_Properties.sensor_id == Sensor.id).filter(
+            Sensor.name == '(null)').filter(Sensor_Properties.version != '').one()
         success = False
         message = "There seems to be orphan sensors which have not been added to a server"
     except NoResultFound:
@@ -384,9 +412,43 @@ def get_base_path(sensor_id):
         Return the base PATH taking into account the ha configuration
     """
     try:
-        data = db.session.query(System).filter(or_(System.sensor_id == get_bytes_from_uuid(sensor_id), System.server_id == get_bytes_from_uuid(sensor_id))).order_by(asc(System.ha_name)).limit(1).one()
+        data = db.session.query(System).filter(or_(System.sensor_id == get_bytes_from_uuid(sensor_id),
+                                                   System.server_id == get_bytes_from_uuid(sensor_id))).order_by(
+            asc(System.ha_name)).limit(1).one()
         result = True, os.path.join("/var/alienvault/", data.serialize['uuid'])
     except NoResultFound:
         db.session.rollback()
         result = False, "No sensor identified by " + sensor_id
     return result
+
+
+@require_db
+@accepted_types(UUID)
+@accepted_values([], ['str', 'bin'])
+def get_sensor_ctx_by_sensor_id(sensor_id, output='str'):
+    """
+        Returns a sensor CTX given a sensor ID
+    """
+    sensor_ctx = None
+
+    try:
+        if sensor_id:
+            sensor_id_bin = get_bytes_from_uuid(sensor_id)
+
+            query = db.session.query(Acl_Sensors.entity_id).filter(Acl_Sensors.sensor_id == sensor_id_bin)
+            sensor = query.join(Acl_Entities, Acl_Entities.id == Acl_Sensors.entity_id).filter(
+                Acl_Entities.entity_type == 'context').one()
+            sensor_ctx = sensor.entity_id
+        else:
+            return False, "Sensor ID could not be empty"
+    except NoResultFound:
+        return True, sensor_ctx
+    except Exception as msg:
+        msg = str(msg)
+        api_log.error(msg)
+        return False, msg
+
+    if output == 'str':
+        return True, get_uuid_string_from_bytes(sensor_ctx)
+    else:
+        return True, sensor_ctx

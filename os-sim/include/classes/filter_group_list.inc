@@ -93,6 +93,7 @@ class Filter_group_list extends Filter_list
             20 => TRUE,     //os
             21 => TRUE,     //model
             22 => TRUE,     //group name
+            25 => TRUE,     //plugin
         );
         
         $this->_filters = array();
@@ -160,7 +161,7 @@ class Filter_group_list extends Filter_list
             $filter_values[$id] = $filter->get_filter_sql($this->_force_reload);
         }
 
-        $proc   = 'CALL host_filter(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);';
+        $proc   = 'CALL host_filter(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);';
         
         $params = array
         (
@@ -192,9 +193,11 @@ class Filter_group_list extends Filter_list
             $filter_values[13],
             $filter_values[22],
             '',
+            '',
+            $filter_values[25],
             ''
         );
-        
+
         /*  
             PROCEDURE PARAMS
             IN login VARCHAR(64), -- string like - 'admin'
@@ -225,7 +228,9 @@ class Filter_group_list extends Filter_list
             IN locations TEXT, -- location hex uuid value list - 0xF8EF2A7B9AC2B876C95FC12914BB3754,0x4531A9B0B300105D7DEDC6FC9330E24D
             IN group_name TEXT, -- free string (% is allowed)
             IN net_name TEXT, -- free string (% is allowed)
-            IN net_cidr TEXT -- free string (% is allowed)
+            IN net_cidr TEXT, -- free string (% is allowed)
+            IN plugins TEXT, -- unquoted string - 4003,1001,7001
+            IN hids_filter CHAR -- integer 0 => not deployed, 1 => disconnected, 2 => connected
         */
         
         $rs = $conn->Execute($proc, $params);

@@ -339,7 +339,7 @@ while (!$result->EOF)
                         $n       = 0;
                         $txtmaps = '';
 
-                        $maps = explode("\n",`ls -tr 'maps' | grep -v CVS`);
+                        $maps = Util::execute_command("ls -tr 'maps' | grep -v CVS", FALSE, 'array');
 
                         foreach ($maps as $ico)
                         {

@@ -219,12 +219,6 @@ SET GLOBAL default_storage_engine=TokuDB;\" | ossim-db mysql 2> /dev/null";
     }
     
 	print("Snort postinst ".gmtime()."...\n");
-    # snort rules aditional data
-    if ( -s "/var/lib/dpkg/info/snort-rules-default.postinst" )
-    {
-    	verbose_log("Updating snort data");
-    	system("/bin/bash /var/lib/dpkg/info/snort-rules-default.postinst configure");
-    }
 
     # suricata rules aditional data
     print("Suricata postinst ".gmtime()."...\n");
@@ -305,7 +299,7 @@ SET GLOBAL default_storage_engine=TokuDB;\" | ossim-db mysql 2> /dev/null";
             debug_log("$command");
             system($command);
         }
-        @tables = ('datawarehouse.incidents_ssi', 'datawarehouse.ip2country', 'datawarehouse.report_data', 'datawarehouse.ssi', 'alienvault.sem_stats_events', 'alienvault.event', 'alienvault.extra_data', 'alienvault.idm_data', 'alienvault_siem.acid_event', 'alienvault_siem.extra_data', 'alienvault_siem.idm_data', 'alienvault_siem.reputation_data', 'alienvault_siem.po_acid_event');
+        @tables = ('datawarehouse.incidents_ssi', 'datawarehouse.ip2country', 'datawarehouse.report_data', 'datawarehouse.ssi', 'alienvault.sem_stats_events', 'alienvault.event', 'alienvault.extra_data', 'alienvault.otx_data', 'alienvault.idm_data', 'alienvault_siem.acid_event', 'alienvault_siem.extra_data', 'alienvault_siem.idm_data', 'alienvault_siem.otx_data', 'alienvault_siem.reputation_data', 'alienvault_siem.po_acid_event');
         foreach $table (@tables)
         {
             ($db, $table_name) = split(/\./, $table);

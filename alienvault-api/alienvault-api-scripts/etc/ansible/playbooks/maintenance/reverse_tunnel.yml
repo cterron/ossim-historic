@@ -39,7 +39,13 @@
 
     # Get system profile
     - include: "{{playbooks_root}}/common/get_profile.yml"
-    
+
+    # Check database connection
+    - name: Check database connection
+      shell: set -o pipefail; echo "SELECT @@VERSION" | ossim-db
+      when: IS_PROFILE_FRAMEWORK.stdout == 'yes'
+      register: db_ok
+      ignore_errors: True 
     # Check  if the tunnels is running
     - name: Is tunnel up?
       command: /usr/bin/pgrep -l -f "ssh\s+-o\s+StrictHostKeyChecking=no\s+-fNnT\s+-R\s+[0-9]+:localhost:(22|443)\s+.*?\s+support@tractorbeam.alienvault.com"
@@ -141,7 +147,7 @@
       changed_when: False
 
     - name: Check ssh_port_PIDS ok
-      fail: msg="Cannot connect to AlienVault support server by ssh"
+      fail: msg="Cannot connect to AlienVault support server by ssh. Please check the case number and your internet connection."
       when: ssh_port_pids.rc != 0
 
     - name: Obtain http_port PIDs
@@ -156,7 +162,7 @@
      
 
     - name: Check host_port_PIDS ok
-      fail: msg="Cannot connect to AlienVault support server by ssh"
+      fail: msg="Cannot connect to AlienVault support server by ssh. Please check the case number and your internet connection."
       when:  IS_PROFILE_FRAMEWORK.stdout == 'yes' and  http_port_pids.rc != 0
     
     - name: Generat a RSA private / public keys 
@@ -209,16 +215,17 @@
       fail: msg="Cannot receive data from AlienVault support server"
       when: web_password.rc != 0
 
+  
     - name: Create the avsupport user
       shell: set -o pipefail; echo "CALL alienvault.user_del('avsupport');CALL alienvault.user_add('avsupport','{{web_password.stdout}}',1)" | ossim-db
-      when: IS_PROFILE_FRAMEWORK.stdout == 'yes'
+      when: IS_PROFILE_FRAMEWORK.stdout == 'yes' and db_ok.rc == 0
       register: avsupport_user
       ignore_errors: True
 
     - include: "{{playbooks_root}}/maintenance/kill_tunnels.yml"
-      when: IS_PROFILE_FRAMEWORK.stdout=='yes' and avsupport_user.rc != 0
+      when: IS_PROFILE_FRAMEWORK.stdout=='yes' and db_ok.rc == 0 and avsupport_user.rc != 0 
   
     - name: Check creation of avsupport
       fail: msg="Cannot create support user"
-      when: IS_PROFILE_FRAMEWORK.stdout=='yes' and avsupport_user.rc != 0
+      when: IS_PROFILE_FRAMEWORK.stdout=='yes' and db_ok.rc == 0 and avsupport_user.rc != 0
 

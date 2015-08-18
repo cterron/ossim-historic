@@ -38,6 +38,7 @@ AC_STDC_HEADERS
 AC_PROG_INSTALL
 AM_PROG_CC_C_O
 AC_CANONICAL_HOST
+AC_PROG_RANLIB
 
 # Support silent build rules, requires at least automake-1.11. Disable
 # by either passing --disable-silent-rules to configure or passing V=1
@@ -100,6 +101,7 @@ PKG_CHECK_MODULES(LIBPCRE, [libpcre >= 3.0])
 PKG_CHECK_MODULES(JSON_GLIB, [json-glib-1.0 >= 0.10.2])
 PKG_CHECK_MODULES(LIBGEOIP, [geoip >= 1.4.7])
 PKG_CHECK_MODULES(LIBSOUP, [libsoup-2.4])
+PKG_CHECK_MODULES(LIBBSON, [libbson-1.0])
 
 AC_CHECK_HEADER([uuid/uuid.h],
 		AC_CHECK_LIB([uuid], [uuid_generate],
@@ -178,6 +180,8 @@ AC_SUBST(LIBPCRE_LIBS)
 AC_SUBST(LIBTIDY_LIBS)
 AC_SUBST(LIBSOUP_CFLAGS)
 AC_SUBST(LIBSOUP_LIBS)
+AC_SUBST(LIBBSON_CFLAGS)
+AC_SUBST(LIBBSON_LIBS)
 AC_SUBST(CFLAGS)
 
 AC_OUTPUT([
@@ -200,14 +204,12 @@ www/control_panel/Makefile
 www/directives/Makefile
 www/incidents/Makefile
 www/nagios/Makefile
-www/ntop/Makefile
 www/panel/Makefile
 www/policy/Makefile
 www/port/Makefile
 www/report/Makefile
 www/report/graphs/Makefile
 www/report/jgraphs/Makefile
-www/riskmeter/Makefile
 www/sensor/Makefile
 www/server/Makefile
 www/session/Makefile
@@ -227,7 +229,6 @@ scripts/extract_osvdb/Makefile
 scripts/extract_osvdb/OS/Makefile
 contrib/Makefile
 contrib/fonts/Makefile
-contrib/ntop/Makefile
 contrib/mrtg/Makefile
 contrib/arpwatch/Makefile
 contrib/base/Makefile

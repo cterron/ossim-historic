@@ -34,6 +34,7 @@ from sqlalchemy import text as sqltext
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy import or_, and_
 
+import re
 import db
 from db.models.alienvault import (
     Server,
@@ -63,8 +64,8 @@ def db_get_hostname(system_id):
         system = db.session.query(System).filter(System.id == system_id_bin).one()
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error while querying for system with id '%s': %s" % (system_id, str(msg)))
-    return (True, system.name)
+        return False, "Error while querying for system with id '%s': %s" % (system_id, str(msg))
+    return True, system.name
 
 
 @require_db
@@ -88,7 +89,7 @@ def get_systems(system_type='', convert_to_dict=False, exclusive=False, directly
             system_list = db.session.query(System).filter(System.profile.ilike('%' + system_type + '%')).all()
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error while querying for '%s' systems: %s" % (system_type if system_type != '' else 'all', str(msg)))
+        return False, "Error while querying for '%s' systems: %s" % (system_type if system_type != '' else 'all', str(msg))
 
     if directly_connected:
         try:
@@ -98,7 +99,7 @@ def get_systems(system_type='', convert_to_dict=False, exclusive=False, directly
             connected_servers.append(server_id)
         except Exception, msg:
             db.session.rollback()
-            return (False, "Error while querying for server: '%s'" % str(msg))
+            return False, "Error while querying for server: '%s'" % str(msg)
 
         if not system_type or system_type.lower() == 'server':
             system_list = filter(lambda x: x.server_id in connected_servers or 'server' not in x.profile.lower(), system_list)
@@ -109,7 +110,7 @@ def get_systems(system_type='', convert_to_dict=False, exclusive=False, directly
                 connected_sensors = [x.sensor_id for x in db.session.query(Acl_Sensors).filter(Acl_Sensors.entity_id.in_(context_ids)).all()]
             except Exception, msg:
                 db.session.rollback()
-                return (False, "Error while querying for connected sensors: '%s'" % str(msg))
+                return False, "Error while querying for connected sensors: '%s'" % str(msg)
 
             system_list = filter(lambda x: x.sensor_id in connected_sensors or
                                  ('server' in x.profile.lower() and x.server_id in connected_servers and not system_type),
@@ -122,14 +123,14 @@ def get_systems(system_type='', convert_to_dict=False, exclusive=False, directly
                 pass
             except Exception, msg:
                 db.session.rollback()
-                return (False, "Error while querying for connected databases: '%s'" % str(msg))
+                return False, "Error while querying for connected databases: '%s'" % str(msg)
             else:
                 system_list = filter(lambda x: (x.admin_ip == database_ip or x.vpn_ip == database_ip) or 'database' not in x.profile.lower(), system_list)
 
     if convert_to_dict:
-        return (True, dict([(get_uuid_string_from_bytes(x.id), get_ip_str_from_bytes(x.vpn_ip) if x.vpn_ip else get_ip_str_from_bytes(x.admin_ip)) for x in system_list]))
+        return True, dict([(get_uuid_string_from_bytes(x.id), get_ip_str_from_bytes(x.vpn_ip) if x.vpn_ip else get_ip_str_from_bytes(x.admin_ip)) for x in system_list])
 
-    return (True, [(get_uuid_string_from_bytes(x.id), get_ip_str_from_bytes(x.vpn_ip) if x.vpn_ip else get_ip_str_from_bytes(x.admin_ip)) for x in system_list])
+    return True, [(get_uuid_string_from_bytes(x.id), get_ip_str_from_bytes(x.vpn_ip) if x.vpn_ip else get_ip_str_from_bytes(x.admin_ip)) for x in system_list]
 
 
 @require_db
@@ -155,8 +156,42 @@ def get_all_ip_systems():
             result[system_uuid] = res
     except Exception as err:
         db.session.rollback()
-        return (False, "Error while querying systems. error: %s" % str(err))
-    return (True, result)
+        return False, "Error while querying systems. error: %s" % str(err)
+    return True, result
+
+
+@require_db
+def get_system_info(system_id):
+    """
+    Return all information related to system
+    :param System ID
+    """
+    system_info = {}
+    try:
+        system_id_bin = get_bytes_from_uuid(system_id)
+        system = db.session.query(System).filter(System.id == system_id_bin).one()
+
+        if system:
+            system_info = {
+                'id': get_uuid_string_from_bytes(system.id),
+                'name': system.name,
+                'admin_ip': get_ip_str_from_bytes(system.admin_ip) if system.admin_ip is not None else None,
+                'vpn_ip': get_ip_str_from_bytes(system.vpn_ip) if system.vpn_ip is not None else None,
+                'profile': system.profile,
+                'sensor_id': get_uuid_string_from_bytes(system.sensor_id) if system.sensor_id is not None else None,
+                'server_id': get_uuid_string_from_bytes(system.server_id) if system.server_id is not None else None,
+                'database_id': get_uuid_string_from_bytes(
+                    system.database_id) if system.database_id is not None else None,
+                'host_id': get_uuid_string_from_bytes(system.host_id) if system.host_id is not None else None,
+                'ha_ip': get_ip_str_from_bytes(system.ha_ip) if system.ha_ip is not None else None,
+                'ha_name': system.ha_name,
+                'ha_role': system.ha_role
+            }
+    except Exception as err:
+        db.session.rollback()
+        return False, "Error while querying system {0}.  Reason: {1}".format(system_id, err)
+
+    return True, system_info
 
 
 @require_db
@@ -184,9 +219,9 @@ def get_children_servers(parent_id):
         server_list = db.session.connection(mapper=System).execute(query)
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error while querying for children servers: %s" % str(msg))
+        return False, "Error while querying for children servers: %s" % str(msg)
 
-    return (True, [get_uuid_string_from_bytes(x.id) for x in server_list])
+    return True, [get_uuid_string_from_bytes(x.id) for x in server_list]
 
 
 @require_db
@@ -202,12 +237,12 @@ def get_systems_full(system_type='', convert_to_dict=False):
         system_list = db.session.query(System).filter(System.profile.ilike('%' + system_type + '%')).all()
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error while querying for '%s' systems: %s" % (system_type if system_type != '' else 'all', str(msg)))
+        return False, "Error while querying for '%s' systems: %s" % (system_type if system_type != '' else 'all', str(msg))
 
     if convert_to_dict:
-        return (True, dict([(get_uuid_string_from_bytes(x.id), x.serialize) for x in system_list]))
+        return True, dict([(get_uuid_string_from_bytes(x.id), x.serialize) for x in system_list])
 
-    return (True, [(get_uuid_string_from_bytes(x.id), x.serialize) for x in system_list])
+    return True, [(get_uuid_string_from_bytes(x.id), x.serialize) for x in system_list]
 
 
 @require_db
@@ -224,14 +259,14 @@ def get_system_id_from_system_ip(system_ip, output='str'):
         elif output == 'bin':
             system_id = db.session.query(System).filter(or_(System.admin_ip == system_ip_bin, System.vpn_ip == system_ip_bin)).one().id
     except NoResultFound, msg:
-        return (False, "No system found with ip address '%s'" % str(system_ip))
+        return False, "No system found with ip address '%s'" % str(system_ip)
     except MultipleResultsFound, msg:
-        return (False, "More than one system found with ip address '%s'" % str(system_ip))
+        return False, "More than one system found with ip address '%s'" % str(system_ip)
     except Exception, msg:
         db.session.rollback()
-        return (False, "Unknown error for ip address '%s': %s" % (str(system_ip), str(msg)))
+        return False, "Unknown error for ip address '%s': %s" % (str(system_ip), str(msg))
 
-    return (True, system_id)
+    return True, system_id
 
 
 @require_db
@@ -242,16 +277,16 @@ def get_system_id_from_local(output='str'):
     """
     try:
         #framework_ip = db.session.query(Config).filter(Config.conf == 'frameworkd_address').one().value
-        local_system_ip = ossim_setup.get_general_admin_ip()
+        local_system_ip = ossim_setup.get_general_admin_ip(refresh=True)
     except NoResultFound, msg:
-        return (False, "There is no admin_ip on your system setup")
+        return False, "There is no admin_ip on your system setup"
     except MultipleResultsFound, msg:
-        return (False, "More than one framework ip found for local")
+        return False, "More than one framework ip found for local"
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error captured while querying for local system id: %s" % str(msg))
+        return False, "Error captured while querying for local system id: %s" % str(msg)
 
-    return (get_system_id_from_system_ip(local_system_ip, output=output))
+    return get_system_id_from_system_ip(local_system_ip, output=output)
 
 
 @require_db
@@ -266,21 +301,21 @@ def get_server_id_from_system_id(system_id, output='str'):
         system = db.session.query(System).filter(System.profile.ilike('%Server%')).filter(System.id == system_id_bin).one()
         server_id = system.server_id
     except NoResultFound, msg:
-        return (False, "No server id found with system id '%s'" % str(system_id))
+        return False, "No server id found with system id '%s'" % str(system_id)
     except MultipleResultsFound, msg:
-        return (False, "More than one server id found with system id '%s'" % str(system_id))
+        return False, "More than one server id found with system id '%s'" % str(system_id)
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error captured while querying for system id '%s': %s" % (str(system_id), str(msg)))
+        return False, "Error captured while querying for system id '%s': %s" % (str(system_id), str(msg))
 
     if output == 'str':
         try:
             server_id_str = get_uuid_string_from_bytes(server_id)
         except Exception, msg:
-            return (False, "Cannot convert supposed server id '%s' to its string form: %s" % (str(server_id), str(msg)))
-        return (True, server_id_str)
+            return False, "Cannot convert supposed server id '%s' to its string form: %s" % (str(server_id), str(msg))
+        return True, server_id_str
 
-    return (True, server_id)
+    return True, server_id
 
 
 @require_db
@@ -296,21 +331,21 @@ def get_sensor_id_from_system_id(system_id, output='str'):
         sensor_id = system.sensor_id
 
     except NoResultFound, msg:
-        return (False, "No sensor ip address found with system id '%s'" % str(system_id))
+        return False, "No sensor ip address found with system id '%s'" % str(system_id)
     except MultipleResultsFound, msg:
-        return (False, "More than one sensor ip address found with system id '%s'" % str(system_id))
+        return False, "More than one sensor ip address found with system id '%s'" % str(system_id)
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error captured while querying for system id '%s': %s" % (str(system_id), str(msg)))
+        return False, "Error captured while querying for system id '%s': %s" % (str(system_id), str(msg))
 
     if output == 'str':
         try:
             sensor_id_str = get_uuid_string_from_bytes(sensor_id)
         except Exception, msg:
-            return (False, "Cannot convert supposed sensor id '%s' to its string form: %s" % (str(sensor_id), str(msg)))
-        return (True, sensor_id_str)
+            return False, "Cannot convert supposed sensor id '%s' to its string form: %s" % (str(sensor_id), str(msg))
+        return True, sensor_id_str
 
-    return (True, sensor_id)
+    return True, sensor_id
 
 
 @require_db(accept_local=True)
@@ -323,30 +358,30 @@ def get_system_ip_from_system_id(system_id, output='str', local_loopback=True):
         system_id_lower = system_id.lower()
 
         if system_id_lower == 'local':
-            (success, system_ip) = get_system_ip_from_local(output='bin', local_loopback=local_loopback)
+            success, system_ip = get_system_ip_from_local(output='bin', local_loopback=local_loopback)
             if not success:
-                return (success, system_ip)
+                return success, system_ip
 
         else:
             system_id_bin = get_bytes_from_uuid(system_id_lower)
             system = db.session.query(System).filter(System.id == system_id_bin).one()
             system_ip = system.vpn_ip if system.vpn_ip else system.admin_ip
     except NoResultFound, msg:
-        return (False, "No system found with id '%s'" % str(system_id))
+        return False, "No system found with id '%s'" % str(system_id)
     except MultipleResultsFound, msg:
-        return (False, "More than one system found with id '%s'" % str(system_id))
+        return False, "More than one system found with id '%s'" % str(system_id)
     except Exception, msg:
         db.session.rollback()
-        return (False, "Error captured while querying for system id '%s': %s" % (str(system_id), str(msg)))
+        return False, "Error captured while querying for system id '%s': %s" % (str(system_id), str(msg))
 
     if output == 'str':
         try:
             system_ip_str = get_ip_str_from_bytes(system_ip)
         except Exception, msg:
-            return (False, "Cannot convert supposed system ip '%s' to its string form: %s" % (str(system_ip), str(msg)))
+            return False, "Cannot convert supposed system ip '%s' to its string form: %s" % (str(system_ip), str(msg))
         system_ip = system_ip_str
 
-    return (True, system_ip)
+    return True, system_ip
 
 
 @accepted_values([], ['str', 'bin'])
@@ -357,21 +392,21 @@ def get_system_ip_from_local(output='str', local_loopback=True):
     if local_loopback:
         local_ip = '127.0.0.1'
     else:
-        (success, system_id) = get_system_id_from_local()
+        success, system_id = get_system_id_from_local()
         if not success:
-            return (success, system_id)
-        (success, local_ip) = get_system_ip_from_system_id(system_id)
+            return success, system_id
+        success, local_ip = get_system_ip_from_system_id(system_id)
         if not success:
-            return(success, local_ip)
+            return success, local_ip
 
     if output == 'bin':
         try:
             local_ip_str = get_ip_bin_from_str(local_ip)
         except Exception, msg:
-            return (False, "Cannot convert supposed local ip '%s' to its binary form: %s" % (str(local_ip_str), str(msg)))
+            return False, "Cannot convert supposed local ip '%s' to its binary form: %s" % (str(local_ip_str), str(msg))
         local_ip = local_ip_str
 
-    return (True, local_ip)
+    return True, local_ip
 
 
 @require_db
@@ -455,9 +490,9 @@ def db_add_system(system_id, name, admin_ip, vpn_ip=None, profile='', server_id=
     except Exception, e:
         api_log.error(str(e))
         db.session.rollback()
-        return (False, 'Something wrong happened while adding the system into the database')
+        return False, 'Something wrong happened while adding the system into the database'
 
-    return (True, '')
+    return True, ''
 
 
 @require_db
@@ -465,7 +500,7 @@ def db_system_update_admin_ip(system_id, admin_ip):
 
     if not is_valid_ipv4(admin_ip):
         api_log.error('Invalid admin_ip %s' % str(admin_ip))
-        return (False, 'Invalid admin ip %s' % str(admin_ip))
+        return False, 'Invalid admin ip %s' % str(admin_ip)
 
     try:
         sp_call = sqltext("CALL system_update('%s','','%s','','','','','','','')" % (system_id, admin_ip))
@@ -480,9 +515,9 @@ def db_system_update_admin_ip(system_id, admin_ip):
     except Exception, e:
         api_log.error(str(e))
         db.session.rollback()
-        return (False, 'Something wrong happened while updating system info in the database')
+        return False, 'Something wrong happened while updating system info in the database'
 
-    return (True, '')
+    return True, ''
 
 
 @require_db
@@ -501,9 +536,9 @@ def db_system_update_hostname(system_id, hostname):
     except Exception, e:
         api_log.error(str(e))
         db.session.rollback()
-        return (False, 'Something wrong happened while updating system info in the database')
+        return False, 'Something wrong happened while updating system info in the database'
 
-    return (True, '')
+    return True, ''
 
 
 def set_system_value(system_id, property_name, value):
@@ -627,39 +662,9 @@ def fix_system_references():
         db.session.commit()
     except Exception, msg:
         db.session.rollback()
-        return (False, str(msg))
+        return False, str(msg)
 
     return True, ''
-
-
-@require_db
-def get_config_otx_enabled():
-    """Returns when the user has OTX enabled.
-    Args:
-        None
-    Returns:
-        True when OTX is enable, False otherwise
-    """
-    # If there is no entry in the config table for open_threat_exchange, that means
-    # that OTX is not enableda
-    # When OTX is enabled the value is:
-    # mysql> select * from config where conf like 'open_threat_exchange';
-    # +----------------------+-------+
-    # | conf                 | value |
-    # +----------------------+-------+
-    # | open_threat_exchange | yes   |
-    # +----------------------+-------+
-    otx_enabled = False
-    try:
-        result = db.session.query(Config).filter(Config.conf == 'open_threat_exchange').one()
-        otx_enabled = True if result.value is not None and result.value == "yes" else False
-    except NoResultFound, MultipleResultsFound:
-        # MultipleResultsFound: It should not happen, by the way if it happens, it should means that OTX is enabled
-        pass
-    except Exception as err:
-        api_log.error("[get_config_otx_enabled] %s" % str(err))
-        print "Error %s" % str(err)
-    return otx_enabled
 
 
 @require_db
@@ -683,7 +688,7 @@ def check_any_innodb_tables():
               'alienvault_siem.idm_data',
               'alienvault_siem.reputation_data',
               'alienvault_siem.po_acid_event',
-             ]
+              ]
     result = []
     for table in tables:
         try:
@@ -697,7 +702,7 @@ def check_any_innodb_tables():
             pass
         except Exception, msg:
             db.session.rollback()
-            return (False, str(msg))
+            return False, str(msg)
     return True, result
 
 
@@ -727,7 +732,7 @@ def get_wizard_data():
         welcome_wizard_date = 0
         start_welcome_wizard = 0
         success = False
-    return (success, start_welcome_wizard, welcome_wizard_date)
+    return success, start_welcome_wizard, welcome_wizard_date
 
 
 @require_db
@@ -790,3 +795,70 @@ def check_backup_process_running():
         message = "There has been an error checking if there is a backup process running: %s" % str(e)
 
     return success, running, message
+
+
+@require_db
+def db_business_process():
+    try:
+        sp_call = sqltext("CALL business_processes()")
+        db.session.begin()
+        result = db.session.connection(mapper=System).execute(sp_call)
+        db.session.commit()
+    except Exception as err:
+        db.session.rollback()
+        return False, "Cannot run business process: %s" % str(err)
+    return True, ""
+
+
+
+@require_db
+def db_get_config(key):
+    """
+        Returns a config value
+    """
+
+    query = "SELECT value, AES_DECRYPT(value, (SELECT value FROM config WHERE conf='encryption_key')) AS value_decrypt FROM config where conf = :conf"
+
+    try:
+        data = db.session.connection(mapper=Config).execute(sqltext(query), conf=key).fetchall()
+        success = True
+        result = ""
+        if len(data) > 0:
+            result = data[0][1] if re.search('(_key$|_pass$)', key) and data[0][1] else data[0][0]
+
+    except NoResultFound:
+        success = True
+        result = ""
+    except Exception as e:
+        success = False
+        result = "There has been an error retrieving the config value: %s" % str(e)
+        api_log.error("[db_get_config] %s" % str(result))
+
+    return success, result
+
+
+@require_db
+def db_set_config(key, value):
+    """
+        Set a Config Value
+    """
+    success = True
+    result = ""
+
+    try:
+        if re.search('(_key$|_pass$)', key) and len(value) > 0:
+            status, uuid = db_get_config('encryption_key')
+            if not status:
+                return False, "There has been an error setting the config value"
+
+            query = "REPLACE INTO config (conf, value) VALUES (:conf, AES_ENCRYPT(:val, :crypt))"
+            db.session.connection(mapper=Config).execute(sqltext(query), conf=key, val=value, crypt=uuid)
+        else:
+            query = "REPLACE INTO config (conf, value) VALUES (:conf, :val)"
+            db.session.connection(mapper=Config).execute(sqltext(query), conf=key, val=value)
+    except Exception as e:
+        success = False
+        result = "There has been an error setting the config value: %s" % str(e)
+        api_log.error("[db_set_config] %s" % str(result))
+
+    return success, result

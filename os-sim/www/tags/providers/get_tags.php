@@ -50,7 +50,7 @@ Session::useractive();
 //DataTables Pagination and search Params
 $order      = (REQUEST('iSortCol_0') != '')     ? REQUEST('iSortCol_0')         : '';
 $torder     = REQUEST('sSortDir_0');
-$sec        = REQUEST('sEcho');
+$sec        = intval(REQUEST('sEcho'));
 $search_str = (REQUEST('sSearch') != '')        ?   REQUEST('sSearch')          : '';
 $from       = (REQUEST('iDisplayStart') != '')  ?   REQUEST('iDisplayStart')    : 0;
 $limit      = (REQUEST('iDisplayLength') != '') ?   REQUEST('iDisplayLength')   : 10;
@@ -72,12 +72,13 @@ ossim_valid($tag_type, OSS_ALPHA, '_', 'illegal:'._('Label type'));
 
 if (ossim_error())
 {
-    $response['sEcho']                = 1;
+    $response['sEcho']                = $sec;
     $response['iTotalRecords']        = 0;
     $response['iTotalDisplayRecords'] = 0;
     $response['aaData']               = '';
 
     echo json_encode($response);
+    
     exit();
 }
 

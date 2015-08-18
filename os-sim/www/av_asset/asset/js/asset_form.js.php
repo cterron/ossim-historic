@@ -159,9 +159,6 @@ function Av_tabs_asset_edition(tab_config)
 
                 $('#model').val(asset_data.model);
 
-                $('#threshold_c').val(asset_data.threshold_c);
-                $('#threshold_a').val(asset_data.threshold_a);
-
 
                 $.each(asset_data.devices, function(d_value, d_text)
                 {

@@ -1,7 +1,7 @@
 #
-#  License:
+# License:
 #
-#  Copyright (c) 2013 AlienVault
+# Copyright (c) 2013 AlienVault
 #  All rights reserved.
 #
 #  This package is free software; you can redistribute it and/or modify
@@ -32,16 +32,19 @@
 import celerymethods.jobs.ossec_win_deploy
 
 # import celery.result
-#  import celery.task.control
+# import celery.task.control
 
 from flask import Blueprint, request
-from db.methods.sensor import get_sensor_ip_from_sensor_id
-from api.lib.utils import accepted_url, is_valid_windows_user, is_valid_user_password
+
 from uuid import UUID
+
 import api_log
+
+from api.lib.utils import accepted_url
 from api.lib.auth import admin_permission
 from api.lib.common import make_ok, make_bad_request, make_error
 
+from apiexceptions.hids import APICannotDeployHIDSAgent
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -49,54 +52,50 @@ blueprint = Blueprint(__name__, __name__)
 @blueprint.route('/<sensor_id>/ossec/deploy', methods=['PUT'])
 @admin_permission.require(http_exception=403)
 @accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
-               'agent_name': str,
+               'asset_id': {'type': UUID},
                'windows_ip': str,
                'windows_username': str,
+               'windows_password': str,
                'windows_domain': str,
-               'windows_password': str})
+               'agent_id': {'type': str, 'optional': True}})
 def ossec_win_deploy(sensor_id):
+    asset_id = request.args.get("asset_id", None)
+    windows_ip = request.args.get("windows_ip", None)
+    windows_username = request.args.get("windows_username", None)
+    windows_password = request.args.get("windows_password", None)
+    windows_domain = request.args.get("windows_domain", '')
+    agent_id = request.args.get("agent_id", None)
 
-    param_names = ['agent_name',
-                   'windows_ip',
-                   'windows_username',
-                   'windows_domain',
-                   'windows_password']
+    try:
+        job = celerymethods.jobs.ossec_win_deploy.ossec_win_deploy.delay(sensor_id,
+                                                                         asset_id,
+                                                                         windows_ip,
+                                                                         windows_username,
+                                                                         windows_password,
+                                                                         windows_domain,
+                                                                         agent_id)
 
-    (result, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id, local_loopback=False)
-    if result is False:
-        api_log.error("ossec_win_deploy: ossec_win_deploy error: " % str(sensor_ip))
-        return make_error("Error deploying ossec from sensor %s" % sensor_ip, 404)
+        if not job.failed():
+            current_job_id = job.id
+            is_finished = False
+            job_status = job.status
+            job_data = job.info
+            active_jobs = None
+            msg = "Job launched!"
 
-    for param in param_names:
-        if request.args.get(param) is None:
-            api_log.error("ossec_win_deploy: bad request: Missing param '%s'" % param)
-            return make_bad_request("Missing param '%s'" % param)
+            res = make_ok(job_id=current_job_id,
+                          finished=is_finished,
+                          status=job_status,
+                          task_data=job_data,
+                          active_jobs=active_jobs,
+                          message=msg)
+        else:
+            error_msg = "Sorry, deployment job cannot be launched due to an error when sending the request. " \
+                        "Please try again"
+            raise APICannotDeployHIDSAgent(error_msg)
 
-    if not is_valid_windows_user(request.args['windows_username']):
-        api_log.error("ossec_win_deploy: bad username '%s'" % request.args['windows_username'])
-        return make_bad_request("Bad username")
+    except Exception as e:
+        api_log.error(str(e))
+        res = make_error(str(e), 500)
 
-    if not is_valid_user_password(request.args['windows_password']):
-        api_log.error("ossec_win_deploy: bad password '%s'" % request.args['windows_password'])
-        return make_bad_request("Bad password")
-
-    job = celerymethods.jobs.ossec_win_deploy.ossec_win_deploy.delay(sensor_ip,
-                                                                     request.args['agent_name'],
-                                                                     request.args['windows_ip'],
-                                                                     request.args['windows_username'],
-                                                                     request.args['windows_domain'],
-                                                                     request.args['windows_password'])
-
-    current_job_id = job.id
-    is_finished = False
-    job_status = job.status
-    job_data = job.info
-    active_jobs = None
-    msg = "Job launched!"
-
-    return make_ok(job_id=current_job_id,
-                   finished=is_finished,
-                   status=job_status,
-                   task_data=job_data,
-                   active_jobs=active_jobs,
-                   message=msg)
+    return res

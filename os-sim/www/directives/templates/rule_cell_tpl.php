@@ -323,6 +323,10 @@
         <?php } ?>
         <?php } ?>
         
+        <?php if ($col_label == "filename") { ?>
+        <td style="white-space:nowrap"<?php if ($editable) { ?> class="editable"<?php } ?> id="<?php echo str_replace("=", "EQUAL", base64_encode("filename_-_".$rule->id."_-_".$id_dir."_-_".$xml_file."_-_".$rule->filename)) ?>"><?php echo $rule->filename ?></td>
+        <?php } ?>
+        
         <?php if ($col_label == "username") { ?>
         <td style="white-space:nowrap"<?php if ($editable) { ?> class="editable"<?php } ?> id="<?php echo str_replace("=", "EQUAL", base64_encode("username_-_".$rule->id."_-_".$id_dir."_-_".$xml_file."_-_".$rule->username)) ?>"><?php echo $rule->username ?></td>
         <?php } ?>

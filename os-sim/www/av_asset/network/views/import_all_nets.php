@@ -69,7 +69,7 @@ function print_form($import_type)
                 'checked' => FALSE
             ),
             'help' => array(
-                'Version 4.x.x or higher' => array(
+                'Version 4.x.x, 5.x.x' => array(
                     'format'  => _('"Netname";"CIDRs(CIDR1,CIDR2,...)";"Description";"Asset Value";"Net ID"'),
                     'header'  => '"Netname";"CIDRs";"Description";"Asset Value";"Net ID"',
                     'example' => '"Net-1";"192.168.10.0/24,192.168.9.0/24";"'._('Short description').'";"2";"479D45C0BBF22B4458BD2F8EE09ECAC2"'
@@ -274,7 +274,7 @@ function print_form($import_type)
 
 function clean_iic($string)
 {
-     $str  = strtr($string, "ٹŒژڑœ‍ں¥µہءآأؤإئابةتثجحخدذرزسشصضطظعغـفكàلâ�
+    $str  = strtr($string, "ٹŒژڑœ‍ں¥µہءآأؤإئابةتثجحخدذرزسشصضطظعغـفكàلâ�
 نهوçèéêëىيîïًٌٍَôُِّùْûü‎ے","SOZsozYYuAAAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaaceeeeiiiionoooooouuuuyy");
     $size = strlen($str);
 
@@ -437,21 +437,22 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
         {
             $parameter = trim($field);
 
-                    if ($index == 0)
-                    {
-                        $pattern   = '/^\"|^\'/';
-                        $param[]   = preg_replace($pattern, '', $parameter);
-                    }
-                    else if ($index == $max_index)
-                    {
-                        $pattern   = '/\"$|\'$/';
-                        $param[]   = preg_replace($pattern, '', $parameter);
-                    }
-                    else
-                    {
-                        $param[] = $parameter;
-                    }
-                    $index++;
+            if ($index == 0)
+            {
+                $pattern   = '/^\"|^\'/';
+                $param[]   = preg_replace($pattern, '', $parameter);
+            }
+            else if ($index == $max_index)
+            {
+                $pattern   = '/\"$|\'$/';
+                $param[]   = preg_replace($pattern, '', $parameter);
+            }
+            else
+            {
+                $param[] = $parameter;
+            }
+
+            $index++;
         }
 
         //Values
@@ -555,7 +556,7 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
         {
             if (mb_detect_encoding($descr.' ','UTF-8,ISO-8859-1') == 'UTF-8')
             {
-                 $descr = mb_convert_encoding($descr,'HTML-ENTITIES', 'UTF-8');
+                $descr = mb_convert_encoding($descr,'HTML-ENTITIES', 'UTF-8');
             }
         }
 
@@ -672,7 +673,7 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
                             {
                                 if (!Asset_net::is_cidr_in_my_nets($conn, $cidr, $ctx))
                                 {
-                                    $c_error_msg = sprintf(_("Error! The CIDR %s is not allowed.  Please check your asset and network settings"), $cidrs);
+                                    $c_error_msg = sprintf(_("Error! The CIDR %s is not allowed. Please check with your account admin for more information"), $cidrs);
 
                                     $summary['by_nets'][$num_line]['errors']['CIDRs'] = $c_error_msg;
                                     $summary['general']['statistics']['errors']++;
@@ -701,7 +702,6 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
                     $net->set_ctx($ctx);
                     $net->set_name($name);
                     $net->set_descr($descr);
-
 
                     if($is_in_db == FALSE)
                     {
@@ -890,7 +890,6 @@ $container_class = ($import_type == 'welcome_wizard_nets') ? 'import_container_w
             margin: 0 auto 20px auto;
             position: relative;
         }
-
 
         #form_container
         {
@@ -1194,7 +1193,6 @@ $container_class = ($import_type == 'welcome_wizard_nets') ? 'import_container_w
 
             //Setting all handlers
             bind_import_actions();
-
         });
     </script>
 </head>

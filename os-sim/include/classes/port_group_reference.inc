@@ -195,9 +195,12 @@ class Port_group_reference
     public static function in_port_group_reference_for_id($conn, $port_group_id)
     {
         $list  = array();
-        $query = "SELECT * FROM port_group_reference WHERE port_group_id = ".$port_group_id;
+
+        $params = array($port_group_id);
+        $query  = "SELECT * FROM port_group_reference WHERE port_group_id = ?";
 
         $rs = $conn->Execute($query, $params);
+
         if (!$rs)
         {
             Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());

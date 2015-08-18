@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  License:
+# License:
 #
 #  Copyright (c) 2015 AlienVault
 #  All rights reserved.
@@ -28,18 +28,14 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 ##
 
-import os
 import time
 import ast
-import yaml
-import hashlib
-import redis
 from celery.utils.log import get_logger
 from celery.task.control import inspect
-from celerymethods import celeryconfig
-from celerybeatredis.schedulers import PeriodicTask
 from celery.task.control import revoke
 from ansiblemethods.system.system import ansible_get_process_pid
+import api_log
+
 logger = get_logger("celery")
 
 
@@ -113,14 +109,14 @@ def exist_task_running(task_type, current_task_request, param_to_compare=None, a
             started_before_the_current_one = (task_start_time != current_task_start_time) and \
                                              (task_start_time < current_task_start_time)
             if started_before_the_current_one and \
-               param_to_compare is None:  # An existing task is running
+                            param_to_compare is None:  # An existing task is running
                 previous_task_running = True
                 break
 
             # 3 - Does the task running in the same system?
             task_param_value = ast.literal_eval(task['args'])[argnum]
             if str(task_param_value) == str(param_to_compare) and \
-               started_before_the_current_one:
+                    started_before_the_current_one:
                 previous_task_running = True
                 break
 
@@ -238,7 +234,7 @@ def get_task_status(system_id, system_ip, task_list):
             pending_tasks = pending.values()
         if reserved is not None:
             pending_tasks.extend(reserved.values())
-        # Retrieve the list of pending tasks.
+            # Retrieve the list of pending tasks.
     except Exception, e:
         error_msg = "[celery.utils.get_task_status]: An error occurred: " + \
                     "%s" % (str(e))
@@ -279,188 +275,8 @@ def get_task_status(system_id, system_ip, task_list):
     return True, result
 
 
-def add_task_to_db(task, signature, prefix=''):
-    """
-    Adds a new scheduled task to the database, using a dictionary.
-    """
-    if type(task) != dict:
-        return (False, "Configuration datatype is not a dictionary")
-
-    try:
-        task['name'] = prefix + task['name'] + ':' + signature
-        ptask = PeriodicTask.from_dict(task)
-        ptask.save()
-    except Exception as e:
-        error_msg = "Cannot insert new scheduled task " + \
-                    "'%s': %s" % (str(task['task']), str(e))
-
-        return (False, error_msg)
-
-    return (True, '')
-
-
-def restore_tasks_to_db():
-    """
-    Set the initial tasks in the database
-    (i.e. Redis) from configuration files.
-    """
-
-    # Check first if everything is in place.
-    default_tasks_file = getattr(celeryconfig,
-                                 'CELERY_REDIS_SCHEDULER_DEFAULT_TASKS_FILE',
-                                 None)
-    custom_tasks_file = getattr(celeryconfig,
-                                'CELERY_REDIS_SCHEDULER_CUSTOM_TASKS_FILE',
-                                None)
-    if not (default_tasks_file and os.path.isfile(default_tasks_file)):
-        return (False, 'Default tasks file does not exist')
-    if not (custom_tasks_file and os.path.isfile(custom_tasks_file)):
-        return (False, 'Custom tasks file does not exist')
-
-    # Purge old entries.
-    redis_sched_url = getattr(celeryconfig,
-                              'CELERY_REDIS_SCHEDULER_URL')
-    redis_proto = redis.StrictRedis.from_url(redis_sched_url)
-    redis_proto.flushdb()
-
-    # Get the new ones from our files and add them to the database.
-    prefix = getattr(celeryconfig, 'CELERY_REDIS_SCHEDULER_KEY_PREFIX')
-    default_tasks = []
-    default_task_prefix = prefix + ':default:'
-    custom_tasks = []
-    custom_task_prefix = prefix + ':custom:'
-    try:
-        with open(default_tasks_file, 'r') as f:
-            content = yaml.load(f.read())
-            default_tasks = content if content else []
-        with open(custom_tasks_file, 'r') as f:
-            content = yaml.load(f.read())
-            custom_tasks = content if content else []
-    except Exception, e:
-        return (False, 'Cannot parse task YAML file: %s' % str(e))
-
-    result, info = True, ''
-    for task in default_tasks:
-        signature = task.pop('signature')
-        partial, msg = add_task_to_db(task,
-                                      signature,
-                                      prefix=default_task_prefix)
-        result &= partial
-        info = ';'.join([msg, info]) if msg else info
-    for task in custom_tasks:
-        signature = task.pop('signature')
-        partial, msg = add_task_to_db(task,
-                                      signature,
-                                      prefix=custom_task_prefix)
-        result &= partial
-        info = ';'.join([msg, info]) if msg else info
-
-    return (result, info)
-
-
-def set_task_config(name, task, args, kwargs, interval=None, crontab=None, enabled=False, kind=''):
-    """
-    Set a celery task configuration, both in a file and the Redis db.
-    """
-    crs_def_tasks_file = getattr(celeryconfig,
-                                 'CELERY_REDIS_SCHEDULER_DEFAULT_TASKS_FILE',
-                                 None)
-    crs_cus_tasks_file = getattr(celeryconfig,
-                                 'CELERY_REDIS_SCHEDULER_CUSTOM_TASKS_FILE',
-                                 None)
-    crs_key_prefix = getattr(celeryconfig,
-                             'CELERY_REDIS_SCHEDULER_KEY_PREFIX')
-
-    conffiles = {'default': crs_def_tasks_file,
-                 'custom': crs_cus_tasks_file}
-    prefixes = {'default': crs_key_prefix + ':default:',
-                'custom': crs_key_prefix + ':custom:'}
-
-    if kind not in conffiles:
-        error_msg = "Trying to configure a task that is " + \
-                    "neither 'default', nor 'custom'"
-        return (False, error_msg)
-    if not (interval or crontab):
-        error_msg = "Tasks need either an 'interval' or 'crontab' " + \
-                    "time schedule configuration"
-        return (False, error_msg)
-
-    task = {'name': name,
-            'task': task,
-            'args': args,
-            'kwargs': kwargs,
-            'enabled': enabled}
-    if interval:
-        timer = task['interval'] = interval
-    else:
-        timer = task['crontab'] = crontab
-    task['signature'] = hashlib.sha256(str(task['task']) +
-                                       str(timer) +
-                                       str(task['args']) +
-                                       str(task['kwargs'])).hexdigest()
-
-    with open(conffiles[kind], 'r') as f:
-        file_content = yaml.load(f.read())
-
-    if file_content:
-        file_content = filter(lambda x: x['signature'] != task['signature'],
-                              file_content)
-    file_content.append(task)
-
-    with open(conffiles[kind], 'w') as f:
-        yaml.dump(file_content, f, default_flow_style=False)
-
-    signature = task.pop('signature')
-    return add_task_to_db(task,
-                          signature,
-                          prefix=prefixes[kind])
-
-
-def get_task_config(task, args=None, kwargs=None, interval=None, crontab=None, kind=''):
-    """
-    Get a celery task configuration, both in a file and the Redis db.
-    Return either a list of dicts, if only the task is given,
-    or a single task, if all the arguments are filled.
-    """
-    crs_def_tasks_file = getattr(celeryconfig,
-                                 'CELERY_REDIS_SCHEDULER_DEFAULT_TASKS_FILE',
-                                 None)
-    crs_cus_tasks_file = getattr(celeryconfig,
-                                 'CELERY_REDIS_SCHEDULER_CUSTOM_TASKS_FILE',
-                                 None)
-    conffiles = {'default': crs_def_tasks_file,
-                 'custom': crs_cus_tasks_file}
-
-    if kind not in conffiles:
-        error_msg = "Trying to find a task that is neither 'default'" + \
-                    "nor 'custom'"
-        return (False, error_msg)
-
-    with open(conffiles[kind], 'r') as f:
-        file_content = yaml.load(f.read())
-
-    tasks = []
-    if file_content:
-        if not (args and kwargs and (interval or crontab)):
-            tasks = filter(lambda x: x['task'] == task, file_content)
-        else:
-            timer = interval if interval else crontab
-            signature = hashlib.sha256(str(task) +
-                                       str(timer) +
-                                       str(args) +
-                                       str(kwargs)).hexdigest()
-            tasks = filter(lambda x: x['signature'] == signature, file_content)
-        if not tasks:
-            return (False, "No tasks available")
-
-    return (True, tasks)
-
-
 def get_running_tasks(system_ip):
-
     try:
-        with open("/tmp/log_system", "a") as f:
-            f.write("Aqui llego 3\n")
         i = inspect()
         tasks = i.active()
     except Exception as e:
@@ -485,3 +301,34 @@ def stop_running_task(task_id, force=True):
     except Exception as e:
         return False, str(e)
     return True, ""
+
+
+def is_task_in_celery(task_id):
+    """Look whether a task is scheduled, reserved or active
+    Args:
+        The task id
+    Returns the task dictionary or None
+    """
+    task = None
+    try:
+        i = inspect()
+        task_list = {}
+        active = i.active().copy()
+        scheduled = i.scheduled().copy()
+        reserved = i.reserved().copy()
+        for node, tasks in active.iteritems():
+            for task in tasks:
+                task_list[str(task['id'])] = task
+        for node, tasks in reserved.iteritems():
+            for task in tasks:
+                task_list[str(task['id'])] = task
+        for node, tasks in scheduled.iteritems():
+            for task in tasks:
+                task_list[str(task['id'])] = task
+        if task_id in task_list:
+            found = task_list[task_id].copy()
+            return found
+
+    except Exception as exp:
+        api_log.error("[is_task_in_celery] An error occurred while reading the task list")
+    return task

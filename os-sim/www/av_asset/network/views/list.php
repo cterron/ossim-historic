@@ -145,22 +145,22 @@ $av_to   = ($flag_av) ? $filters[6]->get_to() : 5;
 // Getting Filter Legends
 $f_legend = Filter_list::get_filter_legends(); 
 
-
 // Getting Permissions:
 $perm_add  = Session::can_i_create_assets();
-
 
 // Getting Permissions:
 $perms     = array
 (
+    'admin'           => Session::am_i_admin(),
     'create'          => $perm_add,
     'delete'          => $perm_add,
     'vulnerabilities' => Session::logcheck_bool('environment-menu', 'EventsVulnerabilitiesScan'),
     'alarms'          => Session::logcheck_bool('analysis-menu', 'ControlPanelAlarms'),
     'events'          => Session::logcheck_bool('analysis-menu', 'EventsForensics'),
-    'availability'    => Session::logcheck_bool('environment-menu', 'MonitorsAvailability')
+    'availability'    => Session::logcheck_bool('environment-menu', 'MonitorsAvailability'),
+    'deploy_agents'   => Session::logcheck_bool('environment-menu', 'EventsHidsConfig'),
+    'nmap'            => Session::logcheck_bool('environment-menu', 'ToolsScan')
 );
-
 
 switch ($notif)
 {
@@ -192,9 +192,10 @@ switch ($notif)
             array('src' => 'ui.slider.extras.css',          'def_path' => TRUE),
             array('src' => 'jquery.tag-it.css',             'def_path' => TRUE),
             array('src' => 'jquery.dropdown.css',           'def_path' => TRUE),
-            array('src' => 'jquery.select.css',             'def_path' => TRUE),
             array('src' => 'av_dropdown_tag.css',           'def_path' => TRUE),
+            array('src' => 'jquery.select.css',             'def_path' => TRUE),
             array('src' => 'av_tags.css',                   'def_path' => TRUE),
+            array('src' => 'av_table.css',                  'def_path' => TRUE),
             array('src' => '/assets/asset_list_view.css',   'def_path' => TRUE),
             array('src' => 'assets/asset_indicators.css',   'def_path' => TRUE)
         );
@@ -216,13 +217,15 @@ switch ($notif)
             array('src' => 'selectToUISlider.jQuery.js',                    'def_path' => TRUE),
             array('src' => 'jquery.tag-it.js',                              'def_path' => TRUE),
             array('src' => 'jquery.dropdown.js',                            'def_path' => TRUE),
-            array('src' => 'jquery.select.js',                              'def_path' => TRUE),
             array('src' => 'jquery.md5.js',                                 'def_path' => TRUE),
             array('src' => 'jquery.placeholder.js',                         'def_path' => TRUE),
             array('src' => 'av_tags.js.php',                                'def_path' => TRUE),
             array('src' => 'av_dropdown_tag.js',                            'def_path' => TRUE),
+            array('src' => 'av_table.js.php',                               'def_path' => TRUE),
+            array('src' => 'jquery.select.js',                              'def_path' => TRUE),
             array('src' => 'av_storage.js.php',                             'def_path' => TRUE),
             array('src' => '/av_asset/common/js/asset_list.js.php',         'def_path' => FALSE),
+            array('src' => '/av_asset/common/js/asset_list_bind.js.php',    'def_path' => FALSE),
             array('src' => '/av_asset/common/js/asset_indicators.js.php',   'def_path' => FALSE),
             array('src' => '/av_asset/network/js/list_network.js.php',      'def_path' => FALSE)
         );
@@ -233,19 +236,33 @@ switch ($notif)
 
     <script type='text/javascript'>
         
-        var __asset_list = new av_network_list(<?php echo json_encode($perms) ?>);
-    
-        //Double click issue variables
-        var click_delay  = 300, n_clicks = 0, click_timer = null;
+        var __asset_list = null;
+        
+        /**********  LIGHTBOX EVENTS  **********/
+        
+        function GB_onclose(url, params)
+        {
+            __asset_list.handle_close_lightbox(url, params);
+        }
+        
+        
+        function GB_onhide(url, params)
+        {
+            __asset_list.handle_hide_lightbox(url, params);
+        }
+        
         
         $(document).ready(function() 
         {
+            __asset_list = new av_network_list(<?php echo json_encode($perms)?>);
+            
             if (!<?php echo $back ?>)
             {
-                __asset_list.db.clean_checked();
+                __asset_list.clean_checked();
             }
             
-            load_search_handlers();
+            
+            load_search_handlers(__asset_list);
             
             //DISABLING SLIDERS
             <?php 
@@ -259,9 +276,7 @@ switch ($notif)
                 echo "$('#asset_value_slider .ui-slider').slider('disable');";
             }
             ?>
-            
         });
-        // End of document.ready
         
     </script>
     
@@ -272,7 +287,7 @@ switch ($notif)
     <div id='main_container'>
         <div class="left_side">
             <div class='filter_left_section'>
-                <input id='search_filter' data-bind="search-asset" class='input_search_filter' name='search_filter' type="search" value="" placeholder="<?php echo _('Search') ?>">
+                <input id='search_filter' data-bind="search-network" class='input_search_filter' name='search_filter' type="search" value="" placeholder="<?php echo _('Search') ?>">
             </div>
  
             <div class='filter_left_section'>
@@ -415,11 +430,11 @@ switch ($notif)
                 
                 <div id='action_add_buttons'>
                     
-                    <a href='javascript:;' id='button_add' class='button av_b_secondary' data-dropdown="#dropdown-add">
+                    <button id='button_add' class='button av_b_secondary' data-dropdown="#dropdown-add">
                         <?php echo _('Add Network') ?> &nbsp;&#x25be;
-                    </a>
+                    </button>
                     
-                    <img id='export_selection' class='disabled tiptip' data-bind="export-selection" data-title="<?php echo _('Select assets to export') ?>" src="/ossim/pixmaps/download-big.png"/>
+                    <img id='export_selection' class='disabled tiptip' data-selection="avt_action" data-bind="export-selection" data-title="<?php echo _('Select assets to export') ?>" src="/ossim/pixmaps/download-big.png"/>
                     
                 </div>
                 
@@ -467,115 +482,16 @@ switch ($notif)
             </div>
 
             <div id='content_result'>
-                
-                <div id='action_buttons'>
-                    
-                    <a href='javascript:;' id='button_action' class='button av_b_disabled small' data-dropdown="#dropdown-actions">
-                        <?php echo _('Actions') ?> &nbsp;&#x25be;
-                    </a>
-                    
-                    <img id='label_selection' class='img_action disabled' src="/ossim/pixmaps/label.png"/>
-                    
-                    <img id='delete_selection' class='img_action disabled' src="/ossim/pixmaps/delete-big.png"/>
-    
-                </div>
-            
-                <div id='msg_selection' data-bind='msg-selection'>
-                    <span></span>
-                    <a href='javascript:;' data-bind='chk-all-filter'></a>
-                </div>
-                <table class='noborder table_data' width="100%" align="center">
-                    <thead>
-                        <tr>
-                            
-                            <th>
-                                <input type='checkbox' data-bind='chk-all-assets'>  
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Network Name') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('CIDR') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Owner(s)') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Sensors') ?>
-                            </th>
-    
-                            <th>
-                                <?php echo _('Alarms') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Vulnerabilities') ?>
-                            </th>
-                            
-                            <th>
-                                <?php echo _('Events') ?>
-                            </th>
-                            
-                            <th></th>
-
-                        </tr>
-                    </thead>
-                    
-                    <tbody>
-                        <!-- Do not delete, this is to show the first "Loading" message -->
-                        <tr><td colspan="9"></td></tr>
-                    </tbody>
-                    
-                </table>
-
-            </div>  
+               <?php include AV_MAIN_ROOT_PATH . '/av_asset/network/templates/tpl_dt_networks.php' ?>                
+            </div> 
             
         </div>
         
     </div>
     
-    <div id="dropdown-add" class="dropdown dropdown-secondary dropdown-close dropdown-tip dropdown-anchor-right">
     
-		<ul class="dropdown-menu">
-			<?php
-			if (Session::can_i_create_assets() == TRUE)
-			{
-    			?>
-    			<li><a href="#1" data-bind="add-asset"><?php echo _('Add Network') ?></a></li>
-    			<?php
-			}
-			?>			
-			
-			<li><a href="#2" data-bind="import-csv"><?php echo _('Import CSV') ?></a></li>
-		</ul>		
-	</div>
-	
-	
-	<div id="dropdown-actions" data-bind="dropdown-actions" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
-    
-		<ul class="dropdown-menu">
-    		<?php 
-            if (Session::logcheck_bool('environment-menu', 'ToolsScan'))
-    		{
-            ?>
-                <li><a href="#1" data-bind="asset-scan"><?php echo _('Run Asset Scan') ?></a></li>
-            <?php
-            }
-            if (Session::logcheck_bool('environment-menu', 'EventsVulnerabilitiesScan'))
-            {
-            ?>
-			    <li><a href="#2" data-bind="vuln_scan"><?php echo _('Run Vulnerability Scan') ?></a></li>
-			<?php
-            }
-			?>
-			
-            <li><a href="#5" data-bind="add-note"><?php echo _('Add Note') ?></a></li>
-		</ul>		
-	</div>
+    <div id="dropdown-add" data-bind="dropdown-add" class="dropdown dropdown-secondary dropdown-close dropdown-tip dropdown-anchor-right"></div>
+	<div id="dropdown-actions" data-bind="dropdown-actions" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right"></div>
 
 </body>
 

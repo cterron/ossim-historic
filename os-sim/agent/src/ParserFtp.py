@@ -37,21 +37,16 @@ from time import time
 import pdb
 import pyinotify #deb package python-pyinotify
 # python-pyinotify version 0.7.1-1
-from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
-from threading import Lock
+
 #
 # LOCAL IMPORTS
 #
-from Profiler import TimeProfiler
 from Detector import Detector
-from Event import Event, EventOS, EventMac, EventService, EventHids, EventIdm
 from Logger import Logger
-from TailFollow import TailFollow
-from TailFollowBookmark import TailFollowBookmark
-import glob
 from ParserLog import RuleMatch
 from ftplib import FTP
 logger = Logger.logger
+
 
 class ParserFTP(Detector):
 

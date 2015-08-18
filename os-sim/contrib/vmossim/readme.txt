@@ -14,7 +14,6 @@ Included with the applianace are the following software components:
 - Snort, the IDS, also used for cross correlation with nessus.
 - Spade, the statistical packet anomaly detection engine. Used to gain knowledge about attacks without signature.
 - Tcptrack, used for session data information which can grant useful information for attack correlation.
-- Ntop, which builds an impressive network information database from which we can get aberrant behaviour anomaly detection.
 - Nagios. Being fed from the host asset database it monitors host and service availability information.
 - Osiris, a great HIDS.
 
@@ -65,7 +64,7 @@ Sensor
 
 Server
 ------
-- Disable pads, p0f, ntop, etc...
+- Disable pads, p0f, etc...
 - Reconfigure /etc/issue and /etc/issue.net so you can see what is configured at any time.
 - Grant mysql privileges to remote sensors.
 

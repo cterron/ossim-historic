@@ -180,7 +180,7 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
 			'ip'           => array('validation' => 'OSS_IP_ADDRCIDR_0, OSS_NULLABLE',                            'e_message' => 'illegal:' . _('Host')),
 			'port'         => array('validation' => 'OSS_PORT, OSS_NULLABLE',                                     'e_message' => 'illegal:' . _('Port')),
 			'risk'         => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Risk')),
-			'nessus_id'    => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Nessus/OpenVas ID')),
+			'nessus_id'    => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Plugin ID')),
 			'description'  => array('validation' => "OSS_NULLABLE, OSS_AT, OSS_TEXT, OSS_PUNC_EXT, '\<\>~'",          'e_message' => 'illegal:' . _('Description'))
        );
 	}
@@ -525,7 +525,6 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
 					{
 						$$v = POST("$v");
 					}
-					
 										
 					if ($action == 'newincident')	
 					{

@@ -294,7 +294,7 @@ echo "<table class='transparent w100'><tr><td class=\"sec_title\">"._("Threats F
         <tr>
         <td style="text-align:center;" class="nobborder">';
     echo "
-         <div class='datepicker_range' style='width:180px;margin:0px auto;padding-left:20px;'>
+         <div class='datepicker_range' style='width:190px;margin:0px auto;padding-left:20px;'>
             <div class='calendar_from'>
                 <div class='calendar'>
                    <input name='start_date' id='date_from' class='date_filter' type='input' value='$start_date'>
@@ -315,7 +315,7 @@ echo "<table class='transparent w100'><tr><td class=\"sec_title\">"._("Threats F
           <td style="padding: 0 30px 0 30px;text-align:center;" class="nobborder">
 EOT;
 	echo <<<EOT
-     <input type="text" name="kw" size="20" value="$kw"/>
+     <input type="text" name="kw" size="30" value="$kw"/>
       </td>
 EOT;
 echo "<td style=\"padding: 0 30px 0 30px;text-align:center;\" class=\"nobborder\" nowrap>";
@@ -410,7 +410,7 @@ EOT;
             <td class='noborder' align=\"center\">".(($fam_high==0)? "0" : "<a href=\"$http_base&risk=3\" >".Util::number_format_locale((int)$fam_high,0)."</a>")."</td>
             <td class='noborder' align=\"center\">".(($fam_ser==0)? "0" : "<a href=\"$http_base&risk=2\" >".Util::number_format_locale((int)$fam_ser,0)."</a>")."</td>
             <td class='noborder' align=\"center\">".(($fam_urg==0)? "0" : "<a href=\"$http_base&risk=1\" >".Util::number_format_locale((int)$fam_urg,0)."</a>")."</td>
-            <td class='noborder' align=\"center\">".(($fam_total==0)? "0" : "<a href=\"$http_base&family=All&risk=All\" >".Util::number_format_locale((int)$fam_total,0)."</a>")."</td>
+            <td class='noborder' align=\"center\">".(($fam_total==0)? "0" : "<a href=\"$http_base\" >".Util::number_format_locale((int)$fam_total,0)."</a>")."</td>
           </tr></table>";
 
 }

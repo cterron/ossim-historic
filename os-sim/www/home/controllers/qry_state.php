@@ -34,11 +34,12 @@ require_once 'av_init.php';
 
 Session::useractive();
 
-$conn_id  = intval($_SESSION['_connection_id']);
-$last_id  = intval($_SESSION['_last_checked_id']);
+$sess_id  = Util::get_sess_cookie();
+$conn_id  = intval($_SESSION[$sess_id]['_connection_id']);
+$last_id  = intval($_SESSION[$sess_id]['_last_checked_id']);
 $force    = intval($_GET['force_kill']);
 
-$response = array('id' => $conn_id, 'status' => '');
+$response = array('id' => $conn_id, 'status' => '', 'sess' => $sess_id);
 
 if ($conn_id > 0 || $last_id > 0)
 {
@@ -52,8 +53,8 @@ if ($conn_id > 0 || $last_id > 0)
         $conn->Execute('KILL ?', array($last_id));
     }
     
-    $_SESSION['_last_checked_id'] = $conn_id;
-    $params                       = array($conn_id);
+    $_SESSION[$sess_id]['_last_checked_id'] = $conn_id;
+    $params                                 = array($conn_id);
     
     if ($force)
     {

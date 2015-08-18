@@ -371,7 +371,7 @@ function change_htype($conn, $data)
 * --------------   STEP 5 ACTIONS  --------------
 */
 
-function set_plugins($conn, $data)
+function set_plugins($data)
 {
     $response = array();
     
@@ -382,42 +382,9 @@ function set_plugins($conn, $data)
         throw new Exception(_('Sorry, operation was not completed due to an error when processing the request. Try again later'));
     }
     
-    $plugins = array();
-
-    foreach ($data['plugin_list'] as $id => $list_cpe)
-    {
-        ossim_valid($id,      OSS_HEX,    'illegal:' . _("Host ID"));
-        
-        $list_cpe = (is_array($list_cpe)) ? $list_cpe : array();
-        
-        foreach ($list_cpe as $p)
-        {
-            $cpe = '';
-            
-            if ($p['version'] != '')
-            {
-                $cpe = $p['version'];
-            }
-            elseif($p['model'] != '')
-            {
-                $cpe = $p['model'];
-            }
-            elseif($p['vendor'] != '')
-            {
-                $cpe = $p['vendor'];
-            }
-            
-            ossim_valid($cpe,    OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT,     'illegal:' . _("CPE"));
-            
-            $plugins[$id][] = $cpe;
-
-        }
-
-    }
+    $plugins = Plugin::resolve_plugins_by_vmv($data['plugin_list']);
     
-    check_ossim_error();
-    
-    $task_id = Plugin::set_plugins_by_device_cpe($conn, $plugins);
+    $task_id = Plugin::set_plugins_by_assets($plugins);
 
     $wizard->set_step_data('task_id', $task_id);
     $wizard->set_step_data('plugins_flag', FALSE);
@@ -427,9 +394,8 @@ function set_plugins($conn, $data)
     $response['msg']   = _("Plugin successfully configured. It can take up few minutes. Please wait until green led appears");
 
     return $response;
-    
-
 }
+
 
 function net_devices_activity($conn)
 {
@@ -459,17 +425,19 @@ function net_devices_activity($conn)
     
     if ($status == 1)
     {
-        $devices = Plugin::get_plugins_by_device();
+        $devices = Plugin::get_plugins_by_assets();
         
         foreach ($devices as $h_id => $p_data)
         {
+            $h_id = Util::uuid_format_nc($h_id);
+            
             $p_data = is_array($p_data) ? $p_data : array();
             
-            foreach ($p_data as $pdata)
+            foreach ($p_data as $pkey => $pdata)
             {
                 $active = Asset_host_devices::check_device_connectivity($conn, $h_id, $pdata['plugin_id'], '', TRUE);
                 
-                $plugins[$h_id][$pdata['cpe']] = $active;
+                $plugins[$h_id][$pkey] = $active;
                 
                 if ($flag_end)
                 {
@@ -503,8 +471,20 @@ function get_otx_user ($data)
     check_ossim_error();
     
     /* The try-catch check is done when the function is called in the main */
-    $response['error'] = FALSE;
-    $response['msg']   = Util::get_otx_username($token);
+    
+    try
+    {
+        $otx = new Otx();
+        $otx->register_token($token);
+        
+        $response['error'] = FALSE;
+        $response['msg']   = $otx->get_username();
+    }
+    catch(Exception $e)
+    {
+        $response['error'] = TRUE;
+        $response['msg']   = $e->getMessage();
+    }
 
     return $response;
 }
@@ -570,7 +550,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
             'nic_activity'      => array('name' => 'get_nic_activity',         'params' => array('')),
             'get_otx_user'      => array('name' => 'get_otx_user',             'params' => array('data')),
             'change_nic_mode'   => array('name' => 'change_nic_mode',          'params' => array('data')),
-            'set_plugins'       => array('name' => 'set_plugins',              'params' => array('conn', 'data'))
+            'set_plugins'       => array('name' => 'set_plugins',              'params' => array('data'))
         );
 
         $_function = $function_list[$action];

@@ -121,13 +121,6 @@ Depends: ${misc:Depends}, libmailtools-perl
 Replaces: nfsen
 Description: Configuration package for nfsen
 
-Package: alienvault-ntop
-Architecture: all
-Depends: ${misc:Depends}
-Pre-Depends: ntop
-Replaces: ntop
-Description: Configuration package for Ntop
-
 Package: alienvault-openssl
 Architecture: all
 Depends: ${misc:Depends}
@@ -136,8 +129,10 @@ Description: Configuration package for OpenSSL
 
 Package: alienvault-openvas
 Architecture: all
-Depends: ${misc:Depends}
-Pre-Depends: openvas-cli, openvas-scanner, openvas-manager, openvas-administrator, rng-tools, sqlite3, xsltproc
+Depends: ${misc:Depends}, openvas-cli (>= 1.4)
+Pre-Depends: openvas-scanner (>= 5.0.3), openvas-manager (>= 6.0.3), alienvault-redis-server-openvas, rng-tools, sqlite3, xsltproc
+Conflicts: alienvault-openvas-plugins
+Replaces: alienvault-openvas-plugins
 Description: Configuration package for OpenVAS
 
 Package: alienvault-ossec
@@ -161,7 +156,7 @@ Description: Configuration package for php5
 
 Package: alienvault-plymouth
 Architecture: all
-Pre-Depends: plymouth, initramfs-tools
+Pre-Depends: plymouth, initramfs-tools, v86d
 Depends: ${misc:Depends}
 Replaces: plymouth
 Description: Graphical boot animation for AlienVault appliances
@@ -187,9 +182,23 @@ Description: Prads database configuration package
 Package: alienvault-redis-server
 Architecture: all
 Depends: ${misc:Depends}
-Pre-Depends: redis-server
+Pre-Depends: redis-server (>= 3.0.2)
+Replaces: alienvault-redis-server, redis-server
 Description: Configuration package for redis-server
-Replaces: redis-server
+
+Package: alienvault-redis-server-otx
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: redis-server (>= 3.0.2)
+Replaces: alienvault-redis-server-otx
+Description: Configuration package for Redis instance of OTX
+
+Package: alienvault-redis-server-openvas
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: redis-server (>= 3.0.2)
+Replaces: alienvault-redis-server-openvas
+Description: Configuration package for Redis instance of OpenVAS 8
 
 Package: alienvault-rsyslog
 Architecture: all
@@ -227,3 +236,4 @@ Pre-Depends: alienvault-crypto, ossim-utils, alienvault-api-scripts, augeas-tool
 Depends: alienvault-firewall (>= ${source:Upstream-Version})
 Replaces: alienvault-vpn
 Description: Configuration package for vpn infraestructure
+

@@ -196,7 +196,7 @@ class AVOssimSetupConfigHandler():
     ALLOWED_PROFILES = [PROFILE_NAME_DATABASE, PROFILE_NAME_SENSOR, PROFILE_NAME_SERVER, PROFILE_NAME_FRAMEWORK]
     YES_NO_CHOICES = ["yes", "no"]
     ENABLE_DISABLE_CHOICES = ["enabled", "disabled"]
-    PROXY_VALUES = ["disabled", "manual", "alienvault-center"]
+    PROXY_VALUES = ["disabled", "manual", "alienvault-proxy"]
     PROXY_VALUES_NO_PRO = ["disabled", "manual"]
     ALLOWED_HA_ROLES = ["master","slave"]
 
@@ -484,290 +484,313 @@ class AVOssimSetupConfigHandler():
 # When section is None -> use section=general
 ###############################################################################
 
+    def refresh(func):
+        """ Decorator for get methods
+        Force refresh the configuration from file if the parameter refresh=True
+        and the file has changed in the filesystem.
+        """
+        def refresh_wrapper(self, *args, **kwargs):
+            if 'refresh' in kwargs:
+                if kwargs['refresh'] is True:
+                    if not self.__check_md5():
+                        self.__load_config()
+                del kwargs['refresh']
+            return func(self, *args, **kwargs)
 
+        return refresh_wrapper
+
+    @refresh
     def get_general_admin_dns(self):
         """Returns the 'admin_dns' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_DNS)
 
-
+    @refresh
     def get_general_admin_gateway(self):
         """Returns the 'admin_gateway' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_GATEWAY)
 
-
+    @refresh
     def get_general_admin_ip(self):
         """Returns the 'admin_ip' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_IP)
 
-
+    @refresh
     def get_general_admin_netmask(self):
         """Returns the 'admin_netmask' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_NETMASK)
 
-
+    @refresh
     def get_general_domain(self):
         """Returns the 'domain' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_DOMAIN)
 
-
+    @refresh
     def get_general_email_notify(self):
         """Returns the 'email_notify' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_EMAIN_NOTIFY)
 
-
+    @refresh
     def get_general_hostname(self):
         """Returns the 'hostname' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_HOSTNAME)
 
-
+    @refresh
     def get_general_interface(self):
         """Returns the 'interface' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_INTERFACE)
 
-
+    @refresh
     def get_general_mailserver_relay(self):
         """Returns the 'mailserver_relay' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY)
 
-
+    @refresh
     def get_general_mailserver_relay_passwd(self):
         """Returns the 'mailserver_relay_passwd' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD)
 
-
+    @refresh
     def get_general_mailserver_relay_port(self):
         """Returns the 'mailserver_relay_port' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT)
 
-
+    @refresh
     def get_general_mailserver_relay_user(self):
         """Returns the 'mailserver_relay_user' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER)
 
-
+    @refresh
     def get_general_ntp_server(self):
         """Returns the 'ntp_server' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_NTP_SERVER)
 
-
+    @refresh
     def get_general_profile(self):
         """Returns the 'profile' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_PROFILE)
 
+    @refresh
     def get_general_profile_list(self):
         """Returns the 'profile' field
         """
         profiles = self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_PROFILE)
         if profiles:
-            profiles= profiles.replace(' ','')
+            profiles = profiles.replace(' ', '')
             profiles = profiles.split(',')
         return profiles
 
-
+    @refresh
     def get_database_db_ip(self):
         """Returns the '[database]->db_ip' field
         """
         return self.__get_variable_value(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_IP)
 
-
+    @refresh
     def get_database_pass(self):
         """Returns the '[database]->pass' field
         """
         return self.__get_variable_value(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_PASSWORD)
 
-
+    @refresh
     def get_database_user(self):
         """Returns the '[database]->user' field
         """
         return self.__get_variable_value(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_USER)
 
-
+    @refresh
     def get_expert_profile(self):
         """Returns the '[expert]->profile' field
         """
         return self.__get_variable_value(self.EXPERT_SECTION_NAME, self.NO_SECTION_NAME_PROFILE)
 
-
+    @refresh
     def get_firewall_active(self):
         """Returns the '[firewall]->active' field
         """
         return self.__get_variable_value(self.FIREWALL_SECTION_NAME, self.SECTION_FIREWALL_ACTIVE)
 
-
+    @refresh
     def get_framework_framework_https_cert(self):
         """Returns the '[framework]->framework_https_cert' field
         """
         return self.__get_variable_value(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_CERT)
 
-
+    @refresh
     def get_framework_framework_https_key(self):
         """Returns the '[framework]->framework_https_key' field
         """
         return self.__get_variable_value(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_KEY)
 
-
+    @refresh
     def get_framework_framework_ip(self):
         """Returns the '[framework]->framework_ip' field
         """
         return self.__get_variable_value(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_IP)
 
-
+    @refresh
     def get_sensor_detectors(self):
         """Returns the '[sensor]->detectors' field
         NOTE: Returns a list of elements.
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_DETECTORS)
 
-
+    @refresh
     def get_sensor_detectors_list(self):
         """Returns the '[sensor]->detectors' field
         NOTE: Returns a list of elements.
         """
         data = self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_DETECTORS)
         if data:
-            data= data.replace(' ','')
+            data = data.replace(' ', '')
             data = data.split(',')
         return data
 
+    @refresh
     def get_sensor_ids_rules_flow_control(self):
         """Returns the '[sensor]->ids_rules_flow_control' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IDS_RULES_FLOW_CONTROL)
 
-
+    @refresh
     def get_sensor_interfaces(self):
         """Returns the '[sensor]->interfaces' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_INTERFACES)
-  
 
+    @refresh
     def get_sensor_interfaces_list(self):
         """Returns the '[sensor]->interfaces' field
         """
         data = self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_INTERFACES)
         if data:
-            data= data.replace(' ','')
+            data = data.replace(' ', '')
             data = data.split(',')
         return data
 
+    @refresh
     def get_sensor_ip(self):
         """Returns the '[sensor]->ip' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IP)
 
-
+    @refresh
     def get_sensor_monitors(self):
         """Returns the '[sensor]->monitors' field
         NOTE: Returns a list of elements.
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MONITORS)
 
-
+    @refresh
     def get_sensor_monitors_list(self):
         """Returns the '[sensor]->monitors' field
         NOTE: Returns a list of elements.
         """
         data = self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MONITORS)
         if data:
-            data= data.replace(' ','')
+            data = data.replace(' ', '')
             data = data.split(',')
         return data
 
+    @refresh
     def get_sensor_mservers(self):
         """Returns the '[sensor]->mservers' field
         NOTE: Returns a list of elements.
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MSERVER)
 
-
+    @refresh
     def get_sensor_name(self):
         """Returns the '[sensor]->name' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NAME)
 
-
+    @refresh
     def get_sensor_netflow(self):
         """Returns the '[sensor]->netflow' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW)
 
-
+    @refresh
     def get_sensor_netflow_remote_collector_port(self):
         """Returns the '[sensor]->netflow_remote_collector_port' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW_REMOTE_COLLECTOR_PORT)
 
-
+    @refresh
     def get_sensor_networks(self):
         """Returns the '[sensor]->networks' field
         NOTE: Returns a list of elements.
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETWORKS)
 
-
+    @refresh
     def get_sensor_networks_list(self):
         """Returns the '[sensor]->networks' field
         NOTE: Returns a list of elements.
         """
         data = self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETWORKS)
         if data:
-            data= data.replace(' ','')
+            data = data.replace(' ', '')
             data = data.split(',')
         return data
 
+    @refresh
     def get_sensor_pci_express(self):
         """Returns the '[sensor]->pci_express' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_PCI_EXPRESS)
 
-
+    @refresh
     def get_sensor_tzone(self):
         """Returns the '[sensor]->tzone' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_TZONE)
-    def get_sensor_ctx (self):
+
+    @refresh
+    def get_sensor_ctx(self):
         """Return the '[sensor]->sensor_ctx' field
         """
-        return self.__get_variable_value (self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_CTX)
+        return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_CTX)
 
-
+    @refresh
     def get_sensor_asec(self):
         """Returns the '[sensor]->asec' field
         """
         return self.__get_variable_value(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_ASEC)
 
-
+    @refresh
     def get_server_alienvault_ip_reputation(self):
         """Returns the '[server]->alienvault_ip_reputation' field
         """
         return self.__get_variable_value(self.SERVER_SECTION_NAME, self.SECTION_SERVER_ALIENVAULT_IP_REPUTATION)
 
-
+    @refresh
     def get_server_server_ip(self):
         """Returns the '[server]->server_ip' field
         """
         return self.__get_variable_value(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP)
 
-
+    @refresh
     def get_server_server_plugins(self):
         """Returns the '[server]->server_plugins' field
         """
         return self.__get_variable_value(self.SERVER_SECTION_NAME, self.SECTION_SERVER_PLUGINS)
 
+    @refresh
     def get_server_server_plugins_list(self):
         """Returns the '[server]->server_plugins' field
         """
@@ -777,133 +800,134 @@ class AVOssimSetupConfigHandler():
             data = data.split(',')
         return data
 
-
+    @refresh
     def get_server_server_pro(self):
         """Returns the '[server]->server_pro' field
         """
         return self.__get_variable_value(self.SERVER_SECTION_NAME, self.SECTION_SERVER_PRO)
 
-
+    @refresh
     def get_snmp_comunity(self):
         """Returns the '[snmp]->community' field
-        NOTE: The name has a typo (it should be community) but 
+        NOTE: The name has a typo (it should be community) but
         we use the notation set_section_option. And the option is wrong typed in the file.
         """
         return self.__get_variable_value(self.SNMP_SECTION_NAME, self.SECTION_SNMP_COMMUNITY)
 
-
+    @refresh
     def get_snmp_snmp_comunity(self):
         """Returns the '[snmp]->snmp_comunity' field
         """
         return self.__get_variable_value(self.SNMP_SECTION_NAME, self.SECTION_SNMP_SNMP_COMMUNITY)
 
-
+    @refresh
     def get_snmp_snmpd(self):
         """Returns the '[snmp]->snmpd' field
         """
         return self.__get_variable_value(self.SNMP_SECTION_NAME, self.SECTION_SNMP_SNMPD)
 
-
+    @refresh
     def get_snmp_snmptrap(self):
         """Returns the '[snmp]->snmptrap' field
         """
         return self.__get_variable_value(self.SNMP_SECTION_NAME, self.SECTION_SNMP_SNMPTRAP)
 
-
+    @refresh
     def get_update_update_proxy(self):
         """Returns the '[update]->update_proxy' field
         """
         return self.__get_variable_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY)
 
-
+    @refresh
     def get_update_update_proxy_dns(self):
         """Returns the '[update]->update_proxy_dns' field
         """
         return self.__get_variable_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_DNS)
 
-
+    @refresh
     def get_update_update_proxy_pass(self):
         """Returns the '[update]->update_proxy_pass' field
         """
         return self.__get_variable_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PASSWORD)
 
-
+    @refresh
     def get_update_update_proxy_port(self):
         """Returns the '[update]->update_proxy_port' field
         """
         return self.__get_variable_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PORT)
 
-
+    @refresh
     def get_update_update_proxy_user(self):
         """Returns the '[update]->update_proxy_user' field
         """
         return self.__get_variable_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_USER)
 
+    @refresh
     def get_ha_ha_autofailback(self):
         """Returns the '[ha]->ha_autofailback' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_AUTOFAILBACK)
 
-
+    @refresh
     def get_ha_ha_deadtime(self):
         """Returns the '[ha]->ha_deadtime' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_DEADTIME)
 
-
+    @refresh
     def get_ha_ha_device(self):
         """Returns the '[ha]->ha_device' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_DEVICE)
 
-
+    @refresh
     def get_ha_ha_heartbeat_comm(self):
         """Returns the '[ha]->ha_heartbeat_comm' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_HEARTBEAT_COMM)
 
-
+    @refresh
     def get_ha_ha_heartbeat_start(self):
         """Returns the '[ha]->ha_heartbeat_start' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_HEARTBEAT_START)
 
-
+    @refresh
     def get_ha_ha_keepalive(self):
         """Returns the '[ha]->ha_heartbeat_start' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_KEEPALIVE)
 
-
+    @refresh
     def get_ha_ha_local_node_ip(self):
         """Returns the '[ha]->ha_heartbeat_start' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_LOCAL_NODE_IP)
 
-
+    @refresh
     def get_ha_ha_log(self):
         """Returns the '[ha]->ha_log' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_LOG)
 
-
+    @refresh
     def get_ha_ha_other_node_ip(self):
         """Returns the '[ha]->ha_other_node_ip' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_OTHER_NODE_IP)
 
-
+    @refresh
     def get_ha_ha_other_node_name(self):
         """Returns the '[ha]->ha_other_node_name' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_OTHER_NODE_NAME)
 
-
+    @refresh
     def get_ha_ha_password(self):
         """Returns the '[ha]->ha_password' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_PASSWORD)
 
-
+    @refresh
     def get_ha_ha_ping_node(self):
         """Returns the '[ha]->ha_ping_node' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_PING_NODE)
 
-
+    @refresh
     def get_ha_ha_role(self):
         """Returns the '[ha]->ha_role' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_ROLE)
 
-
+    @refresh
     def get_ha_ha_virtual_ip(self):
         """Returns the '[ha]->ha_virtual_ip' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_VIRTUAL_IP)
@@ -933,7 +957,7 @@ class AVOssimSetupConfigHandler():
         """
         st =""
         for section,options in self.__modified_values.iteritems():
-            st +="[%s]\n" % section 
+            st +="[%s]\n" % section
             for optionname, optionvalue in options.iteritems():
                 st +="%s\n" % optionname
 
@@ -988,23 +1012,32 @@ class AVOssimSetupConfigHandler():
         """
         return self.__sysconfig.get_net_iface_config_all().keys()[0]
 
-    def get_net_iface_ip (self, modifier='eth0'):
+    def get_net_iface_ip(self, modifier='eth0'):
         """
         Return the IP address of a interface.
         """
-        return self.__sysconfig.get_net_iface_config(modifier)[modifier].get('address')
+        ip = self.__sysconfig.get_net_iface_config(modifier)[modifier].get('address')
+        if ip == 'TBD':
+            ip = ''
+        return ip
 
-    def get_net_iface_netmask (self, modifier='eth0'):
+    def get_net_iface_netmask(self, modifier='eth0'):
         """
         Return the network mask of a interface.
         """
-        return self.__sysconfig.get_net_iface_config(modifier)[modifier].get('netmask')
+        netmask = self.__sysconfig.get_net_iface_config(modifier)[modifier].get('netmask')
+        if netmask == 'TBD':
+            netmask = ''
+        return netmask
 
-    def get_net_iface_gateway (self, modifier='eth0'):
+    def get_net_iface_gateway(self, modifier='eth0'):
         """
         Return the network mask of a interface.
         """
-        return self.__sysconfig.get_net_iface_config(modifier)[modifier].get('gateway')
+        gateway = self.__sysconfig.get_net_iface_config(modifier)[modifier].get('gateway')
+        if gateway == 'TBD':
+            gateway = ''
+        return gateway
 
     ### /etc/hosts configuration
 
@@ -1805,7 +1838,7 @@ class AVOssimSetupConfigHandler():
 
     def check_update_update_proxy(self, value):
         """Check whether [update]->update_proxy is valid
-        allowed values: [disabled, manual, alienvault-center]
+        allowed values: [disabled, manual, alienvault-proxy]
         """
         result = AVConfigParserErrors.ALL_OK
         if value not in self.PROXY_VALUES:
@@ -1866,6 +1899,24 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_USER, result)
         return result
 
+    def check_interface_ip(self, value):
+        """Check whether the ip is valid
+        """
+        result = AVConfigParserErrors.ALL_OK
+        if not is_ipv4(value):
+            logger.warning("Invalid ip ... %s" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VALUE_NOT_VALID_IP, value)
+        return result
+
+    def check_interface_netmask(self, value):
+        """Check whether the netmask is valid
+        """
+        result = AVConfigParserErrors.ALL_OK
+        if not is_net_mask(value):
+            logger.warning("Invalid netmask ... %s" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_NETMASK, value)
+        return result
+
     def set_general_admin_dns(self, value):
         """Sets the value for 'admin_dns'
         Requirements:
@@ -1881,6 +1932,11 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             logger.info("set admin_dns = %s" % value)
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_DNS, value)
+
+            admin_interface = self.get_general_interface()
+            self.__sysconfig.set_net_iface_config(admin_interface,
+                                                  dns_nameservers=value)
+
         return result
 
 
@@ -1902,6 +1958,11 @@ class AVOssimSetupConfigHandler():
             result = self.check_general_admin_gateway(value)
             if result == AVConfigParserErrors.ALL_OK:
                 self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_GATEWAY, value)
+                admin_interface = self.get_general_interface()
+                self.__sysconfig.set_net_iface_config(admin_interface,
+                                                      gateway=value)
+
+
         else:
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_ADMIN_GATEWAY_INVALID_ADMIN_INTERFACE, iface)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_GATEWAY, result)
@@ -1919,6 +1980,10 @@ class AVOssimSetupConfigHandler():
 
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_IP, value)
+            admin_interface = self.get_general_interface()
+            self.__sysconfig.set_net_iface_config(admin_interface,
+                                                  address=value)
+
         return result
 
     def set_general_admin_netmask(self, value):
@@ -1936,6 +2001,10 @@ class AVOssimSetupConfigHandler():
             result = self.check_general_admin_netmask(value)
             if result == AVConfigParserErrors.ALL_OK:
                 self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_NETMASK, value)
+                admin_interface = self.get_general_interface()
+                self.__sysconfig.set_net_iface_config(admin_interface,
+                                                      netmask=value)
+
         else:
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_ADMIN_NETMASK_INVALID_ADMIN_INTERFACE, iface)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_NETMASK, result)
@@ -2002,6 +2071,8 @@ class AVOssimSetupConfigHandler():
         result = self.check_general_interface(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_INTERFACE, value)
+            result = self.set_net_iface_config (value, is_administration = 'yes')
+
         return result
 
     def set_default_values_for_mail_relay(self):
@@ -2260,6 +2331,7 @@ class AVOssimSetupConfigHandler():
         """Sets the [sensor]->interfaces value
         """
         result = AVConfigParserErrors.ALL_OK
+        previous_sensor_interfaces = []
         if not self.__avconfig_loaded_ok:
             logger.error("set_sensor_interfaces -> File not loaded!")
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
@@ -2267,7 +2339,26 @@ class AVOssimSetupConfigHandler():
             return result
         result = self.check_sensor_interfaces(value)
         if result == AVConfigParserErrors.ALL_OK:
+            previous_sensor_interfaces = self.get_sensor_interfaces_list()
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_INTERFACES, self.__get_list_value(value))
+
+            value = value.replace(' ', '')
+            new_sensor_interfaces = value.split(',')
+
+            for iface in previous_sensor_interfaces:
+                if iface not in new_sensor_interfaces:
+                    # Remove promisc mode
+                    result = self.set_net_iface_config(iface, is_monitor='no')
+
+            # Set sensor interface in the /etc/alienvault/network/interfaces.conf file.
+            for iface in new_sensor_interfaces:
+                iface_config = self.get_net_iface_config(iface)[iface]
+                if iface_config.get('log_management', 'no') == 'no':
+                    result = self.set_net_iface_config(iface, address='0.0.0.0')
+
+                r = self.set_net_iface_config(iface, is_monitor='yes')
+                if r != AVConfigParserErrors.ALL_OK:
+                    result = r
         return result
 
 
@@ -2559,7 +2650,7 @@ class AVOssimSetupConfigHandler():
 
     def set_update_update_proxy(self, value):
         """Sets the [update]->update_proxy value
-        allowed values: [disabled, manual, alienvault-center]
+        allowed values: [disabled, manual, alienvault-proxy]
         """
         if not self.__avconfig_loaded_ok:
             logger.error("set_update_update_proxy -> File not loaded!")
@@ -2638,12 +2729,14 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/network/interfaces configuration
 
-    def set_net_iface_config (self, iface, address = None, netmask = None, gateway = None, dns_search= None, dns_nameservers = None, broadcast = None, network = None):
+    def set_net_iface_config (self, iface, address = None, netmask = None, gateway = None, dns_search= None, dns_nameservers = None, broadcast = None, network = None,
+                              is_administration = None, is_log_management = None, is_monitor = None):
         """
         Set the network configuration for the interface 'iface'.
         """
         # Take into account that this may be the admin interface...
-        if self.get_general_interface() == iface:
+        # And, very important here, do not change any network option if the admin interface is being set as a monitor interface.
+        if self.get_general_interface() == iface and is_monitor is None:
             apply_on = [(x, y) for (x, y) in locals().items() if x in ['address', 'netmask', 'gateway', 'dns_search', 'dns_nameservers'] and y != None]
             ops = {'address': (self.set_general_admin_ip, self.get_general_admin_ip()), \
                    'netmask': (self.set_general_admin_netmask, self.get_general_admin_netmask()), \
@@ -2660,20 +2753,28 @@ class AVOssimSetupConfigHandler():
                     return result
 
         self.__file_dirty = True
-        return self.__sysconfig.set_net_iface_config (iface, address, netmask, gateway, dns_search, dns_nameservers, broadcast, network)
+        return self.__sysconfig.set_net_iface_config (iface, address, netmask, gateway, dns_search, dns_nameservers, broadcast, network,
+                                                      is_administration, is_log_management, is_monitor)
 
-    # Dumb methods to interact with ossimsetup
+    # Dumb methods to interact with ossimsetup.
+    # All methods set the is_log_management flag to 'yes', since this is used to set this interface type.
     def set_net_iface_name (self, whatever):
         return AVConfigParserErrors.ALL_OK
 
-    def set_net_iface_ip (self, value, modifier='eth0'):
-        return self.set_net_iface_config (modifier, address = value)
+    def set_net_iface_ip(self, value, modifier='eth0'):
+        check_result = self.check_interface_ip(value)
+        if check_result != AVConfigParserErrors.ALL_OK:
+            return check_result
+        return self.set_net_iface_config(modifier, address=value, is_log_management='yes')
 
-    def set_net_iface_netmask (self, value, modifier='eth0'):
-        return self.set_net_iface_config (modifier, netmask = value)
+    def set_net_iface_netmask(self, value, modifier='eth0'):
+        check_result = self.check_interface_netmask(value)
+        if check_result != AVConfigParserErrors.ALL_OK:
+            return check_result
+        return self.set_net_iface_config(modifier, netmask=value, is_log_management='yes')
 
     def set_net_iface_gateway (self, value, modifier='eth0'):
-        return self.set_net_iface_config (modifier, gateway = value)
+        return self.set_net_iface_config (modifier, gateway = value, is_log_management = 'yes')
 
     ### /etc/hosts configuration
 

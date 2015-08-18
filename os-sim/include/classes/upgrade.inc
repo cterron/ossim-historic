@@ -105,8 +105,8 @@ class Upgrade
             $this->upgrades_path = $path;
         }
         
-        $db = new Ossim_db();
-        $this->conn = $db->connect();
+        //$db = new Ossim_db();
+        $this->conn = null; //$db->connect();
         $this->conf = $GLOBALS["CONF"];
         $this->ossim_dbtype = $this->conf->get_conf("ossim_type"); // ej: mysql
         $this->about = new About();

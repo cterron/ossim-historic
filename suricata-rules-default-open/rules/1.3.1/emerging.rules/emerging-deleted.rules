@@ -642,6 +642,10 @@
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED C4tdownload.com Access, Likely Spyware"; flow: to_server,established; content:"Host|3a|"; nocase; content:".c4tdownload.com"; within:26; nocase; reference:url,sarc.com/avcenter/venc/data/adware.clickdloader.b.html; reference:url,doc.emergingthreats.net/bin/view/Main/2001531; classtype:trojan-activity; sid:2001531; rev:14;)
 
+#Matt Jonkman
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED CWS Related Installer"; flow:established,to_server; content:"/image_tracker.php?l="; http_uri; fast_pattern:only; content:"&x="; http_uri; content:"&deptid="; distance:0; http_uri; content:"&page"; distance:0; http_uri; content:"&unique="; distance:0; http_uri; reference:url,www3.ca.com/securityadvisor/pest/pest.aspx?id=453076035; reference:url,doc.emergingthreats.net/bin/view/Main/2002932; classtype:trojan-activity; sid:2002932; rev:6;)
+
 #by Matt Jonkman from spyware listeningpost data
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Cnzz.com/Baidu Related Spyware Stat Reporting"; flow:established,to_server; content:"/stat.php?id="; nocase; http_uri; content:"&web_id="; nocase; http_uri; content:"Host|3a|"; nocase; http_header; content:!"Referer|3a| "; nocase; http_header; reference:url,vil.nai.com/vil/content/v_140364.htm; reference:url,doc.emergingthreats.net/bin/view/Main/2003607; classtype:trojan-activity; sid:2003607; rev:10;)
@@ -4688,6 +4692,9 @@
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED MALVERTISING Malicious Advertizing URL in.cgi"; flow:to_server,established; content:"/in.cgi?"; http_uri; classtype:bad-unknown; sid:2012883; rev:6;)
 
 #
+#alert http $HOME_NET any -> any any (msg:"ET DELETED Http Client Body contains pw= in cleartext"; flow:established,to_server; content:"pw="; nocase; http_client_body; classtype:policy-violation; sid:2012889; rev:3;)
+
+#
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED CPL Trojan Downloader Request"; flow:established,to_server; content:".cpl?|20|HTTP/1.1"; nocase; content:!"Referer|3a 20|"; http_header; classtype:trojan-activity; sid:2012910; rev:6;)
 
 #
@@ -4994,6 +5001,9 @@
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Blackhole OBE Java Exploit request to /content/obe.jar"; flow:established,to_server; content:"/content/obe.jar"; http_uri; reference:cve,CVE-2010-0840; reference:cve,CVE-2010-0842; classtype:trojan-activity; sid:2014160; rev:2;)
 
 #
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Styx Exploit Kit Landing"; flow:established,to_server; urilen:7; content:"/i.html"; http_uri; depth:7; fast_pattern; content:"Referer|3a| "; http_header; content:!"|0d 0a|"; http_header; within:100; content:"|0d 0a|"; distance:0; http_header; classtype:bad-unknown; sid:2014171; rev:5;)
+
+#
 ##alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Incognito/Sakura exploit kit landing page with obfuscated URLs"; flow:established,from_server; content:"<applet"; depth:500; content:"lxxt>33"; fast_pattern; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2014176; rev:3;)
 
 #
@@ -5109,6 +5119,9 @@
 
 #
 ##alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED DRIVEBY Blackhole - Landing Page Recieved - applet and flowbit"; flow:from_server,established; flowbits:isset,et.exploitkitlanding; content:"<applet"; classtype:bad-unknown; sid:2014443; rev:5;)
+
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Dynamic DNS Exploit Pack Payload"; flow:established,to_server;  content:".php"; http_uri; content:"quote="; distance:0; http_uri; content:"tid=";http_uri; content:"fid="; http_uri; flowbits:set,et.exploitkitlanding;  classtype:bad-unknown; sid:2014445; rev:5;)
 
 #
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Blackhole Exploit Kit JAR from //Home/"; flow:established,to_server; content:"GET //Home/"; depth:11; fast_pattern; content:".jar"; http_uri; nocase; reference:url,community.websense.com/blogs/securitylabs/pages/black-hole-exploit-kit.aspx; classtype:trojan-activity; sid:2014457; rev:4;)
@@ -6572,6 +6585,9 @@
 ##alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Blackhole repetitive applet/code tag"; flow:established,from_server; file_data; content:"applet/code="; content:"/archive="; distance:0; content:".jar"; distance:0; pcre:"/applet\/code=[\x22\x27](?P<val1>[a-zA-Z0-9]+)[a-z]\.(?P=val1)[a-z][\x22\x27][^\x3e]+\.jar[\x22\x27]/"; classtype:trojan-activity; sid:2015697; rev:3;)
 
 #
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED SPL Landing Page Requested"; flow:established,to_server; content:"/?"; http_uri; content:"YWZmaWQ9"; http_uri; classtype:trojan-activity; sid:2015698; rev:3;)
+
+#
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Unknown base64-style Java-based Exploit Kit using github as initial director"; flow:established,to_server; content:"%3D HTTP/1."; fast_pattern:only; content:"/?"; http_uri; isdataat:45,relative; pcre:"/\/\?[a-z0-9]{5,}=[a-zA-Z0-9\x25]{40,}\x253D$/I"; classtype:trojan-activity; sid:2015699; rev:3;)
 
 #
@@ -6705,6 +6721,9 @@
 
 #
 ##alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED CoolEK - Landing Page (2)"; flow:established,to_client; file_data; content:"</title>|0D 0A|<link href=|22|favicon.ico|22| rel=|22|shortcut icon|22| type=|22|image/x-icon|22| />"; classtype:trojan-activity; sid:2016066; rev:3;)
+
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Backdoor.Win32.Skill.gk User-Agent"; flow:established,to_server; content:"|3b 20 3b 20|"; http_user_agent; content:"MSIE"; http_user_agent;  classtype:trojan-activity; sid:2016074; rev:4;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED FakeAV Checkin"; flow:to_server,established; content:"GET"; http_method; content:"/?affid="; depth:8; http_uri; content:"&promo_type="; http_uri; content:"&promo_opt="; http_uri; pcre:"/^\/\?affid=\d+&promo_type=\d+&promo_opt=\d+$/U"; reference:md5,527e115876d0892c9a0ddfc96e852a16; classtype:trojan-activity; sid:2016075; rev:3;)
@@ -6851,6 +6870,9 @@
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED W32/Asprox Spam Module CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:"/index.php"; http_uri; content:"Content-Disposition|3A| form-data|3B| name=|22|sid|22|"; http_client_body; content:"Content-Disposition|3A| form-data|3B| name=|22|up|22|"; http_client_body; distance:0; content:"Content-Disposition|3A| form-data|3B| name=|22|ping|22|"; fast_pattern:32,11; http_client_body; distance:0; content:"Content-Disposition|3A| form-data|3B| name=|22|guid|22|"; distance:0; http_client_body; reference:url,www.welivesecurity.com/2013/03/08/sinkholing-trojan-downloader-zortob-b-reveals-fast-growing-malware-threat/; reference:url,www.trendmicro.com/cloud-content/us/pdfs/security-intelligence/white-papers/wp-asprox-reborn.pdf; classtype:trojan-activity; sid:2016561; rev:3;)
 
 #
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Redkit Jar Naming Pattern March 03 2013"; flow:established,to_server; content:".jar"; http_uri; nocase; content:"Java/1."; http_user_agent; pcre:"/^\/[a-z0-9]{2}\.jar$/U"; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2016588; rev:15;)
+
+#
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Redkit URI Struct Flowbit"; flow:established,to_server; content:".htm"; http_uri; fast_pattern:only; pcre:"/^\/[a-z]{4}\.html?(\?[h-j]=\d+)?$/U"; flowbits:set,ET.http.driveby.redkit.uri; flowbits:noalert; classtype:trojan-activity; sid:2016589; rev:8;)
 
 #
@@ -6923,7 +6945,13 @@
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fake FedEX/Pony spam campaign URI Struct"; flow:established,to_server; content:".php?label="; http_uri; nocase; fast_pattern:only; pcre:"/\.php\?label=(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/Ui"; content:!"dynamicdrive.com"; nocase; http_header; classtype:trojan-activity; sid:2017258; rev:5;)
 
 #
+#alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED PoisonIvy.fishplay Keepalive to CnC"; flow:established,to_server; content:"|77 1b 13 19 a2 d1 8d a1 b5 05 8f fa 3f aa c0 8a|"; offset:16; depth:16; dsize:48; reference:url,www.fireeye.com/resources/pdfs/fireeye-poison-ivy-report.pdf; classtype:trojan-activity; sid:2017361; rev:2;)
+
+#
 ##alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED CoolEK Landing Aug 29 2013"; flow:established,from_server; file_data; content:".txt?e"; nocase; fast_pattern:only; content:"value"; nocase; pcre:"/^[\r\n\s\+]*?=[\r\n\s\+]*?(?P<q>[\x22\x27])((?!(?P=q)).)+?\.txt\?e=\d+(&[fh]=\d+)?(?P=q)/Ri"; classtype:trojan-activity; sid:2017396; rev:6;)
+
+#
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Apple CoreText Exploit Specific string"; flow:established,from_server; file_data; content:"|D8 B3 D9 85 D9 8E D9 80 D9 8E D9 91 D9 88 D9 8F D9 88 D9 8F D8 AD D8 AE 20 CC B7 CC B4 CC 90 D8 AE 20 CC B7 CC B4 CC 90 D8 AE 20 CC B7 CC B4 CC 90 D8 AE 20 D8 A7 D9 85 D8 A7 D8 B1 D8 AA D9 8A D8 AE 20 CC B7 CC B4 CC 90 D8 AE|"; reference:url,techcrunch.com/2013/08/29/bug-in-apples-coretext-allows-specific-string-of-characters-to-crash-ios-6-os-x-10-8-apps/; classtype:bad-unknown; sid:2017397; rev:2;)
 
 #
 ##alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DELETED Unknown Malware CnC response with exe file"; flow:from_server,established; dsize:>0; byte_jump:2,1,little,post_offset -4; isdataat:!2,relative; content:"!This program cannot be run in DOS mode."; reference:url,contagiodump.blogspot.com.br/2013/09/sandbox-miming-cve-2012-0158-in-mhtml.html; classtype:trojan-activity; sid:2017414; rev:3;)
@@ -6936,6 +6964,9 @@
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Styx J7u21 click2play bypass"; flow:established,to_server; content:"/jplay.html"; http_uri; fast_pattern:only; classtype:trojan-activity; sid:2017508; rev:2;)
+
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED W32/Napolar Checkin"; flow:established,to_server; content:"POST"; http_method; nocase; content:"v="; depth:2; http_client_body; content:"&u="; distance:0; http_client_body; content:"&c="; distance:0; http_client_body; content:"&s={"; distance:0; http_client_body; content:"}&w="; fast_pattern; distance:0; http_client_body; content:"&b="; distance:0; http_client_body; pcre:"/&s=\{[A-Z0-9]{8}-([A-Z0-9]{4}-){3}[A-Z0-9]{12}\}&w=(\d{1,2}\.){2}\d{1,2}&b=(32|64)$/Pi"; reference:url,blog.avast.com/2013/09/25/win3264napolar-new-trojan-shines-on-the-cyber-crime-scene/; reference:url,www.welivesecurity.com/2013/09/25/win32napolar-a-new-bot-on-the-block/; reference:md5,2c344add2ee6201f4e2cdf604548408b; classtype:trojan-activity; sid:2017527; rev:3;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET DELETED vBulletin Administrator Injection Attempt"; flow:established,to_server; content:"POST"; http_method; content:"/install/upgrade.php"; http_uri; content:"username"; http_client_body; content:"password"; http_client_body; distance:0; content:"confirmpassword"; http_client_body; distance:0; reference:url,blog.imperva.com/2013/10/threat-advisory-a-vbulletin-exploit-administrator-injection.html; classtype:web-application-attack; sid:2017610; rev:2;)
@@ -6959,10 +6990,16 @@
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED SUSPICIOUS lgfxsrvc.exe in URI Probable Process Dump/Trojan Download"; flow:established,to_server; content:"GET"; http_method; content:"/lgfxsrvc.exe"; http_uri; nocase; fast_pattern:only; pcre:"/\/lgfxsrvc\.exe$/Ui"; classtype:trojan-activity; sid:2017678; rev:3;)
 
 #
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Angler EK SilverLight Exploit"; flow:established,to_server; urilen:15; content:"/0"; depth:2; http_uri; fast_pattern; pcre:"/^\/0[a-z0-9]{13}$/U"; content:!"Referer|3a|"; http_header; content:"User-Agent|3a|"; http_header; content:"|0d 0a 0d 0a|"; classtype:trojan-activity; sid:2017715; rev:4;)
+
+#
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 443 (msg:"ET DELETED Win32/Tesch.A Checkin"; flow:to_server,established; dsize:<100; content:"|01 00 30 01 01 00|"; fast_pattern; depth:6; content:!"|00|"; distance:3; within:1; content:"|00|"; distance:4; within:1; pcre:"/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/R"; reference:md5,f2e5900061c5ac470fa005580681be94; reference:md5,872763d48730506af7eee0bf22c2f47b; reference:url,www.microsoft.com/security/portal/threat/encyclopedia/entry.aspx?Name=Trojan%3AWin32%2FTesch.A; classtype:trojan-activity; sid:2018611; rev:5;)
 
 #
 ##alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET DELETED Possible Upatre Downloader SSL certificate"; flow:established,from_server; content:"|2a 86 48 86 f7 0d 01 09 01|"; pcre:"/^.{2}(?P<fake_email>([asdfgh]+|[qwerty]+|[zxcvbn]+)\@([asdfgh]+|[qwerty]+|[zxcvbn]+)\.).+?\x2a\x86\x48\x86\xf7\x0d\x01\x09\x01.{2}(?P=fake_email)/Rs"; classtype:trojan-activity; sid:2017733; rev:2;)
+
+#
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED HiMan EK - Payload Requested"; flow:established,to_server; content:".php?e="; http_uri; content:"&ver="; http_uri; distance:0; classtype:trojan-activity; sid:2017793; rev:4;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED HiMan EK - Payload Downloaded - EXE in ZIP Downloaded by Java"; flow:established,to_client; flowbits:isset,ET.http.javaclient; file_data; content:"PK"; within:2; content:".exe"; fast_pattern; nocase; classtype:trojan-activity; sid:2017795; rev:2;)
@@ -6981,6 +7018,9 @@
 
 #
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible AnglerEK Java Exploit/Payload Structure Jan 16 2014"; flow:established,to_server; urilen:49; content:" Java/1."; http_header; pcre:"/^\/[a-z0-9_\-]{48}$/Ui"; classtype:trojan-activity; sid:2017976; rev:10;)
+
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Browlock Hostname Format US"; flow:established,to_server; content:"Host|3a 20|fbi.gov."; http_header; fast_pattern:only; classtype:trojan-activity; sid:2018006; rev:3;)
 
 #
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED SUSPICIOUS HTTP Request to .bit domain"; flow:to_server,established; content:".bit"; fast_pattern; nocase; http_header; pcre:"/^Host\x3a[^\r\n]+\.bit(?:\x3a\d{1,5})?\r$/Hmi"; reference:url,normanshark.com/blog/necurs-cc-domains-non-censorable/; reference:md5,243dda18666ae2a64685e51d82c5ad69; classtype:bad-unknown; sid:2018009; rev:3;)
@@ -7016,7 +7056,13 @@
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 443 (msg:"ET DELETED TROJAN Downloader.Win32.Tesch.A Client CnC Checkin"; flow:established,to_server; content:"|01 00 30 01 01 00|"; fast_pattern; depth:6; content:"|00|"; distance:4; within:1; pcre:"/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/R"; reference:md5,86b5491831522f3c7bdcdacb17417514; reference:md5,2bebb36872b4829f553326e102d014ed; classtype:trojan-activity; sid:2018476; rev:1;)
 
 #
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Angler EK SilverLight Payload Request - May 2014"; flow:established,to_server; urilen:71<>79; content:!"/aHR0c"; depth:6; http_uri; content:!"/Uk0v"; depth:5; http_uri; content:"="; http_uri; offset:71; depth:6; pcre:"/^\/[-a-zA-Z0-9_]{70,75}==?$/U"; reference:url,blogs.cisco.com/security/angling-for-silverlight-exploits/; classtype:trojan-activity; sid:2018497; rev:6;)
+
+#
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED food.com compromise hostile JavaScript gate"; flow:established,to_server; content:".html?0."; http_uri; fast_pattern:only; pcre:"/\/[a-z]{1,6}\.html\?0\.[0-9]+[a-z]?$/U"; classtype:trojan-activity; sid:2018505; rev:6;)
+
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible ASPROX Download URI Struct June 19 2014"; flow:established, to_server; content:"GET"; http_method; content:".php?"; http_uri; fast_pattern:only; content:!"=aHR0cD"; http_uri; content:"User-Agent|3a|"; http_header; content:!"|0d 0a|Referer|3a|"; http_header; pcre:"/\/[a-z]{2,9}\.php\?(?:[a-z0-9]{2,4}|[cktw])=[a-zA-Z0-9\x2b\x2f\x5c]{43,56}=?$/U"; classtype:trojan-activity; sid:2018589; rev:6;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Enfal.F Checkin via HTTP Post 7"; flow:established,to_server; content:"POST"; http_method; content:"/cgi-bin/Owpp4.cgi"; http_uri; fast_pattern:only; content:!"User-Agent|3a|"; content:!"Referer|3a 20|"; pcre:"/^[^\r\n]{15}\x5f[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}/m"; reference:url,blog.cassidiancybersecurity.com/post/2014/07/The-Eye-of-the-Tiger2; classtype:trojan-activity; sid:2018665; rev:4;)
@@ -7038,6 +7084,15 @@
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Trojan-Spy.Win32.HavexSysinfo Response"; flow:from_server,established; file_data; content:"<!--havexhavex-->"; fast_pattern:only; reference:url,securelist.com/blog/research/65240/energetic-bear-more-like-a-crouching-yeti/; reference:md5,bdd1d473a56607ec366bb2e3af5aedea; reference:url,802bba9d078a09530189e95e459adcdf; classtype:trojan-activity; sid:2018921; rev:2;)
+
+#
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED DRIVEBY Archie.EK IE Exploit URI Struct"; flow:to_server,established; content:"/ie7.html"; http_uri; classtype:trojan-activity; sid:2018932; rev:4;)
+
+#
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED DRIVEBY Archie.EK IE CVE-2013-2551 Payload Struct"; flow:to_server,established; urilen:3; content:"/dd"; http_uri; fast_pattern:only; content:!"Referer|3a|"; http_header; content:" MSIE "; http_header; classtype:trojan-activity; sid:2018934; rev:3;)
+
+#
+#alert tcp any any -> any any (msg:"ET DELETED njrat ver 0.7d Malware CnC Callback"; flow:from_client,established; content:"|00|ll|7C 27 7C 27 7C|"; fast_pattern; content:"0.7d"; reference:md5,bbc68c34bb2dac3ae382ecf785bdb441; classtype:trojan-activity; sid:2019223; rev:1;)
 
 #
 #alert udp any 67 -> any 68 (msg:"ET DELETED Possible CVE-2014-6271 exploit attempt via malicious DHCP ACK - option 67"; content:"|02 01|"; depth:2; content:"|43|"; distance:238; content:"|28 29 20 7b 20|"; distance:1; within:10; reference:url,access.redhat.com/articles/1200223; reference:cve,2014-6271; classtype:attempted-admin; sid:2019238; rev:2;)
@@ -7091,8 +7146,44 @@
 ##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Chaintor/Tordal User-Agent spotted downloading payload"; flow:established,to_server; content:"GET"; http_method; content:".exe"; http_uri; content:"User-Agent|3a 20|Mozilla/5.0 (Macintosh|3b| Intel Mac OS X 10_10) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25"; fast_pattern:50,20; http_header; classtype:trojan-activity; sid:2020347; rev:4;)
 
 #
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Angler EK Payload DL M1 Feb 06 2015"; flow:to_server,established; urilen:>48; content:"HTTP/1.1|0d 0a|Connection|3a 20|Keep-Alive|0d 0a|"; fast_pattern:2,20; offset:49; content:!"User-Agent|3a|"; http_header; content:!"Accept"; http_header; content:!"Referer"; http_header; content:"|0d 0a|Host|3a|"; http_header; pcre:"/^\/(?:[A-Za-z0-9-_]{4}){11,}(?:[A-Za-z0-9-_]{2}==|[A-Za-z0-9-_]{3}=)?$/U"; content:"GET"; http_method; classtype:trojan-activity; sid:2020385; rev:6;)
+
+#
+##alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED DRIVEBY Angler EK Landing URI Struct Feb 21"; flow:established,to_server; urilen:<28; content:"/lists/"; depth:7; http_uri; pcre:"/^\/lists\/\d{15}(?:\d{5})?$/U"; classtype:trojan-activity; sid:2020497; rev:5;)
+
+#
 ##alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET DELETED Microsoft Access database error in HTTP response, possible SQL injection point"; flow:from_server,established; content:"JET Database Engine"; fast_pattern:only; classtype:web-application-attack; sid:2020502; rev:2;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Scam - FakeAV Alert Request March 2 2015"; flow:established,to_server; content:"afid="; http_uri; content:"&sid="; distance:0; http_uri; content:"&Expires="; distance:0; http_uri; content:"&Signature="; distance:0; http_uri; content:"&Key-Pair-Id="; distance:0; http_uri; classtype:trojan-activity; sid:2020587; rev:2;)
+
+#
+#alert tcp any [21,25,110,143,443,465,587,636,989:995,5061,5222] -> $HOME_NET any (msg:"ET DELETED FREAK Weak Export Suite From Server (CVE-2015-0204)"; flow:established,from_server; content:"|16 03|"; depth:2; byte_test:1,<,4,0,relative; content:"|02|"; distance:3; within:1; byte_jump:1,37,relative; content:"|00 0B|"; within:2; fast_pattern; threshold:type limit,track by_dst,count 1,seconds 1200; reference:url,blog.cryptographyengineering.com/2015/03/attack-of-week-freak-or-factoring-nsa.html; reference:cve,2015-0204; reference:cve,2015-1637; classtype:bad-unknown; sid:2020658; rev:3;)
+
+#
+#alert udp $HOME_NET any -> any 53 (msg:"ET DELETED Cryptolocker .onion Proxy Domain (24u4jf7s4regu6hn)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|24u4jf7s4regu6hn"; fast_pattern; distance:0; nocase; reference:md5,36095572717aee2399b6bdacef936e22; classtype:trojan-activity; sid:2021085; rev:1;)
+
+#
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Win32/Troldesh.A SSL Cert"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|00 bf 81 b3 c2 61 36 e4 9d|"; fast_pattern; content:"|55 04 03|"; content:"|16|www.jyxc3nn7eu2iqd.net"; distance:1; within:23; reference:md5,3358793e79042faa2298856373e644dc; classtype:trojan-activity; sid:2021098; rev:2;)
+
+#
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED External IP Lookup - whoer.net"; flow:established,to_server; content:"Host|3a 20|whoer.net|0d 0a|"; http_header; content:!"Referer|3a|"; http_header; classtype:policy-violation; sid:2021161; rev:2;)
+
+#
+#alert tls $EXTERNAL_NET [443,4443] -> $HOME_NET any (msg:"ET DELETED Possible Upatre or Dyre SSL Cert June 9 2015"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|02 09 00|"; distance:17; within:3; content:"|06 03 55 04 06 13 02|"; distance:0; pcre:"/^[A-Z]{2}[01]/R"; content:"|30 09 06 03 55 04 08 0c 02|"; distance:1; within:9; fast_pattern; pcre:"/^[A-Z]{2}[01]/R"; content:"|06 03 55 04 07 0c|"; within:9; byte_test:1,>,9,0,relative; byte_test:1,<,121,0,relative; pcre:"/^.{1}(?=[a-z0-9]{0,119}[A-Z])(?=[A-Z0-9]{0,119}[a-z])[a-zA-Z0-9]{10,120}[01]/R"; content:"|06 03 55 04 0a 0c|"; within:9; byte_extract:1,0,orglen,relative; content:!"|20|"; within:orglen; pcre:"/^(?=[a-z0-9]{0,119}[A-Z])(?=[A-Z0-9]{0,119}[a-z])[a-zA-Z0-9]{10,120}[01]/R"; content:"|06 03 55 04 03 0c|"; within:9; byte_extract:1,0,cnlen,relative; content:!"|2e|"; within:cnlen; content:!"|2a|"; within:cnlen; pcre:"/^(?=[a-z0-9]{0,119}[A-Z])(?=[A-Z0-9]{0,119}[a-z])(?P<var>[a-zA-Z0-9]{10,120}[01]).+?\x55\x04\x03.{2}(?P=var)/Rs"; classtype:trojan-activity; sid:2021225; rev:3;)
+
+#
+#alert tcp any any -> any [139,445] (msg:"ET DELETED Possible Duqu 2.0 Accessing SMB/SMB2 backdoor"; flow:to_server,established; content:"SMB"; offset:5; depth:3; content:"tttttttt"; nocase; distance:0; fast_pattern; reference:url,securelist.com/blog/research/70504/the-mystery-of-duqu-2-0-a-sophisticated-cyberespionage-actor-returns/; classtype:trojan-activity; sid:2021243; rev:1;)
+
+#
+#alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET DELETED Cryptolocker C2 SSL cert serial"; flow:established,to_client; content:"|b3 b2 82 08 58 32 5e 8e|"; fast_pattern:only; reference:url,www.hybrid-analysis.com/sample/3ebc6999da89eaf44d94195b588cb869d894ca754a248b074893d11f6dd19188?environmentId=4; reference:md5,2c339dbb40b3b19ee275e4c7c1c17a18; classtype:trojan-activity; sid:2021253; rev:2;)
+
+#
+#alert tls $EXTERNAL_NET [443,4443] -> $HOME_NET any (msg:"ET DELETED Possible Upatre or Dyre SSL Cert June 29 2015"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|02 09 00|"; distance:17; within:3; content:"|06 03 55 04 06 13 02|"; distance:0; pcre:"/^[A-Z]{2}[01]/R"; content:"|30 09 06 03 55 04 08 0c 02|"; distance:1; within:9; fast_pattern; pcre:"/^[A-Z]{2}[01]/R"; content:"|06 03 55 04 07 0c|"; within:9; byte_test:1,>,8,0,relative; byte_test:1,<,121,0,relative; pcre:"/^.{1}(?=[a-zA-Z]{0,119}[0-9])[a-zA-Z0-9]{9,120}[01]/R"; content:"|06 03 55 04 0a 0c|"; within:9; byte_extract:1,0,orglen,relative; content:!"|20|"; within:orglen; pcre:"/^(?=[a-zA-Z]{0,119}[0-9])[a-zA-Z0-9]{9,120}[01]/R"; content:"|06 03 55 04 03 0c|"; within:9; byte_extract:1,0,cnlen,relative; content:!"|2e|"; within:cnlen; content:!"|2a|"; within:cnlen; pcre:"/^(?=[a-zA-Z]{0,119}[0-9])(?P<var>[a-zA-Z0-9]{9,120}[01]).+?\x55\x04\x03.{2}(?P=var)/Rs"; classtype:trojan-activity; sid:2021369; rev:3;)
+
+#
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Dridex SSL Cert July 6 2015"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 e4 0e 34 be 9a f3 1e d7|"; within:35; fast_pattern; content:"|55 04 03|"; distance:0; content:"|07|pace.eu"; distance:1; within:8; reference:md5,0facc32fc6f9c67650575c8a8298bef2; classtype:trojan-activity; sid:2021380; rev:2;)
+
+#
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (HTTPBrowser CnC)"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 97 d3 99 b4 6f 4e 77 43|"; within:35; content:"|55 04 0A|"; distance:0; content:"|18|Internet Widgits Pty Ltd"; distance:1; within:25; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021428; rev:3;)
 

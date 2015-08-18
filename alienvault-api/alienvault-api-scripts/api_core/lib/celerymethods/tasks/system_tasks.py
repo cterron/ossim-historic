@@ -34,6 +34,7 @@ from api.lib.monitors.triggers import CheckTriggers
 from db.methods.system import get_system_id_from_local, get_children_servers
 from db.methods.server import get_server_id_from_local
 from apimethods.system.system import sync_database_from_child
+from apimethods.system.engine import update_engine_stats
 
 from celery.task.control import inspect
 from celery import current_task
@@ -142,3 +143,16 @@ def sync_databases():
             rt = False
 
     return rt, ""
+
+@celery_instance.task
+def update_ctx_stats():
+    """
+        Update the RRD from stats info
+    """
+    success, data = ret = update_engine_stats()
+    if  not success:
+        return ret
+    else:
+        return True, ''
+    
+    

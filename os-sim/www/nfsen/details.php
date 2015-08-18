@@ -1603,7 +1603,7 @@ function DisplayDetails () {
 
     function remove_source(id)
     {
-    	if( confirm("<?php echo Util::js_entities( _('This Nfsen source is going to be deleted. This action cannot be undone. Are you soure?') ) ?>") )
+    	if( confirm("<?php echo Util::js_entities( _('This Netflow source is going to be deleted. This action cannot be undone. Are you soure?') ) ?>") )
     	{
 	    	$.ajax({
 				data:  {"action": 1, "data": {"sensor": id}},
@@ -1617,7 +1617,7 @@ function DisplayDetails () {
 					var layer = "<div id='loading_container' style='width:100%;height:100%;position:absolute;top:0px;left:0px;'></div>";
 	            	$('body').append(layer);
 	            	
-					show_loading_box('loading_container', '<?php echo Util::js_entities(_("Deleting Nfsen source...")) ?>', '');
+					show_loading_box('loading_container', '<?php echo Util::js_entities(_("Deleting Netflow source...")) ?>', '');
 				},
 				success: function(data)
 				{ 

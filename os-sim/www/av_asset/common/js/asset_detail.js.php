@@ -256,6 +256,7 @@ function av_detail()
             success : function(data)
             {
                 $.extend(__self.info, data || {});
+                __self.perms['deploy_agent'] = __self.perms['hids'] && __self.info['os'] && __self.info['os'].match(/(^microsoft|windows)/i);
             },
             error: function(XMLHttpRequest, textStatus, errorThrown)
             {
@@ -561,7 +562,7 @@ function av_detail()
         GB_show(title, url, '600', '720');
     }
 
-    
+
     /*
      *  Function to init the Vulnerability Scan Lightbox.
      */
@@ -571,6 +572,19 @@ function av_detail()
         var title = "<?php echo Util::js_entities(_('Vulnerability Scan')) ?>";
 
         GB_show(title, url, '600', '720');
+    }
+
+
+    /*
+     *  Function to init the HIDS Agent Lightbox.
+     */
+    this.deploy_hids = function()
+    {
+        var __self = this;
+        var url    = __self.cfg.asset.views + 'deploy_hids_form.php?asset_id=' + this.asset_id;
+        var title  = "<?php echo Util::js_entities(_('Deploy HIDS Agent')) ?>";
+
+        GB_show(title, url, '400', '650');
     }
 
     
@@ -634,7 +648,8 @@ function av_detail()
         var __self = this;
         
         var hide   = true; 
-        var $elem  = $('[data-bind="dropdown-actions"] ul');
+        var $elem  = $('[data-bind="dropdown-actions"] ul').empty();
+        
         $.each(this.actions, function(i, v)
         {
             if (__self.perms[v.perms])
@@ -716,27 +731,6 @@ function av_detail()
     /*******************************************************************************************/
 
     /*
-     *  Function to bind DOM elements to actions
-     */
-    this.bind_general_handlers = function()
-    {
-        var __self = this;
-        
-        if (__self.perms['edit'])
-        {
-            $("[data-bind='edit_asset']").on('click', function()
-            {
-                __self.edit_asset();
-            });
-        }
-        else
-        {
-            $("[data-bind='edit_asset']").addClass('disabled');
-        }
-    }
-
-
-    /*
      *  Function to init the detail.
      */
     this.detail_init = function()
@@ -754,8 +748,6 @@ function av_detail()
         this.load_environment_info();
 
         this.load_notes();
-
-        this.bind_general_handlers();
 
         this.bind_handlers();
     }
@@ -788,6 +780,22 @@ function link(url, p_menu, s_menu, t_menu)
     try
     {
         url = top.av_menu.get_menu_url(url, p_menu, s_menu, t_menu);
+    }
+    catch(Err){}
+
+    go_to(url);
+}
+
+
+/*
+ *  Function to load a link using the load_content funciton.
+ *
+ * @param  url     Url. 
+ */
+function go_to(url)
+{
+    try
+    {
         top.av_menu.load_content(url);
     }
     catch(Err)

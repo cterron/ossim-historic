@@ -82,7 +82,7 @@ if ($v)
         {
             border: none;
             width: 100%;
-            height: 500px;
+            height: 550px;
             overflow: hidden;
             margin: auto;
         }

@@ -30,8 +30,19 @@
 """
     Several methods to manage a ossec deployment from API
 """
+
 from db.methods.sensor import get_sensor_ip_from_sensor_id
+from db.methods.sensor import get_system_id_from_sensor_id
+
+from db.methods.hids import delete_hids_agent
+from db.methods.hids import add_hids_agent
+from db.methods.hids import get_hids_agents_by_sensor
+from db.methods.hids import get_hids_agent_by_sensor
+from db.methods.hids import update_asset_id
 from db.methods.system import get_system_ip_from_local
+
+from apimethods.system.cache import use_cache
+
 from ansiblemethods.sensor.ossec import ossec_extract_agent_key as ans_ossec_extract_agent_key
 from ansiblemethods.sensor.ossec import ossec_add_new_agent as ans_ossec_add_new_agent
 from ansiblemethods.sensor.ossec import ossec_delete_agent as ans_ossec_delete_agent
@@ -56,8 +67,10 @@ from ansiblemethods.sensor.ossec import ossec_get_syscheck as ans_ossec_get_sysc
 
 from ansiblemethods.helper import fetch_file, copy_file
 
-from apimethods.utils import create_local_directory, set_ossec_file_permissions,touch_file
+from apimethods.utils import create_local_directory, set_ossec_file_permissions, touch_file
 from apimethods.sensor.sensor import get_base_path_from_sensor_id
+
+from apiexceptions import APIException
 
 import api_log
 
@@ -85,14 +98,53 @@ def get_ossec_directory(sensor_id):
     return True, destination_path
 
 
-def ossec_add_new_agent(sensor_id, agent_name, agent_ip):
+def ossec_add_new_agent(sensor_id, agent_name, agent_ip, asset_id):
     """
         Add a new agent
     """
     (success, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id)
     if not success:
         return False, "Bad sensor_id"
+
     (success, data) = ans_ossec_add_new_agent(sensor_ip, agent_name, agent_ip)
+
+    # Add HIDS information to database and restart ossec server if it is necessary
+    if success:
+        # Default values
+        agent_id = data
+        agent_status = 'Never connected'
+
+        try:
+            add_hids_agent(agent_id, sensor_id, agent_name, agent_ip, agent_status, asset_id)
+        except APIException as e:
+            success = False
+            data = str(e)
+
+        (result, status) = ans_ossec_control(sensor_ip, 'status', '')
+
+        if result and status['general_status']['remoted'] == 'DOWN':
+            ans_ossec_control(sensor_ip, 'restart', '')
+
+    return success, data
+
+
+def apimethod_link_agent_to_asset(sensor_id, agent_id, asset_id):
+    """
+        This method binds an asset with an agent
+        @param sensor_id: Sensor id
+        @param agent_id: Agent ID
+        @param asset_id: Asset related to agent
+    """
+
+    success = True
+    data = ''
+
+    try:
+        update_asset_id(sensor_id, agent_id, asset_id)
+    except APIException as e:
+        success = False
+        data = str(e)
+
     return success, data
 
 
@@ -101,6 +153,14 @@ def ossec_delete_agent(sensor_id, agent_id):
     if not success:
         return False, "Bad sensor_id"
     (success, data) = ans_ossec_delete_agent(sensor_ip, agent_id)
+
+    if success:
+        try:
+            delete_hids_agent(agent_id, sensor_id)
+        except APIException as e:
+            data = str(e)
+            success = False
+
     return success, data
 
 
@@ -166,12 +226,25 @@ def ossec_rootcheck(sensor_id, agent_id):
     return ans_ossec_rootcheck(system_ip, agent_id)
 
 
-def ossec_get_check(sensor_id, agent_name, check_type):
+@use_cache(namespace="sensor_ossec_agents")
+def ossec_get_check(sensor_id, agent_name, check_type, no_cache=False):
     (success, system_ip) = get_sensor_ip_from_sensor_id(sensor_id)
     if not success:
         return False, "Invalid sensor id" % sensor_id
 
     return ans_ossec_get_check(system_ip=system_ip, check_type=check_type, agent_name=agent_name)
+
+
+def apimethod_hids_get_list(sensor_id):
+    """
+        Get HIDS agent list
+        @param sensor_id: Sensor id
+
+    Raises:
+        APICannotResolveSensorID
+        APICannotGetHIDSAgents
+    """
+    return get_hids_agents_by_sensor(sensor_id)
 
 
 def ossec_get_available_agents(sensor_id, op_ossec, agent_id=''):
@@ -194,7 +267,20 @@ def apimethod_ossec_control(sensor_id, operation, option):
     if not success:
         return False, "Invalid sensor id %s" % sensor_id
 
-    return ans_ossec_control(system_ip=system_ip, operation=operation, option=option)
+    (result, ans_result) = ans_ossec_control(system_ip=system_ip, operation=operation, option=option)
+
+    if result and operation == "restart":
+        # Update status of all HIDS Agents
+        from celerymethods.tasks.hids import update_system_hids_agents
+
+        try:
+            (success, system_id) = get_system_id_from_sensor_id(sensor_id)
+            if success:
+                update_system_hids_agents.delay(system_id)
+        except Exception as e:
+            api_log.error("[update_system_hids_agents]: {0}".format(e))
+
+    return (result, ans_result)
 
 
 def ossec_add_agentless(sensor_id, host, user, password, supassword):
@@ -225,7 +311,9 @@ def apimethod_get_configuration_rule_file(sensor_id, rule_filename):
         api_log.error(str(msg))
         return False, "Error creating directory '%s'" % destination_path
 
-    success,msg= ans_ossec_get_configuration_rule(system_ip=system_ip, rule_filename=rule_filename, destination_path=destination_path)
+    success, msg = ans_ossec_get_configuration_rule(system_ip=system_ip,
+                                                    rule_filename=rule_filename,
+                                                    destination_path=destination_path)
     if not success:
         if str(msg).find('the remote file does not exist') > 0:
             if touch_file(destination_path+rule_filename):
@@ -236,11 +324,11 @@ def apimethod_get_configuration_rule_file(sensor_id, rule_filename):
     if not success:
         return False, str(result)
 
+    return success, msg
 
-    return success,msg
 
 def apimethod_put_ossec_configuration_file(sensor_id, filename):
-    if filename not in ['local_rules.xml','rules_config.xml']:
+    if filename not in ['local_rules.xml', 'rules_config.xml']:
         return False, "Invalid configuration file to put: %s" % str(filename)
     (success, system_ip) = get_sensor_ip_from_sensor_id(sensor_id)
     if not success:
@@ -280,8 +368,7 @@ def ossec_get_agent_config(sensor_id):
 
     if not success:
         api_log.error(str(filename))
-        return False, "Something wrong happened getting the ossec agent configuration file"
-
+        return False, "Something wrong happened getting the HIDS agent configuration file"
 
     success, result = set_ossec_file_permissions(agent_config_file)
     if not success:
@@ -310,13 +397,13 @@ def ossec_put_agent_config(sensor_id):
     success, msg = ossec_verify_agent_config_file(local_system_ip, agent_config_file)
     if not success:
         api_log.error(str(msg))
-        return False, "Error verifiying the ossec agent configuration file\n%s" % msg
+        return False, "Error verifiying the HIDS agent configuration file\n%s" % msg
 
     success, msg = copy_file(host_list=[system_ip],
                              args="src=%s dest=%s owner=root group=ossec mode=644" % (agent_config_file, OSSEC_CONFIG_AGENT_PATH))
     if not success:
         api_log.error(str(msg))
-        return False, "Error setting the ossec agent configuration file"
+        return False, "Error setting the HIDS agent configuration file"
 
     return True, ''
 
@@ -344,7 +431,7 @@ def ossec_get_server_config(sensor_id):
                 filename = server_config_file
         else:
             api_log.error(str(filename))
-            return False, "Something wrong happened getting the ossec server configuration file"
+            return False, "Something wrong happened getting the HIDS server configuration file"
 
     success, result = set_ossec_file_permissions(server_config_file)
     if not success:
@@ -378,7 +465,7 @@ def ossec_put_server_config(sensor_id):
                              args="src=%s dest=%s owner=root group=ossec mode=644" % (server_config_file, OSSEC_CONFIG_SERVER_PATH))
     if not success:
         api_log.error(str(msg))
-        return False, "Error setting the ossec server configuration file"
+        return False, "Error setting the HIDS server configuration file"
 
     return True, ''
 
@@ -397,7 +484,8 @@ def apimethod_get_agentless_passlist(sensor_id):
         api_log.error(str(msg))
         return False, "Error creating directory '%s'" % destination_path
     dst_filename = destination_path+".passlist"
-    success,msg = ans_ossec_get_agentless_passlist(system_ip=system_ip, destination_path=dst_filename)
+    success, msg = ans_ossec_get_agentless_passlist(system_ip=system_ip,
+                                                    destination_path=dst_filename)
     if not success:
         if str(msg).find('the remote file does not exist') > 0:
             if touch_file(dst_filename):
@@ -408,7 +496,7 @@ def apimethod_get_agentless_passlist(sensor_id):
     if not success:
         return False, str(result)
 
-    return success,msg
+    return success, msg
 
 
 def apimethod_put_agentless_passlist(sensor_id):
@@ -439,6 +527,23 @@ def apimethod_ossec_get_agent_detail(sensor_id, agent_id):
     if not success:
         return (False, "Invalid sensor id %s" % sensor_id)
     return ans_ossec_get_ossec_agent_detail(system_ip, agent_id)
+
+
+def apimethod_ossec_get_agent_from_db(sensor_id, agent_id):
+    """
+        This method gets HIDS agent information from database
+        @param sensor_id: Sensor id
+        @param agent_id: Agent ID
+    """
+
+    try:
+        success = True
+        data = get_hids_agent_by_sensor(sensor_id, agent_id)
+    except APIException as e:
+        success = False
+        data = str(e)
+
+    return success, data
 
 
 def apimethod_ossec_get_syscheck(sensor_id, agent_id):

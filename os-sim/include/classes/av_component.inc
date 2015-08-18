@@ -503,23 +503,6 @@ abstract class Av_component
                 // Restart ossim-server
                 Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
             }
-            
-            
-            /********************************
-             *********** Frameworkd *********
-             ********************************/
-                
-            try
-            {
-                $frcon = new Frameworkd_socket();
-                $frcon->write("refresh_sensor_list");
-            }
-            catch(Exception $e)
-            {
-                $exp_msg = _('An error occurred while updating Agent cache...');
-
-                Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
-            }
         }
         elseif ($asset_type == 'servers')
         {

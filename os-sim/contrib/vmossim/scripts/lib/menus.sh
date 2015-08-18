@@ -35,8 +35,6 @@ case $retval in
              return;;
         "5") dpkg-reconfigure -plow phpgacl
              return;;
-        "6") dpkg-reconfigure -plow ntop
-             return;;
         "7") MenuOther;;
         *) exit;;
     esac;;

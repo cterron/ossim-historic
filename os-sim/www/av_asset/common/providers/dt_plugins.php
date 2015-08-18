@@ -170,23 +170,21 @@ try
                     $model_list   = array();
                     $version_list = array();
 
-                    list($vendor, $model, $version) = Plugin::translate_cpe_to_software($_pdata['cpe']);
-
-                    if ($vendor != '')
+                    if ($_pdata['vendor'] != '')
                     {
-                        $model_list = Software::get_models_by_cpe($conn, $vendor, TRUE);
+                        $model_list = Software::get_models_by_vendor($_pdata['vendor'], $sensor_id);
                     }
 
-                    if ($model != '')
+                    if ($_pdata['model'] != '')
                     {
-                        $version_list = Software::get_versions_by_cpe($conn, $model, TRUE);
+                        $version_list = Software::get_versions_by_model($_pdata['vendor'].':'.$_pdata['model'], $sensor_id);
                     }
 
                     $_row_data[$asset_id][] = array(
                         'asset_id'     => $asset_id,
-                        'vendor'       => $vendor,
-                        'model'        => $model,
-                        'version'      => $version,
+                        'vendor'       => $_pdata['vendor'],
+                        'model'        => $_pdata['vendor'].':'.$_pdata['model'],
+                        'version'      => $_pdata['vendor'].':'.$_pdata['model'].':'.$_pdata['version'],
                         'model_list'   => json_encode($model_list),
                         'version_list' => json_encode($version_list)
                     );
@@ -221,9 +219,8 @@ try
             foreach ($plugin_data as $_pdata)
             {
                 $aux_search_str = '/'.strtolower($search_str).'/';
-                $aux_cpe        = strtolower($_pdata['cpe']);
 
-                if (preg_match($aux_search_str, $aux_cpe) || preg_match($aux_search_str, $p_data['name']))
+                if (preg_match($aux_search_str, $_pdata['name']))
                 {
                     $_plugin_data_filtered[] = $_pdata;
                 }
@@ -251,7 +248,7 @@ try
         foreach ($plugin_data as $_pdata)
         {
             // Plugin Unique ID
-            $p_id = md5($_pdata['asset_id'] . $_pdata['cpe'] . $_pdata['sensor_id']);
+            $p_id = md5($_pdata['asset_id'] . $_pdata['plugin_id'] . $_pdata['sensor_id']);
 
             $order_index[$p_id]    = $_pdata[$order];
             $p_data_indexed[$p_id] = $_pdata;

@@ -160,8 +160,21 @@ $data = array();
 
 foreach ($alarms as $alarm)
 {
-	// Alarm description
-	list($alarm_ik, $alarm_sc) = Alarm::get_alarm_name($alarm->get_taxonomy());
+	// kingdom, category and subcategory
+    $a_taxonomy = $alarm->get_taxonomy();
+    if ($a_taxonomy['id'])
+    {
+        list($alarm_ik, $alarm_sc) = Alarm::get_alarm_name($a_taxonomy);
+        $alarm_ik   = str_replace("style/", AV_MAIN_PATH."/alarm/style/", $alarm_ik);
+        $alarm_tr   = Util::translate_alarm($conn, $alarm_sc, $alarm, "array");
+        $alarm_sc   = $alarm_tr['name'];
+    }
+    else
+    {
+        $alarm_name = Util::translate_alarm($conn, $alarm->get_sid_name(), $alarm, "array");
+        $alarm_ik   = $alarm_name['name'];
+        $alarm_sc   = '';
+    }
 
 	// Src Dst
 	$src_ip     = $alarm->get_src_ip();
@@ -206,13 +219,11 @@ foreach ($alarms as $alarm)
 	$src_output   = Asset_host::get_extended_name($conn, $geoloc, $src_ip, $ctx_src, $event_info["src_host"], $event_info["src_net"]);
 	$homelan_src  = $src_output['is_internal'];
 	$src_img      = preg_replace("/scriptinfo/", '', $src_output['html_icon']); // Clean icon hover tiptip
-	$rep_src_icon = Reputation::getrepimg($event_info["rep_prio_src"],$event_info["rep_rel_src"],$event_info["rep_act_src"],$src_ip);
 
 	// Dst icon and bold
 	$dst_output   = Asset_host::get_extended_name($conn, $geoloc, $dst_ip, $ctx_dst, $event_info["dst_host"], $event_info["dst_net"]);
 	$homelan_dst  = $dst_output['is_internal'];
 	$dst_img      = preg_replace("/scriptinfo/", '', $dst_output['html_icon']); // Clean icon hover tiptip
-	$rep_dst_icon = Reputation::getrepimg($event_info["rep_prio_dst"],$event_info["rep_rel_dst"],$event_info["rep_act_dst"],$dst_ip);
 
 	//host report menu:
 	$src_hrm = "$src_ip;$src_name;".$event_info['src_host'];
@@ -227,9 +238,11 @@ foreach ($alarms as $alarm)
 	$dst_name = Util::wordwrap($dst_name, 30, '<br/>');
 	
     //Homeland Check
-    $src_name = ($homelan_src) ? " <strong>$src_name</strong> $rep_src_icon" : " $src_name $rep_src_icon";
-    $dst_name = ($homelan_dst) ? " <strong>$dst_name</strong> $rep_dst_icon" : " $dst_name $rep_dst_icon";
-
+    $src_name = ($homelan_src) ? " <strong>$src_name</strong>" : " $src_name";
+    $dst_name = ($homelan_dst) ? " <strong>$dst_name</strong>" : " $dst_name";
+    
+    $alarm_otx = $alarm->get_otx_icon();
+    
     // COLUMNS
     $_res = array();
 
@@ -237,9 +250,10 @@ foreach ($alarms as $alarm)
 
     $_res[] = $alarm->get_timestamp();
     $_res[] = $alarm->get_status();
-    $_res[] = str_replace("style/", AV_MAIN_PATH."/alarm/style/", $alarm_ik);
+    $_res[] = $alarm_ik;
     $_res[] = $alarm_sc;
     $_res[] = $alarm->get_risk();
+    $_res[] = $alarm_otx;
     $_res[] = "<div class='HostReportMenu' id='$src_hrm'>".$src_img . $src_name ."</div>";
     $_res[] = "<div class='HostReportMenu' id='$dst_hrm'>".$dst_img . $dst_name ."</div>";
     $_res[] = '';

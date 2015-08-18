@@ -69,6 +69,7 @@ struct _SimEnginePrivate
   GPtrArray      *backlogs;         // Backlogs array
 
   GHashTable     *group_alarms;     // Alarms groupped
+  GHashTable     *otx_data;         //Use to see if we have add the "ghosts" directives 
 
   /* Mutex */
   GMutex         *mutex_plugins;
@@ -163,6 +164,9 @@ sim_engine_instance_init (SimEngine *self)
   self->priv->mutex_backlogs = g_mutex_new ();
   self->priv->mutex_directives = g_mutex_new ();
   self->priv->mutex_group_alarms = g_mutex_new ();
+  /* Used for otx */
+
+  self->priv->otx_data = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 /**
@@ -235,6 +239,11 @@ sim_engine_finalize (GObject *self)
   {
     g_hash_table_unref (priv->group_alarms);
     priv->group_alarms = NULL;
+  }
+  if (priv->otx_data)
+  {
+    g_hash_table_unref (priv->otx_data);
+    priv->otx_data = NULL;
   }
 
   g_mutex_free (priv->mutex_plugins);
@@ -1539,7 +1548,39 @@ sim_engine_inc_total_events (SimEngine *engine)
   engine->priv->total_events++;
 }
 
-
+gboolean
+sim_engine_add_otx_data (SimEngine     *engine, SimContext *ctx, GHashTable    *otx_data)
+{
+  g_return_val_if_fail (engine != NULL, FALSE);
+  g_return_val_if_fail (SIM_IS_ENGINE (engine), FALSE);
+  g_return_val_if_fail (otx_data != NULL, FALSE);
+  GHashTableIter iter;
+  gchar *key;
+  gpointer value;
+  g_mutex_lock (engine->priv->mutex_directives);
+  /* I need to verify that each pulse_id is not added */
+  g_hash_table_iter_init (&iter, otx_data);
+  while (g_hash_table_iter_next (&iter, (gpointer*)&key, &value))
+  {
+    if (!g_hash_table_lookup (engine->priv->otx_data, (gpointer)key))
+    {
+      SimDirective * ghost = sim_directive_create_pulse_backlog ((gchar*) key);
+      SimPluginSid * sid = sim_plugin_sid_new_from_data (1505, SIM_DIRECTIVE_PULSE_ID, 10, 5, "Rule pulse_match");
+      /*ctx = sim_container_get_context (ossim.container,
+                                                  sim_engine_get_id (engine));*/
+      /* Must be the ENGINED contxt */
+      ctx = sim_container_get_engine_ctx (ossim.container);
+      sim_context_add_plugin_sid (ctx, sid);
+      g_object_unref (sid);
+      sim_engine_append_directive (engine, ghost);
+      sim_db_update_plugin_sid (engine->priv->database, ghost, engine->priv->id);
+      g_hash_table_insert (engine->priv->otx_data, g_strdup (key),  GINT_TO_POINTER (GENERIC_VALUE));
+    } 
+  }
+  
+  g_mutex_unlock (engine->priv->mutex_directives);
+  return TRUE;
+}
 #ifdef USE_UNITTESTS
 
 /*************************************************************

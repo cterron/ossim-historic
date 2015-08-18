@@ -42,8 +42,8 @@
 	            <th><?php echo _('Device Type')?></th>
 	            <th><?php echo _('Operating System')?></th>
 	            <th><?php echo _('Asset Value')?></th>
-	            <th><?php echo _('Vulnerability Scan')?></th>
-	            <th><?php echo _('Availability Configured')?></th>
+	            <th><?php echo _('Vuln Scan Scheduled')?></th>
+	            <th><?php echo _('HIDS Status')?></th>
 	            <th></th>
 	        </tr>
 	    </thead>

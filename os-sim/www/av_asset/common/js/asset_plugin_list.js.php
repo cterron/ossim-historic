@@ -35,22 +35,30 @@ header('Content-type: text/javascript');
 require_once 'av_init.php';
 ?>
 
+/* Class Av_plugin_list
+ *
+ * This class is used to configure the plugins related with assets
+ * It creates a dataTable object and uses av_plugin_select object for each row
+ *
+ * @param   config   Options to initialize de Av_plugin_list instance
+ *
+ */
 
 function Av_plugin_list(config)
 {
     //Public variables
-    this.edit_mode     = config.edit_mode;
+    this.edit_mode     = config.edit_mode; // Note: Always 'true' by now
     this.sensor_id     = config.sensor_id;
     this.maxrows       = config.maxrows || 10;
-    this.page_modified = false;
-    this.saved_plugins = {};
     this.dt_obj        = {};
+    this.av_plugin_obj = new AVplugin_select();
 
     //Asset data
     var __asset_data   = config.asset_data || {};
     
     
     //Private variables
+    this.__plugin_data = {}; // Temporary array to initialize the selectors
     
 
 
@@ -58,11 +66,16 @@ function Av_plugin_list(config)
     var __self = this;
 
 
+    
     /**************************************************************************/
     /***************************  DRAW FUNCTIONS  *****************************/
     /**************************************************************************/
 
-
+    /*
+     * This function creates the instance of the dataTable object and draws the paginated table
+     * It creates a plugin selector object for each row (each asset)
+     * 
+     */
     this.draw = function()
     {
         var dt_parameters  = __get_dt_parameters();
@@ -92,7 +105,7 @@ function Av_plugin_list(config)
                 "sZeroRecords": "<?php echo _('No plugins found')?>",
                 "sEmptyTable": "<?php echo _('No plugins found')?>",
                 "sLoadingRecords": "<?php echo _('Loading') ?>...",
-                "sInfo": "<?php echo _('Showing _START_ to _END_ of _TOTAL_ plugins')?>",
+                "sInfo": "<?php echo _('Showing _START_ to _END_ of _TOTAL_ assets')?>",
                 "sInfoEmpty": "<?php echo _('Showing 0 to 0 of 0 entries')?>",
                 "sInfoFiltered": "(<?php echo _('filtered from _MAX_ total entries')?>)",
                 "sInfoPostFix": "",
@@ -116,33 +129,38 @@ function Av_plugin_list(config)
                     $.each(aData['DT_RowData'], function(key, val)
                     {
                         // Create one select container for each plugin the each asset
-                        for (var i = 0; i < val.length; i++)
+                        
+                        var _asset_plugins_total = (typeof presaved_data[_asset_id] != 'undefined') ? presaved_data[_asset_id].length : val.length;
+                        
+                        for (var i = 0; i < _asset_plugins_total; i++)
                         {
-                            var _table = '<table class="plugin_list plugin_select_container" id="select_' + _asset_id + '"';
+                            // Get the selects selections from presaved_data or ajax response if not
+                            var _vendor   = (typeof presaved_data[_asset_id] != 'undefined') ? presaved_data[_asset_id][i]['vendor']   : val[i].vendor;
+                            var _model    = (typeof presaved_data[_asset_id] != 'undefined') ? presaved_data[_asset_id][i]['model']    : val[i].model;
+                            var _version  = (typeof presaved_data[_asset_id] != 'undefined') ? presaved_data[_asset_id][i]['version']  : val[i].version;
+                            var _mlist    = (typeof presaved_data[_asset_id] != 'undefined') ? presaved_data[_asset_id][i]['mlist']    : val[i].model_list;
+                            var _vlist    = (typeof presaved_data[_asset_id] != 'undefined') ? presaved_data[_asset_id][i]['vlist']    : val[i].version_list;
                             
-                            // Get the selects selections from saved_plugins or ajax response if not
-                            var _vendor   = (typeof __self.saved_plugins[_asset_id] != 'undefined') ? __self.saved_plugins[_asset_id][i]['vendor']   : val[i].vendor;
-                            var _model    = (typeof __self.saved_plugins[_asset_id] != 'undefined') ? __self.saved_plugins[_asset_id][i]['model']    : val[i].model;
-                            var _version  = (typeof __self.saved_plugins[_asset_id] != 'undefined') ? __self.saved_plugins[_asset_id][i]['version']  : val[i].version;
-                            var _mlist    = (typeof __self.saved_plugins[_asset_id] != 'undefined') ? __self.saved_plugins[_asset_id][i]['mlist']    : val[i].model_list;
-                            var _vlist    = (typeof __self.saved_plugins[_asset_id] != 'undefined') ? __self.saved_plugins[_asset_id][i]['vlist']    : val[i].version_list;
+                            // Data into __plugin_data will be used in Select Object constructor
+                            if (typeof __self.__plugin_data[_asset_id] == 'undefined')
+                            {
+                                __self.__plugin_data[_asset_id] = [];
+                            }
                             
-                            // Data attributes will be used in Select Object constructor
-                            _table += ' id="' + _asset_id + '_' + i + '"';
-                            _table += ' data-host="' + _asset_id + '"';
-                            _table += ' data-vendor="' + _vendor + '"';
-                            _table += ' data-model="' + _model + '"';
-                            _table += ' data-version="' + _version + '"';
-                            _table += " data-model-list='" + _mlist + "'";
-                            _table += " data-version-list='" + _vlist + "'";
-    
-                            _table += '></table>';
+                            __self.__plugin_data[_asset_id].push({'vendor':       _vendor,
+                                                                  'model':        _model,
+                                                                  'version':      _version,
+                                                                  'model_list':   $.parseJSON(_mlist),
+                                                                  'version_list': $.parseJSON(_vlist)});
                             
-                            var container = $(_table).appendTo($("td:nth-child(2)", nRow));
                         }
                     });
                     
-                    $("td:nth-child(2)", nRow).attr('colspan', 3);
+                    var _table = '<table class="plugin_list plugin_select_container" data-asset_id="' + _asset_id + '"></table>';
+                    
+                    var _aux_container = (__asset_data.asset_type == 'asset') ? $("td:nth-child(1)", nRow) : $("td:nth-child(2)", nRow);
+                    $(_table).appendTo(_aux_container);
+                    _aux_container.attr('colspan', 4);
                 }
                 
             },
@@ -156,13 +174,6 @@ function Av_plugin_list(config)
                     "data": aoData,
                     "beforeSend": function()
                     {
-                        if (__self.edit_mode && __self.page_modified)
-                        {
-                            __self.save_plugins();
-
-                            __self.page_modified = false;
-                        }
-                        
                         if (__asset_data.asset_type == 'asset')
                         {
                             $('.dt_footer').hide();
@@ -199,24 +210,15 @@ function Av_plugin_list(config)
                         {
                             // Create Plugin Select Object from container data attributes
                             $('.plugin_list').each(function()
-                            {    
-                                $('#' + $(this).attr('id')).AVplugin_select(
-                                {
-                                    "vendor"       : $(this).attr('data-vendor'),
-                                    "model"        : $(this).attr('data-model'),
-                                    "version"      : $(this).attr('data-version'),
-                                    "vendor_list"  : __vendor_list,
-                                    "model_list"   : $.parseJSON($(this).attr('data-model-list')),
-                                    "version_list" : $.parseJSON($(this).attr('data-version-list'))
-                                });
-                            });
-                            
-                            $('.select_plugin').on('change', function()
                             {
-                                __self.page_modified = true;
+                                var _asset_id = $(this).attr('data-asset_id')
+                                
+                                __self.av_plugin_obj.create(this, __self.__plugin_data[_asset_id]);
                             });
                             
-                            $('.dataTables_empty').attr('colspan', 4);
+                            __self.__plugin_data = {}; // Clean aux data for next requests
+                            
+                            $('.dataTables_empty').attr('colspan', 5);
                         }
                     }
                 });
@@ -236,49 +238,18 @@ function Av_plugin_list(config)
 
 
     /**************************************************************************/
-    /****************************  STORAGE FUNCTIONS  **************************/
+    /****************************  STORAGE FUNCTIONS  *************************/
     /**************************************************************************/
 
-    this.save_plugins = function()
+    /*
+     * This function saves the changes made to all plugin selectors in all pages
+     *
+     * @param  callback    [Optional] Callback function to call when changes are saved
+     * @param  url         [Optional] Target URL to save the changes via ajax
+     */
+    this.apply_changes = function(callback, url)
     {
-        if (__self.page_modified)
-        {
-            // *** Call to av_plugin_select.js method _get_selected_plugins() ***
-            var _page_plugins = _get_selected_plugins();
-            
-            $.each(_page_plugins, function (_asset_id, _asset_plugins)
-            {
-                $.each(_asset_plugins, function (i, _plugin_data)
-                {
-                    var _mlist_arr = {};
-                    var _vlist_arr = {};
-                    
-                    $("#select_" + _asset_id + " .model option").each(function (i, op)
-                    {
-                        if ($(op).val != '')
-                        {
-                            _mlist_arr[$(op).val()] = $(op).text();
-                        }
-                    });
-
-                    $("#select_" + _asset_id + " .version option").each(function (i, op)
-                    {
-                        if ($(op).val != '')
-                        {
-                            _vlist_arr[$(op).val()] = $(op).text();
-                        }
-                    });
-
-                    var _mlist = JSON.stringify(_mlist_arr);
-                    var _vlist = JSON.stringify(_vlist_arr);
-                    
-                    _asset_plugins[i].mlist = _mlist;
-                    _asset_plugins[i].vlist = _vlist;
-                });
-                
-                __self.saved_plugins[_asset_id] = _asset_plugins;
-            });
-        }
+        __self.av_plugin_obj.apply_changes(callback, url);
     }
     
     
@@ -287,6 +258,21 @@ function Av_plugin_list(config)
     /****************************  HELPER FUNCTIONS  **************************/
     /**************************************************************************/
 
+    this.change_sensor = function(new_sensor)
+    {
+        // Change the sensor for the self plugin (asset_plugin_list.js.php)
+        __self.sensor_id = new_sensor;
+        
+        // Change the sensor in the selectors plugin (av_plugin_select.js.php)
+        // The __self parameter is to redraw dataTable there inside
+        __self.av_plugin_obj.change_sensor(new_sensor, __self);
+    }
+    
+    /*
+     * This function returns the parameters to initialize the dataTable instance
+     * The parameters are loaded from the options given in the main constructor
+     *
+     */
     function __get_dt_parameters()
     {
         var sort          = [];
@@ -300,7 +286,7 @@ function Av_plugin_list(config)
         if (__self.edit_mode == 1)
         {
             columns = [
-                { "bSortable": false, "sClass" : "td_asset" },
+                { "bSortable": false, "sClass" : "td_asset", "bVisible": (__asset_data.asset_type == 'asset') ? false : true },
                 { "bSortable": false, "sClass" : "td_main" }
             ];
         }

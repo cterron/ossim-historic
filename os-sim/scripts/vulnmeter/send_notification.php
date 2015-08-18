@@ -258,7 +258,8 @@ else
             $file_path = str_replace(" ", "", $file_path);
             $file_name = $result->fields["name"]."_".$scan_END.".pdf";
             
-            exec ("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/respdf.php '".$report_id."' > ".$file_path);
+            $params = array($report_id, $file_path);
+            Util::execute_command("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/respdf.php ? > ?", $params);
             
             
             if(file_exists($file_path) && filesize($file_path) <= 5242880) 

@@ -58,6 +58,7 @@ if __name__ == "__main__":
     doctor_args = {}
     doctor_args['output_type'] = 'support'
     doctor_args['output_raw'] = 'True'
+    doctor_args['verbose'] = 2
     doctor_args['output_file_prefix'] = ticket
 
     response = get_doctor_data(['127.0.0.1'], doctor_args)

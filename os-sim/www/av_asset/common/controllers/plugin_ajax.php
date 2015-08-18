@@ -63,18 +63,23 @@ function check_ossim_error()
     {
         $error = ossim_get_error();
 
-    	ossim_clean_error();
+        ossim_clean_error();
 
-    	Av_exception::throw_error(Av_exception::USER_ERROR, $error);
+        Av_exception::throw_error(Av_exception::USER_ERROR, $error);
     }
 }
 
 
-function get_vendor_list($conn)
+function get_vendor_list($data)
 {
     $response = array();
+    $sensor   = $data['sensor'];
     
-    $items = Software::get_hardware_vendors($conn, TRUE);
+    ossim_valid($sensor,   OSS_ALPHA, OSS_HEX,                        'illegal:' . _("Sensor"));
+    
+    check_ossim_error();
+    
+    $items = Software::get_hardware_vendors($sensor);
     
     $response['error'] = FALSE;
     $response['data']['items'] = $items;
@@ -83,13 +88,14 @@ function get_vendor_list($conn)
 }
 
 
-function get_model_list($conn, $data)
+function get_model_list($data)
 {
     $response = array();
-
     $vendor   = $data['vendor'];
+    $sensor   = $data['sensor'];
 
     ossim_valid($vendor,   OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT,     'illegal:' . _("Vendor"));
+    ossim_valid($sensor,   OSS_ALPHA, OSS_HEX,                        'illegal:' . _("Sensor"));
 
     check_ossim_error();
     
@@ -99,8 +105,7 @@ function get_model_list($conn, $data)
     }
     else
     {
-        $vendor = escape_sql($vendor, $conn);
-        $items  = Software::get_models_by_cpe($conn, $vendor, TRUE);
+        $items  = Software::get_models_by_vendor($vendor, $sensor);
     }
     $response['error'] = FALSE;
     $response['data']['items'] = $items;
@@ -110,13 +115,14 @@ function get_model_list($conn, $data)
 }
 
 
-function get_version_list($conn, $data)
+function get_version_list($data)
 {
     $response = array();
-
     $model    = $data['model'];
+    $sensor   = $data['sensor'];
 
     ossim_valid($model,    OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT,     'illegal:' . _("Model"));
+    ossim_valid($sensor,   OSS_ALPHA, OSS_HEX,                        'illegal:' . _("Sensor"));
 
     check_ossim_error();
     
@@ -126,9 +132,7 @@ function get_version_list($conn, $data)
     }
     else
     {
-        $model  = escape_sql($model, $conn);
-
-        $items  = Software::get_versions_by_cpe($conn, $model, TRUE);
+        $items  = Software::get_versions_by_model($model, $sensor);
     }
     
     $response['error'] = FALSE;
@@ -138,108 +142,23 @@ function get_version_list($conn, $data)
 }
 
 
-function plugin_activity($conn, $data)
+
+function set_plugins($data)
 {
-    $asset_id = $data['asset'];
-
-    ossim_valid($asset_id,    OSS_HEX,     'illegal:' . _("ASSET"));
-
-    check_ossim_error();
-
-    $active_plugin  = array();
-    $total_plugins  = 0;
-
-    try
-    {
-        $sensors = Asset_host_sensors::get_sensors_by_id($conn, $asset_id);
-
-        $client  = new Alienvault_client();
-
-        foreach ($sensors as $sensor_id => $s_data)
-        {
-            $plugins  = $client->sensor(Util::uuid_format($sensor_id))->get_plugins_by_assets();
-            $plugins  = @json_decode($plugins, TRUE);
-
-            if ($plugins['status'] == 'success')
-            {
-                if (array_key_exists($asset_id, $plugins['data']['plugins']))
-                {
-                    $plugins = $plugins['data']['plugins'][$asset_id];
-
-                    foreach ($plugins as $pdata)
-                    {
-                        $active = Asset_host_devices::check_device_connectivity($conn, $asset_id, $pdata['plugin_id'], $sensor_id, TRUE);
-
-                        if ($active)
-                        {
-                            $row_id = md5($asset_id . $pdata['cpe'] . $sensor_id);
-                            $active_plugin[$row_id] = TRUE;
-                        }
-
-                        $total_plugins ++;
-                    }
-                }
-            }
-        }
-    }
-    catch(Exception $e)
-    {
-       //nothing here
-    }
-
-
-    $response['error']           = FALSE;
-    $response['data']['plugins'] = $active_plugin;
-    $response['data']['total_p'] = $total_plugins;
-
-    return $response;
-}
-
-
-function set_plugins($conn, $data)
-{
-    $response = array();
-    
-    $plugins  = array();
-
-    foreach ($data['plugin_list'] as $id => $list_cpe)
-    {
-        ossim_valid($id,      OSS_HEX,    'illegal:' . _("Host ID"));
-        
-        $list_cpe = (is_array($list_cpe)) ? $list_cpe : array();
-        
-        foreach ($list_cpe as $p)
-        {
-            $cpe = '';
-            
-            if ($p['version'] != '')
-            {
-                $cpe = $p['version'];
-            }
-            elseif($p['model'] != '')
-            {
-                $cpe = $p['model'];
-            }
-            elseif($p['vendor'] != '')
-            {
-                $cpe = $p['vendor'];
-            }
-            
-            ossim_valid($cpe,    OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT,     'illegal:' . _("CPE"));
-
-            $plugins[$id][] = $cpe;            
-
-        }
-
-    }
-    
     $sensor = $data['sensor'];
     
-    ossim_valid($sensor,  'a-fA-F0-9\-',   'illegal:' . _("Sensor ID"));
+    ossim_valid($sensor,  OSS_HEX,   'illegal:' . _("Sensor ID"));
     
     check_ossim_error();
+    
+    
+    $response = array();
+    
+    
+    $plugins = Plugin::resolve_plugins_by_vmv($data['plugin_list'], $sensor);
+    
         
-    Plugin::set_plugins_by_device_cpe($conn, $plugins, Util::uuid_format($sensor));
+    Plugin::set_plugins_by_assets($plugins, Util::uuid_format($sensor));
     
     $response['error']   = FALSE;
     $response['msg']     = _("Plugin successfully configured.");
@@ -271,17 +190,17 @@ $action = POST("action");   //Action to perform.
 $data   = POST("data");     //Data related to the action.
 
 
-ossim_valid($action,	OSS_INPUT,	'illegal:' . _("Action"));
+ossim_valid($action,    OSS_INPUT,    'illegal:' . _("Action"));
 
 if (ossim_error())
 {
     $response['error'] = TRUE ;
-	$response['msg']   = ossim_get_error();
-	ossim_clean_error();
+    $response['msg']   = ossim_get_error();
+    ossim_clean_error();
 
-	echo json_encode($response);
+    echo json_encode($response);
 
-	die();
+    die();
 }
 
 //Default values for the response.
@@ -292,21 +211,20 @@ $response['msg']   = _('Error');
 if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
 {
     //Checking token
-	if ( !Token::verify('tk_plugin_select', GET('token')) )
-	{
-		$response['error'] = TRUE ;
-		$response['msg']   = _('Invalid Action');
-	}
-	else
-	{
+    if ( !Token::verify('tk_plugin_select', GET('token')) )
+    {
+        $response['error'] = TRUE ;
+        $response['msg']   = _('Invalid Action');
+    }
+    else
+    {
         //List of all the possibles functions
         $function_list = array
         (
-            'set_plugins'     => array('name' => 'set_plugins',              'params' => array('conn', 'data')),
-            'vendor_list'     => array('name' => 'get_vendor_list',          'params' => array('conn')),
-            'model_list'      => array('name' => 'get_model_list',           'params' => array('conn', 'data')),
-            'version_list'    => array('name' => 'get_version_list',         'params' => array('conn', 'data')),
-            'plugin_activity' => array('name' => 'plugin_activity',          'params' => array('conn', 'data'))
+            'set_plugins'     => array('name' => 'set_plugins',              'params' => array('data')),
+            'vendor_list'     => array('name' => 'get_vendor_list',          'params' => array('data')),
+            'model_list'      => array('name' => 'get_model_list',           'params' => array('data')),
+            'version_list'    => array('name' => 'get_version_list',         'params' => array('data'))
         );
 
         $_function = $function_list[$action];
@@ -349,7 +267,7 @@ if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUE
            $response['error'] = TRUE ;
            $response['msg']   = _('Wrong Option Chosen');
         }
-	}
+    }
 }
 
 //Returning the response to the AJAX call.

@@ -21,7 +21,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libgd2-xpm, graphviz, alienvault-na
  alienvault-apache2 (>= ${source:Upstream-Version}),
  alienvault-api (>= ${source:Upstream-Version}),
  alienvault-framework-documentation (>= ${source:Upstream-Version}),
- alienvault-openvas-feed, openvas-cli,
+ alienvault-openvas8-feed,
  alienvault-memcached (>= ${source:Upstream-Version}),
  alienvault-php5 (>= ${source:Upstream-Version}),
  alienvault-prads-mysql (>= ${source:Upstream-Version}),

@@ -588,7 +588,7 @@ sub select_job {
             $sth_sel->finish;
             
             if($scanner =~ /omp\s*$/) {            
-            	$used_slots = get_running_scans($serverid);
+            	$used_slots = get_running_scans($serverid, $job_id);
             }
             else {
                 my $command_output = `ps ax | grep $scanner | grep $server_ip | egrep -v "ps ax"`;
@@ -1284,13 +1284,13 @@ sub run_nessus {
             %credentials = generate_credentials($job_id);
             
             logwriter("get_target_id for targets:$targets", 4);
-            $target_id = get_target_id($targets, \%credentials);
+            $target_id = get_target_id($targets, \%credentials, $job_id);
             
             logwriter("get_config_id for sid:$sid", 4);
-            $config_id = get_config_id($sid);
+            $config_id = get_config_id($sid, $job_id);
             
             logwriter("create_task for jobname, config_id, target_id: $jobname, $config_id, $target_id", 4);
-            $task_id = create_task($jobname, $config_id, $target_id);
+            $task_id = create_task($jobname, $config_id, $target_id, $job_id);
             
             $sql = qq{ UPDATE vuln_jobs SET meth_CPLUGINS='$task_id' WHERE id='$job_id' };
             safe_db_write ( $sql, 4 );
@@ -1298,7 +1298,7 @@ sub run_nessus {
             system("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/util.php update_vuln_jobs_assets insert $job_id 1");
 
             logwriter("play_task $task_id", 4);
-            play_task($task_id);
+            play_task($task_id, $job_id);
             
             #die();
             
@@ -1310,7 +1310,7 @@ sub run_nessus {
 
             do {
                 sleep($tsleep);
-                $info_status = get_task_status($task_id); 
+                $info_status = get_task_status($task_id, '', $job_id); 
                 @arr_status = split /\|/, $info_status;
                 $status = shift(@arr_status);
                 
@@ -1333,7 +1333,7 @@ sub run_nessus {
             
             if($endScan==1) {
                 $omp_scan_timeout = TRUE;
-                stop_task($task_id);
+                stop_task($task_id, $job_id);
                 set_job_timeout($job_id);
             }
         }
@@ -2624,8 +2624,8 @@ sub process_results {
     my ( $rpt_key, $sqli, $sth_ins);
     my ( $nname);
     my ( $fp_sel, $fp_service, $fp);
-    my %ntargets = ();
-    my %acnets = ();
+    #my %ntargets = ();
+    #my %acnets = ();
 
     my $bSInfo = FALSE;		    #TRACK SERVER SCAN INFO WAS SAVED
     if ( $primaryAuditcheck ) { $rfield = "creport_id"; } else { $rfield = "report_id"; } #GET CORRECT FIELD BASED ON AUDIT TYPE
@@ -2640,15 +2640,15 @@ sub process_results {
         $sth_sel->execute;
         $targets = $sth_sel->fetchrow_array( );
         # there are networks
-        if ($targets =~ /\//) {
-            my @anets = split(/\n/,$targets);
-            foreach my $anet (@anets) {
-                $anet =~ s/\s|\n|\r|\t//g;
-                if ($anet =~ m/([a-f\d]{32})#(.*\/.*)/i) {   #       net_id#cidr
-                    $ntargets{$2} = $1;
-                }
-            }
-        }
+        #if ($targets =~ /\//) {
+        #    my @anets = split(/\n/,$targets);
+        #    foreach my $anet (@anets) {
+        #        $anet =~ s/\s|\n|\r|\t//g;
+        #        if ($anet =~ m/([a-f\d]{32})#(.*\/.*)/i) {   #       net_id#cidr
+        #            $ntargets{$2} = $1;
+        #        }
+        #    }
+        #}
 
 
         #CHECK IF PROFILE IS SAFE/FULL AUDIT WHICH ALLOWED TO UPDATE HOST TRACKER STATS
@@ -2973,19 +2973,25 @@ sub process_results {
                 #
             }
             # net max risk
-            foreach my $anet (keys %ntargets) {
-                $ntargets{$anet} =~ s/^\s*|\s*$//g;
-                if (ipinnet($hip,$anet)) {
-                    if(!defined($acnets{$ntargets{$anet}})) {
-                        $acnets{$ntargets{$anet}} = $max_risk ;
-                    }
-                    elsif($max_risk > $acnets{$ntargets{$anet}}) {
-                        $acnets{$ntargets{$anet}} = $max_risk ;
-                    }
-                }
-            }
+            #foreach my $anet (keys %ntargets) {
+            #    $ntargets{$anet} =~ s/^\s*|\s*$//g;
+            #    if (ipinnet($hip,$anet)) {
+            #        if(!defined($acnets{$ntargets{$anet}})) {
+            #            $acnets{$ntargets{$anet}} = $max_risk ;
+            #        }
+            #        elsif($max_risk > $acnets{$ntargets{$anet}}) {
+            #            $acnets{$ntargets{$anet}} = $max_risk ;
+            #        }
+            #    }
+            #}
             # host_vulnerability
-            if(defined($hid) && $hid ne "") {
+            if(defined($hid) && $hid ne "")
+            {
+                $sql_update = qq{ DELETE FROM host_vulnerability WHERE host_id=UNHEX('$hid') };
+                logwriter( $sql_update, 5 );
+                $sth_update = $dbh->prepare( $sql_update );
+                $sth_update->execute;
+                
                 $sql_update = qq{ INSERT INTO host_vulnerability VALUES (UNHEX('$hid'), '$scantime', $max_risk) ON DUPLICATE KEY UPDATE vulnerability=$max_risk  };
                 logwriter( $sql_update, 5 );
                 $sth_update = $dbh->prepare( $sql_update );
@@ -3008,14 +3014,22 @@ sub process_results {
             $sth_update->execute;
         }
 
-        foreach my $net_id (keys %acnets) {
-            my $nt = $acnets{$net_id};
-            $sql_update = qq{ INSERT INTO net_vulnerability VALUES (UNHEX('$net_id'), '$scantime', $nt) ON DUPLICATE KEY UPDATE vulnerability=$nt };
-            logwriter( $sql_update, 5 );
-            $sth_update = $dbh->prepare( $sql_update );
-            $sth_update->execute;
-        }
-
+        #foreach my $net_id (keys %acnets) {
+        #    my $nt = $acnets{$net_id};
+        #    $sql_update = qq{ INSERT INTO net_vulnerability VALUES (UNHEX('$net_id'), '$scantime', $nt) ON DUPLICATE KEY UPDATE vulnerability=$nt };
+        #    logwriter( $sql_update, 5 );
+        #    $sth_update = $dbh->prepare( $sql_update );
+        #    $sth_update->execute;
+        #}
+        $sql_update = qq{ TRUNCATE TABLE net_vulnerability };
+        logwriter( $sql_update, 5 );
+        $sth_update = $dbh->prepare( $sql_update );
+        $sth_update->execute;
+        
+        $sql_update = qq{ INSERT INTO net_vulnerability SELECT net_id, '$scantime', max(v.vulnerability) FROM host_net_reference r,host_vulnerability v,net n WHERE r.host_id=v.host_id AND n.id=r.net_id group by net_id };
+        logwriter( $sql_update, 5 );
+        $sth_update = $dbh->prepare( $sql_update );
+        $sth_update->execute;
 
         #UPDATE CLOSED INCIDENTS AS RESOLVED ( per previously update_incidents )
         if ( defined( $hostip ) && defined( $ctx ) ) {
@@ -3348,7 +3362,7 @@ sub check_schedule {
     $now = getCurrentDateTime();
 
     $sql = qq{ SELECT id, name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, time, email,
-        meth_TARGET, meth_CRED, meth_VSET, meth_TIMEOUT, scan_ASSIGNED, next_CHECK, meth_Ucheck, resolve_names, IP_ctx, meth_Wfile, credentials
+        meth_TARGET, meth_CRED, meth_VSET, meth_TIMEOUT, scan_ASSIGNED, next_CHECK, meth_Wcheck, meth_Ucheck, resolve_names, IP_ctx, meth_Wfile, credentials
         FROM vuln_job_schedule WHERE enabled != '0' and next_check <= '$now' };
         
     logwriter( $sql, 5 );
@@ -3357,15 +3371,32 @@ sub check_schedule {
     $sth_sel->execute;
 
     while ( my ($jid, $name, $username, $fk_name, $jobTYPE, $schedule_type, $day_of_week, $day_of_month, $time_run, $email,
-        $meth_TARGET, $meth_CRED, $meth_VSET, $meth_TIMEOUT, $scan_server, $next_check, $scan_locally, $resolve_names, $IP_ctx, $send_email,
+        $meth_TARGET, $meth_CRED, $meth_VSET, $meth_TIMEOUT, $scan_server, $next_check, $vuln_job_id, $scan_locally, $resolve_names, $IP_ctx, $send_email,
         $credentials) = $sth_sel->fetchrow_array )
     {
-        logwriter("datediff between nex_check and now: " . datediff($next_check, $now , 'H') . " hours", 4);
+        if (noEmpty($vuln_job_id))
+        {
+            $sql = qq{ SELECT count(*) FROM vuln_jobs WHERE id='$vuln_job_id' AND status='R'};
+            logwriter( $sql, 5 );
+
+            $sth_sel=$dbh->prepare( $sql );
+            $sth_sel->execute;
+
+            my $count = $sth_sel->fetchrow_array;
+
+            if ($count ne 0)
+            {
+                gen_sched_next_scan ( $jid, $schedule_type );
+                next;
+            }
+        }
+        my $diff = (datediff($next_check, $now , 'H')) * 1.0;
+
+        logwriter("datediff between nex_check and now: $diff hours", 4);
         
-        if (datediff($next_check, $now , 'H') >= 1)
+        if ($diff > 1.0)
         {
             # The "Run Once" jobs will be deleted
-            
             if ($schedule_type eq 'O') {
                 $sql = qq{ DELETE FROM vuln_job_schedule WHERE id='$jid' };
                 safe_db_write($sql, 4);
@@ -3373,17 +3404,13 @@ sub check_schedule {
             else
             {
                 # The others jobs will be rescheduled
-                
                 resched_scan ($jid, $schedule_type);   
             }
         }
         else
         {
             $scan_locally=0 if ($scan_locally eq "" || !$scan_locally);
-    
-            #DECIDED TO DROP TRACKING ON DAY/MONTH/TIME_RUN RELY SOLELY ON A GOOD NEXT_CHECK DATE
-            gen_sched_next_scan ( $jid, $schedule_type );
-    
+
             if ( $fk_name eq "" ) { $fk_name = "NULL"; } else { $fk_name = "'".$fk_name."'"; }
             
             # split the scheduled jobs
@@ -3409,11 +3436,17 @@ sub check_schedule {
                         'SCHEDULED - $name', '$username', $fk_name, '$jobTYPE', '$job_targets', '$meth_CRED', '$meth_VSET', 
                         '$meth_TIMEOUT', '$sensor_id', '$now', '$next_check', '$sensor_id', '$jid', '$scan_locally', $resolve_names, '$IP_ctx', $send_email, '$credentials' )  };
                     safe_db_write ( $sql, 4 );
+
+                    $sql = qq{ UPDATE vuln_job_schedule SET meth_Wcheck=LAST_INSERT_ID() WHERE id='$jid' };
+                    safe_db_write ( $sql, 4 );
                 }
             }
             close SCHEDULED_JOBS;
             
             unlink $get_jobs_file if -e $get_jobs_file;
+
+            #DECIDED TO DROP TRACKING ON DAY/MONTH/TIME_RUN RELY SOLELY ON A GOOD NEXT_CHECK DATE
+            gen_sched_next_scan ( $jid, $schedule_type );
         }
     }
 }
@@ -5021,7 +5054,7 @@ sub update_ossim_incidents {
             }
             my $priority = calc_priority($risk, $hostid, $scanid);
             $sql_inc = qq{ INSERT INTO incident(uuid, ctx, title, date, ref, type_id, priority, status, last_update, in_charge, submitter, event_start, event_end)
-                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", now(), 'Vulnerability', 'OpenVAS Vulnerability', '$priority', 'Open', now(), '$username', 'openvas', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
+                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", now(), 'Vulnerability', 'Vulnerability', '$priority', 'Open', now(), '$username', 'openvas', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
             safe_db_write ($sql_inc, 4);
             # TODO: change this for a sequence
             $sql_inc = qq{ SELECT MAX(id) id from incident };
@@ -5131,6 +5164,7 @@ sub scan_discover {
 sub get_target_id {
     my $input = $_[0];
     my (%credentials) = %{$_[1]};
+    my $job_id = $_[2];
     
     my @sorted_hosts = ();
     my ($xml);
@@ -5149,13 +5183,14 @@ sub get_target_id {
         logwriter("<ssh_lsc_credential id='".$credentials{'ssh_credential'}."'/>", 4);
     }
     
-    $xml = execute_omp_command("<create_target><name>target$$</name><hosts>".join(",", @sorted_hosts)."</hosts>".$ls_credentials."</create_target>");
+    $xml = execute_omp_command("<create_target><name>target$$</name><hosts>".join(",", @sorted_hosts)."</hosts>".$ls_credentials."</create_target>", '', $job_id);
 
     return $xml->{'id'};
 }
 
 sub get_config_id {
     my $sid = shift;
+    my $job_id = shift;
     
     my $sql = qq{ SELECT name, owner FROM vuln_nessus_settings WHERE id=$sid };
     my $sthse=$dbh->prepare( $sql );
@@ -5166,7 +5201,7 @@ sub get_config_id {
     my $result = "";
     my @items=();
     
-    my $xml = execute_omp_command("<get_configs />");
+    my $xml = execute_omp_command("<get_configs />", '', $job_id);
     
     if (ref($xml->{'config'}) eq 'ARRAY') {
         @items = @{$xml->{'config'}};
@@ -5197,31 +5232,33 @@ sub create_task {
     my $jobname = shift;
     my $config_id = shift;
     my $target_id = shift;
+    my $job_id = shift;
     
-    my $xml = execute_omp_command("<create_task><name>$jobname</name><config id='$config_id'></config><target id='$target_id'></target></create_task>");
+    my $xml = execute_omp_command("<create_task><name>$jobname</name><config id='$config_id'></config><target id='$target_id'></target></create_task>", '', $job_id);
 
     return $xml->{'id'};
 }
 sub play_task {
     my $task_id = shift;
+    my $job_id = shift;
 
-    my $xml = execute_omp_command("<start_task task_id='$task_id' />");
+    my $xml = execute_omp_command("<start_task task_id='$task_id' />", '', $job_id);
 }
 
 sub stop_task {
     my $task_id = shift;
+    my $job_id = shift;
 
-    my $xml = execute_omp_command("<stop_task task_id='$task_id' />");
+    my $xml = execute_omp_command("<stop_task task_id='$task_id' />", '', $job_id);
 }
 sub get_task_status {
-    
-    my ($task_id, $sensor_id )  = @_;
+    my ($task_id, $sensor_id, $job_id)  = @_;
     
     my($xml, @items, $task, $status);
     
     $sensor_id = (noEmpty( $sensor_id ) ) ? $sensor_id : '';
     
-    $xml = execute_omp_command("<get_tasks task_id='$task_id'/>", $sensor_id);
+    $xml = execute_omp_command("<get_tasks task_id='$task_id'/>", $sensor_id, $job_id);
 
     if ( $xml->{'status_text'} =~ /Failed to find task/ ) {
         return "NOT_FOUND|NOT_FOUND";
@@ -5245,6 +5282,7 @@ sub get_task_status {
 
 sub get_running_scans {
     my $sensor_id = shift;
+    my $job_id = shift;
     
     my($xml, @items, $task, $status, $total, $ts, @server_data, $onessusport, $onessususer, $onessuspassword, $onessushost);
     
@@ -5277,7 +5315,7 @@ sub get_running_scans {
         return -1;
     }
     
-    $xml             = execute_omp_command("<get_tasks />");
+    $xml             = execute_omp_command("<get_tasks />", $sensor_id, $job_id);
     
     if (ref($xml->{'task'}) eq 'ARRAY') {
         @items = @{$xml->{'task'}};
@@ -5304,16 +5342,16 @@ sub get_running_scans {
 
 sub execute_omp_command {
 
-    my ($cmd, $sensor_id)     = @_;
+    my ($cmd, $sensor_id, $job_id)     = @_;
 
     $sensor_id = (noEmpty( $sensor_id ) ) ? $sensor_id : '';
 
-    logwriter("Command: ".$cmd,5);
-    logwriter("Sensor id: ".$sensor_id,5);
-
     my $xml;
     my $retry = 0;
+    my $maxretries = 30;
+    my $sleep = 30;
     my $openvas_manager_common = "";
+    my $fail = "";
 
     my(@server_data, $onessusport, $onessususer, $onessuspassword, $onessushost);
 
@@ -5354,6 +5392,11 @@ sub execute_omp_command {
             system ("cat $xml_output >> '$debug_file'");
             system ("echo '' >> '$debug_file'");
         }
+
+        if (-e '/tmp/debug_openvas' && $cmd =~ /get_reports/)
+        {
+          system("cp $xml_output /tmp/latest_openvas_results.xml");
+        }
         
         unlink $file_omp_command if -e $file_omp_command;
         
@@ -5361,13 +5404,20 @@ sub execute_omp_command {
 
         $xml = eval {XMLin($xml_output, keyattr => [])};
         
-        if ($@ ne "") { 
+        $fail = $@;
+        if ($fail ne "") { 
             $retry += 1;
-            logwriter( "Failure on OMP request: Sleeping 30 seconds before retrying...", 4 );
-            sleep(30);
+            logwriter( "Failure on OMP request: Sleeping $sleep seconds before retrying...", 4 );
+            # Update job_id
+            if ($job_id > 0) {
+                my $remain = $maxretries - $retry;
+                $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck='Scanner request failed, will be retried $remain times.<br/>' WHERE id='$job_id' };
+                safe_db_write ( $sql, 1 );
+            }
+            sleep($sleep);
         }
     
-    } while ( $@ ne "" && $retry < 50 );
+    } while ( $fail ne "" && $retry < $maxretries );
 
     if ( $sensor_id ne "" ) {
         # restore data
@@ -5379,7 +5429,7 @@ sub execute_omp_command {
     }
     
 
-    if ($@ ne "") {
+    if ($fail ne "") {
     
         open(INFO, $xml_output);         # Open the file
         my @log_lines = <INFO>;          # Read it into an array
@@ -5390,7 +5440,13 @@ sub execute_omp_command {
             if($semail eq "1") {
                 send_error_notifications_by_email($job_id_to_log, "OMP: $error");
             }
-            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(meth_Wcheck, '$error<br />') , scan_END=now(), scan_NEXT=NULL WHERE id='$job_id_to_log' }; #MARK FAILED
+            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(meth_Wcheck, '$error<br/>') , scan_END=now(), scan_NEXT=NULL WHERE id='$job_id_to_log' }; #MARK FAILED
+            safe_db_write ( $sql, 1 );
+        }elsif ($job_id ne ""){
+            if($semail eq "1") {
+                send_error_notifications_by_email($job_id, "OMP: $error");
+            }
+            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck='$error Retried $maxretries times.<br/>', scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
             safe_db_write ( $sql, 1 );
         }
 
@@ -5398,7 +5454,7 @@ sub execute_omp_command {
         die "Can't read XML $xml_output: $error";
     }
     
-    if ($xml->{'status'} !~ /20\d/) {
+    if (noEmpty($xml) && $xml->{'status'} !~ /20\d/) {
         my $status = $xml->{'status'};
         my $status_text = $xml->{'status_text'};
         
@@ -5426,11 +5482,14 @@ sub get_results_from_xml {
     my $sensor_id   = $_[3];
     
     my $total_records = 0;
-    my (@items, @nvt_data, $host, $service, $scan_id, $description, $app, $proto, $port, $risk_factor, @issues, %hostHash, %resultHash, $report_id, $xml);
+    my (@items, @nvt_data, $host, $service, $scan_id, $description, $app, $proto, $port, $risk_factor, @issues, %hostHash, %resultHash, $report_id, $xml, %apps_by_port_protocol, %plugins_desc);
     
     %hostHash = ();
     %resultHash = ();
     
+    %apps_by_port_protocol = load_apps();
+    %plugins_desc          = load_plugins_desc();
+
     # Search IPs in task details
     
     # my @tmp_hosts = split(/\n/, $targets);
@@ -5439,7 +5498,7 @@ sub get_results_from_xml {
         # $hostHash{$ihost}++;
     # }
     
-    $xml = execute_omp_command("<get_tasks task_id='$task_id' details='1'/>", $sensor_id);
+    $xml = execute_omp_command("<get_tasks task_id='$task_id' details='1'/>", $sensor_id, 0);
     
     if (ref($xml->{'task'}{'reports'}{'report'}) eq 'ARRAY') {
         @items = @{$xml->{'task'}{'reports'}{'report'}}; 
@@ -5453,7 +5512,7 @@ sub get_results_from_xml {
     }
     
     logwriter("Get reports for report_id: $report_id",4);
-    $xml = execute_omp_command("<get_reports report_id='$report_id'/>", $sensor_id);
+    $xml = execute_omp_command("<get_reports report_id='$report_id'/>", $sensor_id, 0);
     
     # reports format depends on OpenVAS version 
     @items = ();
@@ -5509,17 +5568,40 @@ sub get_results_from_xml {
                 $risk_factor = "Low";
             }
 
-            
             #logwriter("Set risk: ".$result->{"nvt"}->{"cvss_base"}." -> ".$risk_factor, 4);
-            
-            $description = $result->{"description"};
+
+            if (ref($result->{"nvt"}->{"tags"}) ne 'HASH' && noEmpty($result->{"nvt"}->{"tags"}))
+            {
+              $description = get_description_from_xml($result->{"nvt"}->{"tags"}, $result->{"description"}, $result->{"nvt"}->{"xref"});
+            }
+            elsif (ref($result->{"description"}) ne 'HASH' && noEmpty($result->{"description"}) && $result->{"description"} =~ /summary\s*:/i)
+            {
+              $description = $result->{"description"};
+            }
+            elsif(noEmpty($plugins_desc{$scan_id}))
+            {
+              $description = $plugins_desc{$scan_id};
+            }
+            else
+            {
+              $description = '';
+            }
             
             if ( $service =~ /general/ ) {
                 my @temp = split /\//, $service;
                 $app = "general";
                 $proto = $temp[1];
                 $port = "0";
-            } else {
+            }
+            elsif ($service =~ /^\d+\//)
+            {
+                my @temp2 = split /\//, $service;
+                $port = $temp2[0];
+                $proto = $temp2[1];
+
+                $app = (defined($apps_by_port_protocol{$service}) ? $apps_by_port_protocol{$service} : 'unknown');
+            }
+            else {
                 my @temp = split /\s/, $service;
                 $app = $temp[0];
                 $temp[1] =~ s/\(//;
@@ -5592,10 +5674,10 @@ sub get_results_from_xml {
                 
                 if( $description !~  m/cvss base score/i ) {
                     if($result->{"nvt"}->{"cvss_base"} ne "" && ref($result->{"nvt"}->{"cvss_base"}) ne 'HASH') {
-                        $description .= "\nCVSS Base Score     : ".$result->{"nvt"}->{"cvss_base"};
+                        $description .= "\n\nCVSS Base Score: ".$result->{"nvt"}->{"cvss_base"};
                     }
                     else {
-                        $description .= "\nCVSS Base Score     : -\n";
+                        $description .= "\n\nCVSS Base Score: -\n";
                     }
                 }
 
@@ -5625,17 +5707,17 @@ sub get_results_from_xml {
     # Deletion order is very important
     
     if ($delete_task == TRUE)        {
-    	execute_omp_command("<delete_task task_id='$task_id' />", $sensor_id);
+    	execute_omp_command("<delete_task task_id='$task_id' />", $sensor_id, 0);
     	logwriter("Deleting task $task_id from $sensor_id", 5);
     }
     if ($delete_target == TRUE)      {
-    	execute_omp_command("<delete_target target_id='$target_id' />", $sensor_id);
+    	execute_omp_command("<delete_target target_id='$target_id' />", $sensor_id, 0);
     	logwriter("Deleting target $target_id from $sensor_id", 5);
     }
 
     if ($delete_credentials == TRUE) {
         foreach my $tcred ( keys %credentials ) {
-            execute_omp_command("<delete_lsc_credential lsc_credential_id='".$credentials{$tcred}."'/>", $sensor_id);
+            execute_omp_command("<delete_lsc_credential lsc_credential_id='".$credentials{$tcred}."'/>", $sensor_id, 0);
             logwriter("Deleting credential ".$credentials{$tcred}." from ".$sensor_id, 5);
         }
     }
@@ -5724,7 +5806,7 @@ sub check_running_scans {
             $running =`ps ax | grep $scan_pid | grep nessus_jobs | grep -v "ps ax" | wc -l`;
         }
         else {
-            $info_status = get_task_status($task_id, $sensor_id); 
+            $info_status = get_task_status($task_id, $sensor_id, $job_id); 
             @arr_status = split /\|/, $info_status;
             $status = shift(@arr_status);
             
@@ -5799,7 +5881,7 @@ sub get_task_data {
     $result{'target_id'}   = 'NOT_FOUND';
     %{$result{'credentials'}} = ("smb_credential", "", "ssh_credential", "");
         
-    $xml = execute_omp_command("<get_tasks task_id='$task_id'/>", $sensor_id);
+    $xml = execute_omp_command("<get_tasks task_id='$task_id'/>", $sensor_id, 0);
  
     if ( $xml->{'status_text'} =~ /Failed to find task/ ) {        
         return %result; # task not found
@@ -5811,7 +5893,7 @@ sub get_task_data {
     
     # get smb and ssh credentials
     
-    $xml = execute_omp_command("<get_targets target_id='".$result{'target_id'}."'/>", $sensor_id);
+    $xml = execute_omp_command("<get_targets target_id='".$result{'target_id'}."'/>", $sensor_id, 0);
     
     if ( noEmpty( $xml->{"target"}->{'ssh_lsc_credential'}->{'id'}) ) {
 	    $result{'credentials'}{'ssh_credential'} = $xml->{"target"}->{'ssh_lsc_credential'}->{'id'};
@@ -5863,6 +5945,95 @@ sub get_ctxs_by_ip {
     return (%ctxs_by_ip);
 }
 
+sub load_apps {
+    $sql = qq{ SELECT DISTINCT port_number, protocol_name, service FROM port };
+
+    my %apps = ();
+
+    my $sth_sel2 = $dbh->prepare( $sql );
+    $sth_sel2->execute;
+    while (my($port_number, $protocol_name, $service) = $sth_sel2->fetchrow_array())
+    {
+        $apps{$port_number . '/' . $protocol_name } = $service;
+    }
+    $sth_sel2->finish;
+
+    return (%apps);
+}
+
+sub load_plugins_desc {
+    $sql = qq{ SELECT oid, description FROM vuln_nessus_plugins };
+
+    my %plugins_desc = ();
+
+    my $sth_sel2 = $dbh->prepare( $sql );
+    $sth_sel2->execute;
+    while (my($plugin_id, $plugin_description) = $sth_sel2->fetchrow_array())
+    {
+        $plugins_desc{$plugin_id} = $plugin_description;
+    }
+    $sth_sel2->finish;
+
+    return (%plugins_desc);
+}
+
+sub get_description_from_xml {
+    my $tags           = shift;
+    my $description    = shift;
+    my $xref           = shift;
+
+    my @output      = ();
+
+    my %tokens = ('summary' => 'Summary', 'overview' => 'Overview', 'synopsis' => 'Synopsis', 'description' => 'Description',
+                  'vuldetect' => 'Vulnerability Detection Method', 'details' => 'Details', 'insight' => 'Insight',
+                  'impact' => 'Impact', 'affected' => 'Affected Software/OS', 'cvss_base_vector' => 'CVSS Base Vector', 'solution' => 'Solution');
+
+    my @tags_lines = ();
+
+    if (ref($description) ne 'HASH' && noEmpty($description))
+    {
+        push @output, "Vulnerability Detection Result:\n\n" . $description;
+    }
+
+    if (ref($tags) ne 'HASH' && noEmpty($tags))
+    {
+        @tags_lines = split(/\|/, $tags);
+    }
+
+    if (scalar(@tags_lines) != 0)
+    {
+      foreach my $token (keys %tokens) {
+        my $new_token = $tokens{$token};
+
+        foreach my $tags_line (@tags_lines)
+        {
+          if ($tags_line =~ /^$token=/i)
+          {
+            $tags_line =~ s/$token=/$new_token:\n\n/;
+            push @output, $tags_line;
+          }
+        }
+      }
+    }
+
+    if (ref($xref) ne 'HASH' && noEmpty($xref) && $xref ne 'NOXREF')
+    {
+        $xref =~ s/,\s+/\n/g;
+        $xref =~ s/url://ig;
+
+        push @output, "References:\n\n" . $xref;
+    }
+
+    if (scalar(@output) != 0)
+    {
+      return (join("\n\n", @output));
+    }
+    else
+    {
+      return '';
+    }
+}
+
 sub generate_credentials {
     my $job_id  = shift;
     
@@ -5890,7 +6061,7 @@ sub generate_credentials {
         
         if( noEmpty($ssh_credential) ) { # Create ssh credentials 
             $ssh_credential =~ s/\<name\>/\<name\>$pid/;
-            $xml = execute_omp_command($ssh_credential);
+            $xml = execute_omp_command($ssh_credential, '', $job_id);
             #logwriter("ssh_credential: $ssh_credential", 4);
             
             if( noEmpty($xml->{'id'}) ) {
@@ -5911,7 +6082,7 @@ sub generate_credentials {
         
         if( noEmpty($smb_credential) ) { # Create ssh credentials
             $smb_credential =~ s/\<name\>/\<name\>$pid/;
-            $xml = execute_omp_command($smb_credential);
+            $xml = execute_omp_command($smb_credential, '', $job_id);
             if( noEmpty($xml->{'id'}) ) {
                 $smb_credential_id = $xml->{'id'};
             }

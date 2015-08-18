@@ -318,7 +318,7 @@ $db->close();
                         //Try - Catch to avoid if this launch an error, the lightbox must be closed.
                         try
                         {
-                            top.frames['main'].notify('<?php echo $_message?>', 'nf_success', true);
+                            top.frames['main'].show_notification('asset_notif', "<?php echo $_message ?>", 'nf_success', 15000, true);
                         }
                         catch(Err){}
 

@@ -42,6 +42,7 @@
 	            <th><?php echo _('Intent&Strategy')?></th>
 	            <th><?php echo _('Method')?></th>
 	            <th><?php echo _('Risk')?></th>
+	            <th><?php echo _('OTX')?></th>
 	            <th><?php echo _('Source')?></th>
 	            <th><?php echo _('Destination')?></th>
 	            <th></th>
@@ -49,7 +50,7 @@
 	    </thead>
 	    <tbody>
 	        <tr>
-	            <td colspan='7'></td>
+	            <td colspan='9'></td>
 	        </tr>          
 	    </tbody>
 	</table>

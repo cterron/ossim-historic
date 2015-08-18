@@ -47,12 +47,12 @@ if ($step != 2)
 ?>
         
 <div class='wizard_title'>
-    <?php echo _('HIDs Deployment') ?>
+    <?php echo _('HIDS Deployment') ?>
 </div>
 
 
 <div class='wizard_subtitle'>
-    <?php echo _('Deploying the HIDs agent to the selected devices.') ?>
+    <?php echo _('Deploying the HIDS agent to the selected devices.') ?>
 </div>
 
 

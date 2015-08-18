@@ -135,6 +135,7 @@
 -->
 
         <!-- RRD threshold and anomaly detector -->
+<!--
         <plugin id="1507" process="rrd_plugin.pl" type="detector" start="yes" enable="yes">
             <startup>/opt/ossim/scripts/rrd_plugin.pl</startup>
             <shutdown>killall rrd_plugin.pl</shutdown>
@@ -143,7 +144,8 @@
             <sensor>&sensor;</sensor>
             <location>/var/log/ossim/rrd_plugin.log</location>
         </plugin>
-        
+-->
+
         <!-- C & A detector -->
         <plugin id="1509" process="mysqld" type="detector" start="yes" enable="yes">
             <startup></startup>
@@ -302,22 +304,6 @@
 
         <!-- Begin MONITORS -->
 
-        <!-- 
-             ntop monitor 
-             location must point to the ip and port where ntop is listening
-             (for example: 127.0.0.1:3000)
-             frequency: if server make a request, get ntop info every N seconds
-        -->
-        <plugin id="2005" process="ntop" type="monitor" start="yes" enable="yes">
-            <startup>/etc/init.d/ntop restart</startup>
-            <shutdown>/etc/init.d/ntop stop</shutdown>
-            <source>socket</source>
-            <location>&sensor;:3000</location>
-            <interface>&interface;</interface>
-            <sensor>&sensor;</sensor>
-            <frequency>20</frequency>
-        </plugin>
-        
         <!--
             C & A monitor
             location must be: database:host:db:user:pass 

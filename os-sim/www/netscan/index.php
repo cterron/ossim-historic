@@ -214,7 +214,8 @@ $db->close();
         array('src' => 'tree.css',                                      'def_path' => TRUE),
         array('src' => 'progress.css',                                  'def_path' => TRUE),
         array('src' => 'tipTip.css',                                    'def_path' => TRUE),
-        array('src' => 'fancybox/jquery.fancybox-1.3.4.css',            'def_path' => TRUE)
+        array('src' => 'fancybox/jquery.fancybox-1.3.4.css',            'def_path' => TRUE),
+        array('src' => '/environment/assets/asset_discovery.css',       'def_path' => TRUE)
     );
 
     Util::print_include_files($_files, 'css');
@@ -275,6 +276,8 @@ $db->close();
 
         function check_target_number()
         {
+            $('#scan_button').addClass('av_b_processing').prop('disabled', true);
+            
             if(getcombotext("assets").length < 1)
             {
                 av_alert('<?php echo Util::js_entities(_('You must choose at least one asset'))?>');
@@ -497,6 +500,8 @@ $db->close();
                         var __nf_class = 'nf_warning';
                     }
 
+                    $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
+
                     var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
                     show_notification(__error_msg, 'c_info', __nf_class, __style);
                 },
@@ -506,6 +511,8 @@ $db->close();
                         //hide_loading_box();
                         show_progress_box();
                     }, 3000);
+                    
+                    $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
                 }
             });
         }
@@ -529,6 +536,8 @@ $db->close();
 
         function stop_scan()
         {
+            $('#stop_scan').addClass('av_b_processing').prop('disabled', true);
+
             var scan_data = {
                "token"  : Token.get_token("assets_form"),
                "action" : "stop_scan"
@@ -557,8 +566,11 @@ $db->close();
                         __error_msg = xhr.responseText;
                     }
 
+                    $('#stop_scan').removeClass('av_b_processing').prop('disabled', false);
+
                     var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
                     show_notification(__error_msg, 'c_info', 'nf_error', __style);
+
                 },
                 success: function(msg){
 
@@ -568,7 +580,10 @@ $db->close();
 
                     get_scan_report();
 
+                    $('#stop_scan').removeClass('av_b_processing').prop('disabled', false);
+
                     $.fancybox.close();
+
                 }
             });
         }
@@ -1063,7 +1078,7 @@ $db->close();
 
     <form name="assets_form" id="assets_form">
 
-        <div class='scan_title'><?php echo _('New Scan') ?></div>
+        <div class='scan_title'><?php echo _('Scan for New Assets') ?></div>
 
         <table align="center" id='t_ad'>
 
@@ -1158,7 +1173,7 @@ $db->close();
                         <td style="text-align: left; border:none; padding:3px 0px 3px 8px">
                             <a href="javascript:void(0);" id='lnk_ss'>
                                 <img id="sensors_arrow" border="0" align="absmiddle" src="../pixmaps/arrow_green.gif"/>
-                                <span><span class="bold"><?php echo _('Select an')?></span> <?php echo _('specific sensor')?></span>
+                                <span><?php echo _('<strong>Select a</strong> specific sensor')?></span>
                             </a>
                         </td>
                     </tr>

@@ -160,10 +160,12 @@ def ossec_add_new_agent(system_ip, agent_name, agent_ip):
     (success, msg) = ansible_is_valid_response(system_ip, response)
     if success:
         if 'Error' in response['contacted'][system_ip]['stdout']:
-            return False, "[ossec_add_new] Create agent script failed: %s" % \
-                str(response['contacted'][system_ip]['stdout'])
-    
-    return success, str(response['contacted'][system_ip]['stdout'])
+            return False, "[ossec_add_new] Create agent script failed: %s" % str(response['contacted'][system_ip]['stdout'])
+        return True, response['contacted'][system_ip]['stdout']
+    else:
+        api_log.error("Ansible Error: An error occurred while running ossec_add_new_agent: {0}".format(msg))
+        msg = 'HIDS agent cannot be created'
+    return success, msg
 
 
 def ossec_delete_agent(system_ip, agent_id):
@@ -471,6 +473,17 @@ def ossec_control(system_ip, operation, option):
         data.update(msg)
     except Exception as err:
         return False, "[ossec_control] Something wrong happened while running ansible command ->  '%s'" % str(err)
+
+    if operation in ["status"]:
+        # remove ossec string
+        data['raw_output_status'] = data['raw_output_status'].replace('ossec-', '')
+        data['stdout'] = data['stdout'].replace('ossec-', '')
+
+        for key, value in data['general_status'].items():
+            new_key = key.replace('ossec-', '')
+            data['general_status'][new_key] = value
+            del data['general_status'][key]
+
     return True, data
 
 

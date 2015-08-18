@@ -30,8 +30,10 @@
 
 import api_log
 from ansiblemethods.ansiblemanager import Ansible
+from apiexceptions.ansible import APIAnsibleError, APIAnsibleBadResponse
 import re
 import os.path
+
 ansible = Ansible()
 
 
@@ -40,24 +42,24 @@ def parse_av_config_response(response, system_ip):
     Utility method to parse av_config library responses.
     """
     if system_ip in response['dark']:
-        return(False, response['dark'][system_ip]['msg'])
+        return False, response['dark'][system_ip]['msg']
 
     if 'failed' in response['contacted'][system_ip]:
-        return(False, response['contacted'][system_ip]['msg'])
+        return False, response['contacted'][system_ip]['msg']
 
-    return (True, response['contacted'][system_ip]['data'])
+    return True, response['contacted'][system_ip]['data']
 
 
 def read_file(host, file_name=None):
     response = ansible.run_module([host], 'command', "cat %s" % file_name)
     if host in response['dark']:
-        return (False, "read_file : " + response['dark'][host]['msg'])
+        return False, "read_file : " + response['dark'][host]['msg']
 
     contacted = response['contacted'][host]
     if contacted['rc'] != 0:
-        return (False, "read_file : " + contacted['stderr'])
+        return False, "read_file : " + contacted['stderr']
 
-    return (True, contacted['stdout'])
+    return True, contacted['stdout']
 
 
 def fetch_file(system_ip, src_file_path, dst_file_path, fail_on_missing=True, flat=False):
@@ -71,11 +73,31 @@ def fetch_file(system_ip, src_file_path, dst_file_path, fail_on_missing=True, fl
 
     response = ansible.run_module([system_ip], 'fetch', args, use_sudo=True)
     if system_ip in response['dark']:
-        return(False, "system.fetch_file: " + str(response['dark']))
+        return False, "system.fetch_file: " + str(response['dark'])
     if 'failed' in response['contacted'][system_ip]:
-        return(False, "system.fetch_file: " + str(response['contacted']))
+        return False, "system.fetch_file: " + str(response['contacted'])
 
-    return(True, response['contacted'][system_ip]['dest'])
+    return True, response['contacted'][system_ip]['dest']
+
+
+def file_exist(system_ip, file_name):
+    """
+    Check if a file exists or not.
+    """
+    try:
+        response = ansible.run_module(host_list=[system_ip], module='stat', args="path=" + file_name)
+    except Exception, exc:
+        raise APIAnsibleError(str(exc))
+
+    success, msg = ansible_is_valid_response(system_ip, response)
+    if success:
+        if response['contacted'][system_ip]['stat']['exists']:
+            return True
+        else:
+            return False
+    else:
+        raise APIAnsibleBadResponse(str(msg))
+
 
 
 def copy_file(host_list=[], args={}):
@@ -85,8 +107,8 @@ def copy_file(host_list=[], args={}):
     response = ansible.run_module(host_list, 'copy', args, use_sudo=True)
     for host in host_list:
         if host in response['dark']:
-            return (False, "system.copy_file : " + response['dark'][host]['msg'])
-    return (True, '')
+            return False, "system.copy_file : " + response['dark'][host]['msg']
+    return True, ''
 
 
 def remove_file(host_list=[], file_name=None):
@@ -96,8 +118,8 @@ def remove_file(host_list=[], file_name=None):
     response = ansible.run_module(host_list, 'command', 'rm -f %s' % file_name)
     for host in host_list:
         if host in response['dark']:
-            return (False, "remove_file : " + response['dark'][host]['msg'])
-    return (True, '')
+            return False, "remove_file : " + response['dark'][host]['msg']
+    return True, ''
 
 
 def gunzip_file(system_ip, gzip_file=None, gunzipped_file=None):
@@ -116,8 +138,8 @@ def gunzip_file(system_ip, gzip_file=None, gunzipped_file=None):
     response = ansible.run_module([system_ip], 'shell', 'gunzip -c %s > %s' % (gzip_file, gunzipped_file))
     success, msg = ansible_is_valid_response(system_ip, response)
     if not success:
-        return (False, "gunzip_file : %s" % msg)
-    return (True, '')
+        return False, "gunzip_file : %s" % msg
+    return True, ''
 
 
 def ansible_is_valid_response(system_ip, response):
@@ -164,11 +186,11 @@ def local_copy_file(system_ip, src_file, dst_file):
     chmod_command = "chmod %s %s" % ("777", dst_file)
     response = ansible.run_module([system_ip], module='command', args=cp_command, use_sudo=True)
     if system_ip in response['dark']:
-        return (False, "system.local_copy_file : " + response['dark'][system_ip]['msg'])
+        return False, "system.local_copy_file : " + response['dark'][system_ip]['msg']
     response = ansible.run_module([system_ip], module='command', args=chmod_command, use_sudo=True)
     if system_ip in response['dark']:
-        return (False, "system.local_copy_file : " + response['dark'][system_ip]['msg'])
-    return (True, '')
+        return False, "system.local_copy_file : " + response['dark'][system_ip]['msg']
+    return True, ''
 
 
 def get_files_in_path(system_ip, path):
@@ -186,3 +208,25 @@ def get_files_in_path(system_ip, path):
         m = re.match(pattern, line)
         result[os.path.join(path, m.group('filename'))] = m.groupdict()
     return True, result
+
+
+def fire_trigger(system_ip, trigger, execute_trigger=True):
+    """ Fires a trigger described by trigger_name
+
+    Args:
+        trigger: Name of string to be fired
+    Return:
+        True on success, False on failure
+    """
+    command_fire = "dpkg-trigger --no-await %s" % trigger
+    response = ansible.run_module([system_ip], module='command', args=command_fire, use_sudo=True)
+    if system_ip in response['dark']:
+        return False, "system.fire_trigger : " + response['dark'][system_ip]['msg']
+
+    if execute_trigger is True:
+        command_configure = "dpkg --pending --configure"
+        response = ansible.run_module([system_ip], module='command', args=command_configure, use_sudo=True)
+        if system_ip in response['dark']:
+            return False, "system.configure_trigger : " + response['dark'][system_ip]['msg']
+
+    return True, ""

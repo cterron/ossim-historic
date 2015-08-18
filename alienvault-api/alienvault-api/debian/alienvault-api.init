@@ -1,8 +1,8 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          alienvault-api
-# Required-Start:    $remote_fs $syslog rabbitmq-server redis-server
-# Required-Stop:     $remote_fs $syslog rabbitmq-server redis-server
+# Required-Start:    $remote_fs $syslog rabbitmq-server redis-server alienvault-redis-server-otx
+# Required-Stop:     $remote_fs $syslog rabbitmq-server redis-server alienvault-redis-server-otx
 # Should-Start:      mysql ossim-server ossim-agent
 # Should-Stop:       mysql ossim-server ossim-agent
 # Default-Start:     2 3 4 5
@@ -46,6 +46,10 @@ do_start() {
   # We don't want to process old tasks, so reset our rabbitapp.
   cleanup_rabbit_queues
 
+  if [ -d "/var/log/alienvault/api" ]; then
+      chown avapi:alienvault /var/log/alienvault/api -R
+      for logfile in /var/log/alienvault/api/*; do chmod 644 $logfile; done
+  fi
 
   log_daemon_msg "Starting CeleryBeat" "celerybeat"
   start-stop-daemon --quiet --start --exec $CELERYBEAT start

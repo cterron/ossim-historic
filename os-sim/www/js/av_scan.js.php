@@ -60,7 +60,7 @@ function show_info(type, subtype)
         if (show_in_tooltip == true)
         {
             $('#'+type+'_info img').show();
-            $('#'+type+'_info img').tipTip({content: info[type][subtype]});
+            $('#'+type+'_info img').tipTip({content: info[type][subtype], maxWidth: "350px", defaultPosition: "top"});
         }
         else
         {
@@ -161,7 +161,7 @@ function bind_nmap_actions()
 //Scan host locally with
 function scan_host(id)
 {
-    var url = '<?php echo Menu::get_menu_url("../netscan/index.php", 'environment', 'assets', 'asset_discovery')?>';
+    var url = '<?php echo Menu::get_menu_url("../netscan/index.php", 'environment', 'assets', 'assets')?>';
 
     var form = $('<form id="f_scan_host" action="' + url + '" method="POST">' +
         '<input type="hidden" name="action" value="custom_scan"/>' +

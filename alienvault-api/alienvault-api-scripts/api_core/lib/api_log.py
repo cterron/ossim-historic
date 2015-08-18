@@ -47,3 +47,19 @@ def error(message):
 
 def critical(message):
     syslog.syslog(syslog.LOG_CRIT, "ALIENVAULT-API[CRITICAL]: " + message)
+
+log_level = {
+    'INFO': info,
+    'DEBUG': debug,
+    'WARNING': warning,
+    'ERROR': error,
+    'CRITICAL': critical
+}
+
+
+def log(message, level='INFO'):
+    try:
+        log_level[level](message)
+    except KeyError:
+        log_level['INFO']("Bad log level '%s'" % level)
+        log_level['INFO'](message)

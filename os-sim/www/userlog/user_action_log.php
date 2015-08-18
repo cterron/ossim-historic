@@ -234,7 +234,7 @@ if ( Session::am_i_admin() )
     			<tbody>			
         			<tr>
         				<td style="padding:5px;">
-        				    <div class="datepicker_range" style="width:180px;margin:0px auto;padding-left:20px;">
+        				    <div class="datepicker_range" style="width:220px;margin:0px auto;padding-left:20px;">
                                 <div class='calendar_from'>
                                     <div class='calendar'>
                                         <input name='date_from' id='date_from' class='date_filter' type="input" value="<?php echo $date_from ?>">

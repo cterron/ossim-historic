@@ -216,12 +216,12 @@ class Current_Status (Base):
         message_action_role = self.message.action_role if self.message is not None else ""
         message_alternative_actions = self.message.alternative_actions if self.message is not None else ""
         message_source = self.message.source if self.message is not None else ""
-        additional_info_json = ""
+        additional_info_json = {}
         try:
             if self.additional_info is not None and self.additional_info != "":
                 additional_info_json = json.loads(self.additional_info)
         except Exception, e:
-            additional_info_json = json.loads({"error": "Invalid json object for this message"})
+            additional_info_json = json.loads('{"error": "Invalid json object for this message"}')
         return {
             'id': get_uuid_string_from_bytes(self.id),
             'message_id': get_uuid_string_from_bytes(self.message_id),

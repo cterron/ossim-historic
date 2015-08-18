@@ -356,6 +356,7 @@ class Directive_rule {
             'sensor'           => _('Sensor'),
             'protocol'         => _('Protocol'),
             'sticky_different' => _('Sticky Dif'),
+            'filename'         => _('Filename'),
             'username'         => _('Username'),
             'password'         => _('Pass'),
             'userdata1'        => _('Userdata1'),

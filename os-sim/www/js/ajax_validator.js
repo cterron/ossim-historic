@@ -210,48 +210,27 @@ function Ajax_validator(new_config)
     {
         if (typeof(config.validation_type) == 'undefined' || config.validation_type == '')
         {
-            var error = new Error();
-                error.name    = 'TypeError';
-                error.message = "Configuration error: Option 'validation_type' is empty or undefined";
-
-            throw error;
+            throw "Configuration error: Option 'validation_type' is empty or undefined";
         }
 
         if (typeof(config.errors.display_errors) == 'undefined' || config.errors.display_errors == '')
         {
-            var error = new Error();
-                error.name    = 'TypeError';
-                error.message = "Configuration error: Option 'errors.display_errors' is empty or undefined";
-
-            throw error;
+            throw "Configuration error: Option 'errors.display_errors' is empty or undefined";
         }
 
         if ((typeof(config.errors.display_in) == 'undefined' || config.errors.display_in == '') && display_errors != 'field-errors')
         {
-            var error = new Error();
-                error.name    = 'TypeError';
-                error.message = "Configuration error: Option 'errors.display_in' is empty or undefined";
-
-            throw error;
+            throw "Configuration error: Option 'errors.display_in' is empty or undefined";
         }
 
         if (typeof(config.form.id) == 'undefined' || config.form.id == '')
         {
-            var error = new Error();
-                error.name    = 'TypeError';
-                error.message = "Configuration error: Option 'form.id' is empty or undefined";
-
-            throw error;
+            throw "Configuration error: Option 'form.id' is empty or undefined";
         }
 
         if (typeof(config.form.url) == 'undefined' || config.form.url == '')
         {
-
-            var error = new Error();
-                error.name    = 'TypeError';
-                error.message = "Configuration error: Option 'form.url' is empty or undefined";
-
-            throw error;
+            throw "Configuration error: Option 'form.url' is empty or undefined";
         }
 
         if (typeof(config.actions) != 'undefined')
@@ -260,29 +239,17 @@ function Ajax_validator(new_config)
             {
                 if (typeof(config.actions.on_submit.id) == 'undefined' || config.actions.on_submit.id == '')
                 {
-                    var error = new Error();
-                    error.name    = 'TypeError';
-                    error.message = "Configuration error: Option 'actions.on_submit.id' is empty or undefined";
-
-                    throw error;
+                    throw "Configuration error: Option 'actions.on_submit.id' is empty or undefined";
                 }
 
                 if (typeof(config.actions.on_submit.success) == 'undefined' || config.actions.on_submit.success == '')
                 {
-                    var error = new Error();
-                    error.name    = 'TypeError';
-                    error.message = "Configuration error: Option 'actions.on_submit.success' is empty or undefined";
-
-                    throw error;
+                    throw "Configuration error: Option 'actions.on_submit.success' is empty or undefined";;
                 }
 
                 if (typeof(config.actions.on_submit.checking) == 'undefined' || config.actions.on_submit.checking == '')
                 {
-                    var error = new Error();
-                    error.name    = 'TypeError';
-                    error.message = "Configuration error: Option 'actions.on_submit.checking' is empty or undefined";
-
-                    throw error;
+                    throw "Configuration error: Option 'actions.on_submit.checking' is empty or undefined";
                 }
             }
         }
@@ -784,7 +751,7 @@ function Ajax_validator(new_config)
                 _show_all_html_errors();
             }
 
-            if (!parent.is_lightbox_loaded(window.name))
+            if (typeof(parent.is_lightbox_loaded) == 'function' && !parent.is_lightbox_loaded(window.name))
             {
                 parent.window.scrollTo(0,0);
             }

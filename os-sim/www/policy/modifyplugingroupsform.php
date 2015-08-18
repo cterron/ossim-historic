@@ -385,7 +385,7 @@ else
 
 		$(document).ready(function(){
 		    $(".delete_dsg").on("click", function(event){
-		        if(confirm('<?php echo  Util::js_entities(_("Are you sure to delete this data source?"))?>'))
+		        if(confirm('<?php echo  Util::js_entities(_("Are you sure you want to delete this data source?"))?>'))
 		        {
     		        location.href='modifyplugingroupsform.php?action=<?php echo Util::htmlentities(GET('action')) ?>&id=<?php echo $group_id ?>&delete=' + $(this).attr("data-id");
 		        }

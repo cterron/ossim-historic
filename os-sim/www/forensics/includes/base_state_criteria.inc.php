@@ -55,6 +55,7 @@ class CriteriaState {
         $this->criteria['sourcetype'] = new SourceTypeCriteria($tdb, $obj, "sourcetype");
         $this->criteria['category'] = new CategoryCriteria($tdb, $obj, "category");
         $this->criteria['rep'] = new ReputationCriteria($tdb, $obj, "rep");
+        $this->criteria['otx'] = new OTXCriteria($tdb, $obj, "otx");
         $this->criteria['plugingroup'] = new PluginGroupCriteria($tdb, $obj, "plugingroup");
         $this->criteria['networkgroup'] = new NetworkGroupCriteria($tdb, $obj, "networkgroup");
         $this->criteria['userdata'] = new UserDataCriteria($tdb, $obj, "userdata");

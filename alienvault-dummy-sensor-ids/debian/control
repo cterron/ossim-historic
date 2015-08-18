@@ -10,14 +10,14 @@ Package: alienvault-dummy-sensor-ids
 Architecture: all
 Pre-Depends: alienvault-dummy-common (>= ${source:Upstream-Version})
 Depends: ossim-agent,
- pfring, libpfring, daq, libdaq0,
  ossim-geoip (>= ${source:Upstream-Version})| ossim-geoip-pro (>= ${source:Upstream-Version}),
- alienvault-pfring-ids (>= ${source:Upstream-Version}),
  alienvault-suricata (>= ${source:Upstream-Version}),
  alienvault-plugins,
  suricata-rules-default,
+ alienvault-redis-server-otx (>= ${source:Upstream-Version}),
+ alienvault-rhythm (>= ${source:Upstream-Version})
 Provides: alienvault-dummy-sensor
-Conflicts: alienvault-dummy-sensor, snort, snort-common, snort-common-libraries
-Replaces: alienvault-dummy-sensor, snort, snort-common, snort-common-libraries
+Conflicts: alienvault-dummy-sensor
+Replaces: alienvault-dummy-sensor
 Description: MetaPackage for alienvault sensor IDS components
  This package installs all the needed packages for alienvault sensor IDS profile.

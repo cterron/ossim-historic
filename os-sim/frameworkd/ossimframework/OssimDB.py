@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -117,7 +117,6 @@ class OssimDB:
             else:
                 retries +=1
                 time.sleep(1)
-        #self.__close()
         self._mutex.release()
         
         if not arr:
@@ -178,14 +177,5 @@ class OssimDB:
         finally:
             self._conn = None
             self._connected = False
-
-
-if __name__ == "__main__" :
-    db = OssimDB("127.0.0.1", "alienvault", "xxx", "xxxx")
-    db.connect()
-    hash = db.exec_query("select * from config")
-    for row in hash: 
-        print row
-    db.close()
 
 # vim:ts=4 sts=4 tw=79 expandtab:

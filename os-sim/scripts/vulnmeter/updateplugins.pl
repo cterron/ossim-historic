@@ -255,9 +255,9 @@ $openvas_nessus_plugins = $CONFIG{'ROOTDIR'}."tmp/plugins.sql";     #Temp OpenVa
 
 my @profiles = ();
 
-$profiles[0] = 'Default|Non destructive Full and Fast scan|F|0|1|1';
-$profiles[1] = 'Deep|Non destructive Full and Slow scan|F|0|1|1';
-$profiles[2] = 'Ultimate|Full and Fast scan including Destructive tests|F|0|1|1';
+$profiles[0] = '1|Deep|Non destructive Full and Slow scan|F|0|1|1';
+$profiles[1] = '2|Default|Non destructive Full and Fast scan|F|0|1|1';
+$profiles[2] = '3|Ultimate|Full and Fast scan including Destructive tests|F|0|1|1';
 
 my @sensors = ();
 
@@ -424,34 +424,33 @@ sub main {
         update_openvas_plugins();
     }
     
-    disconn_db($dbh);
-    $dbh = conn_db();
-    update_settings_plugins($custom);
-        
+    if ($custom == TRUE)
+    {
+        disconn_db($dbh);
+        $dbh = conn_db();
+        update_settings_plugins();
+    }
+
     if ($custom == FALSE)
     {
         disconn_db($dbh);
         $dbh = conn_db();
         update_preferences();
-        
-        disconn_db($dbh);
-        $dbh = conn_db();
-        generate_profiles(\@profiles);
-    
-        disconn_db($dbh);
-        $dbh = conn_db();
-        enable_port_scanner_plugins();
     
         disconn_db($dbh);
         $dbh = conn_db();
         $sql = qq{ DROP TABLE `vuln_plugins`; };
         safe_db_write( $sql, 5 );
-    }
-    
-    disconn_db($dbh);
-    
-    if ($custom == FALSE)
-    {
+
+        disconn_db($dbh);
+        $dbh = conn_db();
+        generate_profiles_in_db(\@profiles);
+
+        disconn_db($dbh);
+        $dbh = conn_db();
+        enable_port_scanner_plugins();
+        
+        disconn_db($dbh);
         #
         print "\nUpdating plugin_sid vulnerabilities scanner ids\n";
         system("perl /usr/share/ossim/scripts/vulnmeter/update_nessus_ids.pl");
@@ -837,28 +836,12 @@ sub update_openvas_plugins {
 }
 
 sub update_settings_plugins {
-
-    my $custom = shift;
     
     my %autofam;
     my %autocat;
     
-    my $profiles_filter = ($custom == TRUE) ? "WHERE name NOT IN ('Default', 'Deep', 'Ultimate')" : '';
-    
-    # Force autoenable by families for 'Default', 'Deep' and 'Ultimate'
-    $sql = qq{ UPDATE vuln_nessus_settings SET autoenable = 'F' WHERE name IN ('Default', 'Deep', 'Ultimate') };
-    $sth_sel = $dbh->prepare($sql);
-    $sth_sel->execute;
-    
-    $sql = qq{ UPDATE vuln_nessus_settings_family, vuln_nessus_settings SET vuln_nessus_settings_family.status = 2 WHERE vuln_nessus_settings.id=vuln_nessus_settings_family.sid AND vuln_nessus_settings.name IN ('Default', 'Deep', 'Ultimate') };
-    $sth_sel = $dbh->prepare($sql);
-    $sth_sel->execute;
-    
-    $sql = qq{ UPDATE vuln_nessus_settings, vuln_nessus_settings_plugins SET vuln_nessus_settings_plugins.enabled = 'Y' WHERE vuln_nessus_settings.id=vuln_nessus_settings_plugins.sid AND vuln_nessus_settings.name IN ('Default', 'Deep', 'Ultimate') };
-    $sth_sel = $dbh->prepare($sql);
-    $sth_sel->execute;
-    
-    
+    my $profiles_filter = "WHERE name NOT IN ('Default', 'Deep', 'Ultimate')";
+ 
     logwriter( "BEGIN  - UPDATE SETTINGS_PLUGINS", 4 );
     my $time_start = time();
 
@@ -1369,7 +1352,7 @@ sub disconn_db {
     $dbh->disconnect or die("Failed to disconnect : $DBI::errstr\n");
 }
 
-sub generate_profiles {
+sub generate_profiles_in_db {
     my @profiles = @{$_[0]};
 
     foreach my $nd (@profiles) {
@@ -1377,36 +1360,48 @@ sub generate_profiles {
         $dbh = conn_db();
         my @tmp = split(/\|/,$nd);
 
-        $sql = qq{SELECT id from vuln_nessus_settings where name like '$tmp[0]' and (owner like '$tmp[3]' or owner like 'admin' )};
-        
-        $sth_sel = $dbh->prepare($sql);
-        $sth_sel->execute();
-        my ($id) = $sth_sel->fetchrow_array;
-        $sth_sel->finish;
+        my $p_id       = $tmp[0];
+        my $p_name     = $tmp[1];
+        my $p_desc     = $tmp[2];
+        my $p_auto     = $tmp[3];
+        my $p_owner    = $tmp[4];
+        my $p_c_status = $tmp[5];
+        my $p_f_status = $tmp[6];
 
-        if (!defined($id) || $id eq '') {
+        $sql = qq{DELETE FROM vuln_nessus_settings WHERE id = $p_id};
+        safe_db_write($sql, 5);
 
+        $sql = qq{DELETE FROM vuln_nessus_settings_category WHERE sid = $p_id};
+        safe_db_write($sql, 5);
+
+        $sql = qq{DELETE FROM vuln_nessus_settings_family WHERE sid = $p_id};
+        safe_db_write($sql, 5);
+
+        $sql = qq{DELETE FROM vuln_nessus_settings_plugins WHERE sid = $p_id};
+        safe_db_write($sql, 5);
+
+        $sql = qq{DELETE FROM vuln_nessus_settings_preferences WHERE sid = $p_id};
+        safe_db_write($sql, 5);
+
+        $omp_id = get_config_id($p_name, $p_owner);
+
+        if ($omp_id ne '')
+        {
             print "\n";
-            
-            logwriter("Creating $tmp[0] profile...", 4);
-            $sql = qq{INSERT INTO vuln_nessus_settings (name, description, autoenable, owner, auto_cat_status, auto_fam_status)
-                    values('$tmp[0]', '$tmp[1]', '$tmp[2]', '$tmp[3]', '$tmp[4]', '$tmp[5]')};
+
+            logwriter("Creating $p_name profile...", 4);
+            $sql = qq{INSERT INTO vuln_nessus_settings (id, name, description, autoenable, owner, auto_cat_status, auto_fam_status)
+                    values($p_id, '$p_name', '$p_desc', '$p_auto', '$p_owner', '$p_c_status', '$p_f_status')};
 
             $sth_sel = $dbh->prepare($sql);
             $sth_sel->execute;
-            $sth_sel->finish;
-            
-            $sql = qq{SELECT LAST_INSERT_ID() as lastid};
-            $sth_sel = $dbh->prepare($sql);
-            $sth_sel->execute;
-            my ($idprofile) = $sth_sel->fetchrow_array;
             $sth_sel->finish;
             
             # Force category on
             
             logwriter("Filling categories...", 4);
             
-            $sql = qq{ select id, name from vuln_nessus_category };
+            $sql = qq{ SELECT id, name FROM vuln_nessus_category };
             $sth_self=$dbh->prepare( $sql );
             $sth_self->execute;
             while (my ($idcategory, $namecategory)=$sth_self->fetchrow_array ) {
@@ -1414,7 +1409,7 @@ sub generate_profiles {
                 
                 print ".";
                 
-                $sql = qq{ insert into vuln_nessus_settings_category (sid, cid, status) values ($idprofile, $idcategory, 2)};
+                $sql = qq{ INSERT INTO vuln_nessus_settings_category (sid, cid, status) VALUES ($p_id, $idcategory, 2)};
                 
                 $sth_sel = $dbh->prepare($sql);
                 $sth_sel->execute;
@@ -1427,7 +1422,7 @@ sub generate_profiles {
                             
             logwriter("Filling families...", 4);
             
-            $sql = qq{ select id, name from vuln_nessus_family };
+            $sql = qq{ SELECT id, name FROM vuln_nessus_family };
             $sth_self=$dbh->prepare( $sql );
             $sth_self->execute;
             while (my ($idfamily, $namefamily)=$sth_self->fetchrow_array ) {
@@ -1435,7 +1430,7 @@ sub generate_profiles {
                 
                 print ".";
                 
-                $sql = qq{ insert into vuln_nessus_settings_family (sid, fid, status) values ($idprofile, $idfamily, 2)};
+                $sql = qq{ INSERT INTO vuln_nessus_settings_family (sid, fid, status) VALUES ($p_id, $idfamily, 2)};
                 
                 $sth_sel = $dbh->prepare($sql);
                 $sth_sel->execute;
@@ -1446,51 +1441,30 @@ sub generate_profiles {
             
             # plugins
             logwriter("Filling plugins...", 4);
-            $sql = qq{ select id, category, family from vuln_nessus_plugins };
+            $sql = qq{ SELECT id, category, family FROM vuln_nessus_plugins };
             $sth_self=$dbh->prepare( $sql );
             $sth_self->execute;
-            while (my ($idplugin, $idcategory, $idfamily) =$sth_self->fetchrow_array ) {
-                #print ".";
+            while (my ($idplugin, $idcategory, $idfamily) = $sth_self->fetchrow_array ) {
 
-                $sql = qq{ insert into vuln_nessus_settings_plugins (id, sid, enabled, category, family) values ($idplugin, $idprofile, 'Y', $idcategory, $idfamily) };
+                $sql = qq{ INSERT INTO vuln_nessus_settings_plugins (id, sid, enabled, category, family) VALUES ($idplugin, $p_id, 'Y', $idcategory, $idfamily) };
 
                 $sth_sel = $dbh->prepare($sql);
                 $sth_sel->execute;
                 $sth_sel->finish();
             }
-            
-            $sth_self->finish();
-            logwriter("Done", 4);
-            
-            # $tmp[0] -> name, $tmp[2] -> C of F, $tmp[3] -> user
-            my $id_ff = ''; # use conf-> main sensor
-
-            $openvas_manager_common_conf_main = $openvas_manager_common;
-
-            foreach my $sensor_data (@sensors) {
-
-                my @sd = split(/\|/, $sensor_data);
-                
-                $openvas_manager_common = "$binary_location -h ".$sd[0]." -p ".$sd[1]." -u '".$sd[2]."' -w '".$sd[3]."' -iX"; # other sensors
-
-                $id_ff = create_profile($tmp[0], $tmp[2], $tmp[3]);
-
-            }
-            
-            $openvas_manager_common = $openvas_manager_common_conf_main;
 
             # preferences
             logwriter("Filling preferences in Alienvault DB...", 4);
-            
-            fill_preferences($idprofile, $id_ff); # id_ff = ff profile, deep profile and ultimate profile
 
-            logwriter("Done...", 4); 
+            fill_preferences($p_id, $omp_id);
+
+            logwriter("Done", 4);
                         
-            logwriter("$tmp[0] profile inserted", 4);
+            logwriter("$p_name profile inserted", 4);
         }
         else
         {
-            logwriter("$tmp[0] profile already exists", 4);
+            logwriter("$p_name doesn't exist in OpenVAS", 4);
         }
     }   # end foreach
 }
@@ -1505,161 +1479,6 @@ sub in_array {
         }
     }
     return 0;
-}
-
-sub create_profile {
-
-    my $name = $_[0];
-    my $type = $_[1];
-    my $user = $_[2];
-   
-    my $cmd;
-    my $i;
-    my @tmp;
-    my $id_ff;
-    
-    my $file_omp_command = '';
-
-    my $profile_to_clone = 'Full and fast';
-
-    if($name eq 'Deep' && $user eq '0') {      
-        $profile_to_clone = "Full and very deep";
-    }
-    elsif($name eq 'Ultimate' && $user eq '0') {
-        $profile_to_clone = "Full and very deep ultimate";
-    }
-    
-    $file_omp_command = "/usr/share/ossim/www/tmp/omp_command_$$".int(rand(1000000)).".xml";
-
-    system("echo \"<get_configs />\" > '$file_omp_command'");
-            
-    $cmd = "$openvas_manager_common - < ".$file_omp_command." > $xml_output 2>&1";
-    
-    #logwriter( "$cmd", 4 );
-    my $imp = system ( $cmd );
-    
-    if(defined($debug) && $debug == 0 ) { unlink $file_omp_command if -e $file_omp_command; }
-
-    if ( $imp != 0 ) { logwriter( "updateplugins: Failed Get Configs", 2 ); }
-
-    my $xml = eval {XMLin($xml_output, keyattr => [])};
-    
-    #print Dumper($xml);
-    
-    if ($@ ne "") { logwriter( "Cant' read XML $xml_output", 2); }
-    if ($xml->{'status'} !~ /20\d/) {
-        my $status = $xml->{'status'};
-        my $status_text = $xml->{'status_text'};
-        logwriter( "Error: status = $status, status_text = '$status_text' ($xml_output)", 2);
-    }
-    
-    if (ref($xml->{'config'}) eq 'ARRAY') {
-        @items = @{$xml->{'config'}};
-    } else {
-        push(@items,$xml->{'config'});
-    }
-    
-    foreach my $profile (@items) {
-        if ($profile->{'name'} eq $profile_to_clone) {
-            $id_ff = $profile->{'id'};
-        }
-    }
-    
-    #### copy config ####
-    
-    $file_omp_command = "/usr/share/ossim/www/tmp/omp_command_$$".int(rand(1000000)).".xml";
-
-    system("echo \"<create_config><copy>$id_ff</copy><name>$name</name><comment>$user</comment></create_config>\" > '$file_omp_command'");
-        
-    $cmd = "$openvas_manager_common - < ".$file_omp_command." > $xml_output 2>&1";
-        
-    #logwriter( "$cmd", 4 );
-
-    $imp = system ( $cmd );
-    
-    if(defined($debug) && $debug == 0 ) { unlink $file_omp_command if -e $file_omp_command; }
-
-    $xml = eval {XMLin($xml_output, keyattr => [])};
-    
-    if ($@ ne "") { logwriter( "Cant' read XML $xml_output", 2); }
-    if ($xml->{'status'} !~ /20\d/) {
-        my $status = $xml->{'status'};
-        my $status_text = $xml->{'status_text'};
-        logwriter( "Error: status = $status, status_text = '$status_text' ($xml_output)", 2);
-    }
-
-    $new_config_id = $xml->{'id'}; # new config id
-
-    if ( $imp != 0 ) { logwriter( "updateplugins: Failed Create Config $name", 2 ); }
-
-    
-    if( ($name eq "Default" || $name eq "Deep" || $name eq "Ultimate") && $user eq "0" ) { return $id_ff; } 
-    
-
-    #### modify config ####
-    
-    logwriter("Creating $pname for $powner will be updated...",4);
-    
-    $openvas_manager_common = $openvas_manager_common_conf_main;
-    
-    my %familyHash;
-    
-    # Enable All Plugins
-    
-    my $sql = qq{ SELECT f.name, p.oid FROM vuln_nessus_plugins AS p, vuln_nessus_family AS f WHERE p.family = f.id };
-
-    my $sth_self=$dbh->prepare( $sql );
-    $sth_self->execute;
-    while (my ($family, $oid) =$sth_self->fetchrow_array ) {
-        $familyHash{$family}{$oid}++;
-    }
-    $sth_self->finish();
-    
-    $file_omp_command = "/usr/share/ossim/www/tmp/omp_command_$$".int(rand(1000000)).".xml";
-    open (OF,">$file_omp_command");
-    print OF "<modify_config config_id='$new_config_id'><nvt_selection><family>$family</family>\n";
-
-    foreach my $family ( keys %familyHash ) {
-        $i = 0;
-        foreach my $oid ( keys %{$familyHash{$family}} ) {
-            print OF "<nvt oid='$oid'/>\n";
-            $i++;
-        }
-    }
-
-    print OF "</nvt_selection></modify_config>";
-    close(OF);
-
-    $cmd = " - < ".$file_omp_command." > $xml_output 2>&1";   
-
-    $openvas_manager_common_conf_main = $openvas_manager_common;
-
-    foreach my $sensor_data (@sensors) {
-
-        my @sd = split(/\|/, $sensor_data);
-
-        $openvas_manager_common = "$binary_location -h ".$sd[0]." -p ".$sd[1]." -u '".$sd[2]."' -w '".$sd[3]."' -iX"; # other sensors
-        
-        $imp = system ( $openvas_manager_common.$cmd );
-        
-        if ( $imp != 0 && $check_command)  { logwriter( "updateplugins: Cant' modify Config $name", 2 ); }
-        
-        if(defined($debug) && $debug == 0 ) { unlink $file_omp_command if -e $file_omp_command; }
-    
-        $xml = eval {XMLin($xml_output, keyattr => [])};
-
-        if ($@ ne "") { logwriter( "Cant' read XML $xml_output", 2); }
-        
-        if ($xml->{'status'} !~ /20\d/) {
-            my $status = $xml->{'status'};
-            my $status_text = $xml->{'status_text'};
-            logwriter( "Error: status = $status, status_text = '$status_text' ($xml_output)", 2);
-        }
-    }
-
-    $openvas_manager_common = $openvas_manager_common_conf_main;
-
-    return $id_ff;
 }
 
 sub get_config_id {
@@ -1717,8 +1536,8 @@ sub get_config_id {
 }
 
 sub fill_preferences {
-    my $idprofile = $_[0];
-    my $id_ff = $_[1];
+    my $db_id  = $_[0];
+    my $omp_id = $_[1];
     my $sql;
     
     my @items=();
@@ -1729,7 +1548,7 @@ sub fill_preferences {
     
     $file_omp_command = "/usr/share/ossim/www/tmp/omp_command_$$".int(rand(1000000)).".xml";
 
-    system("echo \"<get_preferences config_id='$id_ff'/>\" > '$file_omp_command'");
+    system("echo \"<get_preferences config_id='$omp_id'/>\" > '$file_omp_command'");
         
     $cmd = "$openvas_manager_common - < ".$file_omp_command." > $xml_output 2>&1";
         
@@ -1742,8 +1561,8 @@ sub fill_preferences {
     if ( $imp != 0 ) { logwriter( "updateplugins: Failed Get Preferences", 2 ); }
     
     my $xml = eval {XMLin($xml_output, keyattr => [])};
-    
-    
+
+
     if ($@ ne "") { logwriter( "Cant' read XML $xml_output", 2); }
     if ($xml->{'status'} !~ /20\d/) {
         my $status = $xml->{'status'};
@@ -1758,11 +1577,30 @@ sub fill_preferences {
     }
     
     foreach my $preference (@items) {
-        #print Dumper($preference);
+        my $alts = '';
+
         if (ref($preference->{'value'}) eq 'HASH') {
-            $preference->{'value'} = ""; 
+            $preference->{'value'} = '';
         }
-        push(@preferences, $preference->{'name'}." = ".$preference->{'value'});
+
+        if (defined($preference->{'alt'}))
+        {
+            if (ref($preference->{'alt'}) eq 'ARRAY')
+            {
+               $alts = ';' . join(';', @{$preference->{'alt'}});
+            }
+            else
+            {
+               $alts = ';' . join(';', $preference->{'alt'});
+            }
+        }
+
+        if (defined($preference->{'nvt'}->{'name'}) && ref($preference->{'nvt'}->{'name'}) ne 'HASH' && $preference->{'nvt'}->{'name'} ne '')
+        {
+            $preference->{'name'} = $preference->{'nvt'}->{'name'} . "[" . $preference->{'type'} . "]:" . $preference->{'name'};
+        }
+
+        push(@preferences, $preference->{'name'}." = ".$preference->{'value'} . $alts);
     }
     
     #open(PROC, "$cmd |") or die "failed to fork :$!\n";
@@ -1798,7 +1636,7 @@ sub fill_preferences {
         }
 
         $sql = qq{insert into vuln_nessus_settings_preferences (sid, nessus_id, type, 
-                value, category) values ($idprofile,"$f0", "$f2", "$f4", "$f5");};
+                value, category) values ($db_id,"$f0", "$f2", "$f4", "$f5");};
                 
         safe_db_write( $sql, 5 );
     }
@@ -2062,7 +1900,7 @@ sub enable_port_scanner_plugins {
     my($oid3) = $sth_sel->fetchrow_array;
     
 
-    $sql = qq{ select distinct id, name, owner from vuln_nessus_settings };
+    $sql = qq{ select distinct id, name, owner from vuln_nessus_settings where id <= 3 };
 
     $sth_sel = $dbh->prepare( $sql );
     $sth_sel->execute;
@@ -2076,25 +1914,27 @@ sub enable_port_scanner_plugins {
         
         $config_id = get_config_id($name, $user);
         
-        $cmd = "<modify_config config_id='$config_id'><nvt_selection><family>Port scanners</family>";
-        $cmd .= "<nvt oid='$oid1' />";
-        $cmd .= "<nvt oid='$oid2' />";
-        $cmd .= "<nvt oid='$oid3' />";
-        $cmd .= "</nvt_selection></modify_config>";
+        if ($config_id ne '')
+        {
+            $cmd = "<modify_config config_id='$config_id'><nvt_selection><family>Port scanners</family>";
+            $cmd .= "<nvt oid='$oid1' />";
+            $cmd .= "<nvt oid='$oid2' />";
+            $cmd .= "<nvt oid='$oid3' />";
+            $cmd .= "</nvt_selection></modify_config>";
 
-        $openvas_manager_common_conf_main = $openvas_manager_common;
+            $openvas_manager_common_conf_main = $openvas_manager_common;
 
-        foreach my $sensor_data (@sensors) {
+            foreach my $sensor_data (@sensors) {
 
-            my @sd = split(/\|/, $sensor_data);
+                my @sd = split(/\|/, $sensor_data);
+            
+                $openvas_manager_common = "$binary_location -h ".$sd[0]." -p ".$sd[1]." -u '".$sd[2]."' -w '".$sd[3]."' -iX"; # other sensors
         
-            $openvas_manager_common = "$binary_location -h ".$sd[0]." -p ".$sd[1]." -u '".$sd[2]."' -w '".$sd[3]."' -iX"; # other sensors
-    
-            execute_omp_command($cmd);
+                execute_omp_command($cmd);
 
+            }
+            $openvas_manager_common = $openvas_manager_common_conf_main;
         }
-
-        $openvas_manager_common = $openvas_manager_common_conf_main;
     }
     my $time_run = time() - $time_start;
     

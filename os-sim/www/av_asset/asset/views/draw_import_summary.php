@@ -46,7 +46,7 @@ if ($import_type == 'welcome_wizard_hosts')
     ?>
     <div class='sm_wizard'>
         <div><?php echo Util::htmlentities($sm_data['general']['statistics']['saved']).'/'.Util::htmlentities($sm_data['general']['statistics']['total']).' '._('host have been imported'); ?></div>
-        <div class='sm_back_button'><input id='new_importation' type='button' value='<?php echo _('New Importation') ?>'></div>
+        <div class='sm_back_button'><input id='new_importation' type='button' value='<?php echo _('Import New') ?>'></div>
     </div>
     <?php
 }
@@ -173,7 +173,7 @@ else
     ?>
     
     <div id='c_new_importation'>
-        <input type='button' id='new_importation' name='new_importation' value="<?php echo _('New Importation')?>"/>
+        <input type='button' id='new_importation' name='new_importation' value="<?php echo _('Import New')?>"/>
     </div>
         
     <?php

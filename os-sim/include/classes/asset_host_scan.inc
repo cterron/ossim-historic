@@ -635,6 +635,66 @@ class Asset_host_scan
             
         return FALSE;
     }    
+    
+    /**
+     * This function returns the list of all plugins related with hosts
+     * 
+     * @param object   $conn     Database access object
+     * @param string   $tables   [Optional] Database tables separated by comma (Join with main table)
+     * @param array    $filters  [Optional] SQL statements (WHERE, LIMIT, ORDER BY ...)
+     * @param boolean  $cache    [Optional] Use cached information
+     *
+     * @throws Exception  If a connection error occurred
+     *
+     * @return array
+     */
+    public static function get_all_plugins($conn, $tables = '', $filters = array(), $cache = FALSE)
+    {
+        Ossim_db::check_connection($conn);
+
+        $plugins = array();
+        
+        $perms_where = Asset_host::get_perms_where('host_scan.host_', FALSE);
+        
+        $q_select = 'DISTINCT host_scan.plugin_id, plugin.*';
+        $q_where  = 'WHERE host_scan.plugin_id = plugin.id AND host_scan.plugin_id <> 2007 '.$perms_where;
+        
+        if (!empty($filters['where']))
+        {
+            $q_where  .= ' AND '.$filters['where'];
+        }
+        
+        $q_where .= ' ORDER BY plugin.name ASC';
+        
+        if (!empty($filters['limit']))
+        {
+            $q_select  = 'SQL_CALC_FOUND_ROWS DISTINCT host_scan.plugin_id, plugin.*';
+            $q_where  .= ' LIMIT '.$filters['limit'];
+        }
+        
+        
+        $query  = 'SELECT '.$q_select.' FROM host_scan, plugin'.$tables.' '.$q_where;
+        $rs     = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        while (!$rs->EOF)
+        {
+            $plugins[$rs->fields['plugin_id']] = array(
+                    'name'        => $rs->fields['name'],
+                    'description' => $rs->fields['description']
+            );
+            
+            $rs->MoveNext();
+        }
+        
+        $total = (empty($filters['limit'])) ? count($plugins) : Ossim_db::get_found_rows($conn, $query, $cache);
+        
+        return array($plugins, $total);
+    }
 }
 
 /* End of file asset_host_scan.inc */

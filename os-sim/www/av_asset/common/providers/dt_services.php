@@ -181,6 +181,7 @@ foreach ($s_list as $_asset_id => $serv_data)
 
         $nagios_enabled = intval($s_values['nagios']['enabled']);
         $nagios_status  = ($nagios_enabled == 1) ? Asset_host_services::get_nagios_status_by_code($s_values['nagios']['status']) : '-';
+        $ip_value       = $_host->get_name().' ('.$s_values['ip'].')';
 
         $_s_data = array(
             "DT_RowId" => $r_key,
@@ -195,7 +196,7 @@ foreach ($s_list as $_asset_id => $serv_data)
                 'source_id'  => $s_values['source']['id']
             ),
             "",
-            $ips_to_show,
+            $ip_value,
             $s_values['port'],
             $s_values['protocol']['name'],
             $s_values['service'],

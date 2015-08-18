@@ -89,12 +89,21 @@ if (!Token::verify('tk_delete_server', GET('token')))
     {
         if ($p_id == $local_id)
         {
-    	?>
-    	<script type='text/javascript'>document.location.href="server.php?msg=nodeleteremote"</script>
-    	<?php
-    	exit();
+            ?>
+            <script type='text/javascript'>document.location.href="server.php?msg=nodeleteremote"</script>
+            <?php
+            exit();
         }
-    }    
+    }
+
+    // Check if is related to a system
+    if (Server::is_in_a_system($conn, $id))
+    {
+        ?>
+        <script type='text/javascript'>document.location.href="server.php?msg=deletesystemfirst"</script>
+        <?php
+        exit();
+    }
 
     Server::delete($conn, $id);
 

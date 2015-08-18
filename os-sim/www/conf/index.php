@@ -145,37 +145,6 @@ if (Session::is_pro())
     asort($entities);
 }
 
-// OTX
-$open_threat_exchange_last = $conf->get_conf("open_threat_exchange_last");
-
-// Show the contribute button or the yes/no select box
-if ($conf->get_conf("open_threat_exchange") != '')
-{
-    $otx_option = array(
-        'type' => array(
-            'yes' => _('Yes'),
-            'no' => _('No')
-        ),
-        'help' => _('Send information about logs'),
-        'desc' => _('Contribute threat information to AlienVault OTX?'),
-        'section' => 'otx',
-        'id' => 'otx_select',
-        'onchange' => 'change_otx(this.value)',
-        'advanced' => 1
-    );
-}
-else
-{
-    $otx_option = array(
-        'type' => 'html',
-        'help' => _('Send information about logs'),
-        'desc' => _('Contribute threat information to AlienVault OTX?'),
-        'section' => 'otx',
-        'id' => 'otx_select',
-        'value' => '<select id="otx_select" onchange="change_otx(this.value)" style="display:none"><option value="yes">'._('Yes').'</option><option value="no">'._('No').'</option></select><input type="button" class="av_b_secondary small" value="'._('Contribute').'" id="otx_contribute">',
-        'advanced' => 1
-    );
-}
 
 $CONFIG = array(
     'Ossim Framework' => array(
@@ -200,13 +169,7 @@ $CONFIG = array(
                         '1' => _('Yes')
                     ),
                     'help'  => '',
-                    'desc'  => _('Open Remote NFsen in the same frame'),
-                    'advanced' => 1
-                ),
-                'ntop_link' => array(
-                    'type'  => $sensor_list,
-                    'help'  => '' ,
-                    'desc'  => _('Default Ntop Sensor'),
+                    'desc'  => _('Open Remote Netflow in the same frame'),
                     'advanced' => 1
                 ),
                 'md5_salt' => array(
@@ -293,13 +256,7 @@ $CONFIG = array(
                         '1' => _('Yes')
                     ),
                     'help'  => '',
-                    'desc'  => _('Open Remote NFsen in the same frame'),
-                    'advanced' => 1
-                ),
-                'ntop_link' => array(
-                    'type'  => $sensor_list,
-                    'help'  => '' ,
-                    'desc'  => _('Default Ntop Sensor'),
+                    'desc'  => _('Open Remote Netflow in the same frame'),
                     'advanced' => 1
                 ),
                 'md5_salt' => array(
@@ -461,7 +418,7 @@ $CONFIG = array(
             ),
             'nessus_port' => array(
                 'type' => 'text',
-                'help' => _('Defaults to port 1241 on Nessus, 9390 on OpenVAS'),
+                'help' => _('Defaults to port 9390'),
                 'desc' => _('Scanner port'),
                 'advanced' => 1 ,
                 'section' => 'vulnerabilities'
@@ -776,47 +733,7 @@ $CONFIG = array(
                 'section' => 'tickets'
             )
         )
-    ),
-    'OTX' => array(
-        'title' => _('Open Threat Exchange'),
-        'desc' => _('Open Threat Exchange Configuration'),
-        'advanced' => 1,
-        'section' => 'otx',
-        'conf' => array(
-            'open_threat_exchange' => $otx_option,
-            'open_threat_exchange_token' => array(
-                    'type' => 'html',
-                    'classname' => 'otx_token',
-                    'id' => 'otx_token',
-                    'help' => _('OTX Token'),
-                    'desc' => _('OTX Token'),
-                    'section' => 'otx',
-                    'style' => ($conf->get_conf('open_threat_exchange') == 'yes') ? '' : 'color:gray' ,
-                    'value' => "<input type='text' id='otx_token' value='".$conf->get_conf('open_threat_exchange_key')."' placeholder='"._('Enter Token')."'> <input type='button' class='av_b_secondary small' value='".(($conf->get_conf('open_threat_exchange_key') != '') ? _('Submit') : _('Join Now'))."' id='send_otx_token' disabled>" ,
-                    'advanced' => 1
-            ),
-            'open_threat_exchange_username' => array(
-                'type' => 'html',
-                'classname' => 'otx',
-                'help' => _('OTX Username'),
-                'desc' => _('OTX Username'),
-                'section' => 'otx',
-                    'style' => ($conf->get_conf('open_threat_exchange') == 'yes') ? '' : 'color:gray' ,
-                    'value' => "<span id='otx_username' class='otx' ".(($conf->get_conf('open_threat_exchange') == 'yes') ? '' : "style='color:gray'").">".$conf->get_conf('open_threat_exchange_username')."</span>" ,
-                'advanced' => 1
-            ),
-            'open_threat_exchange_last' => array(
-                'type' => 'html',
-                'classname' => 'otx',
-                'help' => _('Last contribution to OTX'),
-                'desc' => _('Last contribution to OTX'),
-            'section' => 'otx',
-                'value'=> "<span class='otx' ".(($conf->get_conf('open_threat_exchange') != 'yes') ? "style='color:gray'" : "").">".(($open_threat_exchange_last == "") ? "<span style='margin-right:15px;'>Never</span>" : "<b>".gmdate("Y-m-d H:i:s", strtotime($open_threat_exchange_last." GMT")+(3600*$tz))."</b>")."</span> <input type='button' value='Send now' onclick=\"GB_show('"._("Send Threat Information")."', '/ossim/updates/otxsend.php', 450, '70%');\" class='av_b_secondary small otx' ".(($conf->get_conf('open_threat_exchange') != 'yes') ? "disabled='disabled'" : "").">",
-                'style' => ($conf->get_conf('open_threat_exchange') == 'yes') ? '' : 'color:gray' ,
-                'advanced' => 1
-            )
-        )
-    ),
+    )
 );
 
 ksort($CONFIG);
@@ -886,7 +803,6 @@ if (POST('update'))
         'server_port',
         'use_resolv',
         'internet_connection',
-        'use_ntop_rewrite',
         'use_munin',
         'frameworkd_port',
         'frameworkd_controlpanelrrd',
@@ -1123,12 +1039,6 @@ if (REQUEST('reset'))
 
 $default_open = REQUEST('open');
 
-if (intval(GET('passpolicy')) == 1)
-{
-    $default_open = 7;
-}
-
-
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -1364,7 +1274,9 @@ if (intval(GET('passpolicy')) == 1)
         {
             if($("#word").val().length>1)
             {
-                $("#idf").submit();
+                $("#search").addClass('av_b_processing');
+                $("#fword").val($("#word").val());
+                $("#fidf").submit();
             }
             else
             {
@@ -1462,103 +1374,6 @@ if (intval(GET('passpolicy')) == 1)
             }
         }
 
-        //********************** OTX **************************
-
-        // Change OTX select option
-        function change_otx(val)
-        {
-            if (val == 'yes')
-            {
-
-                // Activate Join Now button only the first time
-                    // If user already has a token, it activates when input focus
-                    if ($('#otx_token').val() == '')
-                {
-                    $('#send_otx_token').attr('disabled', false);
-                }
-
-                    $('.otx_token').css('color', '');
-
-                    if ($('#otx_username').html() != '')
-                    {
-                        $('.otx').css('color', '');
-                        $('.otx').attr('disabled', false);
-                }
-            }
-            else
-            {
-                $('#send_otx_token').attr('disabled', true);
-                $('.otx').attr('disabled', true);
-                $('.otx_token').css('color', 'gray');
-                $('.otx').css('color', 'gray');
-            }
-        }
-
-        // Send OTX Token
-        function get_otx_user()
-        {
-            var data      = {};
-            data['token'] = $('#otx_token').val();
-
-            var ctoken = Token.get_token("configuration_main");
-            $.ajax(
-            {
-                url: "<?php echo AV_MAIN_PATH ?>/conf/ajax/get_otx_user.php?token="+ctoken,
-                data: data,
-                type: "POST",
-                dataType: "json",
-                beforeSend: function()
-                {
-                    $('#send_otx_token').addClass('av_b_processing');
-                },
-                success: function(data)
-                {
-                    if (typeof data != 'undefined' && data != null)
-                    {
-                        $('#send_otx_token').removeClass('av_b_processing');
-
-                        if (data.error)
-                        {
-                            show_notif('av_info', data.msg, 'nf_error', 10000, true);
-
-                            return false;
-                        }
-                        // Successfully activated in OTX
-                        else
-                        {
-                            $('#otx_contribute').hide();
-                            $('#otx_select').show();
-                            $('#otx_username').html(data.msg);
-                            $('.otx').removeAttr('disabled');
-                            $('.otx').css('color', '');
-                            $('#send_otx_token').val('<?php echo _('Submit') ?>');
-                            $('#send_otx_token').attr('disabled', true);
-
-                            if (typeof parent.load_notifications == 'function')
-                            {
-                                parent.load_notifications();
-                            }
-                        }
-                    }
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown)
-                {
-                    $('#send_otx_token').removeClass('av_b_processing');
-
-                    //Checking expired session
-                        var session = new Session(XMLHttpRequest, '');
-                    if (session.check_session_expired() == true)
-                    {
-                        session.redirect();
-                        return;
-                    }
-
-                    show_notif('av_info', errorThrown, 'nf_error', 10000, true);
-
-                }
-            });
-        }
-
         $(document).ready(function()
         {
 
@@ -1648,32 +1463,7 @@ if (intval(GET('passpolicy')) == 1)
                 <?php
             }
             ?>
-
-            // OTX
-            // Popup
-            $('#otx_contribute').on('click', function()
-            {
-                var url  = "https://www.alienvault.com/my-account/customer/signup-or-thanks/?ctype=<?php echo (Session::is_pro()) ? 'usm' : 'ossim' ?>";
-
-                av_window_open(url,
-                {
-                    width: 800,
-                    height: 750,
-                    title: 'otxwindow'
-                })
-            });
-            // Activate token submit button only when token is pasted
-            $('#otx_token').on('focus', function()
-            {
-                $('#send_otx_token').attr('disabled', false);
-            });
-
-            // Join Now/Submit action
-            $('#send_otx_token').on('click', function()
-            {
-                get_otx_user();
-            });
-
+            
             // Initialize time inputs
             $('#backup_timepicker').timepicker({
                 timeFormat: 'H:i',
@@ -1739,7 +1529,7 @@ if (intval(GET('passpolicy')) == 1)
 
     ?>
 
-    <form method="POST" id="idf" style="margin:0px auto" <?php echo $onsubmit;?> action="<?php echo $_SERVER["SCRIPT_NAME"] ?>" autocomplete="off" />
+    <form method="POST" id="idf" style="margin:0px auto" <?php echo $onsubmit;?> action="<?php echo $_SERVER["SCRIPT_NAME"] ?>" autocomplete="off">
 
     <table align='center' class='conf_table'>
 
@@ -1974,6 +1764,12 @@ if (intval(GET('passpolicy')) == 1)
             </td>
         </tr>
     </table>
+</form>
+<form method="POST" id="fidf" style='display:none' action="<?php echo $_SERVER["SCRIPT_NAME"] ?>" autocomplete="off">
+    <input type='hidden' name="adv" value="<?php echo ($advanced) ? '1' : '' ?>"/>
+    <input type='hidden' name="section" value="<?php echo $section ?>"/>
+    <input type="hidden" name="nconfs" value="<?php echo $count ?>"/>
+    <input type="hidden" id="fword" name="word"/>
 </form>
 <a name="end"></a>
 </body>

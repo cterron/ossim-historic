@@ -134,7 +134,7 @@
       action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file}} --configfile={{smb_winexec_config_file}} --command='cd "{{PROGRAM_FILES_DIR.stdout}}\ossec-agent"; put {{agent_config_file}} ossec.conf'
 
     - name: Generate agent keys
-      action: shell executable=/bin/bash grep -w {{windows_ip}} {{ossec_server_key_file}} > {{agent_key_file}}
+      action: shell executable=/bin/bash grep -w {{agent_name}} {{ossec_server_key_file}} > {{agent_key_file}}
       sudo: yes
 
     - name: Send agent keys

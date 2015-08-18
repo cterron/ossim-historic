@@ -258,7 +258,6 @@ class Menu
                         + Option:WMI Scan
                     + R_lmenu:
                         + Option:Vulnerability Scans
-                + Hmenu:Discover New Assets
             + Submenu:Vulnerabilities
                 + Hmenu:Overview
                     + L_lmenu:
@@ -273,11 +272,6 @@ class Menu
                         + Option:Profiles
                         + Option:Settings
                 + Hmenu:Threat Database
-            + Submenu:Profiles
-                + Hmenu: Services
-                + Hmenu: Global
-                + Hmenu: Throughput
-                + Hmenu: Matrix
             + Submenu:Netflow
                  + Hmenu: Overview
                  + Hmenu: Detail
@@ -559,9 +553,7 @@ class Menu
         $perm_risk_maps         = $this->check_perm("dashboard-menu", "BusinessProcesses");
 
         /* OTX */
-        $ip_rep = new Reputation();
-
-        $perm_otx = $this->check_perm("dashboard-menu", "IPReputation") && $ip_rep->existReputation();
+        $perm_otx = $this->check_perm("dashboard-menu", "IPReputation");
 
 
         $perm_m_dasboards = $perm_dashboards || $perm_deployment_status || $perm_risk_maps || $perm_otx;
@@ -628,13 +620,13 @@ class Menu
 
                 /* OTX */
                 "otx" => array(
-                    "name"    => _("OTX"),
+                    "name"    => _("Open Threat Exchange"),
                     "enabled" => $perm_otx,
                     "hmenu"   => array(
                         "otx" => array(
-                            "name"    => _("OTX"),
+                            "name"    => _("Open Threat Exchange"),
                             "enabled" => $perm_otx,
-                            "url"     => "/reputation/index.php"
+                            "url"     => "/otx/index.php?section=dashboard"
                        )
                     )
                 )
@@ -774,10 +766,6 @@ class Menu
         $perm_vulns           = $this->check_perm("environment-menu", "EventsVulnerabilities");
 
 
-        /* Profiles */
-        $perm_profiles        = $this->check_perm("environment-menu", "MonitorsNetwork");
-
-
         /* Netflows */
         $perm_netflow         = $this->check_perm("environment-menu", "MonitorsNetflows");
 
@@ -798,7 +786,7 @@ class Menu
         $perm_detection       = $perm_hids || $perm_wireless;
 
 
-        $perm_m_environment   = $perm_assets || $perm_vulns || $perm_profiles || $perm_netflow || $perm_traffic_capture || $perm_availability || $perm_detection;
+        $perm_m_environment   = $perm_assets || $perm_vulns || $perm_netflow || $perm_traffic_capture || $perm_availability || $perm_detection;
 
         $this->menus['environment'] = array(
             "name"     => _("Environment"),
@@ -842,18 +830,18 @@ class Menu
                         "scheduler"  => array(
                             "name"    => _("Schedule Scan"),
                             "enabled" => $perm_scheduler,
-                            "url"     => "/av_inventory/index.php",
+                            "url"     => "av_schedule_scan/views/list.php",
                             "l_lmenu" => array(
                                 "asset_discovery" => array(
                                     "name"    => _("Asset Discovery Scan"),
                                     "enabled" => TRUE,
-                                    "url"     => "/av_inventory/index.php?s_type=nmap"
+                                    "url"     => "av_schedule_scan/views/list.php?s_type=nmap"
                                 ),
 
                                 "wmi_scan" => array(
                                     "name"    => _("WMI Scan"),
                                     "enabled" => TRUE,
-                                    "url"     => "/av_inventory/index.php?s_type=wmi"
+                                    "url"     => "av_schedule_scan/views/list.php?s_type=wmi"
                                 )
                             ),
                             "r_lmenu" => array (
@@ -864,12 +852,6 @@ class Menu
                                     "url"        => "/vulnmeter/manage_jobs.php?m_opt=environment&sm_opt=vulnerabilities&h_opt=scan_jobs"
                                 )
                             )
-                        ),
-
-                        "asset_discovery" => array(
-                            "name"    => _("Discover New Assets"),
-                            "enabled" => $perm_asset_discovery,
-                            "url"     => "/netscan/index.php"
                         )
                     )
                 ),
@@ -927,37 +909,6 @@ class Menu
                             "name"    => _("Threat Database"),
                             "enabled" => $perm_vulns,
                             "url"     => "/vulnmeter/threats-db.php"
-                        )
-                    )
-               ),
-
-                /* Profiles */
-                "profiles" => array(
-                    "name"   => _("Profiles"),
-                    "enabled" => $perm_profiles,
-                    "hmenu"   => array(
-                        "services" => array(
-                            "name"    => _("Services"),
-                            "enabled" => TRUE,
-                            "url"     => "/ntop/index.php?opc=services"
-                        ),
-
-                        "global" => array(
-                            "name"    => _("Global"),
-                            "enabled" => TRUE,
-                            "url"     => "/ntop/index.php"
-                        ),
-
-                        "throughput" => array(
-                            "name"    => _("Throughput"),
-                            "enabled" => TRUE,
-                            "url"     => "/ntop/index.php?opc=throughput"
-                        ),
-
-                        "matrix" => array(
-                            "name"    => _("Matrix"),
-                            "enabled" => TRUE,
-                            "url"     => "/ntop/index.php?opc=matrix"
                         )
                     )
                ),
@@ -1028,42 +979,42 @@ class Menu
                         "hids" => array(
                             "name"    => _("HIDS"),
                             "enabled" => $perm_hids,
-                            "url"     => "/ossec/status.php",
+                            "url"     => "/ossec/views/ossec_status/status.php",
                             "l_lmenu" => array (
                                 "overview" => array(
                                     "name"    => _("Overview"),
                                     "enabled" => TRUE,
-                                    "url"     => "/ossec/status.php"
+                                    "url"     => "/ossec/views/ossec_status/status.php"
                                 ),
 
                                 "agents" => array(
                                     "name"    => _("Agents"),
                                     "enabled" => $perm_config_hids,
-                                    "url"     => "/ossec/agent.php"
+                                    "url"     => "/ossec/views/agents/agent.php"
                                 ),
 
                                 "agentless" => array(
                                     "name"    => _("Agentless"),
                                     "enabled" => $perm_config_hids,
-                                    "url"     => "/ossec/agentless.php"
+                                    "url"     => "/ossec/views/agentless/agentless.php"
                                 ),
 
                                 "edit_rules" => array(
                                     "name"    => _("Edit Rules"),
                                     "enabled" => $perm_config_hids,
-                                    "url"     => "/ossec/index.php"
+                                    "url"     => "/ossec/views/ossec_rules/index.php"
                                 ),
 
                                 "config" => array(
                                     "name"    => _("Config"),
                                     "enabled" => $perm_config_hids,
-                                    "url"     => "/ossec/config.php"
+                                    "url"     => "/ossec/views/ossec_config/config.php"
                                 ),
 
-                                "ossec_control" => array(
-                                    "name"    => _("Ossec Control"),
+                                "hids_control" => array(
+                                    "name"    => _("HIDS Control"),
                                     "enabled" => $perm_config_hids,
-                                    "url"     => "/ossec/ossec_control.php"
+                                    "url"     => "/ossec/views/ossec_control/ossec_control.php"
                                 )
                             )
                         ),
@@ -1102,13 +1053,13 @@ class Menu
             $perm_report_layouts    = $this->is_user_admin();
             $perm_report_scheduler  = $this->check_perm("report-menu", "ReportsScheduler");
 
-            $perm_usm_reports        = $perm_report_overview || $perm_report_modules || $perm_report_scheduler;
+            $perm_usm_reports       = $perm_report_overview || $perm_report_modules || $perm_report_scheduler;
 
 
             /* OSSIM Reports */
-            $perm_ossim_reports      = $this->check_perm("report-menu", "ReportsReportServer");
+            $perm_ossim_reports     = !$perm_usm_reports && $this->check_perm("report-menu", "ReportsReportServer");
 
-            $perm_m_reports          = $perm_ossim_reports || $perm_usm_reports;
+            $perm_m_reports         = $perm_ossim_reports || $perm_usm_reports;
 
             $this->menus['reports'] = array(
                 "name"     => _("Reports"),
@@ -1228,9 +1179,12 @@ class Menu
 
         /* Configuration permissions */
 
-        /* Administration */
-        $perm_backup           = $this->check_perm("environment-menu", "ToolsBackup");
 
+        /* Administration */
+        
+        $perm_backup           = $this->check_perm("environment-menu", "ToolsBackup");
+        
+        
         $perm_user_information = $this->check_perm("configuration-menu", "ConfigurationUsers");
         $perm_templates        = $this->is_menu_pro() && ($this->is_user_admin() || $this->is_user_proadmin()) && $perm_user_information;
         $perm_user_activity    = $this->check_perm("configuration-menu", "ConfigurationUserActionLog");
@@ -1240,7 +1194,6 @@ class Menu
         $perm_networks         = $this->check_perm("environment-menu", "PolicyNetworks");
 
         $perm_structure        = $this->is_menu_pro() && $perm_hosts && $perm_networks;
-
 
         $perm_users            = $perm_user_information || $perm_templates || $perm_user_activity || $perm_structure;
 
@@ -1276,6 +1229,7 @@ class Menu
 
 
         /* Threat Intelligence */
+        
         $perm_policy     = $this->check_perm("configuration-menu", "PolicyPolicy");
         $perm_actions    = $this->check_perm("configuration-menu", "PolicyActions");
         $perm_directives = $this->check_perm("configuration-menu", "CorrelationDirectives");
@@ -1288,8 +1242,13 @@ class Menu
 
 
         $perm_ti = $perm_policy || $perm_actions || $perm_directives || $perm_cm || $perm_cc || $perm_ds || $perm_taxonomy || $perm_kdb || $perm_ports;
-
-        $perm_m_configuration = $perm_administration || $perm_deployment || $perm_ti;
+        
+        
+        /* Open Threat Exchange */
+        
+        $perm_otx = $this->check_perm("dashboard-menu", "IPReputation");
+        
+        $perm_m_configuration = $perm_administration || $perm_deployment || $perm_ti || $perm_otx;
 
         $this->menus['configuration'] = array(
             "name"     => _("Configuration"),
@@ -1333,13 +1292,11 @@ class Menu
                                 )
                             )
                         ),
-
                         "main" => array(
                             "name"    => _("Main"),
                             "enabled" => $perm_main,
                             "url"     => "/conf/index.php"
                         ),
-
                         "backups" => array(
                             "name"    => _("Backups"),
                             "enabled" => $perm_backup,
@@ -1368,7 +1325,6 @@ class Menu
                         )
                     )
                 ),
-
 
                 /* Deployment */
                 "deployment" => array(
@@ -1410,12 +1366,12 @@ class Menu
                         "scheduler"  => array(
                             "name"    => _("Scheduler"),
                             "enabled" => $perm_scheduler,
-                            "url"     => "/av_inventory/index.php?s_type=ocs",
+                            "url"     => "av_schedule_scan/views/list.php?s_type=ocs",
                             "l_lmenu" => array(
                                 "software_inventory" => array(
                                     "name"    => _("Software Inventory"),
                                     "enabled" => TRUE,
-                                    "url"     => "/av_inventory/index.php?s_type=ocs"
+                                    "url"     => "av_schedule_scan/views/list.php?s_type=ocs"
                                 )
                             )
                         ),
@@ -1561,6 +1517,19 @@ class Menu
                             )
                         )
 
+                    )
+                ),
+                
+                /* Open Threat Exchange */
+                "otx" => array(
+                    "name"    => _("Open Threat Exchange"),
+                    "enabled" => $perm_otx,
+                    "hmenu"   => array(
+                        "otx" => array(
+                            "name"    => _("Open Threat Exchange"),
+                            "enabled" => $perm_otx,
+                            "url"     => "/otx/index.php?section=config",
+                        )
                     )
                 )
             )
@@ -1989,8 +1958,7 @@ class Menu
                 $p_url = parse_url($l_lmenu_data['url']);
 
                 $url  = (empty($p_url['query'])) ? $l_lmenu_data['url']."?" : $l_lmenu_data['url']."&";
-                $url .= "l_opt=".$l_lmenu_id;
-
+                $url .= "m_opt=".$this->m_option."&sm_opt=".$this->sm_option."&h_opt=".$this->h_option."&l_opt=".$l_lmenu_id;
 
                 $li   = "<a id='ll_opt_$l_lmenu_id' class='$class' href='javascript: parent.av_menu.load_content(\"".$url."\")'>"
                             .$l_lmenu_data['name']
@@ -2010,7 +1978,7 @@ class Menu
                                <ul class='l_lmenu' id='l_lmenu_".$this->h_option."'>".
                                     implode("<li class='li_sep'>|</li>", $l_output_li).PHP_EOL.'
                                </ul>
-                           </div>'.PHP_EOL;
+                            </div>'.PHP_EOL;
             }
         }
 

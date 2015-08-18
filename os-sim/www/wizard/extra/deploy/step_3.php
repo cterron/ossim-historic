@@ -54,13 +54,13 @@ $success = intval($wizard->get_step_data('deploy_success'));
 
 
 <div class='wizard_title'>
-    <?php echo _('HIDs Deployment') ?>
+    <?php echo _('HIDS Deployment') ?>
 </div>
 
 
 
 <div class='wizard_subtitle'>
-    <?php echo _("We were able to deploy HIDs to $success of the $hosts devices selected.") ?>
+    <?php echo _("We were able to deploy HIDS to $success of the $hosts devices selected.") ?>
 </div>
 
 

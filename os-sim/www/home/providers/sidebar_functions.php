@@ -175,7 +175,7 @@ function calc_sensors_status($conn)
     // Getting system list
     $avc_list = Av_center::get_avc_list($conn);
 
-    $total_sensors = 0;
+    $total         = 0;
     $up_sensors    = array();
     $down_sensors  = array();
 

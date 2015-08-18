@@ -1093,6 +1093,7 @@ sub current_config {
 		if ( $write_allow == 1 ){
 		    $ConfigFile_compatibility->write($config_file_tmp);
 		    system("mv $config_file_tmp $config_file");
+		    system("chown -R root:alienvault /etc/ossim/ossim_setup.conf");
 # next cp is already done at the end of the execution flow (foother). see Avconfig_profile_common.pm
 # #           system("cp -rf $config_file $config_file_last");
 #

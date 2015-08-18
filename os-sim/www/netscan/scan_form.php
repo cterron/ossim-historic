@@ -124,6 +124,7 @@ for ($i = 0; $i < $num_ips; $i++)
         <script type="text/javascript" src="/ossim/js/jquery.dataTables.js"></script>
         <!-- <script type="text/javascript" src="../js/jquery.autocomplete.pack.js"></script> -->
         <link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
+        <link rel="stylesheet" type="text/css" href="../style/environment/assets/asset_discovery.css"/>
         <link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css" />
         <link rel="stylesheet" type="text/css" href="../style/tree.css"/>
         <link rel="stylesheet" type="text/css" href="../style/tipTip.css"/>

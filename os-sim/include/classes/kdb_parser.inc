@@ -243,7 +243,7 @@ class KDB_Parser
 
             $rep = $_SESSION['_kdb']['_'.$var];
 
-            $rep = (empty($rep)) ? strtoupper($var) : $rep ;
+            $rep = ($rep == '') ? strtoupper($var) : $rep ;
 
             $txt = str_replace('(($'.$var.'))', $rep, $txt);
         }

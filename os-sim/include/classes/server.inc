@@ -542,10 +542,10 @@ class Server
         Log_action::log(76, $infolog);
 
         Web_indicator::set_on("Reload_servers");
-        // ReloadPolicy key deprecated, now using Reload_policies always
-        //Web_indicator::set_on("ReloadPolicy");
 
-        return $new_id;
+        Util::set_default_os($conn);
+
+        return $id;
     }
 
 
@@ -644,8 +644,8 @@ class Server
         Log_action::log(77, $infolog);
 
         Web_indicator::set_on('Reload_servers');
-        // ReloadPolicy key deprecated, now using Reload_policies always
-        //Web_indicator::set_on('ReloadPolicy');        
+
+        Util::set_default_os($conn);
     }
 
     
@@ -912,6 +912,25 @@ class Server
 
         return $name;        
     }   
+    
+    public static function is_in_a_system($conn, $server_id) 
+    {
+        Ossim_db::check_connection($conn);
+
+        $query = 'SELECT 1 FROM system WHERE server_id=UNHEX(?)';
+        
+        if (!$rs = $conn->Execute($query, array($server_id)))
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if (!$rs->EOF)
+        {
+            return TRUE;
+        }
+
+        return FALSE;
+    }
 }
 
 /* End of file server.inc */

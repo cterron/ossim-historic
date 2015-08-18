@@ -124,7 +124,7 @@ unset($properties[14]);
                                 {
                                     ?>
                                     <select name="mac_ip" id="mac_ip">
-                                        <option value=""><?php echo _('IP address')?></option>
+                                        <option value=""><?php echo _('IP Address')?></option>
                                         <?php
                                         foreach ($ips as $ip_aux)
                                         {

@@ -114,10 +114,11 @@ var LB_FLAG        = false;
 
 
         _iframe = $('<iframe>', {  
-            "class" : "LB_iframe",
-            id      : "LB_frame",
-            "src"   : '',
-            "name"  : 'LB_frame_'+LB_counter,
+            "class"        : "LB_iframe",
+            id             : "LB_frame",
+            "src"          : '',
+            "name"         : 'LB_frame_'+LB_counter,
+            "onmousewheel" : '',
             load    : function() 
             {
 
@@ -130,8 +131,11 @@ var LB_FLAG        = false;
                     $(this).contents().find('body').attr('id', 'body_scroll');
 
                     _adjust_height();
+
                     $(this).css('visibility', 'visible'); 
                 }
+                
+                $(this)[0].contentWindow.focus();
 
                 return false;
             }

@@ -293,7 +293,7 @@ if ($mode == 'insert')
     {
         ?>            
         <script type="text/javascript">
-            top.frames['main'].notify('<?php echo _('All assets have been inserted') ?>', 'nf_success', true);
+            top.frames['main'].show_notification('asset_notif', "<?php echo _('All assets have been inserted') ?>", 'nf_success', 15000, true);
             parent.GB_hide();
         </script>                                              
         <?php

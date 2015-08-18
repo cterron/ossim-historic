@@ -56,12 +56,13 @@ class RedisDB(object):
     """NMAP Scans database redis abstraction
     """
 
-    def __init__(self, host="localhost", port=6379, password=None, db=0, namespace=""):
+    def __init__(self, host="localhost", port=6379, password=None, db=0, namespace="", data_type="set"):
         self.host = host
         self.port = port
         self.password = password
         self.db = db  # Use a different database to the OTX data
         self.namespace = namespace
+        self.data_type = data_type
         try:
             self.connection = RedisConnect(host=self.host,
                                            port=self.port,
@@ -83,6 +84,7 @@ class RedisDB(object):
         """
         return "{0}:{1}".format(self.namespace, key)
 
+
     def store(self, key, value, expire=None):
         """Saves a given pair (key,value)
         Args:
@@ -99,14 +101,42 @@ class RedisDB(object):
             set_name = self.get_set_name()
 
             pipe = self.connection.pipeline()
-
+            
             # Set the value
-            if expire is not None:
+            if expire is None:
                 pipe.set(self.get_namespace_key(key), value)
             else:
                 pipe.setex(self.get_namespace_key(key), expire, value)
-            # add the key to the set
-            pipe.sadd(set_name, key)
+            
+            if self.data_type == 'set':
+                # add the key to the set
+                pipe.sadd(set_name, key)
+            elif self.data_type == 'zset':
+                # add the key to the set
+                pipe.zadd(set_name, 1, key)
+                
+            # run the commands
+            pipe.execute()
+        except Exception as err:
+            raise RedisDBItemCannotBeSaved(str(err))
+
+    def set_key_value(self, key, value):
+        """Saves a given pair (key,value)
+        Args:
+            key(str): DB key
+            value(str): DB JSON
+        Returns:
+            void
+        Raises:
+            RedisDBItemCannotBeSaved: When a item cannot be saved.
+        """
+        try:
+            key = to_unicode(key)
+            value = to_unicode(value)
+
+            pipe = self.connection.pipeline()
+            pipe.set(self.get_namespace_key(key), value)
+
             # run the commands
             pipe.execute()
         except Exception as err:
@@ -132,7 +162,7 @@ class RedisDB(object):
 
         return value
 
-    def keys(self):
+    def keys(self, start=0, end=-1, order='asc'):
         """Returns a list of keys (pulse ids)
         Args:
             void
@@ -140,9 +170,16 @@ class RedisDB(object):
             [<str>]: A list of strings containing all the keys
         """
         try:
-            keys = list(self.connection.smembers(self.get_set_name()))
+            if self.data_type == 'set':
+                keys = list(self.connection.smembers(self.get_set_name()))
+            elif self.data_type == 'zset':
+                if order == 'desc':
+                    keys = list(self.connection.zrevrange(self.get_set_name(), start, end))
+                else:
+                    keys = list(self.connection.zrange(self.get_set_name(), start, end))
         except Exception as err:
             raise RedisDBKeysCannotBeLoaded(str(err))
+
         return keys
 
     def flush(self):
@@ -161,6 +198,15 @@ class RedisDB(object):
             pipe.delete(*keys)
             pipe.execute()
         return len(keys)
+
+    def flush_db(self):
+        """Flushes the current database using flushdb
+        Args:
+            void
+        Returns:
+            void
+        """
+        self.connection.flushdb()
 
     def add(self, items):
         """Add new items"""
@@ -183,19 +229,50 @@ class RedisDB(object):
 
         with self.connection.pipeline() as pipe:
             pipe.delete(self.get_namespace_key(key))
+            if self.data_type == 'set':
+                #remove the key to the set
+                pipe.srem(self.get_set_name(), key)
+            elif self.data_type == 'zset':
+                #remove the key to the set
+                pipe.zrem(self.get_set_name(), key)
+
             pipe.execute()
+
 
     def get_all(self):
         key_list = self.keys()
-        scans = []
+        elems = []
         for key in key_list:
             try:
                 value = self.get(key)
                 value = ast.literal_eval(value)
-                scans.append(value)
+                elems.append(value)
             except:
                 pass
-        return scans
+        return elems
+        
+        
+    def get_range(self, start, end, order='asc'):
+        """Returns a list of N elements in an ORDERED SET
+        Args:
+            start(int): The start offset
+            end(int): The end offset
+        Returns:
+            (list) The list of elements.
+        """
+        if self.data_type != 'zset':
+            raise Exception("The operation get_range is only valid for ORDERED SETS")
+            
+        key_list = self.keys(start, end, order)
+        elems = []
+        for key in key_list:
+            try:
+                value = self.get(key)
+                value = ast.literal_eval(value)
+                elems.append(value)
+            except:
+                pass
+        return elems  
 
     def update(self, key, value):
         pass

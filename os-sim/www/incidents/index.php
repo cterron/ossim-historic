@@ -634,7 +634,6 @@ $criteria = array(
 						""     		    => _("ALL"),
 						"Alarm"   		=> _("Alarm"),
 						"Event"   		=> _("Event"),
-						"Metric"  		=> _("Metric"),
 						"Anomaly" 		=> _("Anomaly"),
 						"Vulnerability" => _("Vulnerability")
 					);
@@ -975,7 +974,6 @@ $criteria = array(
 										<optgroup label="<?=_('Generic')?>">
 											 <option value="newincident.php?ref=Alarm&title=<?=urlencode(_("New Alarm incident"))?>&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports="><?=_("Alarm")?></option>
 											 <option value="newincident.php?ref=Event&title=<?=urlencode(_("New Event incident"))?>&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports="><?=_("Event")?></option>
-											 <option value="newincident.php?ref=Metric&title=<?=urlencode(_("New Metric incident"))?>&priority=1&target=&metric_type=&metric_value=0"><?=_("Metric")?></option>
 											 <option value="newincident.php?ref=Vulnerability&title=<?=urlencode(_("New Vulnerability incident"))?>&priority=1&ip=&port=&nessus_id=&risk=&description="><?=_("Vulnerability")?></option>
 										</optgroup>
 										<optgroup label="<?=_('Anomalies')?>">

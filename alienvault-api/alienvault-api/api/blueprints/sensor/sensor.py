@@ -34,15 +34,19 @@ from db.methods.system import (get_sensor_id_from_system_id)
 from api.lib.common import (make_ok,
                             make_error,
                             make_bad_request,
-                            document_using)
+                            document_using,
+                            make_error_from_exception)
 
 from api.lib.utils import accepted_url
 from api.lib.auth import admin_permission, logged_permission
 from celerymethods.jobs.reconfig import alienvault_reconfigure
-from apimethods.sensor.sensor import set_sensor_context, add_sensor, get_service_status_by_id
+from apimethods.sensor.sensor import (set_sensor_context,
+                                      apimethod_add_sensor,
+                                      get_service_status_by_id)
 from apimethods.system.system import get_all_systems_with_ping_info
 from ansiblemethods.sensor.network import set_sensor_networks, get_sensor_networks
 from ansiblemethods.sensor.ossec import get_ossec_rule_filenames
+from apiexceptions import APIException
 
 CONFIG_FILE = "/etc/ossim/ossim_setup.conf"
 
@@ -55,7 +59,7 @@ blueprint = Blueprint(__name__, __name__)
 def get_sensors():
     ret, sensor_data = get_all_systems_with_ping_info(system_type='Sensor')
     if not ret:
-        return make_error("Error retrieving the list of reachable sensors",500)
+        return make_error("Error retrieving the list of reachable sensors", 500)
     return make_ok(sensors=dict(sensor_data))
 
 
@@ -77,16 +81,12 @@ def get_sensor(sensor_id):
 def put_sensor(sensor_id):
 
     password = request.args.get('password', None)
-    if password is not None:
-        (success, response) = add_sensor(sensor_id, request.args.get('password'))
-        if not success:
-            api_log.error(str(response))
-            return make_error("Error adding sensor, please check the system is reachable and the password is correct", 500)
-
-    (success, job_id) = set_sensor_context(sensor_id,
-                                           request.args.get('ctx').lower())
-    if not success:
-        return make_error("Error setting sensor context", 500)
+    try:
+        job_id = apimethod_add_sensor(sensor_id=sensor_id,
+                                      password=password,
+                                      ctx=request.args.get('ctx').lower())
+    except APIException as e:
+        return make_error_from_exception(e)
 
     return make_ok(job_id=job_id)
 

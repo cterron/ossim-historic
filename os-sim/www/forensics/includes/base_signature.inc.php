@@ -190,6 +190,7 @@ function TranslateSignature($name, $arr)
         "/SRC_PORT/" => '$arr["layer4_sport"]',
         "/DST_PORT/" => '$arr["layer4_dport"]',
         "/PROTOCOL/" => 'Protocol::get_protocol_by_number($arr["ip_proto"], TRUE)',
+        "/PULSE/" => 'GetPulseName($arr["pulse"])',
         "/PLUGIN_ID/" => '$arr["plugin_id"]',
         "/PLUGIN_SID/" => '$arr["plugin_sid"]',
         "/FILENAME/" => 'Util::htmlentities($arr["filename"])',

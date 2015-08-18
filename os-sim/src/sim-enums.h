@@ -181,11 +181,11 @@ G_BEGIN_DECLS
 #define SIM_DS_SNORT                "snortDS"
 #define SIM_DS_OSVDB                "osvdbDS"
 
-#define SIM_PLUGIN_ID_DIRECTIVE     1505
+#define SIM_PLUGIN_ID_DIRECTIVE         1505
 #define SIM_PLUGIN_ID_POST_CORRELATION  20505
-#define SIM_PLUGIN_ID_DEMO			   	20000
-#define SIM_PLUGIN_SID_NONEXISTENT  	2000000000
-
+#define SIM_PLUGIN_ID_DEMO			   	    20000
+#define SIM_PLUGIN_SID_NONEXISTENT  	  2000000000
+#define SIM_PLUGIN_ID_ANY               0x7FFFFFFF
 // Default asset for hosts/nets if not defined
 #define DEFAULT_ASSET			2
 #define VOID_ASSET	           -1
@@ -316,7 +316,8 @@ typedef enum {
   SIM_RULE_VAR_USERDATA6,
   SIM_RULE_VAR_USERDATA7,
   SIM_RULE_VAR_USERDATA8,
-  SIM_RULE_VAR_USERDATA9
+  SIM_RULE_VAR_USERDATA9,
+  SIM_RULE_VAR_PULSE_ID
 } SimRuleVarType;
 
 typedef enum {
@@ -445,6 +446,15 @@ typedef enum
 	SIM_DIRECTIVE_GROUP_ALARM_BY_LAST
 }SimDirectiveGroupAlarmByFields;
 
+typedef enum{
+  SIM_SESSION_LEGACY_PROTOCOL = 0,
+  SIM_SESSION_BSON_PROTOCOL
+} session_type;
+
+/* For use in the pulse directives */
+#define SIM_DIRECTIVE_PULSE_ID 29998
+/* BSON Max packet 2^16 -1 */
+#define SIM_MAX_BSON_SIZE 0xFFFF
 G_END_DECLS
 
 #endif /* __SIM_ENUMS_H__ */

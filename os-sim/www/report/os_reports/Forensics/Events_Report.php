@@ -63,9 +63,10 @@ if (Session::menu_perms("analysis-menu", "EventsForensics"))
 
         $th_style = 'font-size: 10px;';
 
-        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:52mm;'>"._("Signature")."</th>\n
+        $html_headers = "<th align='center' valign='middle' style='".$th_style." width:42mm;'>"._("Signature")."</th>\n
                          <th align='center' valign='middle' style='".$th_style." width:14mm;'>"._("Date")."</th>\n
                          <th align='center' valign='middle' style='".$th_style." width:35mm;'>"._($var_field)."</th>\n
+                         <th align='center' valign='middle' style='".$th_style." width:10mm;'>"._("OTX")."</th>\n
                          <th align='center' valign='middle' style='".$th_style." width:30mm;'>"._("Source")."</th>\n
                          <th align='center' valign='middle' style='".$th_style." width:30mm;'>"._("Destination")."</th>\n
                          <th align='center' valign='middle' style='".$th_style." width:12mm;'>"._("Risk")."</th>\n";
@@ -131,9 +132,10 @@ if (Session::menu_perms("analysis-menu", "EventsForensics"))
             {
                 $td_style = 'font-size: 10px; text-align:center;';
 
-                $html_fields = "<td valign='middle' style='".$td_style." width:52mm; text-align: left;'>".Util::wordwrap($rs->fields['dataV1'], 23, "<br/>", true)."</td>\n
+                $html_fields = "<td valign='middle' style='".$td_style." width:42mm; text-align: left;'>".Util::wordwrap($rs->fields['dataV1'], 20, "<br/>", true)."</td>\n
                                 <td valign='middle' style='".$td_style." width:14mm;'>".$rs->fields['dataV2']."</td>\n
                                 <td valign='middle' style='".$td_style." width:35mm;'>".$rs->fields['dataV11']."</td>\n
+                                <td valign='middle' style='".$td_style." width:10mm;'>".($rs->fields['dataI1']>0 ? _("Yes") : _("N/A"))."</td>\n
                                 <td valign='middle' style='".$td_style." width:30mm;'>".Util::wordwrap($rs->fields['dataV3'], 21, "<br/>", true);
 
                                 if ( $rs->fields['dataV4'] != '' )

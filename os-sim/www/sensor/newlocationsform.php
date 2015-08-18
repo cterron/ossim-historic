@@ -253,7 +253,7 @@ if ($locations_id != '')
                             av_map.add_marker(av_map.get_lat(), av_map.get_lng());
                             
                             // Change title
-                            av_map.markers[0].setTitle('<?php echo _('Sensor Location')?>');
+                            av_map.markers[0].setTitle("<?php echo _('Sensor Location')?>");
                             av_map.markers[0].setMap(av_map.map);  
                                                                                                             
                             av_map.map.setZoom(8);											
@@ -270,7 +270,8 @@ if ($locations_id != '')
                 else
                 {
                     av_map.draw_warning();
-                    $('#send, #search_location, #latitude, #longitude').attr('disabled', 'disabled');          
+                    $('#search_location').val("<?php echo _('Unknown')?>");
+                    $('#latitude, #longitude').attr('disabled', 'disabled');
                 }
             });
             

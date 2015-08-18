@@ -383,30 +383,5 @@ sub feed_update() {
     console_log("Done.");
 }
 
-# same funct, but without 'data script':
-#sub feed_update() {
-#    console_log("Updating packages from feed");
-#    my $feed_packages_list
-#        = "alienvault-directives-free alienvault-directives-pro alienvault-crosscorrelation-free alienvault-crosscorrelation-pro snort-rules-default";
-#    my $command
-#        = "apt-get update && for feedpackage in $feed_packages_list; do dpkg -l \$feedpackage |grep ^ii >/dev/null 2>&1 && apt-get -V -y --assume-yes --allow-unauthenticated install \$feedpackage; done";
-#    console_log($command);
-#    system($command);
-#    console_log("Running alienvault-reconfig");
-#    system("alienvault-reconfig -c -v");
 
-#    console_log("Done.");
-#}
 
-#sub get_current_oct_version() {
-#	#my $octcv=`dpkg -l ossim-cd-tools |grep ^ii |awk -F'ossim-cd-tools +' '{print\$2}'|awk '{print\$1}'`; $octcv =~ s/\n//;
-#	my $octcv=`dpkg -l |grep alienvault-center |grep ^ii |awk -F'alienvault-center +' '{print\$2}'|awk '{print\$1}'`; $octcv =~ s/\n//;
-#	if ( $octcv ne "" ) {
-#		verbose_log("Current alienvault-center version: $octcv");
-##	}else{
-##		verbose_log(" f r e e  version?");
-#	}
-#	return $octcv;
-#}
-
-       

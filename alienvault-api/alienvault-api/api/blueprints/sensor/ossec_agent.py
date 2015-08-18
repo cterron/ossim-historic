@@ -34,13 +34,19 @@ from apimethods.sensor.ossec import ossec_delete_agentless as api_ossec_delete_a
 from apimethods.sensor.ossec import apimethod_ossec_get_modified_registry_entries
 from apimethods.sensor.ossec import ossec_extract_agent_key
 from apimethods.sensor.ossec import apimethod_ossec_get_agent_detail
-from db.methods.sensor import get_sensor_ip_from_sensor_id
+from apimethods.sensor.ossec import apimethod_ossec_get_agent_from_db
+from apimethods.sensor.ossec import apimethod_link_agent_to_asset
 from apimethods.utils import is_valid_ipv4, is_valid_ipv4_cidr, \
     is_valid_ossec_agent_id
+
+from db.methods.hids import update_hids_agent_status
+
+from apiexceptions import APIException
+
 from api.lib.utils import accepted_url
 
 from api.lib.common import (
-    make_ok, make_error, make_bad_request, document_using)
+    make_ok, make_error, make_bad_request, document_using, make_error_from_exception)
 
 from uuid import UUID
 from api.lib.auth import admin_permission, logged_permission
@@ -97,7 +103,8 @@ blueprint = Blueprint(__name__, __name__)
 @logged_permission.require(http_exception=401)
 @accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
                'agent_name': {'type': str},
-               'agent_ip': {'type': str}})
+               'agent_ip': {'type': str},
+               'asset_id': {'type': UUID, 'optional': True}})
 def ossec_add_new_agent(sensor_id):
     """
     Call API method to run ossec_create_new_agent script
@@ -105,6 +112,7 @@ def ossec_add_new_agent(sensor_id):
 
     agent_name = request.args.get('agent_name', None)
     agent_ip = request.args.get('agent_ip', None)
+    asset_id = request.args.get('asset_id', None)
 
     # Check valid input
     valid_str = re.compile('^[-.\w]+$')
@@ -112,18 +120,44 @@ def ossec_add_new_agent(sensor_id):
         return make_bad_request("Invalid agent name or address")
 
     # Now call the api method to create the new agent - If everything is right it returns the agent id of the new agent
-    (success, data) = api_ossec_add_new_agent(sensor_id, agent_name, agent_ip)
+    (success, data) = api_ossec_add_new_agent(sensor_id, agent_name, agent_ip, asset_id)
     if not success:
         current_app.logger.error("ossec_agent: error creating new agent: " + str(data))
         return make_error(data, 500)
-        
-    # Now we get the agent detail to return it.
-    (success, data) = apimethod_ossec_get_agent_detail(sensor_id, data)
-   
+
+    # Now we get the agent detail
+    try:
+        agent_id = data
+        (success, data) = apimethod_ossec_get_agent_from_db(sensor_id, agent_id)
+    except APIException as e:
+        return make_error_from_exception(e)
+
     if success:
         return make_ok(agent_detail=data)
     else:
         return make_error(data, 500)
+
+
+@blueprint.route('/<sensor_id>/ossec/agent/<agent_id>/link_to_asset', methods=['PUT'])
+@document_using('static/apidocs/sensor/ossec/agent.html')
+@logged_permission.require(http_exception=401)
+@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
+               'agent_id': {'type': str},
+               'asset_id': {'type': UUID}})
+def ossec_link_to_asset(sensor_id, agent_id):
+    """
+    Call API method to run apimethod_link_agent_to_asset
+    """
+
+    asset_id = request.args.get('asset_id', None)
+
+    # Now call the api method to link agent with asset
+    (success, data) = apimethod_link_agent_to_asset(sensor_id, agent_id, asset_id)
+    if not success:
+        current_app.logger.error("HIDS agent: error binding agent with asset: " + str(data))
+        return make_error(data, 500)
+
+    return make_ok(messages=data)
 
 
 @blueprint.route('/<sensor_id>/ossec/agent/<agent_id>', methods=['DELETE'])

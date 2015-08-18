@@ -34,26 +34,28 @@ from uuid import UUID
 from flask import Blueprint, request
 from api.lib.common import (make_ok,
                             make_error,
+                            make_error_from_exception,
                             make_bad_request,
                             document_using)
 
-from api.lib.auth import admin_permission, logged_permission
+from api.lib.auth import logged_permission
 from api.lib.utils import accepted_url
 from apimethods.sensor.ossec import ossec_get_logs
 from apimethods.sensor.ossec import ossec_get_preconfigured_agent
 from apimethods.sensor.ossec import ossec_rootcheck
 from apimethods.sensor.ossec import ossec_get_check
 from apimethods.sensor.ossec import ossec_get_available_agents
+from apimethods.sensor.ossec import apimethod_hids_get_list
 from apimethods.sensor.ossec import apimethod_ossec_control
 from apimethods.sensor.ossec import ossec_add_agentless
-#from apimethods.sensor.ossec import apimethod_get_agentlesss_list
 from apimethods.sensor.ossec import apimethod_get_agentless_passlist
 from apimethods.sensor.ossec import apimethod_put_agentless_passlist
 from apimethods.sensor.ossec import apimethod_get_agentless_list
 from apimethods.sensor.ossec import apimethod_ossec_get_agent_detail
 from apimethods.sensor.ossec import apimethod_ossec_get_syscheck
 
-from apimethods.utils import is_valid_ipv4
+from apiexceptions import APIException
+
 
 blueprint = Blueprint(__name__, __name__)  # pylint: disable-msg=C0103
 
@@ -155,14 +157,14 @@ def get_ossec_check(sensor_id):
 @accepted_url({'sensor_id': {'type': UUID, 'values': ['local']}})
 def get_ossec_available_agents(sensor_id):
     """
-        Get the avaliable agents that a sensor controls
+        Returns the agent list related to sensor
         :param sensor_id: Sensor id
     """
-    (result, data) = ossec_get_available_agents(sensor_id, 'list_available_agents')
-    if result:
-        return make_ok(agents=data)
-    else:
-        return make_error(data, 500)
+    try:
+        agents = apimethod_hids_get_list(sensor_id)
+        return make_ok(agents=agents)
+    except APIException as e:
+        return make_error_from_exception(e)
 
 
 @blueprint.route('/<sensor_id>/ossec/active_available_agents', methods=['GET'])

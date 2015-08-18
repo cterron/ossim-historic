@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # License:
 #
@@ -99,6 +99,7 @@ class DoRestore(threading.Thread):
         self.__tables = ['acid_event',
                         'reputation_data',
                         'idm_data',
+                        'otx_data',
                         'extra_data',]
         self.__msgerror = ""
         self.__purgeStatus = DoRestore.PURGE_STATUS_OK
@@ -539,6 +540,11 @@ class DoRestore(threading.Thread):
             cursor.execute(query_remove_idm_data)
             cursor.fetchall()
 
+            query_remove_otx_data = "delete from alienvault_siem_tmp.otx_data where event_id not in (select event_id from alienvault_siem_tmp.acid_event)"
+            logger.info(query_remove_otx_data)
+            cursor.execute(query_remove_otx_data)
+            cursor.fetchall()
+
             query_remove_extra_data = "delete from alienvault_siem_tmp.extra_data where event_id not in (select event_id from alienvault_siem_tmp.acid_event)"
             logger.info(query_remove_extra_data)
             cursor.execute(query_remove_extra_data)
@@ -563,6 +569,14 @@ class DoRestore(threading.Thread):
             self.__myDB.exec_query(querytmp)
             logger.info("Restored data to reputation_data")
 
+            #table: otx_data:
+            querytmp = "select * into outfile '/tmp/otx_data.sql' from alienvault_siem_tmp.otx_data"
+            cursor.execute(querytmp)
+            cursor.fetchall()
+            
+            querytmp =" load data infile '/tmp/otx_data.sql' into table alienvault_siem.otx_data"
+            self.__myDB.exec_query(querytmp)
+            logger.info("Restored data to otx_data")
 
             #table: idm_data:
             querytmp = "select * into outfile '/tmp/idm_data.sql' from alienvault_siem_tmp.idm_data"
@@ -571,6 +585,7 @@ class DoRestore(threading.Thread):
             querytmp =" load data infile '/tmp/idm_data.sql' into table alienvault_siem.idm_data"
             self.__myDB.exec_query(querytmp)
             logger.info("Restored data to idm_data")
+
             # 6 - Remove the temporary database and the temporal files
             try:
                 query ="DROP DATABASE IF EXISTS alienvault_siem_tmp"
@@ -578,6 +593,7 @@ class DoRestore(threading.Thread):
                 cursor.fetchall()
                 os.remove('/tmp/acid_event.sql')
                 os.remove('/tmp/reputation_data.sql')
+                os.remove('/tmp/otx_data.sql')
                 os.remove('/tmp/idm_data.sql')
                 cursor.close()
                 db.close()
@@ -891,6 +907,7 @@ class BackupManager(threading.Thread):
                     
                     delete_file.write("DELETE aux FROM alienvault_siem.idm_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
                     delete_file.write("DELETE aux FROM alienvault_siem.reputation_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
+                    delete_file.write("DELETE aux FROM alienvault_siem.otx_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
                     delete_file.write("DELETE aux FROM alienvault_siem.extra_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
                     delete_file.write("DELETE FROM alienvault_siem.ac_acid_event WHERE timestamp BETWEEN '%s' AND '%s';\n" % (initd, endd))
                     delete_file.write("DELETE FROM alienvault_siem.po_acid_event WHERE timestamp BETWEEN '%s' AND '%s';\n" % (initd, endd))
@@ -1058,7 +1075,6 @@ class BackupManager(threading.Thread):
             max_events = 0
 
         if max_events > 0: # backup_events = 0 -> unlimited
-            # query = "select timestamp from alienvault_siem.acid_event order by timestamp desc limit %s,1;" % self.__bkConfig['backup_events']
             query = "select timestamp from (select timestamp,@total := @total - cnt as total from (alienvault_siem.ac_acid_event, (select @total := (select ifnull(sum(cnt),0) from alienvault_siem.ac_acid_event)) t) order by timestamp asc) as ac where total>%s order by timestamp desc limit 1;" % self.__bkConfig['backup_events']
             data = self.__myDB.exec_query(query)
 
@@ -1180,21 +1196,12 @@ class BackupManager(threading.Thread):
                         backupACIDEVENT_cmd = backupACIDEVENT_cmd.replace('$CONDITION', condition)
                         backupCmds["%s_%s" % ('acid_event',dateBackup)] = backupACIDEVENT_cmd
                         condition = '"event_id in (SELECT id FROM alienvault_siem.acid_event WHERE timestamp BETWEEN \'%s 00:00:00\' AND \'%s 23:59:59\')"' % (dateBackup, dateBackup)
-                        for table in ['reputation_data', 'idm_data', 'extra_data']:
+                        for table in ['reputation_data', 'idm_data', 'otx_data', 'extra_data']:
                             cmd = backupCMD.replace('$TABLE', table)
                             cmd = cmd.replace('$CONDITION', condition)
                             backupCmds['%s_%s' %(table,dateBackup)] = cmd
 
                         condition = '"day=\'%s\'"' % (dateBackup)
-                        #Changes #4376 
-                        #for table in ['ac_alerts_signature', 'ac_sensor_sid']:
-                        #    #cmd = 'mysqldump alienvault_siem %s -h %s -u %s -p%s -c -n -t -f --no-autocommit --single-transaction --quick  --insert-ignore -w "day=\'%s\'"' % (table, _CONF[VAR_DB_HOST], _CONF[VAR_DB_USER], _CONF[VAR_DB_PASSWORD], dateBackup)
-                        #    cmd = backupCMD.replace('$TABLE', table)
-                        #    cmd = cmd.replace('$CONDITION', condition)
-                        #    backupCmds.append(cmd)
-                        #cmd = backupCMD.replace('$TABLE', 'ac_acid_event')
-                        #cmd = cmd.replace('$CONDITION', condition)
-                        #backupCmds.append(cmd)
 
                         backup_data = ""
                         for table_day, cmd in backupCmds.iteritems():
@@ -1249,16 +1256,3 @@ class BackupManager(threading.Thread):
         """Stop the current thread execution
         """
         self.__stopE.set()
-
-
-if __name__ == "__main__":
-    bkm = BackupManager()
-    bkm.start()
-    try:
-        while True:
-            sleep(1)
-    except KeyboardInterrupt:
-        print "Ctrl-c received! Stopping BackupManager..."
-        bkm.stop()
-        bkm.join(1)
-    sys.exit(0)

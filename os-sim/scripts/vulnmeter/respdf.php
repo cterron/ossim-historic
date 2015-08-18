@@ -71,7 +71,6 @@
 /* discovered with this program's use.                     */
 /***********************************************************/
 
-ini_set('memory_limit', '1500M');
 ini_set("max_execution_time","720");
 
 define('FPDF_FONTPATH','/usr/share/ossim/www/vulnmeter/inc/font/');

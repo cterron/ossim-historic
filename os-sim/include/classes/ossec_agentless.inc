@@ -906,7 +906,7 @@ class Ossec_agentless
                 }
                 catch(Exception $e)
                 {
-                    $info_error .= _('Impossible to parse ossec.conf file') . "\n"; 
+                    $info_error .= _('Impossible to parse the configuration file') . "\n"; 
                 }               
             }         
         }
@@ -924,7 +924,7 @@ class Ossec_agentless
             //Error file
             $agenteless_error_log = "/var/tmp/_agentless_error_$user".'.log';
             
-            $info_error = '<b>' . _('Error trying to syncronize ossec conf files and agentless values stored in db') . ": </b>\n" . $info_error;
+            $info_error = '<b>' . _('Error trying to syncronize HIDS conf files and agentless values stored in db') . ": </b>\n" . $info_error;
             @file_put_contents($agenteless_error_log, $info_error);
         }
     }
@@ -979,7 +979,7 @@ class Ossec_agentless
 
             if($conf_file === FALSE)
             {
-                $exp_msg = _('Impossible to parse ossec.conf file');
+                $exp_msg = _('Impossible to parse the configuration file');
 
                 Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
             } 
@@ -1012,7 +1012,7 @@ class Ossec_agentless
 
                 if($conf_file === FALSE)
                 {
-                    $exp_msg = _('Impossible to parse ossec.conf file');
+                    $exp_msg = _('Impossible to parse the configuration file');
 
                     Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
                 }
@@ -1139,7 +1139,7 @@ class Ossec_agentless
         
         if($new_conf === FALSE)
         {
-            $exp_msg = _('Impossible to parse ossec.conf file');
+            $exp_msg = _('Impossible to parse the configuration file');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -1263,7 +1263,7 @@ class Ossec_agentless
         //Loading the XML file into the Doom XML Object
         if($xml->loadXML($conf_file) === FALSE)
         {            
-            $exp_msg = _('Impossible to parse ossec.conf file');
+            $exp_msg = _('Impossible to parse the configuration file');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -1329,7 +1329,7 @@ class Ossec_agentless
         //Loading the XML file into the Doom XML Object
         if($xml->loadXML($conf_file) === FALSE)
         {            
-            $exp_msg = _('Impossible to parse ossec.conf file');
+            $exp_msg = _('Impossible to parse the configuration file');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -1633,6 +1633,72 @@ class Ossec_agentless
             }
         }
 
+        return TRUE;
+    }
+    
+    /**
+    * This function saves the agentless monitoring entries
+     *
+     * @param object $conn       Database access object
+     * @param string $ip         Agentless IP
+     * @param string $sensor_id  Agentless Sensor ID
+     * @param array  $entries    Agentless Entry List
+     *
+     * @throws Exception  If an error occurred
+     *
+     * @return boolean
+     */
+    public static function save_agentless_monitoring_entries($conn, $ip, $sensor_id, $entries)
+    {
+        Ossim_db::check_connection($conn);
+        
+        $params = array($ip, $sensor_id);
+        $query  = "DELETE FROM host_agentless_entries WHERE ip = ? AND sensor_id = ?";
+        
+        $rs = $conn->Execute($query, $params);
+        
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        } 
+        
+        
+        foreach ($entries as $entry)
+        {
+            $arguments = preg_replace("/[\r?\n]+/", " ", $entry['arguments']);
+            
+            $params = array(
+                $ip,
+                $sensor_id,
+                $entry['id_type'],
+                $entry['frequency'],
+                $entry['state'],
+                Util::utf8_decode2($arguments)
+            );
+            
+            $query = "REPLACE INTO host_agentless_entries (ip, sensor_id, type, frequency, state, arguments) VALUES (?, ?, ?, ?, ?, ?)";
+            
+            $rs = $conn->Execute($query, $params);
+            
+            if (!$rs)
+            {            
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            } 
+        }
+        
+        Util::execute_command('touch ?', array('/var/tmp/.reload_'.$sensor_id));
+        
+        $agentless = self::get_object($conn, $sensor_id, $ip);
+        
+        //Modifying agentless status and changing 'apply configuration' flag
+        if($agentless)
+        {
+            if ($agentless->get_status() != 0)
+            {
+                $agentless->set_status($conn, 1);
+            }
+        }
+        
         return TRUE;
     }
 }

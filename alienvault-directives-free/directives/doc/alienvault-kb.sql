@@ -737,7 +737,8 @@ INSERT INTO `alarm_categories` VALUES (1,'Adware infection'),
 (47,'WebServer Attack'),
 (72,'WebServer Attack - CMS'),
 (73,'WebServer Attack - SQL Injection'),
-(48,'Worm infection');
+(48,'Worm infection'),
+(100,'OTX Indicators of Compromise');
 
 REPLACE INTO `alarm_taxonomy` (sid,kingdom,category,subcategory) VALUES (27001,4,33,'Modbus SCADA devices'),
 (27002,4,33,'Modbus SCADA devices'),
@@ -2324,7 +2325,8 @@ REPLACE INTO `alarm_taxonomy` (sid,kingdom,category,subcategory) VALUES (27001,4
 (29012,5,51,'Exploit kit'),
 (45270,3,51,'Exploit kit'),
 (45269,3,3,'Web shell upload attempt'),
-(41072,5,51,'Response from malware sinkhole');
+(41072,5,51,'Response from malware sinkhole'),
+(29998,2,100,'PULSE');
 
 -- Clone Taxonomy for all enginges
 DROP PROCEDURE IF EXISTS clone_taxonomy;

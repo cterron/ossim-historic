@@ -209,36 +209,15 @@ echo '<BR> </FONT></td></tr></table>';
 <FORM METHOD="POST" ACTION="base_stat_ipaddr.php">
 
 <?php
-// if ($debug_mode == 1) echo '<TABLE BORDER=1>
-             // <TR><TD>action</TD><TD>submit</TD><TD>ip</TD><TD>netmask</TD></TR>
-             // <TR><TD>' . $action . '</TD><TD>' . $submit . '</TD>
-                 // <TD>' . $ip . '</TD><TD>' . $netmask . '</TD></TR>
-           // </TABLE>';
 /* Print the Statistics the IP address */
-$db_object = new ossim_db(true);
-if (is_array($_SESSION["server"]) && $_SESSION["server"][0]!="")
-	$conn_object = $db_object->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
-else
-	$conn_object = $db_object->connect();
-
-$slink = Av_sensor::get_ntop_link_by_host($conn_object, $ip);
-if ($slink['ntop'] != '')
-{
-    echo '<CENTER><B>' . Util::htmlentities($ip) . '</B>';
-?> 
-   ( <a href="<?php echo $slink['ntop'] . Util::htmlentities($ip).".html" ?>" class="uppercase">See host Detail</a> )
-<?php
-}
-$db_object->close($conn_object);
-
-echo ' <BR>FQDN: <B>';
+echo ' <p align="CENTER">FQDN: <B>';
 if ($resolve_IP == 0) echo '  (' . gettext("no DNS resolution attempted") . ')';
 else {
     if ($ip != "255.255.255.255") echo baseGetHostByAddr(Util::htmlentities($ip), '', $db);
     else echo Util::htmlentities($ip) . ' (Broadcast)';
 }
 //if (VerifySocketSupport()) echo '&nbsp;&nbsp;( <A HREF="base_stat_ipaddr.php?ip=' . $ip . '&amp;netmask=' . $netmask . '&amp;action=whois">local whois</A> )';
-echo '</B>
+echo '</B></p>
         <TABLE BORDER=0 class="table_list" style="width:90%">
         <TR>
            <TD CLASS="headerbasestat uppercase">' . gettext("Devices #") . '</TD>

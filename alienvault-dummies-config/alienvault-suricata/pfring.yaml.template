@@ -1,6 +1,0 @@
-  - interface: <iface_name>
-    threads: <threads_num>
-    cluster-id: <cluster_id>
-    cluster-type: <cluster_type>
-    #bpf-filter: tcp
-    #checksum-checks: auto

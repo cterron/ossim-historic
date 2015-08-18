@@ -93,7 +93,6 @@ function modify_filter($conn, $filters, $data)
         {
             $return = reload_asset_group_assets($conn, $filters);
         }
-
 	}
 	//In case of exception, we catch it and we return the exception error message.
 	catch(Exception $e)

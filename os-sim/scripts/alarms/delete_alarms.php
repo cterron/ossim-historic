@@ -108,7 +108,12 @@ for ($t=$time; $t<time(); $t+=86400)
     $where  = "event_id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
     $cmd    = "/usr/bin/mysqldump alienvault idm_data -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
     $params = array($host, $user, $password, $where, $file);
-    
+
+    // otx_data
+    $where  = "event_id in (SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp BETWEEN '$current_date 00:00:00' AND '$current_date 23:59:59')";
+    $cmd    = "/usr/bin/mysqldump alienvault otx_data -h ? -u ? -p? -c -n -t -f --hex-blob --skip-comments --skip-triggers --no-autocommit --single-transaction --quick  --insert-ignore -w ? >> ? 2>/dev/null";
+    $params = array($host, $user, $password, $where, $file);
+
     Util::execute_command($cmd, $params);
 
     // backlog_event
@@ -173,13 +178,13 @@ echo "Delete with date <= $date_to ... ";
 // event
 $tmptable = Util::create_tmp_table($conn,"id binary(16) NOT NULL, PRIMARY KEY ( id ))");
 
-$conn->Execute("REPLACE INTO $tmptable SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp <= '$date_to'");	
-$conn->Execute("DELETE FROM event WHERE id in (SELECT id FROM $tmptable)");
+$conn->Execute("INSERT IGNORE INTO $tmptable SELECT backlog_event.event_id as id FROM alarm, backlog_event WHERE alarm.backlog_id = backlog_event.backlog_id AND alarm.timestamp <= '$date_to'");	
+$conn->Execute("DELETE e FROM event e, $tmptable t WHERE e.id=t.id");
 
 // backlog tables
 $conn->Execute("TRUNCATE TABLE $tmptable");
-$conn->Execute("REPLACE INTO $tmptable SELECT backlog_id as id FROM alarm WHERE timestamp <= '$date_to'");		
-$conn->Execute("DELETE FROM backlog WHERE id in (SELECT id FROM $tmptable)");
+$conn->Execute("INSERT IGNORE INTO $tmptable SELECT backlog_id as id FROM alarm WHERE timestamp <= '$date_to'");		
+$conn->Execute("DELETE b FROM backlog b, $tmptable t WHERE b.id=t.id");
 $conn->Execute("DROP TABLE $tmptable");
 
 $conn->Execute("DELETE backlog_event.* FROM backlog_event, alarm WHERE alarm.timestamp <= '$date_to' AND backlog_event.backlog_id = alarm.backlog_id AND backlog_event.event_id = alarm.event_id");
@@ -193,6 +198,7 @@ $conn->Execute("DELETE ac FROM alarm_ctxs ac LEFT JOIN alarm a ON ac.id_alarm = 
 $conn->Execute("DELETE ah FROM alarm_hosts ah LEFT JOIN alarm a ON ah.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL");
 $conn->Execute("DELETE an FROM alarm_nets an LEFT JOIN alarm a ON an.id_alarm = a.backlog_id WHERE a.backlog_id IS NULL");
 $conn->Execute("DELETE idm FROM idm_data idm LEFT JOIN event e ON idm.event_id = e.id WHERE e.id IS NULL");
+$conn->Execute("DELETE otx FROM otx_data otx LEFT JOIN event e ON otx.event_id = e.id WHERE e.id IS NULL");
 $conn->Execute("DELETE ed FROM extra_data ed LEFT JOIN event e ON ed.event_id = e.id WHERE e.id IS NULL");
 
 $db->close();

@@ -40,7 +40,7 @@
 
 #by Dale Peterson of digitalbond.com
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 20222 (msg:"ET SCADA CitectSCADA ODBC Overflowflow Attempt"; flow:established,to_server; dsize:4; byte_test:4,>,399,0; reference:cve,2008-2639; reference:url,www.digitalbond.com/index.php/2008/09/08/ids-signature-for-citect-vuln/; reference:url,digitalbond.com/tools/quickdraw/vulnerability-rules; classtype:attempted-user; sid:2008542; rev:7;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 20222 (msg:"ET SCADA CitectSCADA ODBC Overflowflow Attempt"; flow:established,to_server; dsize:4; byte_test:4,>,399,0; reference:cve,2008-2639; reference:url,www.digitalbond.com/index.php/2008/09/08/ids-signature-for-citect-vuln/; reference:url,digitalbond.com/tools/quickdraw/vulnerability-rules; classtype:attempted-user; sid:2008542; rev:7;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 912 (msg:"ET SCADA RealWin SCADA System Buffer Overflow"; flow:established,to_server; content:"|64 12 54 6a|"; depth:4; content:"|00 00 00 f4 1f 00 00|"; distance:1; within:7; isdataat:220; content:!"|0a|"; distance:0; pcre:"/\x64\x12\x54\x6a[\x20\x10\x02]\x00\x00\x00\xf4\x1f\x00\x00/"; reference:url,www.exploit-db.com/exploits/15337/; classtype:attempted-dos; sid:2011976; rev:1;)

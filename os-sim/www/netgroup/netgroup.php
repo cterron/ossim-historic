@@ -165,7 +165,7 @@ $layout = load_layout($name_layout, $category);
 				//Delete host by ajax
 				if (typeof(items[0]) != 'undefined')
 				{
-					if (confirm("<?php echo Util::js_entities(_('Are you sure to delete the selected network group?')) ?>"))
+					if (confirm("<?php echo Util::js_entities(_('Are you sure you want to delete the selected network group?')) ?>"))
 					{
 						for (var ids='',i=0;i<items.length;i++)
 						{
@@ -221,7 +221,7 @@ $layout = load_layout($name_layout, $category);
 			{
 				if (typeof(id) != 'undefined')
 				{
-					if (confirm("<?php echo Util::js_entities(_("Are you sure to delete this network group?"))?>"))
+					if (confirm("<?php echo Util::js_entities(_("Are you sure you want to delete this network group?"))?>"))
 					{
 						var name = urlencode(id);
 

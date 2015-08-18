@@ -33,6 +33,7 @@ from db.methods.system import get_system_id_from_local
 from db.methods.server import get_server_ip_from_server_id
 from db.methods.server import get_system_id_from_server_id
 from apimethods.utils import is_valid_ipv4
+from ansiblemethods.helper import fire_trigger
 from ansiblemethods.system.system import ansible_add_system
 from ansiblemethods.server.server import get_remote_server_id_from_server_ip, ansible_nfsen_reconfigure
 from apimethods.utils import  get_base_path_from_system_id
@@ -53,6 +54,12 @@ def add_server(server_ip, password):
                                              password=password)
     if not success:
         return success, "Cannot add the server to the system"
+
+    trigger_success, msg = fire_trigger(system_ip="127.0.0.1",
+                                        trigger="alienvault-add-server")
+
+    if not trigger_success:
+        api_log.error(msg)
 
     (success, response) = get_remote_server_id_from_server_ip(server_ip)
 

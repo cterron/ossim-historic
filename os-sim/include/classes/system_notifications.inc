@@ -199,6 +199,7 @@ class System_notifications
     {
         $date            = gmdate('Y-m-d H:i:s', strtotime($message['creation_time']) + (3600 * Util::get_timezone()));
         $component_id    = strtoupper(str_replace('-', '', $message['component_id']));
+        $message_id      = strtoupper(str_replace('-', '', $message['message_id']));
         $component_type  = $message['component_type'];
         $additional_info = $message['additional_info'];
 
@@ -206,22 +207,115 @@ class System_notifications
         $message['creation_time'] = $date;
 
         // Format title
-        if (is_array($additional_info) && array_key_exists('00000000000000000000000000010024', $additional_info))
+        if (is_array($additional_info))
         {
-            $target_key = $additional_info['00000000000000000000000000010024'];
-
-            if (array_key_exists('over_assets', $target_key) && $target_key['over_assets'])
+            if (array_key_exists('00000000000000000000000000010024', $additional_info))
             {
-                $message['message_title'] = str_replace(array('NUM_ASSETS'), array($target_key['exceeding_assets']), $message['message_title']);
+                $target_key = $additional_info['00000000000000000000000000010024'];
+
+                if (array_key_exists('over_assets', $target_key) && $target_key['over_assets'])
+                {
+                    $message['message_title'] = str_replace(array('NUM_ASSETS'), array($target_key['exceeding_assets']), $message['message_title']);
+                }
+            }
+
+            //HIDS AGENTS
+            if (preg_match('/^0000000000000000000000000001003[1-3]$/', $message_id))
+            {
+                //Agent description
+                $agent_descr = _("Agent ID:"). " " . $additional_info['agent_id'];
+
+                if (!empty($additional_info['agent_name']) && !empty($additional_info['agent_id']))
+                {
+                    $agent_descr = _("Agent name:") . " " . $additional_info['agent_name'] . "\n" . _("Agent ID:"). " " . $additional_info['agent_id'];
+                }
+
+                $agent_descr_key = (!empty($agent_descr)) ? 'AGENT_DESCR' : 'AGENT_DESCR ';
+
+                //Asset description
+                $asset_descr = $additional_info['asset_id'];
+
+                if (!empty($additional_info['asset_name']))
+                {
+                    $asset_descr = $additional_info['asset_name'];
+                }
+
+                $asset_descr_key = (!empty($asset_descr)) ? 'ASSET_DESCR' : 'ASSET_DESCR ';
+
+                $message['message_title'] = str_replace($asset_descr_key, $asset_descr, $message['message_title']);
+
+                //Asset not linked
+                $additional_info['not_linked_assets'] = intval($additional_info['not_linked_assets']);
+
+                if ($additional_info['not_linked_assets'] > 0)
+                {
+                    $message['message_title'] = str_replace('NUM_ASSETS', $additional_info['not_linked_assets'], $message['message_title']);
+                }
             }
         }
 
         // Format message_description
         $message['message_description'] = str_replace(array('TIMESTAMP'), array($date), $message['message_description']);
 
+
+        //REBOOT NEEDED
+        if ($message_id == '00000000000000000000000000010027')
+        {
+            $db   = new Ossim_db();
+            $conn = $db->connect();
+
+            try
+            {
+                $system_info = Av_center::get_system_info_by_id($conn, $component_id);
+
+                $component_name = empty($system_info['data']['name'])       ? 'Unknown' : $system_info['data']['name'];
+                $component_ip   = empty($system_info['data']['current_ip']) ? 'Unknown' : $system_info['data']['current_ip'];
+            }
+            catch (Exception $e)
+            {
+                ;
+            }
+
+            $db->close();
+
+            $message['message_description'] = str_replace('HOSTNAME',   $component_name, $message['message_description']);
+            $message['message_description'] = str_replace('IP_ADDRESS', $component_ip, $message['message_description']);
+        }
+
+
         // Format based in additional info
         if (is_array($additional_info))
         {
+            //HIDS AGENTS
+            if (preg_match('/^0000000000000000000000000001003[1-3]$/', $message_id))
+            {
+                //Agent description
+                if (isset($agent_descr_key))
+                {
+                    $message['message_description'] = str_replace($agent_descr_key, $agent_descr, $message['message_description']);
+                }
+
+                //Asset description
+                if (isset($asset_descr_key))
+                {
+                    $message['message_description'] = str_replace($asset_descr_key, $asset_descr, $message['message_description']);
+                }
+
+                //Asset not deployed
+                if (preg_match('/ERROR/', $message['message_description']) && !empty($additional_info['deploy_status']))
+                {
+                    $message['message_description'] = str_replace('ERROR', $additional_info['deploy_status'], $message['message_description']);
+                }
+
+                //Asset not linked
+                $additional_info['not_linked_assets'] = intval($additional_info['not_linked_assets']);
+
+                if ($additional_info['not_linked_assets'] > 0)
+                {
+                    $message['message_description'] = str_replace('NUM_ASSETS', $additional_info['not_linked_assets'], $message['message_description']);
+                }
+            }
+
             // PLUGINS CHANGED
             if (array_key_exists('plugins_changed', $additional_info))
             {

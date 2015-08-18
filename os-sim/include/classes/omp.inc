@@ -235,44 +235,84 @@ class Omp
     }
 
 
-    public function get_results_by_ips($task_id) {
-        
+    /**
+     * Get scan results by ips
+     *
+     * @param string $task_id Task ID
+     *
+     * @return array
+     */
+    public function get_results_by_ips($task_id)
+    {
+
         $results_by_ips = array();
-        
-        $xml = $this->execute_command("<get_tasks task_id=\"$task_id\" details=\"1\"/>");
-        
-        if ($xml==FALSE) return 0;
-        
-        foreach ($xml->task->reports->report as $report) {
+
+        // Get task
+        $xml = $this->execute_command('<get_tasks task_id=\''.$task_id.'\' details=\'1\'/>');
+
+        if ($xml == FALSE)
+        {
+            return 0;
+        }
+
+        foreach ($xml->task->reports->report as $report)
+        {
             $last_report_id = (string)$report->attributes()->id;
         }
-        
-        $xml = $this->execute_command("<get_reports report_id=\"$last_report_id\" />");
-        
-        if ($xml==FALSE) return 0;
-        
-        if(gettype($xml->report->report->results->result) == "object") $results = $xml->report->report->results->result; // OpenVAS 4
-        else $results = $xml->report->results->result; // OpenVAS 3
-        
-        foreach ($results as $result) {
-            if ((string)$result->nvt->risk_factor != "") { $risk_factor = (string)$result->nvt->risk_factor; }
-            else { $risk_factor = "Info"; }
-            
-            if($risk_factor == "Critical")  { $risk_factor = "Serious"; }
-            if($risk_factor == "Log")       { $risk_factor = "Info"; }
-            if($risk_factor == "None")      { $risk_factor = "Info"; }
-            if($risk_factor == "Passed")    { $risk_factor = "Info"; }
-            if($risk_factor == "Unknown")   { $risk_factor = "Medium"; }
-            if($risk_factor == "Failed")    { $risk_factor = "High"; }
-        
-            if (!isset($results_by_ips[(string)$result->host][$risk_factor])) {
+
+        // Get last report
+        $xml = $this->execute_command('<get_reports report_id=\''.$last_report_id.'\' />');
+
+        if ($xml == FALSE)
+        {
+            return 0;
+        }
+
+        $results = $xml->report->report->results->result;
+
+        // For each result in report
+        foreach ($results as $result)
+        {
+            $cvss_base = $result->nvt->cvss_base;
+
+            // Set risk factor
+            if (empty($cvss_base) || is_array($cvss_base))
+            {
+                $risk_factor = 'Info';
+            }
+            else
+            {
+                $cvss_base = (int)$cvss_base;
+
+                if ($cvss_base >= 8)
+                {
+                    $risk_factor = 'Serious';
+                }
+                else if ($cvss_base >= 5 && $cvss_base < 8)
+                {
+                    $risk_factor = 'High';
+                }
+                else if ($cvss_base >= 2 && $cvss_base < 5)
+                {
+                    $risk_factor = 'Medium';
+                }
+                else
+                {
+                    $risk_factor = 'Low';
+                }
+            }
+
+            // Count by risk factor
+            if (!isset($results_by_ips[(string)$result->host][$risk_factor]))
+            {
                 $results_by_ips[(string)$result->host][$risk_factor] = 1;
             }
-            else {
-                $results_by_ips[(string)$result->host][$risk_factor]+=1;
+            else
+            {
+                $results_by_ips[(string)$result->host][$risk_factor] += 1;
             }
         }
-        
+
         return $results_by_ips;
     }
 

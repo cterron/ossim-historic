@@ -30,6 +30,7 @@
 
 import re
 
+from output import log_debug
 from netaddr import IPNetwork
 from sysinfo import Sysinfo
 
@@ -133,3 +134,60 @@ class Wildcard:
             return (new_string)
 
         return (new_string)
+
+    @staticmethod
+    def appliance_exec(string):
+
+        new_string = string
+        profiles = {'vmware_sensor_profiles': ['alienvault-vmware-sensor-remote',
+                                               'alienvault-vmware-sensor-standard-6x1gb',
+                                               'alienvault-vmware-sensor-remote-lite'],
+                    'vmware_aio_profiles': ['alienvault-vmware-aio-6x1gb',
+                                            'alienvault-vmware-aio-6x1gb-lite'],
+                    'vmware_logger_profiles': ['alienvault-vmware-logger-standard'],
+                    'vmware_usm_standard_profiles': ['alienvault-vmware-usm-standard'],
+                    'vmware_all_profiles': [],
+                    'hw_sensor_profiles': ['alienvault-hw-sensor-remote',
+                                           'alienvault-hw-sensor-standard-6x1gb',
+                                           'alienvault-hw-sensor-standard-2x10gb',
+                                           'alienvault-hw-sensor-enterprise-ids-6x1gb',
+                                           'alienvault-hw-sensor-enterprise-ids-2x10gb'],
+                    'hw_aio_profiles': ['alienvault-hw-aio-6x1gb',
+                                        'alienvault-hw-aio-niap'],
+                    'hw_logger_profiles': ['alienvault-hw-logger-standard',
+                                           'alienvault-hw-logger-enterprise'],
+                    'hw_usm_standard_profiles': ['alienvault-hw-usm-standard'],
+                    'hw_usm_enterprise_profiles': ['alienvault-hw-usm-enterprise'],
+                    'hw_usm_database_profiles': ['alienvault-hw-usm-database'],
+                    'hw_aio_extended_profiles': ['alienvault-hw-aio-extended'],
+                    'hw_all_profiles': [],
+                    'ami_aio_profiles': ['alienvault-ami-aio-6x1gb'],
+                    'ami_all_profiles': [],
+                    'all_profiles': []
+                    }
+
+        subkeys = ['logger',
+                   'sensor',
+                   'aio',
+                   'usm_standard',
+                   'usm_database',
+                   'usm_enterprise',
+                   'aio_extended']
+
+        for platform in ['hw', 'vmware', 'ami']:
+            for subkey in subkeys:
+                profiles.setdefault('all_%s_profiles' % subkey, [])
+                if "%s_%s_profiles" % (platform, subkey) in profiles.keys():
+                    profiles['%s_all_profiles' % platform] += profiles["%s_%s_profiles" % (platform, subkey)]
+                    profiles['all_%s_profiles' % subkey] += profiles["%s_%s_profiles" % (platform, subkey)]
+
+            profiles['all_profiles'] += profiles['%s_all_profiles' % platform]
+
+        try:
+            match = re.findall(r'^@([_a-zA-Z]*)@.*', string)[0]
+            new_string = profiles[match]
+        except Exception:
+            return [new_string]
+
+        return new_string
+

@@ -253,6 +253,7 @@ function av_detail_section(opt)
         __self.av_tables['asset'] = $("[data-bind='av_table_assets']").AV_table(
         {
             "selectable": true,
+            "with_tray" : true,
             "language": "assets",
             "ajax_url": __self.cfg.common.providers + "dt_assets.php",
             "load_params":
@@ -298,9 +299,20 @@ function av_detail_section(opt)
                 }).appendTo($("td:nth-child(9)", nRow));
 
                 $(nRow).addClass('asset_tr');
-
-                bind_row_click('asset', nRow, load_tray, load_detail);
-
+            },
+            "on_open_tray": function(ui, row, wrapper)
+            {
+                wrapper.AV_asset_indicator(
+                {
+                    'asset_type' : 'asset',
+                    'asset_id'   : row.attr('id'),
+                    'class'      : 'circle_tray',
+                    'perms'      : __self.o.permissions
+                }).hide();   
+            },
+            "on_row_dbl_click": function(ui, row)
+            {
+                load_detail(row.attr('id'));
             },
             "on_finish_draw": function(ui, oSettings, json)
             {
@@ -322,30 +334,30 @@ function av_detail_section(opt)
 
                         $('<img></img>',
                         {
-                            "class"    : "avt_img avt_action",
-                            "data-bind": "avt_action",
-                            "src"      : "/ossim/pixmaps/delete-big.png",
-                            "click"    : function(e)
+                            "class": "avt_img avt_action",                            
+                            "src"  : "/ossim/pixmaps/delete-big.png",
+                            "click": function(e)
                             {
                                 if (!__self.action_forbidden('asset'))
                                 {
                                     var msg = "<?php echo _('Are you sure you want to remove the selected assets from the group') ?>";
                                     av_confirm(msg, __keys).done(remove_assets);
                                 }
-                            }
+                            },
+                            "data-selection": "avt_action"
                         }).appendTo(elem);
                     }
                 }
 
                 $('<img></img>',
                 {
-                    "class"    : "avt_img avt_action",
-                    "data-bind": "avt_action",
-                    "src"      : "/ossim/pixmaps/edit.png",
-                    "click"    : function(e)
+                    "class": "avt_img avt_action",
+                    "src"  : "/ossim/pixmaps/edit.png",
+                    "click": function(e)
                     {
                         edit_assets();
-                    }
+                    },
+                    "data-selection": "avt_action"
                 }).appendTo(elem);
 
                 // Labels dropdown
@@ -383,9 +395,9 @@ function av_detail_section(opt)
 
                 var $label_selection = $('<img></img>',
                 {
-                    "class"    : "avt_img avt_action",
-                    "data-bind": "avt_action",
-                    "src"      : "/ossim/pixmaps/label.png"
+                    "class"         : "avt_img avt_action",
+                    "src"           : "/ossim/pixmaps/label.png",
+                    "data-selection": "avt_action"
                 }).appendTo(elem);
 
                 $label_selection.av_dropdown_tag(options);
@@ -527,6 +539,7 @@ function av_detail_section(opt)
         __self.av_tables['group'] = $("[data-bind='av_table_groups']").AV_table(
         {
             "selectable": true,
+            "with_tray" : true,
             "language": "groups",
             "ajax_url": __self.cfg.asset.providers + "dt_groups.php",
             "load_params":
@@ -567,8 +580,20 @@ function av_detail_section(opt)
                 }).appendTo($("td:last-child", nRow));
 
                 $(nRow).addClass('asset_tr');
-
-                bind_row_click('group', nRow, load_tray, load_detail);
+            },
+            "on_open_tray": function(ui, row, wrapper)
+            {
+                wrapper.AV_asset_indicator(
+                {
+                    'asset_type' : 'group',
+                    'asset_id'   : row.attr('id'),
+                    'class'      : 'circle_tray',
+                    'perms'      : __self.o.permissions
+                }).hide();   
+            },
+            "on_row_dbl_click": function(ui, row)
+            {
+                load_detail(row.attr('id'));
             },
             "on_finish_draw": function(ui, oSettings, json)
             {
@@ -586,17 +611,17 @@ function av_detail_section(opt)
 
                 $('<img></img>',
                 {
-                    "class"    : "avt_img avt_action",
-                    "data-bind": "avt_action",
-                    "src"      : "/ossim/pixmaps/delete-big.png",
-                    "click"    : function(e)
+                    "class": "avt_img avt_action",
+                    "src"  : "/ossim/pixmaps/delete-big.png",
+                    "click": function(e)
                     {
                         if (true || !__self.action_forbidden('group'))
                         {
                             var msg = "<?php echo _('Are you sure you want to remove the asset from the selected groups') ?>";
                             av_confirm(msg, __keys).done(remove_groups);
                         }
-                    }
+                    },
+                    "data-selection": "avt_action"
                 }).appendTo(elem);
 
             }
@@ -748,6 +773,7 @@ function av_detail_section(opt)
                     { "bSortable": true,  "sClass": "td_nowrap left"},
                     { "bSortable": true,  "sClass": "left"},
                     { "bSortable": true,  "sClass": "center"},
+                    { "bSortable": false, "sClass": "center", "sWidth": "50px"},
                     { "bSortable": false, "sClass": "left td_nowrap", "sWidth": "70px"},
                     { "bSortable": false, "sClass": "left td_nowrap", "sWidth": "70px"},
                     { "bSortable": false, "sClass": "center", "sWidth": "50px"}
@@ -755,8 +781,35 @@ function av_detail_section(opt)
             },
             "on_draw_row": function(ui, nRow, aData, iDrawIndex, iDataIndex)
             {
-                var id = aData['DT_RowId'];
-
+                var id    = aData['DT_RowId'];
+                var $cell = null;
+                
+                $cell = $("td:nth-child(6)", nRow).empty();
+                if (aData[5] != '')
+                {
+                    $('<img></img>',
+                    {
+                        "class" : "otx_icon pointer",
+                        "src"   : aData[5],
+                        "click" : function(e)
+                        {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            var title   = "<?php echo Util::js_entities(_('OTX Pulse')) ?>";
+                            var url     = "/ossim/otx/views/view_my_pulses.php?type=alarm&id=" + id;
+                            
+                            GB_show(title, url, 600, '65%');
+    
+                        }
+                    }).appendTo($cell);
+                }
+                else
+                {
+                    $cell.html("<?php echo _('N/A') ?>");
+                }
+                
+                $cell = $("td:nth-child(9)", nRow).empty();
                 $('<img></img>',
                 {
                     "class" : "avt_img",
@@ -768,10 +821,18 @@ function av_detail_section(opt)
 
                         load_detail(id);
                     }
-                }).appendTo($("td:nth-child(8)", nRow));
+                }).appendTo($cell);
+                
+                if ($('td:eq(3)',nRow).html() == '')
+                {
+                    $('td:eq(2)',nRow).attr('colspan', 2);
+                    $('td:eq(3)',nRow).hide();
+                }
 
-                bind_row_click('alarm', nRow, function(){}, load_detail);
-
+            },
+            "on_row_dbl_click": function(ui, row)
+            {
+                load_detail(row.attr('id'));
             },
             "on_complete_ajax": function()
             {
@@ -914,7 +975,7 @@ function av_detail_section(opt)
                 "bLengthChange": (__self.o.asset_type == 'asset') ? false : true,
                 "aoColumns":
                 [
-                    { "bSortable": false, "sClass": "left"},
+                    { "bSortable": false, "sClass": "left", "bVisible": (__self.o.asset_type == 'asset') ? false : true },
                     { "bSortable": false, "sClass": "left"},
                     { "bSortable": false, "sClass": "left"},
                     { "bSortable": false, "sClass": "left"},
@@ -936,7 +997,7 @@ function av_detail_section(opt)
                 if (__self.o.permissions['admin'] && __self.o.permissions['plugins'])
                 {
                     var elem = ui.dt_actions;
-                    var name = (__self.o.asset_type == 'asset') ? "<?php echo _('Edit Plugin') ?>" : "<?php echo _('Edit Plugins') ?>";
+                    var name = "<?php echo _('Edit Plugins') ?>";
 
                     $('<button></button>',
                     {
@@ -1021,10 +1082,11 @@ function av_detail_section(opt)
                         load_detail(id);
                     }
                 }).appendTo($("td:nth-child(7)", nRow));
-
-                //Binding the load detail to the double click on the row.
-                bind_row_click('events', nRow, function(){}, load_detail);
-            }
+            },
+            "on_row_dbl_click": function(ui, row)
+            {
+                load_detail(row.attr('id'));
+            },
         });
 
 
@@ -1035,18 +1097,12 @@ function av_detail_section(opt)
          */
         function load_detail(id)
         {
+            var title  = "<?php echo Util::js_entities(_('Event Detail')) ?>";
             var url    = __self.cfg.ossim + '/forensics/base_qry_alert.php?submit=%230-'+urlencode(id)+'&clear_allcriteria=1&minimal_view=1&noback=1';
 
-            var p_menu = 'analysis';
-            var s_menu = 'security_events';
-            var t_menu = 'security_events';
-
-            link(url, p_menu, s_menu, t_menu);
+            GB_show(title, url, '70%', '80%');
         }
     }
-
-
-
 
     /*******************************************************************************************************/
     /***************************                PROPERTY SECTION                ****************************/
@@ -1093,10 +1149,9 @@ function av_detail_section(opt)
 
                     $('<button></button>',
                     {
-                        "text"     : "<?php echo _('Edit Properties') ?>",
-                        "class"    : "av_b_secondary small avt_action",
-                        "data-bind": "avt_action",
-                        "click"    : function()
+                        "text" : "<?php echo _('Edit Properties') ?>",
+                        "class": "av_b_secondary small avt_action",
+                        "click": function()
                         {
                             if (__self.o.asset_type == 'asset')
                             {
@@ -1106,7 +1161,8 @@ function av_detail_section(opt)
                             {
                                 edit_bulk_properties();
                             }
-                        }
+                        },
+                        "data-selection": "avt_action"
                     }).appendTo(elem);
                 }
             }
@@ -1186,10 +1242,9 @@ function av_detail_section(opt)
 
                     $('<button></button>',
                     {
-                        "text"     : "<?php echo _('Edit Software') ?>",
-                        "class"    : "av_b_secondary small avt_action",
-                        "data-bind": "avt_action",
-                        "click"    : function()
+                        "text" : "<?php echo _('Edit Software') ?>",
+                        "class": "av_b_secondary small avt_action",
+                        "click": function()
                         {
                             if (__self.o.asset_type == 'asset')
                             {
@@ -1199,7 +1254,8 @@ function av_detail_section(opt)
                             {
                                 edit_bulk_software();
                             }
-                        }
+                        },
+                        "data-selection": "avt_action"
                     }).appendTo(elem);
                 }
             }
@@ -1343,109 +1399,4 @@ function av_detail_section(opt)
         return false;
     }
     
-    
-    /*
-     * Function to open the tray.
-     *
-     * @param  section   Section ID.
-     * @param  row       Row where the tray will be opened. 
-     */
-    function load_tray(section, row)
-    {
-        var id = $(row).attr('id');
-
-        if(__self.av_tables[section].dt.fnIsOpen(row))
-        {
-            $(row).next('tr').find('#tray_container').slideUp(300,function()
-            {
-                __self.av_tables[section].dt.fnClose(row);
-            });
-        }
-        else
-        {
-            var wrapper = $('<div></div>',
-            {
-                'id'   : 'tray_container',
-                'class': 'list_tray'
-            }).css('visibility', 'hidden');
-
-            $('<div></div>',
-            {
-                'class': 'tray_triangle clear_layer'
-            }).appendTo(wrapper);
-
-            var asset_indicators = $(wrapper).AV_asset_indicator(
-            {
-                'asset_type' : section,
-                'asset_id'   : id,
-                'class'      : 'circle_tray',
-                'perms'      : __self.o.permissions
-            }).hide();
-
-            __self.av_tables[section].dt.fnOpen(row, wrapper, 'tray_details');
-
-            wrapper.slideDown(300, function()
-            {
-                $(this).css('visibility', 'visible');
-            });
-        }
-    }
-    
-    
-    /*
-     * Function to bind the row click (Single and Double click).
-     *
-     * @param  section              Section ID. 
-     * @param  row                  Row to bind the callbacks. 
-     * @param  click_callback       Single Click Callback. 
-     * @param  dbl_click_callback   Double Click Callback. 
-     */
-    var click_delay  = 300, n_clicks = 0, click_timer = null;
-    function bind_row_click(section, row, click_callback, dbl_click_callback)
-    {
-        $(row).on('click', function()
-        {
-            $(this).disableTextSelect();
-
-            n_clicks++;  //count clicks
-
-            var row = this;
-
-            if(n_clicks === 1) //Single click event
-            {
-                click_timer = setTimeout(function()
-                {
-                    $(this).enableTextSelect();
-
-                    n_clicks = 0;             //reset counter
-
-                    //Executing the single click callback
-                    try
-                    {
-                        click_callback(section, row);
-                    }
-                    catch(Err){}
-
-                }, click_delay);
-            }
-            else //Double click event
-            {
-                clearTimeout(click_timer);  //prevent single-click action
-                n_clicks = 0;               //reset counter
-
-                var id   = $(row).attr('id');
-
-                //Executing the double click callback
-                try
-                {
-                    dbl_click_callback(id);
-                }
-                catch(Err){}
-            }
-
-        }).off('dblclick').on('dblclick', function(e)
-        {
-            e.preventDefault();
-        });
-    }
 }

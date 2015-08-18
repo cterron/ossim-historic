@@ -35,6 +35,7 @@
 #include <glib-object.h>
 #include <gnet.h>
 #include <uuid/uuid.h>
+#include <bson.h>
 
 G_BEGIN_DECLS
 
@@ -332,6 +333,9 @@ struct _SimCommand {
       // Saqqara specific.
       SimUuid * saqqara_backlog_id;
       gint      level;
+      // Pulse engine
+      GHashTable        *generic_fields;
+      bson_t            *pulses;
     } event;
 
     struct {
@@ -478,7 +482,7 @@ gchar*            sim_command_get_string                      (SimCommand      *
 SimEvent*         sim_command_get_event                       (SimCommand      *command);
 
 gboolean          sim_command_is_valid                        (SimCommand      *command);
-
+bson_t *          sim_command_get_bson                        (SimCommand * cmd);
 gboolean (*sim_command_get_remote_server_scan(void))(SimCommand*,GScanner*);
 gboolean (*sim_command_get_agent_scan(void))(SimCommand*,GScanner*);
 gboolean (*sim_command_get_default_scan(void))(SimCommand*,GScanner*);

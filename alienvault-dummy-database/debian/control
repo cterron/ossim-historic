@@ -10,7 +10,12 @@ Homepage: http://www.alienvault.com/
 Package: alienvault-dummy-database
 Architecture: all
 Pre-Depends: alienvault-dummy-common (>= ${source:Upstream-Version}), libjemalloc1 (>= 3.3.0)
-Depends: ${shlibs:Depends}, ${misc:Depends}, percona-server-client-5.6, percona-server-server-5.6, ossim-mysql-ext, mytop, libconfig-tiny-perl, dialog, debconf-utils, snort-rules-default, suricata-rules-default,
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ percona-server-client-5.6,
+ percona-server-server-5.6,
+ ossim-mysql-ext,
+ mytop,
+ suricata-rules-default,
  ossim-mysql (>= 1:${source:Upstream-Version}),
  alienvault-mysql (>= 10:${source:Upstream-Version}) | alienvault-mysql (>= ${source:Upstream-Version})
 Description: MetaPackage for alienvault database components

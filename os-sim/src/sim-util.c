@@ -2169,7 +2169,7 @@ sim_version_match (SimVersion * a, SimVersion * b)
 }
 
 void
-sim_version_parse (const gchar *string, guint8 *major, guint8 *minor, guint8 *micro)
+sim_version_parse (const gchar *string, guint8 *major, guint8 *minor, guint8 *micro, guint8 *nano)
 {
   GRegex *regex;
   GMatchInfo *match_info;
@@ -2178,6 +2178,7 @@ sim_version_parse (const gchar *string, guint8 *major, guint8 *minor, guint8 *mi
   *major = 0;
   *minor = 0;
   *micro = 0;
+  *nano = 0;
 
 	g_return_if_fail (string);
 
@@ -2212,6 +2213,17 @@ sim_version_parse (const gchar *string, guint8 *major, guint8 *minor, guint8 *mi
   {
     word = g_match_info_fetch (match_info, 0);
     *micro = g_ascii_strtoull (word, NULL, 10);
+    g_free (word);
+  }
+  else
+  {
+    goto free;
+  }
+  g_match_info_next (match_info, NULL);
+  if (g_match_info_matches (match_info))
+  {
+    word = g_match_info_fetch (match_info, 0);
+    *nano = g_ascii_strtoull (word, NULL, 10);
     g_free (word);
   }
 
@@ -2273,6 +2285,38 @@ sim_socket_send_simple (GSocket* socket, const gchar *buffer)
 	}
 
 	return ret;
+}
+
+/**
+ *  sim_util_is_hex_string 
+ *  @string a pointer to a hex string
+ * Verify if the all digits in string are hexadecimal
+*/
+gboolean 
+sim_util_is_hex_string (const gchar         *string)
+{
+  gboolean result = FALSE;
+  if (string != NULL)
+  {
+    result = TRUE;
+    while (result && *string != '\0')
+    {
+      if (!g_ascii_isxdigit (*string++))
+        result = FALSE;
+    }
+  }
+  return result;
+}
+gboolean
+sim_util_is_pulse_id (const gchar *string)
+{
+  gboolean result = FALSE;
+  if (string != NULL)
+  {
+    if (strlen (string) == 24 && sim_util_is_hex_string (string))
+      result = TRUE;
+  }
+  return result;
 }
 
 // vim: set tabstop=2 sts=2 noexpandtab:

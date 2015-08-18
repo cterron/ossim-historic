@@ -85,7 +85,8 @@ class baseCon {
             $sql = "SELECT connection_id()";
             $result = $this->DB->Execute($sql);
             $myrow = $result->fields;
-            $_SESSION['_connection_id'] = $myrow[0];
+            $sess_id  = Util::get_sess_cookie();
+            $_SESSION[$sess_id]['_connection_id'] = $myrow[0];
             //error_log($myrow[0]);
             $result->Close();
         }
@@ -300,21 +301,13 @@ class baseCon {
                 }
             }
         }
-		//echo "<br>ejecutando baseExecute num_rows $num_rows (base_db.inc):$sql<br>Limitstr:$limit_str";
-		//echo "<br><br>";
-		//print_r($rs);
-		
         if ($sql_trace_mode > 0) {
             fputs($this->sql_trace, $sql . "$limit_str\n");
             fflush($this->sql_trace);
         }
         if ((!$rs || $this->baseErrorMessage() != "") && $die_on_error) {
-            if (file_exists('/tmp/debug_siem'))
-            {
-                error_log("DB ERROR:".$this->DB->ErrorMsg()."\n", 3, "/tmp/siem");
-            }
-            //echo '</TABLE></TABLE></TABLE><FONT COLOR="#FF0000"><B>' . gettext("Database ERROR:") . '</B>' . ($this->baseErrorMessage()) . "</FONT>";
-            echo '</TABLE></TABLE></TABLE><FONT COLOR="#FF0000"><B>' . gettext("Database ERROR") . '</B>' . "</FONT>";
+            Av_exception::write_log(Av_exception::DB_ERROR, $this->DB->ErrorMsg());
+            echo '</TABLE></TABLE></TABLE><CENTER><span style="font-size:11px;color:#555555"><B><br>' . gettext("Unable to query the database to retrieve some table information. Try fewer conditions.") . '</B></span></CENTER><script>$("#views_link").prop("disabled",true);$("#actions_link").prop("disabled",true);</script>';
             die();
         } else {
             return $rs;

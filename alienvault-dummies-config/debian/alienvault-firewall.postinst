@@ -16,10 +16,6 @@ set -e
 #          <conflicting-package> <version>
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
-DEPRECATED_FIREWALL_FILE="/etc/ossim_firewall"
-DEPRECATED_FIREWALL_IP6_FILE="/etc/ossim_firewall_ipv6"
-BACKUP_DEPRECATED_FIREWALL_FILE="/etc/ossim_firewall.dpkg-old"
-BACKUP_DEPRECATED_FIREWALL_IP6_FILE="/etc/ossim_firewall_ipv6.dpkg-old"
 CUSTOM_FIREWALL_RULES="/etc/ossim/firewall_include"
 TMP_FIREWALL_CUSTOM_RULES="/tmp/av_include_iptables.tmp"
 TMP_TEST_RULES_RESULT="/tmp/ofv.tmp"
@@ -68,7 +64,13 @@ configure_firewall(){
     /etc/network/if-pre-up.d/iptables > /dev/null 2>&1 || true
 }
 
-
+configure_default_custom_firewall () {
+    if [ -f /usr/share/alienvault-firewall/firewall_include ]; then
+       if ! [ -f /etc/ossim/firewall_include ]; then
+           cp -af /usr/share/alienvault-firewall/firewall_include /etc/ossim/
+       fi
+    fi
+}
 
 delete_deprecated_firewall_configuration(){
     # Removes the deprecated firewall configuration from the system
@@ -93,20 +95,22 @@ case "$1" in
     configure)
         # Enabling iptables filter module (first time)
         if [ -z "$(modprobe -l iptable_filter)" ]; then
-            modprobe -q iptable_filter
+            modprobe -q iptable_filter || true
             echo "Module iptable_filter was disabled, and it has been enabled"
         fi
 
         if [ -z "$(modprobe -l ip6table_filter)" ]; then
-            modprobe -q ip6table_filter
+            modprobe -q ip6table_filter || true
             echo "Module iptable_filter was disabled, and it has been enabled"
         fi
+
+        configure_default_custom_firewall
 
         # Deleting deprecated ossim_firewall configuration
         delete_deprecated_firewall_configuration
         
         # Configuring firewall
-        configure_firewall
+        configure_firewall || true
     ;;
 
     triggered)
@@ -115,7 +119,7 @@ case "$1" in
             case "$trigger" in
                 alienvault-restart-firewall)
                     # Configuring firewall
-                    configure_firewall
+                    configure_firewall || true
                 ;;
 
                 *)

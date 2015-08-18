@@ -176,7 +176,7 @@ if ($type == 'virus')
 		}
 	}
 	
-	$links  = "''";
+	$links  = array();
 	
 	$colors = get_widget_colors(count($data));
 } 
@@ -213,7 +213,7 @@ else
 		$range         = ($chart_info['range']  > 0)? ($chart_info['range'] * 86400) : 432000;
 
 		//Link to the forensic site.
-		$forensic_link = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics&utc=1", 'analysis', 'security_events');
+		$forensic_link = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time_cnt=2&time[0][0]=+&time[0][1]=%3E%3D&time[0][8]=+&time[0][9]=AND&time[1][1]=%3C%3D&time[0][2]=".gmdate("m",$timeutc-$range)."&time[0][3]=".gmdate("d",$timeutc-$range)."&time[0][4]=".gmdate("Y",$timeutc-$range)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[1][2]=".gmdate("m",$timeutc)."&time[1][3]=".gmdate("d",$timeutc)."&time[1][4]=".gmdate("Y",$timeutc)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&submit=Query+DB&num_result_rows=-1&time_cnt=1&sort_order=time_d&hmenu=Forensics&smenu=Forensics&utc=1", 'analysis', 'security_events');
 		
 		//Sql Query
 		//TO DO: Use parameters in the query.
@@ -240,7 +240,7 @@ else
 				{
 					$data[]  = $rg->fields["num_events"];
 					$label[] = _($rg->fields["name"]);
-					$links[] = "'$forensic_link&category%5B0%5D=".$rg->fields["cat_id"]."&category%5B1%5D=".$rg->fields["id"]."'";
+					$links[] = $forensic_link . '&category%5B0%5D=' . $rg->fields["cat_id"] . '&category%5B1%5D=' . $rg->fields["id"];
 				}
 				
 				$rg->MoveNext();

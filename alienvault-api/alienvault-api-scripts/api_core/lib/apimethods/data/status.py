@@ -39,7 +39,102 @@ from db.methods.data import (load_mcserver_messages,
                              delete_messages,
                              db_insert_current_status_message)
 
-from db.methods.system import get_system_id_from_local
+from db.methods.system import get_system_id_from_local, db_get_hostname
+
+from time import time
+
+import os.path
+
+from datetime import datetime
+
+
+def _format_handle_n_assets(message, additional_info):
+    """
+        message is pased by ref. I can modify it on fly
+    """
+    assets = additional_info['00000000000000000000000000010024'] 
+    nassets = assets.get('over_assets', None)
+    if nassets is not None:
+        message['message_title'] = message['message_title'].replace('NUM_ASSETS', str(assets.get('exceeding_assets', 0)))
+
+
+def _format_plugins_changed(message, additional_info):
+    """
+        Format the plugins
+        The plugins_changes is a list with the full paths to plugins
+    """
+    plugin_names = [os.path.basename(base) for base in additional_info['plugins_changed']]
+    message['message_title'] = message['message_title'].replace('PLUGINS_CHANGED', ", ".join(plugin_names))
+    message['message_description'] = message['message_description'].replace('PATH_PLUGINS_CHANGED', ", ".join(additional_info['plugins_changed']))
+    message['message_description'] = message['message_description'].replace('PLUGINS_CHANGED', ", ".join(plugin_names))
+
+
+def _format_plugins_removed(message, additional_info):
+    """
+        Format remove plugins info
+    """
+    plugin_names = [os.path.basename(base) for base in additional_info['plugins_removed']]
+    message['message_title'] = message['message_title'].replace('PLUGINS_REMOVED', ", ".join(plugin_names))
+    message['message_description'] = message['message_description'].replace('PATH_PLUGINS_REMOVED', ", ".join(additional_info['plugins_removed']))
+    message['message_description'] = message['message_description'].replace('PLUGINS_REMOVED', ", ".join(plugin_names))
+
+
+def _format_rsyslog_files_removed(message, additional_info):
+    """
+        Format rsyslog_files_removed
+    """
+    rsyslog_names = [os.path.basename(base) for base in additional_info['rsyslog_files_removed']]
+    message['message_title'] = message['message_title'].replace('RSYSLOG_FILES_REMOVED', ", ".join(rsyslog_names))
+    message['message_description'] = message['message_description'].replace('PATH_RSYSLOG_FILES_REMOVED', ", ".join(additional_info['rsyslog_files_removed']))
+    message['message_description'] = message['message_description'].replace('RSYSLOG_FILES_REMOVED', ", ".join(rsyslog_names))
+
+
+def _format_rsyslog_files_changed(message, additional_info):
+    """
+        Format rsyslog_files_changed
+    """
+    rsyslog_names = [os.path.basename(base) for base in additional_info['rsyslog_files_changed']]
+    message['message_title'] = message['message_title'].replace('RSYSLOG_FILES_CHANGED', ", ".join(rsyslog_names))
+    message['message_description'] = message['message_description'].replace('PATH_RSYSLOG_FILES_CHANGED', ", ".join(additional_info['rsyslog_files_changed']))
+    message['message_description'] = message['message_description'].replace('RSYSLOG_FILES_CHANGED', ", ".join(rsyslog_names))
+
+
+def _format_system_name(message, additional_info):
+    """
+        Format system name
+    """
+    success, name = db_get_hostname(additional_info['system_id'])
+    if not success:
+        system_name = "Unknown"
+    else:
+        system_name = name
+    message['message_description'] = message['message_description'].replace('SYSTEM_NAME',
+                                                                            system_name)
+
+
+def format_messages(messages):
+    """
+        Format message
+        directly ported from os-sim/include/classes/system_notifications.inc
+        tz is the current tz for messages
+        If email is True we don't format TIMESTAMP field
+    """
+    cases = {
+        '00000000000000000000000000010024': _format_handle_n_assets,
+        'plugins_changed': _format_plugins_changed,
+        'plugins_removed': _format_plugins_removed,
+        'rsyslog_files_removed': _format_rsyslog_files_removed,
+        'rsyslog_files_changed': _format_rsyslog_files_changed,
+        'system_id': _format_system_name
+    }
+    for message in messages:
+        # First special case for message_id
+        additional_info = message.get('additional_info', None)
+        if additional_info is not None:
+            for key in [x for x in additional_info.keys() if x in cases.keys()]:
+                cases[key](message=message, additional_info=additional_info)
+        # The message_creation is a datetime.datetime object
+        message['message_description'] = message['message_description'].replace('TIMESTAMP', message['creation_time'].strftime("%Y-%m-%d %H:%M:%S") + " UTC")
 
 
 def get_status_messages(component_id=None,
@@ -79,6 +174,9 @@ def get_status_messages(component_id=None,
                                                 login_user, is_admin)
     if not success:
         return False, "Couldn't retrieve status messages from the database"
+    if not success:
+        return False, "Can't format message"
+    format_messages(data['messages'])
 
     return True, {'messages': data['messages'], 'total': data['total']}
 
@@ -131,7 +229,7 @@ def load_external_messages_on_db(messages):
     return ((success and success_remove), {'loaded': data, 'removed': data_remove})
 
 
-def insert_current_status_message(message_id, component_id, component_type, additional_info):
+def insert_current_status_message(message_id, component_id, component_type, additional_info=None, replace=False):
     """Inserts a new notification on the system. The related message id should exists.
     Args:
         message_id (str:uuid string): Message id related with the notification
@@ -146,4 +244,4 @@ def insert_current_status_message(message_id, component_id, component_type, addi
         success, component_id = get_system_id_from_local()
         if not success:
             return False, "Cannot retrieve the local system id"
-    return db_insert_current_status_message(message_id, component_id, component_type, additional_info)
+    return db_insert_current_status_message(message_id, component_id, component_type, additional_info, replace)

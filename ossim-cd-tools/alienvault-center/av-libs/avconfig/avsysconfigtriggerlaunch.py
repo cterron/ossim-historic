@@ -40,7 +40,8 @@ class AVSysConfigTriggerLaunch (object):
 
         # Create a RegexDict that associates augeas paths to triggers.
         self.__triggers = RegexDict(
-            {'/files/etc/alienvault/network/vpn.conf/tun\d/network': 'alienvault-network-vpn-net-config',
+            {'/files/etc/alienvault/network/interfaces.conf/eth\d/[a-z]*': 'alienvault-network-interfaces-config',
+             '/files/etc/alienvault/network/vpn.conf/tun\d/network': 'alienvault-network-vpn-net-config',
              '/files/etc/alienvault/network/vpn.conf/tun\d/netmask': 'alienvault-network-vpn-net-config',
              '/files/etc/alienvault/network/vpn.conf/tun\d/port': 'alienvault-network-vpn-net-config',
              '/files/etc/alienvault/network/vpn.conf/tun\d/ca': 'alienvault-network-vpn-crypto-config',
@@ -63,11 +64,6 @@ class AVSysConfigTriggerLaunch (object):
                 except Exception, e:
                     return (False, 'Error: %s; Output message: %s' % (str(e), str(err)))
 
-            try:
-                proc = subprocess.Popen('dpkg --configure --pending', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                out, err = proc.communicate()
-            except Exception, e:
-                return (False, 'Error: %s; Output message: %s' % (str(e), str(err)))
+        # After saving the configuration files, a reconfig should run and it will trigger the pending changes
 
         return (True, '')
-

@@ -34,27 +34,158 @@
 //Config File
 require_once 'av_init.php';
 
-// validate asset type
+session_write_close();
 
-$asset_type = POST('asset_type');
 
-if ($asset_type == 'asset' || $asset_type == 'group')
+function add_note($conn, $type)
 {
-    Session::logcheck('environment-menu', 'PolicyHosts');
+    $validate = array(
+        'asset_id' => array('validation' => 'OSS_HEX',                  'e_message'  =>  'illegal:' . _('Asset ID')),
+        'txt'      => array('validation' => 'OSS_TEXT, OSS_PUNC_EXT',   'e_message'  =>  'illegal:' . _('Note text'))
+    );
+
+    $validation_errors = validate_form_fields('POST', $validate);
+
+    if ((is_array($validation_errors) && !empty($validation_errors)))
+    {   
+        Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Note could not be added'));
+    }
+    
+ 
+    $asset_id = POST('asset_id');
+    $txt      = POST('txt');
+    
+    // Check Asset Type
+    $asset_types = array(
+        'asset'     => 'asset_host',
+        'network'   => 'asset_net',
+        'group'     => 'asset_group',
+        'net_group' => 'net_group'
+    );
+    
+    // Note type
+    $type_tr = array(
+        'group'     => 'host_group',
+        'network'   => 'net',
+        'asset'     => 'host',
+        'net_group' => 'net_group'
+    );
+    
+    $class_name = $asset_types[$type];
+    $asset_type = $type_tr[$type];
+    
+    // Check Asset Permission
+    if (method_exists($class_name, 'is_allowed') && !$class_name::is_allowed($conn, $asset_id))
+    {
+        $error = sprintf(_('Error! %s is not allowed'), ucwords($type));
+        Av_exception::throw_error(Av_exception::USER_ERROR, $error);
+    }
+    
+    $note_id  = Notes::insert($conn, $asset_type, gmdate('Y-m-d H:i:s'), $asset_id, $txt);
+    
+    if (intval($note_id) > 0)
+    {
+        $tz  = Util::get_timezone();
+        
+        $data['msg']      = _('Note added successfully');
+        $data['id']       = $note_id;
+        $data['note']     = $txt;
+        $data['date']     = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime(gmdate('Y-m-d H:i:s')) + 3600 * $tz);
+        $data['user']     = Session::get_session_user();
+        $data['editable'] = 1;
+    }
+    else
+    {                    
+        Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Note could not be added'));
+    }
+    
+    
+    return $data;
 }
-else if ($asset_type == 'network' || $asset_type == 'net_group')
+
+
+function edit_note($conn)
 {
-    Session::logcheck('environment-menu', 'PolicyNetworks');
+    $validate = array(
+        'note_id' => array('validation' => 'OSS_DIGIT',               'e_message'  =>  'illegal:' . _('Note ID')),
+        'txt'     => array('validation' => 'OSS_TEXT, OSS_PUNC_EXT',  'e_message'  =>  'illegal:' . _('Note text'))
+    );
+
+    $validation_errors = validate_form_fields('POST', $validate);
+
+    if ((is_array($validation_errors) && !empty($validation_errors)))
+    {   
+        Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Note could not be saved'));
+    }
+
+    $note_id = POST('note_id');
+    $txt     = POST('txt');
+    
+    $result = Notes::update($conn, $note_id, gmdate('Y-m-d H:i:s'), $txt);
+
+    if ($result == TRUE)
+    {
+        $data['msg'] = _('Note saved successfully');
+    }
+    else
+    {   
+        Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Note could not be saved'));
+    }
+    
+    return $data;
+}
+
+
+function delete_note($conn)
+{
+    $validate = array(
+        'note_id'  => array('validation' => 'OSS_DIGIT',  'e_message'  =>  'illegal:' . _('Note ID'))
+    );
+
+    $validation_errors = validate_form_fields('POST', $validate);
+
+    if ((is_array($validation_errors) && !empty($validation_errors)))
+    {   
+        Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Note could not be deleted'));
+    }
+
+
+    $note_id = POST('note_id');
+    
+    $result  = Notes::delete($conn, $note_id);
+
+    if ($result == TRUE)
+    {
+        $data['msg'] = _('Note deleted successfully');
+    }
+    else
+    {   
+        Av_exception::throw_error(Av_exception::USER_ERROR, _('Error! Note could not be deleted'));
+    }
+    
+    
+    return $data;
+}
+
+
+// validate asset type
+$type = POST('asset_type');
+
+if ($type == 'asset' || $type == 'group')
+{
+    Session::logcheck_ajax('environment-menu', 'PolicyHosts');
+}
+else if ($type == 'network' || $type == 'net_group')
+{
+    Session::logcheck_ajax('environment-menu', 'PolicyNetworks');
 }
 else
 {
 	Util::response_bad_request(_('Invalid asset type value'));
 }
 
-session_write_close();
 
 //Validate action type
-
 $action = POST('action');
 
 ossim_valid($action, OSS_LETTER, '_',   'illegal:' . _('Action'));
@@ -67,7 +198,6 @@ if (ossim_error())
 }
 
 //Validate Form token
-
 $token  = POST('token');
 
 $tk_key = 'tk_' . $action;
@@ -79,158 +209,38 @@ if (Token::verify($tk_key, $token) == FALSE)
     Util::response_bad_request($error);
 }
 
-$data = array();
 
-switch($action)
+$db    = new ossim_db();
+$conn  = $db->connect();
+
+try
 {
-    case 'delete_note':
+    $response = array();
     
-        $validate = array(
-            'note_id'  => array('validation' => 'OSS_DIGIT',  'e_message'  =>  'illegal:' . _('Note ID'))
-        );
-
-        $validation_errors = validate_form_fields('POST', $validate);
-
-        if ((is_array($validation_errors) && !empty($validation_errors)))
-        {   
-            Util::response_bad_request(_('Error! Note could not be deleted'));
-        }
-        else
-        {
-            try
-            {
-                $db    = new ossim_db();
-                $conn  = $db->connect();
-
-                $note_id  = POST('note_id');
-                
-                $result = Notes::delete($conn, $note_id);
-
-                $db->close();
-
-                if ($result == TRUE)
-                {
-                    $data['msg'] = _('Note deleted successfully');
-                }
-                else
-                {   
-                    Util::response_bad_request(_('Error! Note could not be deleted'));
-                }
-            }
-            catch(Exception $e)
-            {                
-                Util::response_bad_request(_('Error! Note could not be deleted:') . ' ' . $e->getMessage());
-            }
-        }
-
-    break;
-
-    case 'add_note':
+    switch($action)
+    {   
+        case 'add_note':
+            $response = add_note($conn, $type);
+        break;
     
-        $validate = array(
-            'asset_type' => array('validation' => "'regex:asset|group|network|net_group'", 'e_message'  =>  'illegal:' . _('Asset type')),
-            'asset_id'   => array('validation' => 'OSS_HEX',                               'e_message'  =>  'illegal:' . _('Asset ID')),
-            'txt'        => array('validation' => 'OSS_TEXT, OSS_PUNC_EXT',                'e_message'  =>  'illegal:' . _('Note text'))
-        );
-
-        $validation_errors = validate_form_fields('POST', $validate);
-
-        if ((is_array($validation_errors) && !empty($validation_errors)))
-        {   
-            Util::response_bad_request(_('Error! Note could not be added'));
-        }
-        else
-        { 
-            try
-            {   
-                $type_tr = array(
-                    'group'     => 'host_group',
-                    'network'   => 'net',
-                    'asset'     => 'host',
-                    'net_group' => 'net_group'
-                );
-                
-                $db    = new ossim_db();
-                $conn  = $db->connect();
-
-                $asset_type = POST('asset_type');
-                $asset_id   = POST('asset_id');
-                $txt        = POST('txt');
-                
-                $asset_type = $type_tr[$asset_type];
-                
-                $note_id    = Notes::insert($conn, $asset_type, gmdate('Y-m-d H:i:s'), $asset_id, $txt);
-
-                $db->close();
-                
-                if ( gettype($note_id) == "integer" && $note_id > 0)
-                {
-                    $tz  = Util::get_timezone();
-                    
-                    $data['msg']      = _('Note added successfully');
-                    $data['id']       = $note_id;
-                    $data['note']     = $txt;
-                    $data['date']     = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime(gmdate('Y-m-d H:i:s')) + 3600*$tz);
-                    $data['user']     = Session::get_session_user();
-                    $data['editable'] = 1;
-                }
-                else
-                {                    
-                    Util::response_bad_request(_('Error! Note could not be added'));
-                }
-            }
-            catch(Exception $e)
-            {  
-                Util::response_bad_request(_('Error! Note could not be added:') . ' ' . $e->getMessage());
-            }
-        }
+        case 'edit_note':
+            $response = edit_note($conn);
+        break;
         
-    break;
-
-    case 'edit_note':
-
-        $validate = array(
-            'note_id' => array('validation' => 'OSS_DIGIT',               'e_message'  =>  'illegal:' . _('Note ID')),
-            'txt'     => array('validation' => 'OSS_TEXT, OSS_PUNC_EXT',  'e_message'  =>  'illegal:' . _('Note text'))
-        );
-
-        $validation_errors = validate_form_fields('POST', $validate);
-
-        if ((is_array($validation_errors) && !empty($validation_errors)))
-        {   
-            Util::response_bad_request(_('Error! Note could not be saved'));
-        }
-        else
-        {
-            try
-            {
-                $db    = new ossim_db();
-                $conn  = $db->connect();
-
-                $note_id = POST('note_id');
-                $txt     = POST('txt');
-                
-                $result = Notes::update($conn, $note_id, gmdate('Y-m-d H:i:s'), $txt);
-
-                $db->close();
-
-                if ($result == TRUE)
-                {
-                    $data['msg'] = _('Note saved successfully');
-                }
-                else
-                {   
-                    Util::response_bad_request(_('Error! Note could not be saved'));
-                }
-
-            }
-            catch(Exception $e)
-            {   
-                Util::response_bad_request(_('Error! Note could not be saved:') . ' ' . $e->getMessage());
-            }
-        }
-
-    break;
+        case 'delete_note':
+            $response = delete_note($conn);
+        break;
+        
+        default:
+            Av_exception::throw_error(Av_exception::USER_ERROR, _('Invalid Action.'));
+    }
+}
+catch (Exception $e)
+{
+    $db->close();
+    Util::response_bad_request($e->getMessage());
 }
 
-echo json_encode($data);
+$db->close();
+
+echo json_encode($response);
