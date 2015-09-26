@@ -415,6 +415,7 @@ def add_system(system_id, password):
 
 def apimethod_delete_system(system_id):
     success, local_system_id = get_system_id_from_local()
+
     if not success:
         error_msg = "Cannot retrieve the " + \
                     "local system id. %s" % str(local_system_id)
@@ -429,11 +430,15 @@ def apimethod_delete_system(system_id):
         error_msg = "Cannot retrieve the system ip " + \
                     "for the given system-id %s" % (str(system_ip))
         return success, error_msg
+
     # Check whether the remote system is reachable or not:
     try:
         remote_system_is_reachable = ping_system(system_id, no_cache=True)
     except APIException:
         remote_system_is_reachable = False
+
+    # We need to take the sensor_id from the database before removing it from the db
+    (success_f, sensor_id) = get_sensor_id_from_system_id(system_id)
 
     # 1 - Remove it from the database
     success, msg = db_remove_system(system_id)
@@ -443,8 +448,7 @@ def apimethod_delete_system(system_id):
         return success, error_msg
 
     # 2 - Remove the firewall rules.
-    (success, sensor_id) = get_sensor_id_from_system_id(system_id)
-    if success:
+    if success_f:
         trigger_success, msg = fire_trigger(system_ip="127.0.0.1",
                                             trigger="alienvault-del-sensor")
         if not trigger_success:

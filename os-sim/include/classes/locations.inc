@@ -330,6 +330,31 @@ class Locations
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
     }
+    
+    
+    public static function save_location_sensors($conn, $id, $sensor_list)
+    {
+        Ossim_db::check_connection($conn);
+
+        $query = "DELETE FROM `location_sensor_reference` WHERE location_id=UNHEX(?)";
+
+        if (!$conn->Execute($query, array($id)))
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        
+        $sensor_list = is_array($sensor_list) ? $sensor_list : array();
+        foreach ($sensor_list as $sensor_id)
+        {
+            $params = array($id, $sensor_id);
+            $query  = "REPLACE INTO `location_sensor_reference` (location_id,sensor_id) VALUES (UNHEX(?), UNHEX(?))";
+    
+            if (!$conn->Execute($query, $params))
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+        }
+    }
 
 
     public static function count_related_networks($conn, $id)

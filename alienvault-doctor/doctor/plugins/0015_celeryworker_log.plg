@@ -10,11 +10,11 @@ raw_limit=1000
 
 # Look for errors in celery worker log file.
 [00150001]
+severity=Info
 pattern=\[\d{4}-\d{2}-\d{2}\s(?:\d{2}\:?){3},\d{3}\:\sERROR/\S+\]\s(?P<error>.*)
 conditions=@string@:==""
 formatted_output=The following error has been found in /var/log/alienvault/api/w1.log while running celery worker process: @string@ {nl} 
 fail_if_empty=False
-severity=Info
 description=Verifies that there are no errors in the celery tasks execution.
 summary_passed=No errors were found in the celery tasks execution
 summary_failed=There was an error in the internal execution of the tasks handled by a Celery worker

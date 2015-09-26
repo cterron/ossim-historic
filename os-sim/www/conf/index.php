@@ -309,7 +309,7 @@ $CONFIG = array(
             ),
             'frameworkd_backup_storage_days_lifetime' => array(
                 'type' => 'text',
-                'help' => _('Number of days Siem events are stored in hard-disk'),
+                'help' => _('Number of Backup files (One file per day of Siem events) are stored in hard-disk'),
                 'desc' => _('Number of Backup files to keep in the filesystem'),
                 'section' => 'siem',
                 'advanced' => 0
@@ -323,7 +323,7 @@ $CONFIG = array(
             ),
             'backup_events' => array(
                 'type' => 'text',
-                'help' => _('Maximum number of events stored in SQL Database<br/>(0 value does no limit)'),
+                'help' => _('Maximum number of events stored in SQL Database<br/>(0 value means no limit)'),
                 'desc' => _('Events to keep in the Database (Number of events)'),
                 'section' => 'siem',
                 'advanced' => 0

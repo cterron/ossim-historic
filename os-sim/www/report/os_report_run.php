@@ -72,6 +72,7 @@ if (isset($_GET['data']) && !empty($_GET['data']))
         header('Content-Length: ' . filesize($path));
         readfile($path);
         @unlink($path);
+        Log_action::log(19);
         exit();
     }
 }
@@ -224,5 +225,7 @@ else
     {
         echo $pdfReport->getNamePdf();
     }
+
+    Log_action::log(19);
 }
 ?>

@@ -121,14 +121,15 @@ class Util
 
         $translations = array(
             '/SRC_IP/'     => array('func' => 'get_src_ip',     'parameters' => array()),
-            '/PULSE/'      => array('func' => '',               'parameters' => array()),
             '/DST_IP/'     => array('func' => 'get_dst_ip',     'parameters' => array()),
             '/SRC_PORT/'   => array('func' => 'get_src_port',   'parameters' => array()),
             '/DST_PORT/'   => array('func' => 'get_dst_port',   'parameters' => array()),
             '/PROTOCOL/'   => array('func' => 'get_protocol',   'parameters' => array()),
+            '/PULSE/'      => array('func' => '',               'parameters' => array()),
             '/PLUGIN_ID/'  => array('func' => 'get_plugin_id',  'parameters' => array()),
             '/PLUGIN_SID/' => array('func' => 'get_plugin_sid', 'parameters' => array()),
             '/FILENAME/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'filename')),
+            '/USERNAME/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'username')),
             '/USERDATA/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata')),
             '/USERDATA1/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata1')),
             '/USERDATA2/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata2')),
@@ -156,7 +157,12 @@ class Util
 
                     $parameters  = array($d_param);
                     $replacement = call_user_func_array('Protocol::get_protocol_by_number', $parameters);
-
+                    
+                    if (empty($replacement))
+                    {
+                        $replacement = $d_param;
+                    }
+                        
                     break;
                     
                 case '/PULSE/':
@@ -184,7 +190,6 @@ class Util
                     {
                         $parameters  = array($conn, $alarm->get_src_host());
                         $replacement = call_user_func_array('Asset_host::get_name_by_id', $parameters);
-
                     }
                     else
                     {
@@ -193,6 +198,11 @@ class Util
                         $parameters  = array($conn, $d_param, $alarm->get_ctx());
                         $replacement = call_user_func_array('Asset_host::get_name_by_ip', $parameters);
                         $replacement = array_pop($replacement);
+                        
+                        if (empty($replacement))
+                        {
+                            $replacement = $d_param;
+                        }
                     }
 
                     break;
@@ -211,6 +221,11 @@ class Util
                         $parameters  = array($conn, $d_param, $alarm->get_ctx());
                         $replacement = call_user_func_array('Asset_host::get_name_by_ip', $parameters);
                         $replacement = array_pop($replacement);
+                        
+                        if (empty($replacement))
+                        {
+                            $replacement = $d_param;
+                        }
                     }
 
                     break;
@@ -218,10 +233,12 @@ class Util
                 default:
                     $replacement = call_user_func_array(array($alarm, $v['func']), $v['parameters']);
             }
-
-            $str = '$name = preg_replace("' . $k . '", $replacement, $name);';
-
-            eval($str);
+            
+            if (!empty($replacement))
+            {
+                $str = '$name = preg_replace("' . $k . '", $replacement, $name);';
+                eval($str);
+            }
         }
 
         if (empty($name))
@@ -1647,6 +1664,7 @@ class Util
         $mail = new PHPMailer(TRUE); // the TRUE param means it will throw exceptions on errors, which we need to catch
 
         $mail->IsSMTP();
+        $mail->CharSet = "UTF-8";
 
         try
         {

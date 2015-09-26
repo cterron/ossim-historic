@@ -10,11 +10,11 @@ raw_limit=200
 
 # Check for errors during the db migration process
 [00200001]
+severity=Error
 pattern=(.*)
 conditions=@string@:==""
 formatted_output=An issue was found while migrating the database: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if the AlienVault database migration has been successful
 summary_passed=Database migration successfully completed 
 summary_failed=Database migration did not complete successfully

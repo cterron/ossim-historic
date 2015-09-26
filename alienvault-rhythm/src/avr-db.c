@@ -48,6 +48,9 @@ struct _AvrDbPrivate
 
 static gpointer parent_class = NULL;
 
+/* OTX data loaded. Greater than 0 when there is nothing in the redis DB */
+static gint otx_data_loaded = 0;
+
 // Private declarations
 // static gchar * _avr_db_get_string (AvrDb *, gchar *);
 static GPtrArray * _avr_db_get_array (AvrDb *, gchar *);
@@ -287,6 +290,19 @@ avr_db_unref_data (AvrDb * db, gpointer data)
 }
 
 
+/**
+ * avr_db_has_otx_data:
+ * @void
+ *
+ *
+ * Returns: TRUE if there is any OTX IoC in the DB
+ */
+gboolean
+avr_db_has_otx_data ()
+{
+  return (g_atomic_int_get(&otx_data_loaded) > 0);
+}
+
 //
 // Private methods
 //
@@ -344,51 +360,6 @@ _avr_db_load_data (AvrDb * db)
   return (FALSE);
 }
 
-
-/**
- * _avr_db_get_string:
- * @void
- *
- *
- * Returns:
- */
-/* static gchar * */
-/* _avr_db_get_string (AvrDb * db, gchar * key) */
-/* { */
-/*   g_return_val_if_fail (AVR_IS_DB(db), NULL); */
-/*   g_return_val_if_fail (key, NULL); */
-
-/*   redisReply * reply = NULL; */
-/*   gchar * value = NULL; */
-
-/*   reply = redisCommand(db->_priv->ctx, "GET %s", key); */
-/*   if (reply) */
-/*   { */
-/*     switch (reply->type) */
-/*     { */
-/*     case REDIS_REPLY_STRING: */
-/*       value = g_strndup((const gchar *)reply->str, (gsize)reply->len); */
-/*       break; */
-/*     case REDIS_REPLY_NIL: */
-/*       break; */
-/*     case REDIS_REPLY_ERROR: */
-/*       g_warning("Error in query for key \"%s\": %s", key, reply->str); */
-/*       break; */
-/*     default: */
-/*       g_warning("Invalid type on query for key \"%s\"", key); */
-/*     } */
-/*     freeReplyObject(reply); */
-/*   } */
-/*   else */
-/*   { */
-/*     if (db->_priv->ctx->errstr) */
-/*       g_warning("Error on query for key \"%s\": %s", key, db->_priv->ctx->errstr); */
-/*     else */
-/*       g_warning("Error on query for key \"%s\"", key); */
-/*   } */
-
-/*   return (value); */
-/* } */
 
 /**
  * _avr_db_get_array:
@@ -518,6 +489,17 @@ _avr_db_load_ip_addresses_in_rtree (AvrDb * db)
         g_strfreev(address_str_splitted);
 
       }
+      if (total > 0)
+      {
+        // add the type mask to the value
+        (void) __sync_or_and_fetch(&otx_data_loaded, (db->_priv->type + 1));
+      }
+      else
+      {
+        // Remove the type mask to the value
+        (void) __sync_and_and_fetch(&otx_data_loaded, ~(db->_priv->type + 1));
+      }
+
       g_message("Loaded %d keys from database %d", total, db->_priv->type);
       break; // REDIS_REPLY_ARRAY
 
@@ -585,6 +567,17 @@ _avr_db_load_strings_in_htable (AvrDb * db)
         g_hash_table_insert(table, (gpointer)key, (gpointer)value_array);
         total ++;
       }
+      if (total > 0)
+      {
+        // Add the type mask to the value
+        (void) __sync_or_and_fetch(&otx_data_loaded, (db->_priv->type + 1));
+      }
+      else
+      {
+        // Remove the type mask to the value
+        (void) __sync_and_and_fetch(&otx_data_loaded, ~(db->_priv->type + 1));
+      }
+
       g_message("Loaded %d keys from database %d", total, db->_priv->type);
       break; // REDIS_REPLY_ARRAY
 

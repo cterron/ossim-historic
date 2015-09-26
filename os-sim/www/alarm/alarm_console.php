@@ -254,6 +254,13 @@ $alarm_url = Alarm::get_alarm_path();
         var graph_filter = false;
         var draw_label   = false;
         var dd_alarm     = '';
+
+        /*  Local Storage Keys  */
+        var __local_storage_keys =
+        {
+            "graph"  : "alienvault_<?php echo Session::get_session_user() ?>_show_graph",
+            "filters": "alienvault_<?php echo Session::get_session_user() ?>_show_alarm_filters"
+        };
         
         //Double click issue variables
         var click_delay  = 250, n_clicks = 0, click_timer = null;
@@ -354,22 +361,48 @@ $alarm_url = Alarm::get_alarm_path();
 
         function toggle_filters()
         {
-            if($('#alarm_params').css('display') == 'none')
+            var status = ($('#alarm_params').css('display') == 'none');
+
+            var $arrow  = $('#search_arrow');
+            var $params = $('#alarm_params');
+
+            if(status)
             {
-                $('#search_arrow').attr('src', '/ossim/pixmaps/arrow_down.png');
-                $('#alarm_params').slideDown();
+                $arrow.attr('src', '/ossim/pixmaps/arrow_down.png');
+                $params.slideDown();
             }
             else
             {
-                $('#search_arrow').attr('src', '/ossim/pixmaps/arrow_right.png');
-                $('#alarm_params').slideUp();
+                $arrow.attr('src', '/ossim/pixmaps/arrow_right.png');
+                $params.slideUp();
             }
 
-            if (!showing_calendar) 
+            if (!showing_calendar)
             {
                 calendar();
             }
+
+            set_ls_key_status('filters', status);
         }
+
+        function display_filters()
+        {
+            var status  = get_ls_key_status('filters');
+            var $arrow  = $('#search_arrow');
+            var $params = $('#alarm_params');
+
+            if(status)
+            {
+                $arrow.attr('src', '/ossim/pixmaps/arrow_down.png');
+                $params.show();
+            }
+            else
+            {
+                $arrow.attr('src', '/ossim/pixmaps/arrow_right.png');
+                $params.hide();
+            }
+        }
+
         
         var showing_calendar = false;
         function calendar() 
@@ -1099,7 +1132,7 @@ $alarm_url = Alarm::get_alarm_path();
         
         function display_graph(show)
         {
-            if (show && is_graph_enabled())
+            if (show && get_ls_key_status('graph'))
             {
                 $('#graph_overlay').show();
                 $('#alarm_graph').hide().attr('src','views/alarm_graph.php');
@@ -1122,20 +1155,29 @@ $alarm_url = Alarm::get_alarm_path();
                 $('#alarm_graph').show()
             }
         }
-        
-        function is_graph_enabled()
+
+        function get_ls_key_status(k)
         {
-            var key     = 'alienvault_<?php echo Session::get_session_user() ?>_show_graph';
-            var enabled = localStorage.getItem(key);
-            
-            return (enabled != 0) ? true : false; 
+            var key     = __local_storage_keys[k];
+            var enabled = 0;
+
+            if (key)
+            {
+                enabled = localStorage.getItem(key);
+            }
+
+            return enabled != 0;
         }
-        
-        function change_graph_enabled(status)
+
+        function set_ls_key_status(k, status)
         {
-            var key = 'alienvault_<?php echo Session::get_session_user() ?>_show_graph';
-            var val = (status) ? 1 : 0;
-            localStorage.setItem(key, val);
+            var key = __local_storage_keys[k];
+            var val = status ? 1 : 0;
+
+            if (key)
+            {
+                localStorage.setItem(key, val);
+            }
         }
         
         
@@ -1198,7 +1240,7 @@ $alarm_url = Alarm::get_alarm_path();
             
             $('#graph_toggle').toggles(
             {
-                "on"   : is_graph_enabled(),
+                "on"   : get_ls_key_status('graph'),
                 "text" : 
                 {
                     "on"  : '<?php echo _('Yes')?>',
@@ -1206,27 +1248,27 @@ $alarm_url = Alarm::get_alarm_path();
                 }
             }).on('toggle', function(e, status)
             {
-                change_graph_enabled(status);
+                set_ls_key_status('graph', status);
                 display_graph(status);
             });
-        
-        
+
+            display_filters();
+
             $('#clean_date_filter').on('click', function()
             {
                 $('#date_from').val('');
                 $('#date_to').val('');
                 
-                $('#queryform').submit()
+                $('#queryform').submit();
                 
                 return false;
             });
-                        
+
             check_background_tasks(0);  
 
             //Loading the alarm counter that reloads the alarms
             reload_alarms();
-            
-                        
+
             $("a.greybox2").click(function(e)
             {
                 e.stopPropagation();
@@ -1650,16 +1692,17 @@ if (!isset($_GET["hide_search"]))
             <div id='graph_toggle' class='toggle_button'></div>
             
             <a href='../report/sec_report.php?section=all&type=alarm&back=alarm' class='tip greybox2' title='<?php echo _('Alarm Report') ?>' style='text-decoration:none;'>
-                <img src='../pixmaps/pie_chart.png' class="gray_img"/>
+                <img src='../pixmaps/menu/reports_menu.png' class="gray_img" width="15" />
             </a>
         </div>
     </div>
     
     <div class='clear_layer'></div>
-    
-    <form method="get" id="queryform" name="filters">
-               
-        <div id='alarm_params'>
+
+    <div id='alarm_params'>
+
+        <form method="get" id="queryform" name="filters">
+
             <div class='p_column'>
                 
                 <?php
@@ -1846,11 +1889,9 @@ if (!isset($_GET["hide_search"]))
             <div class='search_button_container'>
                 <input type="submit" name='search' id='btnsearch' value="<?php echo _("Search") ?>"/>
             </div>
-            
-        </div>
-        
-    </form>
-    <?php
+        </form>
+     </div>
+<?php
 } 
 ?>
     <!-- ALARM GRAPH -->

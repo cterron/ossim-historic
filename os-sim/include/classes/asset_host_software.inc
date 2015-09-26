@@ -804,7 +804,7 @@ class Asset_host_software
 
         while (!$rs->EOF)
         {
-            $software[$rs->fields['h_id']][$rs->fields['cpe']] = array(
+            $_cpe = array(
                 'cpe'     => $rs->fields['cpe'],
                 'name'    => $rs->fields['banner'],
                 'banner'  => $rs->fields['banner'],
@@ -815,7 +815,16 @@ class Asset_host_software
                 ),
                 'date' => $rs->fields['last_modified']
             );
-
+            
+            if ($filters['response_type'] == 'by_cpe')
+            {
+                $software[$rs->fields['cpe']][$rs->fields['h_id']] = $_cpe;
+            }
+            else
+            {
+                $software[$rs->fields['h_id']][$rs->fields['cpe']] = $_cpe;
+            }
+            
             $rs->MoveNext();
         }
 

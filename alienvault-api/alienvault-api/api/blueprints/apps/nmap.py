@@ -140,7 +140,7 @@ def do_nmap_scan():
         try:
             cidr = IPNetwork(t)
             ftargets.append(t)
-            targets_number += len(list(cidr))
+            targets_number += cidr.size
             continue
         except:
             pass

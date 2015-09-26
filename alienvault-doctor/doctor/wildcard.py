@@ -82,7 +82,7 @@ class Wildcard:
         sysinfo = Sysinfo()
         translate = {'is_vm': 'A Virtual Machine is required',
                      'cores': 'Number of CPU cores required is not met',
-                     'mem': 'Memory size required is not met'}
+                     'installed_mem': 'Memory size required is not met'}
         new_string = ''
 
         try:

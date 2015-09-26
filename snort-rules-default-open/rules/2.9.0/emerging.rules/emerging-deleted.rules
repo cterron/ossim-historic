@@ -3941,6 +3941,9 @@
 #alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL DELETED BASE base_qry_common.php remote file include"; flow:to_server,established; content:"/base_qry_common.php"; http_uri; nocase; fast_pattern:only; content:"BASE_path="; http_uri; nocase; pcre:"/BASE_path=(?:(?:ht|f)tps?|data|php)/Ui"; reference:url,secunia.com/advisories/20300/; classtype:web-application-attack; sid:100000356; rev:6;)
 
 #
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL DELETED WEB-MISC JBoss web-console access"; flow:to_server,established; content:"/web-console"; http_uri; reference:url,www.jboss.org/wiki/Wiki.jsp?page=WebConsole; classtype:misc-activity; sid:100000429; rev:4;)
+
+#
 #alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL DELETED Geeklog BlackList.Examine.class.php remote file include"; flow:to_server,established; content:"plugins/spamx/BlackList.Examine.class.php"; nocase; http_uri; content:"$_CONF[path]="; nocase; http_uri; pcre:"/\$_CONF\[path\]=(?:(?:ht|f)tps?|data|php)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000730; rev:5;)
 
 #
@@ -5205,6 +5208,9 @@
 
 #
 #alert udp $HOME_NET any -> any 53 (msg:"ET DELETED W32.Tinba/Zusy Banking Trojan Hardcoded CnC Domain Request - d4ak4otavolandos.com"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|d4ak4otavolandos|03|com"; distance:0; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2012-060111-3803-99&om_rssid=sr-latestthreats30days; classtype:trojan-activity; sid:2014863; rev:3;)
+
+#
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DELETED RedKit - Landing Page Received - applet and 5digit jar"; flow:established,to_client; content:"<applet"; fast_pattern; content:".jar"; distance:0; pcre:"/\W[0-9]{5}\.jar/"; classtype:trojan-activity; sid:2014894; rev:7;)
 
 #
 ##alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED RedKit - Landing Page Requested - 8Digit.html"; flow:established,to_server; urilen:14; content:".html"; http_uri; pcre:"/^\/[0-9]{8}\.html$/U"; flowbits:set,ET.http.driveby.redkit.uri; flowbits:noalert; classtype:trojan-activity; sid:2014916; rev:2;)
@@ -6749,6 +6755,9 @@
 ##alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DELETED Sweet Orange Java obfuscated binary (2)"; flow:established,to_client; flowbits:isset,ET.http.javaclient; file_data; content:"|3d 3b|"; within:2; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2016143; rev:3;)
 
 #
+##alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Magnitude EK (formerly Popads) - Font Exploit - 32HexChar.eot"; flow:established,to_server; urilen:>36; content:".eot"; http_uri; fast_pattern:only; pcre:"/\/[a-f0-9]{32}\.eot$/U"; content:!"fonts.gstatic.com|0d 0a|"; http_header; content:!".fitbit.com|0d 0a|"; http_header; classtype:attempted-user; sid:2016155; rev:6;)
+
+#
 ##alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DELETED Potential Zeus Binary Download - Specific PE Sections Structure"; flow:established,to_client; file_data; content:"MZ"; within:2; content:"This program cannot be run in DOS mode"; distance:0; content:"PE|00 00|"; distance:0; content:".text"; distance:0; content:"m13"; distance:0; content:"m12"; distance:0; content:"m11"; distance:0; content:"m10"; distance:0; content:"m9"; distance:0; content:"m8"; distance:0; content:"m7"; distance:0; content:"m6"; distance:0; content:"m5"; distance:0; content:"m4"; distance:0; content:"m3"; distance:0; content:".data"; distance:0; content:".data2"; distance:0; reference:url,ioactive.com/pdfs/ZeusSpyEyeBankingTrojanAnalysis.pdf; classtype:trojan-activity; sid:2016188; rev:3;)
 
 #
@@ -7007,6 +7016,9 @@
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Possible Zbot Activity Common Download Struct"; flow:to_server,established; content:".bin"; fast_pattern; http_uri; pcre:"/\.bin$/U"; content:!"Referer|3a|"; http_header; content:!"Accept-"; http_header; content:"User-Agent|3a 20|"; http_header; depth:12; content:" MSIE "; http_header; pcre:"/^User-Agent\x3a[^\r\n]*?\sMSIE\s/H"; classtype:trojan-activity; sid:2017837; rev:2;)
 
 #
+##alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Styx Exploit Kit - HTML"; flow:to_server,established; urilen:>300; content:".htm"; fast_pattern:only; http_uri; pcre:"/^\/[a-zA-Z0-9_\x2f-]{300,}\.html?$/U"; content:"/"; http_uri; offset:1; content:"_"; http_uri; offset:1; content:"-"; offset:1; http_uri; classtype:trojan-activity; sid:2017841; rev:2;)
+
+#
 ##alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED W32/Ferret DDOS Bot CnC Beacon"; flow:established,to_server; urilen:14; content:"POST"; http_method; content:"/hor/input.php"; http_uri; content:"User-Agent|3a 20|Mozilla Gecko Firefox 25|0d 0a|"; fast_pattern:12,24; http_header; content:"m="; http_client_body; depth:2; content:"&h="; http_client_body; within:50; reference:md5,c49e3411294521d63c7cc28e08cf8a77; reference:url,www.arbornetworks.com/asert/2013/12/a-business-of-ferrets/; classtype:trojan-activity; sid:2017883; rev:1;)
 
 #
@@ -7182,4 +7194,16 @@
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (HTTPBrowser CnC)"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 97 d3 99 b4 6f 4e 77 43|"; within:35; content:"|55 04 0A|"; distance:0; content:"|18|Internet Widgits Pty Ltd"; distance:1; within:25; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021428; rev:2;)
+
+#
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED KINS/ZeusVM Variant CnC Beacon"; flow:established,to_server; content:"POST"; http_method; content:".php/"; http_uri; fast_pattern:only; content:!"Accept-"; http_header; content:!"Referer|3a|"; http_header; pcre:"/^[\x20-\x7e\s]{0,20}[^\x20-\x7e\s]/P"; pcre:"/\.php\/(?:[a-zA-Z0-9]+\/)+[A-F0-9]{8}$/U"; pcre:"/^User-Agent\x3a[^\r\n]+(?: MSIE |rv\x3a11)/Hmi"; reference:md5,7a015848f24de23da43e2ca9970df11e; classtype:trojan-activity; sid:2021524; rev:1;)
+
+#
+#alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (VMZeuS MITM)"; flow:established,from_server; content:"|55 04 03|"; content:"|13|contactcitywell.com"; distance:1; within:20; fast_pattern; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021562; rev:1;)
+
+#
+#alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex)"; flow:established,from_server; content:"|55 04 03|"; content:"|0c|ghheranon.ad"; distance:1; within:13; fast_pattern; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021613; rev:1;)
+
+#
+#alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex)"; flow:established,from_server; content:"|55 04 03|"; content:"|0b|idcythef.tj"; distance:1; within:12; fast_pattern; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021614; rev:1;)
 

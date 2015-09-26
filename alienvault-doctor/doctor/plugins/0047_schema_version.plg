@@ -14,10 +14,10 @@ raw_limit=100
 
 # Verify that the schema version matches the appliance version
 [00470001]
+severity=Warning
 query=select value from config where conf = 'ossim_schema_version'
 conditions=@string@:==@version@
 formatted_output=ossim_schema_version is registered in DB as @string@ (expected @version@)
-severity=Warning
 description=Verify that the schema version matches the appliance version
 summary_passed=The database schema version is correct
 summary_failed=Schema or Server version differs from installed version

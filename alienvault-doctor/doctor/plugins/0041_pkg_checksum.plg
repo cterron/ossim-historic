@@ -11,10 +11,10 @@ requires=@dpkg:debsums
 
 # Verify that the files provided within AlienVault packages have not been modified
 [00410001]
+severity=Error
 pattern=^(\S+)\s+(\w+)$
 conditions=@info@;@string@:=="OK"
 formatted_output=@info@ has been reported as modified
-severity=Error
 description=Verify that the files provided within AlienVault packages have not been modified
 summary_passed=The files within the AlienVault packages have not been modified
 summary_failed=Modified AlienVault files have been identified

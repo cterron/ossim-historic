@@ -64,6 +64,7 @@ class MonitorPlatformTelemetryData(Monitor):
                                       '0009_alienvault_dummies.plg',
                                       '0013_bash_history.plg',
                                       '0018_current_network_config.plg',
+                                      '0019_licensed_devices.plg',
                                       '0025_default_hw.plg',
                                       '0026_default_repositories.plg',
                                       '0027_default_server_packages.plg',

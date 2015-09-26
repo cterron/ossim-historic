@@ -85,6 +85,9 @@ gpointer            avr_db_ref_data                    (AvrDb * db);
 void                avr_db_unref_data                  (AvrDb * db,
                                                         gpointer data);
 
+gboolean            avr_db_has_otx_data                (void);
+
+
 G_END_DECLS
 
 #endif

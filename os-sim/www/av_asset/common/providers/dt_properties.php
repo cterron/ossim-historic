@@ -131,6 +131,8 @@ try
             'limit'    => "$from, $maxrows",
             'order_by' => "$order $torder"
         );
+        
+        $filters['response_type'] = 'by_ref';
 
         if ($search_str != '')
         {
@@ -152,36 +154,33 @@ catch(Exception $e)
     Util::response_bad_request($e->getMessage());
 }
 
-
-
 //Distinct Host IDs with properties
 $assets_with_properties = array();
 
 // Properties data
 $data = array();
 
-foreach ($p_list as $_asset_id => $prop_data)
+foreach ($p_list as $p_id => $prop_data)
 {
-    if (array_key_exists($_asset_id, $assets_with_properties))
+    foreach ($prop_data as $_asset_id => $p_values)
     {
-        $ips_to_show = $assets_with_properties[$_asset_id];
-    }
-    else
-    {
-        $_host       = Asset_host::get_object($conn, $_asset_id);
-        $ips_to_show = $_host->get_name().' ('.$_host->get_ips()->get_ips('string').')';
-
-        $assets_with_properties[$_asset_id] = $ips_to_show;
-    }
-
-
-    foreach ($prop_data as $p_id => $p_values)
-    {
+        if (array_key_exists($_asset_id, $assets_with_properties))
+        {
+            $h_display = $assets_with_properties[$_asset_id];
+        }
+        else
+        {
+            $_host     = Asset_host::get_object($conn, $_asset_id);
+            $h_display = array($_host->get_name(), $_host->get_ips()->get_ips('string'));
+            
+            $assets_with_properties[$_asset_id] = $h_display;
+        }
+        
         foreach ($p_values as $p_value)
         {
             $r_key    = strtolower($_asset_id.'_'.$p_id.'_'.md5($p_value['value']));
             $p_locked = ($p_value['source']['id'] == 1) ? 1 : 0;
-            $ip_value = ($p_id == 50) ? $_host->get_name().' ('.$p_value['extra'].')' : $ips_to_show;
+            $ip_value = ($p_id == 50) ? $h_display[0] . ' ('.$p_value['extra'].')' : $h_display[0] . ' (' . $h_display[1] . ')';
 
             $_p_data = array(
                 "DT_RowId"   => $r_key,
@@ -205,7 +204,6 @@ foreach ($p_list as $_asset_id => $prop_data)
         }
     }
 }
-
 
 
 $response['sEcho']                = $sec;

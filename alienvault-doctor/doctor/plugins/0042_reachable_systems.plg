@@ -9,11 +9,12 @@ command=alienvault-api systems
 
 # Verifies that all connected systems are reachable
 [00420001]
+severity=Error
 pattern=^\S+\s-\s\S+\s-\s(\S+)\s-\s(\S+)
 conditions=@info@;@string@:=="Reachable"
-formatted_output=System with IP @info@ has been found as @string@ 
+formatted_output=System with IP @info@ has been identified as @string@ 
 fail_if_empty=True
-severity=Error
+fail_if_empty_output=Connected systems could not be checked as matching "Reachable" against alienvault-api systems returned an empty value
 description=Verifies that all connected systems are reachable
 summary_passed=All connected systems are reachable
 summary_failed=There are one or more systems that are currently unreachable

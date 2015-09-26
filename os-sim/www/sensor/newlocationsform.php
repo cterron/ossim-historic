@@ -30,10 +30,7 @@
 * Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 *
 */
-
-
 require_once 'av_init.php';
-
 
 if (!Session::am_i_admin()) 
 {
@@ -60,25 +57,19 @@ if ($map_key == '')
     $map_key = 'ABQIAAAAbnvDoAoYOSW2iqoXiGTpYBTIx7cuHpcaq3fYV4NM0BaZl8OxDxS9pQpgJkMv0RxjVl6cDGhDNERjaQ';
 }
 
-
 $db    = new ossim_db();
 $conn  = $db->connect();
 
-$locations_id     = (GET('id') != '') ? GET('id') : POST('locations_id');
-$action           = ($locations_id != '') ? 'modifylocations.php' : 'newlocations.php';
-$sensor_id        = POST('sensor');
-$delete_id        = POST('delete');
-
-$ip      = ''; 
-$name    = '';
-$status  = 1;
-$zoom    = 1;
+$locations_id = (GET('id') != '') ? GET('id') : POST('locations_id');
+$name         = '';
+$status       = 1;
+$zoom         = 1;
+$sensors      = Av_sensor::get_basic_list($conn);
+$r_sensors	  = array();
 	
 if ($locations_id != '')
 {
-	ossim_valid($locations_id, OSS_HEX,            'illegal:' . _('Location ID'));
-	ossim_valid($sensor_id, OSS_HEX, OSS_NULLABLE, 'illegal:' . _('Sensor'));
-	ossim_valid($delete_id, OSS_HEX, OSS_NULLABLE, 'illegal:' . _('Delete'));
+	ossim_valid($locations_id,  OSS_HEX,    'illegal:' . _('Location ID'));
 
 	if (ossim_error())
 	{ 
@@ -89,30 +80,24 @@ if ($locations_id != '')
 	{
 		$location       = $locations_list[0];
 		$ctx            = $location->get_ctx();
-		$name           = $location->get_name();
-		$desc           = $location->get_desc();
+		$name           = Util::htmlentities($location->get_name());
+		$desc           = Util::htmlentities($location->get_desc());
 		$latitude       = str_replace(',', '.', floatval($location->get_lat()));
 		$longitude      = str_replace(',', '.', floatval($location->get_lon()));
 		$zoom           = 4;
 		$cou            = strtolower($location->get_country());
-		$location       = $location->get_location();
+		$location       = Util::htmlentities($location->get_location());
+        
+        $_related       = Locations::get_related_sensors($conn, $locations_id);
+        $r_sensors      = array();
+        foreach ($_related as $_s)
+        {
+            $r_sensors[$_s[0]] = $_s[1] . ' [' . $_s[2] . ']';
+        }
 	}
-	
-	// Insert related sensor
-	if ($sensor_id != '')
-	{
-	   Locations::insert_related_sensor($conn,$locations_id,$sensor_id);
-	   Util::memcacheFlush();
-	}
-	// Delete related sensor
-	if ($delete_id != '')
-	{
-	   Locations::delete_related_sensor($conn,$locations_id,$delete_id);
-	   Util::memcacheFlush();
-	}
-	
 }
 
+$db->close();
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -122,61 +107,241 @@ if ($locations_id != '')
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 	<meta http-equiv="Pragma" content="no-cache"/>
 
-	<script type="text/javascript" src="../js/jquery.min.js"></script>
-	<script type="text/javascript" src="../js/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="../js/notification.js"></script>
-	<script type="text/javascript" src="../js/ajax_validator.js"></script>
-	<script type="text/javascript" src="../js/messages.php"></script>
-	<script type="text/javascript" src="../js/jquery.elastic.source.js" charset="utf-8"></script>
-	<script type="text/javascript" src="../js/utils.js"></script>
-	<script type="text/javascript" src="../js/jquery.dynatree.js"></script>
-	<script type="text/javascript" src="../js/token.js"></script>
-   
-	<script type="text/javascript" src="../js/jquery.autocomplete_geomod.js"></script> 
-	<script type="text/javascript" src="../js/geo_autocomplete.js"></script>
-	<script type="text/javascript" src="../js/av_map.js.php"></script>
-	<script type="text/javascript" src="../js/jquery.tipTip.js"></script>
+	
+	<?php
+        //CSS Files
+        $_files = array(
+            array('src' => 'av_common.css',                 'def_path' => TRUE),
+            array('src' => 'jquery.autocomplete.css',       'def_path' => TRUE),
+            array('src' => 'tipTip.css',                    'def_path' => TRUE),
+            array('src' => 'jquery.tree.css',               'def_path' => TRUE)
+        );
+        
+        Util::print_include_files($_files, 'css');
 
-	<link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-	<link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css"/>  
-	<link rel="stylesheet" type="text/css" href="../style/tree.css"/>
-	<link rel="stylesheet" type="text/css" href="../style/tipTip.css"/>	
+        //JS Files
+        $_files = array(
+            array('src' => 'jquery.min.js',                     'def_path' => TRUE),
+            array('src' => 'jquery-ui.min.js',                  'def_path' => TRUE),
+            array('src' => 'utils.js',                          'def_path' => TRUE),
+            array('src' => 'notification.js',                   'def_path' => TRUE),
+            array('src' => 'token.js',                          'def_path' => TRUE),
+            array('src' => 'jquery.tipTip.js',                  'def_path' => TRUE),
+            array('src' => 'ajax_validator.js',                 'def_path' => TRUE),
+            array('src' => 'messages.php',                      'def_path' => TRUE),
+            array('src' => 'jquery.elastic.source.js',          'def_path' => TRUE),
+            array('src' => 'jquery.dynatree.js',                'def_path' => TRUE),
+            array('src' => 'jquery.autocomplete_geomod.js',     'def_path' => TRUE),
+            array('src' => 'geo_autocomplete.js',               'def_path' => TRUE),
+            array('src' => 'av_map.js.php',                     'def_path' => TRUE)
+        );
+        
+        Util::print_include_files($_files, 'js');
+    ?>
+	
+	<style type='text/css'>
+						
+		input[type='text'], input[type='hidden'], select 
+		{
+            width: 98%; 
+            height: 18px;
+		}
+		
+		input[type='file'] 
+		{
+            width: 90%; 
+            border: solid 1px #CCCCCC;
+        }
+		
+		textarea 
+		{
+    		width: 98%; 
+    		height: 45px;
+		}
+		
+		.legend
+		{
+    		margin-top: 40px;
+		}
+		
+		.text_wi
+		{
+			cursor: default !important;
+			font-style: italic !important;
+			opacity: 0.5 !important;
+		}			
+				
+		div.bold 
+		{
+		    line-height: 18px;
+		}
+				
+		#table_form 
+		{
+		    width: 500px;
+		    margin: 5px auto;
+		}
+		
+		#table_form th 
+		{
+		    width: 150px;
+		}
+		
+		#av_info 
+		{
+            width: 580px; 
+            margin: 10px auto;
+        }
+		
+	</style>
 	
 	<script type="text/javascript">
-		$(document).ready(function(){
-			
+    	
+    	var __is_in_lightbox   = false;
+    	var __location_sensors = <?php echo json_encode($r_sensors, JSON_FORCE_OBJECT) ?>;
+    	
+
+    	function add_sensor()
+    	{
+        	var s_id   = $('#sensor_list').val();
+        	var s_name = $("#sensor_list option:selected").text();
+        	
+        	if (typeof s_id == 'string' && s_id != '0')
+        	{
+            	__location_sensors[s_id] = s_name;
+                draw_selected_sensors();
+        	}
+    	}
+    	
+    	function delete_sensor(s_id)
+    	{
+        	delete __location_sensors[s_id];
+        	draw_selected_sensors();
+    	}
+    	
+    	function draw_selected_sensors()
+    	{
+        	var $s_list = $('#sensor_selected_list').empty();
+        	
+        	$.each(__location_sensors, function(id, name)
+        	{ 
+            	var $tr  = $('<tr/>').appendTo($s_list);
+            	
+            	var $td1 = $('<td/>',
+            	{
+                	'text': name 
+            	}).appendTo($tr);
+            	
+            	var $td2 = $('<td/>').appendTo($tr);
+            	$('<button/>',
+            	{
+                	'class':"small av_b_secondary",
+                	'html' : "<?php echo _('Delete') ?>",
+                	'click': function()
+                	{
+                    	delete_sensor(id);
+                	}
+            	}).appendTo($td2);
+        	});
+    	}
+    	
+    	function save_location()
+    	{
+        	var f_params = $('#form_wi').serializeArray();
+        	var params   = {};
+        	
+        	$.each(f_params, function(i, p)
+        	{
+            	params[p.name] = p.value;
+        	});
+        	
+        	params['token']       = Token.get_token('form_wi');
+        	params['sensor_list'] = Object.keys(__location_sensors)
+
+            $.ajax(
+            {
+                data: params,
+                type: "POST",
+                url: 'modifylocations.php',
+                dataType: "json",
+                success: function(data)
+                {
+                    if (__is_in_lightbox && typeof parent.GB_close == 'function')
+                    {
+                        parent.GB_close();
+                    }
+                    else
+                    {
+                        document.location.href = 'locations.php';
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+                    //Checking expired session
+                    var session = new Session(XMLHttpRequest, '');
+                    if (session.check_session_expired() == true)
+                    {
+                        session.redirect();
+                        return;
+                    }
+
+                    if (typeof(XMLHttpRequest.responseText) != 'undefined' && XMLHttpRequest.responseText != '')
+                    {
+                        __error_msg = XMLHttpRequest.responseText;
+                    }
+
+                    show_notification('av_info', __error_msg, 'nf_error', 20000, true);
+                }
+            });
+    	}
+    	
+		$(document).ready(function()
+		{
+    		__is_in_lightbox = parent.is_lightbox_loaded(window.name);
+    		
 			Token.add_to_forms();
 			
 			$('textarea').elastic();
 			
-			var config = {   
+			var config = 
+			{   
 				validation_type: 'complete', // single|complete
-				errors:{
+				errors:
+				{
 					display_errors: 'all', //  all | summary | field-errors
 					display_in: 'av_info'
 				},
-				form : {
+				form : 
+				{
 					id  : 'form_wi',
-					url : '<?php echo $action?>'
+					url : 'modifylocations.php'
 				},
-				actions: {
-					on_submit:{
+				actions: 
+				{
+					on_submit:
+					{
 						id: 'send',
 						success: '<?php echo _('Save')?>',
 						checking: '<?php echo _('Saving')?>'
 					}
 				}
 			};
-		
+			
 			ajax_validator = new Ajax_validator(config);
 		
-		    $('#send').click(function() { 
-				ajax_validator.submit_form();
+		    $('#send').off('click').on('click', function(e)
+		    { 
+    		    e.preventDefault();
+    		    
+    		    if (ajax_validator.check_form() == true)
+                {
+                    save_location();
+                }
 			});
 		
+            draw_selected_sensors();
 			
 			/* Google Map */			   
-            
             av_map = new Av_map('c_map');
             
             Av_map.is_map_available(function (conn)
@@ -275,16 +440,18 @@ if ($locations_id != '')
                 }
             });
             
-            						
+    	
 			// Entities tree
 			<?php 
 			if (Session::show_entities() && !$locations_id) 
 			{ 
     			?>
-    			$("#tree").dynatree({
+    			$("#tree").dynatree(
+    			{
     				initAjax: { url: "../tree.php?key=contexts&extra_options=local" },
     				clickFolderMode: 2,
-    				onActivate: function(dtnode) {
+    				onActivate: function(dtnode) 
+    				{
     					var key = dtnode.data.key.replace(/e_/, "");
     					
     					if (key != "") 
@@ -300,13 +467,14 @@ if ($locations_id != '')
     				},
     				onDeactivate: function(dtnode) {}
     			});
-    			<?php 
+            <?php 
 			} 
 			?>
 			
+			$('#add_sensor').on('click', add_sensor);
+
 			//Greybox options			
-			
-			if (parent.is_lightbox_loaded(window.name))
+			if (__is_in_lightbox)
 			{ 			
     			$('#table_form').css("width", "400px");
     			$('#table_form th').css("width", "150px");
@@ -315,66 +483,9 @@ if ($locations_id != '')
 			else
 			{
     			$('.c_back_button').show();        			
-    		}						
+    		}		
 		});
 	</script>
-  
-	<style type='text/css'>
-						
-		input[type='text'], input[type='hidden'], select 
-		{
-            width: 98%; 
-            height: 18px;
-		}
-		
-		input[type='file'] 
-		{
-            width: 90%; 
-            border: solid 1px #CCCCCC;
-        }
-		
-		textarea 
-		{
-    		width: 98%; 
-    		height: 45px;
-		}
-		
-		.legend
-		{
-    		margin-top: 40px;
-		}
-		
-		.text_wi
-		{
-			cursor: default !important;
-			font-style: italic !important;
-			opacity: 0.5 !important;
-		}			
-				
-		div.bold 
-		{
-		    line-height: 18px;
-		}
-				
-		#table_form 
-		{
-		    width: 500px;
-		    margin: 5px auto;
-		}
-		
-		#table_form th 
-		{
-		    width: 150px;
-		}
-		
-		#av_info 
-		{
-            width: 580px; 
-            margin: 10px auto;
-        }
-		
-	</style>
-  
 </head>
 <body>
                                                                                 
@@ -384,10 +495,8 @@ if ($locations_id != '')
     <input type='button' class="av_b_back" onclick="document.location.href='locations.php';return false;"/> 
 </div> 
 
-<form name='form_wi' id='form_wi' method="POST" action="<?php echo ($locations_id != '') ? 'modifylocations.php' : 'newlocations.php' ?>" enctype="multipart/form-data">
-
-	<input type="hidden" name="insert" value="insert"/>
-	
+<form name='form_wi' id='form_wi' method="POST" action="modifylocations.php" enctype="multipart/form-data">
+	<input type="hidden" class='vfield' name="locations_id" id="locations_id" value="<?php echo $locations_id?>"/>
 	
 	<div class="legend">
         <?php echo _('Values marked with (*) are mandatory');?>
@@ -400,7 +509,7 @@ if ($locations_id != '')
 				<label for='name'><?php echo _('Name') . required();?></label>
 			</th>
 			<td class="left">
-				<input type="text" class='vfield' name="name" id="name" maxlength="64" value="<?php echo $name;?>"/>
+				<input type="text" class='vfield' name="l_name" id="name" maxlength="64" value="<?php echo $name;?>"/>
 			</td>
 		</tr>
   
@@ -421,7 +530,7 @@ if ($locations_id != '')
 			</th>
 			<td class="left">
 				<img src="../pixmaps/search_icon.png" border="0" align="top"/>
-				<input type="text" style="margin-top:2px; margin-left:2px; width:312px" class='vfield' name="search_location" id="search_location" maxlength="255" value="<?php echo $location?>"/>
+				<input type="text" style="margin-top:2px; margin-left:2px; width:312px" class='vfield' name="search_location" id="search_location" maxlength="255" value="<?php echo $location?>">
 				<br>
 				<input type="hidden" class='vfield' name="country" id="country" value="<?php echo $cou?>"/>
 				<div id='c_map' style='margin-top:5px; height:200px; width:340px;'></div>				
@@ -446,51 +555,34 @@ if ($locations_id != '')
 			</td>
 		</tr>
 
-		<?php 
-		if ($locations_id != '') 
-		{
-            $sensors = Av_sensor::get_basic_list($conn);
-            $related = Locations::get_related_sensors($conn, $locations_id);
-            ?>
-    		<input type="hidden" class='vfield' name="locations_id" id="locations_id" value="<?php echo $locations_id?>"/>
-    		<input type="hidden" class='vfield' name="delete" id="delete"/>
-    		<tr>
-    			<td colspan="2" style="height:20px"></td>
-    		</tr>	
-    		
-    		<tr>
-    			<th colspan="2" align="center">
-    				<label for='sensor'><?php echo _('Sensors in this Location')?></label>
-    			</th>
-    		</tr>	
-    		<tr>
-    			<td colspan="2" align="center">
-    			    <select name="sensor" id="sensor" style="width:200px"><option value="0"> ---- <?php echo _("Select a sensor")?> ---- </option>
-    			    <?php
-    			        foreach ($sensors as $s_data) 
-    			        {
-        			        echo "<option value='".$s_data['id']."'>".$s_data['name']. " [".$s_data['ip']."]</option>";
-    			        }
-    			    ?>
-    			    </select>
-    			    &nbsp;
-    			    <input type="button" class="small av_b_secondary" value="<?php echo _("Add sensor")?>" onclick="$('#form_wi').attr('action','newlocationsform.php');$('#form_wi').submit()">
-    			</td>
-    		</tr>	
+		<tr>
+			<td colspan="2" style="height:20px"></td>
+		</tr>	
+		
+		<tr>
+			<th colspan="2" align="center">
+				<label for='sensor'><?php echo _('Sensors in this Location')?></label>
+			</th>
+		</tr>	
+		<tr>
+			<td colspan="2" align="center">
+			    <select name="sensor" id="sensor_list" style="width:200px">
+    			    <option value="0"><?php echo _("Select a sensor")?></option>
+			    <?php
+		        foreach ($sensors as $s_data) 
+		        {
+			        echo "<option value='".$s_data['id']."'>".$s_data['name']. " [".$s_data['ip']."]</option>";
+		        }
+			    ?>
+			    </select>
+			    &nbsp;
+			    <input type="button" id="add_sensor" class="small av_b_secondary" value="<?php echo _("Add sensor")?>">
+			</td>
+		</tr>	
 
 		<tr>
 			<td colspan="2" align="center">
-			    <table cellpadding="0" cellspacing="2" class="noborder">
-    			    <?php
-    		        foreach ($related as $rel) 
-    		        {
-    			        echo "<tr>
-        			        <td> <b>".$rel[1]. " [".$rel[2]."]</b> </td>
-        			        <td> &nbsp; <input type='button' class='small av_b_secondary' value='"._("Delete")."'  onclick=\"$('#delete').val('".$rel[0]."');$('#form_wi').attr('action','newlocationsform.php');$('#form_wi').submit()\"> </td>
-    			        </tr>";
-    		        }
-    			    ?>
-			    </table>
+			    <table id='sensor_selected_list' class="noborder"></table>
 			</td>
 		</tr>
 		
@@ -498,13 +590,9 @@ if ($locations_id != '')
 			<td colspan="2" style="height:10px"></td>
 		</tr>
 		
-		<?php 
-		}
-		?>
-
 		<tr>
 			<td colspan="2" align="center" style="padding: 10px;">
-				<input type="button" id='send' name='send' value="<?php echo _('Save')?>"/>				
+				<button id='send'><?php echo _('Save') ?></button>				
 			</td>
 		</tr>				
 	</table>
@@ -512,6 +600,3 @@ if ($locations_id != '')
 
 </body>
 </html>
-<?php
-$db->close();
-?>

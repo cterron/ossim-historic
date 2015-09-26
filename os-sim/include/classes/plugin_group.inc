@@ -338,6 +338,48 @@ class Plugin_group
 
 
     /**
+     * This function checks if a group name is valid
+     *
+     * @param object $conn
+     * @param string $group_name
+     * @param string $group_id
+     *
+     * @return boolean
+     */
+    public static function is_valid_group_name($conn, $group_name, $group_id = NULL)
+    {
+        Ossim_db::check_connection($conn);
+
+        $params = array($group_name);
+        $filter = "name = ?";
+
+        if ($group_id !== NULL)
+        {
+            $params[]  = $group_id;
+            $filter   .= " AND group_id != UNHEX(?)";
+        }
+
+        $query  = "SELECT count(*) AS num FROM plugin_group WHERE " . $filter;
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        if (intval($rs->fields['num']) == 0)
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+
+
+    /**
      * This function deletes a plugin from group
      * 
      * @param object $conn

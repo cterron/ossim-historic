@@ -266,7 +266,7 @@ function AV_otx_config(p)
     
     function view_account()
     {
-        var url = "<?php echo Otx::OTX_URL ?>user/"+ self.user_id +"/";
+        var url = "<?php echo Otx::OTX_URL ?>user/"+ self.username +"/";
          window.open(url, '_blank');          
     }
     

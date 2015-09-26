@@ -1641,6 +1641,17 @@ sub config_squid {
     # admin_ip;vpn_ip;ha_ip
     my @avsystem=`alienvault-api get_registered_systems --list | perl -npe 's/.*?;(\\d+\\.\\d+\\.*?)/\$1/'`;
     my $acl = join(" ",@avsystem);
+
+    if ( $acl !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+    {
+        my $ossim_setup_conf_file = '/etc/ossim/ossim_setup.conf';
+
+        if (-e $ossim_setup_conf_file)
+        {
+            $acl = `cat $ossim_setup_conf_file | grep ^admin_ip= | cut -d = -f 2`;
+        }
+    }
+
     $acl =~ s/;/ /g;
     $acl =~ s/\s+/ /g;
     $acl =~ s/\n//g;

@@ -85,8 +85,6 @@ install: build
 	rm -rf $(TMP)/ossim-framework/usr/share/ossim/www/cloud/
 	cp etc/httpd/ossim.conf \
 		$(TMP)/ossim-framework/etc/ossim/framework/apache.conf
-	##cp contrib/jasperserver/apache_reverse_proxy_jasperserver.conf \
-	##$(TMP)/ossim-framework/etc/ossim/framework/apache_jasperserver.conf
 
 	docbook-to-man doc/ossim-framework.xml > debian/ossim-framework.8
 	install -d $(TMP)/ossim-framework/usr/share/ossim/www/forensics/tmp/
@@ -153,9 +151,6 @@ install: build
 	install -m755 scripts/alienvault-system-id $(TMP)/ossim-utils/usr/bin
 	install -m640 etc/framework/ossim.conf $(TMP)/ossim-utils/etc/ossim/framework/
 
-	# ossim-contrib
-	cp -r contrib $(TMP)/ossim-contrib/usr/share/doc/ossim-contrib/
-
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -169,7 +164,6 @@ binary-arch: build install
 		-possim-framework \
 		-possim-server \
 		-possim-mysql \
-		-possim-contrib \
 		-possim-utils -i ChangeLog
 	dh_installdocs 	-possim-framework   -i $(TMP)/README.locales `pwd`/README.phpgacl `pwd`/README.oinkmaster `pwd`/README.nessus
 	dh_installexamples

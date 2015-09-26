@@ -8,9 +8,9 @@ strike_zone=True
 
 # Verifies that a VM meets the required hardware to run
 [00560001]
-hardware=@is_vm@,@cores@>=4,@mem@>=7.7
-formatted_output=h
 severity=Warning
+hardware=@is_vm@,@cores@>=4,@installed_mem@>=7.7
+formatted_output=Unused
 description=Verifies that a VM meets the required hardware to run
 summary_passed=The virtual deployment meets the current hardware requirements
 summary_failed=The VM does not meet the suggested hardware requirements to run
@@ -21,8 +21,8 @@ min_doctor_version=4.15
 
 # Verifies that a VM meets the required hardware to run
 [00560002]
-hardware=@is_vm@,@cores@>=4,@mem@>=7.7
-formatted_output=h
+hardware=@is_vm@,@cores@>=4,@installed_mem@>=7.7
+formatted_output=Unused
 severity=Warning
 description=Verifies that a VM meets the required hardware to run
 summary_passed=The virtual deployment meets the current hardware requirements

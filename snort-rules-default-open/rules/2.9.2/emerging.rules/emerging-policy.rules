@@ -2225,10 +2225,10 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY CNET TechTr
 alert tcp $HOME_NET 443 -> $EXTERNAL_NET any (msg:"ET POLICY Cisco IOS Self Signed Certificate Served to External Host"; flow:established,to_client; content:"|16 03|"; content:"|0b|"; within:7; content:"IOS-Self-Signed-Certificate-"; distance:0; classtype:misc-activity; sid:2014617; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a| "; http_header; content:!"18,0,0,209|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?MSIE\s/Hm"; content:!"13,0,0,305|0d 0a|"; http_header; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:59;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a| "; http_header; content:!"18,0,0,232|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?MSIE\s/Hm"; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:61;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Outdated Mac Flash Version"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,209|0d 0a|"; within:12; http_header; content:"Macintosh"; http_header; pcre:"/^User-Agent\x3a.+?Macintosh/Hm"; content:!"13,0,0,305|0d 0a|"; http_header; threshold: type limit, count 1, seconds 60, track by_src; classtype:policy-violation; sid:2014727; rev:52;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Outdated Mac Flash Version"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,232|0d 0a|"; within:12; http_header; content:"Macintosh"; http_header; pcre:"/^User-Agent\x3a.+?Macintosh/Hm"; threshold: type limit, count 1, seconds 60, track by_src; classtype:policy-violation; sid:2014727; rev:53;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Internal Host Getting External IP Address - ip2city.asp"; flow:established,to_server; content:"/ip2city.asp"; http_uri; classtype:misc-activity; sid:2014761; rev:1;)
@@ -2904,4 +2904,13 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY External IP
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET POLICY Edwards Packed proxy.pac from 724sky"; flow:established,from_server; file_data; content:"eval(function(p,a,c"; content:"|7C|FindProxyForURL|7C|"; nocase; content:"|7c|proxy|7c|"; nocase; content:"|7c|baidu|7c|"; nocase; reference:md5,50bd21aac1f57d90c54683995ec102aa; classtype:trojan-activity; sid:2021511; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible External IP Lookup myip.kz"; flow:established,to_server; content:"Host|3a 20|myip.kz|0d 0a|"; http_header; fast_pattern:only; classtype:policy-violation; sid:2021533; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup trackip.net"; flow:established,to_server; content:"GET"; http_method; content:"/ip?json"; http_uri; fast_pattern:only; content:"trackip.net"; http_header; classtype:policy-violation; sid:2021550; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY External IP Lookup - www.ip.cn"; flow:established,to_server; content:"Host|3A 20|www.ip.cn|0d 0a|"; fast_pattern:only; http_header; classtype:policy-violation; sid:2021600; rev:1;)
 

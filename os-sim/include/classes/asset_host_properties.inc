@@ -1667,7 +1667,7 @@ class Asset_host_properties
 
         while (!$rs->EOF)
         {
-            $properties[$rs->fields['h_id']][$rs->fields['property_ref']][] = array(
+            $_prop = array(
                 'description' => $rs->fields['property_descr'],
                 'date'        => $rs->fields['date'],
                 'source'      => array(
@@ -1677,7 +1677,16 @@ class Asset_host_properties
                 'value' => $rs->fields['value'],
                 'extra' => $rs->fields['extra']
             );
-
+            
+            if ($filters['response_type'] == 'by_ref')
+            {
+                $properties[$rs->fields['property_ref']][$rs->fields['h_id']][] = $_prop;
+            }
+            else
+            {
+                $properties[$rs->fields['h_id']][$rs->fields['property_ref']][] = $_prop;
+            }
+            
             $rs->MoveNext();
         }
 

@@ -2496,6 +2496,8 @@ class Asset_host extends Asset
             LEFT JOIN (SELECT ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.host_ip = f.ip AND f.ctx = h.ctx";
         $queries[] = "DELETE h.* FROM vuln_nessus_latest_reports h
             LEFT JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
+        $queries[] = "DELETE h.* FROM vuln_nessus_latest_results h
+            LEFT JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
 
         //Update statements
         $queries[] = "UPDATE hids_agents ha INNER JOIN $tmp_table f ON f.host_id=ha.host_id SET ha.host_id = NULL";
@@ -4070,7 +4072,7 @@ class Asset_host extends Asset
                     {
                         $asset_plugins = $plugins['data']['plugins'][$asset_id_canonical];
 
-                        foreach ($asset_plugins as $plugin_key => $pdata)
+                        foreach ($asset_plugins as $pdata)
                         {
                             $active = Asset_host_devices::check_device_connectivity($conn, $asset_id, $pdata['plugin_id'], $sensor_id, TRUE);
 

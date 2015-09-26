@@ -630,3 +630,9 @@ td.tray_details
 {
     width: 40px;
 }
+
+/* Overwrite dropdown height */
+.select2-results
+{
+    max-height: 130px;
+}

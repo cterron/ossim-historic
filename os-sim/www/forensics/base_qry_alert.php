@@ -875,16 +875,12 @@ echo '                </TD>
 /* Summary Bar */
 echo '<TABLE class="siem_table">
       <TR>
-           <th class="autow">' . _("Asset Src") . '</th>
-           <th class="autow">' . _("Asset Dst") . '</th>
            <th class="autow">' . _("Priority") . '</th>
            <th class="autow">' . _("Reliability") . '</th>
            <th class="autow">' . _("Risk") . '</th>
            <th class="autow otx">' . ($myrow2['otx']!='' ? '<img class="otx" src="../pixmaps/'.$myrow2['otx'].'_icon.png" border=0/> ' : '') . _("OTX Indicators") . '</th>
       </TR>
       <TR>
-           <TD class="center">' . $ossim_asset_src . '</TD>
-           <TD class="center">' . $ossim_asset_dst . '</TD>
            <TD class="center">' . $ossim_priority . '</TD>
            <TD class="center">' . $ossim_reliability . '</TD>
            <TD class="center">' . $ossim_risk . '</TD>
@@ -939,8 +935,8 @@ echo '<div class="siem_detail_table">
                              <div class="content_r">' . _("Logged Users") . ': '.(($src_host["username"]) ? preg_replace("/,\s*$/",'',str_replace("|",", ",implode("<br>",$src_host["username"]))) : $empty).'</div>
                           </div>';
                     echo '<div class="content_c">
-                             <div class="content_l">' . _("OTX IP Reputation") . ': '.($repinfo_src ?  str_replace('__CLASS__','scriptinfoimg',str_replace('__TOOLTIP__',$reptooltip_src,str_replace('__VALUE__', _('Yes'), $otx_link))) : _('No')).'</div>
-                             <div class="content_r"></div>
+                             <div class="content_l">' . _("Asset Value") . ': '.$ossim_asset_src.'</div>
+                             <div class="content_r">' . _("OTX IP Reputation") . ': '.($repinfo_src ?  str_replace('__CLASS__','scriptinfoimg',str_replace('__TOOLTIP__',$reptooltip_src,str_replace('__VALUE__', _('Yes'), $otx_link))) : _('No')).'</div>
                           </div>';
                     /*
                     $src_img = getrepimg($idm_data["rep_prio_src"],$idm_data["rep_rel_src"],$idm_data["rep_act_src"],$current_sip);
@@ -993,8 +989,8 @@ echo '          </div>
                              <div class="content_r">' . _("Logged Users") . ': '.(($dst_host["username"]) ? preg_replace("/,\s*$/",'',str_replace("|",", ",implode("<br>",$dst_host["username"]))) : $empty).'</div>
                           </div>';
                     echo '<div class="content_c">
-                             <div class="content_l">' . _("OTX IP Reputation") . ': '.($repinfo_dst ? str_replace('__CLASS__','scriptinfoimg',str_replace('__TOOLTIP__',$reptooltip_dst,str_replace('__VALUE__', _('Yes'), $otx_link))) : _('No')).'</div>
-                             <div class="content_r"></div>
+                             <div class="content_l">' . _("Asset Value") . ': '.$ossim_asset_dst.'</div>
+                             <div class="content_r">' . _("OTX IP Reputation") . ': '.($repinfo_dst ? str_replace('__CLASS__','scriptinfoimg',str_replace('__TOOLTIP__',$reptooltip_dst,str_replace('__VALUE__', _('Yes'), $otx_link))) : _('No')).'</div>
                           </div>';
                     /*
                     $dst_img = getrepimg($idm_data["rep_prio_dst"],$idm_data["rep_rel_dst"],$idm_data["rep_act_dst"],$current_dip);
@@ -1281,7 +1277,8 @@ if ($is_snort)
         // snort rule detection
         //
         echo '<div><div class="siem_detail_snorttitle">'._("Rule Detection").'</div>';
-        $result = Util::execute_command("grep -n ? /etc/snort/rules/*.rules", array("sid:$plugin_sid;"), 'string');
+        $result = Util::execute_command("grep -n ? /etc/suricata/rules/*.rules /etc/snort/rules/*.rules | head -n1", array("sid:$plugin_sid;"), 'string');
+
         // format: /etc/snort/rules/ddos.rules:53:alert tcp $EXTERNAL_NET any -> $HOME_NET 15104 (msg:"DDOS mstream client to handler"; flow:stateless; flags:S,12; reference:arachnids,111; reference:cve,2000-0138; classtype:attempted-dos; sid:249; rev:8;)
         preg_match("/(.*?):\d+:(.*?) \((.*?);\)/",$result,$found);
         if (trim($result)=="" || count($found)<=1) {

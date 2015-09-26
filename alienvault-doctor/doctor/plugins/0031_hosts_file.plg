@@ -10,11 +10,12 @@ raw_limit=100
 
 # Checks if the hostname and/or domain are the ones configured for the AlienVault system
 [00310001]
+severity=Critical
 pattern=^@admin_ip@\s+(\S+)\s+(\S+)?
 conditions=@string@:==@hostname@.@domain@;@string@:==@hostname@
 formatted_output=Found unexpected FQDN name (@string@) in the /etc/hosts file
 fail_if_empty=True
-severity=Critical
+fail_if_empty_output=hostname and /or domain could not be checked as match output is empty
 description=Checks if the hostname and/or domain are the ones configured for the AlienVault system
 summary_passed=The hostname and domain values in /etc/hosts are correct
 summary_failed=Hostname and/or domain in /etc/hosts do not match with the ones initially delivered in the AlienVault system
@@ -25,11 +26,12 @@ strike_zone=True
 
 # Verifies that the localhost is present in the /etc/hosts file
 [00310002]
+severity=Critical
 pattern=^(127\.0\.0\.1)\s+(\S+)
 conditions=@string@:=="127.0.0.1";@string@:=="localhost";
 formatted_output=Localhost entry missing from /etc/hosts file
 fail_if_empty=True
-severity=Critical
+fail_if_empty_output=Localhost entry could not be checked as match output is empty
 description=Verifies that the localhost is present in the /etc/hosts file
 summary_passed=There is a localhost entry in the /etc/hosts file
 summary_failed=Default hostname 'localhost' or default local ip address '127.0.0.1' are not present in /etc/hosts
@@ -40,11 +42,11 @@ strike_zone=True
 
 # Verify that data.alienvault.com has not been redirected to a different location
 [00310003]
+severity=Error
 pattern=^\s*(?!#)(.*data.alienvault.com)
 conditions=@string@:==""
 formatted_output=data.alienvault.com found redirected to @string@
 fail_if_empty=False
-severity=Error
 description=Verify that data.alienvault.com has not been redirected to a different location
 summary_passed=The AlienVault Data server is correctly configured
 summary_failed=data.alienvault.com is being redirected to a different ip address

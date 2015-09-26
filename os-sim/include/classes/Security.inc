@@ -137,6 +137,7 @@ define('OSS_NOTNULL', 'rule:OSS_NOTNULL'); // default for all vars
 define('OSS_NULLABLE', 'rule:OSS_NULLABLE'); // value can be null, false, missing
 define('OSS_PORT', 'func:valid_port');  //	Valid port number or pair port-protocol. Port range: [0 - 65535]; Separators allowed : -, _, #; Protocols allowed : tcp, udp, icmp
 define('OSS_PROTOCOL', 'tcp | udp | icmp');
+define('OSS_PROTOCOL_SERVICE', '6 | 17');
 define('OSS_CCLASS', 'func:valid_cclass'); // C-class 0.0.0 and 255.255.255 allowed
 define('OSS_IP_ADDR', 'func:valid_ip');
 define('OSS_IP_ADDR_0', 'func:valid_ip_2'); // IP address 0.0.0.0 allowed

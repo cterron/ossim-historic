@@ -1064,6 +1064,9 @@ function load_handler_step_deploy()
 
             if (tab_os == 'windows')
             {
+                $('#l_username').html('<?php echo _('Username')?>');
+                $('#l_password').html('<?php echo _('Password')?>');
+
                 $('#form_domain').show();
                 __os = 'windows';
 
@@ -1072,6 +1075,9 @@ function load_handler_step_deploy()
             }
             else
             {
+                $('#l_username').html('<?php echo _('SSH Username')?>');
+                $('#l_password').html('<?php echo _('SSH Password')?>');
+
                 $('#form_domain').hide();
                 __os = 'linux';
 

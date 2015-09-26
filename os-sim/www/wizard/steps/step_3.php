@@ -182,12 +182,12 @@ $first_tab    = key($deploy_tabs);
             <div class='fleft half_width'>
             
                 <div class='form_elem'>
-                    <?php echo _('Username') ?><br/>
+                    <label for="username" id='l_username'><?php echo _('Username')?></label><br/>
                     <input type="text" id="username" name="username" value=""/>
                 </div>
                 
                 <div class='form_elem'>
-                    <?php echo _('Password') ?><br/>
+                    <label for="password" id='l_password'><?php echo _('Password')?></label><br/>
                     <input type="password" id="password" name="password" autocomplete="off"/>
                 </div>
                 
@@ -221,12 +221,11 @@ $first_tab    = key($deploy_tabs);
     }
     else
     {
-    ?>
+        ?>
         <div id='empty_devices'>
             <?php echo _('There are no servers on your network. Return to the asset discovery page by clicking back to scan your network or by adding servers manually.') ?>
         </div>
-    
-    <?php
+        <?php
     }
     ?>
     

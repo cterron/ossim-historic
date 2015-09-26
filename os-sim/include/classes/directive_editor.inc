@@ -546,6 +546,7 @@ class Directive_editor {
             if (self::save_xml($filepath, $dom, "DOMXML")) {
                 $this->remove_directive_pluginsid($dir_id);
                 $this->remove_directive_taxonomy($dir_id);
+                $this->enable_directive($file, $dir_id);
                 
                 $infolog = array($dir_id);
                 Log_action::log(87, $infolog);

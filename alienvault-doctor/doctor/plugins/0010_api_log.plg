@@ -10,11 +10,11 @@ raw_limit=2000
 
 # Looks for 'Cannot connect to amqp' errors in the api log file
 [00100001]
+severity=Warning
 pattern=ALIENVAULT-API\[ERROR\]\:\s(Cannot connect to amqp.*)
 conditions=@string@:<count[10]
 formatted_output=@string@ failed connection attempts to the RabbitMQ internal message queues (amqp) have been found  
 fail_if_empty=False
-severity=Warning
 description=Verifies there is not a significant number of failed connection attempts to AlienVault API BG TaskManager
 summary_passed=Successful connection process to the AlienVault API BG TaskManager
 summary_failed=Too many failed connection attempts to the AlienVault API BG TaskManager
@@ -24,11 +24,11 @@ min_doctor_version=4.15
 
 # Looks for errors in the API log file
 [00100002]
+severity=Info
 pattern=ALIENVAULT-API\[ERROR\]\:\s((?!Cannot connect to amqp).*)$
 conditions=@string@:==""
 formatted_output=@string@ 
 fail_if_empty=False
-severity=Info
 description=Looks for errors in api log file different from the RabbitMQ server connections errors
 summary_passed=No error messages found in the AlienVault API log file
 summary_failed=Error message found in the AlienVault API log file.

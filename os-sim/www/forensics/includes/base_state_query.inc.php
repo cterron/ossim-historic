@@ -292,7 +292,7 @@ class QueryState {
             }
         } else {
             printf("<B>" . _("No events matching your search criteria have been found. Try fewer conditions.") . "</B>&nbsp;<a style='color:white' href='base_qry_main.php?clear_allcriteria=1&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d'>[..." . _("Clear All Criteria") . "...]</a>\n");
-            echo '<script>$("#views_link").prop("disabled",true);$("#actions_link").prop("disabled",true);</script>';
+            echo '<script>$("#actions_link").prop("disabled",true);</script>';
             //printf("<P style='color:white;font-size:10px'><B>" . _("No events matching your search criteria have been found. Try fewer conditions.") . "</B>&nbsp;<a href='base_qry_main.php?clear_allcriteria=1&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d'>[..." . _("Clear All Criteria") . "...]</a><P>\n");
         }
         echo "</td></tr></table>";
@@ -342,7 +342,7 @@ class QueryState {
         } else {
             printf("<B>" . _("No events matching your search criteria have been found. Try fewer conditions.") . "</B>&nbsp;<a style='color:white' href='base_qry_main.php?clear_allcriteria=1&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d'>[..." . _("Clear All Criteria") . "...]</a>\n");
             // Disable buttons
-            echo '<script>$("#views_link").prop("disabled",true);$("#actions_link").prop("disabled",true);</script>';
+            echo '<script>$("#actions_link").prop("disabled",true);</script>';
         }
         echo "</td></tr></table>";
     }

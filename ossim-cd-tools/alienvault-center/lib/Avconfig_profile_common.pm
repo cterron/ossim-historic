@@ -403,7 +403,7 @@ if ( -f "/etc/ossim/first_login" ){
     my $pname = `cat /etc/ossim/first_login` ; $pname =~ s/\n//g;
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.1.0 - \\m - \\l
+AlienVault USM 5.1.1 - \\m - \\l
 
 =========================================================================
 == #### First time instructions ####   
@@ -415,7 +415,7 @@ EOF
 }else{
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.1.0 - \\m - \\l
+AlienVault USM 5.1.1 - \\m - \\l
 
 EOF
 }

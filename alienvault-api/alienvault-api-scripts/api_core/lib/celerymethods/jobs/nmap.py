@@ -147,12 +147,6 @@ def monitor_nmap_scan(sensor_id, task_id):
                     job["remaining_time"] = 0
                     job["end_time"] = int(time.time())
                     apimethod_nmapdb_update_task(task_id, job)
-                    # Task will be deleted by the timeout
-                    # if job['idm']:
-                    #     try:
-                    #         apimethod_delete_nmap_scan(sensor_id, task_id)
-                    #     except:
-                    #         pass
                 return True
 
             if job is not None and job["status"] == "In Progress":
@@ -168,6 +162,7 @@ def monitor_nmap_scan(sensor_id, task_id):
                     average_sec = int((time.time() - job["start_time"]) / data['scanned_hosts'])
                     job["remaining_time"] = (data['target_number'] - data['scanned_hosts']) * average_sec
                 apimethod_nmapdb_update_task(task_id, job)
+            tries = 3 # restart the counter
         except Exception:
             tries -= 1
             logger.error("Cannot retrieve the the task status...")

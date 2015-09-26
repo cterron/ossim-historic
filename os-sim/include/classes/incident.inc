@@ -2049,6 +2049,8 @@ class Incident
         $list1 = array();
         $list2 = array();
 
+
+        //Getting subscriptors
         $query = "SELECT u.login, u.name, u.email, u.company, u.department FROM users u, incident_subscrip s
             WHERE s.incident_id = ? AND u.login = s.login ORDER BY u.name";
 
@@ -2068,16 +2070,17 @@ class Incident
             }
         }
 
+        //Getting entity users
         if ($pro && valid_hex32($entity_id))
         {
             $users_entity = array();
-            $users = Acl::get_users_by_entity($conn, $entity_id);
+            $users = Acl::get_all_users_by_entity($conn, $entity_id);
 
             if (is_array($users) && !empty($users))
             {
                 foreach ($users as $user)
                 {
-                    $users_entity[] = "'".$user["login"]."'";
+                    $users_entity[] = "'".$user."'";
                 }
 
                 $query = "SELECT u.login, u.name, u.email, u.company, u.department FROM users u
@@ -2396,7 +2399,6 @@ class Incident
 
         $in_charge = ($transferred_user != '')  ? $transferred_user : $transferred_entity;
         $in_charge = ($in_charge != '')         ? $in_charge : Session::get_session_user();
-
 
         $last_id = self::__insert($conn, $title, $type, $submitter, $priority, "Alarm", $event_start, $event_end, $in_charge);
 

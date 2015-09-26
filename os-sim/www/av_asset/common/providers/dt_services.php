@@ -132,7 +132,9 @@ try
             'limit'    => "$from, $maxrows",
             'order_by' => "$order $torder"
         );
-
+        
+        $filters['response_type'] = 'by_service';
+        
         if ($search_str != '')
         {
             $search_str       = escape_sql($search_str, $conn);
@@ -160,23 +162,22 @@ $assets_with_services = array();
 // Services data
 $data = array();
 
-foreach ($s_list as $_asset_id => $serv_data)
+foreach ($s_list as $s_id => $serv_data)
 {
-    if (array_key_exists($_asset_id, $assets_with_services))
+    foreach ($serv_data as $_asset_id => $s_values)
     {
-        $ips_to_show = $assets_with_services[$_asset_id];
-    }
-    else
-    {
-        $_host       = Asset_host::get_object($conn, $_asset_id);
-        $ips_to_show = $_host->get_name().' ('.$_host->get_ips()->get_ips('string').')';
-
-        $assets_with_services[$_asset_id] = $ips_to_show;
-    }
-
-
-    foreach ($serv_data as $s_id => $s_values)
-    {
+        if (array_key_exists($_asset_id, $assets_with_services))
+        {
+            $ips_to_show = $assets_with_services[$_asset_id];
+        }
+        else
+        {
+            $_host       = Asset_host::get_object($conn, $_asset_id);
+            $ips_to_show = $_host->get_name().' ('.$_host->get_ips()->get_ips('string').')';
+    
+            $assets_with_services[$_asset_id] = $ips_to_show;
+        }
+        
         $r_key = strtolower($_asset_id.'_'.md5($s_id));
 
         $nagios_enabled = intval($s_values['nagios']['enabled']);

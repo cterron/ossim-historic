@@ -559,33 +559,7 @@ class Incident_ticket
             $new_in_charge = $values['IN_CHARGE_LOGIN'];
         }
 
-        if (!empty($new_in_charge))
-        {
-            $users_by_entity = array();
-
-            if (valid_hex32($new_in_charge))
-            {
-                $users_by_entity = Acl::get_users_by_entity($conn, $new_in_charge);
-            }
-            else
-            {
-                $users_by_entity[$new_in_charge] = $new_in_charge;
-            }
-
-            $where        = "WHERE login IN ('".implode("','", $users_by_entity)."')";
-            $entity_users = Session::get_list($conn, $where, '', TRUE);
-
-            foreach($entity_users as $user)
-            {
-                if ($user->get_email() != '')
-                {
-                    $users[$user->get_login()] = $user->get_email();
-                }
-            }
-        }
-
         //Email
-
         if ($type == 'CREATE_INCIDENT')
         {
             $values['TICKET_DESCRIPTION']  = _("You're subscribed to this ticket or you're in charge");
@@ -602,6 +576,8 @@ class Incident_ticket
         $attachments = self::get_attachment_to_mail($conn, $incident_id, $ticket_id);
 
         $subject     = self::build_email_template($subject_tpl, $values);
+        $subject     = Util::html_entities2utf8($subject);
+
         $body        = self::build_email_template($body_tpl, $values);
 
         foreach($users as $user => $email)
@@ -931,10 +907,9 @@ class Incident_ticket
         if (valid_hex32($login))
         {
             $e_data = Acl::get_entity($conn, $login, FALSE, FALSE);
-            $e_name = Acl::get_entity_name($conn, $login);
 
-            $values['IN_CHARGE_LOGIN']   = $e_data["admin_user"];
-            $values['IN_CHARGE_NAME']    = $e_name;
+            $values['IN_CHARGE_LOGIN']   = $e_data['id'];
+            $values['IN_CHARGE_NAME']    = $e_data['name'];
             $values['IN_CHARGE_EMAIL']   = "";
             $values['IN_CHARGE_DPTO']    = "";
             $values['IN_CHARGE_COMPANY'] = "";

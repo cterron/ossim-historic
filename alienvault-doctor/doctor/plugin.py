@@ -273,6 +273,10 @@ class Plugin:
                                                                                    self.__alienvault_config['version']))
                         needs_deletion = True
 
+                    elif not check.check_version_type():
+                        Output.warning("\nCheck %s is not meant to be run in a %s license" % (section,
+                                                                                          self.__alienvault_config['versiontype']))
+                        needs_deletion = True
                     if not needs_deletion:
                         self.__checks.append(check)
                     else:
@@ -449,6 +453,7 @@ class Plugin:
     def get_alienvault_config(self):
         return self.__alienvault_config
 
+
       # Check if any of the categories match with the plugin ones.
     def check_category(self, categories):
         # Treat the empty list as 'all'
@@ -509,6 +514,7 @@ class Plugin:
                 result = True
             else:
                 result, msg, fo = check.run()
+                fo = fo.lstrip().split('\n\t')[-1]
 
             # Prepare 'command' field
             aux_command = ''
@@ -525,7 +531,20 @@ class Plugin:
                 elif self.__verbose == 1:
                     Output.error("Check '%s' failed" % check.get_name())
 
-                if check.get_severity() != 'Info':
+                if self.__alienvault_config['has_ha'] and check.get_ha_dependant():
+                        json_msg['checks'][check.get_name()] = {'result': 'passed',
+                                                                'severity': check.get_severity(),
+                                                                'description': check.get_description(),
+                                                                'summary': 'HA configuration detected. Invalid issue: %s. Disregard this check' % check.get_summary_failed(),
+                                                                'remediation': check.get_remediation(),
+                                                                'detail': fo.lstrip().replace('\n\t', ';'),
+                                                                'debug_detail': msg.lstrip().replace('\n\t', ';'),
+                                                                'pattern': str(check.get_pattern()),
+                                                                'command': aux_command,
+                                                                'output': check.get_output(),
+                                                                'strike_zone': True}
+
+                elif check.get_severity() != 'Info':
                     json_msg['checks'][check.get_name()] = {'result': 'failed',
                                                             'severity': check.get_severity(),
                                                             'description': check.get_description(),

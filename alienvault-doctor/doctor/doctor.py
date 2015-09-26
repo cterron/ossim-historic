@@ -49,7 +49,7 @@ from output import *
 from sysinfo import Sysinfo
 from plugin import Plugin, PluginConfigParser
 from error import PluginError, PluginConfigParserError, CheckError
-
+from wildcard import Wildcard
 
 class Doctor:
     '''
@@ -60,6 +60,7 @@ class Doctor:
         self.__options = {}
         self.__config = {}
         self.__plugin_list = []
+        self.__plugin_dir = ''
         self.__category_list = []
         self.__alienvault_config = {}
         self.__successful_config = {}
@@ -111,6 +112,8 @@ class Doctor:
         if not path.isdir(options.plugin_dir):
             Output.error('"%s" is not a valid directory' % options.plugin_dir)
             sys.exit(default.error_codes['invalid_dir'])
+        else:
+            self.__plugin_dir = options.plugin_dir
 
         output_fd = None
 
@@ -124,7 +127,7 @@ class Doctor:
                    len(options.output_file_prefix) != 8 or not options.output_file_prefix.isdigit():
                     Output.error('For "support" output, a valid ticket number has to be specified as the file prefix (-f option)')
                     sys.exit(default.error_codes['undef_support_prefix'])
-                Output.set_std_output(False) 
+                Output.set_std_output(False)
 
             if not path.exists(options.output_path):
                 os.mkdir(options.output_path)
@@ -168,7 +171,7 @@ class Doctor:
             self.__appliance_type_list = options.appliance_type_list.split(',')
 
             # Run! Run! Run!
-            Output.emphasized('\nHmmm, let the Doctor have a look at you%s' % ('...\n' if options.verbose > 0 else ''), ['Doctor'], [GREEN], False)
+            Output.emphasized('\nHmmm, let the Doctor have a look at you%s' % ('...\n' if options.verbose > 0 else '\n'), ['Doctor'], [GREEN], False)
 
             for filename in self.__plugin_list:
                 if filename.endswith('.plg'):
@@ -194,7 +197,20 @@ class Doctor:
                     Output.emphasized('\n  Be careful! Seems that you are not in the Strike Zone! Please check the output below.', ['Strike', 'Zone'], [RED])
 
                 # Show per plugin results.
-                for plugin_name, result in self.__summary.iteritems():
+                plugin_det = {}
+                for x, y in self.__summary.iteritems():
+                    if self.__plugin_dir in x:
+                        Output.emphasized('\n     Plugin %s didn\'t run: %s' % (x, y['summary']), [x])
+                        continue
+                    ident = int(y['id']) if 'id' in y.keys() else int(x.split(" ", 1)[0])
+                    plugin_det[ident] = x
+
+                plugin_ids = plugin_det.keys()
+                plugin_ids.sort()
+
+                for plugin_id in plugin_ids:
+                    plugin_name = plugin_det[plugin_id]
+                    result = self.__summary[plugin_name]
                     plugin_description = result.get('description', None)
                     plugin_strike_zone = result.get('strike_zone', None)
 
@@ -419,6 +435,11 @@ class Doctor:
                 for section in sections:
                     if section != 'properties':
                         items = dict(config_file.items(section))
+                        aux_app_type = []
+                        for x in items['appliance_type'].split(','):
+                            aux_app_type += Wildcard.appliance_exec(x.strip())
+                        if self.__alienvault_config['hw_profile'].lower() not in aux_app_type:
+                            continue
                         if 'type' in plugin_data.keys() and plugin_data['type'] == "db":
                             try:
                                 data['command'] = "echo '%s;' | ossim-db" % items['query']
@@ -436,7 +457,11 @@ class Doctor:
                                            'command': data['command'],
                                            'severity': items['severity']}
 
-            except Exception:
+                # No checks for this plugin in the current appliance --> do not return plugin details
+                if not checks:
+                    return
+
+            except Exception as e:
                 checks = {}
 
         self.__summary[plugin] = {'result': 'blocked',

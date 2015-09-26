@@ -111,7 +111,7 @@ basedir=/usr
 datadir=/var/lib/mysql
 tmpdir=/tmp
 language=/usr/share/mysql/english
-max_allowed_packet=256M
+max_allowed_packet=512M
 event_scheduler=ON
 bind-address=0.0.0.0
 join_buffer_size=128k
@@ -213,7 +213,6 @@ EOF
         sed -i "s/^interactive_timeout=.*/interactive_timeout=300/" $MYSQL_CONF_FILE
         sed -i "s/^wait_timeout=.*/wait_timeout=300/" $MYSQL_CONF_FILE
         sed -i "s/^#\?skip_name_resolve.*/skip_name_resolve/" $MYSQL_CONF_FILE
-        sed -i "s/^max_allowed_packet=.*/max_allowed_packet=512M/" $MYSQL_CONF_FILE
         sed -i "s/^slave_load_tmpdir=.*/slave_load_tmpdir=\/var\/tmp/" $MYSQL_CONF_FILE
         sed -i "s/^tmpdir=.*/tmpdir=\/var\/tmp/" $MYSQL_CONF_FILE
         sed -i "s/^query_cache_size=.*/query_cache_size=256M/" $MYSQL_CONF_FILE
@@ -338,7 +337,7 @@ update_serverip_iptables(){
         sed -i "s/^#//g" $DB_FIREWALL_CONF
         ft_counter=$(grep -c SERVERIP $DB_FIREWALL_CONF | cat)
         if [ "$ft_counter" != "0" ]; then
-            sed -i "s/SERVERIP/$framework_ip/g" $DB_FIREWALL_CONF
+            sed -i "s/SERVERIP/$server_ip/g" $DB_FIREWALL_CONF
         else
             old_server_ip=$(sed -n 1p $DB_FIREWALL_CONF | cut -d' ' -f14)
             sed -i "s/$old_server_ip/$server_ip/g" $DB_FIREWALL_CONF

@@ -1644,284 +1644,578 @@ sim_event_to_bson (SimEvent * event)
     g_free (json);
   return bson;
 }
+
 gchar *
 sim_event_to_json (SimEvent *event)
 {
   g_return_val_if_fail (event != NULL, NULL);
   g_return_val_if_fail (SIM_IS_EVENT(event), NULL);
-  GString *json_str = g_string_new("{\"event\":{");
+
   gchar *str;
-  /* as sim_event_to_string , event_id  and ctx  always are present */
-  if ((str =  sim_uuid_to_base64 (event->id)) == NULL)
+  gchar *event_uuid;
+  gchar *event_type;
+  gchar *event_ctx;
+  JsonBuilder *builder;
+  JsonGenerator *generator;
+  JsonNode *root;
+
+  if ((event_uuid = sim_uuid_to_base64 (event->id)) == NULL)
   {
-    return g_string_free (json_str, TRUE);
+    return NULL;
   }
-  g_string_append_printf (json_str, "\"event_id\":{ \"$binary\":\"%s\", \"$type\":\"04\"}", str);
-  g_free (str);
-  if ((str = sim_uuid_to_base64 (sim_context_get_id (event->context))) == NULL)
+  if ((event_type = sim_event_get_str_from_type (event->type)) == NULL)
   {
-    return g_string_free (json_str, TRUE);
+    g_free (event_uuid);
+    return NULL;
   }
-  gchar *aux;
-  if (!(aux = sim_event_get_str_from_type (event->type)))
-    return g_string_free (json_str, TRUE);
-  g_string_append_printf (json_str, ",\"type\":\"%s\"", aux);
-  g_free (aux);
-  
-  g_string_append_printf (json_str, ",\"ctx\":{\"$type\":\"04\", \"$binary\":\"%s\"}", str);
-  g_free (str);
-  g_string_append_printf (json_str, ",\"alarm\":%s", event->alarm ? "true" : "false");
+  if ((event_ctx = sim_uuid_to_base64 (sim_context_get_id (event->context))) == NULL)
+  {
+    g_free (event_uuid);
+    g_free (event_type);
+    return NULL;
+  }
+
+  builder = json_builder_new ();
+
+  json_builder_begin_object (builder);
+  json_builder_set_member_name (builder, "event");
+  json_builder_begin_object (builder);
+
+  /* event_id */
+  json_builder_set_member_name (builder, "event_id");
+  json_builder_begin_object (builder);
+  json_builder_set_member_name (builder, "$binary");
+  json_builder_add_string_value (builder, event_uuid);
+  json_builder_set_member_name (builder, "$type");
+  json_builder_add_string_value (builder, "04");
+  json_builder_end_object (builder);
+  g_free (event_uuid);
+
+  /* type */
+  json_builder_set_member_name (builder, "type");
+  json_builder_add_string_value (builder, event_type);
+  g_free (event_type);
+
+  /* ctx*/
+  json_builder_set_member_name (builder, "ctx");
+  json_builder_begin_object (builder);
+  json_builder_set_member_name (builder, "$binary");
+  json_builder_add_string_value (builder, event_ctx);
+  json_builder_set_member_name (builder, "$type");
+  json_builder_add_string_value (builder, "04");
+  json_builder_end_object (builder);
+  g_free (event_ctx);
+
+  /* alarm */
+  json_builder_set_member_name (builder, "alarm");
+  json_builder_add_boolean_value (builder, event->alarm);
+
+  /* is_remote */
   if (sim_role_sim (ossim.config->server.role))
-    g_string_append_printf (json_str, ",\"is_remote\":%s", event->is_remote ? "true" : "false");
-  g_string_append_printf (json_str, ",\"date\":{\"$numberLong\":\"%lu\"}", event->time);
-  g_string_append_printf (json_str, ",\"tzone\":%4.2f", event->tzone);
+  {
+    json_builder_set_member_name (builder, "is_remote");
+    json_builder_add_boolean_value (builder, event->is_remote);
+  }
+
+  /* date */
+  str = g_strdup_printf("%lu", event->time);
+  json_builder_set_member_name (builder, "date");
+  json_builder_begin_object (builder);
+  json_builder_set_member_name (builder, "$numberLong");
+  json_builder_add_string_value (builder, str);
+  json_builder_end_object (builder);
+  g_free (str);
+
+  /* tzone */
+  /* !! HACK !!
+    Json-glib dumps gdouble values without decimal part as integers
+    when the decimal part is 0, for instance 4.0 becomes 4.
+    This makes the bson_new_from_json to generate events with wrong format.
+    To prevent this, a minimum offset is added to gdoubles values to generate
+    valid json and bson messages. The offset is ignored on the message reception.
+  */
+  json_builder_set_member_name (builder, "tzone");
+  if (event->tzone > 0)
+    json_builder_add_double_value (builder, event->tzone + 0.00000000001);
+  else
+    json_builder_add_double_value (builder, event->tzone - 0.00000000001);
+
+  /* fdate */
   if (event->time_str)
-    g_string_append_printf (json_str, ",\"fdate\":\"%s\"", event->time_str);
+  {
+    json_builder_set_member_name (builder, "fdate");
+    json_builder_add_string_value (builder, event->time_str);
+  }
+
+  /* plugin_id */
   if (event->plugin_id)
-    g_string_append_printf (json_str, ",\"plugin_id\":%d", event->plugin_id);
+  {
+    json_builder_set_member_name (builder, "plugin_id");
+    json_builder_add_int_value (builder, event->plugin_id);
+  }
+
+  /* plugin_sid */
   if (event->plugin_sid)
-    g_string_append_printf (json_str, ",\"plugin_sid\":%d", event->plugin_sid);
-  if (event->src_port)
-    g_string_append_printf(json_str, ", \"src_port\": %d", event->src_port);
+  {
+    json_builder_set_member_name (builder, "plugin_sid");
+    json_builder_add_int_value (builder, event->plugin_sid);
+  }
+
+  /* src_ip */
+  if (event->src_ia)
+  {
+    str = sim_inet_get_canonical_name (event->src_ia);
+    json_builder_set_member_name (builder, "src_ip");
+    json_builder_add_string_value (builder, str);
+    g_free (str);
+  }
+
+  /* dst_ip */
   if (event->dst_ia)
   {
     str = sim_inet_get_canonical_name (event->dst_ia);
-    g_string_append_printf (json_str, ",\"dst_ip\":\"%s\"", str);
+    json_builder_set_member_name (builder, "dst_ip");
+    json_builder_add_string_value (builder, str);
     g_free (str);
   }
-if (event->src_ia)
+
+  /* src_port */
+  if (event->src_port)
   {
-    str = sim_inet_get_canonical_name (event->src_ia);
-    g_string_append_printf (json_str, ",\"src_ip\":\"%s\"", str);
-    g_free (str);
+    json_builder_set_member_name (builder, "src_port");
+    json_builder_add_int_value (builder, event->src_port);
   }
 
+  /* dst_port */
   if (event->dst_port)
-    g_string_append_printf(json_str, ",\"dst_port\":%d", event->dst_port);
+  {
+    json_builder_set_member_name (builder, "dst_port");
+    json_builder_add_int_value (builder, event->dst_port);
+  }
 
+  /* src_net */
   if (event->src_net)
   {
     SimUuid *net_id = sim_net_get_id (event->src_net);
-    if ((str = sim_uuid_to_base64 (net_id)) == NULL)
-      return g_string_free (json_str, TRUE);
-    g_string_append_printf (json_str, ",\"src_net\": {\"$type\":\"04\", \"$binary\":\"%s\"}", str);
-    g_free (str);
+    if ((str = sim_uuid_to_base64 (net_id)) != NULL)
+    {
+      json_builder_set_member_name (builder, "src_net");
+      json_builder_begin_object (builder);
+      json_builder_set_member_name (builder, "$binary");
+      json_builder_add_string_value (builder, str);
+      json_builder_set_member_name (builder, "$type");
+      json_builder_add_string_value (builder, "04");
+      json_builder_end_object (builder);
+      g_free (str);
+    }
   }
 
+  /* dst_net */
   if (event->dst_net)
   {
     SimUuid *net_id = sim_net_get_id (event->dst_net);
-    if ((str = sim_uuid_to_base64 (net_id)) == NULL)
-      return g_string_free (json_str, TRUE);
-    g_string_append_printf (json_str, ",\"dst_net\":{\"$type\":\"04\", \"$binary\":\"%s\"}", str);
-    g_free (str);
+    if ((str = sim_uuid_to_base64 (net_id)) != NULL)
+    {
+      json_builder_set_member_name (builder, "dst_net");
+      json_builder_begin_object (builder);
+      json_builder_set_member_name (builder, "$binary");
+      json_builder_add_string_value (builder, str);
+      json_builder_set_member_name (builder, "$type");
+      json_builder_add_string_value (builder, "04");
+      json_builder_end_object (builder);
+      g_free (str);
+    }
   }
 
+  /* sensor */
   if (event->sensor)
   {
     str = sim_inet_get_canonical_name (event->sensor);
-    g_string_append_printf(json_str, ",\"sensor\":\"%s\"", str);
-    g_free (str);
-  }
-  if (event->sensor_id)
-  {
-    if ((str = sim_uuid_to_base64 (event->sensor_id)) == NULL)
-      return g_string_free (json_str, TRUE); 
-    g_string_append_printf(json_str, ",\"sensor_id\":{\"$type\":\"04\", \"$binary\":\"%s\"}", str);
+    json_builder_set_member_name (builder, "sensor");
+    json_builder_add_string_value (builder, str);
     g_free (str);
   }
 
+  /* sensor_id */
+  if (event->sensor_id)
+  {
+    if ((str = sim_uuid_to_base64 (event->sensor_id)) != NULL)
+    {
+      json_builder_set_member_name (builder, "sensor_id");
+      json_builder_begin_object (builder);
+      json_builder_set_member_name (builder, "$binary");
+      json_builder_add_string_value (builder, str);
+      json_builder_set_member_name (builder, "$type");
+      json_builder_add_string_value (builder, "04");
+      json_builder_end_object (builder);
+      g_free (str);
+    }
+  }
+
+  /* device */
   if (event->device)
   {
     str = sim_inet_get_canonical_name (event->device);
-    g_string_append_printf(json_str, ",\"device\":\"%s\"", str);
+    json_builder_set_member_name (builder, "device");
+    json_builder_add_string_value (builder, str);
     g_free (str);
   }
-  // 
-   if (event->interface)
-    g_string_append_printf(json_str, ",\"interface\":\"%s\"", event->interface);
 
+  /* interface */
+  if (event->interface)
+  {
+    json_builder_set_member_name (builder, "interface");
+    json_builder_add_string_value (builder, event->interface);
+  }
+
+  /* protocol */
   if (event->protocol)
   {
-    gchar *value = sim_protocol_get_str_from_type(event->protocol);
-    g_string_append_printf(json_str, ",\"protocol\":\"%s\" ", value);
-    g_free(value);
+    str = sim_protocol_get_str_from_type (event->protocol);
+    json_builder_set_member_name (builder, "protocol");
+    json_builder_add_string_value (builder, str);
   }
 
+  /* condition */
   if (event->condition)
   {
-    gchar *value = sim_condition_get_str_from_type(event->condition);
-    g_string_append_printf(json_str, ",\"condition\":\"%s\" ", value);
-    g_free(value);
+    str = sim_condition_get_str_from_type (event->condition);
+    json_builder_set_member_name (builder, "condition");
+    json_builder_add_string_value (builder, str);
   }
+
+  /* value */
   if (event->value)
-    g_string_append_printf(json_str, ",\"value\":\"%s\" ", event->value);
+  {
+    json_builder_set_member_name (builder, "value");
+    json_builder_add_string_value (builder, event->value);
+  }
+
+  /* interval */
   if (event->interval)
-    g_string_append_printf(json_str, ",\"interval\":%d ", event->interval);
+  {
+    json_builder_set_member_name (builder, "interval");
+    json_builder_add_int_value (builder, event->interval);
+  }
+
+  /* priority */
   if (event->is_priority_set)
-    g_string_append_printf(json_str, ",\"priority\": %d ", event->priority);
+  {
+    json_builder_set_member_name (builder, "priority");
+    json_builder_add_int_value (builder, event->priority);
+  }
+
+  /* reliability */
   if (event->is_reliability_set)
-    g_string_append_printf(json_str, ",\"reliability\":%d ", event->reliability);
+  {
+    json_builder_set_member_name (builder, "reliability");
+    json_builder_add_int_value (builder, event->reliability);
+  }
 
-  g_string_append_printf(json_str, ",\"asset_src\": %d ", event->asset_src);
-  g_string_append_printf(json_str, ",\"asset_dst\": %d ", event->asset_dst);
+  /* asset_src */
+  json_builder_set_member_name (builder, "asset_src");
+  json_builder_add_int_value (builder, event->asset_src);
 
+  /* asset_dst */
+  json_builder_set_member_name (builder, "asset_dst");
+  json_builder_add_int_value (builder, event->asset_dst);
+
+  /* risk_a */
   if (event->risk_a != DEFAULT_RISK)
-    g_string_append_printf (json_str, ",\"risk_a\":%lf ", event->risk_a);
+  {
+    json_builder_set_member_name (builder, "risk_a");
+    /* !! HACK !!
+      Json-glib dumps gdouble values without decimal part as integers
+      when the decimal part is 0, for instance 4.0 becomes 4.
+      This makes the bson_new_from_json to generate events with wrong format.
+      To prevent this, a minimum offset is added to gdoubles values to generate
+      valid json and bson messages. The offset is ignored on the message reception.
+    */
+    json_builder_add_double_value (builder, event->risk_a + 0.00000000001);
+  }
+
+  /* risk_c */
   if (event->risk_c != DEFAULT_RISK)
-    g_string_append_printf (json_str, ",\"risk_c\":%lf ", event->risk_c);
- 
+  {
+    json_builder_set_member_name (builder, "risk_c");
+    /* !! HACK !!
+      Json-glib dumps gdouble values without decimal part as integers
+      when the decimal part is 0, for instance 4.0 becomes 4.
+      This makes the bson_new_from_json to generate events with wrong format.
+      To prevent this, a minimum offset is added to gdoubles values to generate
+      valid json and bson messages. The offset is ignored on the message reception.
+    */
+    json_builder_add_double_value (builder, event->risk_c + 0.00000000001);
+  }
+
+  /* log */
   if (event->log)
   {
-    gchar *base64 = g_base64_encode((guchar*)event->log->str, event->log->len);
-    if(base64 == NULL)
-      return g_string_free(json_str, TRUE);
-    g_string_append_printf(json_str, ",\"log\":{\"$binary\":\"%s\", \"$type\":\"00\"} ", base64);
-    g_free(base64);
+    str = g_base64_encode((guchar*)event->log->str, event->log->len);
+    if (str != NULL)
+    {
+      json_builder_set_member_name (builder, "log");
+      json_builder_begin_object (builder);
+      json_builder_set_member_name (builder, "$binary");
+      json_builder_add_string_value (builder, str);
+      json_builder_set_member_name (builder, "$type");
+      json_builder_add_string_value (builder, "00");
+      json_builder_end_object (builder);
+      g_free (str);
+    }
   }
+
+  /* filename */
   if (event->filename)
   {
-    g_string_append_printf(json_str, ",\"filename\":\"%s\" ", event->filename);
+    json_builder_set_member_name (builder, "filename");
+    json_builder_add_string_value (builder, event->filename);
   }
+
+  /* username */
   if (event->username)
   {
-    g_string_append_printf(json_str, ",\"username\":\"%s\" ", event->username);
+    json_builder_set_member_name (builder, "username");
+    json_builder_add_string_value (builder, event->username);
   }
+
+  /* password */
   if (event->password)
   {
-    g_string_append_printf(json_str, ",\"password\":\"%s\" ", event->password);
+    json_builder_set_member_name (builder, "password");
+    json_builder_add_string_value (builder, event->password);
   }
+
+  /* userdata1 */
   if (event->userdata1)
   {
-    g_string_append_printf(json_str, ",\"userdata1\":\"%s\" ", event->userdata1);
+    json_builder_set_member_name (builder, "userdata1");
+    json_builder_add_string_value (builder, event->userdata1);
   }
+
+  /* userdata2 */
   if (event->userdata2)
   {
-    g_string_append_printf(json_str, ",\"userdata2\":\"%s\" ", event->userdata2);
+    json_builder_set_member_name (builder, "userdata2");
+    json_builder_add_string_value (builder, event->userdata2);
   }
+
+  /* userdata3 */
   if (event->userdata3)
   {
-    g_string_append_printf(json_str, ",\"userdata3\":\"%s\" ", event->userdata3);
+    json_builder_set_member_name (builder, "userdata3");
+    json_builder_add_string_value (builder, event->userdata3);
   }
+
+  /* userdata4 */
   if (event->userdata4)
   {
-    g_string_append_printf(json_str, ",\"userdata4\":\"%s\" ", event->userdata4);
+    json_builder_set_member_name (builder, "userdata4");
+    json_builder_add_string_value (builder, event->userdata4);
   }
+
+  /* userdata5 */
   if (event->userdata5)
   {
-    g_string_append_printf(json_str, ",\"userdata5\":\"%s\" ", event->userdata5);
+    json_builder_set_member_name (builder, "userdata5");
+    json_builder_add_string_value (builder, event->userdata5);
   }
+
+  /* userdata6 */
   if (event->userdata6)
   {
-    g_string_append_printf(json_str, ",\"userdata6\":\"%s\" ", event->userdata6);
+    json_builder_set_member_name (builder, "userdata6");
+    json_builder_add_string_value (builder, event->userdata6);
   }
+
+  /* userdata7 */
   if (event->userdata7)
   {
-    g_string_append_printf(json_str, ",\"userdata7\":\"%s\" ", event->userdata7);
+    json_builder_set_member_name (builder, "userdata7");
+    json_builder_add_string_value (builder, event->userdata7);
   }
+
+  /* userdata8 */
   if (event->userdata8)
   {
-   g_string_append_printf(json_str, ",\"userdata8:\"%s\" ", event->userdata8);
+    json_builder_set_member_name (builder, "userdata8");
+    json_builder_add_string_value (builder, event->userdata8);
   }
+
+  /* userdata9 */
   if (event->userdata9)
   {
-    g_string_append_printf(json_str, ",\"userdata9\":\"%s\" ", event->userdata9);
+    json_builder_set_member_name (builder, "userdata9");
+    json_builder_add_string_value (builder, event->userdata9);
   }
+
+  /* src_username */
   if (event->src_username_raw)
   {
-    g_string_append_printf(json_str, ",\"src_username\":\"%s\" ", event->src_username_raw);
+    json_builder_set_member_name (builder, "src_username");
+    json_builder_add_string_value (builder, event->src_username_raw);
   }
+
+  /* dst_username */
   if (event->dst_username_raw)
   {
-    g_string_append_printf(json_str, ",\"dst_username\":\"%s\" ", event->dst_username_raw);
+    json_builder_set_member_name (builder, "dst_username");
+    json_builder_add_string_value (builder, event->dst_username_raw);
   }
+
+  /* src_id */
   if (event->src_id)
   {
-    if ((str = sim_uuid_to_base64 (event->src_id)) == NULL)
-      return g_string_free (json_str, TRUE);
-    g_string_append_printf(json_str, ",\"src_id\": {\"$type\":\"04\", \"$binary\":\"%s\"}", str);
-    g_free (str);
+    if ((str = sim_uuid_to_base64 (event->src_id)) != NULL)
+    {
+      json_builder_set_member_name (builder, "src_id");
+      json_builder_begin_object (builder);
+      json_builder_set_member_name (builder, "$binary");
+      json_builder_add_string_value (builder, str);
+      json_builder_set_member_name (builder, "$type");
+      json_builder_add_string_value (builder, "04");
+      json_builder_end_object (builder);
+      g_free (str);
+    }
   }
+
+  /* dst_id */
   if (event->dst_id)
   {
-    if ((str = sim_uuid_to_base64 (event->dst_id)) == NULL)
-      return g_string_free (json_str, TRUE);
-    g_string_append_printf(json_str, ",\"dst_id\":{\"$type\":\"04\", \"$binary\":\"%s\"}", str);
-    g_free (str);
-  }
-  if (event->src_hostname)
-    g_string_append_printf(json_str, ",\"src_hostname\":\"%s\" ", event->src_hostname);
-  if (event->dst_hostname)
-    g_string_append_printf(json_str, ",\"dst_hostname\":\"%s\" ", event->dst_hostname);
-  if (event->src_mac)
-    g_string_append_printf(json_str, ",\"src_mac\":\"%s\" ", event->src_mac);
-  if (event->dst_mac)
-    g_string_append_printf(json_str, ",\"dst_mac\":\"%s\" ", event->dst_mac);
-  if (event->rep_prio_src)
-    g_string_append_printf(json_str, ",\"rep_prio_src\":%u ", event->rep_prio_src);
-
-  if (event->rep_prio_dst)
-    g_string_append_printf(json_str, ",\"rep_prio_dst\":%u ", event->rep_prio_dst);
-
-  if (event->rep_rel_src)
-    g_string_append_printf(json_str, ",\"rep_rel_src\":%u ", event->rep_rel_src);
-
-  if (event->rep_rel_dst)
-    g_string_append_printf(json_str, ",\"rep_rel_dst\":%u ", event->rep_rel_dst);
-
-  if (event->rep_act_src)
-  {
-    g_string_append_printf(json_str, ",\"rep_act_src\":\"%s\" ",event->str_rep_act_src);
-  }
-
-  if (event->rep_act_dst)
-  {
-    g_string_append_printf(json_str, ",\"rep_act_dst\":\"%s\" ",event->str_rep_act_dst);
-  }
-  /* We need to check that the */
-  if (event->binary_data != NULL && event->log != NULL)
-  {
-    gchar *base64 = g_base64_encode((guchar*)event->log->str, event->log->len);
-    if(base64 == NULL)
-      return g_string_free(json_str, TRUE);
-    g_string_append_printf(json_str,",\"binary_data\": {\"$binary\":\"%s\", \"$type\":\"00\" ", base64);
-    g_free (base64);
-  }
-  /* Pulses */
-  gint pulses_count = 0; 
-  gint pulses_len = 0;
-  
-  if ((pulses_len = g_hash_table_size (event->otx_data)) > 0)
-  { 
-    GHashTableIter iter;
-    const char *key;
-    GPtrArray  *iocs;
-    
-    g_string_append_printf (json_str, ",\"pulses\":{");
-    g_hash_table_iter_init (&iter, event->otx_data);
-    while (g_hash_table_iter_next (&iter,(gpointer *)&key,(gpointer *)&iocs))
+    if ((str = sim_uuid_to_base64 (event->dst_id)) != NULL)
     {
-      guint i;
-      g_string_append_printf (json_str,"\"%s\":[", key);
-      for (i = 0 ; i < iocs->len;i++)
-      {
-        if (i != (iocs->len - 1))
-          g_string_append_printf (json_str, "\"%s\",",(gchar *)g_ptr_array_index (iocs, i));
-        else
-          g_string_append_printf (json_str, "\"%s\"",(gchar *)g_ptr_array_index (iocs, i));
-      }
-      if (pulses_count ==  (pulses_len - 1))
-        g_string_append_printf (json_str,"]"); 
-      else
-        g_string_append_printf (json_str,"],");
-      pulses_count += 1;
+      json_builder_set_member_name (builder, "dst_id");
+      json_builder_begin_object (builder);
+      json_builder_set_member_name (builder, "$binary");
+      json_builder_add_string_value (builder, str);
+      json_builder_set_member_name (builder, "$type");
+      json_builder_add_string_value (builder, "04");
+      json_builder_end_object (builder);
+      g_free (str);
     }
-    g_string_append_printf (json_str, "}");
   }
-  g_string_append_printf(json_str, "}}");
 
-  return g_string_free(json_str, FALSE);
+  /* src_hostname */
+  if (event->src_hostname)
+  {
+    json_builder_set_member_name (builder, "src_hostname");
+    json_builder_add_string_value (builder, event->src_hostname);
+  }
+
+  /* dst_hostname */
+  if (event->dst_hostname)
+  {
+    json_builder_set_member_name (builder, "dst_hostname");
+    json_builder_add_string_value (builder, event->dst_hostname);
+  }
+
+  /* src_mac */
+  if (event->src_mac)
+  {
+    json_builder_set_member_name (builder, "src_mac");
+    json_builder_add_string_value (builder, event->src_mac);
+  }
+
+  /* dst_mac */
+  if (event->dst_mac)
+  {
+    json_builder_set_member_name (builder, "dst_mac");
+    json_builder_add_string_value (builder, event->dst_mac);
+  }
+
+  /* rep_prio_src */
+  if (event->rep_prio_src)
+  {
+    json_builder_set_member_name (builder, "rep_prio_src");
+    json_builder_add_int_value (builder, event->rep_prio_src);
+  }
+
+  /* rep_prio_dst */
+  if (event->rep_prio_dst)
+  {
+    json_builder_set_member_name (builder, "rep_prio_dst");
+    json_builder_add_int_value (builder, event->rep_prio_dst);
+  }
+
+  /* rep_rel_src */
+  if (event->rep_rel_src)
+  {
+    json_builder_set_member_name (builder, "rep_rel_src");
+    json_builder_add_int_value (builder, event->rep_rel_src);
+  }
+
+  /* rep_rel_dst */
+  if (event->rep_rel_dst)
+  {
+    json_builder_set_member_name (builder, "rep_rel_dst");
+    json_builder_add_int_value (builder, event->rep_rel_dst);
+  }
+
+  /* rep_act_src */
+  if (event->str_rep_act_src)
+  {
+    json_builder_set_member_name (builder, "rep_act_src");
+    json_builder_add_string_value (builder, event->str_rep_act_src);
+  }
+
+  /* rep_act_dst */
+  if (event->str_rep_act_dst)
+  {
+    json_builder_set_member_name (builder, "rep_act_dst");
+    json_builder_add_string_value (builder, event->str_rep_act_dst);
+  }
+
+
+  /* binary_data */
+  if (event->binary_data)
+  {
+    json_builder_set_member_name (builder, "binary_data");
+    json_builder_add_string_value (builder, (gchar *)event->binary_data);
+  }
+
+  /* pulses */
+  if ((g_hash_table_size (event->otx_data)) > 0)
+  {
+    GHashTableIter iter;
+    const gchar *key;
+    GPtrArray  *iocs;
+    guint i;
+
+    json_builder_set_member_name (builder, "pulses");
+    json_builder_begin_object (builder);
+
+    g_hash_table_iter_init (&iter, event->otx_data);
+    while (g_hash_table_iter_next (&iter, (gpointer *)&key, (gpointer *)&iocs))
+    {
+      json_builder_set_member_name (builder, key);
+      json_builder_begin_array (builder);
+      for (i = 0 ; i < iocs->len; i++)
+      {
+        json_builder_add_string_value (builder, (gchar *)g_ptr_array_index (iocs, i));
+      }
+      json_builder_end_array (builder);
+    }
+    json_builder_end_object (builder);
+  }
+
+  // End "event" object
+  json_builder_end_object (builder);
+  // End global json object
+  json_builder_end_object (builder);
+
+  generator = json_generator_new ();
+  root = json_builder_get_root (builder);
+  json_generator_set_root (generator, root);
+  str = json_generator_to_data (generator, NULL);
+
+  // Free json objects
+  json_node_free (root);
+  g_object_unref (generator);
+  g_object_unref (builder);
+
+  return str;
 }
+
 static void 
 sim_event_json_uuid (GString *st,const char *key,  JsonNode *node)
 {

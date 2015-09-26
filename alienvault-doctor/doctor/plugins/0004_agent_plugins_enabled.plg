@@ -9,11 +9,12 @@ command=grep \.cfg /etc/ossim/agent/config.yml /etc/ossim/agent/config.cfg | wc 
 
 # Match with the total count of enabled plugins
 [00040001]
+severity=Notice
 pattern=(\d+)
 conditions=@int@:<100
 formatted_output=@int@ plugins have been enabled
-severity=Notice
 fail_if_empty=True
+fail_if_empty_output=No plugins could be counted as the plugin count reported an empty value
 description=Looks for the amount of plugins enabled in the AlienVault Agent config files 
 summary_passed=The number of enabled plugins is normal
 summary_failed=The number of enabled plugins is higher than 100
@@ -23,11 +24,12 @@ min_doctor_version=4.15
 
 # Match with the total count of enabled plugins
 [00040002]
+severity=Info
 pattern=(\d+)
 conditions=@int@:<30@or@>100
 formatted_output=@int@ plugins are currently enabled
-severity=Info
 fail_if_empty=True
+fail_if_empty_output=No plugins could be counted as the plugin count reported an empty value
 description=Verifies that the number of enabled plugins is in a normal operation range
 summary_passed=The number of enabled plugins is within a normal operation range
 summary_failed=The number of enabled plugins is over 30

@@ -10,11 +10,11 @@ raw_limit=1000
 
 # Parses the bash history looking for the modification of DB files
 [00130001]
+severity=Info
 pattern=((?:vim|vi|nano|emacs|cp|mv|rm|sed|joe)\s+(?:\S*percona\S*|\S+mysql\S*))
 conditions=@string@:==""
 formatted_output=The following command has been found in the bash history: @string@
 fail_if_empty=False
-severity=Info
 description=Checks if any Database configuration file has been modified or deleted
 summary_passed=AlienVault DB configuration files haven't been modified
 summary_failed=An AlienVault DB configuration file may been modified or deleted
@@ -26,11 +26,11 @@ strike_zone=True
 # Parses the bash history looking for the modification of AlienVault Agent
 # configuration files
 [00130002]
+severity=Info
 pattern=((?:vim|vi|nano|emacs|cp|mv|rm|sed|joe)\s+(?:\S*config\.xml\S*|\S+agent/config.cfg\S*))
 conditions=@string@:==""
 formatted_output=Bash history indicates that an AlienVault Agent configuration file has been edited: @string@
 fail_if_empty=False
-severity=Info
 description=Verifies that no AlienVault Agent configuration file has been modified or deleted 
 summary_passed=AlienVault Agent configuration files haven't been modified
 summary_failed=An AlienVault Agent configuration file might have been modified or deleted
@@ -41,11 +41,11 @@ strike_zone=True
 
 # Parses the bash history looking for the modification of firewall rules
 [00130003]
+severity=Info
 pattern=((?:(?:vim|vi|nano|emacs|cp|mv|rm|sed|joe)\s+\S*ossim_firewall)\s*|\S*/iptables-save\s*|\S*/iptables\s(?!-L)\S+)
 conditions=@string@:==""
 formatted_output=Bash history indicates that there has been an attempt to modify the AlienVault firewall configuration: @string@
 fail_if_empty=False
-severity=Info
 description=Verifies that the AlienVault firewall rules have not been changed
 summary_passed=The AlienVault firewall rules have not been modified
 summary_failed=The AlienVault firewall rules may have been modified or deleted
@@ -56,11 +56,11 @@ strike_zone=True
 
 # Parses the bash history looking for the modification of packages installation
 [00130004]
+severity=Info
 pattern=(dpkg[ \t]+(?!-[lLsSp])\S+|apt(?!-cache)(?!\/sources\.list)\S+)
 conditions=@string@:==""
 formatted_output=Bash history indicates there has been an attempt to change an AlienVault package manually: @string@
 fail_if_empty=False
-severity=Info
 description=Verifies that AlienVault installed packages have not been modified
 summary_passed=The AlienVault installed packages have not been modified
 summary_failed=Installed packages may have been modified using non AlienVault-standard tools
@@ -71,11 +71,11 @@ strike_zone=True
 
 # Parses the bash history looking for the modification of AlienVault systems configuration files
 [00130005]
+severity=Info
 pattern=(?:vim|vi|nano|emacs|cp|mv|rm|sed|joe)\s+(?:/?\S+/)*(\S+)
 conditions=@set@:@isdisjointto@suricata.yaml,suricata-debian.yaml,interfaces,snort.conf,apache2.conf,server.xml,config.cfg
 formatted_output=Bash history indicates there has been an attempt to modify the following configuration file(s): @set_list@
 fail_if_empty=False
-severity=Info
 description=Verify that configuration files have not been modified
 summary_passed=The AlienVault configuration files haven't been modified
 summary_failed=One or more AlienVault restricted configuration files may have been edited
@@ -86,11 +86,11 @@ strike_zone=True
 
 # Parses the bash history looking for the modification of protected files
 [00130006]
+severity=Info
 pattern=((?:vim|vi|nano|emacs|cp|mv|rm|sed|joe)\s+(?:\/usr|\/lib|\/bin|\/sbin|\/var).*)
 conditions=@string@:==""
 formatted_output=Bash history informs there has been an attempt to modify a protected file: @string@
 fail_if_empty=False
-severity=Info
 description=Verifies that there are no modified files in protected directories
 summary_passed=The AlienVault protected directories haven't been modified
 summary_failed=Some critical files may have been modified
@@ -101,12 +101,12 @@ strike_zone=True
 
 # Parses the bash history looking for the modification of ossim_setup.conf
 [00130007]
+severity=Info
 pattern=(?:vim|vi|nano|emacs|cp|mv|rm|sed|joe)\s+(?:/?\S+/)*(ossim_setup\.conf)
 conditions=@string@:==""
 formatted_output=Bash history indicates there has been an attempt to modify a protected file: @string@
 fail_if_empty=False
 ha_dependant=True
-severity=Info
 description=Verify that ossim_setup.conf has not been modified
 summary_passed=AlienVault's ossim-setup.conf file has not been modified
 summary_failed=AlienVault's ossim-setup.conf file has been modified

@@ -217,6 +217,11 @@ $alarm_url = Alarm::get_alarm_path();
 			var title = this.title || '<?php echo _('Event Detail') ?>';
 			var url   = this.href;
 			
+			if (url == '')
+			{
+    			return false;
+			}
+			
 			GB_show(title, url, '70%', '80%');
 			return false;
 		});

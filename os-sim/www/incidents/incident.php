@@ -1074,7 +1074,7 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
         <!-- ticket head -->
         <tr>
             <th class='i_ticket_header' colspan="2">
-                <strong><?php echo format_user($creator) ?></strong> - <?php echo $date ?>                
+                <strong><?php echo format_user($creator) ?></strong> - <?php echo $date?>
             </th>
         </tr>
         <!-- end ticket head -->
@@ -1164,13 +1164,13 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
                 if (($i == count($tickets_list) - 1) && Incident_ticket::user_tickets_perms($conn, $ticket_id))
                 {
                     $del_url = "manageincident.php?action=delete_ticket&ticket_id=$ticket_id&incident_id=$id";
-                ?>
+                    ?>
                     <div id='del_button_layer'>
                         <form method="POST" name='f_del_ticket' id='f_del_ticket' action="<?php echo $del_url ?>">
                             <input type="button" name="del_ticket" id="del_ticket" class="av_b_secondary small" value="<?php echo _('Delete ticket') ?>">
                         </form>
                     </div>
-                <?php
+                    <?php
                 }
                 ?>
                 

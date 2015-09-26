@@ -271,7 +271,6 @@ switch ($action)
                         'data'   => '',
                     );
 
-
                     //Getting HIDS sensor and Windows IP
                     $sensor_id = NULL;
 
@@ -360,30 +359,41 @@ switch ($action)
                     }
                 }
 
-
                 if ($total_deployed == $total_windows)
                 {
                     $data = array(
                         'status' => 'success',
-                        'data'   => _('HIDS Agents deployed successfully.
+                        'data'   => _('Deployment job/s scheduled successfully.
                             <br/>Check out the <span class="bold" id="go_to_mc">Message Center</span> for more details')
                     );
                 }
                 else
                 {
-                    $data = array(
-                        'status' => 'warning',
-                        'data'   => sprintf(_('Unable to deploy HIDS agents to %s assets.
-                            <br/>Please check the <span class="bold" id="go_to_mc">Message Center</span> for details on each of the jobs'), $total_windows - $total_deployed),
-                        'stats'  => $deployment_stats
-                    );
+                    if ($total_deployed == 0)
+                    {
+                        $data = array(
+                            'status' => 'warning',
+                            'data'   => _('Unable to deploy HIDS agents due to an internal error. Please try again'),
+                            'stats'  => $deployment_stats
+                        );
+                    }
+                    else
+                    {
+                        $total_not_deployed = $total_windows - $total_deployed;
+                        $data = array(
+                            'status' => 'warning',
+                            'data'   => sprintf(_('Unable to deploy HIDS agents to %s assets.
+                                <br/>Please check the <span class="bold" id="go_to_mc">Message Center</span> for details of other jobs'), $total_not_deployed),
+                            'stats'  => $deployment_stats
+                        );
+                    }
                 }
             }
             else
             {
                 $data = array(
                     'status' => 'error',
-                    'data'   => _('Unable to HIDS deploy agents due to an internal error. Please try again')
+                    'data'   => _('Unable to deploy HIDS agents due to an internal error. Please try again')
                 );
             }
         }

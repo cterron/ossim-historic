@@ -163,6 +163,9 @@ if (preg_match("/^\!?[A-F0-9]{32}$/i",$_GET["sensor"]))
                                WHERE device.sensor_id=sensor.id AND device.sensor_id=UNHEX(?)
                                GROUP BY sensor_id", array(str_replace('!','',$_GET["sensor"])));
 
+    // GROUP_CONCAT() function returns a final comma character sometimes
+    $sids = preg_replace('/,$/', '', $sids);
+    
     if (empty($sids))
     {
         $_GET["ctx"]    = $_GET["sensor"];

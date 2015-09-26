@@ -218,7 +218,7 @@ try
                 );
 
                 $av_scan = new Av_scan($assets_p, $sensor, $scan_options);
-                $av_scan->run();
+                $job_id = $av_scan->run();
 
                 //File to cache scan object
                 $scan_file = 'last_asset_object-'.md5($user);
@@ -226,7 +226,7 @@ try
                 Av_scan::set_object_in_file($av_scan, $scan_file);
 
                 $data['status'] = 'success';
-                $data['data']   = $scan_status;
+                $data['data']   = $job_id;
             }
 
         break;

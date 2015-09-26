@@ -1,3 +1,9 @@
+alienvault-api-sdk (5.1.1-0) stable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 29 Jul 2015 07:21:23 -0400
+
 alienvault-api-sdk (5.1.0-0) stable; urgency=low
 
   * New release

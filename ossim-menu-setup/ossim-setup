@@ -1178,7 +1178,8 @@ class Menu(object):
         """
         if os.path.isfile(FIRST_LOGIN_FILE):
             self.show_screen(Menu.CHANGE_FIRST_ROOT_PASSWORD)
-            self.show_screen(Menu.CHECK_CONNECTION)
+            if 'framework' in self.__setup_config.get_general_profile().replace(' ', '').lower().split(','):
+                self.show_screen(Menu.CHECK_CONNECTION)
 
     def check_licensed(self):
         """

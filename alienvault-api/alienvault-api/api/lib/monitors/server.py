@@ -89,6 +89,7 @@ class MonitorServerEPSStats(Monitor):
 
         eps_data = eps_data[-(self.__max_samples - 1):] + [eps]
         with open(self.__eps_log_file, 'w') as f:
+            os.chmod(self.__eps_log_file, 0644)
             try:
                 f.write(json.dumps(eps_data, indent=4, separators=(',', ': ')))
             except Exception, e:

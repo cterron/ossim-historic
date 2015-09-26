@@ -75,6 +75,7 @@ class Check:
         self.__formatted_output = ''
         self.__appliance_type = []
         self.__fail_if_empty = True
+        self.__fail_if_empty_output = ''
         self.__fail_only_if_all_failed = False
         self.__split_by_comma = False
         self.__ha_dependant = False
@@ -83,6 +84,7 @@ class Check:
         self.__actions = []
         self.__aux_data = {}
         self.__strike_zone = False
+        self.__version_type = ''
 
         config_file = plugin.get_config_file()
 
@@ -119,6 +121,8 @@ class Check:
                 elif name == 'fail_if_empty':
                     if value in ['True', 'False']:
                         self.__fail_if_empty = eval(value)
+                elif name == 'fail_if_empty_output':
+                    self.__fail_if_empty_output = value
                 elif name == 'fail_only_if_all_failed':
                     if value in ['True', 'False']:
                         self.__fail_only_if_all_failed = eval(value)
@@ -128,6 +132,8 @@ class Check:
                 elif name == 'ha_dependant':
                     if value in ['True', 'False']:
                         self.__ha_dependant = eval(value)
+                elif name == 'version_type':
+                    self.__version_type = value
                 elif name == 'severity':
                     if value in default.severity:
                         self.__severity = value
@@ -270,6 +276,9 @@ class Check:
     def get_strike_zone(self):
         return self.__strike_zone
 
+    def get_ha_dependant(self):
+        return self.__ha_dependant
+
     # Test if the severity match with the check ones.
     def check_severity(self, severities):
         # Treat the empty list as 'all'
@@ -287,15 +296,16 @@ class Check:
 
     def check_appliance_type(self, hw_profile, appliance_types):
         # Treat the empty list as 'current'
+
         if appliance_types == []:
-            if hw_profile in self.__appliance_type:
+            if hw_profile.lower() in self.__appliance_type:
                 return True
 
         if 'current' in appliance_types:
-            if hw_profile in self.__appliance_type:
+            if hw_profile.lower() in self.__appliance_type:
                 return True
 
-        if hw_profile in appliance_types and hw_profile in self.__appliance_type:
+        if hw_profile.lower() in appliance_types and hw_profile.lower() in self.__appliance_type:
             return True
 
         return False
@@ -354,7 +364,16 @@ class Check:
 
         return True
 
+    # Checks for versiontype match
+    def check_version_type(self):
 
+        if self.__version_type:
+            if self.__plugin.get_alienvault_config()['versiontype'] in self.__version_type.split(','):
+                return True
+            else:
+                return False
+        else:
+            return True
 
     # Run the check logic and return a boolean.
     def run(self):
@@ -400,8 +419,13 @@ class Check:
             (outcome, description, fo) = self.__check_conditions__(matches)
         else:
             description = '\n\tEmpty match set for pattern "%s" in check "%s"' % (self.__regex.pattern, self.__name)
+            if self.__plugin.get_alienvault_config()['has_ha'] and self.__ha_dependant:
+                description += '. This failure was caused by having HA enabled. Ignoring it'
             outcome = False if self.__fail_if_empty else True
-            fo = "\n\tEmpty match set for pattern %s in check %s" % (self.__regex.pattern, self.__name)
+            if self.__fail_if_empty_output:
+                fo = self.__fail_if_empty_output
+            else:
+                fo = "\n\tEmpty match set for pattern %s in check %s" % (self.__regex.pattern, self.__name)
 
         return (outcome, description, fo)
 
@@ -439,7 +463,12 @@ class Check:
             if not eval(eval_str):
                 outcome = False
                 description += "\n\t %s" % hw_req_pretty
-                fo += "\n\t %s: Condition (available vs expected) --> %s" % (hw_req_pretty, eval_str)
+                aux = re.findall(r'(\S+)(>=|==|<=)(\S+)', eval_str)
+                # fo += "%s: Condition (available vs expected) --> %s;" % (hw_req_pretty, eval_str)
+                fo += "%s: Expected a value %s %s, but %s found; " % (hw_req_pretty,
+                                                                      aux[0][1],
+                                                                      aux[0][2],
+                                                                      aux[0][0])
 
         return (outcome, description, fo)
 
@@ -467,11 +496,12 @@ class Check:
         # (outcome, description, fo) = (True, '', '')
 
         partial = []
-
+        aux_final_fo = ''
         for value in values:
             data = ''
             info = ''
             regex = ''
+            include_final_fo = False
 
             if type(value) == tuple:
                 value = list(enumerate(value))
@@ -543,9 +573,8 @@ class Check:
                         raise CheckError(msg='Condition datatype is marked as "ipaddr" but "%s" is not an IP Address' % str(data),
                                          plugin=self.__plugin.get_name())
 
-
                 if self.__severity == 'Debug':
-                    final_fo += "\n\t" + fo
+                    aux_final_fo += "\n\t" + fo
                     continue
                 #
                 # Check the second part of the operation (e.g. the condition)
@@ -555,7 +584,7 @@ class Check:
                 # only a type, e.g. '@string@;@int@:==1'
 
                 if condition == None:
-                    final_fo += "\n\t" + fo
+                    aux_final_fo += "\n\t" + fo
                     continue
 
                 # Two methods here: pattern matching or simple operator ('>=<') match.
@@ -648,6 +677,7 @@ class Check:
                         raise CheckError('Could not evaluate "%s": %s' % (eval_str, e), self.__plugin.get_name())
 
                     if not partial[-1]:
+                        include_final_fo = True
                         if self.__severity == "Info":
                             if not info:
                                 description += '\n\tCondition "%s" failed (this is just an information check)' % eval_str.lstrip()
@@ -655,21 +685,24 @@ class Check:
                                 description += '\n\tCondition "%s" failed for "%s" (this is just an information check)' % (eval_str.lstrip(), info)
                         elif self.__plugin.get_alienvault_config()['has_ha'] and self.__ha_dependant:
                             if not info:
-                                description += '\n\tCondition "%s" failed because HA is enabled. Ignoring it' % eval_str.lstrip()
+                                description += '\n\tCondition "%s" failed because HA is enabled. Disregard this check' % eval_str.lstrip()
                             else:
-                                description += '\n\tCondition "%s" failed for "%s" because HA is enabled. Ignoring it' % (eval_str.lstrip(), info)
-                            partial[-1] = True
+                                description += '\n\tCondition "%s" failed for "%s" because HA is enabled. Disregard this check' % (eval_str.lstrip(), info)
                         else:
                             if not info:
                                 description += "\n\tCondition '%s' failed" % eval_str.lstrip()
                             else:
                                 description += "\n\tCondition '%s' failed for '%s'" % (eval_str.lstrip(), info)
-                            final_fo += "\n\t" + fo
+                            aux_final_fo += "\n\t" + fo
                     else:
                         if not info:
                             description += '\n\tCondition "%s" passed' % eval_str.lstrip()
                         else:
                             description += '\n\tCondition "%s" passed for "%s"' % (eval_str.lstrip(), info)
+                        aux_final_fo += "\n\t" + fo
+
+            if include_final_fo:
+                final_fo += '\n\t' + aux_final_fo.split('\n\t')[-1]
 
         if self.__severity != 'Debug':
             if partial:
@@ -699,9 +732,14 @@ class Check:
                 diff = eval(values_set_str + parsed_condition)
                 if diff != set():
                     set_list = ", ".join(str(elem) for elem in diff if elem != '')
-                    description += '\n\tOffending values for operation "%s": %s\n' % (str(operation), set_list)
-                    fo = self.__formatted_output.replace('@set_list@', set_list)
+                    if self.__plugin.get_alienvault_config()['has_ha'] and self.__ha_dependant:
+                        description += '\n\tCondition "%s: %s" failed because HA is enabled. Ignoring it' % (str(operation), set_list)
+                        fo = self.__formatted_output.replace('@set_list@', set_list)
+                    else:
+                        description += '\n\tOffending values for operation "%s": %s\n' % (str(operation), set_list)
+                        fo = self.__formatted_output.replace('@set_list@', set_list)
                     outcome = False
+
             except SyntaxError, msg:
                 raise CheckError(msg='Invalid syntax',
                                  plugin=self.__plugin.get_name())

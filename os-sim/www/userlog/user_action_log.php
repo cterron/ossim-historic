@@ -122,8 +122,9 @@ if (!empty($code))
 
 //Date filter
 if (!empty($date_from) && !empty($date_to))
-{ 
-	$filter.= " AND (log_action.date BETWEEN '$date_from 00:00:00' AND  '$date_to 23:59:59')";
+{
+    $tzc = Util::get_tzc();
+    $filter.= " AND convert_tz(log_action.date,'+00:00','".$tzc."') between '".$date_from." 00:00:00' AND '".$date_to. " 23:59:59'";
 }
 
 $count    = Log_action::get_count($conn, "WHERE 1=1".$filter);			

@@ -5,14 +5,14 @@ description=Checks the disk size
 category=system
 strike_zone=True
 type=command
-command=echo $(COLUMNS=200 dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw)' | awk '{ print $2 }'):$(fdisk -l | egrep 'xvda1|sda1'  | awk '{ print $5 }')
+command=aux_size=$(fdisk -l | egrep 'xvda1|sda1'); grepped=$(echo "$aux_size" | grep '*' || echo ''); echo $(COLUMNS=200 dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw)' | awk '{ print $2 }'):$([ -n "$grepped" ] && echo "$grepped" | awk '{ print $5 }' | sed -e 's/+//' || echo "$aux_size" | awk '{ print $4 }'| sed -e 's/+//')
 raw_limit=100
 
 [00290001]
+severity=Warning
 pattern=^(\S*)\s+$
 conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/0029_disk_size.list
 formatted_output=@set_list@ is not registered among the standard disk sizes 
-severity=Warning
 description=Checks if the disk size is the standard one
 summary_passed=The disk size in this installation is standard
 summary_failed=The disk size doesn't match the standard ones

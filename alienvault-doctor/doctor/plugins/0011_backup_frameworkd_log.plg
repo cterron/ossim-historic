@@ -10,11 +10,11 @@ raw_limit=2000
 
 # Parses the AlienVault Framework error log looking for errors regarding BackupManager
 [00110001]
+severity=Warning
 pattern=^\S+\s\S+\s(\S+)\s\[.*\]:\s(.+)$
 conditions=@string@:!="BackupManager";@info@
 formatted_output=A BackupManager error message was generated during a backup process: @string@
 fail_if_empty=False
-severity=Warning
 description=Verifies there haven't been any errors during a backup process
 summary_passed=No error messages found for BackupManager during a backup process
 summary_failed=Error messages found for Backup Manager during a backup process

@@ -307,7 +307,7 @@ class baseCon {
         }
         if ((!$rs || $this->baseErrorMessage() != "") && $die_on_error) {
             Av_exception::write_log(Av_exception::DB_ERROR, $this->DB->ErrorMsg());
-            echo '</TABLE></TABLE></TABLE><CENTER><span style="font-size:11px;color:#555555"><B><br>' . gettext("Unable to query the database to retrieve some table information. Try fewer conditions.") . '</B></span></CENTER><script>$("#views_link").prop("disabled",true);$("#actions_link").prop("disabled",true);</script>';
+            echo '</TABLE></TABLE></TABLE><CENTER><span style="font-size:11px;color:#555555"><B><br>' . gettext("Unable to query the database to retrieve some table information. Try fewer conditions.") . '</B></span></CENTER><script>$("#actions_link").prop("disabled",true);</script>';
             die();
         } else {
             return $rs;

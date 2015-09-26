@@ -70,6 +70,9 @@ alienvault-suricata-hw-sensor-standard-6x1gb
 alienvault-suricata-hw-sensor-standard-2x10gb
 alienvault-suricata-hw-sensor-enterprise-ids-6x1gb
 alienvault-suricata-hw-sensor-enterprise-ids-2x10gb
+alienvault-suricata-hw-server-sensor
+alienvault-suricata-hw-sensor-standard
+alienvault-suricata-hw-sensor-enterprise
 alienvault-sysctl
 alienvault-system-benchmark
 alienvault-vmware-aio-6x1gb
@@ -535,6 +538,7 @@ linux-base
 linux-image-3.2.0-0.bpo.4-amd64
 linux-image-amd64
 linux-image-2.6-amd64
+linux-image-2.6.32-5-amd64
 locales
 locales-all
 locate
@@ -611,7 +615,6 @@ ossim-agent
 ossim-cd-configs
 ossim-cd-tools
 ossim-compliance
-ossim-contrib
 ossim-database-migration
 ossim-downloads
 ossim-framework
@@ -782,7 +785,6 @@ python-redis
 alienvault-openssh
 python-netaddr
 hdparm
-alienvault-prads-mysql
 alienvault-prads
 alienvault-nic-order
 alienvault-license

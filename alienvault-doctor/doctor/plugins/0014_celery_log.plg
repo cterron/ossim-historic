@@ -10,11 +10,11 @@ raw_limit=1000
 
 # Look for errors in AlienVault API Task Manager log file
 [00140001]
+severity=Info
 pattern=\[\d{4}-\d{2}-\d{2}\s(?:\d{2}\:?){3},\d{3}\:\sERROR/\S+\]\s(?P<error>.*)
 conditions=@string@:==""
 formatted_output=An error has been found in the celerybeat log file: @string@ {nl}
 fail_if_empty=False
-severity=Info
 description=Verifies if the AlienVault API Task Manager is working properly
 summary_passed=AlienVault API Task Manager is working properly
 summary_failed=AlienVault API Task Manager is not working properly

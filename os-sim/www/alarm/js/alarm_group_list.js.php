@@ -43,6 +43,11 @@ var __open_groups    = {};
 var __ajax_url       = '<?php echo AV_MAIN_PATH ?>/alarm/controllers/alarm_group_actions.php';
 var __alarm_url      = <?php echo json_encode(Alarm::get_alarm_path()) ?>;
 
+/*  Local Storage Keys  */
+var __local_storage_keys =
+{
+    "filters": "alienvault_<?php echo Session::get_session_user() ?>_show_alarm_group_filters"
+};
 
 /************************************************************************************/
 /*************************        DOCUMENT READY       ******************************/
@@ -54,6 +59,8 @@ var __alarm_url      = <?php echo json_encode(Alarm::get_alarm_path()) ?>;
 function load_alarm_list()
 {
 	check_background_tasks(0);
+
+    display_filters();
     
     $('.date_filter').datepicker(
     {
@@ -393,7 +400,9 @@ function check_background_tasks(times)
  */
 function toggle_filters()
 {
-    if($('#alarm_group_params').css('display') == 'none')
+    var status = ($('#alarm_group_params').css('display') == 'none');
+
+    if(status)
     {
         $('#search_arrow').attr('src', '/ossim/pixmaps/arrow_down.png');
         $('#alarm_group_params').slideDown();
@@ -404,9 +413,29 @@ function toggle_filters()
         $('#alarm_group_params').slideUp();
     }
 
+    set_ls_key_status('filters', status);
 }
 
 
+/*
+ *    Toggle the alarm group filters
+ */
+function display_filters()
+{
+    var status = get_ls_key_status('filters');
+
+    if(status)
+    {
+        $('#search_arrow').attr('src', '/ossim/pixmaps/arrow_down.png');
+        $('#alarm_group_params').show();
+    }
+    else
+    {
+        $('#search_arrow').attr('src', '/ossim/pixmaps/arrow_right.png');
+        $('#alarm_group_params').hide();
+    }
+
+}
 
 
 /************************************************************************************/
@@ -1336,6 +1365,33 @@ function change_alarm_status()
 }
 
 
+/************************************************************************************/
+/**********************      LOCAL STORAGE FUNCTIONS       **************************/
+/************************************************************************************/
+
+function get_ls_key_status(k)
+{
+    var key     = __local_storage_keys[k];
+    var enabled = 0;
+
+    if (key)
+    {
+        enabled = localStorage.getItem(key);
+    }
+
+    return enabled != 0;
+}
+
+function set_ls_key_status(k, status)
+{
+    var key = __local_storage_keys[k];
+    var val = status ? 1 : 0;
+
+    if (key)
+    {
+        localStorage.setItem(key, val);
+    }
+}
 
 
 /************************************************************************************/

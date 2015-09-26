@@ -392,7 +392,7 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
       return (NULL);
     }
 
-    if (file_status == G_IO_STATUS_EOF)
+    if ((file_status == G_IO_STATUS_EOF))
     {
       if (line_str != NULL)
       {
@@ -441,10 +441,33 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
     }
 
     file_len += (line_term + 1);
-    correlation->_priv->events_processed += 1;
 
+    // Ignore line if there is no otx data loaded
+    if (avr_db_has_otx_data() == FALSE)
+    {
+      if (line_str != NULL)
+      {
+        g_free (line_str);
+        line_str = NULL;
+      }
+      g_usleep(100);
+      continue;
+    }
+
+    // Discard the line if it is not a valid event
+    if (line_len < 10)
+    {
+      if (line_str != NULL)
+      {
+        g_free (line_str);
+        line_str = NULL;
+      }
+      continue;
+    }
+
+
+    correlation->_priv->events_processed += 1;
     utf8_line_len = g_utf8_strlen(line_str, -1);
-    // g_debug ("%s", line_str);
 
     // Parse a line, match a line.
     parsed_array = _avr_correlation_parse_line (correlation, line_str, utf8_line_len);
@@ -516,6 +539,8 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
   g_atomic_int_inc (&correlation->_priv->lines_parsed);
 
   g_return_val_if_fail (AVR_IS_CORRELATION(correlation), NULL);
+  g_return_val_if_fail (line_str, NULL);
+  g_return_val_if_fail (line_len > 10, NULL);
 
   GError * error = NULL;
   GPtrArray * parsed_array = NULL;
@@ -530,6 +555,7 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
   if (json_parser_load_from_data (parser, line_str, line_len, &error) != TRUE)
   {
     g_object_unref (parser);
+    parser = NULL;
 
     if (error != NULL)
       {
@@ -550,6 +576,7 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
 
   reader = json_reader_new (json_parser_get_root (parser));
   g_object_unref (parser);
+  parser = NULL;
 
   parsed_array = g_ptr_array_new_with_free_func ((GDestroyNotify)g_free);
 
@@ -613,7 +640,7 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
     {
       if (json_reader_read_member (reader, "md5"))
       {
-        value = g_utf8_strdown(g_strdup_printf("%s", json_reader_get_string_value (reader)), -1);
+        value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
         g_ptr_array_add (parsed_array, (gpointer)value);
       }
       json_reader_end_member (reader);
@@ -632,7 +659,7 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
           json_reader_end_member (reader);
           if (json_reader_read_member (reader, "rrname"))
           {
-            value = g_utf8_strdown(g_strdup_printf ("%s", json_reader_get_string_value (reader)), -1);
+            value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
             g_ptr_array_add (parsed_array, (gpointer)value);
 
             value = avr_tld_get_domain(correlation->_priv->domains, value);
@@ -651,7 +678,7 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
     {
       if (json_reader_read_member (reader, "hostname"))
       {
-        value = g_utf8_strdown(g_strdup_printf ("%s", json_reader_get_string_value(reader)), -1);
+        value = g_utf8_strdown(json_reader_get_string_value(reader), -1);
         g_ptr_array_add (parsed_array, (gpointer)value);
 
         value = avr_tld_get_domain(correlation->_priv->domains, value);
@@ -668,12 +695,31 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
 
     break;
   case HOSTNAME:
+    // Read "rrname" under "dns"
+    if (json_reader_read_member (reader, "dns"))
+    {
+      if (json_reader_read_member (reader, "type"))
+      {
+        if (!g_ascii_strncasecmp ("answer", json_reader_get_string_value (reader), 6))
+        {
+          json_reader_end_member (reader);
+          if (json_reader_read_member (reader, "rrname"))
+          {
+            value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
+            g_ptr_array_add (parsed_array, (gpointer)value);
+          }
+          json_reader_end_member (reader);
+        }
+      }
+    }
+    json_reader_end_member (reader);
+
     // Read "hostname" under "http".
     if (json_reader_read_member (reader, "http"))
     {
       if (json_reader_read_member (reader, "hostname"))
       {
-        value = g_utf8_strdown(g_strdup_printf ("%s", json_reader_get_string_value (reader)), -1);
+        value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
         g_ptr_array_add (parsed_array, (gpointer)value);
       }
       json_reader_end_member (reader);

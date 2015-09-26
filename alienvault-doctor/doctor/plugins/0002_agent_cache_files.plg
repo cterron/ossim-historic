@@ -9,11 +9,12 @@ command=ls /var/ossim/agent_events | perl -pe "s/\.\d+\.\d+\.db//" | uniq -c
 
 # Check the number of the agent cache files for the same host
 [00020001]
+severity=Warning
 pattern=(\d+)\s+\d+\.\d+\.\d+\.\d+
 conditions=@int@:<6
 formatted_output=@int@ Agent cache files have been found in the AlienVault Server (expected less than 6)
-severity=Warning
 fail_if_empty=False
+fail_if_empty_output=Agent cache files could not be checked as the match was reported as empty
 description=Checks the number of agent cache files in a given Server
 summary_passed=There is a normal number of AlienVault Agent Cache files in this Server
 summary_failed=There is a big number of AlienVault Agent Cache files in this Server

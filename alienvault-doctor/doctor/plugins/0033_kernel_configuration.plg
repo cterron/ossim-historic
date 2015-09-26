@@ -13,10 +13,10 @@ strike_zone=True
 
 # Verifies that the kernel configuration has not been modified
 [00330001]
+severity=Warning
 pattern=\S+\s=\s.+
 conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/0033_kernel_configuration.list
 formatted_output=Some kernel variables found (@set_list@) which differ from the AlienVault provided ones
-severity=Warning
 description=Verifies that the kernel configuration has not been modified
 summary_passed=The kernel configuration has not been modified
 summary_failed=The default Kernel configuration has been modified

@@ -225,11 +225,11 @@ class Log_action
      * This function inserts a row into log_action table and a new line in syslog file
      * 
      * @param number $log_code
-     * @param string $extrainfo
+     * @param array $extrainfo
      * 
      * @return boolean
      */
-    public static function log($log_code, $extrainfo) 
+    public static function log($log_code, $extrainfo = array()) 
     {      
         $conf = $GLOBALS["CONF"];
                 									
@@ -276,7 +276,7 @@ class Log_action
             syslog(LOG_NOTICE, "User event log [$log_code]: $user from $user_ip: $info");
         }
         // tmp fix DK: timestamp is limited to seconds, two users can do something at the same second
-        $sql = "INSERT IGNORE INTO log_action (login, ipfrom, date, code, info) VALUES (?, ?, current_timestamp , ?, ?)";
+        $sql = "INSERT IGNORE INTO log_action (login, ipfrom, date, code, info) VALUES (?, ?, UTC_TIMESTAMP() , ?, ?)";
 
         $params = array(
             $user,
@@ -354,7 +354,9 @@ class Log_action
     public static function get_list($conn, $filter = "", $order = "", $inf = 0, $sup = 25) 
     {
         Ossim_db::check_connection($conn);
-        
+
+        $tz     = Util::get_timezone();
+
         /* number of logs per page */
         $nlogs = $sup - $inf;
         $query = ossim_query("SELECT * from log_action where 1=1 $filter $order LIMIT $nlogs OFFSET $inf");
@@ -373,6 +375,7 @@ class Log_action
             $code   = $rs->fields["code"];
             $descr  = (is_object($codes[$code])) ? $codes[$code]->get_descr() : "";
             $prio   = (is_object($codes[$code])) ? $codes[$code]->get_priority() : "";
+            $rs->fields['date'] = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime($rs->fields['date']) + 3600*$tz);
             $list[] = new Log_action($rs->fields["login"], $rs->fields["ipfrom"], $rs->fields["date"], $code, $rs->fields["info"], $descr, $prio);
             
             $rs->MoveNext();
@@ -514,8 +517,10 @@ class Log_action
             $date,
             $info
         );
-        
-        $sql = "DELETE FROM log_action WHERE date=? AND info=?";
+
+        $tzc = Util::get_tzc();
+
+        $sql = "DELETE FROM log_action WHERE convert_tz(log_action.date,'+00:00','".$tzc."')=? AND info=?";
         
         if (!$conn->Execute($sql, $params)) 
         {

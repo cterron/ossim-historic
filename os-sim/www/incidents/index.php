@@ -613,7 +613,7 @@ $criteria = array(
     			?>
     			</span>    			
     			<a href="../report/incidentreport.php" class="tiptip" title="<?php echo _("Ticket Report")?>">
-    			    <img src="../pixmaps/pie_chart.png" border="0" align="absmiddle"/>
+                    <img src="../pixmaps/menu/reports_menu.png" width="13" border="0" align="absmiddle"/>
     			</a>
 			</th>
 		</tr>

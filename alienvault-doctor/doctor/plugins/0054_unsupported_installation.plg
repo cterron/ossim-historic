@@ -11,11 +11,11 @@ requires=@dpkg:alienvault-professional
 # Rules
 # Verifies that the current system is supported and does not come from a free OSSIM version installation.
 [00540001]
+severity=Critical
 pattern=^.*(?:ossim-server|ossim-agent)\s(\S+):\S
 conditions=@string@:=="10"
 formatted_output=ossim-server|ossim-agent free found in dpkg history
 fail_if_empty=False
-severity=Critical
 description=Verifies that the current system is supported and does not come from a free OSSIM version installation.
 summary_passed=The current deployment is supported
 summary_failed=There has been un upgrade from a free version

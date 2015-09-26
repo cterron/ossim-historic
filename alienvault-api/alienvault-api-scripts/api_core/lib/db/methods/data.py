@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  License:
+# License:
 #
 #  Copyright (c) 2014 AlienVault
 #  All rights reserved.
@@ -110,14 +110,14 @@ def get_asset_events(asset_id, asset_ctx, order_by=True):
     events = []
     try:
         if order_by:
-            events = db.session.query(Acid_Event).\
-                filter(Acid_Event.ctx == asset_ctx).\
-                filter(Acid_Event.src_host == asset_id).\
+            events = db.session.query(Acid_Event). \
+                filter(Acid_Event.ctx == asset_ctx). \
+                filter(Acid_Event.src_host == asset_id). \
                 order_by(Acid_Event.timestamp.desc()).all()
         else:
-            events = db.session.query(Acid_Event).\
-                filter(Acid_Event.ctx == asset_ctx).\
-                filter(Acid_Event.src_host == asset_id).\
+            events = db.session.query(Acid_Event). \
+                filter(Acid_Event.ctx == asset_ctx). \
+                filter(Acid_Event.src_host == asset_id). \
                 order_by(Acid_Event.timestamp.asc()).all()
 
     except Exception:
@@ -211,7 +211,8 @@ def host_clean_orphan_ref(host_id):
     """
     try:
         records = db.session.query(Current_Status).filter(and_(Current_Status.component_type == 'host',
-                                                          Current_Status.component_id == get_bytes_from_uuid(host_id))).all()
+                                                               Current_Status.component_id == get_bytes_from_uuid(
+                                                                   host_id))).all()
         db.session.begin()
         for record in records:
             db.session.delete(record)
@@ -233,8 +234,8 @@ def host_clean_orphan_ref(host_id):
 def get_snort_suricata_events_in_the_last_24_hours():
     try:
         d = datetime.now() - timedelta(hours=24)
-        data = db.session.query(Acid_Event).filter(Acid_Event.plugin_id >= 1001).\
-            filter(Acid_Event.plugin_id <= 1505).\
+        data = db.session.query(Acid_Event).filter(Acid_Event.plugin_id >= 1001). \
+            filter(Acid_Event.plugin_id <= 1505). \
             filter(Acid_Event.timestamp >= d).all()
     except:
         db.session.rollback()
@@ -263,9 +264,12 @@ def get_asset_ids_in_group(group_id, user):
     assets = []
     try:
         data = db.session.query(Host, Host_Ip, Host_Group_Reference).filter(and_(Host.id == Host_Ip.host_id,
-                                                                            Host.id == Host_Group_Reference.host_id, Host_Group_Reference.host_group_id
-                                                                                    == get_bytes_from_uuid(group_id))).all()
-        assets = [get_uuid_string_from_bytes(i[0].id) for i in data if user.is_allowed(get_uuid_string_from_bytes(i[0].id).replace('-', ''))]
+                                                                                 Host.id == Host_Group_Reference.host_id,
+                                                                                 Host_Group_Reference.host_group_id
+                                                                                 == get_bytes_from_uuid(
+                                                                                     group_id))).all()
+        assets = [get_uuid_string_from_bytes(i[0].id) for i in data if
+                  user.is_allowed(get_uuid_string_from_bytes(i[0].id).replace('-', ''))]
         success = True
 
     except Exception:
@@ -340,7 +344,9 @@ def get_current_status_messages(component_id=None,
     if message_id is not None:
         query = query.filter(and_(Current_Status.message_id == get_bytes_from_uuid(message_id)))
     if message_level is not None:
-        new_filter = [Current_Status.message.has(Status_Message.level.like(Status_Message.get_level_integer_from_string(x))) for x in message_level]
+        new_filter = [
+            Current_Status.message.has(Status_Message.level.like(Status_Message.get_level_integer_from_string(x))) for x
+            in message_level]
         query = query.filter(or_(*new_filter))
     if message_type is not None:
         new_filter = [Current_Status.message.has(Status_Message.type.like(x)) for x in message_type]
@@ -348,7 +354,8 @@ def get_current_status_messages(component_id=None,
     if component_type is not None:
         query = query.filter(and_(Current_Status.component_type == component_type))
     if search is not None:
-        query = query.filter(or_(Current_Status.message.has(Status_Message.title.like("%"+search+"%")), Current_Status.message.has(Status_Message.description.like("%"+search+"%"))))
+        query = query.filter(or_(Current_Status.message.has(Status_Message.title.like("%" + search + "%")),
+                                 Current_Status.message.has(Status_Message.description.like("%" + search + "%"))))
     if only_unread:
         query = query.filter(and_(Current_Status.viewed == 0))
 
@@ -401,7 +408,9 @@ def get_current_status_messages_stats(search=None, only_unread=False, login_user
         query = db.session.query(Current_Status)  # db.session.query(func.count(Current_Status.id)).scalar()
         query = query.filter(or_(Current_Status.suppressed == None, Current_Status.suppressed == 0))
         if search is not None:
-            query = query.filter(and_(Current_Status.message.has(Status_Message.title.like("%"+search+"%"))))
+            query = query.filter(and_(or_(Current_Status.message.has(Status_Message.title.like("%" + search + "%")),
+                                          Current_Status.message.has(
+                                              Status_Message.description.like("%" + search + "%")))))
         if login_user != "admin" and not is_admin:  # neither user admin nor is_admin
             query = query.join(UserPermissions, UserPermissions.component_id == Current_Status.component_id)
             query = query.filter(and_(UserPermissions.login == login_user))
@@ -410,7 +419,9 @@ def get_current_status_messages_stats(search=None, only_unread=False, login_user
         query = db.session.query(Current_Status).filter(Current_Status.viewed == 0)
         query = query.filter(or_(Current_Status.suppressed == None, Current_Status.suppressed == 0))
         if search is not None:
-            query = query.filter(and_(Current_Status.message.has(Status_Message.title.like("%"+search+"%"))))
+            query = query.filter(and_(or_(Current_Status.message.has(Status_Message.title.like("%" + search + "%")),
+                                          Current_Status.message.has(
+                                              Status_Message.description.like("%" + search + "%")))))
         if login_user != "admin" and not is_admin:  # neither user admin nor is_admin
             query = query.join(UserPermissions, UserPermissions.component_id == Current_Status.component_id)
             query = query.filter(and_(UserPermissions.login == login_user))
@@ -418,12 +429,15 @@ def get_current_status_messages_stats(search=None, only_unread=False, login_user
 
         stats['level'] = {}
         for m_level in m_levels:
-            query = db.session.query(Current_Status).join(Status_Message).filter(Status_Message.level == Status_Message.get_level_integer_from_string(m_level))
+            query = db.session.query(Current_Status).join(Status_Message).filter(
+                Status_Message.level == Status_Message.get_level_integer_from_string(m_level))
             query = query.filter(or_(Current_Status.suppressed == None, Current_Status.suppressed == 0))
             if only_unread:
                 query = query.filter(and_(Current_Status.viewed == 0))
             if search is not None:
-                query = query.filter(and_(Current_Status.message.has(Status_Message.title.like("%"+search+"%"))))
+                query = query.filter(and_(or_(Current_Status.message.has(Status_Message.title.like("%" + search + "%")),
+                                          Current_Status.message.has(
+                                              Status_Message.description.like("%" + search + "%")))))
             if login_user != "admin" and not is_admin:  # neither user admin nor is_admin
                 query = query.join(UserPermissions, UserPermissions.component_id == Current_Status.component_id)
                 query = query.filter(and_(UserPermissions.login == login_user))
@@ -436,7 +450,9 @@ def get_current_status_messages_stats(search=None, only_unread=False, login_user
             if only_unread:
                 query = query.filter(and_(Current_Status.viewed == 0))
             if search is not None:
-                query = query.filter(and_(Current_Status.message.has(Status_Message.title.like("%"+search+"%"))))
+                query = query.filter(and_(or_(Current_Status.message.has(Status_Message.title.like("%" + search + "%")),
+                                          Current_Status.message.has(
+                                              Status_Message.description.like("%" + search + "%")))))
             if login_user != "admin" and not is_admin:  # neither user admin nor is_admin
                 query = query.join(UserPermissions, UserPermissions.component_id == Current_Status.component_id)
                 query = query.filter(and_(UserPermissions.login == login_user))
@@ -527,7 +543,8 @@ def load_messages_to_db(msg_list):
 def set_current_status_property(current_status_id, viewed, suppressed):
     """Sets the values of the attributtes viewed and suppresed"""
     try:
-        status_message = db.session.query(Current_Status).filter(Current_Status.id == get_bytes_from_uuid(current_status_id)).one()
+        status_message = db.session.query(Current_Status).filter(
+            Current_Status.id == get_bytes_from_uuid(current_status_id)).one()
     except NoResultFound, msg:
         api_log.error("No Result: %s" % str(msg))
         return (False, "No result: Bad Current_Status ID")
@@ -550,7 +567,8 @@ def set_current_status_property(current_status_id, viewed, suppressed):
         db.session.begin()
         if delete_status_message:
             db.session.delete(status_message)
-            cmd = "delete from status_message where id=0x%s" % get_uuid_string_from_bytes(status_message.message_id).replace('-', '').upper()
+            cmd = "delete from status_message where id=0x%s" % get_uuid_string_from_bytes(
+                status_message.message_id).replace('-', '').upper()
             db.session.connection(mapper=Status_Message).execute(cmd)
         else:
             db.session.merge(status_message)
@@ -604,7 +622,8 @@ def get_status_message_from_id(message_id, is_admin=False, serialize=True):
 def get_current_status_message_from_id(current_status_id):
     """Retrieves the Current_Status message id with the given id"""
     try:
-        data = db.session.query(Current_Status).filter(Current_Status.message_id == get_bytes_from_uuid(current_status_id)).one()
+        data = db.session.query(Current_Status).filter(
+            Current_Status.message_id == get_bytes_from_uuid(current_status_id)).one()
     except NoResultFound:
         return (False, "No Current_Status found with id '%s'" % str(current_status_id))
     except MultipleResultsFound:
@@ -676,6 +695,7 @@ def delete_messages(messages):
 
     success, msg = delete_status_messages(messages)
     return success, msg
+
 
 @require_db
 def db_insert_current_status_message(message_id, component_id, component_type, additional_info, replace):
@@ -765,7 +785,8 @@ def load_mcserver_messages(message_list):
                 except Exception as e:
                     api_log.warning("Message with an invalid additional_info %s -  %s" % (msg_id_str, str(e)))
                     additional_info_json = ""
-            success, status_message = get_status_message_from_id(message_id=msg_id_binary, is_admin=True, serialize=False)
+            success, status_message = get_status_message_from_id(message_id=msg_id_binary, is_admin=True,
+                                                                 serialize=False)
             if success:
                 #update values:
                 status_message.level = Status_Message.get_level_integer_from_string(str(msg['level']))
@@ -774,7 +795,8 @@ def load_mcserver_messages(message_list):
                 status_message.type = msg['type']
                 success, current_status_message = get_current_status_from_message_id(msg_id_str)
                 if not success or len(current_status_message) != 1:
-                    api_log.error("Invalid external message %s. Current_Status: %s, tuples(%s)" % (msg_id_str, success, len(current_status_message)))
+                    api_log.error("Invalid external message %s. Current_Status: %s, tuples(%s)" % (
+                        msg_id_str, success, len(current_status_message)))
                     continue
                 current_status_message[0].additional_info = additional_info_json
                 db.session.merge(current_status_message[0])
@@ -793,7 +815,7 @@ def load_mcserver_messages(message_list):
                 current_status_message = Current_Status()
                 current_status_message.id = uuid4().bytes
                 current_status_message.component_type = 'external'
-                current_status_message.creation_time = datetime.utcnow()
+                current_status_message.creation_time = datetime.strptime(msg['valid_from'], "%Y-%m-%dT%H:%M:%S")
                 current_status_message.message_id = new_msg.id
                 current_status_message.additional_info = ""
                 current_status_message.suppressed = 0

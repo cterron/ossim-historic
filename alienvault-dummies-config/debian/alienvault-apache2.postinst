@@ -29,11 +29,8 @@ case "$1" in
         # Enable essential apache2 modules
         [ -L "/etc/apache2/mods-enabled/rewrite.load" ] || CHANGED=1 && a2enmod rewrite > /dev/null 2>&1
         [ -L "/etc/apache2/mods-enabled/ssl.load" ] || CHANGED=1 && a2enmod ssl > /dev/null 2>&1
-
-        # Reload apache2 configuration, if needed.
-        if [ $CHANGED -ne 0 ]; then
-            dpkg-trigger --no-await alienvault-restart-apache2
-        fi
+	# Sorry, I need apache restart
+        dpkg-trigger --no-await alienvault-restart-apache2
     ;;
 
     triggered)

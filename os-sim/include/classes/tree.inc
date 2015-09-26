@@ -2318,7 +2318,7 @@ class Tree
                 }
                 else
                 {
-                    $port_groups[] = array($pg_name, $pg_name, '');
+                    $port_groups[] = array($pg_id, $pg_name, '');
                 }
             }
         }

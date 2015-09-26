@@ -216,6 +216,7 @@ td.nowrap
 #graph_toggle_legend
 {
     float: left;
+    margin-top: 2px;
     margin-right: 7px;
     line-height: 20px;
 }
@@ -223,6 +224,7 @@ td.nowrap
 #graph_toggle
 {
     float: left;
+    margin-top: 2px;
     margin-right: 20px;
     width: 50px;
     height: 18px;

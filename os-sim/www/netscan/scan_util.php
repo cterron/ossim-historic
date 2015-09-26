@@ -254,7 +254,7 @@ function scan2html($conn, $scan)
         
         <div style='text-align:center; padding: 10px 0px;'>
 			<input type="button" style='margin-left: 10px;' class="av_b_secondary" onclick="document.location.href='index.php?clearscan=1'" value='<?php echo _('Clear scan result')?>'/>
-			<input type='submit' name='send' id='send' value="<?php echo _('Update database values')?>"/>
+			<input type='submit' name='send' id='send' value="<?php echo _('Update managed assets')?>"/>
         </div>            		
 	</form>
 	

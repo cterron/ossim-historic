@@ -2683,14 +2683,14 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
                                                                             {
                                                                                 $tip = _('This plugin group cannot be applied because contains the plugin 1505');
                                                                                 echo "<input type='checkbox' class='disabled' disabled='disabled' id='plugin_" . $g->get_id() ."' pname='". $g->get_name() ."'>";
-                                                                                echo "<a href='modifyplugingroupsform.php?action=edit&id=". $g->get_id() ."' class='greybox gray italic ' title='". _('View DS Group') ."'>". $g->get_name() ."</a>";
+                                                                                echo "<a href='modifyplugingroupsform.php?action=edit&id=". $g->get_id() ."' class='greybox gray italic ' title='". _('View DS Group') ."'>". Util::htmlentities($g->get_name()) ."</a>";
                                                                                 echo " <img src='/ossim/pixmaps/warnin_icon.png' id='dg_locked' class='tiptip_dg' title='". $tip ."'/>";
                                                                             }
                                                                             else
                                                                             {
                                                                                 echo "<input type='checkbox' id='plugin_" . $g->get_id() ."' pname='". $g->get_name() ."' onclick='drawpolicy()' name='plugins[". $g->get_id() ."]' $checked/>";
                                                                             
-                                                                                echo "<a href='modifyplugingroupsform.php?action=edit&id=". $g->get_id() ."' class='greybox' title='". _('View DS Group') ."'>". $g->get_name() ."</a>";
+                                                                                echo "<a href='modifyplugingroupsform.php?action=edit&id=". $g->get_id() ."' class='greybox' title='". _('View DS Group') ."'>". Util::htmlentities($g->get_name()) ."</a>";
 
                                                                             }
 

@@ -9,11 +9,10 @@ command=grep \.cfg /etc/ossim/agent/config.yml /etc/ossim/agent/config.cfg | gre
 
 # Detects custom plugins
 [00070001]
+severity=Info
 pattern=^.*(\/etc\/ossim\/agent\/plugins\/[a-zA-Z0-9\_\-]+\.cfg)
 conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/0007_agent_plugins.list
 formatted_output=The following custom plugin files have been created: @set_list@
-severity=Info
-info_check=True
 description=Verify there are not custom plugin configuration files not labeled as 'local'
 summary_passed=No custom plugins found in this system
 summary_failed=Custom plugins found in this system

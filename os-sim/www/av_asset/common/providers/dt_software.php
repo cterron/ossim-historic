@@ -138,6 +138,8 @@ try
             $search_str        = escape_sql($search_str, $conn);
             $filters['where'] .= ' AND (banner LIKE "%'.$search_str.'%" OR cpe LIKE "%'.$search_str.'%")';
         }
+        
+        $filters['response_type'] = 'by_cpe';
 
         list($sw_list, $sw_total) = $asset_object->get_software($conn, $filters);
     }
@@ -160,23 +162,22 @@ $assets_with_software = array();
 // Software data
 $data = array();
 
-foreach ($sw_list as $_asset_id => $sw_data)
+foreach ($sw_list as $cpe => $sw_data)
 {
-    if (array_key_exists($_asset_id, $assets_with_software))
+    foreach ($sw_data as $_asset_id => $sw_values)
     {
-        $ips_to_show = $assets_with_software[$_asset_id];
-    }
-    else
-    {
-        $_host       = Asset_host::get_object($conn, $_asset_id);
-        $ips_to_show = $_host->get_name().' ('.$_host->get_ips()->get_ips('string').')';
+        if (array_key_exists($_asset_id, $assets_with_software))
+        {
+            $ips_to_show = $assets_with_software[$_asset_id];
+        }
+        else
+        {
+            $_host       = Asset_host::get_object($conn, $_asset_id);
+            $ips_to_show = $_host->get_name().' ('.$_host->get_ips()->get_ips('string').')';
+    
+            $assets_with_software[$_asset_id] = $ips_to_show;
+        }
 
-        $assets_with_software[$_asset_id] = $ips_to_show;
-    }
-
-
-    foreach ($sw_data as $cpe => $sw_values)
-    {
         $r_key = strtolower($_asset_id.'_'.md5($cpe));
 
         $sw_name    = $sw_values['banner'];

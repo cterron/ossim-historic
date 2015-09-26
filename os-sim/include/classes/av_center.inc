@@ -1169,47 +1169,8 @@ class Av_center
 
             return $res;
         }
-
-        // Remove 'sensor_detectors' info, we'll send it through /plugins/detector/enabled blueprint
-        $selected_plugins = explode(',', $data['sensor_detectors']);
-        unset($data['sensor_detectors']);
-        
         
         $res = self::set_config_data($system_id, $data, 'alienvault');
-
-        
-        // Additional call to set the sensor plugins
-        if ($res['status'] != 'error')
-        {
-            $sensor_id = 'local';
-            
-            if ($system_id != 'local')
-            {
-                $db = new Ossim_db();
-                $conn = $db->connect();
-            
-                $sensor_ids = Av_center::get_component_id_by_system($conn, $system_id, 'sensor');
-            
-                $db->close();
-            
-                if (is_array($sensor_ids) && !empty($sensor_ids))
-                {
-                    $sensor_id = $sensor_ids['canonical'];
-                }
-            }
-            
-            $client   = new Alienvault_client();
-            
-            $response = $client->sensor($sensor_id)->set_plugins($selected_plugins);
-            
-            $response = @json_decode($response, TRUE);
-            
-            if (!$response || $response['status'] == 'error')
-            {
-                $res['status'] = 'error';
-                $res['data']   = sprintf(_('System error! Configuration not applied [%s]'), $client->get_error_message($response));
-            }
-        }
         
         return $res;
     }

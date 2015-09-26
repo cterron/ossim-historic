@@ -208,10 +208,10 @@ switch($action)
         }
 
         $validate = array(
-            'asset_id'   =>  array('validation' => 'OSS_HEX',                  'e_message'  =>  'illegal:' . _('Asset ID')),
-            's_port'     =>  array('validation' => 'OSS_PORT',                 'e_message'  =>  'illegal:' . _('Port')),
-            's_protocol' =>  array('validation' => 'OSS_DIGIT',                'e_message'  =>  'illegal:' . _('Protocol')),
-            's_name'     =>  array('validation' => 'OSS_ALPHA, OSS_PUNC_EXT',  'e_message'  =>  'illegal:' . _('Service'))
+            'asset_id'   =>  array('validation' => 'OSS_HEX',                   'e_message'  =>  'illegal:' . _('Asset ID')),
+            's_port'     =>  array('validation' => 'OSS_PORT',                  'e_message'  =>  'illegal:' . _('Port')),
+            's_protocol' =>  array('validation' => 'OSS_PROTOCOL_SERVICE',      'e_message'  =>  'illegal:' . _('Protocol')),
+            's_name'     =>  array('validation' => 'OSS_ALPHA, OSS_PUNC_EXT',   'e_message'  =>  'illegal:' . _('Service'))
         );
 
 
@@ -237,16 +237,17 @@ switch($action)
                 $conn  = $db->connect();
 
                 $asset_id = POST('asset_id');
-                $port     = POST('s_port');
                 $protocol = POST('s_protocol');
+                $protocol_name = Protocol::get_protocol_by_number($protocol);
+                $port     = POST('s_port');
                 $service  = POST('s_name');
                 $ctx      = Asset_host::get_ctx_by_id($conn, $asset_id);
 
-                $n_ports  = Port::get_list($conn, " AND port_number = $port and protocol_name = '$protocol'");
+                $n_ports  = Port::get_list($conn, " AND port_number = $port and protocol_name = '$protocol_name'");
 
                 if(count($n_ports) == 0)
                 {
-                    Port::insert($conn, $port, $protocol, $service, '', $ctx);
+                    Port::insert($conn, $port, $protocol_name, $service, '', $ctx);
                 }
                 else
                 {
@@ -294,11 +295,11 @@ switch($action)
                     $tk_key = 'tk_services_form';
 
                     $validate = array(
-                        'asset_id'     =>  array('validation' => 'OSS_HEX',                  'e_message'  =>  'illegal:' . _('Asset ID')),
-                        's_ip'         =>  array('validation' => 'OSS_IP_ADDR',              'e_message'  =>  'illegal:' . _('Asset IP')),
-                        's_port'       =>  array('validation' => 'OSS_PORT',                 'e_message'  =>  'illegal:' . _('Port')),
-                        's_protocol'   =>  array('validation' => 'OSS_DIGIT',                'e_message'  =>  'illegal:' . _('Protocol')),
-                        's_name'       =>  array('validation' => 'OSS_ALPHA, OSS_PUNC_EXT',  'e_message'  =>  'illegal:' . _('Service'))
+                        'asset_id'     =>  array('validation' => 'OSS_HEX',                   'e_message'  =>  'illegal:' . _('Asset ID')),
+                        's_ip'         =>  array('validation' => 'OSS_IP_ADDR',               'e_message'  =>  'illegal:' . _('Asset IP')),
+                        's_port'       =>  array('validation' => 'OSS_PORT',                  'e_message'  =>  'illegal:' . _('Port')),
+                        's_protocol'   =>  array('validation' => 'OSS_PROTOCOL_SERVICE',      'e_message'  =>  'illegal:' . _('Protocol')),
+                        's_name'       =>  array('validation' => 'OSS_ALPHA, OSS_PUNC_EXT',   'e_message'  =>  'illegal:' . _('Service'))
                     );
 
 
@@ -317,7 +318,7 @@ switch($action)
                         $validate['nagios']         = array('validation' => 'OSS_BINARY',                               'e_message'  =>  'illegal:' . _('Nagios'));
                         $validate['old_s_ip']       = array('validation' => 'OSS_IP_ADDR',                              'e_message'  =>  'illegal:' . _('Old asset IP'));
                         $validate['old_s_port']     = array('validation' => 'OSS_PORT',                                 'e_message'  =>  'illegal:' . _('Old port'));
-                        $validate['old_s_protocol'] = array('validation' => 'OSS_DIGIT',                                'e_message'  =>  'illegal:' . _('Old protocol'));
+                        $validate['old_s_protocol'] = array('validation' => 'OSS_PROTOCOL_SERVICE',                     'e_message'  =>  'illegal:' . _('Old protocol'));
 
 
                         $p_data['delete']['asset_id']        = $asset_id;
@@ -649,10 +650,10 @@ switch($action)
                             case '40':
 
                                 $validate = array(
-                                    'asset_id'  =>  array('validation' => array(OSS_HEX),      'e_message'  =>  'illegal:' . _('Asset ID')),
-                                    'ip'        =>  array('validation' => array(OSS_IP_ADDR),  'e_message'  =>  'illegal:' . _('Asset IP')),
-                                    'port'      =>  array('validation' => array(OSS_PORT),     'e_message'  =>  'illegal:' . _('Port')),
-                                    'protocol'  =>  array('validation' => array(OSS_DIGIT),    'e_message'  =>  'illegal:' . _('Protocol'))
+                                    'asset_id'  =>  array('validation' => array(OSS_HEX),               'e_message'  =>  'illegal:' . _('Asset ID')),
+                                    'ip'        =>  array('validation' => array(OSS_IP_ADDR),           'e_message'  =>  'illegal:' . _('Asset IP')),
+                                    'port'      =>  array('validation' => array(OSS_PORT),              'e_message'  =>  'illegal:' . _('Port')),
+                                    'protocol'  =>  array('validation' => array(OSS_PROTOCOL_SERVICE),  'e_message'  =>  'illegal:' . _('Protocol'))
                                 );
 
                                 $p_data['ip']       = $p_values['s_ip'];
@@ -861,10 +862,10 @@ switch($action)
                         ossim_clean_error();
 
                         $validate = array(
-                            'asset_id'   =>  array('validation' => array(OSS_HEX),                               'e_message'  =>  'illegal:' . _('Asset ID')),
-                            'ip'         =>  array('validation' => array(OSS_IP_ADDR),                           'e_message'  =>  'illegal:' . _('Asset IP')),
-                            'port'       =>  array('validation' => array(OSS_PORT),                              'e_message'  =>  'illegal:' . _('Port')),
-                            'protocol'   =>  array('validation' => array(OSS_DIGIT),                             'e_message'  =>  'illegal:' . _('Protocol'))
+                            'asset_id'   =>  array('validation' => array(OSS_HEX),               'e_message'  =>  'illegal:' . _('Asset ID')),
+                            'ip'         =>  array('validation' => array(OSS_IP_ADDR),           'e_message'  =>  'illegal:' . _('Asset IP')),
+                            'port'       =>  array('validation' => array(OSS_PORT),              'e_message'  =>  'illegal:' . _('Port')),
+                            'protocol'   =>  array('validation' => array(OSS_PROTOCOL_SERVICE),  'e_message'  =>  'illegal:' . _('Protocol'))
                         );
 
                         //Initialize service data

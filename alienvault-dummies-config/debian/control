@@ -130,7 +130,7 @@ Description: Configuration package for OpenSSL
 Package: alienvault-openvas
 Architecture: all
 Depends: ${misc:Depends}, openvas-cli (>= 1.4)
-Pre-Depends: openvas-scanner (>= 5.0.3), openvas-manager (>= 6.0.3), alienvault-redis-server-openvas, rng-tools, sqlite3, xsltproc
+Pre-Depends: openvas-scanner (>= 5.0.4), openvas-manager (>= 6.0.5), alienvault-redis-server-openvas, rng-tools, sqlite3, xsltproc
 Conflicts: alienvault-openvas-plugins
 Replaces: alienvault-openvas-plugins
 Description: Configuration package for OpenVAS
@@ -159,6 +159,7 @@ Architecture: all
 Pre-Depends: plymouth, initramfs-tools, v86d
 Depends: ${misc:Depends}
 Replaces: plymouth
+Breaks: plymouth (>= 0.8.5.1-5)
 Description: Graphical boot animation for AlienVault appliances
 
 Package: alienvault-postfix
@@ -172,12 +173,6 @@ Architecture: all
 Depends: ${misc:Depends}
 Pre-Depends: prads
 Description: Configuration package for prads
-
-Package: alienvault-prads-mysql
-Architecture: all
-Depends: ${misc:Depends}
-Pre-Depends: ossim-framework
-Description: Prads database configuration package
 
 Package: alienvault-redis-server
 Architecture: all

@@ -12,10 +12,10 @@ profiles=Server:>4.0
 
 # Verifies there's at least one connection (with MySQL) in the appliance
 [00170001]
+severity=Warning
 pattern=(\d+)
 conditions=@int@:!=0
 formatted_output=At least one connection from/to this computer is expected, but no connections have been found
-severity=Warning
 description=Verify the number of connections from/to this computer is coherent
 summary_passed=The number of connections from/to this system is coherent
 summary_failed=Number of connections between server and mysql not expected

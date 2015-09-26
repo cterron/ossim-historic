@@ -10,11 +10,11 @@ raw_limit=2000
 
 # Parses AlienVault API backup-notifications.log looking for errors
 [00120001]
+severity=Warning
 pattern=^\S+\s\S+\s\S+\s--\s((\S+)\s--\s.+)$
 conditions=@info@;@string@:!="ERROR"
 formatted_output=The following error message was found during a backup process: @info@
 fail_if_empty=False
-severity=Warning
 description=Verify there haven't been any errors during a backup process
 summary_passed=No error messages found in the backup notifications log file
 summary_failed=Error message found in the backup notifications log file

@@ -24,7 +24,6 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libgd2-xpm, graphviz, alienvault-na
  alienvault-openvas8-feed,
  alienvault-memcached (>= ${source:Upstream-Version}),
  alienvault-php5 (>= ${source:Upstream-Version}),
- alienvault-prads-mysql (>= ${source:Upstream-Version}),
 # alienvault-dummy-asec,
  alienvault-nfsen (>= ${source:Upstream-Version}),
  alienvault-cpe,

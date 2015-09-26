@@ -156,7 +156,7 @@ if ($total_events > 0)
         $sid_priority = $alarm->get_sid_priority();
         $rule_level   = $alarm->get_rule_level();
         $view         = Alarm::event_allowed($conn,$ctx,$alarm->get_src_host(),$alarm->get_dst_host(),$alarm->get_src_net(),$alarm->get_dst_net());
-        $td_class        = ($id==1505) ? "td_directive_event" : "transparent";
+        $td_class     = ($id==1505) ? "td_directive_event" : "transparent";
         if ($sid_name=="")           $sid_name = "Unknown (id=$id sid=$sid)";
         if ($sid_priority=="")       $sid_priority = "N/A";
         if (!$show_all || $id==1505) $summary = Alarm::get_alarm_resume($conn, $backlog_id, $rule_level, true);
@@ -197,6 +197,7 @@ if ($total_events > 0)
 		
 		$asset_src = $alarm->get_asset_src();
 		$asset_dst = $alarm->get_asset_dst();
+		$href_sim  = '';
 		
 		if ($view && $aid) 
 		{
@@ -305,14 +306,14 @@ if ($total_events > 0)
 		{
 			if ($event_date==$orig_date || $event_date==$date) 
 			{ 
-				$buffer .= "<a class='greybox' href='".Util::get_acid_date_link($date, $src_ip, "ip_src")."'><font color='black'>$date</font></a>";
+				$buffer .= "<a class='greybox' href='$href_sim'><font color='black'>$date</font></a>";
 			} 
 			else 
 			{ 
 				$buffer .= "
 
-							<a class='greybox' href='".Util::get_acid_date_link($date, $src_ip, "ip_src")."'>
-							  <font color='black'>$date</font>
+							<a class='greybox' href='$href_sim'>
+                                <font color='black'>$date</font>
 							</a>
 							<div style='display: none;'>
                                 <table class='t_white'>                           
@@ -368,11 +369,7 @@ if ($total_events > 0)
 		$dst_output  = Asset_host::get_extended_name($conn, $geoloc, $dst_ip, $ctx_dst, $event_info["dst_host"], $event_info["dst_net"]);
 		$homelan_dst = ($dst_output['is_internal']) ? "bold" : "";
 		$dst_img     = $dst_output['html_icon'];
-		
-		
-		$src_link = Menu::get_menu_url("/ossim/forensics/base_stat_ipaddr.php?clear_allcriteria=1&ip=$src_ip", 'analysis', 'security_events', 'security_events');
-		$dst_link = Menu::get_menu_url("/ossim/forensics/base_stat_ipaddr.php?clear_allcriteria=1&ip=$dst_ip", 'analysis', 'security_events', 'security_events');
-		
+				
 		$src_title  = _("Src Asset").": <b>$asset_src</b><br>"._("IP").": <b>$src_ip</b>";
 		$dst_title  = _("Dst Asset").": <b>$asset_dst</b><br>"._("IP").": <b>$dst_ip</b>";
 
@@ -384,7 +381,7 @@ if ($total_events > 0)
 		}
 		else
 		{
-			$buffer .= "$src_img <a href='$src_link' class='HostReportMenu greybox $homelan_src' id2='$src_ip;$dst_ip' id='$src_ip;$src_name;".$event_info["src_host"]."' ctx='$ctx'>$src_name$src_port</a>";
+			$buffer .= "$src_img <a href='$href_sim' class='HostReportMenu greybox $homelan_src' id2='$src_ip;$dst_ip' id='$src_ip;$src_name;".$event_info["src_host"]."' ctx='$ctx'>$src_name$src_port</a>";
 		} 
 		
 		$buffer .= "</td>";
@@ -398,7 +395,7 @@ if ($total_events > 0)
 		}
 		else
 		{
-			$buffer .= "$dst_img <a href='$dst_link' class='HostReportMenu greybox $homelan_dst' id2='$dst_ip;$src_ip' id='$dst_ip;$dst_name;".$event_info["dst_host"]."' ctx='$ctx'>$dst_name$dst_port</a>";
+			$buffer .= "$dst_img <a href='$href_sim' class='HostReportMenu greybox $homelan_dst' id2='$dst_ip;$src_ip' id='$dst_ip;$dst_name;".$event_info["dst_host"]."' ctx='$ctx'>$dst_name$dst_port</a>";
 		}
 
 		$buffer .=	"</td>";

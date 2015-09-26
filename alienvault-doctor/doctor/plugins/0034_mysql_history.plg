@@ -11,11 +11,11 @@ raw_limit=100
 
 # Checks if the internal database has been modified manually
 [00340001]
+severity=Error
 pattern=((?i)(?:insert|update|delete)\s+.+)
 conditions=@string@:==""
 formatted_output=@string@ query found in MySQL history
 fail_if_empty=False
-severity=Error
 description=Checks if the internal database has been modified manually
 summary_passed=The internal AlienVault database has not been modified
 summary_failed=Data in the AlienVault database has been modified manually
@@ -26,11 +26,11 @@ strike_zone=True
 
 # Checks if the AlienVault database schema has been manually modified
 [00340002]
+severity=Warning
 pattern=(^(?:(?i)(?:(?<!show)(?:\\040|\s)*(?:create|drop).+))|;[^\n]?(?:\\040|\s)*(?:(?i)(?:(?:create|drop).+)))
 conditions=@string@:==""
 formatted_output=@string@ query found in MySQL history
 fail_if_empty=False
-severity=Warning
 description=Checks if the AlienVault database schema has been manually modified
 summary_passed=The AlienVault schema has not been modified
 summary_failed=The current database history file shows signal of created or dropped tables in the database 

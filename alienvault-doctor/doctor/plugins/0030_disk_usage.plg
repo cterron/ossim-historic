@@ -8,10 +8,10 @@ command=df -h
 
 # Note the last condition; this is to avoid overlapping with the 'root partition critical' rule.
 [00300001]
+severity=Warning
 pattern=([0-9][0-9]?|100)%\s+/$
 conditions=@int@:>0@and@<75@or@>=95
 formatted_output=root partition is at @int@% of its capacity
-severity=Warning
 description=Verifies root partition does not exceed 75% capacity
 summary_passed=The root partition size is adequate
 summary_failed=root partition exceeds 75% capacity
@@ -21,10 +21,10 @@ min_doctor_version=4.15
 
 # Verify root partition does not exceed 95% capacity
 [00300002]
+severity=Critical
 pattern=([0-9][0-9]?|100)%\s+/$
 conditions=@int@:>0@and@<95
 formatted_output=root partition is at @int@% of its capacity
-severity=Critical
 description=Verify root partition does not exceed 95% capacity
 summary_passed=the root partition size has not reached 95% capacity
 summary_failed=root partition exceeds 95% capacity

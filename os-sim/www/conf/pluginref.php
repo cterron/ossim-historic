@@ -55,6 +55,7 @@ $layout      = load_layout($name_layout, $category);
     <script type="text/javascript" src="../js/urlencode.js"></script>
     <script type="text/javascript" src="../js/greybox.js"></script>
     <script type="text/javascript" src="../js/notification.js"></script>
+    <script type="text/javascript" src="../js/utils.js"></script>
     
     <style type='text/css'>
         table, th, tr, td {
@@ -89,12 +90,15 @@ $layout      = load_layout($name_layout, $category);
                 //Delete host by ajax
                 if ( typeof(items[0]) != 'undefined' ) 
                 {
-                    if (confirm("<?php echo Util::js_entities(_('Are you sure you want to delete the selected rule?')) ?>"))
+                    var msg  = "<?php echo Util::js_entities(_('Are you sure you want to delete the selected rule?')) ?>"
+                    var opts = {"yes": "<?php echo _('Yes') ?>", "no": "<?php echo _('No') ?>"}
+
+                    av_confirm(msg, opts).done(function()
                     {
                         var aux    = items[0].id.substr(3);
                         var auxarr = aux.split(/\_/);
-                        document.location.href = 'delete_pluginref.php?plugin_id1='+auxarr[0]+'&plugin_sid1='+auxarr[1]+'&plugin_id2='+auxarr[2]+'&plugin_sid2='+auxarr[3];
-                    }
+                        document.location.href = '/ossim/conf/delete_pluginref.php?plugin_id1='+auxarr[0]+'&plugin_sid1='+auxarr[1]+'&plugin_id2='+auxarr[2]+'&plugin_sid2='+auxarr[3];
+                    });
                 }
                 else{
                     alert('<?php echo Util::js_entities(_('You must select a rule'));?>');

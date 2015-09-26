@@ -1202,7 +1202,7 @@ class SensorCriteria extends SingleElementCriteria {
     function SanitizeElement() {
         $this->param = preg_match("/^\!/",$this->criteria) ? true : false;
         $this->criteria = CleanVariable($this->criteria, VAR_DIGIT | VAR_PUNC);
-        if ( $this->criteria!="" && !preg_match("/(\d+,)*\d/",$this->criteria) )
+        if ( $this->criteria!="" && !preg_match("/^(\d+,)*\d+$/",$this->criteria) )
         {
             $this->criteria = "0";
         }

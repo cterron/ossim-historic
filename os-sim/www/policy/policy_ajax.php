@@ -121,7 +121,7 @@ function get_policy_actions($conn, $data)
 		foreach($action_list2 as $act) 
 		{ 
 			$sel   = (in_array($act->get_id(),$actions_saved)) ? " selected='selected'" : ""; 
-			$desc1 = (strlen($act->get_name())>48) ? substr($act->get_name(),0,48)."..." : $act->get_name();
+			$desc1 = Util::utf8_encode2((strlen($act->get_name())>48) ? substr($act->get_name(),0,48)."..." : $act->get_name());
 
 			$result .="<option value='". $act->get_id() ."' $sel>$desc1</option>";
 
@@ -328,7 +328,7 @@ function get_categories($conn, $data)
 	{		
 		while (!$rs->EOF) 
 		{
-			$result .= "<option value='".$rs->fields["id"]."'>".$rs->fields["name"]."</option>\n";
+			$result .= "<option value='".$rs->fields["id"]."'>". Util::utf8_encode2($rs->fields["name"]) ."</option>\n";
 			$rs->MoveNext();
 		}
 	}
@@ -377,7 +377,7 @@ function get_subcategories($conn, $data)
 	{
 		while (!$rs->EOF) 
 		{
-			$result .= "<option value='".$rs->fields["id"]."'>".$rs->fields["name"]."</option>\n";
+			$result .= "<option value='".$rs->fields["id"]."'>". Util::utf8_encode2($rs->fields["name"]) ."</option>\n";
 			
 			$rs->MoveNext();
 		}

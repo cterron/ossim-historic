@@ -276,63 +276,59 @@ $db->close();
 
         function check_target_number()
         {
-            $('#scan_button').addClass('av_b_processing').prop('disabled', true);
-            
             if(getcombotext("assets").length < 1)
             {
                 av_alert('<?php echo Util::js_entities(_('You must choose at least one asset'))?>');
 
                 return false;
             }
-            else
+
+            var num_targets = 0;
+
+            selectall("assets");
+
+            var targets = $('#assets').val();
+
+            for (i = 0; i < targets.length; i++)
             {
-                var num_targets = 0;
-
-                selectall("assets");
-
-                var targets = $('#assets').val();
-
-                for (i = 0; i < targets.length; i++)
+                if (targets[i].match(/#/))
                 {
-                    if (targets[i].match(/#/))
-                    {
-                        var ip_cidr = targets[i].split('#')
-                            ip_cidr = ip_cidr[1];
-                    }
-                    else
-                    {
-                        var ip_cidr = targets[i];
-                    }
-
-                    if (ip_cidr.match(/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))$/))
-                    {
-                        var res = ip_cidr.split('/');
-                        num_targets += 1 << (32 - res[1]);
-                    }
-                    else
-                    {
-                        num_targets++;
-                    }
-                }
-
-                if (num_targets > 256)
-                {
-                    var msg_confirm = '<?php echo Util::js_entities(_("You are about to scan a big number of assets (#TARGETS# assets). This scan could take a long time depending on your network and the number of assets that are up, are you sure you want to continue?"))?>';
-
-                    msg_confirm = msg_confirm.replace("#TARGETS#", num_targets);
-
-                    var keys = {"yes": "<?php echo _('Yes') ?>","no": "<?php echo _('No') ?>"};
-
-                    av_confirm(msg_confirm, keys).fail(function(){
-                        return false;
-                    }).done(function(){
-                        run_scan();
-                    });
+                    var ip_cidr = targets[i].split('#')
+                        ip_cidr = ip_cidr[1];
                 }
                 else
                 {
-                    run_scan();
+                    var ip_cidr = targets[i];
                 }
+
+                if (ip_cidr.match(/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))$/))
+                {
+                    var res = ip_cidr.split('/');
+                    num_targets += 1 << (32 - res[1]);
+                }
+                else
+                {
+                    num_targets++;
+                }
+            }
+
+            if (num_targets > 256)
+            {
+                var msg_confirm = '<?php echo Util::js_entities(_("You are about to scan a big number of assets (#TARGETS# assets). This scan could take a long time depending on your network and the number of assets that are up, are you sure you want to continue?"))?>';
+
+                msg_confirm = msg_confirm.replace("#TARGETS#", num_targets);
+
+                var keys = {"yes": "<?php echo _('Yes') ?>","no": "<?php echo _('No') ?>"};
+
+                av_confirm(msg_confirm, keys).fail(function(){
+                    return false;
+                }).done(function(){
+                    run_scan();
+                });
+            }
+            else
+            {
+                run_scan();
             }
         }
 
@@ -342,6 +338,22 @@ $db->close();
             var scan_data = {
                "token"  : Token.get_token("assets_form"),
                "action" : "scan_status"
+            }
+
+            return $.ajax({
+                type: 'POST',
+                url: 'scan_actions.php',
+                data: scan_data,
+                dataType: 'json'
+            });
+        }
+
+
+        function delete_scan()
+        {
+            var scan_data = {
+               "token"  : Token.get_token("assets_form"),
+               "action" : "delete_scan"
             }
 
             return $.ajax({
@@ -370,25 +382,22 @@ $db->close();
                     var scan_info     = data.data.message;
                     var scan_progress = data.data.progress;
 
-                    /*
-                    console.log('Status: ' + scan_status);
-                    console.log('Message: ' + scan_info);
-                    console.log('Progress: ' + scan_progress.current + '/' + scan_progress.current + ' Percent: ' + scan_progress.percent + '%');
-                    console.log('Remaining Time:' + scan_progress.time)
-                    */
-
                     //Asset scan is running or it has finished
                     if (scan_status > 0 && scan_status < 5)
                     {
                         //Scan has finished
                         if (scan_status == 4)
                         {
+                            $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
+
                             clearTimeout(timer);
 
                             get_scan_report();
                         }
                         else
                         {
+                            $('#scan_button').addClass('av_b_processing').prop('disabled', true);
+
                             show_state_box(scan_status, scan_info, scan_progress);
                             time = (scan_status == 1) ? 4000 :  6000;
 
@@ -400,20 +409,15 @@ $db->close();
                 }
                 catch (Err)
                 {
-                    //console.log(Err);
-
-                    var __error_msg = '<?php echo _('Asset scan cannot be launched.  Please try again')?>';
+                    $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
 
                     var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
-                    show_notification(__error_msg, 'c_info', 'nf_error', __style);
+                    show_notification(av_messages['unknown_error'], 'c_info', 'nf_error', __style);
 
                     clearTimeout(timer);
                     $.fancybox.close();
                 }
-
             }).fail(function(xhr) {
-
-                delete_scan();
 
                 //Check expired session
                 var session = new Session(xhr.responseText, '');
@@ -423,6 +427,10 @@ $db->close();
                     session.redirect();
                     return;
                 }
+
+                $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
+
+                delete_scan();
 
                 var __error_msg = av_messages['unknown_error'];
 
@@ -459,24 +467,9 @@ $db->close();
                     $('#c_info').html('');
                     $('#scan_result').html('');
 
-                    /*
-                    var __style   = "width: 350px; left: 50%; position: absolute; margin-left: -180px;";
-                    var __message = '<?php echo _('Sending data')?> ...';
-                    show_loading_box('c_asset_discovery', __message, __style);
-                    */
-
-                    var scan_status   = 0;
-                    var scan_info     = '<?php echo _('Requesting data, please wait')?> ...';
-                    var scan_progress = null;
-
-                    show_state_box(scan_status, scan_info, scan_progress);
+                    $('#scan_button').addClass('av_b_processing').prop('disabled', true);
                 },
                 error: function(xhr){
-
-                    //hide_loading_box();
-
-                    clearTimeout(timer);
-                    $.fancybox.close();
 
                     //Check expired session
                     var session = new Session(xhr.responseText, '');
@@ -507,37 +500,23 @@ $db->close();
                 },
                 success: function(data){
 
+                    var scan_status   = 0;
+                    var scan_info     = '<?php echo _('Requesting data, please wait')?> ...';
+                    var scan_progress = null;
+
+                    show_state_box(scan_status, scan_info, scan_progress);
+
                     timer = setTimeout(function(){
                         //hide_loading_box();
                         show_progress_box();
                     }, 3000);
-                    
-                    $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
                 }
-            });
-        }
-
-
-        function delete_scan()
-        {
-            var scan_data = {
-               "token"  : Token.get_token("assets_form"),
-               "action" : "delete_scan"
-            }
-
-            return $.ajax({
-                type: 'POST',
-                url: 'scan_actions.php',
-                data: scan_data,
-                dataType: 'json'
             });
         }
 
 
         function stop_scan()
         {
-            $('#stop_scan').addClass('av_b_processing').prop('disabled', true);
-
             var scan_data = {
                "token"  : Token.get_token("assets_form"),
                "action" : "stop_scan"
@@ -548,6 +527,11 @@ $db->close();
                 url: 'scan_actions.php',
                 data: scan_data,
                 dataType: 'json',
+                beforeSend: function(xhr) {
+
+                    $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
+                    $('#stop_scan').addClass('av_b_processing').prop('disabled', true);
+                },
                 error: function(xhr){
 
                     //Check expired session
@@ -566,11 +550,11 @@ $db->close();
                         __error_msg = xhr.responseText;
                     }
 
-                    $('#stop_scan').removeClass('av_b_processing').prop('disabled', false);
-
                     var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
                     show_notification(__error_msg, 'c_info', 'nf_error', __style);
 
+                    clearTimeout(timer);
+                    $.fancybox.close();
                 },
                 success: function(msg){
 
@@ -580,12 +564,58 @@ $db->close();
 
                     get_scan_report();
 
-                    $('#stop_scan').removeClass('av_b_processing').prop('disabled', false);
-
                     $.fancybox.close();
-
                 }
             });
+        }
+
+
+        function get_scan_report()
+        {
+            var scan_data = {
+               "token"  : Token.get_token("assets_form"),
+               "action" : "download_scan_report"
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: 'scan_actions.php',
+                data: scan_data,
+                dataType: 'json',
+                error: function(xhr){
+
+                    //Check expired session
+                    var session = new Session(xhr.responseText, '');
+
+                    if (session.check_session_expired() == true)
+                    {
+                        session.redirect();
+                        return;
+                    }
+
+                    var __error_msg = av_messages['unknown_error'];
+
+                    if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
+                    {
+                        __error_msg = xhr.responseText;
+                    }
+
+                    var __nf_class = 'nf_error';
+                    if (__error_msg.match(/^Warning/))
+                    {
+                        var __nf_class = 'nf_warning';
+                    }
+
+                    var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
+                    show_notification(__error_msg, 'c_info', __nf_class, __style);
+
+                    $.fancybox.close();
+                },
+                success: function(data)
+                {
+                    show_scan_report();
+                }
+           });
         }
 
 
@@ -648,56 +678,6 @@ $db->close();
                 }
            });
         }
-
-
-        function get_scan_report()
-        {
-            var scan_data = {
-               "token"  : Token.get_token("assets_form"),
-               "action" : "download_scan_report"
-            }
-
-            $.ajax({
-                type: 'POST',
-                url: 'scan_actions.php',
-                data: scan_data,
-                dataType: 'json',
-                error: function(xhr){
-
-                    //Check expired session
-                    var session = new Session(xhr.responseText, '');
-
-                    if (session.check_session_expired() == true)
-                    {
-                        session.redirect();
-                        return;
-                    }
-
-                    var __error_msg = av_messages['unknown_error'];
-
-                    if (typeof(xhr.responseText) != 'undefined' && xhr.responseText != '')
-                    {
-                        __error_msg = xhr.responseText;
-                    }
-
-                    var __nf_class = 'nf_error';
-                    if (__error_msg.match(/^Warning/))
-                    {
-                        var __nf_class = 'nf_warning';
-                    }
-
-                    var __style = 'padding: 3px; width: 90%; margin: auto; text-align: left;';
-                    show_notification(__error_msg, 'c_info', __nf_class, __style);
-
-                    $.fancybox.close();
-                },
-                success: function(data)
-                {
-                    show_scan_report();
-                }
-           });
-        }
-
 
 
         /****************************************************

@@ -72,6 +72,8 @@ textarea
 {
     margin-bottom: 8px !important;
     float:left !important;
+    position:relative;
+    z-index: 9999999;
 }
 
 #c_agent_table .dataTables_filter input

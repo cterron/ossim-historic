@@ -70,6 +70,7 @@ class Sysinfo (object):
             'version': '',
             'versiontype': '',
             'license': '',
+            'licensed_assets': '',
             'admin_dns': [],
             'admin_gateway': '',
             'admin_ip': '',
@@ -105,7 +106,8 @@ class Sysinfo (object):
             'is_vm': False,
             'cpu': '',
             'cores': 0,
-            'mem': 0,
+            'installed_mem': 0,
+            'available_mem': 0,
             'running_network_interfaces': [],
             'vpn_ip': [],
         }
@@ -147,8 +149,17 @@ class Sysinfo (object):
                 self.__alienvault_config['versiontype'] = 'TRIAL' if re.findall(r'^expire\=9999-12-31$', content, re.MULTILINE) == [] else 'PRO'
                 license = re.findall(r'^key\=(\S+)$', content, re.MULTILINE)
                 self.__alienvault_config['license'] = license[0] if len(license) > 0 else 'None'
+                if 'Server' in self.__alienvault_config['sw_profile']:
+                    devices = re.findall(r'^devices\=(\S+)$', content, re.MULTILINE)
+                    if len(devices) > 0:
+                        self.__alienvault_config['licensed_assets'] = devices[0] if devices[0] != "0" else "UNLIMITED"
+                    else:
+                        self.__alienvault_config['licensed_assets'] = "UNLIMITED"
+                else:
+                    self.__alienvault_config['licensed_assets'] = "N/A"
         else:
             self.__alienvault_config['versiontype'] = 'FREE'
+            self.__alienvault_config['licensed_assets'] = "N/A"
 
         # Find hardware profile.
         if self.__alienvault_config['versiontype'] != 'FREE':
@@ -172,7 +183,8 @@ class Sysinfo (object):
                                      'alienvault-hw-aio-6x1gb',
                                      'alienvault-hw-aio-extended',
                                      'alienvault-hw-aio-niap',
-                                     'alienvault-hw-sensor-standard',
+                                     'alienvault-hw-sensor-standard-6x1gb',
+                                     'alienvault-hw-sensor-standard-2x10gb',
                                      'alienvault-hw-sensor-remote',
                                      'alienvault-hw-sensor-enterprise',
                                      'alienvault-hw-sensor-enterprise-ids-2x10gb',
@@ -350,7 +362,23 @@ class Sysinfo (object):
                                                                                cpuinfo['proc0']['model'],
                                                                                cpuinfo['proc0']['stepping'])
         self.__hardware_config['cores'] = psutil.NUM_CPUS
-        self.__hardware_config['mem'] = round(psutil.TOTAL_PHYMEM / 1073741824.0, 1)
+        self.__hardware_config['available_mem'] = round(psutil.TOTAL_PHYMEM / 1073741824.0, 1)
+
+        # Compute installed memory from dmidecode output
+        dmidecode = subprocess.Popen(['dmidecode', '--type', '17'], stdout=subprocess.PIPE)
+        dmidecode_output = dmidecode.communicate()[0]
+        counter = 0
+        for line in dmidecode_output.splitlines():
+            if 'Size:' in line:
+                size_data = line.lstrip().split()
+                try:
+                    size = int(size_data[1])
+                    if size_data[2] == 'GB':
+                        size = size * 1000
+                    counter = counter + size
+                except ValueError:
+                    continue
+        self.__hardware_config['installed_mem'] = round(counter/1000, 1)
 
         # Running network interfaces.
         running_interfaces = self.__get_running_network_interfaces__()
@@ -379,8 +407,10 @@ class Sysinfo (object):
         eps_log_file = '/var/alienvault/server/stats/eps.log'
         if 'Server' in self.__alienvault_config['sw_profile'] and os.path.isfile(eps_log_file):
             with open(eps_log_file, 'r') as f:
-                eps_log_lst = json.loads(f.read())
-
+                try:
+                    eps_log_lst = json.loads(f.read())
+                except:
+                    eps_log_lst = []
             try:
                 eps_log_lst = filter(lambda x: type(x) == int, eps_log_lst)
             except:
@@ -463,6 +493,7 @@ class Sysinfo (object):
         platform_info = {
             'AlienVault version': self.__alienvault_config['version'] + '-' + self.__alienvault_config['versiontype'],
             'License': self.__alienvault_config['license'],
+            'Licensed Assets': self.__alienvault_config['licensed_assets'],
             'Software profile': ', '.join(self.__alienvault_config['sw_profile']),
             'Hardware profile': self.__alienvault_config['hw_profile'],
             'Last updated': time.strftime("%a %b %d %H:%M:%S %Y %Z", time.localtime(self.__alienvault_config['last_updated'])) if self.__alienvault_config['last_updated'] else "Freshly installed",
@@ -479,7 +510,8 @@ class Sysinfo (object):
             'Appliance type': 'virtual' if self.__hardware_config['is_vm'] else 'physical',
             'CPU type': self.__hardware_config['cpu'],
             'Number of cores': str(self.__hardware_config['cores']),
-            'Installed memory': str(self.__hardware_config['mem']) + 'GB',
+            'Installed memory': str(self.__hardware_config['installed_mem']) + 'GB',
+            'Available memory': str(self.__hardware_config['available_mem']) + 'GB',
             'Configured network interfaces': ', '.join(self.__alienvault_config['configured_network_interfaces']),
             'Running network interfaces': ', '.join(self.__hardware_config['running_network_interfaces']),
             'Uptime': self.__system_status['uptime'],
@@ -509,9 +541,9 @@ class Sysinfo (object):
                 platform_info = dict(platform_info, **platform_info_sensor)
 
         first_params_displayed = ['Admin IP address', 'Hostname', 'AlienVault version', 'License',
-                                  'Software profile', 'Hardware profile', 'Last updated',
+                                  'Licensed Assets', 'Software profile', 'Hardware profile', 'Last updated',
                                   'CPU type', 'Number of cores', 'Kernel version', 'Installed memory',
-                                  'Operating system', 'Architecture', 'Appliance type',
+                                  'Available memory', 'Operating system', 'Architecture', 'Appliance type',
                                   'Uptime', 'Load']
 
         for param in first_params_displayed:

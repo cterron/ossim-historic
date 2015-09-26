@@ -128,7 +128,7 @@ class Incident_event
         $list  = array();
 
         $query = ossim_query("SELECT * FROM incident_event $args");
-        $rs    = $conn->Execute($query, $params);
+        $rs    = $conn->Execute($query);
 
         if (!$rs)
         {

@@ -194,7 +194,7 @@ else
 $subtitle_1 .= '. ' . _('Confirm the vendor, model, and version of the device shown. Click the "Enable" button to enable the data source plugin for each device.'); 
 
 
-$subtitle_2 = _('Plugin(s) successfully configured. Configure each asset to send logs by clicking on the instructions provided. Once the asset is configured AlienVault should detect the incoming data. When AlienVault receives data for a asset the "Receiving Data" light will turn green. Click "Finish" when you have received data from at least one asset.');
+$subtitle_2 = _('Plugin(s) successfully configured. Configure each asset to send logs by clicking on the instructions provided. Once the asset is configured AlienVault should detect the incoming data. When AlienVault receives data for an asset the "Receiving Data" light will turn green. Click "Next" when you have received data from at least one asset.');
 
 $subtitle_2_empty = _('You have not configured any plugin yet. In order to complete successfully the step, you need to activate at least one plugin in your network devices to start receiving data from it.');
 

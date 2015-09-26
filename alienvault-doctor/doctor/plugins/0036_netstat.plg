@@ -8,10 +8,10 @@ command=netstat -putean | grep -v '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-
 
 # Check if some processes rx/tx queues are overused.
 [00360001]
+severity=Warning
 pattern=tcp\s+(\d+)\s+(\d+)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+/(\S+)
 conditions=@int@:<1000;@int@:<1000;@info@
 formatted_output=@int@ and @int@ found for @info@
-severity=Warning
 description=Verifies that rx/tx queues for all the processes are within the expected limits
 summary_passed=The RX/TX queues have a normal size
 summary_failed=Some processes may have problems with their rx/tx queues
@@ -21,11 +21,11 @@ min_doctor_version=4.15
 
 # Verifies that the number of connection waiting to be closed is not surpassing the threshold
 [00360002]
+severity=Warning
 pattern=\S+\s+\d+\s+\d+\s+\S+\s+\S+\s+\S+\s+\S+\s+(TIME\_WAIT|CLOSE\_WAIT)\s+\d+/(\S+)
 conditions=@string@:<count[100];@info@
 formatted_output=@string@ half-closed connections found for process @info@
 fail_if_empty=False
-severity=Warning
 description=Verifies that the number of connection waiting to be closed is not surpassing the threshold
 summary_passed=The number of connections waiting to be closed is normal
 summary_failed=Too many connections are awaiting to be closed

@@ -10,11 +10,11 @@ raw_limit=50
 
 # Verifies there are no errors during a restore process
 [00460001]
+severity=Warning
 pattern=ERROR\s-\s(Backup\sfile\sto\srestore\sneeded)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Warning
 description=Verifies there are no errors during a restore process
 summary_passed=No error log line was found affecting the restore process
 summary_failed=Error found while restoring backup file
@@ -24,11 +24,11 @@ min_doctor_version=4.15
 
 # Verifies that no errors were triggered caused by a restore process 
 [00460002]
+severity=Error
 pattern=ERROR\s-\s(Backup\sfile\s'\S+'\snot\sfound)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Verifies that no errors were triggered caused by a restore process due to a non existent backup file
 summary_passed=No errors caused by non existent backup files
 summary_failed=Error found while restoring backup file
@@ -38,11 +38,11 @@ min_doctor_version=4.15
 
 # Verifies that no errors were triggered by lack of disk space
 [00460003]
+severity=Error
 pattern=ERROR\s-\s(Not\senoungh\sdisk\sspace\savailable.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Verifies that no errors were triggered by lack of disk space
 summary_passed=No errors were found caused by lack of disk space
 summary_failed=Error found while restoring backup file
@@ -52,11 +52,11 @@ min_doctor_version=4.15
 
 # Checks if there was any running reconfigure during a restore process
 [00460004]
+severity=Error
 pattern=ERROR\s-\s(There\sis\sa\sreconfiguration.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any running reconfigure during a restore process
 summary_passed=No error was triggered by a running reconfiguration/upgrade process during the restoration
 summary_failed=Error found while restoring backup file
@@ -66,11 +66,11 @@ min_doctor_version=4.15
 
 # The following errors were found during a restore process: @string@
 [00460005]
+severity=Error
 pattern=ERROR\s-\s(Error\smatching\sbackup\sprofile.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any profile mismatch during a restore process
 summary_passed=No backup profile mismatch error was found during a restore process
 summary_failed=Error found while restoring backup file
@@ -80,11 +80,11 @@ min_doctor_version=4.15
 
 # Checks if there was any template load error during the restore process
 [00460006]
+severity=Error
 pattern=ERROR\s-\s(Error\sloading\stemplate.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any template load error during the restore process
 summary_passed=No errors were triggered by an error loading template
 summary_failed=Error found while restoring backup file
@@ -94,11 +94,11 @@ min_doctor_version=4.15
 
 # Checks if there was a failure stopping one or more services during the restore process
 [00460007]
+severity=Error
 pattern=ERROR\s-\s(Error\sstopping\sservice.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was a failure stopping one or more services during the restore process
 summary_passed=No errors were triggered during the restore process by a failure stopping one or more services
 summary_failed=Error found while restoring backup file
@@ -108,11 +108,11 @@ min_doctor_version=4.15
 
 # Checks if there was a failure creating a backup folder that stopped the restore process
 [00460008]
+severity=Error
 pattern=ERROR\s-\s(Error\screating\sbackup\sfolder.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was a failure creating a backup folder that stopped the restore process
 summary_passed=The backup folder was created correctly during the restore process
 summary_failed=Error found while restoring backup file
@@ -122,11 +122,11 @@ min_doctor_version=4.15
 
 # Checks if there was any decompressing error during a restore process
 [00460009]
+severity=Error
 pattern=ERROR\s-\s(Error\sdecompressing\sbackup\sfile.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any decompressing error during a restore process
 summary_passed= No decompression error was found during a restore process
 summary_failed=Decompression error found while restoring backup file
@@ -135,12 +135,12 @@ appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profil
 min_doctor_version=4.15
 
 # Checks if there was any failure retrieving database information
-[00460009]
+[00460010]
+severity=Error
 pattern=ERROR\s-\s(Error\sgetting\sdatabase\sinfo.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any failure retrieving database information during a restore process
 summary_passed=No database failure was found during a restore process
 summary_failed=Database error found while restoring backup file
@@ -149,12 +149,12 @@ appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profil
 min_doctor_version=4.15
 
 # The following errors were found during a restore process: @string@
-[00460010]
+[00460011]
+severity=Error
 pattern=ERROR\s-\s(Error\srestoring\stable.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any failure restoring database tables during the restore process
 summary_passed=No database restore error was generated during a restore process
 summary_failed=Error found while restoring backup file
@@ -163,12 +163,12 @@ appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profil
 min_doctor_version=4.15
 
 # Checks if there was any failure restoring the database during the restore process
-[00460011]
+[00460012]
+severity=Error
 pattern=ERROR\s-\s(Error\srestoring\sdatabase.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any failure restoring the database during the restore process
 summary_passed=No failure found restoring the database during the restore process
 summary_failed=Error found while restoring backup file
@@ -177,12 +177,12 @@ appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profil
 min_doctor_version=4.15
 
 # Checks if there was any database udpate error during the restore process
-[00460012]
+[00460013]
+severity=Error
 pattern=ERROR\s-\s(Error\srunning\sdb\supdate.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any database udpate error during the restore process
 summary_passed=No database update error was found during a restore process
 summary_failed=Error found while restoring backup file
@@ -191,12 +191,12 @@ appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profil
 min_doctor_version=4.15
 
 # Checks if there was any file restore error during a restore process
-[00460013]
+[00460014]
+severity=Error
 pattern=ERROR\s-\s(Error\srestoring\sfiles.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any file restore error during a restore process
 summary_passed=No file restore error was found during a restore process
 summary_failed=Error found while restoring backup file
@@ -205,12 +205,12 @@ appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profil
 min_doctor_version=4.15
 
 # Checks if there was any reconfigure error during a restore process
-[00460014]
+[00460015]
+severity=Error
 pattern=ERROR\s-\s(Error\sreconfiguring.*)$
 conditions=@string@:==""
 formatted_output=The following errors were found during a restore process: @string@
 fail_if_empty=False
-severity=Error
 description=Checks if there was any reconfigure error during a restore process
 summary_passed=No reconfigure error was found during a restore process
 summary_failed=Error found while restoring backup file

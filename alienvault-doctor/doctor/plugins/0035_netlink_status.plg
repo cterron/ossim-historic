@@ -10,11 +10,12 @@ raw_limit=100
 
 # Verifies that the link speed is normal
 [00350001]
+severity=Warning
 pattern=^(eth\d)\:\s(?:negotiated\s)?(\d+)(?:baseT\-\S+|\sMbit)
 conditions=@info@;@int@:>999
 formatted_output=@info@ interface found to have a link speed of @int@
 fail_if_empty=True
-severity=Warning
+fail_if_empty_output=Link speed could not be checked as interface information reported an empty value
 description=Verifies that the link speed is normal
 summary_passed=The current link speed is normal
 summary_failed=Link speed is too low
@@ -25,11 +26,12 @@ strike_zone=True
 
 # Verifies the link mode settings
 [00350002]
+severity=Warning
 pattern=^(eth\d).*\n.*\n\s+basic\smode\:\s+(autonegotiation\senabled|\d+)
 conditions=@info@;@string@:>"999"@or@=="autonegotiation enabled"
 formatted_output=Found @string@ link mode for @info@
 fail_if_empty=True
-severity=Warning
+fail_if_empty_output=Link mode settings could not be checked as interface information reported an empty value
 description=Verifies the link mode settings
 summary_passed=The link mode settings are correct
 summary_failed=Link mode is not automatically set, or is too slow

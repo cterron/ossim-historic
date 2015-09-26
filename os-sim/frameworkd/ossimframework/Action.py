@@ -448,14 +448,18 @@ class Action(threading.Thread):
                 data = self.__db.exec_query(get_last_id_query)
                 if data != []:
                     last_id = data[0]['id']
-                insert_incident_event_query = """ insert into incident_event (incident_id,src_ips,src_ports,dst_ips,dst_ports) values ('%s','%s','%s','%s','%s'); """ % (last_id, src_ip, src_port, dst_ip, dst_port) 
+
+                insert_incident_event_query = """ INSERT INTO incident_event (incident_id,src_ips,src_ports,dst_ips,dst_ports) values ('%s','%s','%s','%s','%s'); """ % (last_id, src_ip, src_port, dst_ip, dst_port) 
+                insert_subscription_query = "REPLACE INTO incident_subscrip(login, incident_id) VALUES('admin', {0})".format(last_id)
+                self.__db.exec_query(insert_incident_event_query)
+                self.__db.exec_query(insert_subscription_query)
+
                 data = self.__db.exec_query("select max(id)+1 as id from incident_ticket;")
                 newid = '0'
                 if data != []:
                     newid = data[0]['id']
 
-                self.__db.exec_query(insert_incident_event_query)
-                insert_ticket_query = """ insert into incident_ticket(id,incident_id,date,status,priority,description,in_charge,users) values ('%s','%s',utc_timestamp(),'Open','%s','%s','%s','');""" % (newid, last_id, priority, descr, in_charge)
+                insert_ticket_query = """ insert into incident_ticket(id,incident_id,date,status,priority,description,in_charge,users) values ('%s','%s',utc_timestamp(),'Open','%s','%s','%s','admin');""" % (newid, last_id, priority, descr, in_charge)
                 self.__db.exec_query(insert_ticket_query)
 
                 # Check if this context has an IRS webservice linked.
@@ -468,7 +472,6 @@ class Action(threading.Thread):
                     handler = WSHandler (self.__conf, item['id'])
                     if handler != None:
                         ret = handler.process_db (ticket_data)
-
             else:
                 logger.error("Invalid action_type: '%s'" % action['action_type'])
 

@@ -10,11 +10,11 @@ raw_limit=100
 
 # Checks if there are rx/tx errors in the network traffic
 [00280001]
+severity=Warning
 pattern=(eth\d\s+(?!rx_csum_offload_errors)(?:(?:rx|tx)_\S+_errors))\:\s+(\d+)
 conditions=@info@;@int@:==0
 formatted_output=Found @int@ TX/RX errors in @info@
 fail_if_empty=False
-severity=Warning
 description=Checks if there are rx/tx errors in the network traffic
 summary_passed=No RX/TX errors were found
 summary_failed=Detected some TX/RX errors in the network links

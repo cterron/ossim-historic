@@ -103,6 +103,9 @@ function GetSensorSids($db) {
     $tmp_result = $db->baseExecute($temp_sql);
     while ($myrow = $tmp_result->baseFetchRow())
     {
+        // GROUP_CONCAT() function returns a final comma character sometimes
+        $myrow["id"] = preg_replace('/,$/', '', $myrow["id"]);
+        
         $sensors[$myrow["sensor_ip"]] = $myrow["id"];
         $sensors[$myrow["sensor_id"]] = $myrow["id"];
     }

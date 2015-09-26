@@ -12,10 +12,10 @@ command=diff -burq -x suricata.cfg -x ossec-single-line.cfg -x ossec-idm-single-
 # installed in /etc/ossim/agent/plugins/, and detects if the latter ones have 
 # been modified
 [00060001]
+severity=Warning
 pattern=\/((\S+\.cfg))\s+differ$
 conditions=@info@;@string@:==""
 formatted_output=@info@ has been modified 
-severity=Warning
 fail_if_empty=False
 description=Verifies that default AlienVault Agent plugins have not been modified
 summary_passed=The default AlienVault Agent plugins haven't been modified
@@ -28,10 +28,10 @@ strike_zone=True
 # Detects if the plugin files provided by the alienvault-plugins package have
 # not been properly installed in /etc/ossim/agent/plugins
 [00060002]
+severity=Warning
 pattern=^Only\sin\s\/usr\/share\/alienvault\-plugins\/d\_clean\/plugins\/\:\s((\S+))$
 conditions=@info@;@string@:==""
 formatted_output=@info@ plugin has not been properly installed
-severity=Warning
 fail_if_empty=False
 description=Verifies that default AlienVault Agent plugins have been properly installed
 summary_passed=The default AlienVault Agent plugins have been properly installed

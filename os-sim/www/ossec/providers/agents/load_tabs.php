@@ -135,7 +135,7 @@ if($tab == '#tab1')
             "sPaginationType": "full_numbers",
             "bPaginate": true,
             "bLengthChange": false,
-            "bFilter": false,
+            "bFilter": true,
             "bSort": true,
             "bInfo": true,
             "bJQueryUI": true,

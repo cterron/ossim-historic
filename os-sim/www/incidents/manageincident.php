@@ -752,8 +752,7 @@ elseif ($action == 'newticket') /* Create a new ticket */
 		$transferred_entity  =  POST('transferred_entity');
 		$tags                =  POST('tags');
 		$tags		         = (empty($tags)) ? array() : $tags;
-		
-		
+
 		//Cleaning the description and action fields
 		$description = POST('description');
 		$action      = POST('action_txt');

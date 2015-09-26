@@ -206,8 +206,7 @@ class Status
 			$date_from = strftime("%Y-%m-%d 00:00:00", time() - (24 * 60 * 60 * 7));
 			$date_to   = date("Y-m-d 23:59:59", time());
 		}
-		
-		
+				
 		// User session filtering
 		$ctx_where = self::get_siem_ctx_filter($ctx);
 				
@@ -217,41 +216,34 @@ class Status
 		// Asset ID Filtering
 		list($asset_where,$asset_where_src,$asset_where_dst) = self::get_siem_asset_filter($src_host,$dst_host,$src_net,$dst_net);
 		
-		$sql = "SELECT count(*) as total,max(timestamp) as maxtime,max(ossim_risk_c) as maxrisk FROM acid_event FORCE INDEX (timestamp) WHERE (timestamp BETWEEN '$date_from' AND '$date_to') $ctx_where $ip_where $asset_where";
+		$sql = "SELECT SUM(cnt) AS total, MAX(timestamp) AS maxtime FROM ac_acid_event acid_event WHERE (timestamp BETWEEN '$date_from' AND '$date_to') $ctx_where $ip_where $asset_where";
+		$rs  = $db->Execute($sql);
 		
-		//echo $sql;
-		
-		if (!$rs = $db->Execute($sql))
+		if ($rs)
 		{
-			print $db->ErrorMsg();
+            $foundrows = $rs->fields['total'];
+            $date      = preg_replace('/:00:00$/', 'H', $rs->fields['maxtime']);
 		}
-		else 
-		{
-            if (!$rs->EOF) 
-			{
-				$foundrows = $rs->fields['total'];
+		
+		if ($foundrows > 0)
+        {
+    		$sql = "SELECT ossim_risk_a as maxrisk FROM acid_event WHERE (timestamp BETWEEN '$date_from' AND '$date_to') $ctx_where $ip_where $asset_where ORDER BY ossim_risk_a DESC LIMIT 1";
+    		$rs  = $db->Execute($sql);
+    		
+    		if ($rs)
+    		{
+				$highrisk  = $rs->fields['maxrisk'];
 				
-				if ($foundrows > 0)
+				if ($highrisk != "-" && $highrisk != '') 
 				{
-					$date      = $rs->fields['maxtime'];
-					$highrisk  = $rs->fields['maxrisk'];
+					$sql = "SELECT count(*) as total FROM acid_event WHERE ossim_risk_a=$highrisk AND (timestamp BETWEEN '$date_from' AND '$date_to') $ip_where $asset_where";
+					$rs  = $db->Execute($sql);
 					
-					if ($highrisk != "-" && $highrisk != '') 
+					if ($rs)
 					{
-						$sql = "SELECT count(*) as total FROM acid_event FORCE INDEX (timestamp) WHERE ossim_risk_c=$highrisk AND (timestamp BETWEEN '$date_from' AND '$date_to') $ip_where $asset_where";
-						
-						if (!$rs = $db->Execute($sql))
-						{
-							print $db->ErrorMsg();
-						}
-						else if (!$rs->EOF)
-						{
-							$risknum = $rs->fields['total'];
-						}
+						$risknum = $rs->fields['total'];
 					}
-					
 				}
-				
             }
         }
         				

@@ -847,8 +847,8 @@ class Asset_host_services
             }
 
             $s_key = $rs->fields['ip'].'-'.$rs->fields['port'].'-'.$rs->fields['protocol'];
-
-            $services[$rs->fields['h_id']][$s_key] = array(
+            
+            $_service = array(
                 'ip'    => $rs->fields['ip'],
                 'cpe'   => $rs->fields['cpe'],
                 'port'  => $rs->fields['port'],
@@ -868,7 +868,15 @@ class Asset_host_services
                 ),
                 'date' => $rs->fields['last_modified']
             );
-
+            
+            if ($filters['response_type'] == 'by_service')
+            {
+                $services[$s_key][$rs->fields['h_id']] = $_service;
+            }
+            else
+            {
+                $services[$rs->fields['h_id']][$s_key] = $_service;
+            }
 
             $rs->MoveNext();
         }

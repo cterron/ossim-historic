@@ -546,9 +546,14 @@ _avr_log_open_file (AvrLog * log)
         (void)g_unlink(log->_priv->log_path);
       }
 
+      // Change permissions to backup log file
+      if (chmod(backup_log_path, S_IRUSR | S_IWUSR | S_IRGRP) != 0)
+      {
+        g_warning ("Cannot change permissions to log file \"%s\"", backup_log_path);
+      }
+
       // No matter what happens, open the file again.
       log->_priv->log_channel = g_io_channel_new_file((const gchar *)log->_priv->log_path, "a+", &error);
-
       g_mutex_unlock (log->_priv->file_mutex);
     }
   }
@@ -556,6 +561,12 @@ _avr_log_open_file (AvrLog * log)
   {
     // Just the initialization, then.
     log->_priv->log_channel = g_io_channel_new_file((const gchar *)log->_priv->log_path, "a+", &error);
+  }
+
+  // Change permissions to log file
+  if (chmod(log->_priv->log_path, S_IRUSR | S_IWUSR | S_IRGRP) != 0)
+  {
+    g_warning ("Cannot change permissions to log file \"%s\"", log->_priv->log_path);
   }
 
   if (error != NULL)

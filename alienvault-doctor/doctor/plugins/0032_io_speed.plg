@@ -10,10 +10,10 @@ raw_limit=100
 
 # Verifies that IO speed level is normal
 [00320001]
+severity=Info
 pattern=.*=\s(\S+)\s\S+
 conditions=@float@:>90.0
 formatted_output=IO speed level found: @float@%
-severity=Info
 description=Verifies that IO speed level is normal
 summary_passed=The IO speed level is normal
 summary_failed=The IO speed is too low

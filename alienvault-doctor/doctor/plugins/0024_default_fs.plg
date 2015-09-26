@@ -10,10 +10,10 @@ raw_limit=100
 
 # Verifies whether the file systems mounted are standard
 [00240001]
+severity=Info
 pattern=^.*type\s+(\S*)\s
 conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/0024_default_fs.list
 formatted_output=@set_list@ have been found as not standard filesystems
-severity=Info
 description=Verifies whether the file systems mounted are standard
 summary_passed=The mounted file systems are standard
 summary_failed=Some mounted file systems are not expected
