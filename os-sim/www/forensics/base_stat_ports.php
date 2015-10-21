@@ -22,7 +22,7 @@ include_once ("$BASE_path/base_qry_common.php");
 require_once ('classes/Util.inc');
 
 if((GET('proto')=='6' || GET('proto')=='17' || GET('proto')=='-1') && (GET('port_type')=='1' || GET('port_type')=='2'))
-{ 
+{
     $_SESSION["siem_default_group"] = "base_stat_ports.php?sort_order=occur_d&port_type=" . GET('port_type') . "&proto=" . GET('proto');
 }
 
@@ -59,7 +59,7 @@ $page_title = "";
 switch ($proto) {
     case TCP:
         $page_title = gettext("Unique") . " TCP ";
-        $displaytitle = ($port_type==SOURCE_PORT) ? gettext("Displaying source tcp ports %d-%d of <b>%s</b> matching your selection.") : gettext("Displaying destination tcp ports %d-%d of <b>%s</b> matching your selection."); 
+        $displaytitle = ($port_type==SOURCE_PORT) ? gettext("Displaying source tcp ports %d-%d of <b>%s</b> matching your selection.") : gettext("Displaying destination tcp ports %d-%d of <b>%s</b> matching your selection.");
         break;
 
     case UDP:
@@ -180,7 +180,7 @@ $_SESSION['_siem_port_query'] = $sqlports;
 //echo "$sql<br>";
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS PORTS:$sql\n$sqlports\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS PORTS:$sql\n$sqlports\n", FILE_APPEND);
 }
 /* Run the Query again for the actual data (with the LIMIT) */
 session_write_close();
@@ -209,7 +209,7 @@ if ($qs->num_result_rows > 0)
 }
 
 $i = 0;
-$report_data = array(); // data to fill report_data 
+$report_data = array(); // data to fill report_data
 while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $currentPort = $url_port = $myrow[0] . ' ';
     if ($port_proto == TCP) {
@@ -255,14 +255,14 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     qroPrintEntry($sens, 'center', 'middle');
     qroPrintEntry('<A HREF="base_qry_main.php?' . $url_param . '&amp;new=1&amp;submit=' . gettext("Query DB") . '&amp;sort_order=sig_a">' . Util::number_format_locale($num_events,0) . '</A>', 'center', 'middle');
     qroPrintEntry('<A HREF="base_stat_alerts.php?' . $url_param . '&amp;&sort_order=occur_d">' . Util::number_format_locale($num_sig,0) . '</A>', 'center', 'middle');
-    
+
     $pid = $myrow[0] . '-' . $ctx;
     qroPrintEntry('<div class="upr" id="us'.$pid.'">-</div>', 'center', 'middle');
     qroPrintEntry('<div id="ud'.$pid.'">-</div>', 'center', 'middle');
 
     qroPrintEntryFooter();
     ++$i;
-    
+
     // report_data
     $report_data[] = array (
         trim($crPort), $num_sig,
@@ -290,7 +290,7 @@ if (!$export)
 {
 ?>
 <script>
-	var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
+    var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
     var plots=new Array();
     var pi = 0;
     function load_content() {
@@ -300,19 +300,19 @@ if (!$export)
         var pid = item.replace(/us/,'');
         $.ajax({
             beforeSend: function() {
-				$('#us'+pid).html(tmpimg);
-				$('#ud'+pid).html(tmpimg); 
-            },        
-    		type: "GET",
-    		url: "base_stat_ports_data.php"+params,
-    		success: function(msg) {
-    			var res = msg.split(/##/);
-    			$('#us'+pid).html(res[0]);
-    			$('#ud'+pid).html(res[1]);
-    			setTimeout('load_content()',10);
-    		}
-    	});
-    } 
+                $('#us'+pid).html(tmpimg);
+                $('#ud'+pid).html(tmpimg);
+            },
+            type: "GET",
+            url: "base_stat_ports_data.php"+params,
+            success: function(msg) {
+                var res = msg.split(/##/);
+                $('#us'+pid).html(res[0]);
+                $('#ud'+pid).html(res[1]);
+                setTimeout('load_content()',10);
+            }
+        });
+    }
     $(document).ready(function() {
         $('.upr').each(function(index, item) {
             plots.push(item.id);
@@ -324,4 +324,3 @@ if (!$export)
 }
 
 echo "</body>\r\n</html>";
-?>

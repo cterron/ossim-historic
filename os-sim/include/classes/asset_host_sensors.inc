@@ -464,20 +464,19 @@ class Asset_host_sensors
     public static function bulk_save_sensors_in_db($conn, $sensors)
     {
         Ossim_db::check_connection($conn);
-        
+
         //Begin transaction
         $conn->StartTrans();
-        
+
         $host_perms_where = Asset_host::get_perms_where('h.', TRUE);
-        
+
         $params = array(
             session_id()
         );
 
         //Delete all sensors
         $query  = "DELETE hsr FROM host_sensor_reference hsr, user_component_filter uf, host h
-                        WHERE uf.session_id=? AND h.id=uf.asset_id AND uf.asset_type='asset' $host_perms_where";
-                        
+                        WHERE uf.session_id=? AND h.id=uf.asset_id AND uf.asset_type='asset' AND uf.asset_id = hsr.host_id $host_perms_where";
 
         $rs = $conn->Execute($query, $params);
 
@@ -490,9 +489,8 @@ class Asset_host_sensors
                     SELECT uf.asset_id, UNHEX(?) FROM user_component_filter uf, host h
                     WHERE uf.session_id=? AND uf.asset_type='asset' AND h.id=uf.asset_id $host_perms_where";
 
-            
         foreach($sensors as $sensor_id)
-        {         
+        {
             $params = array(
                 $sensor_id,
                 session_id()
@@ -500,15 +498,15 @@ class Asset_host_sensors
 
             $conn->Execute($query, $params);
         }
-        
+
         //Finish transaction
         if (!$conn->CompleteTrans())
-        {        
+        {
             $exp_msg = _('Error! Asset sensors could not be saved');
-            
+
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
-        
+
         return TRUE;
     }
 

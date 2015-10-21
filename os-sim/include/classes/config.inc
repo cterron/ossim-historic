@@ -180,7 +180,6 @@ class Config
     public function insert($key, $value)
     {
         ossim_valid($key,    OSS_LETTER, OSS_SCORE, OSS_DIGIT, 'illegal:' . _($key));
-        ossim_valid($value,  OSS_NULLABLE,                     'illegal:' . _($value));
 
         if (ossim_error())
         {
@@ -314,8 +313,6 @@ class Config
              
             'ossim_link'          => '/ossim/',
             'nagios_link'         => '/nagios/',
-            'use_munin'           => '0',
-            'munin_link'          => '/munin/',
                                 
             'acid_user'           => 'admin', // ACID: Acid cache configuration
             'acid_pass'           => 'admin',

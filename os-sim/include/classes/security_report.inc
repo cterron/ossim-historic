@@ -204,7 +204,7 @@ class Security_report
 
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log("TOP $ip_target $type:$query\n", 3, "/tmp/reports");
+            file_put_contents("/tmp/reports", "TOP $ip_target $type:$query\n", FILE_APPEND);
         }
         
         //echo "<b>SQL</b>: $query<br>";
@@ -352,7 +352,7 @@ class Security_report
 
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log("TOP $type:$query\n", 3, "/tmp/reports");
+            file_put_contents("/tmp/reports", "TOP $type:$query\n", FILE_APPEND);
         }
 
         $rs = $this->ossim_conn->Execute($query);
@@ -471,7 +471,7 @@ class Security_report
         
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log(ucfirst($type)."s by IP:$query\n", 3, "/tmp/reports");
+            file_put_contents("/tmp/reports", ucfirst($type)."s by IP:$query\n", FILE_APPEND);
         }
         
         
@@ -669,7 +669,8 @@ class Security_report
         
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log((($order_type == "ASC") ? _("Last") : _("Top"))." $type Ports:$query\n", 3, "/tmp/reports");
+            $log_message = (($order_type == "ASC") ? _("Last") : _("Top"))." $type Ports:$query\n";
+            file_put_contents("/tmp/reports", $log_message, FILE_APPEND);
         }
         
 
@@ -789,7 +790,8 @@ class Security_report
 
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log((($order_type == "ASC") ? _("Last") : _("Top"))." ".$type."s by Risk:$query\n", 3, "/tmp/reports");
+            $log_message = (($order_type == "ASC") ? _("Last") : _("Top"))." ".$type."s by Risk:$query\n";
+            file_put_contents("/tmp/reports", $log_message, FILE_APPEND);
         }
         
         
@@ -873,7 +875,8 @@ class Security_report
             
             if (file_exists('/tmp/debug_reports'))
             {
-                error_log((($order_type == "ASC") ? _("Last") : _("Top"))." ".$type."s by Prio:$query\n", 3, "/tmp/reports");
+                $log_message = (($order_type == "ASC") ? _("Last") : _("Top"))." ".$type."s by Prio:$query\n";
+                file_put_contents("/tmp/reports", $log_message, FILE_APPEND);
             }
             
             
@@ -943,7 +946,8 @@ class Security_report
         
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log((($order_type == "ASC") ? _("Last") : _("Top"))." Promiscuous Host:$query\n", 3, "/tmp/reports");
+            $log_message = (($order_type == "ASC") ? _("Last") : _("Top"))." Promiscuous Host:$query\n";
+            file_put_contents("/tmp/reports", $log_message, FILE_APPEND);
         }
         
         
@@ -1018,7 +1022,8 @@ class Security_report
         
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log((($order_type == "ASC") ? _("Last") : _("Top"))." Multiple Events Hosts:$query\n", 3, "/tmp/reports");
+            $log_message = (($order_type == "ASC") ? _("Last") : _("Top"))." Multiple Events Hosts:$query\n";
+            file_put_contents("/tmp/reports", $log_message, FILE_APPEND);
         }
         
         
@@ -1091,7 +1096,7 @@ class Security_report
         
         if (file_exists('/tmp/debug_reports'))
         {
-            error_log("Top Attacker Countries:$query\n", 3, "/tmp/reports");
+            file_put_contents("/tmp/reports", "Top Attacker Countries:$query\n", FILE_APPEND);
         }
         
         
@@ -1285,7 +1290,7 @@ class Security_report
 
         if (file_exists('/tmp/debug_siem'))
         {
-            error_log("CHKWHERE:$sql\n", 3, "/tmp/siem");
+            file_put_contents("/tmp/siem", "CHKWHERE:$sql\n", FILE_APPEND);
         }
 
         $rs  = $conn->Execute($sql);

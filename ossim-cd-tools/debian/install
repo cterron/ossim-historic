@@ -10,7 +10,6 @@ tools/alienvault-aptget                        /usr/bin/
 tools/alienvault-update                        /usr/bin/
 tools/alienvault-rebuild_db                    /usr/share/ossim/cd-tools/
 tools/alienvault-restore_db                    /usr/share/ossim/cd-tools/
-tools/alienvault-update_sensors                /usr/bin/
 tools/edit_serialized_ips_panels_conf.php      /usr/share/ossim/cd-tools/
 tools/ossim-reconfig                           /usr/bin/
 tools/ossim-repair-tables                      /usr/bin/

@@ -41,7 +41,6 @@ require_once 'av_init.php';
 
 $scan_types = array(
     'nmap' => 5,
-    'ocs'  => 3,
     'wmi'  => 4
 );
 
@@ -64,17 +63,7 @@ if (!array_key_exists($s_type, $scan_types))
     exit();
 }
 
-
-// Logcheck by s_type
-if ($s_type == 'ocs')
-{
-    Session::logcheck('configuration-menu', 'AlienVaultInventory');
-}
-else
-{
-    Session::logcheck('environment-menu', 'AlienVaultInventory');
-}
-
+Session::logcheck('environment-menu', 'AlienVaultInventory');
 
 //Getting data
 $task_id  = intval(REQUEST('task_id'));
@@ -300,14 +289,13 @@ $sensors = Av_sensor::get_basic_list($conn);
 
 <body>
 
-    <div id='avi_container'>
+    <div id='avi_info'></div>
 
-        <div id='avi_info'></div>
+    <div id='avi_container'>
 
         <div class="legend">
             <?php echo _('Values marked with (*) are mandatory');?>
         </div>
-
 
         <form name="ss_form" id="ss_form" action="../controllers/save_schedule.php?s_type=<?php echo $s_type?>" method='POST'>
             <input type="hidden" name="s_type" value="<?php echo $s_type?>" class='vfield'/>
@@ -318,10 +306,6 @@ $sensors = Av_sensor::get_basic_list($conn);
             {
                 case 'nmap':
                     include AV_MAIN_ROOT_PATH.'/av_schedule_scan/templates/tpl_asset_scan_form.php';
-                break;
-
-                case 'ocs':
-                    include AV_MAIN_ROOT_PATH.'/av_schedule_scan/templates/tpl_ocs_scan_form.php';
                 break;
 
                 case 'wmi':

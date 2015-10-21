@@ -45,7 +45,6 @@ require_once 'av_init.php';
 
 $scan_types = array(
     'nmap' => 5,
-    'ocs'  => 3,
     'wmi'  => 4
 );
 
@@ -69,16 +68,7 @@ if (!array_key_exists($s_type, $scan_types))
     Util::response_bad_request($e_message);
 }
 
-
-// Logcheck by s_type
-if ($s_type == 'ocs')
-{
-    Session::logcheck_ajax('configuration-menu', 'AlienVaultInventory');
-}
-else
-{
-    Session::logcheck_ajax('environment-menu', 'AlienVaultInventory');
-}
+Session::logcheck_ajax('environment-menu', 'AlienVaultInventory');
 
 $data = array();
 

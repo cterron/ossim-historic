@@ -134,6 +134,9 @@ foreach($upgrade->get_needed() as $act)
     $cont++;
 }
 
+//Updating the report module references.
+$upgrade->update_module_dr();
+
 echo "\nStatus: Upgrade Sucessfull\n\n\n";
 
 ?>

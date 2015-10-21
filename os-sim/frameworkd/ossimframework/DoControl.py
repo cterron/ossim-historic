@@ -182,30 +182,6 @@ class ControlManager:
             logger.info("Empty asset list for sensor :%s!" % agent_ip)
 
 
-    def getOCSInventoryData(self):
-        if not self.__myDB_connected:
-            self.__myDB_connected = self.__myDB.connect ()
-        #read host list
-        host_query = "SELECT hw.ipaddr AS ip, hw.workgroup AS domain, hw.name AS hostname, CONCAT(hw.osname, '_', hw.osversion) AS os, nets.macaddr AS mac, CONCAT(hw.processort, ' ', hw.processors) AS cpu, hw.memory, GROUP_CONCAT(vs.name SEPARATOR ', ') AS video FROM ocsweb.hardware AS hw LEFT JOIN ocsweb.networks AS nets ON hw.ipaddr = nets.ipaddress LEFT JOIN ocsweb.videos AS vs ON hw.id = vs.hardware_id GROUP BY vs.hardware_id;"
-
-        tmp = self.__myDB.exec_query(host_query)
-        response = 'control action="getOCSInventory" '
-        #{'ip': '170.100.50.6', 'domain': 'ferrominera.com', 'hostname': 'ABERNAS', 'os': 'Microsoft Windows Server 2003 R2 Enterprise Edition_5.2.3790', 'mac': '00:1D:60:E5:F4:EC'}
-        ocsinventory_str = "<ocsinventory>"
-        for row in tmp:
-            ocsinventory_str += "<host><ip>%s</ip><domain>%s</domain><hostname>%s</hostname><os>%s</os><mac>%s</mac><cpu>%s Hz</cpu><memory>%s</memory><video>%s</video></host>" % (row['ip'], \
-                                                                                                                             row['domain'], \
-                                                                                                                             row['hostname'], \
-                                                                                                                             row['os'], \
-                                                                                                                             row['mac'], \
-															     row['cpu'], \
-															     row['memory'], \
-															     row['video'])
-        ocsinventory_str += "</ocsinventory>"
-        response += 'ocsinventory="%s" \n' % ocsinventory_str 
-        return response
-
-
     def getNagiosInventory(self):
         response = 'control action="getNagiosInventory" '
         strxml = ''
@@ -361,11 +337,8 @@ class ControlManager:
                 for agent_id in self.control_agents.keys():
                     self.refreshAgentInventoryTasks(self.control_agents[agent_id], self.control_agents[agent_id].getRequestorIP(), self.control_agents[agent_id].getRequestorID())
                 response="%s ok\n" % line
-            elif action == "getOCSInventory":
-                logger.info("Request for ocs inventory")
-                response = self.getOCSInventoryData()
             elif action == "getNagiosInventory":
-                logger.info("Request for ocs inventory")
+                logger.info("Request for nagios inventory")
                 response = self.getNagiosInventory()
             else:
                 # check if we are a transaction

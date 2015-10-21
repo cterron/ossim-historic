@@ -59,10 +59,10 @@ SimCmdArgs    simCmdArgs;
 typedef struct _SimIdmContextInfo
 {
   SimContext *context;
-  GStaticRecMutex     context_mutex;
+  GRecMutex     context_mutex;
   // This cond + mutex is just used for the initialization of sim_idm_snapshot_run thread
-  GCond      *snapshot_cond;
-  GMutex     *snapshot_mutex;
+  GCond      snapshot_cond;
+  GMutex     snapshot_mutex;
   // WARNING: the agent and the IDM cannot know if two different IPs belongs to
   //          the same host. So at the moment we consider that every IP belongs
   //          to an unique host.
@@ -122,7 +122,7 @@ sim_idm_process (SimSensor *sensor, SimCommand *command)
   inet_new = sim_idm_entry_get_ip (entry_new);
   host_id_new = sim_idm_entry_get_host_id (entry_new);
 
-  g_static_rec_mutex_lock (&context_info_store->context_mutex);
+  g_rec_mutex_lock (&context_info_store->context_mutex);
 
   /* inventory */
 
@@ -324,7 +324,7 @@ sim_idm_process (SimSensor *sensor, SimCommand *command)
 
 exit:
 
-  g_static_rec_mutex_unlock (&context_info_store->context_mutex);
+  g_rec_mutex_unlock (&context_info_store->context_mutex);
 
   g_object_unref (entry_new);
 }
@@ -337,7 +337,7 @@ sim_idm_get (SimUuid *context_id, SimInet *ip)
   // unused parameter
   (void) context_id;
 
-  g_static_rec_mutex_lock (&context_info_store->context_mutex);
+  g_rec_mutex_lock (&context_info_store->context_mutex);
 
   entry = g_hash_table_lookup (context_info_store->index_ip, GUINT_TO_POINTER (sim_inet_hash (ip)));
   if (entry)
@@ -347,7 +347,7 @@ sim_idm_get (SimUuid *context_id, SimInet *ip)
     entry = NULL;
   }
 
-  g_static_rec_mutex_unlock (&context_info_store->context_mutex);
+  g_rec_mutex_unlock (&context_info_store->context_mutex);
 
   return entry;
 }
@@ -387,10 +387,9 @@ sim_idm_context_info_load (SimContext *context)
 {
   context_info_store = g_new0 (SimIdmContextInfo, 1);
   context_info_store->context = g_object_ref (context);
-  g_static_rec_mutex_init (&context_info_store->context_mutex);
-  context_info_store->snapshot_cond = g_cond_new ();
-  context_info_store->snapshot_mutex = g_mutex_new ();
-
+  g_rec_mutex_init (&context_info_store->context_mutex);
+  g_cond_init (&context_info_store->snapshot_cond);
+  g_mutex_init (&context_info_store->snapshot_mutex);
   sim_idm_context_info_reload ();
 }
 
@@ -399,7 +398,7 @@ sim_idm_context_info_reload (void)
 {
   SimUuid *ctx_id;
 
-  g_static_rec_mutex_lock (&context_info_store->context_mutex);
+  g_rec_mutex_lock (&context_info_store->context_mutex);
 
   if (context_info_store->index_host_id)
     g_hash_table_unref (context_info_store->index_host_id);
@@ -440,7 +439,7 @@ sim_idm_context_info_reload (void)
     }
   }
 
-  g_static_rec_mutex_unlock (&context_info_store->context_mutex);
+  g_rec_mutex_unlock (&context_info_store->context_mutex);
 }
 
 void
@@ -452,7 +451,7 @@ void
 sim_idm_context_free (void)
 {
   g_message("Clearing IDM info");
-  g_static_rec_mutex_lock (&context_info_store->context_mutex);
+  g_rec_mutex_lock (&context_info_store->context_mutex);
   if (context_info_store->index_host_id)
     g_hash_table_unref (context_info_store->index_host_id);
   context_info_store->index_host_id = NULL;
@@ -462,5 +461,5 @@ sim_idm_context_free (void)
   if (context_info_store->index_ip)
     g_hash_table_unref (context_info_store->index_ip);
   context_info_store->index_ip = NULL;
-  g_static_rec_mutex_unlock (&context_info_store->context_mutex);
+  g_rec_mutex_unlock (&context_info_store->context_mutex);
 }

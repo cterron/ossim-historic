@@ -2,7 +2,7 @@
 #
 ### BEGIN INIT INFO
 # Provides:          suricata-ifaces
-# Required-Start:    $time $network $local_fs $remote_fs
+# Required-Start:    $time $network $local_fs $remote_fs irqbalance
 # Required-Stop:     $remote_fs
 # X-Start-Before:    ossim-agent
 # Default-Start:     2 3 4 5
@@ -24,7 +24,7 @@ config_nics()
 	else	
 		echo "Can't set irq affinity for $interface"
 	fi
-        for param in rx tx tso  ufo gso  gro lro; do
+        for param in rx tx tso  ufo gso  gro lro sg rxvlan txvlan rxhash; do
             ethtool -K "$interface" "$param" off 2> /dev/null || true
         done 
         ethtool -N "$interface" rx-flow-hash udp4 sdfn 2> /dev/null || true

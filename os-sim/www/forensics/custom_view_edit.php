@@ -174,7 +174,7 @@ if ($save == 'insert')
             $session_data = $_SESSION;
             foreach ($_SESSION as $k => $v)
             {
-                if (preg_match("/^(_|alarms_|back_list|current_cview|views|ports_cache|acid_|report_|graph_radar|siem_event|siem_current_query|siem_current_query_graph|deletetask|mdspw).*/",$k))
+                if (preg_match("/^(_|alarms_|back_list|current_cview|views|ports_cache|acid_|report_|graph_radar|siem_event|siem_current_query|siem_current_query_graph|deletetask).*/",$k))
                 {
                     unset($session_data[$k]);
                 }
@@ -323,7 +323,7 @@ elseif ($save == 'report' && Session::am_i_admin())
             $rs = $conn->Execute($query);
             if (!$rs)
             {
-                error_log($conn->ErrorMsg(), 0);
+                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
             else
             {
@@ -333,16 +333,7 @@ elseif ($save == 'report' && Session::am_i_admin())
                 }
             }
 
-            $id = 3000;
-            $result = $conn->Execute("select max(id)+1 from custom_report_types where id>2999");
-            if (!$result->EOF)
-            {
-                $id = intval($result->fields[0]);
-                if (!$id)
-                {
-                   $id=3000;
-                }
-            }
+            $id = Av_report::get_new_report_module_id($conn);
 
             if ($curid > 0)
             {
@@ -361,6 +352,7 @@ elseif ($save == 'report' && Session::am_i_admin())
             }
             else
             {
+                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 $msg      = _("Error creating a new report type.");
                 $msg_type = 'nf_error';
             }
@@ -527,7 +519,15 @@ else
                 </select>
             </div>
             </td></tr>
+
+            <?php
+            if (!$opensource)
+            {
+            ?>
             <tr><td class="center nobborder"><input type="checkbox" name="save_criteria" value="1" checked='checked'></input> <?php echo _("Include custom search criteria in this predefined view") ?></td></tr>
+            <?php
+            }
+            ?>
             <tr><td class="center nobborder">
             <?php
             if ($_SESSION['current_cview'] == 'default' && $edit)

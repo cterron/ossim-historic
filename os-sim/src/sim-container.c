@@ -71,7 +71,7 @@ struct _SimContainerPrivate
   GList      *servers;          // SimServer objects.
   GHashTable *sensors;          // SimSensor Hash Table
   GHashTable *sensor_ids;
-  GMutex     *mutex_sensors;
+  GMutex     mutex_sensors;
 
   GAsyncQueue *delete_backlogs; // Queue to delete backlogs that are timeout'ed. Each element is a list of some backlogs.
 
@@ -89,8 +89,8 @@ struct _SimContainerPrivate
   guint        events_count;     // Approximate count of acid_event rows.
   gint         discarded_events; // Number of discarded events.
 
-  GCond  *cond_ar_events;       //  For action responses queue
-  GMutex *mutex_ar_events;      // For action responses queue
+  GCond  cond_ar_events;       //  For action responses queue
+  GMutex mutex_ar_events;      // For action responses queue
 
   GSemaphore *recv_sema;        // Semaphore for the reception queue
 
@@ -98,8 +98,8 @@ struct _SimContainerPrivate
   guint backlog_seq;            //Cached last id
 
   GQueue *monitor_rules;
-  GCond  *cond_monitor_rules;
-  GMutex *mutex_monitor_rules;
+  GCond  cond_monitor_rules;
+  GMutex mutex_monitor_rules;
 
   SimEngine  *engine;
   SimContext *context;
@@ -158,11 +158,11 @@ sim_container_impl_finalize (GObject  *gobject)
   g_hash_table_destroy(container->_priv->sensor_sid);
   sim_container_free_signatures_to_id(container); //A Signature cache, to prevent massive sql select statements in the event storage process
 
-  g_cond_free (container->_priv->cond_ar_events);
-  g_mutex_free (container->_priv->mutex_ar_events);
+  g_cond_clear (&container->_priv->cond_ar_events);
+  g_mutex_clear (&container->_priv->mutex_ar_events);
 
-  g_cond_free (container->_priv->cond_monitor_rules);
-  g_mutex_free (container->_priv->mutex_monitor_rules);
+  g_cond_clear (&container->_priv->cond_monitor_rules);
+  g_mutex_clear (&container->_priv->mutex_monitor_rules);
 
   g_semaphore_free(container->_priv->recv_sema); // Semaphore for the reception queue
 
@@ -222,19 +222,19 @@ sim_container_instance_init (SimContainer *container)
                                                      NULL, g_object_unref);
   container->_priv->sensor_ids = g_hash_table_new_full (sim_uuid_hash, sim_uuid_equal,
                                                         NULL, g_object_unref);
-  container->_priv->mutex_sensors = g_mutex_new ();
+  g_mutex_init(&container->_priv->mutex_sensors);
 
   /* For action responses mutex and cond */
-  container->_priv->cond_ar_events = g_cond_new ();
-  container->_priv->mutex_ar_events = g_mutex_new ();
+  g_cond_init(&container->_priv->cond_ar_events);
+  g_mutex_init(&container->_priv->mutex_ar_events);
 
  // Semaphore for the reception queue
   container->_priv->recv_sema = g_semaphore_new_with_value (MAX_RECEPTION_QUEUE_LENGTH);
 
   // Mutex Monitor rules Init
   container->_priv->monitor_rules = g_queue_new ();
-  container->_priv->cond_monitor_rules = g_cond_new ();
-  container->_priv->mutex_monitor_rules = g_mutex_new ();
+  g_mutex_init(&container->_priv->mutex_monitor_rules);
+  g_cond_init(&container->_priv->cond_monitor_rules);
 
   container->_priv->event_seq = 0;
   container->_priv->backlog_seq = 0;
@@ -348,7 +348,6 @@ sim_container_get_type (void)
       NULL                        /* value table */
     };
 
-    g_type_init ();
 
     object_type = g_type_register_static (G_TYPE_OBJECT, "SimContainer", &type_info, 0);
   }
@@ -961,7 +960,7 @@ sim_container_load_sensors (SimContainer * container)
   sensor_list = sim_db_load_sensors (ossim.dbossim);
   node = sensor_list;
 
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
   while (node)
   {
     SimSensor *sensor = (SimSensor *) node->data;
@@ -971,7 +970,7 @@ sim_container_load_sensors (SimContainer * container)
     sensor_num ++;
     node = g_list_next (node);
   }
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
 
   g_list_free (sensor_list);
 
@@ -1022,12 +1021,12 @@ sim_container_reload_sensors (SimContainer * container)
   }
   g_list_free (sensor_list);
 
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
   previous_data = container->_priv->sensors;
   previous_data_id = container->_priv->sensor_ids;
   container->_priv->sensors = new_data;
   container->_priv->sensor_ids = new_data_id;
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
 
   /* Remove previous data */
   if (previous_data)
@@ -1073,9 +1072,9 @@ void
 sim_container_add_sensor_to_hash_table (SimContainer * container,
 					SimSensor    * sensor)
 {
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
   sim_container_add_sensor_to_hash_table_ul (container, sensor);
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
 }
 static void
 sim_container_remove_sensor_from_hash_table_ul (SimContainer * container, SimSensor * sensor)
@@ -1096,9 +1095,9 @@ sim_container_remove_sensor_from_hash_table_ul (SimContainer * container, SimSen
 void
 sim_container_remove_sensor_from_hash_table (SimContainer * container, SimSensor * sensor)
 {
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
   sim_container_remove_sensor_from_hash_table_ul (container, sensor);
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
 }
 
 
@@ -1127,13 +1126,13 @@ sim_container_get_sensor_by_inet (SimContainer  *container,
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
   g_return_val_if_fail (SIM_IS_INET (inet), NULL);
 
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
 
   sensor = g_hash_table_lookup (container->_priv->sensors, inet);
   if (sensor)
     g_object_ref (sensor);
 
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
 
   return sensor;
 }
@@ -1161,7 +1160,7 @@ sim_container_get_sensor_by_name (SimContainer  *container,
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
   g_return_val_if_fail (name, NULL);
 
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
 
   g_hash_table_iter_init (&iter, container->_priv->sensors);
   while (g_hash_table_iter_next (&iter, &key, &value))
@@ -1174,7 +1173,7 @@ sim_container_get_sensor_by_name (SimContainer  *container,
     }
   }
 
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
 
   return sensor_matched;
 }
@@ -1191,9 +1190,9 @@ void
 sim_container_set_sensor_by_id (SimContainer * container,
                                 SimSensor    * sensor)
 {
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
   g_hash_table_insert (container->_priv->sensor_ids, sim_sensor_get_id (sensor), g_object_ref (sensor));
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
 
   return;
 }
@@ -1215,10 +1214,10 @@ sim_container_get_sensor_by_id (SimContainer * container,
   if (!id)
     return (NULL);
 
-  g_mutex_lock (container->_priv->mutex_sensors);
+  g_mutex_lock (&container->_priv->mutex_sensors);
   if ((sensor = g_hash_table_lookup (container->_priv->sensor_ids, id)))
     sensor = g_object_ref (sensor);
-  g_mutex_unlock (container->_priv->mutex_sensors);
+  g_mutex_unlock (&container->_priv->mutex_sensors);
   return (sensor);
 }
 
@@ -1566,10 +1565,10 @@ sim_container_push_monitor_rule (SimContainer  *container,
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (SIM_IS_RULE (rule));
 
-  g_mutex_lock (container->_priv->mutex_monitor_rules);
+  g_mutex_lock (&container->_priv->mutex_monitor_rules);
   g_queue_push_head (container->_priv->monitor_rules, rule);
-  g_cond_signal (container->_priv->cond_monitor_rules);
-  g_mutex_unlock (container->_priv->mutex_monitor_rules);
+  g_cond_signal (&container->_priv->cond_monitor_rules);
+  g_mutex_unlock (&container->_priv->mutex_monitor_rules);
   ossim_debug ( "sim_container_push_monitor_rule: pushed");
 }
 
@@ -1584,19 +1583,19 @@ sim_container_pop_monitor_rule (SimContainer  *container)
 
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
 
-  g_mutex_lock (container->_priv->mutex_monitor_rules);
+  g_mutex_lock (&container->_priv->mutex_monitor_rules);
 
   while (!g_queue_peek_tail (container->_priv->monitor_rules)) //We stop until some element appears in the event queue.
-    g_cond_wait (container->_priv->cond_monitor_rules, container->_priv->mutex_monitor_rules);
+    g_cond_wait (&container->_priv->cond_monitor_rules, &container->_priv->mutex_monitor_rules);
 
   rule = (SimRule *) g_queue_pop_tail (container->_priv->monitor_rules);
 
   if (!g_queue_peek_tail (container->_priv->monitor_rules)) //if there are more events in the queue, don't do nothing
   {
-    g_cond_free (container->_priv->cond_monitor_rules);
-    container->_priv->cond_monitor_rules = g_cond_new ();
+    g_cond_clear (&container->_priv->cond_monitor_rules);
+    g_cond_init(&container->_priv->cond_monitor_rules);
   }
-  g_mutex_unlock (container->_priv->mutex_monitor_rules);
+  g_mutex_unlock (&container->_priv->mutex_monitor_rules);
 
   return rule;
 }
@@ -1610,7 +1609,7 @@ sim_container_free_monitor_rules (SimContainer  *container)
 {
   g_return_if_fail (SIM_IS_CONTAINER (container));
 
-  g_mutex_lock (container->_priv->mutex_monitor_rules);
+  g_mutex_lock (&container->_priv->mutex_monitor_rules);
   while (!g_queue_is_empty (container->_priv->monitor_rules))
   {
     SimRule *rule = (SimRule *) g_queue_pop_head (container->_priv->monitor_rules);
@@ -1618,7 +1617,7 @@ sim_container_free_monitor_rules (SimContainer  *container)
   }
   g_queue_free (container->_priv->monitor_rules);
   container->_priv->monitor_rules = g_queue_new ();
-  g_mutex_unlock (container->_priv->mutex_monitor_rules);
+  g_mutex_unlock (&container->_priv->mutex_monitor_rules);
 }
 
 /*
@@ -1631,9 +1630,9 @@ sim_container_is_empty_monitor_rules (SimContainer  *container)
 
   g_return_val_if_fail (SIM_IS_CONTAINER (container), TRUE);
 
-  g_mutex_lock (container->_priv->mutex_monitor_rules);
+  g_mutex_lock (&container->_priv->mutex_monitor_rules);
   empty = g_queue_is_empty (container->_priv->monitor_rules);
-  g_mutex_unlock (container->_priv->mutex_monitor_rules);
+  g_mutex_unlock (&container->_priv->mutex_monitor_rules);
 
   return empty;
 }
@@ -1649,9 +1648,9 @@ sim_container_length_monitor_rules (SimContainer  *container)
 
   g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
 
-  g_mutex_lock (container->_priv->mutex_monitor_rules);
+  g_mutex_lock (&container->_priv->mutex_monitor_rules);
   length = container->_priv->monitor_rules->length;
-  g_mutex_unlock (container->_priv->mutex_monitor_rules);
+  g_mutex_unlock (&container->_priv->mutex_monitor_rules);
 
   return length;
 }

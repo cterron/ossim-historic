@@ -44,7 +44,7 @@ configure_firewall(){
             if [ "$ft_counter" != "0" ]; then
                 sed -i "s/FRAMEWORKIP/$framework_ip/g" $SENSOR_FIREWALL_CONF
             else
-                line_num=$(grep -rne 4949 $SENSOR_FIREWALL_CONF | cut -d':' -f1)
+                line_num=$(grep -rne 9390 $SENSOR_FIREWALL_CONF | cut -d':' -f1)
                 old_framework_ip=$(sed -n "$line_num"p $SENSOR_FIREWALL_CONF | cut -d' ' -f14)
                 sed -i "s/$old_framework_ip/$framework_ip/g" $SENSOR_FIREWALL_CONF
             fi

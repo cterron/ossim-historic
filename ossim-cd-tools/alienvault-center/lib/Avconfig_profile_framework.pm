@@ -32,6 +32,7 @@ package Avconfig_profile_framework;
 use v5.10;
 use strict;
 use warnings;
+no warnings 'experimental::smartmatch';
 #use diagnostics;
 
 use AV::ConfigParser;
@@ -55,10 +56,10 @@ my $nfsenconf                   = "/etc/nfsen/nfsen.conf";
 my $monit_file                  = "/etc/monit/alienvault/avapache.monitrc";
 my $nagiosapache_file           = "/etc/nagios3/apache2.conf";
 my $nagios_cfg_file             = "/etc/nagios3/nagios.cfg";
-my $frameworkapache_file        = "/etc/ossim/framework/apache.conf";
-my $defaultapache_file          = "/etc/apache2/sites-available/default";
-my $defaultapachehttps_file     = "/etc/apache2/sites-available/default-ssl";
-my $defaultapachesecurity_file  = "/etc/apache2/conf.d/security";
+my $frameworkapache_file        = "/etc/apache2/sites-available/ossim-framework.conf";
+my $defaultapache_file          = "/etc/apache2/sites-available/alienvault.conf";
+my $defaultapachehttps_file     = "/etc/apache2/sites-available/alienvault-ssl.conf";
+my $defaultapachesecurity_file  = "/etc/apache2/conf-available/z-security-alienvault.conf";
 my $add_hosts                   = "yes";
 my $ossec_cfg                   = "/var/ossec/etc/ossec.conf";
 my $ldap_client_file            = "/etc/ldap/ldap.conf";
@@ -89,10 +90,6 @@ my $db_pass;
 my $ossim_user;
 my $snort_user;
 my $osvdb_user;
-
-my $munin_data_path = '/var/www/munin';
-my $munin_cron_path = '/var/www/munin';
-
 
 sub config_profile_framework() {
 
@@ -129,7 +126,6 @@ sub config_profile_framework() {
 	configure_risk_maps();
 	configure_framework_file();
 	configure_adjusting_permissions();
-	configure_crontab_update_sensors_for_munin();
 	configure_apache_rewrite_modules();
 	configure_apache_auth_module();
 	configure_apache_disable_autoindex_module();
@@ -140,11 +136,7 @@ sub config_profile_framework() {
 	configure_framework_monit();
 	configure_nfsen();
 	configure_nfsen_monit();
-	configure_ln_nagios_and_framework();
-	set_nfsen_nfsources_max_hostname_lenght();
-    configure_nfsen_replace_name_uuid();
-	configure_munin_apache_file();
-    patch_munin_lowercase();
+	configure_nfsen_replace_name_uuid();
 	configure_nagios_configuration();
 	configure_apache_configuration();
 	configure_apache_ssl_config_file();
@@ -152,14 +144,13 @@ sub config_profile_framework() {
 	configure_default_security_apache();
 	configure_apache_dir_conf(); # revisar
 	configure_unlink_apache2_doc();
-	configure_ocs_server(); # revisar , ocs se instala por deb
+	configure_ln_nagios_and_framework();
 	configure_ossim_agent_for_windows();
 	configure_update_snare_client(); # fix
 	configure_add_framework_host_in_db();
 	configure_update_plugins_vulnerabilities();
 	configure_nfsen_rebuild_hierarchy_on_firstinit();
 	configure_timezone();
-	configure_restart_munin_node(); # ????
 	configure_openvas4 ();
 	configure_compliance();
     settings_from_ossec_initscript_for_web();
@@ -344,30 +335,6 @@ sub configure_adjusting_permissions(){
             "dpkg-statoverride --update --add nagios www-data 751 /var/lib/nagios3"
         );
     }
-    if ( ! -d $munin_data_path ) {
-        system("mkdir -p $munin_data_path");
-    }
-    system("chown -R munin:www-data $munin_data_path");
-
-    if ( ! -d $munin_cron_path ) {
-        system("mkdir -p -m 2775 $munin_cron_path");
-    }
-    if ( !system("getent passwd munin") ) {  # if munin user is defined
-        system("chgrp munin $munin_cron_path");
-    }
-    system("chmod 2775 $munin_cron_path");
-}
-
-sub configure_crontab_update_sensors_for_munin {
-        verbose_log("Framework Profile: Updating munin cron file.");
-        my $munin_cron="/etc/cron.d/update_sensors";
-        open my $fh, q{>}, $munin_cron
-            or die "Error opening file $!";
-        print {$fh} <<'EOF';
-MAILTO=root
-0 * * * *     root [ -x /usr/bin/alienvault-update_sensors ] && /usr/bin/alienvault-update_sensors
-EOF
-        close $fh;
 }
 
 sub configure_apache_rewrite_modules(){
@@ -376,11 +343,12 @@ sub configure_apache_rewrite_modules(){
     verbose_log("Framework Profile:  Configuring  Apache rewrite module");
     system("a2enmod rewrite  $stdout $stderr ");
     system("a2enmod proxy  $stdout $stderr ");
-    system("a2enmod proxy_html  $stdout $stderr ");
-    system("a2enmod proxy_http  $stdout $stderr ");
-    system("a2enmod headers  $stdout $stderr ");
+    system("a2dismod proxy_html $stdout $stderr");
+    system("rm -f /etc/apache2/mods-enabled/proxy_html.conf $stdout $stderr");
+    system("a2enmod proxy_http $stdout $stderr");
+    system("a2enmod headers $stdout $stderr ");
     verbose_log("Framework Profile: Configuring Apache SSL module");
-    system("a2enmod ssl  $stdout $stderr ");
+    system("a2enmod ssl $stdout $stderr ");
 
 }
 sub configure_apache_auth_module(){
@@ -394,32 +362,43 @@ sub configure_apache_auth_module(){
 sub configure_apache_disable_autoindex_module(){
 	    # Fix: #842
     verbose_log("Framework Profile: Disabling Apache autoindex module");
-    system("a2dismod autoindex $stdout $stderr ");
+    system("a2dismod -f autoindex $stdout $stderr ");
 
 
 }
 sub configure_apache_https(){
 
-	    if ( $config{'framework_https'} eq "yes" ) {
+    if ( $config{'framework_https'} eq "yes" ) {
 
         verbose_log("Framework Profile: Enabling HTTPS by default:");
         system("a2enmod ssl $stdout $stderr ");
         system("a2ensite default-ssl $stdout $stderr ");
         verbose_log("Framework Profile: Disabling HTTP default site");
-        system("a2dissite default $stdout $stderr ");
+        system("a2dissite 000-default $stdout $stderr ");
 
         #
-        # user cert and key
+        # user custom cert and key from ddbb
         #
+        $config{'framework_https_pem'} = `echo 'select value from config where conf="framework_https_pem"'|ossim-db|tail -1|tr -d '\n'`;
+        $config{'framework_https_pem'} =~ s/[\n\t\r\s]+//g;
+        $config{'framework_https_pem'} = 'default' if ($config{'framework_https_pem'} eq '');
+
+        $config{'framework_https_crt'} = `echo 'select value from config where conf="framework_https_crt"'|ossim-db|tail -1|tr -d '\n'`;
+        $config{'framework_https_crt'} =~ s/[\n\t\r\s]+//g;
+        $config{'framework_https_crt'} = 'default' if ($config{'framework_https_crt'} eq '');
+
+        $config{'framework_https_ca_cert'} = `echo 'select value from config where conf="framework_https_ca_cert"'|ossim-db|tail -1|tr -d '\n'`;
+        $config{'framework_https_ca_cert'} =~ s/[\n\t\r\s]+//g;
+        $config{'framework_https_ca_cert'} = 'default' if ($config{'framework_https_ca_cert'} eq '');
 
         my $user_key_found = 0;
-        if (   ( $config{'framework_https_key'} ne "default" )
-            && ( $config{'framework_https_cert'} ne "default" ) )
+        if (   ( $config{'framework_https_pem'} ne "default" )
+            && ( $config{'framework_https_crt'} ne "default" ) )
         {
 
             # key file
 
-            if ( -f "$config{'framework_https_key'}" ) {
+            if ( -f "$config{'framework_https_pem'}" ) {
                 console_log("Framework Profile: Apache user key found.");
                 $user_key_found = 1;
             }
@@ -433,7 +412,7 @@ sub configure_apache_https(){
 
             # cert file
 
-            if ( -f "$config{'framework_https_cert'}" ) {
+            if ( -f "$config{'framework_https_crt'}" ) {
                 console_log("Framework Profile: Apache user cert found.");
                 $user_key_found = 1;
             }
@@ -477,11 +456,15 @@ sub configure_apache_https(){
 
         # append for defaul-ssl
 
-        $SSLCertificateFiles
-            = "SSLCertificateFile    $defaultapachecertificate";
+        $SSLCertificateFiles = "SSLCertificateFile    $defaultapachecertificate";
+
         if ( $user_key_found == 1 ) {
-            $SSLCertificateFiles
-                = "SSLCertificateFile    $config{'framework_https_cert'}\n\tSSLCertificateKeyFile    $config{'framework_https_key'}";
+            $SSLCertificateFiles = "SSLCertificateFile     $config{'framework_https_crt'}\n\tSSLCertificateKeyFile  $config{'framework_https_pem'}";
+
+            if ( $config{'framework_https_ca_cert'} ne "default" && -f "$config{'framework_https_ca_cert'}" ) {
+                $SSLCertificateFiles = "$SSLCertificateFiles\n\tSSLCACertificateFile   $config{'framework_https_ca_cert'}";
+
+            }
 
         }
 
@@ -549,7 +532,6 @@ sub configure_nagios(){
 
 
     verbose_log("Framework Profile: Updating Nagios configuration");
-    system("mkdir -p  /var/www/nagios_fake  $stdout $stderr ");
 
     # 2187
     if ( -f "/etc/nagios3/conf.d/host-gateway_nagios3.cfg" ) {
@@ -589,6 +571,10 @@ sub configure_www_fix(){
             "ln -s /usr/share/ossim/www/conf/main.php /usr/share/ossim/www/conf/index.php"
         );
     }
+    
+    # safety remove ocs*.conf and ntop*conf
+    system("rm -f /etc/apache2/conf.d/ocs*");
+    system("rm -f /etc/apache2/conf.d/ntop*");
 }
 
 sub configure_framework_monit(){
@@ -771,19 +757,6 @@ EOF
 
 }
 
-
-sub set_nfsen_nfsources_max_hostname_lenght(){
-	# increase hostname char lenght limit to 48)
-	my $nfsen_src=q{/usr/libexec/nfsen/Nfsources.pm};
-	my $command="sed -i 's:len > [0-9][0-9]:len > 48:' $nfsen_src";
-	debug_log("Framework Profile: nfsen: widen max hostname length");
-	system($command);
-	$command="sed -i 's:between 1 and [0-9][0-9]:between 1 and 48:' $nfsen_src";
-	debug_log("Framework Profile: nfsen: widen max hostname length help text");
-	system($command);
-}
-
-
 sub configure_nfsen_replace_name_uuid(){
 
     my ( $uuid_r, $uuid_r_is_empty ) = ( q{}, q{} );
@@ -881,11 +854,14 @@ sub configure_ln_nagios_and_framework(){
 
 #Avoid error messages "link already exists"
 #`ln -s /etc/ossim/framework/apache.conf /etc/apache2/conf.d/ossim.conf $stdout $stderr `;
-    if ( !-l "/etc/apache2/conf.d/ossim.conf" ) {
-        system(
-            "ln -s /etc/ossim/framework/apache.conf /etc/apache2/conf.d/ossim.conf $stdout $stderr"
-        );
-    }
+    # Use the correct a2ensite module
+    # Create the framework
+    system("a2ensite ossim-framework");
+    #if ( !-l "/etc/apache2/sites-enabled/ossim.conf" ) {
+    #    system(
+    #        "ln -s /etc/ossim/framework/apache.conf /etc/apache2/sites-enabled/ossim.conf $stdout $stderr"
+    #    );
+    #}
 
     #1378
     my $nagios_dupe_conf    = "/etc/apache2/conf.d/apache2.conf";
@@ -907,50 +883,6 @@ sub configure_ln_nagios_and_framework(){
 
 }
 
-sub patch_munin_lowercase(){
-    #Applying Munin changeset 3362 to allow lowercase hostnames
-    verbose_log("Patching Munin");
-    my $patch = <<'EOF';
---- /usr/share/perl5/Munin/Node/Server.pm   2012-10-02 18:18:15.000000000 +0200
-+++ /usr/share/perl5/Munin/Node/Server.pm   2012-10-02 18:18:38.000000000 +0200
-@@ -171,7 +171,7 @@
- 
-     logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
-     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
--        _list_services($session, lc($1));
-+        _list_services($session, $1);
-     }
-     elsif (/^cap\s?(.*)/i) {
-         _negotiate_session_capabilities($session, $1);
-EOF
-    my $command = "cd /tmp && echo '$patch' | patch -Np0 -r-";
-    system ($command);
-}
-
-sub configure_munin_apache_file(){
-	    # For newest munin (1.4.5-3~bpo50+1) #2268 #1498
-    my $munin_apache_file = "/etc/apache2/conf.d/munin";
-    debug_log("Updating munin apache file");
-    verbose_log("Framework Profile: Updating Munin configuration.");
-    open MUNINAPACHEFILE, "> $munin_apache_file"
-        or die "Error opening file $!";
-    print MUNINAPACHEFILE <<"EOF";
-Alias /munin $munin_data_path
-<Directory $munin_data_path>
-        Order allow,deny
-        Allow from all
-        Options None
-    <IfModule mod_expires.c>
-        ExpiresActive On
-        ExpiresDefault M310
-    </IfModule>
-</Directory>
-EOF
-    close(MUNINAPACHEFILE);
-
-
-
-}
 sub configure_nagios_configuration(){
 
 	    # Fix #1587
@@ -964,38 +896,10 @@ sub configure_nagios_configuration(){
     open NAGIOSAPACHEFILE, "> $nagiosapache_file"
         or warning "Error opening log file $!";
     print NAGIOSAPACHEFILE <<'EOF';
-# author: Tomas V.V.Cox <tvvcox@ossim.net>
-#
+Alias /nagios3 /usr/share/ossim/secure_redirect
 
-ScriptAlias /secured_nagios3/cgi-bin /usr/lib/cgi-bin/nagios3
-ScriptAlias /cgi-bin/secured_nagios3 /usr/lib/cgi-bin/nagios3
-<Directory /usr/lib/cgi-bin/nagios3>
-   Options ExecCGI
-   Order deny,allow
-   Allow from env=OSSIM_NAGIOS_ALLOWED
-</Directory>
-
-# directory /var/www/nagios_fake/ should exist and be empty
-Alias /nagios3  /var/www/nagios_fake
-ScriptAlias /cgi-bin/nagios3 /var/www/nagios_fake
-<Directory /var/www/nagios_fake>
-   AllowOverride All
-   Options FollowSymLinks
-   RewriteEngine on
-   RewriteRule ^(.*)$ /ossim/session/secure_nagios.php [PT]
-</Directory>
-
-Alias /secured_nagios3/stylesheets /etc/nagios3/stylesheets
-Alias /secured_nagios3 /usr/share/nagios3/htdocs
-<Directory /usr/share/nagios3/htdocs>
-   Order deny,allow
-   Allow from env=OSSIM_NAGIOS_ALLOWED
-</Directory>
 EOF
     close(NAGIOSAPACHEFILE);
-
-
-
 }
 
 
@@ -1026,8 +930,8 @@ Allow from 127.0.0.1
   </IfModule>
   <IfModule mod_php5.c>
     php_value include_path .:/usr/share/php:/usr/share/ossim/include/
-    php_value error_reporting 2039
-    php_value memory_limit 1024M
+    php_value error_reporting 5111
+    php_value memory_limit -1
     AddType application/x-httpd-php .inc .css
   </IfModule>
   <IfModule mod_setenvif.c>
@@ -1049,14 +953,6 @@ Allow from 127.0.0.1
   AddType font/woff .woff
 </Directory>
 
-<Location /ossim/tmp/>
-AuthType Basic
-AuthName "OSSIM"
-Require valid-user
-AuthExternal av-auth
-AuthBasicProvider external
-</Location>
-
 EOF
     close(FRAMEWORKAPFILE);
 
@@ -1071,7 +967,6 @@ sub configure_apache_ssl_config_file(){
         or die "Error open log file $!";
     print APACHEDEFAULTPFILE <<EOF;
 
-NameVirtualHost *:80
 <VirtualHost *:80>
         DocumentRoot /var/www/
         <Directory />
@@ -1096,6 +991,9 @@ EOF
 		= "sed -i \"s:^NameVirtualHost:#NameVirtualHost:\" /etc/apache2/ports.conf";                                                                                                                  
 		debug_log("$command");
 		system($command);
+    system("a2dissite 000-default");
+    system("a2dissite default-ssl");
+    system("a2ensite alienvault");
 
 
 }
@@ -1106,142 +1004,179 @@ sub configure_apache_configuration_files(){
         or die "Error open log file $!";
     print APACHEHTTPSDEFAULTPFILE <<EOF;
 
-NameVirtualHost *:80
 <VirtualHost *:80>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !.*png [NC]
+    RewriteCond %{REQUEST_URI} !.*gif [NC]
+    RewriteCond %{REQUEST_URI} !.*jpg [NC]
+    RewriteCond %{REQUEST_URI} !.*bar.php.* [NC]
+    RewriteCond %{REQUEST_URI} !.*bar2.php.* [NC]
+    RewriteCond %{REQUEST_URI} !.*geoloc.php.* [NC]
+    RewriteCond %{REQUEST_URI} !.*radar.*php.* [NC]
+    RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R,L]
 
-        # RewriteEngine On
-        #RewriteCond %{HTTPS} !=on
-        #RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R,L]
+    DocumentRoot /var/www/
+    <Directory />
+        Options FollowSymLinks
+        AllowOverride None
+    </Directory>
+    <Directory /var/www/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Order allow,deny
+        allow from all
+        RedirectMatch ^/\$ /ossim/
+    </Directory>
 
-	RewriteEngine On
-        RewriteCond %{REQUEST_URI} !.*png [NC]
-        RewriteCond %{REQUEST_URI} !.*gif [NC]
-        RewriteCond %{REQUEST_URI} !.*jpg [NC]
-        RewriteCond %{REQUEST_URI} !.*bar.php.* [NC]
-        RewriteCond %{REQUEST_URI} !.*bar2.php.* [NC]
-	RewriteCond %{REQUEST_URI} !.*geoloc.php.* [NC]
-	RewriteCond %{REQUEST_URI} !.*radar.*php.* [NC]
-	RewriteCond %{REQUEST_URI} !.*ocsinventory.* [NC]
-        RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R,L]
-
-
-        DocumentRoot /var/www/
-        <Directory />
-                Options FollowSymLinks
-                AllowOverride None
-        </Directory>
-        <Directory /var/www/>
-                Options Indexes FollowSymLinks MultiViews
-                AllowOverride None
-                Order allow,deny
-                allow from all
-                RedirectMatch ^/\$ /ossim/
-        </Directory>
-
-        ErrorLog /var/log/apache2/error.log
-        CustomLog /var/log/apache2/access.log combined
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
 </VirtualHost>
 
 <IfModule mod_ssl.c>
 <VirtualHost _default_:443>
-	#for ntop
-	Include /etc/apache2/conf.d/*conf
-        DocumentRoot /var/www/
-        <Directory />
-                Options FollowSymLinks
-                AllowOverride None
-        </Directory>
-        <Directory /var/www/>
-                Options Indexes FollowSymLinks MultiViews
-                AllowOverride None
-                Order allow,deny
-                allow from all
-		RedirectMatch ^/\$ /ossim/
-        </Directory>
-
-        ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
-        <Directory "/usr/lib/cgi-bin">
-                AllowOverride None
-                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-                Order allow,deny
-                Allow from all
-        </Directory>
-
-        FileETag MTime
-
-        LogLevel warn
-        CustomLog /var/log/apache2/access.log combined
-        ErrorLog /var/log/apache2/error.log
-
-	ErrorDocument 401 /ossim/404.php
-	ErrorDocument 403 /ossim/404.php
-	ErrorDocument 404 /ossim/404.php
-
-        SSLEngine on
-	$SSLCertificateFiles
-
-        # Disable Weak Ciphers
-        SSLProtocol All -SSLv2 -SSLv3
-        SSLCipherSuite HIGH:!SSLv2:!ADH:!aNULL:!eNULL:!NULL
-
-        <FilesMatch "\\.(cgi|shtml|phtml|php)\$">
-                SSLOptions +StdEnvVars
-        </FilesMatch>
-        <Directory /usr/lib/cgi-bin>
-                SSLOptions +StdEnvVars
-        </Directory>
-
-        BrowserMatch ".*MSIE.*" \\
-                nokeepalive ssl-unclean-shutdown \\
-                downgrade-1.0 force-response-1.0
-
-        #DefineExternalAuth    <keyword> <method> <location>
-        DefineExternalAuth av-auth environment /usr/share/ossim/scripts/av-auth
-
-	<Location /nfsen/>
-	    order deny,allow
-	    deny from all
-	    allow from 127.0.0.0/255.0.0.0
-	    Options Indexes FollowSymLinks MultiViews
-	</Location>
-    <Location /cgi-bin/>
-        AuthType  Basic
-        AuthName "OSSIM"
-        Require valid-user
-        AuthExternal av-auth
-        AuthBasicProvider external
+    #for ntop
+    #Include /etc/apache2/conf.d/*conf
+    DocumentRoot /var/www/
+    <Directory />
+        Options FollowSymLinks
+        AllowOverride None
+    </Directory>
+    <Directory /var/www/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Require all granted
+        RedirectMatch ^/\$ /ossim/
+    </Directory>
+    
+    ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
+    <Directory "/usr/lib/cgi-bin">
+        AllowOverride None
+        Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+        Require all granted
+    </Directory>
+    
+    FileETag MTime
+    
+    LogLevel warn
+    CustomLog /var/log/apache2/access.log combined
+    ErrorLog /var/log/apache2/error.log
+    
+    ErrorDocument 401 /ossim/404.php
+    ErrorDocument 403 /ossim/404.php
+    ErrorDocument 404 /ossim/404.php
+    
+    SSLEngine on
+    $SSLCertificateFiles
+    
+    # Disable Weak Ciphers
+    SSLProtocol -All +TLSv1.2
+    SSLCipherSuite ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+    SSLHonorCipherOrder on
+    
+    <FilesMatch "\\.(cgi|shtml|phtml|php)\$">
+        SSLOptions +StdEnvVars
+    </FilesMatch>
+    <Directory /usr/lib/cgi-bin>
+        SSLOptions +StdEnvVars
+    </Directory>
+    
+    BrowserMatch ".*MSIE.*" \\
+            nokeepalive ssl-unclean-shutdown \\
+            downgrade-1.0 force-response-1.0
+    
+    Alias /ossim/tmp /usr/share/ossim/secure_redirect
+    <Location /ossim/tmp/>
+         RewriteEngine on
+         RewriteRule ^(.*)\$ /ossim/secure_proxy/ [PT]
     </Location>
-	<Location /munin/>
-		AuthType  Basic
-		AuthName "OSSIM"
-		Require valid-user
-		AuthExternal av-auth
-		AuthBasicProvider external
-	</Location>
-	<Location /secured_nagios3/>
-		AuthType  Basic
-		AuthName "OSSIM"
-		Require valid-user
-		AuthExternal av-auth
-		AuthBasicProvider external
-	</Location>
-	<Location /manual/>
-	    order deny,allow
-	    deny from all
-	    allow from 127.0.0.0/255.0.0.0
-	    Options Indexes FollowSymLinks MultiViews
-	</Location>
-	<Location /icons/>
-	    order deny,allow
-	    deny from all
-	    allow from 127.0.0.0/255.0.0.0
-	    Options Indexes FollowSymLinks MultiViews
-	</Location>
+    <Location /nfsen/>
+        order deny,allow
+        deny from all
+        allow from 127.0.0.0/255.0.0.0
+        Options Indexes FollowSymLinks MultiViews
+    </Location>
+    <Location /cgi-bin/>
+        RewriteEngine on
+        RewriteRule ^(.*)\$ /ossim/secure_proxy/ [PT]
+    </Location>
+    <Location /nagios3/>
+        RewriteEngine on
+        RewriteRule ^(.*)\$ /ossim/secure_proxy/ [PT]
+    </Location>
+    <Location /manual/>
+        order deny,allow
+        deny from all
+        allow from 127.0.0.0/255.0.0.0
+        Options Indexes FollowSymLinks MultiViews
+    </Location>
+    <Location /icons/>
+        order deny,allow
+        deny from all
+        allow from 127.0.0.0/255.0.0.0
+        Options Indexes FollowSymLinks MultiViews
+    </Location>
 </VirtualHost>
+
+<VirtualHost 127.0.0.1:443>
+    DocumentRoot /var/www/
+    <Directory />
+        Options FollowSymLinks
+        AllowOverride None
+    </Directory>
+    <Directory /var/www/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Require all granted
+        RedirectMatch ^/\$ /ossim/
+    </Directory>
+
+    FileETag MTime
+    
+    LogLevel warn
+    CustomLog /var/log/apache2/access.log combined
+    ErrorLog /var/log/apache2/error.log
+    
+    SSLEngine on
+    $SSLCertificateFiles
+    
+    # Disable Weak Ciphers
+    SSLProtocol All -SSLv2 -SSLv3
+    SSLCipherSuite HIGH:!SSLv2:!ADH:!aNULL:!eNULL:!NULL
+    
+    <FilesMatch "\\.(cgi|shtml|phtml|php)\$">
+            SSLOptions +StdEnvVars
+    </FilesMatch>
+    <Directory /usr/lib/cgi-bin>
+            SSLOptions +StdEnvVars
+    </Directory>
+    
+    BrowserMatch ".*MSIE.*" \\
+            nokeepalive ssl-unclean-shutdown \\
+            downgrade-1.0 force-response-1.0
+
+    ScriptAlias /nagios3/cgi-bin /usr/lib/cgi-bin/nagios3
+    ScriptAlias /cgi-bin/nagios3 /usr/lib/cgi-bin/nagios3
+    <Directory /usr/lib/cgi-bin/nagios3>
+        Options +ExecCGI
+    </Directory>
+    Alias /nagios3/stylesheets /etc/nagios3/stylesheets
+    Alias /nagios3 /usr/share/nagios3/htdocs
+    <Directory /usr/share/nagios3/htdocs>
+        Require all granted
+    </Directory>
+    <Directory /etc/nagios3/stylesheets>
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+
 </IfModule>
 
 EOF
     close(APACHEHTTPSDEFAULTPFILE);
+    system("a2dissite 000-default");
+    system("a2dissite default-ssl");
+    system("a2ensite alienvault-ssl");
 
 
 
@@ -1265,6 +1200,8 @@ TraceEnable Off
 
 EOF
     close(APACHESECURITYDEFAULTPFILE);
+	# Fix
+	system("a2enconf z-security-alienvault");
 
 
 }
@@ -1289,34 +1226,6 @@ sub configure_unlink_apache2_doc(){
     my $apache_manual_file = "/etc/apache2/conf.d/apache2-doc";
     if ( -e $apache_manual_file ) { unlink($apache_manual_file); }
 
-
-}
-
-sub configure_ocs_server(){
-	    ## OCS SERVER
-
-    #1735
-    verbose_log("Framework Profile: Configuring OCS");
-
-    system("rm -f /usr/share/ossim/www/ocsreports");
-
-    ## cambiar variables
-
-    verbose_log("Framework Profile: Find ocs database");
-    my $ocsweb = `echo "show databases" | ossim-db | grep ocsweb`;
-    $ocsweb =~ s/\n//g;
-
-    if ( $ocsweb eq "ocsweb" ) {
-        verbose_log("Framework Profile: Ocs database found");
-        verbose_log("Framework Profile: Updating OCS default admin password");
-        my $dbpass
-            = `cat /etc/ossim/ossim_setup.conf | grep ^pass= | cut -d = -f 2`;
-        my $dbencryption
-            = `cat /etc/ossim/framework/db_encryption_key | grep ^key= | cut -d = -f 2`;
-        my $command
-            = "echo \"update ocsweb.operators set passwd=AES_ENCRYPT(\'$dbpass\',\'$dbencryption\') where firstname='admin';\" | ossim-db ";
-        system($command);
-    }
 
 }
 
@@ -1522,15 +1431,6 @@ sub configure_timezone {
     }
 }
 
-sub configure_restart_munin_node(){
-
-
-    #munin #1468
-    # Restart munin-node
-    console_log("Restarting munin-node");
-    system("/etc/init.d/munin-node restart $stdout $stderr");
-
-}
 sub configure_openvas4(){
 
 
@@ -1672,7 +1572,7 @@ sub config_squid {
         system($command);
     }else{
 
-        my $command = "sed -i \"s:^acl localhost src 127.0.0.1/32:acl localhost src 127.0.0.1/32\\nacl siem_component src $acl:\"  $squidconf";
+        my $command = "sed -i \"s:^acl CONNECT method CONNECT:acl CONNECT method CONNECT\\nacl siem_component src $acl:\"  $squidconf";
         debug_log("$command");                                                                                                                                       
         system($command);           
 

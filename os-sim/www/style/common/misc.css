@@ -633,6 +633,10 @@ div.bballoon:hover span.bottom
 {
     color: #FCFCFC !important;
     background-color: #E25F53;
+}
+
+.av_red_tip #tiptip_content div
+{
     overflow:hidden;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
@@ -893,6 +897,7 @@ div.bballoon:hover span.bottom
     text-decoration: none;
     font-size: 12px;
     text-transform: uppercase;
+    cursor: default !important;
 }
 
 .link_paginate_disabled:hover
@@ -1246,4 +1251,19 @@ p.ticket_body
 .container td 
 {
 	padding: 0px;
+}
+
+/****************************************************
+************        USM REPORTS        **************
+*****************************************************/
+
+.forcewrap
+{
+    white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    white-space: pre-wrap;       /* css-3 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    word-break: break-all;
+    white-space: normal;
 }

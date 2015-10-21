@@ -72,11 +72,11 @@ struct _SimEnginePrivate
   GHashTable     *otx_data;         //Use to see if we have add the "ghosts" directives 
 
   /* Mutex */
-  GMutex         *mutex_plugins;
-  GMutex         *mutex_plugin_sids;
-  GMutex         *mutex_directives;
-  GMutex         *mutex_backlogs;
-  GMutex         *mutex_group_alarms;
+  GMutex         mutex_plugins;
+  GMutex         mutex_plugin_sids;
+  GMutex         mutex_directives;
+  GMutex         mutex_backlogs;
+  GMutex         mutex_group_alarms;
 
 };
 
@@ -159,11 +159,11 @@ sim_engine_instance_init (SimEngine *self)
                                                     g_free, g_object_unref);
 
   /* Mutex */
-  self->priv->mutex_plugins = g_mutex_new ();
-  self->priv->mutex_plugin_sids = g_mutex_new ();
-  self->priv->mutex_backlogs = g_mutex_new ();
-  self->priv->mutex_directives = g_mutex_new ();
-  self->priv->mutex_group_alarms = g_mutex_new ();
+  g_mutex_init(&self->priv->mutex_plugins);
+  g_mutex_init(&self->priv->mutex_plugin_sids);
+  g_mutex_init(&self->priv->mutex_backlogs);
+  g_mutex_init(&self->priv->mutex_directives);
+  g_mutex_init(&self->priv->mutex_group_alarms);
   /* Used for otx */
 
   self->priv->otx_data = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
@@ -246,11 +246,11 @@ sim_engine_finalize (GObject *self)
     priv->otx_data = NULL;
   }
 
-  g_mutex_free (priv->mutex_plugins);
-  g_mutex_free (priv->mutex_plugin_sids);
-  g_mutex_free (priv->mutex_directives);
-  g_mutex_free (priv->mutex_backlogs);
-  g_mutex_free (priv->mutex_group_alarms);
+  g_mutex_clear(&priv->mutex_plugins);
+  g_mutex_clear(&priv->mutex_plugin_sids);
+  g_mutex_clear(&priv->mutex_directives);
+  g_mutex_clear(&priv->mutex_backlogs);
+  g_mutex_clear(&priv->mutex_group_alarms);
 
   G_OBJECT_CLASS (parent_class)->finalize (self);
 }
@@ -780,7 +780,7 @@ sim_engine_load_directives (SimEngine  * engine)
   }
 
 
-  g_mutex_lock (engine->priv->mutex_directives);
+  g_mutex_lock (&engine->priv->mutex_directives);
   iter = list;
   while (iter)
   {
@@ -804,7 +804,7 @@ sim_engine_load_directives (SimEngine  * engine)
   }
   g_list_free (list);
   list = NULL;
-  g_mutex_unlock (engine->priv->mutex_directives);
+  g_mutex_unlock (&engine->priv->mutex_directives);
 
   xmlSubstituteEntitiesDefault (previous);
 
@@ -907,7 +907,7 @@ sim_engine_expand_directives (SimEngine *engine)
   GNode *root_node;
   GList *list;
 
-  g_mutex_lock (engine->priv->mutex_directives);
+  g_mutex_lock (&engine->priv->mutex_directives);
 
   for (list = engine->priv->temp_directives; list; list = list->next)
   {
@@ -916,7 +916,7 @@ sim_engine_expand_directives (SimEngine *engine)
     sim_engine_append_directive (engine, list->data);
   }
 
-  g_mutex_unlock (engine->priv->mutex_directives);
+  g_mutex_unlock (&engine->priv->mutex_directives);
 }
 
 static gboolean
@@ -1142,11 +1142,11 @@ sim_engine_lock_backlogs (SimEngine *engine)
 {
   g_return_if_fail (SIM_IS_ENGINE (engine));
 
-  g_mutex_lock (engine->priv->mutex_backlogs);
+  g_mutex_lock (&engine->priv->mutex_backlogs);
 }
 
 /**
- * sim_engine_unlock_backlogs:
+ * sim_engine_un&lock_backlogs:
  * @engine: #SimEngine object
  *
  * Unlocks backlogs mutex for @engine
@@ -1156,11 +1156,11 @@ sim_engine_unlock_backlogs (SimEngine *engine)
 {
   g_return_if_fail (SIM_IS_ENGINE (engine));
 
-  g_mutex_unlock (engine->priv->mutex_backlogs);
+  g_mutex_unlock (&engine->priv->mutex_backlogs);
 }
 
 /**
- * sim_engine_get_backlogs_ul:
+ * sim_engine_get_&backlogs_ul:
  * @engine: #SimEngine object
  *
  * Returns pointer to backlogs array
@@ -1187,9 +1187,9 @@ sim_engine_get_backlogs (SimEngine  *engine)
 
   g_return_val_if_fail (SIM_IS_ENGINE (engine), NULL);
 
-  g_mutex_lock (engine->priv->mutex_backlogs);
+  g_mutex_lock (&engine->priv->mutex_backlogs);
   backlogs = engine->priv->backlogs;
-  g_mutex_unlock (engine->priv->mutex_backlogs);
+  g_mutex_unlock (&engine->priv->mutex_backlogs);
 
   return backlogs;
 }
@@ -1226,9 +1226,9 @@ sim_engine_append_backlog (SimEngine   *engine,
   g_return_if_fail (SIM_IS_ENGINE (engine));
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
-  g_mutex_lock (engine->priv->mutex_backlogs);
+  g_mutex_lock (&engine->priv->mutex_backlogs);
   g_ptr_array_add (engine->priv->backlogs, g_object_ref (backlog));
-  g_mutex_unlock (engine->priv->mutex_backlogs);
+  g_mutex_unlock (&engine->priv->mutex_backlogs);
 }
 
 /**
@@ -1308,13 +1308,13 @@ sim_engine_free_backlogs (SimEngine *engine)
 
   g_return_if_fail (SIM_IS_ENGINE (engine));
 
-  g_mutex_lock (engine->priv->mutex_backlogs);
+  g_mutex_lock (&engine->priv->mutex_backlogs);
 
   old_data = engine->priv->backlogs;
 
   engine->priv->backlogs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-  g_mutex_unlock (engine->priv->mutex_backlogs);
+  g_mutex_unlock (&engine->priv->mutex_backlogs);
 
   /* Delete old data */
   g_ptr_array_unref (old_data);
@@ -1330,7 +1330,7 @@ sim_engine_remove_expired_backlogs (SimEngine *engine)
   // Check first if there are backlogs.
   if (sim_engine_has_backlogs (engine))
   {
-    g_mutex_lock (engine->priv->mutex_backlogs);
+    g_mutex_lock (&engine->priv->mutex_backlogs);
 
     // There are no events waiting to be processed, so we need to check the array
     // here because the correlation process is stopped.
@@ -1350,7 +1350,7 @@ sim_engine_remove_expired_backlogs (SimEngine *engine)
     // Clean backlogs marked to be removed.
     sim_engine_delete_backlogs_ul (engine);
 
-    g_mutex_unlock (engine->priv->mutex_backlogs);
+    g_mutex_unlock (&engine->priv->mutex_backlogs);
   }
 }
 
@@ -1376,9 +1376,9 @@ sim_engine_append_group_alarm (SimEngine    *engine,
   g_return_if_fail (SIM_IS_GROUP_ALARM (group_alarm));
   g_return_if_fail (key != NULL);
 
-  g_mutex_lock (engine->priv->mutex_group_alarms);
+  g_mutex_lock (&engine->priv->mutex_group_alarms);
   g_hash_table_insert (engine->priv->group_alarms, g_strdup (key), g_object_ref (group_alarm));
-  g_mutex_unlock (engine->priv->mutex_group_alarms);
+  g_mutex_unlock (&engine->priv->mutex_group_alarms);
 }
 
 /**
@@ -1401,7 +1401,7 @@ sim_engine_lookup_group_alarm (SimEngine *engine,
   g_return_val_if_fail (SIM_IS_ENGINE (engine), NULL);
   g_return_val_if_fail (key != NULL, NULL);
 
-  g_mutex_lock (engine->priv->mutex_group_alarms);
+  g_mutex_lock (&engine->priv->mutex_group_alarms);
 
   group_alarm = g_hash_table_lookup (engine->priv->group_alarms, key);
   if (group_alarm)
@@ -1419,7 +1419,7 @@ sim_engine_lookup_group_alarm (SimEngine *engine,
     }
   }
 
-  g_mutex_unlock (engine->priv->mutex_group_alarms);
+  g_mutex_unlock (&engine->priv->mutex_group_alarms);
 
   return group_alarm;
 }
@@ -1436,12 +1436,12 @@ sim_engine_remove_expired_group_alarms (SimEngine *engine)
 {
   g_return_if_fail (SIM_IS_ENGINE (engine));
 
-  g_mutex_lock (engine->priv->mutex_group_alarms);
+  g_mutex_lock (&engine->priv->mutex_group_alarms);
 
   g_hash_table_foreach_remove (engine->priv->group_alarms,
                                _sim_engine_group_alarm_is_timeout, NULL);
 
-  g_mutex_unlock (engine->priv->mutex_group_alarms);
+  g_mutex_unlock (&engine->priv->mutex_group_alarms);
 }
 
 /**
@@ -1557,7 +1557,7 @@ sim_engine_add_otx_data (SimEngine     *engine, SimContext *ctx, GHashTable    *
   GHashTableIter iter;
   gchar *key;
   gpointer value;
-  g_mutex_lock (engine->priv->mutex_directives);
+  g_mutex_lock (&engine->priv->mutex_directives);
   /* I need to verify that each pulse_id is not added */
   g_hash_table_iter_init (&iter, otx_data);
   while (g_hash_table_iter_next (&iter, (gpointer*)&key, &value))
@@ -1578,7 +1578,7 @@ sim_engine_add_otx_data (SimEngine     *engine, SimContext *ctx, GHashTable    *
     } 
   }
   
-  g_mutex_unlock (engine->priv->mutex_directives);
+  g_mutex_unlock (&engine->priv->mutex_directives);
   return TRUE;
 }
 #ifdef USE_UNITTESTS

@@ -244,7 +244,7 @@ alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Encode
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT PDF Name Representation Obfuscation of /Subtype"; flow:established,to_client; content:"|0d 0a 0d 0a|PDF-"; content:"/"; distance:0; content:!"Subtype"; within:7; content:"#"; within:19; pcre:"/\x2F(?!Subtype)(S|#53)(u|#75)(b|#62)(t|#74)(y|#79)(p|#70)(e|#65)/"; reference:url,blog.didierstevens.com/2008/04/29/pdf-let-me-count-the-ways/; classtype:bad-unknown; sid:2011528; rev:6;)
 
 #
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT Internet Explorer URLMON.DLL Content-Encoding Overflow Attempt"; flow:to_client,established; content:"Content-Encoding|3A|"; nocase; pcre:"/Content-Encoding\x3A[^\r\n]{300,}/i"; reference:bugtraq,7419; reference:cve,2003-0113; reference:url,www.microsoft.com/technet/security/bulletin/MS03-015.mspx; classtype:attempted-admin; sid:100000119; rev:3;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT Internet Explorer URLMON.DLL Content-Encoding Overflow Attempt"; flow:to_client,established; content:"Content-Encoding|3A|"; nocase; pcre:"/Content-Encoding\x3A[^\r\n]{300,}/i"; reference:bugtraq,7419; reference:cve,2003-0113; reference:url,www.microsoft.com/technet/security/bulletin/MS03-015.mspx; classtype:attempted-admin; sid:100000119; rev:4;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_CLIENT web bug 0x0 gif attempt"; flow:from_server,established; content:"Content-type|3A| image/gif"; nocase; content:"GIF"; distance:0; nocase; content:"|01 00 01 00|"; within:4; distance:3; content:","; distance:0; content:"|01 00 01 00|"; within:4; distance:4; classtype:misc-activity; sid:2102925; rev:5;)
@@ -802,7 +802,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Generic HeapSp
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Possible CVE-2014-1761 HTTP"; flow:from_server,established; file_data; content:"{|5c|rt{"; content:"|5c|objocx|5c|"; distance:0; content:"MSComctlLib."; content:"|5c|u-554"; fast_pattern; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; reference:url,blogs.technet.com/b/srd/archive/2014/03/24/security-advisory-2953095-recommendation-to-stay-protected-and-for-detections.aspx; classtype:attempted-user; sid:2018313; rev:5;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICOUS Possible automated connectivity check (www.google.com)"; flow:established,to_server; dsize:40; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.google.com|0d 0a 0d 0a|"; distance:1; within:26; fast_pattern:6,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018430; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICOUS Possible automated connectivity check (www.google.com)"; flow:established,to_server; dsize:35<>41; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|"; distance:1; content:"google.com|0d 0a 0d 0a|"; distance:0; within:18; fast_pattern; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018430; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICOUS Possible automated connectivity check (www.msn.com)"; flow:established,to_server; dsize:37; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.msn.com|0d 0a 0d 0a|"; distance:1; within:23; fast_pattern:3,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018431; rev:1;)
@@ -902,4 +902,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Firefox Proxy 
 
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Possible CVE-2013-1710/CVE-2012-3993 Firefox Exploit Attempt"; flow:established,to_client; file_data; content:"generateCRMFRequest"; nocase; fast_pattern:only; content:"InstallTrigger"; nocase; content:"__exposedProps__"; nocase; content:"__defineGetter__"; nocase; content:"getInstallForURL"; nocase; content:".install|28|"; nocase; content:"x-xpinstall"; nocase; reference:cve,CVE-2013-1710; reference:cve,CVE-2012-3993; classtype:attempted-user; sid:2021078; rev:2;)
+
+#
+alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Internet Explorer Memory Corruption Vulnerability (CVE-2015-2444)"; flow:from_server,established; file_data; content:"<style"; nocase; pcre:"/^[^>]*?>\s*?form\s*?\{\s*?-ms-behavior\s*?\x3a\s*?url/Rsi"; content:"x-ua-compatible"; nocase; pcre:"/^[\x22\x27]\s*content\s*=\s*[\x22\x27]\s*IE\s*=\s*10/Rsi"; content:"<button"; nocase; content:"<label"; nocase; distance:0; content:"<form"; nocase; distance:0; content:"<meter"; nocase; distance:0; content:"<optgroup"; nocase; distance:0; content:"<meter"; nocase; distance:0; content:"-ms-behavior"; nocase; fast_pattern:only; reference:cve,2015-2444; classtype:attempted-user; sid:2021709; rev:3;)
 

@@ -47,7 +47,7 @@ struct _SimHostPrivate
   gchar      *name;
   gint        asset;
   gboolean    external;
-  GMutex     *mutex;
+  GMutex     mutex;
 };
 
 SIM_DEFINE_TYPE (SimHost, sim_host, G_TYPE_OBJECT, NULL)
@@ -65,8 +65,7 @@ sim_host_finalize (GObject  *gobject)
     g_ptr_array_unref (host->_priv->inets);
   if (host->_priv->name)
     g_free (host->_priv->name);
-	if (host->_priv->mutex)
-		g_mutex_free (host->_priv->mutex);
+  g_mutex_clear (&host->_priv->mutex);
 
   g_free (host->_priv);
 
@@ -93,8 +92,7 @@ sim_host_instance_init (SimHost *host)
   host->_priv->name = NULL;
   host->_priv->asset = DEFAULT_ASSET;
   host->_priv->external = TRUE;
-  host->_priv->mutex = g_mutex_new ();
-  g_return_if_fail (host->_priv->mutex != NULL);
+  g_mutex_init(&host->_priv->mutex);
 }
 
 /* Public Methods */

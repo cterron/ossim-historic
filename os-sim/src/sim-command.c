@@ -930,7 +930,7 @@ static gboolean sim_command_idm_event_scan     					(SimCommand		*command,
 static gboolean sim_command_frmk_getdb_scan(SimCommand *command, GScanner *scanner,gchar* session_ip_str);
 static gboolean sim_command_sensor_getframeworkconnexion_scan(SimCommand* command, GScanner *scanner,gchar* session_ip_str);
 static gboolean sim_command_sensor_ping_scan(SimCommand* command, GScanner *scanner,gchar* session_ip_str);
-static GPrivate *privScanner=NULL;
+static GPrivate privScanner = G_PRIVATE_INIT ((GDestroyNotify)g_scanner_destroy);
 
 static void sim_command_init_command_event_struct(SimCommand *command);
 
@@ -952,7 +952,7 @@ static void sim_command_snort_event_skip_tcp_opt_scan (GScanner *scanner);
  */
  
  void sim_command_init_tls(void){
-                privScanner = g_private_new((GDestroyNotify)g_scanner_destroy);
+                //privScanner = G_PRIVATE_INIT ((GDestroyNotify)g_scanner_destroy);
  }
 
 
@@ -2014,9 +2014,9 @@ sim_command_scan (SimCommand    *command,
 
   g_return_val_if_fail (SIM_IS_COMMAND (command), FALSE);
   g_return_val_if_fail (buffer != NULL, FALSE);
-	if ((scanner = (GScanner*)g_private_get(privScanner))==NULL){
+  if ((scanner = (GScanner*)g_private_get(&privScanner))==NULL){
 	                   scanner = sim_command_start_scanner();
-	                   g_private_set(privScanner,scanner);
+    g_private_set(&privScanner,scanner);
 	          ossim_debug("Scanner: %p, thread: %p",scanner,g_thread_self ());
 	}
 	 

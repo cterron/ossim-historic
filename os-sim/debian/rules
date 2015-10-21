@@ -104,6 +104,7 @@ install: build
 	#install -m644 etc/framework/post_correlation.cfg $(TMP)/ossim-framework/etc/ossim/framework/
 
 	install -m755 etc/cron.d/ossim-scanner-job $(TMP)/ossim-framework/etc/cron.d/ossim-scanner-job
+	install -m755 etc/cron.d/mail-subscription $(TMP)/ossim-framework/etc/cron.d/mail-subscription
 	install -m755 etc/cron.d/assets-sync $(TMP)/ossim-framework/etc/cron.d/assets-sync
 
 	install -m644 etc/logrotate.d/ossim-framework $(TMP)/ossim-framework/etc/logrotate.d/

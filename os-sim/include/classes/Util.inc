@@ -59,6 +59,23 @@ class Util
         return str_replace('_', ' ', $name);
     }
 
+    /**
+     * Function date_diff_min
+     *
+     * Returns the date difference between two dates
+     *
+     * @param string $startDate
+     * @param string $endDate
+     *
+     * @return int
+     */
+    function date_diff_min($startDate, $endDate)
+    {
+        $to_time   = strtotime($startDate);
+        $from_time = strtotime($endDate);
+        return floor(abs($to_time - $from_time) / 60);
+    }
+
     // Translates the string into human readable form
     public static function translate_alarm($conn, $name, $alarm, $format = 'string')
     {
@@ -1099,6 +1116,19 @@ class Util
     public static function get_unixtime_utc()
     {
         return strtotime(trim(self::execute_command('date -u -R', FALSE, 'string')));
+    }
+
+    /**
+     * Function utc_from_localtime
+     *
+     * @return string
+     */
+    public static function utc_from_localtime($localdate)
+    {
+        $date = DateTime::createFromFormat('Y-m-d H:i:s', $localdate, new DateTimeZone(trim(`head -1 /etc/timezone`)));
+        $date->setTimezone(new DateTimeZone('UTC'));
+
+        return $date->format('Y-m-d H:i:s');
     }
 
     /**
@@ -2884,7 +2914,7 @@ class Util
         // Debug
         if (file_exists('/tmp/debug_cmd'))
         {
-            error_log("$cmd\n", 3, "/tmp/cmd");
+            file_put_contents("/tmp/cmd", "$cmd\n", FILE_APPEND);
         }
         
         
@@ -2913,7 +2943,7 @@ class Util
             {
                 if (file_exists('/tmp/debug_cmd'))
                 {
-                    error_log("Last return value = 1\n", 3, "/tmp/cmd");
+                    file_put_contents("/tmp/cmd", "Last return value = 1\n", FILE_APPEND);
                 }
                 // Av_exception::write_log(Av_exception::USER_ERROR, _('Warning executing command, return value = 1'));
             }
@@ -2937,6 +2967,12 @@ class Util
         }
         
         return $output;
+    }
+    
+    
+    public static function get_chart_colors()
+    {
+        return array('#FAC800','#7D71BD', '#2FC9E5', '#B722E8', '#FF8A00', '#F65DC9', '#1E2AD1', '#837B67', '#9455F8', '#1881FA');
     }
     
 }

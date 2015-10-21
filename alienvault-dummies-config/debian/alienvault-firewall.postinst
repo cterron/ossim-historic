@@ -95,12 +95,12 @@ case "$1" in
     configure)
         # Enabling iptables filter module (first time)
         if [ -z "$(modprobe -l iptable_filter)" ]; then
-            modprobe -q iptable_filter || true
+            modprobe -q iptable_filter
             echo "Module iptable_filter was disabled, and it has been enabled"
         fi
 
         if [ -z "$(modprobe -l ip6table_filter)" ]; then
-            modprobe -q ip6table_filter || true
+            modprobe -q ip6table_filter
             echo "Module iptable_filter was disabled, and it has been enabled"
         fi
 
@@ -110,7 +110,7 @@ case "$1" in
         delete_deprecated_firewall_configuration
         
         # Configuring firewall
-        configure_firewall || true
+        configure_firewall
     ;;
 
     triggered)
@@ -119,7 +119,7 @@ case "$1" in
             case "$trigger" in
                 alienvault-restart-firewall)
                     # Configuring firewall
-                    configure_firewall || true
+                    configure_firewall
                 ;;
 
                 *)
@@ -145,3 +145,4 @@ esac
 #DEBHELPER#
 
 exit 0
+

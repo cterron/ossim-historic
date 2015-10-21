@@ -23,7 +23,7 @@ include_once ("$BASE_path/base_qry_common.php");
 if (GET('sensor') != "") ossim_valid(GET('sensor'), OSS_DIGIT, 'illegal:' . _("sensor"));;
 
 if(GET('addr_type')=='src_hostname' || GET('addr_type')=='dst_hostname')
-{ 
+{
     $_SESSION["siem_default_group"] = "base_stat_uidmsel.php?addr_type=" . GET('addr_type') . "&sort_order=occur_d";
 }
 
@@ -82,7 +82,7 @@ if (preg_match("/user|domain/i",$addr_type))
 else
 {
     $from = " FROM acid_event " . $criteria_clauses[0];
-    $where = " WHERE " . $criteria_clauses[1];    
+    $where = " WHERE " . $criteria_clauses[1];
 }
 if (preg_match("/^(.*)AND\s+\(\s+timestamp\s+[^']+'([^']+)'\s+\)\s+AND\s+\(\s+timestamp\s+[^']+'([^']+)'\s+\)(.*)$/", $where, $matches)) {
     if ($matches[2] != $matches[3]) {
@@ -111,7 +111,7 @@ $field    = $addr_type;
 $from_src = "";
 if ($addr_type=="src_userdomain") {
     $field = "CONCAT(idm_data.username,'@',idm_data.domain)";
-    $from_src = " AND idm_data.from_src=1";    
+    $from_src = " AND idm_data.from_src=1";
 }
 elseif ($addr_type=="dst_userdomain") {
     $field = "CONCAT(idm_data.username,'@',idm_data.domain)";
@@ -137,7 +137,7 @@ $qro->AddTitle("Unique ".gettext(ucfirst($source)."."), "saddr_a", " ", " ORDER 
 
 $sort_sql = $qro->GetSortSQL($qs->GetCurrentSort() , $qs->GetCurrentCannedQuerySort());
 
-if (Session::show_entities()) 
+if (Session::show_entities())
 {
     $sql = "SELECT $field as idm, hex(ctx) as context, COUNT(acid_event.id) as num_events, COUNT( DISTINCT acid_event.plugin_id, acid_event.plugin_sid ) as num_sig, COUNT( DISTINCT ip_".$source." ) as num_ip ". $sort_sql[0] . $from . $where . " $from_src GROUP BY idm,context HAVING num_events>0 AND idm<>'' " . $sort_sql[1];
 }
@@ -148,7 +148,7 @@ else
 
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS IDMSEL:$sql\n$cnt_sql\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS IDMSEL:$sql\n$cnt_sql\n", FILE_APPEND);
 }
 /* Run the Query again for the actual data (with the LIMIT) */
 session_write_close();
@@ -168,7 +168,7 @@ if ($qs->num_result_rows > 0)
     $qro->PrintHeader();
 }
 $i = 0;
-	
+
 while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $currentIP = $myrow[0];
     $ctx = $myrow[1];
@@ -185,21 +185,21 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     * which has no IP
     */
     qroPrintEntry( BuildIDMLink($currentIP,$field,$source) . $currentIP .'</A>&nbsp;' ,'center','middle','nowrap');
-    
+
     /* Print # of Occurances */
     $tmp_iplookup = 'base_qry_main.php?num_result_rows=-1' . '&amp;submit=' . gettext("Query DB") . '&amp;current_view=-1';
     $tmp_iplookup2 = 'base_stat_alerts.php?num_result_rows=-1' . '&amp;submit=' . gettext("Query DB") . '&amp;current_view=-1&sort_order=occur_d';
 
     $url_criteria = BuildIDMVars($currentIP, $field, $source);
-    
+
     qroPrintEntry((Session::show_entities() && !empty($entities[$ctx])) ? $entities[$ctx] : ((Session::show_entities()) ? _("Unknown") : GetSensorName($ctx, $db)),'center','middle');
     qroPrintEntry('<A HREF="' . $tmp_iplookup . $url_criteria . '">' . Util::number_format_locale($num_events,0) . '</A>','center','middle');
     qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria . '">' . Util::number_format_locale($num_sig,0) . '</A>','center','middle');
     qroPrintEntry(Util::number_format_locale($num_ip,0),'center','middle');
-    
+
     qroPrintEntryFooter();
     ++$i;
-    
+
 }
 $result->baseFreeRows();
 $qro->PrintFooter();
@@ -213,4 +213,3 @@ $et->PrintTiming();
 PrintBASESubFooter();
 $db->baseClose();
 echo "</body>\r\n</html>";
-?>

@@ -420,7 +420,7 @@ function Ajax_validator(new_config)
             error = error.replace(/<br>/g, '  ');
             error = error.stripTags();
             error = htmlentities(error, "ENT_QUOTES");
-
+            error = "<div>" + error + "</div>";
 
             //Show error in field
             var img_src    = '/ossim/pixmaps/v_error.png';
@@ -452,7 +452,8 @@ function Ajax_validator(new_config)
             {
                 $('.av_tooltip').tipTip({
                     'tipclass'  : 'av_red_tip',
-                    'attribute' : 'data-title'
+                    'attribute' : 'data-title',
+                    'maxWidth'  : "500px",
                 });
             }
         }
@@ -471,7 +472,7 @@ function Ajax_validator(new_config)
             }
         }
 
-        txt_error = "<div style='padding-left: 10px;'>"+av_messages['error_header']+"<div id='av_summary'><div id='c_error_summary' style='padding-left: 20px;'>"+msg+"</div>";
+        txt_error = "<div style='padding-left: 10px;'>"+av_messages['error_header']+"<div id='av_summary'><div id='c_error_summary' style='padding-left: 15px;'>"+msg+"</div>";
 
 
         if ($('#'+config.errors.display_in + '.nf_error').length < 1)

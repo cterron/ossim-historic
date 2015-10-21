@@ -135,8 +135,8 @@ try
                     unset($av_scan);
 
                     $explain_scan[$sensor_id]['status'] = array(
-                        'code' => 1,
-                        'desc' => _('Running')
+                        'code'  => 1,
+                        'descr' => _('Running')
                     );
                 }
             }
@@ -217,6 +217,11 @@ catch(Exception $e)
 
         $(document).ready(function()
         {
+            $('#scan_button').click(function(event)
+            {
+                $(this).addClass('av_b_processing');
+            });
+
             $('#close_button').click(function(event)
             {
                 event.preventDefault();
@@ -375,7 +380,7 @@ catch(Exception $e)
                                                 break;
                                             }
 
-                                            echo "<img src='$icon' class='more_info' data-title='".$s_data['status']."'/>";
+                                            echo "<img src='$icon' class='more_info' data-title='".$s_data['status']['descr']."'/>";
                                             ?>
                                         </td>
                                     </tr>

@@ -142,7 +142,7 @@ function do_scan($wizard)
 
         //File to cache scan object
         $user      = Session::get_session_user();
-        $scan_file = 'last_asset_object-'.md5($user);
+        $scan_file = 'w_last_asset_object-'.md5($user);
 
         $step = intval($wizard->get_step_data('scan_step'));
 
@@ -230,7 +230,7 @@ function check_scan_progress($conn, $wizard)
 {
     //File to cache scan object
     $user      = Session::get_session_user();
-    $scan_file = 'last_asset_object-'.md5($user);
+    $scan_file = 'w_last_asset_object-'.md5($user);
 
     $data = array();
 
@@ -308,7 +308,7 @@ function cancel_scan($wizard)
 {
     //File to cache scan object
     $user      = Session::get_session_user();
-    $scan_file = 'last_asset_object-'.md5($user);
+    $scan_file = 'w_last_asset_object-'.md5($user);
 
     $step = intval($wizard->get_step_data('scan_step'));
 

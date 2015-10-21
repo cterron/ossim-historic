@@ -223,14 +223,15 @@ class Backup
         $address    = '127.0.0.1';
         $port       = $ossim_conf->get_conf("frameworkd_port");
 
-        error_log(gmdate("Y-m-d H:i:s").", Launch: $action\n",3,"/var/tmp/restore_actions.log");
+        file_put_contents("/var/tmp/restore_actions.log", gmdate("Y-m-d H:i:s").", Launch: $action\n", FILE_APPEND);
 
         // try to connect with frameworkd and "getconnectedagents"
         $socket = socket_create(AF_INET, SOCK_STREAM, 0);
         if ($socket < 0)
         {
             $msg = _("Can't connect with frameworkd").": ". socket_strerror(socket_last_error($socket));
-            error_log(gmdate("Y-m-d H:i:s").", $msg\n\n",3,"/var/tmp/restore_actions.log");
+            file_put_contents("/var/tmp/restore_actions.log", gmdate("Y-m-d H:i:s").", $msg\n\n", FILE_APPEND);
+
             return $msg;
         }
 
@@ -242,7 +243,7 @@ class Backup
         if (!$result)
         {
             $msg = _("Can't connect with frameworkd")." ($address:$port)";
-            error_log(gmdate("Y-m-d H:i:s").", $msg\n\n",3,"/var/tmp/restore_actions.log");
+            file_put_contents("/var/tmp/restore_actions.log", gmdate("Y-m-d H:i:s").", $msg\n\n", FILE_APPEND);
             return $msg;
         }
 
@@ -256,7 +257,7 @@ class Backup
         if (preg_match("/.* errno\=\"(\d+)\" error\=\"(.*)\" ack(end)?$/",$out,$found))
         {
             @socket_close($socket);
-            error_log(gmdate("Y-m-d H:i:s").", return:".$found[2]."\n\n",3,"/var/tmp/restore_actions.log");
+            file_put_contents("/var/tmp/restore_actions.log", gmdate("Y-m-d H:i:s").", return:".$found[2]."\n\n", FILE_APPEND);
             return $found[2];
         }
 
@@ -264,14 +265,14 @@ class Backup
         if (preg_match("/.* status\=\"(\d+)\" ack(end)?$/",$out,$found))
         {
             @socket_close($socket);
-            error_log(gmdate("Y-m-d H:i:s").", return:".$found[1]."\n\n",3,"/var/tmp/restore_actions.log");
+            file_put_contents("/var/tmp/restore_actions.log", gmdate("Y-m-d H:i:s").", return:".$found[1]."\n\n", FILE_APPEND);
             return $found[1];
         }
 
         // Bad response
         @socket_close($socket);
         $msg = _("Bad response from frameworkd");
-        error_log(gmdate("Y-m-d H:i:s").", $msg\n\n",3,"/var/tmp/restore_actions.log");
+        file_put_contents("/var/tmp/restore_actions.log", gmdate("Y-m-d H:i:s").", $msg\n\n", FILE_APPEND);
 
         return -1;
     }

@@ -279,11 +279,11 @@ class Alienvault_conn {
         // Log
         if ($this->log)
         {
-            error_log(gmdate("Y-m-d H:i:s")." GMT\n".strtoupper($method)." https://".$this->host.":".$this->port.$url."\n", 3, $this->debug_file);
+            file_put_contents($this->debug_file, gmdate("Y-m-d H:i:s")." GMT\n".strtoupper($method)." https://".$this->host.":".$this->port.$url."\n", FILE_APPEND);
 
             if (strtoupper($method) == 'POST')
             {
-                error_log($this->format_query($parameters)."\n", 3, $this->debug_file);
+                file_put_contents($this->debug_file, $this->format_query($parameters)."\n", FILE_APPEND);
             }
         }
 
@@ -297,13 +297,22 @@ class Alienvault_conn {
 
         curl_close($handle);
 
+        // Safety chown/chgrp
+        chown($this->cookie_file,'www-data');
+        chgrp($this->cookie_file,'www-data');
+
         $return = @json_decode($response, TRUE);
 
         // Check if a response is not 403 and relogin
         if ($trylogin)
         {
-            if ($return['status'] == 'error' && $return['status_code'] == '403') // Unauthorized
+            if ($return['status'] == 'error' && ($return['status_code'] == '403' || $return['status_short_message'] == 'Unauthorized')) // Unauthorized
             {
+                // Log
+                if ($this->log)
+                {
+                    file_put_contents($this->debug_file, self::__jsonpp($response)."\n".$this->error."\n", FILE_APPEND);
+                }
                 return $this->try_login_redo_request($orig_url, $parameters, $method);
             }
 
@@ -321,14 +330,14 @@ class Alienvault_conn {
         // Log
         if ($this->log)
         {
-            error_log(self::__jsonpp($response)."\n".$this->error."\n", 3, $this->debug_file);
+            file_put_contents($this->debug_file, self::__jsonpp($response)."\n".$this->error."\n", FILE_APPEND);
         }
 
         return $response;
     }
 
     /**
-    * This function try to login and do the same request if the previous one returns 403 - Unauthorized
+    * This function try to login and do the same request if the previous one returns 403 or Unauthorized
     *
     * @param string  $url        Request url
     * @param array   $parameters Request parameters

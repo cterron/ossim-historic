@@ -127,7 +127,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious Us
 
 #by evilghost
 #
-#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User-Agent Beginning with digits - Likely spyware/trojan"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| "; content:!"|0d 0a|User-Agent|3a| Mozilla/"; pcre:"/\x0d\x0aUser-Agent\: \d\d\d/"; reference:url,doc.emergingthreats.net/2010697; classtype:trojan-activity; sid:2010697; rev:5;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User-Agent Beginning with digits - Likely spyware/trojan"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| "; content:!"|0d 0a|User-Agent|3a| Mozilla/"; pcre:"/^\d+/V"; reference:url,doc.emergingthreats.net/2010697; classtype:trojan-activity; sid:2010697; rev:7;)
 
 #by Waldo kitty
 #

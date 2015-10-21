@@ -96,28 +96,27 @@ if (ossim_error())
 </head>
 <body>
 
-<div id="tag_manager">
+<form method="POST" name="tag_form" id="tag_form" action="../controllers/tag_actions.php" enctype="multipart/form-data">
 
-    <div id="av_info" class="hidden"></div>
+    <div id="tag_manager">
 
-    <div id="tag_list_container">
-        <table class="noborder table_data" id="tag_table">
-            <thead>
-            <tr>
-                <th class="th_tag"><?php echo _('Label List') ?></th>
-                <th class="th_actions"><?php echo _('Actions') ?></th>
-            </tr>
-            </thead>
-            <tbody>
+        <div id="av_info" class="hidden"></div>
 
-            </tbody>
-        </table>
-    </div>
+        <div id="tag_list_container">
+            <table class="noborder table_data" id="tag_table">
+                <thead>
+                <tr>
+                    <th class="th_tag"><?php echo _('Label List') ?></th>
+                    <th class="th_actions"><?php echo _('Actions') ?></th>
+                </tr>
+                </thead>
+                <tbody>
 
-    <div id="tag_form_container">
-        <form method="POST" name="tag_form" id="tag_form" action="../controllers/tag_actions.php"
-              enctype="multipart/form-data">
+                </tbody>
+            </table>
+        </div>
 
+        <div id="tag_form_container">
             <fieldset>
                 <legend><?php echo _('Name') ?></legend>
                 <input type="text" id="tag_name" name="tag_name" class="vfield" maxlength="30"/>
@@ -142,12 +141,16 @@ if (ossim_error())
             <input type="hidden" id="tag_class" name="tag_class" class="vfield" value=""/>
             <input type="hidden" id="action" name="action" class="vfield" value="save_tag"/>
 
-            <input type="button" name="send" id="send" value="<?php echo _('Save') ?>"/>
+        </div>
 
-        </form>
     </div>
 
-</div>
+    <div id="action_buttons">
+        <input type="button" name="send" id="send" value="<?php echo _('Save') ?>"/>
+        <input type="button" name="cancel" id="cancel" class="av_b_secondary" value="<?php echo _('Cancel') ?>"/>
+    </div>
+
+</form>
 
 </body>
 </html>

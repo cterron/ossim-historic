@@ -335,7 +335,6 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
         }
     }
 
-    set_time_limit(360);
 
     /******************************************************************************************************************
      * From net section:

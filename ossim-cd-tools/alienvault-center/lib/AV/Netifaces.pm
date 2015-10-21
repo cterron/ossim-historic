@@ -33,6 +33,7 @@ package AV::Netifaces;
 use strict;
 #use diagnostics;
 use warnings;
+no warnings 'experimental::smartmatch';
 use autodie;
 use v5.10;
 use File::Copy;

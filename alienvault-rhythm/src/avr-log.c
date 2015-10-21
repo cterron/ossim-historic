@@ -43,8 +43,8 @@
 
 struct _AvrLogPrivate
 {
-  GMutex *        file_mutex;
-  GMutex *        buffer_mutex;
+  GMutex          file_mutex;
+  GMutex          buffer_mutex;
   gchar *         log_path;
   gsize           size_limit;
   GIOChannel *    log_channel;
@@ -85,16 +85,13 @@ avr_log_impl_finalize (GObject * gobject)
 
   if (log->_priv->buffer_htable)
   {
-    g_mutex_lock (log->_priv->buffer_mutex);
+    g_mutex_lock (&log->_priv->buffer_mutex);
     g_hash_table_unref (log->_priv->buffer_htable);
-    g_mutex_unlock (log->_priv->buffer_mutex);
+    g_mutex_unlock (&log->_priv->buffer_mutex);
   }
 
-  if (log->_priv->buffer_mutex)
-    g_mutex_free (log->_priv->buffer_mutex);
-
-  if (log->_priv->file_mutex)
-    g_mutex_free (log->_priv->file_mutex);
+  g_mutex_clear (&log->_priv->buffer_mutex);
+  g_mutex_clear (&log->_priv->file_mutex);
 
   if (log->_priv->log_path)
     g_free (log->_priv->log_path);
@@ -152,7 +149,6 @@ avr_log_get_type (void)
       NULL                        /* value table */
     };
 
-    g_type_init ();
     object_type = g_type_register_static (G_TYPE_OBJECT, "AvrLog", &type_info, 0);
   }
   return object_type;
@@ -197,21 +193,8 @@ avr_log_new (const gchar * log_path, gint size_limit)
 
   log = AVR_LOG(g_object_new (AVR_TYPE_LOG, NULL));
 
-  log->_priv->file_mutex = g_mutex_new ();
-  if (log->_priv->file_mutex == NULL)
-  {
-    g_warning ("Cannot create log file mutex");
-    g_object_unref(log);
-    return (NULL);
-  }
-
-  log->_priv->buffer_mutex = g_mutex_new ();
-  if (log->_priv->buffer_mutex == NULL)
-  {
-    g_warning ("Cannot create buffer mutex");
-    g_object_unref(log);
-    return (NULL);
-  }
+  g_mutex_init (&log->_priv->file_mutex);
+  g_mutex_init (&log->_priv->buffer_mutex);
 
   log->_priv->log_path = g_strdup_printf("%s", log_path);
   log->_priv->size_limit = size_limit;
@@ -348,9 +331,9 @@ avr_log_write (AvrLog * log, const gchar * line)
 
   dumb_line = g_strdup_printf ("%s\n", line);
 
-  g_mutex_lock (log->_priv->file_mutex);
+  g_mutex_lock (&log->_priv->file_mutex);
   status = g_io_channel_write_chars (log->_priv->log_channel, dumb_line, -1, NULL, &error);
-  g_mutex_unlock (log->_priv->file_mutex);
+  g_mutex_unlock (&log->_priv->file_mutex);
 
   g_free (dumb_line);
 
@@ -367,9 +350,9 @@ avr_log_write (AvrLog * log, const gchar * line)
     }
   }
 
-  g_mutex_lock (log->_priv->file_mutex);
+  g_mutex_lock (&log->_priv->file_mutex);
   status = g_io_channel_flush (log->_priv->log_channel, &error);
-  g_mutex_unlock (log->_priv->file_mutex);
+  g_mutex_unlock (&log->_priv->file_mutex);
 
   if ((status != G_IO_STATUS_NORMAL) || (error != NULL))
   {
@@ -407,7 +390,7 @@ avr_log_flush_buffer (AvrLog * log)
   gchar ** buffer = NULL;
 
   // Lock the buffer here, so we make sure that no other thread is working on it.
-  g_mutex_lock (log->_priv->buffer_mutex);
+  g_mutex_lock (&log->_priv->buffer_mutex);
 
   lines_written = avr_log_get_lines_written (log);
 
@@ -435,7 +418,7 @@ avr_log_flush_buffer (AvrLog * log)
     avr_log_set_lines_written (log, 0);
   }
 
-  g_mutex_unlock (log->_priv->buffer_mutex);
+  g_mutex_unlock (&log->_priv->buffer_mutex);
 
   return;
 }
@@ -460,7 +443,7 @@ avr_log_write_buffer (AvrLog * log, const gchar * header, const gchar * data, gi
   gpointer * buffer = NULL, * new_buffer = NULL;
   gint ref = 0;
 
-  g_mutex_lock (log->_priv->buffer_mutex);
+  g_mutex_lock (&log->_priv->buffer_mutex);
 
   buffer = g_hash_table_lookup (log->_priv->buffer_htable, GINT_TO_POINTER(position));
 
@@ -490,7 +473,7 @@ avr_log_write_buffer (AvrLog * log, const gchar * header, const gchar * data, gi
     (void)g_hash_table_remove (log->_priv->buffer_htable, GINT_TO_POINTER(position));
   }
 
-  g_mutex_unlock (log->_priv->buffer_mutex);
+  g_mutex_unlock (&log->_priv->buffer_mutex);
 
   return;
 }
@@ -530,7 +513,7 @@ _avr_log_open_file (AvrLog * log)
     if (file_size >= log->_priv->size_limit)
     {
       // File needs to be rotated.
-      g_mutex_lock (log->_priv->file_mutex);
+      g_mutex_lock (&log->_priv->file_mutex);
 
       g_io_channel_unref (log->_priv->log_channel);
       backup_log_path = g_strdup_printf ("%s.old", log->_priv->log_path);
@@ -554,7 +537,7 @@ _avr_log_open_file (AvrLog * log)
 
       // No matter what happens, open the file again.
       log->_priv->log_channel = g_io_channel_new_file((const gchar *)log->_priv->log_path, "a+", &error);
-      g_mutex_unlock (log->_priv->file_mutex);
+      g_mutex_unlock (&log->_priv->file_mutex);
     }
   }
   else

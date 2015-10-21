@@ -260,7 +260,7 @@ set_grants() {
             last_pass=$(get_ossim_param_value "pass" "last")
 
             TEST_QUERY=`sshpass -p $last_pass mysql -uroot -p -e "SELECT 1" 2>&1`
-            ERROR=`echo $TEST_QUERY | grep -rni "ERROR"`
+            ERROR=`echo $TEST_QUERY | grep -ni "ERROR"`
         fi
 
         if [ ! -z "$ERROR" ] || [ ! -z "${ERROR-NO_INSTANCE}" ]; then

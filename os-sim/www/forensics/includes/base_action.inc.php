@@ -291,7 +291,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
     
     if (file_exists('/tmp/debug_siem'))
     {
-        error_log("ProcessSelectedAlerts [action=$action action_op=$action_op context=$context num_alert=$num_alert action_sql=$action_sql using_blobs=$using_blobs process_list=".json_encode($process_list)."]\n", 3, "/tmp/siem");
+        file_put_contents("/tmp/siem", "ProcessSelectedAlerts [action=$action action_op=$action_op context=$context num_alert=$num_alert action_sql=$action_sql using_blobs=$using_blobs process_list=".json_encode($process_list)."]\n", FILE_APPEND);
     }
     
     /* ******* SOME PRE ACTION ********* */
@@ -436,7 +436,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
 
             if (file_exists('/tmp/debug_siem'))
             {
-                error_log("Delete: $sql\n$sql2\n", 3, "/tmp/siem");
+                file_put_contents("/tmp/siem", "Delete: $sql\n$sql2\n", FILE_APPEND);
             }
 
             // If acting on alerts by signature or sensor, count the number of alerts
@@ -532,7 +532,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                             /* **** SOME ACTION on Event ID ********** */
                             if (file_exists('/tmp/debug_siem'))
                             {
-                                error_log("Action [$action] on specific event in particular blob ID:$id\n", 3, "/tmp/siem");
+                                file_put_contents("/tmp/siem", "Action [$action] on specific event in particular blob ID:$id\n", FILE_APPEND);
                             }
                             
                             $function_op = "Action_" . $action . "_op";
@@ -565,7 +565,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
                 /* **** SOME ACTION on Event ID ********** */
                 if (file_exists('/tmp/debug_siem'))
                 {
-                    error_log("Action [$action] on single event ID:$id\n", 3, "/tmp/siem");
+                    file_put_contents("/tmp/siem", "Action [$action] on single event ID:$id\n", FILE_APPEND);
                 }
                 $function_op = "Action_" . $action . "_op";
                 $action_ctx  = & $action_ctx;
@@ -601,7 +601,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
         $cmd = "/usr/share/ossim/scripts/forensics/bg_purge_from_siem.sh ? > /var/tmp/latest_siem_events_purge.log 2>&1 &";
         if (file_exists('/tmp/debug_siem'))
         {
-            error_log("Action [$action] background delete ($action_cnt events):$cmd\n", 3, "/tmp/siem");
+            file_put_contents("/tmp/siem", "Action [$action] background delete ($action_cnt events):$cmd\n", FILE_APPEND);
         }
         Util::execute_command($cmd, array("del_$rnd"));
         echo "<script>bgtask();</script>\n";
@@ -627,7 +627,7 @@ function ProcessSelectedAlerts($action, &$action_op, $action_arg, $action_param,
         //    else ErrorMessage(gettext("Successful") . " $action_desc - " . $action_cnt . gettext(" event(s)"));
         //}
     } else if ($action_cnt == 0) ErrorMessage(gettext("No events were selected or the") . " $action_desc " . gettext("was not successful"));
-    //error_log("cnt:$action_cnt,dup:$dup_cnt,desc:$action_desc,file:$deltmp\n",3,"/var/tmp/dellog");
+
     $db->baseCacheFlush();
     // if ($debug_mode > 0) {
         // echo "-------------------------------------<BR>

@@ -1,8 +1,8 @@
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          alienvault-rhythm
-# Required-Start:    $local_fs $syslog $network ossim-agent alienvault-redis-server-otx
-# Required-Stop:     $local_fs $syslog $network ossim-agent alienvault-redis-server-otx
+# Required-Start:    $local_fs $syslog $network $remote_fs ossim-agent alienvault-redis-server-otx
+# Required-Stop:     $local_fs $syslog $network $remote_fs ossim-agent alienvault-redis-server-otx
 # Should-Start:
 # Should-Stop:
 # Default-Start:     2 3 4 5
@@ -60,18 +60,24 @@ do_start()
         fi
     fi
 
+    [ -d "$RUNDIR" ] || mkdir -p -m 770 "$RUNDIR"
+    chgrp -R alienvault "$RUNDIR" 
+
     start-stop-daemon --start --quiet --chuid $USER --group $GROUP --pidfile $AVR_PIDFILE --exec $AVR_DAEMON --test > /dev/null \
         || return 1
     start-stop-daemon --start --quiet --chuid $USER --group $GROUP --pidfile $AVR_PIDFILE --exec $AVR_DAEMON -- $AVR_DAEMON_ARGS \
         || return 2
 
     sleep 2
-    PIDVALUE=$(cat $AVR_PIDFILE)
-    for rhythm_pid in $(ps ax | grep $AVR_DAEMON | grep -v grep| awk '{print$1}'); do
-        if [ "$rhythm_pid" != "$PIDVALUE" ]; then
-            kill -9 $rhythm_pid
-        fi
-    done
+
+    if [ -f $AVR_PIDFILE ]; then
+        PIDVALUE=$(cat $AVR_PIDFILE)
+        for rhythm_pid in $(ps ax | grep $AVR_DAEMON | grep -v grep| awk '{print$1}'); do
+            if [ "$rhythm_pid" != "$PIDVALUE" ]; then
+                kill -9 $rhythm_pid
+            fi
+        done
+    fi
 
     return 0
 }
@@ -119,7 +125,7 @@ case "$1" in
     status)
         status_of_proc "$AVR_DAEMON" "$AVR_NAME" && exit 0 || exit $?
         ;;
-    restart)
+    force-reload|restart)
         log_daemon_msg "Restarting $DESC" "$NAME"
         do_stop
         case "$?" in
@@ -138,7 +144,7 @@ case "$1" in
         esac
         ;;
     *)
-        echo "Usage: $SCRIPTNAME {start|stop|status|restart}" >&2
+        echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
         exit 3
         ;;
 esac

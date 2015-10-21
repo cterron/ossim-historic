@@ -2225,10 +2225,10 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY CNET TechTracker U
 alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Cisco IOS Self Signed Certificate Served to External Host"; flow:established,to_client; content:"IOS-Self-Signed-Certificate-"; classtype:misc-activity; sid:2014617; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a| "; http_header;  content:!"18,0,0,232|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_user_agent; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:64;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,241|0d 0a|"; distance:0; within:12; http_header; content:!"19,0,0,185|0d 0a|"; distance:0; within:12; http_header; content:!"19,0,0,190|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_user_agent; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:66;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Mac Flash Version"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,232|0d 0a|"; within:12; http_header; content:"Macintosh"; http_user_agent; threshold: type limit, count 1, seconds 60, track by_src; classtype:policy-violation; sid:2014727; rev:53;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Mac Flash Version"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,241|0d 0a|"; distance:0; within:12; http_header; content:!"19,0,0,185|0d 0a|"; distance:0; within:12; http_header; content:!"19,0,0,190|0d 0a|"; distance:0; within:12; http_header; content:"Macintosh"; http_user_agent; threshold: type limit, count 1, seconds 60, track by_src; classtype:policy-violation; sid:2014727; rev:54;)
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Internal Host Getting External IP Address - ip2city.asp"; flow:established,to_server; content:"/ip2city.asp"; http_uri; classtype:misc-activity; sid:2014761; rev:2;)
@@ -2447,7 +2447,7 @@ alert udp $HOME_NET any -> $EXTERNAL_NET 3653 (msg:"ET POLICY gogo6/Freenet6 Aut
 alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY SSL Certificate IRC GEEKS Likely Encrypted IRC or CnC"; flow:established,from_server; content:"|16 03 00|"; content:"|0b|"; within:7; content:"|13 09|IRC geeks"; distance:0; classtype:misc-activity; sid:2019387; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.8.x Detected"; flow:established,to_server; content:" Java/1.8.0_"; http_header; content:!"51"; within:2; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2019401; rev:6;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.8.x Detected"; flow:established,to_server; content:" Java/1.8.0_"; http_header; content:!"51"; within:2; http_header; content:!"60"; within:2; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2019401; rev:7;)
 
 #
 alert tcp $HOME_NET [443,465,993,995,25] -> any any (msg:"ET POLICY SSLv3 inbound connection to server vulnerable to POODLE attack"; flow:established,to_client; ssl_version:sslv3; ssl_state:server_hello; content:"|16 03 00|"; depth:3; threshold: type limit, track by_src, seconds 300, count 1; reference:cve,2014-3566; reference:url,blog.fox-it.com/2014/10/15/poodle/; reference:url,www.openssl.org/~bodo/ssl-poodle.pdf; reference:cve,2014-3566; reference:url,askubuntu.com/questions/537196/how-do-i-patch-workaround-sslv3-poodle-vulnerability-cve-2014-3566; reference:url,www.imperialviolet.org/2014/10/14/poodle.html; classtype:policy-violation; sid:2019415; rev:3;)
@@ -2910,4 +2910,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup - www.ip.cn"; flow:established,to_server; content:"Host|3A 20|www.ip.cn|0d 0a|"; fast_pattern:only; http_header; classtype:policy-violation; sid:2021600; rev:2;)
+
+#
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Hola VPN Activity - X-Hola-* Headers"; flow:established,to_server; content:"|0d 0a|X-Hola-"; http_header; threshold:type limit,track by_src,seconds 300,count 1; classtype:policy-violation; sid:2021886; rev:2;)
 

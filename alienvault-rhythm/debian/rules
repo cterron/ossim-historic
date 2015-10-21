@@ -16,6 +16,8 @@ export DH_VERBOSE=1
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
+.PHONY: override_dh_strip
+
 override_dh_auto_test:
 	exit 0
 
@@ -25,6 +27,9 @@ override_dh_installinit:
 %:
 	dh $@ --with autoreconf
 
-.PHONY: override_dh_strip
 override_dh_strip:
 	dh_strip --dbg-package=alienvault-rhythm-dbg
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-debug=yes
+

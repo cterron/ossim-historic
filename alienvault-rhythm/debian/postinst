@@ -29,7 +29,11 @@ create_user_and_dirs(){
 	    addgroup --quiet --system "$GROUP"
     fi
     if ! getent passwd "$USER" > /dev/null; then
-	    adduser --system --shell /bin/false --ingroup "$GROUP" --gecos "AlienVault Rhythm" "$USER"
+	    adduser --system --shell /bin/false \
+                --ingroup "$GROUP" \
+                --home /home/avrhythm \
+                --gecos "AlienVault Rhythm" \
+                "$USER"
     fi
 
     # Set up directories.

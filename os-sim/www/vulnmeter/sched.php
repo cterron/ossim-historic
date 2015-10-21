@@ -881,11 +881,13 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
 	<link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
 	<link rel="stylesheet" type="text/css" href="/ossim/style/jquery.autocomplete.css"/>
 	<link rel="stylesheet" type="text/css" href="/ossim/style/tree.css" />
+	<link rel="stylesheet" type="text/css" href="/ossim/style/tipTip.css" />
 	<script type="text/javascript" src="/ossim/js/jquery.min.js"></script>
 	<script type="text/javascript" src="/ossim/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="/ossim/js/jquery.autocomplete.pack.js"></script>
 	<script type="text/javascript" src="/ossim/js/jquery.cookie.js"></script>
 	<script type="text/javascript" src="/ossim/js/jquery.dynatree.js"></script>
+	<script type="text/javascript" src="/ossim/js/jquery.tipTip.js"></script>
 	<script type="text/javascript" src="/ossim/js/utils.js"></script>
     <script type="text/javascript" src="/ossim/js/combos.js"></script>
 	<script type="text/javascript" src="/ossim/js/vulnmeter.js"></script>
@@ -1310,7 +1312,11 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
                             $('#sresult').html("");
                             $('#sresult').html(data[0]);
                             $('#sresult').show();
-                                                                                
+                            $('.vuln_tooltip').tipTip({
+                                'tipclass'  : 'av_red_tip',
+                                'attribute' : 'data-title',
+                                'maxWidth'  : "500px",
+                            })
                             if(data[1]=="1") {
                                 enable_button();
                             }

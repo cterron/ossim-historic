@@ -18,6 +18,7 @@ import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
 import os
+import glob
 import sys
 import subprocess
 import signal
@@ -151,6 +152,7 @@ class Menu(object):
         self.__dirty = False
         self.__default_style = default_style
         self.__backup_selected = ""
+        self.__vpn_file_selected = ""
 
         self.load_setup_config()
         self.__verbose = verbose
@@ -1087,6 +1089,9 @@ class Menu(object):
         return self.__setup_config.save_ossim_setup_file()
 
     def get_network_setup_dynamic_ip(self):
+
+        error_code = ''
+        return_code = self.DIALOG_OK
         # Launch dhclient
         proc = subprocess.Popen(['dhclient', 'eth0'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = proc.communicate()
@@ -1094,48 +1099,47 @@ class Menu(object):
             self.debug('Error while running dhclient')
             return (self.DIALOG_ERROR, '1')
 
-        proc = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, err = proc.communicate()
-        if err != '':
-            self.debug('Error while killing dhclient')
-            return (self.DIALOG_ERROR, '2')
+        try:
+            # Get address and netmask from eth0
+            proc = subprocess.Popen(['ifconfig', 'eth0'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, err = proc.communicate()
 
-        for line in output.splitlines():
-            if 'dhclient' in line:
-                pid = int(line.split(None, 1)[0])
-                os.kill(pid, signal.SIGKILL)
+            if err != '':
+                self.debug('Error while acquiring network configuration')
+                error_code = '3'
+                raise
 
-        # Get address and netmask from eth0
-        proc = subprocess.Popen(['ifconfig', 'eth0'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, err = proc.communicate()
+            iface_attrs = re.findall('inet\saddr\:(\S+)\s\sBcast\:(\S+)\s\sMask\:(\S+)', output)
+            if iface_attrs == [] or len(iface_attrs[0]) != 3:
+                self.debug('Error while acquiring network configuration')
+                error_code = '4'
+                raise
 
-        if err != '':
-            self.debug('Error while acquiring network configuration')
-            return (self.DIALOG_ERROR, '3')
+            [(self.__stored_var['admin_ip'], bcast, self.__stored_var['admin_netmask'])] = iface_attrs
 
-        iface_attrs = re.findall('inet\saddr\:(\S+)\s\sBcast\:(\S+)\s\sMask\:(\S+)', output)
-        if iface_attrs == [] or len(iface_attrs[0]) != 3:
-            self.debug('Error while acquiring network configuration')
-            return (self.DIALOG_ERROR, '4')
+            # Get default gateway.
+            proc = subprocess.Popen(['route', '-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, err = proc.communicate()
 
-        [(self.__stored_var['admin_ip'], bcast, self.__stored_var['admin_netmask'])] = iface_attrs
+            if err != '':
+                self.debug("Error while acquiring default gateway data")
+                error_code = '5'
+                raise
 
-        # Get default gateway.
-        proc = subprocess.Popen(['route', '-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, err = proc.communicate()
+            [self.__stored_var['admin_gateway']] = re.findall('0\.0\.0\.0\s+(\S+)\s+0\.0\.0\.0\s+UG', output)
 
-        if err != '':
-            self.debug("Error while acquiring default gateway data")
-            return (self.DIALOG_ERROR, '5')
+            # Get dns servers.
+            resolvconf_data = open('/etc/resolv.conf', 'r').read()
+            dnsserver_list = re.findall('nameserver\s(\S+)', resolvconf_data)
+            self.__stored_var['admin_dns'] = ','.join(dnsserver_list)
 
-        [self.__stored_var['admin_gateway']] = re.findall('0\.0\.0\.0\s+(\S+)\s+0\.0\.0\.0\s+UG', output)
+        except Exception:
+            return_code = self.DIALOG_ERROR
+        finally:
+            proc = subprocess.Popen(['dhclient', '-x', 'eth0'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, err = proc.communicate()
 
-        # Get dns servers.
-        resolvconf_data = open('/etc/resolv.conf', 'r').read()
-        dnsserver_list = re.findall('nameserver\s(\S+)', resolvconf_data)
-        self.__stored_var['admin_dns'] = ','.join(dnsserver_list)
-
-        return (self.DIALOG_OK, '')
+        return (return_code, error_code)
 
     def get_version_string(self):
         """
@@ -1426,6 +1430,17 @@ class Menu(object):
             return (self.DIALOG_ERROR, '1')
         backups = json.loads(output)
         return [x['file'] for x in backups]
+
+    # Custom function for VPN files
+    def get_vpn_files(self):
+        return self.__vpn_file_selected
+
+    def set_vpn_files(self, value):
+        self.__vpn_file_selected = value
+        return Menu.DIALOG_OK, value
+
+    def get_allowed_values_for_vpn_files(self):
+        return [os.path.basename(f)[:-7] for f in glob.glob("/etc/alienvault/network/*.tar.gz")]
 
     def is_hostname_changed(self):
         # Get the current modified list

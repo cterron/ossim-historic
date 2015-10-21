@@ -453,65 +453,70 @@ class Server
     }
 
 
-    public static function set_remote_sshkey($remoteadmin, $remotepass, $remoteurl) 
+    public static function set_remote_sshkey($remoteadmin, $remotepass, $remoteurl)
     {
+        $data = array(
+            'status' => 'success',
+            'data'   => ''
+        );
+
         $conf = $GLOBALS['CONF'];
         $conf = (!$conf) ? new Ossim_conf() : $conf;
-        
-        // Create public key in local machine 
-        if (!file_exists("/etc/ossim/framework/ssh/remotelogger.pub")) 
+
+        // Create public key in local machine
+        if (!file_exists("/etc/ossim/framework/ssh/remotelogger.pub"))
         {
             Util::execute_command("ssh-keygen -q -t rsa -N '' -C remotelogger -f /etc/ossim/framework/ssh/remotelogger");
         }
-        
+
         $publickey_output = file("/etc/ossim/framework/ssh/remotelogger.pub");
         $publickey = trim($publickey_output[0]);
         $keyparam  = base64_encode(Util::encrypt($remoteadmin.'####'.$remotepass.'####'.$publickey, $conf->get_conf('remote_key')));
-        
+
         // Check the remote authorized_keys
-        ini_set('display_errors', 0);
-                        
-        if (is_array($output = file($remoteurl.'/sem/insertsshkey.php?key='.$keyparam))) 
+        $opts = array(
+            'ssl'  => array(
+                'verify_peer'      => FALSE,
+                'verify_peer_name' => FALSE,
+            )
+        );
+
+        $context = stream_context_create($opts);
+        $output  = file($remoteurl.'/sem/insertsshkey.php?key='.$keyparam,0,$context);
+
+        if (is_array($output))
         {
-            $s_url = Menu::get_menu_url('/ossim/server/server.php', 'configuration', 'deployment', 'components', 'servers');
-            
-            if ($output[0] == 'USERERROR') 
-            {           
-                echo "<center>". _("Login error in remote machine. Remote logger is not configured...")." <a href='$s_url'>"._("Continue with Server config")."</a></center>";
-                                
-                ini_set('display_errors', 1);
-                
-                return FALSE;
-            } 
-            elseif ($output[0] == 'VALIDERROR') 
+            if ($output[0] == 'USERERROR')
             {
-                echo "<center>"._("Invalid user or wrong remote_key configuration parameter. Remote logger is not configured...")." <a href='$s_url'>"._("Continue with Server config")."</a></center>";
-                
-                ini_set('display_errors', 1);
-                
-                return FALSE;
-            } 
-            elseif ($output[0] != 'OK') 
+                $data = array(
+                    'status' => 'error',
+                    'data'   => _('Unable to configure Remote Logger. Remote admin user is incorrect.')
+                );
+            }
+            elseif ($output[0] == 'VALIDERROR')
             {
-                echo "<center>"._("Error writting SSH public key in remote machine. Remote logger is not configured...")." <a href='$s_url'>"._("Continue with Server config")."</a></center>";
-                
-                ini_set( "display_errors", 1);
-                
-                return FALSE;
+                $data = array(
+                    'status' => 'error',
+                    'data'   => _('Unable to configure Remote Logger. Remote admin user or remote password is incorrect.')
+                );
+            }
+            elseif ($output[0] != 'OK')
+            {
+                $data = array(
+                    'status' => 'error',
+                    'data'   => _('Unable to configure Remote Logger. SSH public key is incorrect.')
+                );
             }
         }
-        else 
+        else
         {
-            echo "<center>"._("Error connecting to $remoteurl. Remote logger is not configured...")." <a href='$s_url'>"._("Continue with Server config")."</a></center>";
-            
-            ini_set('display_errors', 1);
-            
-            return FALSE;
+            $data = array(
+                'status' => 'error',
+                'data'   => sprintf(_('Unable to connect to %s. SSH public key is incorrect.'), $remoteurl)
+            );
         }
 
-        ini_set('display_errors', 1);
-
-        return TRUE;
+        return $data;
     }
 
 
@@ -615,26 +620,28 @@ class Server
         $query = "UPDATE server_role SET correlate = ?, cross_correlate = ?, store = ?, reputation = ?, qualify = ?, resend_alarm = ?, 
             resend_event = ?, sign = ?, sem = ?, sim = ?, alarms_to_syslog = ?
             WHERE server_id = UNHEX(?)";
-            
-        
-        if (!$conn->Execute($query, $params)) 
+
+
+        if (!$conn->Execute($query, $params))
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
-        if ($remoteadmin != '' && $remotepass != '' && $remoteurl != '' && $setssh) 
+
+        if ($remoteadmin != '' && $remotepass != '' && $remoteurl != '' && $setssh)
         {
-            if (!self::set_remote_sshkey($remoteadmin, $remotepass, $remoteurl)) 
+            $data = self::set_remote_sshkey($remoteadmin, $remotepass, $remoteurl);
+
+            if ($data['status'] == 'error')
             {
                 $params = array($id);
-                $query  = "UPDATE server SET remoteadmin = '', remotepass = '', remoteurl = '' WHERE server_id = UNHEX(?)";
-                
-                if (!$conn->Execute($query, $params)) 
+                $query  = "UPDATE server SET remoteadmin = '', remotepass = '', remoteurl = '' WHERE id = UNHEX(?)";
+
+                if (!$conn->Execute($query, $params))
                 {
                     Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
 
-                sleep(5);
+                Av_exception::throw_error(Av_exception::USER_ERROR, $data['data']);
             }
         }
 

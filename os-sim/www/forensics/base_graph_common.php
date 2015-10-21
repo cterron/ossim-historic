@@ -112,7 +112,7 @@ function VerifyGraphingLib() {
             <B>PHP build incomplete</B>: <FONT>
             the prerequisite GD support required to
             generate graphs was not built into PHP.
-            Please recompile PHP with the necessary library 
+            Please recompile PHP with the necessary library
             (<CODE>--with-gd</CODE>)</FONT>";
         die();
     }
@@ -396,14 +396,14 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                                         $sql = "SELECT count(*) FROM acid_event $ag WHERE $ag_criteria AND " . $db->baseSQL_YEAR("timestamp", "=", $i_year) . " AND " . $db->baseSQL_MONTH("timestamp", "=", FormatTimeDigit($i_month)) . " AND " . $db->baseSQL_DAY("timestamp", "=", FormatTimeDigit($i_day)) . " AND " . $db->baseSQL_HOUR("timestamp", "=", $i_hour);
                                         StoreAlertNum($sql, FormatTimeDigit($i_month) . "/" . FormatTimeDigit($i_day) . "/" . $i_year . " " . $i_hour . ":00:00 - " . $i_hour . ":59:59", $xdata, $cnt, $min_threshold);
                                     } // end hour
-                                    
+
                                 } else StoreAlertNum($sql, FormatTimeDigit($i_month) . "/" . FormatTimeDigit($i_day) . "/" . $i_year, $xdata, $cnt, $min_threshold);
                             }
                         } // end day
-                        
+
                     } else StoreAlertNum($sql, FormatTimeDigit($i_month) . "/" . $i_year, $xdata, $cnt, $min_threshold);
                 } // end month
-                
+
             } else StoreAlertNum($sql, $i_year, $xdata, $cnt, $min_threshold);
         } // end year
         return $cnt;
@@ -585,9 +585,9 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
             return 0;
         }
         $cmd = $IP2CC . " ?";
-        
+
         unset($output);
-        
+
         try
         {
             $output = Util::execute_command($cmd, array($address_with_dots), 'array');
@@ -595,7 +595,6 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
         catch (Exception $e)
         {
             ErrorMessage("ERROR with " . $cmd . "<BR>\n");
-            print_r($output);
             return 0;
         }
         $result = explode(" ", $output[6]);
@@ -779,5 +778,3 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
         return $cnt2;
     }
     // vim: shiftwidth=2:tabstop=2:expandtab
-    
-?>

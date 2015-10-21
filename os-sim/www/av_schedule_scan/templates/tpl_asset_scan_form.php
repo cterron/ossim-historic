@@ -83,7 +83,7 @@ if($params != '')
     $tmp_data  = explode('#', $params);
 
     // Getting timing template
-    $tmp_data[1] = str_replace('-', '', $tmp_data[1]);
+    $tmp_data[1] = preg_replace('/\-(T[0-5])/', '$1', $tmp_data[1]);
 
     preg_match('/(T[0-5])/', $tmp_data[1], $matches);
 

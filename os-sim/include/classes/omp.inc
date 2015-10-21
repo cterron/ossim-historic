@@ -273,7 +273,8 @@ class Omp
         // For each result in report
         foreach ($results as $result)
         {
-            $cvss_base = $result->nvt->cvss_base;
+            $cvss_base   = $result->nvt->cvss_base;
+            $risk_factor = 'Info';
 
             // Set risk factor
             if (empty($cvss_base) || is_array($cvss_base))
@@ -296,7 +297,7 @@ class Omp
                 {
                     $risk_factor = 'Medium';
                 }
-                else
+                else if ($cvss_base > 0)
                 {
                     $risk_factor = 'Low';
                 }

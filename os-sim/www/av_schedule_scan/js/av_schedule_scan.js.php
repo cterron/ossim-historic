@@ -58,12 +58,10 @@ function load_schedule_scans(s_type)
 {
     var aaSorting = [[0, "asc"]];
 
-    var bVisible  = (s_type == 'ocs') ? false : true;
-
     var aoColumns = [
         { "bSortable": true,  "sClass": "left" },
         { "bSortable": true,  "sClass": "left" },
-        { "bSortable": true,  "sClass": "left", "bVisible": bVisible},
+        { "bSortable": true,  "sClass": "left", "bVisible": true},
         { "bSortable": true,  "sClass": "left" },
         { "bSortable": false, "sClass": "left" },
         { "bSortable": false, "sClass": "center", "sWidth": "60px" }
@@ -127,10 +125,6 @@ function load_schedule_scans(s_type)
 
                     case 'wmi':
                         var s_title = "<?php echo _('Schedule New WMI Scan')?>";
-                    break;
-
-                    case 'ocs':
-                        var s_title = "<?php echo _('Schedule New Software Scan')?>";
                     break;
                 }
 
@@ -268,10 +262,6 @@ function __create_actions(nRow, aData)
 
                 case 'wmi':
                     var s_title = "<?php echo _('Edit WMI Scan')?>";
-                break;
-
-                case 'ocs':
-                    var s_title = "<?php echo _('Edit Software Scan')?>";
                 break;
             }
 

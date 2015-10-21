@@ -720,7 +720,16 @@ class Av_sensor extends Av_component
 
         if ($load != '')
         {
-            $res = round($load*100, 1).'%';
+            $perc = round($load*100, 1);
+
+            if ($perc >= 60)
+            {
+                $res = '<font color=#ff0000>'.$perc.'%</font> <img class="vuln_tooltip" data-title="'.sprintf(_("The scan load in your appliance is already %s. Introducing a new concurrent scan job will put the AlienVault sensor under a heavy load. Please make sure you want to create a new scan job."),$perc.'%').'" src="/ossim/pixmaps/v_error.png">';
+            }
+            else
+            {
+                $res = $perc.'%';
+            }
         }
 
         return $res;
@@ -868,9 +877,17 @@ class Av_sensor extends Av_component
 
             while (!$rs->EOF)
             {
-                $id = strtoupper($rs->fields['sid']);
+                $id   = strtoupper($rs->fields['sid']);
+                $perc = round($rs->fields['vs_load']*100, 1);
 
-                $r_sensors[$id] =  round($rs->fields['vs_load']*100, 1) . '%';
+                if ($perc >= 60)
+                {
+                    $r_sensors[$id] = '<font color=#ff0000>'.$perc.'%</font> <img class="vuln_tooltip" data-title="'.sprintf(_("The scan load in your appliance is already %s. Introducing a new concurrent scan job will put the AlienVault sensor under a heavy load. Please make sure you want to create a new scan job."),$perc.'%').'" src="/ossim/pixmaps/v_error.png">';
+                }
+                else
+                {
+                    $r_sensors[$id] = $perc . '%';
+                }
 
                 $rs->MoveNext();
             }
@@ -969,7 +986,7 @@ class Av_sensor extends Av_component
 
         $headers = Util::getheaders($url);
 
-        // Found OSSIM in remote IP:secured_nagios3
+        // Found OSSIM in remote IP:nagios3
         if (preg_match("/\/session\/login\.php/", $headers) == TRUE)
         {
             $ssid = Util::get_session_cookie($ip, $user, $pass);
@@ -979,7 +996,7 @@ class Av_sensor extends Av_component
                 $s_context = array('http'  => array('header' => "Cookie: $ssid"));
 
                 $data = array(
-                    'url'       => "https://".$ip."/secured_nagios3/",
+                    'url'       => "https://".$ip."/nagios3/",
                     's_context' => $s_context
                 );
             }
@@ -1334,10 +1351,6 @@ class Av_sensor extends Av_component
                     VALUES ((SELECT UNHEX(REPLACE (value, '-', '')) FROM config WHERE conf = 'default_context_id'), UNHEX(?))";
             }
 
-            //Inventory
-            $queries[] = "INSERT IGNORE INTO task_inventory (task_type, task_period, task_enable, task_sensor, task_name)
-                VALUES (3, 1800, 1, UNHEX(?), 'default_inventory')";
-
             //Nessus Config
             $queries[] = "REPLACE INTO alienvault.config VALUES ('nessus_host','".$this->get_ip()."')";
 
@@ -1688,7 +1701,7 @@ class Av_sensor extends Av_component
             $db   = new ossim_db();
             $conn = $db->connect();
         
-            $sensor_id  = Av_sensor::get_id_by_ip($conn, $sensor);
+            $sensor_id  = self::get_id_by_ip($conn, $sensor);
             
             $system_ids = Av_center::get_system_id_by_component($conn, $sensor_id);
             

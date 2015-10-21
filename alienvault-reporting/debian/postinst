@@ -2,14 +2,10 @@
 
 configure_reporting_feed() {
 
-    sql="/usr/share/alienvault/reporting/reporting-feed.sql"
+    sql_dir="/usr/share/alienvault/reporting/"
 
-    if [ -f "${sql}" ]; then
-        echo "Loading report data in DB..."
-        cat /usr/share/alienvault/reporting/reporting-feed.sql | ossim-db || true
-    else
-        echo "'${sql}' does not exist. Package might be corrupt"
-    fi
+    echo "Loading report data in DB..."
+    zcat -f ${sql_dir}* | ossim-db || true
 }
 
 case "$1" in

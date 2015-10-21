@@ -50,7 +50,8 @@ if ($row = $rs->baseFetchRow())
 }
 $rs->baseFreeRows();
 
-//error_log("$sql\n$sqlunique\n$sqlgraph\n",3,"/tmp/graph");
+//file_put_contents("/tmp/graph", "$sql\n$sqlunique\n$sqlgraph\n", FILE_APPEND);
+
 echo "$last##";
 
 // Graph

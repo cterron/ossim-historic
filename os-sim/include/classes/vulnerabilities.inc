@@ -245,8 +245,8 @@ class Vulnerabilities
 
                     if($debug)
                     {
-                        error_log("> in ".$command."\n", 3,"/tmp/credentials.log");
-                        error_log("< out ".$out."\n", 3,"/tmp/credentials.log");
+                        file_put_contents("/tmp/credentials.log", "> in ".$command."\n", FILE_APPEND);
+                        file_put_contents("/tmp/credentials.log", "< out ".$out."\n", FILE_APPEND);
                     }
 
                     if(preg_match("/Connection timed out/i", $out))
@@ -310,8 +310,8 @@ class Vulnerabilities
 
                     if($debug)
                     {
-                        error_log("> in ".$command."\n", 3,"/tmp/credentials.log");
-                        error_log("< out ".$out."\n", 3,"/tmp/credentials.log");
+                        file_put_contents("/tmp/credentials.log", "> in ".$command."\n", FILE_APPEND);
+                        file_put_contents("/tmp/credentials.log", "< out ".$out."\n", FILE_APPEND);
                     }
 
                     if(preg_match("/HOST_UNREACHABLE/", $out))
@@ -350,8 +350,8 @@ class Vulnerabilities
 
                     if($debug)
                     {
-                        error_log("> in ".$command."\n", 3,"/tmp/credentials.log");
-                        error_log("< out ".$out."\n", 3,"/tmp/credentials.log");
+                        file_put_contents("/tmp/credentials.log", "> in ".$command."\n", FILE_APPEND);
+                        file_put_contents("/tmp/credentials.log", "< out ".$out."\n", FILE_APPEND);
                     }
 
                     if (!preg_match("/NOK/i", $out))
@@ -491,8 +491,23 @@ class Vulnerabilities
         return $list;
     }
 
+    public static function get_total_omp_running_scans($dbconn)
+    {
+        $query = ossim_query("SELECT count(vuln_jobs.id) AS total_jobs FROM vuln_jobs WHERE vuln_jobs.status='R' $perm_filter");
 
-    public static function get_omp_running_scans($dbconn)
+        $rf    = $dbconn->Execute($query);
+
+        if (!$rf)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        $total = intval($rf->fields['total_jobs']);
+
+        return $total;
+    }
+
+    public static function get_omp_running_scans($dbconn, $offset = 0, $limit = 5)
     {
         $tz   = Util::get_timezone();
 
@@ -521,6 +536,20 @@ class Vulnerabilities
             $perm_filter = '';
         }
 
+        // First count to paginate the jobs
+
+        $total_scans = Vulnerabilities::get_total_omp_running_scans($dbconn);
+
+        $requested_page = $offset + 1;
+        $current_pages  = ceil($total_scans / $limit);
+
+        if ($requested_page > $current_pages)
+        {
+            $offset = 0;  // Go to the first page
+        }
+
+        $begin = $offset * $limit;
+
         $query = "SELECT t1.failed_attempts, t1.meth_Wcheck, t6.name as profile, t1.scan_NEXT, t1.meth_TARGET, t1.scan_PID, t1.id, t1.name, t1.username, t1.scan_START, t1.scan_END,
                          t1.scan_SUBMIT, t1.status, t1.notify, t3.hostname, t1.credentials
                         FROM vuln_jobs t1
@@ -528,7 +557,7 @@ class Vulnerabilities
                         LEFT JOIN vuln_nessus_reports t5 on t1.report_id = t5.report_id
                         LEFT JOIN vuln_nessus_settings t6 on t1.meth_VSET=t6.id
                         WHERE t1.status='R' $perm_filter
-                        ORDER BY t1.id DESC";
+                        ORDER BY t1.id DESC limit $begin, $limit";
 
         $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
 
@@ -541,8 +570,21 @@ class Vulnerabilities
                     </script>
                   ";
 
+        if ($total_scans > 1)
+        {
+            $running_scans_title = _("<strong>%d</strong> Running Scans");
+        }
+        else if($total_scans == 1)
+        {
+            $running_scans_title = _("<strong>%d</strong> Running Scan");
+        }
+        else
+        {
+            $running_scans_title = _("Running Scans");
+        }
+
         $sInfo .= "<table style='margin-top:5px;' class='w100 transparent'>
-                        <tr><td class='sec_title center'>"._("Running Scans")."</td></tr>
+                        <tr><td class='sec_title center'>".sprintf($running_scans_title, $total_scans)."</td></tr>
                    </table>";
 
         $sInfo .= "<table class='table_list t_width'>";
@@ -797,6 +839,7 @@ class Vulnerabilities
                 $sInfo .= "</td>";
 
                 $sInfo .= "<td style='text-align:center;width:15%;'>";
+
                 if ($tstatus["status"] != "Done" && $tstatus["status"] != "Stopped" && $tstatus["status"] != '')
                 {
                     $task_status = $tstatus["status"];
@@ -806,7 +849,7 @@ class Vulnerabilities
                         // pause button
                         if($task_status == "Running" || $task_status == "Requested" && !preg_match("/.*\srequested/i", $task_status))
                         {
-                            $sInfo .= "<img align='absmiddle' class='manageJob' id='pause_task#$nid' title='"._("Pause current scan job")."' alt='"._("Pause current scan job")."' src='./images/pause_task.png'  border='0'>";
+                            $sInfo .= "<img align='absmiddle' class='manageJob' id='pauseTask_$nid' title='"._("Pause current scan job")."' alt='"._("Pause current scan job")."' src='./images/pause_task.png'  border='0'>";
                         }
                         else
                         {
@@ -816,7 +859,7 @@ class Vulnerabilities
                         // resume button
                         if( preg_match("/^pause.*/i", $task_status) && !preg_match("/.*\srequested/i", $task_status))
                         {
-                            $sInfo .= "<img align='absmiddle' class='manageJob' id='resume_task#$nid' title='"._("Resume scan job")."' alt='"._("Resume scan job")."' src='./images/resume_task.png'  border='0'>";
+                            $sInfo .= "<img align='absmiddle' class='manageJob' id='resumeTask_$nid' title='"._("Resume scan job")."' alt='"._("Resume scan job")."' src='./images/resume_task.png'  border='0'>";
                         }
                         else
                         {
@@ -827,7 +870,7 @@ class Vulnerabilities
                     // stop button
                     if($task_status == "Running" || $task_status == "Paused" && !preg_match("/.*\srequested/i", $task_status))
                     {
-                        $sInfo .= "<img align='absmiddle' class='manageJob' id='stop_task#$nid' title='"._("Stop current scan job")."' alt='"._("Stop current scan job")."' src='./images/stop_task.png'  border='0'>";
+                        $sInfo .= "<img align='absmiddle' class='manageJob' id='stopTask_$nid' title='"._("Stop current scan job")."' alt='"._("Stop current scan job")."' src='./images/stop_task.png'  border='0'>";
                     }
                     else
                     {
@@ -908,6 +951,24 @@ class Vulnerabilities
         }
 
         $sInfo .= "</table>";
+
+        if ($total_scans > $limit)
+        {
+            $rs_ppage = $rs_npage = $offset;
+
+            $rs_ppage--; // the previous page
+            $rs_npage++; // the next page
+
+            $previous_attr = ($rs_ppage >= 0)             ? "href='manage_jobs.php?rs_page=$rs_ppage' class='lmargin pn_buttons'" : "class='lmargin link_paginate_disabled' href='' onclick='return false'";
+            $next_attr     = ($rs_npage < $current_pages) ? "href='manage_jobs.php?rs_page=$rs_npage' class='lmargin pn_buttons'" : "class='lmargin link_paginate_disabled' href='' onclick='return false'";
+
+            $sInfo .= "<div class='fright tmargin'>";
+
+            $sInfo .= "<a $previous_attr>< " . _("PREVIOUS") . "</a>";
+            $sInfo .= "<a $next_attr>" . _("NEXT") . "></a>";
+
+            $sInfo .= "</div>";
+        }
 
         return $sInfo;
     }

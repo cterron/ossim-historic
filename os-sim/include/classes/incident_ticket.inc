@@ -595,6 +595,83 @@ class Incident_ticket
         return $error ? ossim_set_error($error) : TRUE;
     }
 
+    public static function mail_notification($conn, $incident_id, $ticket_id)
+    {
+        $error = '';
+        $users = array();
+
+        $values                        = self::get_email_template_values($conn, $incident_id, $ticket_id);
+        $values['TICKET_DESCRIPTION']  = _("You're subscribed to this ticket or you're in charge");
+
+        $incident    = Incident::get_list_all($conn, 'WHERE incident.id='.intval($incident_id));
+        $in_charge   = $incident[0]->get_in_charge();
+
+        if (valid_hex32($in_charge))
+        {
+            $entity_data = Acl::get_entity($conn,$in_charge, FALSE, FALSE);
+
+            if ($entity_data["admin_user"]!="")
+            {
+                // exists pro admin
+                $pro_admin_data = Session::get_list($conn, "WHERE login='".$entity_data["admin_user"]."'", "", TRUE);
+
+                if ($pro_admin_data[0]->get_email() != '')
+                {
+                    $users[$entity_data["admin_user"]] = $pro_admin_data[0]->get_email();
+                }
+            }
+            else
+            {
+                // Doesn't exit pro admin
+                $users_list = Acl::get_users_by_entity($conn, $in_charge);
+
+                foreach ($users_list as $user)
+                {
+                    if ($user["email"] != '')
+                    {
+                        $users[$user["login"]] = $user['email'];
+                    }
+                }
+            }
+        }
+        else
+        {
+            $user_data = Session::get_list($conn, "WHERE login='$in_charge'", "", TRUE);
+
+            if (is_object($user_data[0]))
+            {
+                if ($user_data[0]->get_email() != '')
+                {
+                    $users[$in_charge] = $user_data[0]->get_email();
+                }
+            }
+        }
+
+        $subject_tpl = self::get_email_template('subject');
+        $body_tpl    = self::get_email_template('body');
+
+        //Attachments
+        $attachments = self::get_attachment_to_mail($conn, $incident_id, $ticket_id);
+
+        $subject     = self::build_email_template($subject_tpl, $values);
+        $subject     = Util::html_entities2utf8($subject);
+
+        $body        = self::build_email_template($body_tpl, $values);
+
+        foreach($users as $user => $email)
+        {
+            $res = Util::send_email($conn, $email, $subject, $body, $attachments);
+
+            if (!$res)
+            {
+                $error.= _("Could not email ticket to the following address") . ": " . $email . "<br/>";
+            }
+        }
+
+        @unlink($attachments[0]['path']);
+
+        return $error ? ossim_set_error($error) : TRUE;
+    }
 
     public function get_attachment_to_mail($conn, $incident_id, $ticket_id)
     {

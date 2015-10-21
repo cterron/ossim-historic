@@ -73,7 +73,7 @@ $default_view = ($config->get($login, 'custom_view_default', 'php', "siem") != "
 $session_data = $_SESSION;
 foreach ($_SESSION as $k => $v)
 {
-    if (preg_match("/^(_|alarms_|back_list|current_cview|views|ports_cache|acid_|report_|graph_radar|siem_event|siem_current_query|siem_current_query_graph|deletetask|mdspw).*/",$k))
+    if (preg_match("/^(_|alarms_|back_list|current_cview|views|ports_cache|acid_|report_|graph_radar|siem_event|siem_current_query|siem_current_query_graph|deletetask).*/",$k))
         unset($session_data[$k]);
 }
 
@@ -231,7 +231,7 @@ if ($custom_view != "") {
     $_SESSION['current_cview'] = Util::htmlentities($custom_view);
     if (is_array($_SESSION['views'][$custom_view]['data']))
         foreach ($_SESSION['views'][$custom_view]['data'] as $skey=>$sval) {
-            if (!preg_match("/^(_|alarms_|back_list|current_cview|views|ports_cache|acid_|report_|graph_radar|siem_event|siem_current_query|siem_current_query_graph|deletetask|mdspw).*/",$skey))
+            if (!preg_match("/^(_|alarms_|back_list|current_cview|views|ports_cache|acid_|report_|graph_radar|siem_event|siem_current_query|siem_current_query_graph|deletetask).*/",$skey))
                 $_SESSION[$skey] = $sval;
             else
                 unset($_SESSION[$skey]);
@@ -499,9 +499,7 @@ if (is_array($_SESSION['server']) && $_SESSION["server"][0] != '')
 
     $db_connect_method = DB_PCONNECT;
 
-
     $dbo = new ossim_db(true);
-    error_reporting(E_ERROR | E_PARSE);
 
     // Try to connect
     try
@@ -525,7 +523,6 @@ if (is_array($_SESSION['server']) && $_SESSION["server"][0] != '')
 
     $dbo->close();
     unset($dbo);
-    error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
 }
 
 $current_url = Util::get_ossim_url();

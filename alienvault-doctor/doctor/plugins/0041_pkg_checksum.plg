@@ -4,7 +4,7 @@ id=0041
 description=Searches for modified files that originally belonged to a package.
 category=alienvault,system
 type=command
-strike_zone=True
+affects_strike_zone=True
 command=debsums ossim-server ossim-agent ossim-framework alienvault-plugins
 profiles=Server:>4.0,Sensor:>4.0
 requires=@dpkg:debsums
@@ -21,5 +21,5 @@ summary_failed=Modified AlienVault files have been identified
 remediation=Modifying AlienVault files is not supported. Please check the system and update the affected packages properly
 appliance_type=@all_aio_profiles@,@all_usm_standard_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 

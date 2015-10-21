@@ -800,44 +800,44 @@ class Welcome_wizard
     public static function format_time($t)
     {
         //Getting the days
-        $d = round($t/86400);
+        $d = floor($t/86400);
         $t = $t%86400;
-        
+
         //Getting the hours
-        $h = round($t/3600);
+        $h = floor($t/3600);
         $t = $t%3600;
-        
+
         //Getting the minutes
-        $m = round($t/60);
+        $m = floor($t/60);
         $t = $t%60;
-        
+
         //Getting the seconds
-        $s = round($t);
-        
+        $s = floor($t);
+
         $time = array();
-        
+
         if ($d > 0)
         {
             $time[] = $d . ' ' . (($d == 1) ? _('day') : _('days'));
         }
-        
+
         if ($h > 0)
         {
             $time[] = $h . ' ' . (($h == 1) ? _('hour') : _('hours'));
         }
-        
+
         if ($m > 0)
         {
             $time[] = $m . ' ' . (($m == 1) ? _('minute') : _('minutes'));
         }
-        
+
         if ($s > 0)
         {
             $time[] = $s . ' ' . (($s == 1) ? _('second') : _('seconds'));
         }
-        
+
         $time = implode(' ', $time);
-        
+
         return ($time == '') ? '0 ' . _('seconds') : $time;
     }
 

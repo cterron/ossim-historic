@@ -941,6 +941,28 @@ else return '{
     
         return $response;
     }
+
+    /**
+     * This method set the given content 
+     *
+     * @param string   $keyfile
+     * @param array    $content
+     *
+     * @return object
+     */
+    public function set_system_certificates($crt, $pem, $ca)
+    {
+        $params = array(
+                'crt' => $crt,
+                'pem' => $pem,
+                'ca' => $ca
+        );
+
+        $response = $this->conn->do_request('/system/local/certificate', $params, 'POST');
+
+        return $response;
+    }
+
 }
 
 /* End of file system.inc */

@@ -415,7 +415,7 @@ class Session
     
     
     /**
-    * This function returns the user timezone
+    * This function calculates time difference (in hours) between GMT and local time
     *
     * <pre>
     * For backward compatibility, parameter $tz can be:
@@ -426,20 +426,20 @@ class Session
     * @param string|int|float  User timezone
     *
     *
-    * @return int  Time difference (in hours) between GMT and local time            
+    * @return int
     */
-    public function get_timezone($tz = '') 
-    {        
-        if ($tz == '') 
+    public static function get_timezone($tz = '')
+    {
+        if ($tz == '')
         {
-            $tz = $this->timezone;
+            return 0;
         }
-        
-        if (is_numeric($tz)) 
+
+        if (is_numeric($tz))
         {
             return $tz; // Old stored numeric format
         }
-        
+
         // Fix PHP Etc/GMT+-N timezone bug
         if (preg_match("/Etc\/GMT\-\d+/i",$tz))
         {
@@ -449,27 +449,27 @@ class Session
         {
             $tz = str_replace('+','-',$tz);
         }
-        
-        try 
+
+        try
         {
             $this_tz = new DateTimeZone($tz);
         }
-        catch(Exception $e) 
+        catch(Exception $e)
         {
             return 0;
         }
-        
+
         $offset = $this_tz->getOffset(new DateTime('now', $this_tz));
-        
+
         if ($offset != 0)
         {
             $offset /= 3600;
         }
-        
+
         return $offset;
     }
-    
-    
+
+
     /**
     * This function returns last logon date of user
     *
@@ -865,6 +865,7 @@ class Session
     {
         Ossim_db::check_connection($conn);        
         
+        $tz   = Util::get_timezone();
         $list = array();
         
         $iffoundrows = preg_match ('/LIMIT/i', $order) ? TRUE : FALSE;
@@ -911,7 +912,12 @@ class Session
                 
                 $assets   = ($with_assets) ? self::get_user_assets($conn, $rs->fields['login']) : array();
                 $sensors  = ($with_assets) ? self::get_user_sensors($conn, $rs->fields['login']) : array();
-                
+
+                if ($rs->fields['last_logon_try'] != "0000-00-00 00:00:00")
+                {
+                    $rs->fields['last_logon_try'] = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime($rs->fields['last_logon_try']) + 3600*$tz);
+                }
+
                 $list[]   = new Session($rs->fields['login'], $rs->fields['pass'], $rs->fields['uuid'], $entities, $sensors, $assets, 
                     $rs->fields['template_id'], $rs->fields['name'], $rs->fields['email'], $rs->fields['company'], $rs->fields['department'], 
                     $rs->fields['language'], $rs->fields['enabled'], $rs->fields['is_admin'], 0, $rs->fields['timezone'], $rs->fields['last_logon_try'], 
@@ -2109,6 +2115,9 @@ class Session
         $conn  = $this->conn;
         $login = $this->login;
 
+        // Update last_logon_try for the first login
+        $this->conn->Execute("UPDATE users SET last_logon_try = UTC_TIMESTAMP() WHERE login= '".$login."' AND last_logon_try = '0000-00-00 00:00:00'");
+
         $clogin = $conn->GetOne("SELECT login FROM users WHERE login = '".$login."' AND expires > '".gmdate('Y-m-d H:i:s')."'");
         
         if ($clogin == '') 
@@ -2117,7 +2126,7 @@ class Session
         }
         
         $conf             = $GLOBALS['CONF'];
-        $lockout_duration = intval($conf->get_conf("unlock_user_interval")) * 60;        
+        $lockout_duration = intval($conf->get_conf("unlock_user_interval"));
         
         
         $params = array($login);
@@ -2141,8 +2150,7 @@ class Session
             }
                                     
             //Auto-enable if account lockout duration expires
-            if ($rs->fields['last_logon_try'] != '0000-00-00 00:00:00' 
-                && time() - strtotime($rs->fields['last_logon_try']) >= $lockout_duration) 
+            if ($rs->fields['last_logon_try'] != '0000-00-00 00:00:00' && Util::date_diff_min($rs->fields['last_logon_try'], gmdate('Y-m-d H:i:s')) >= $lockout_duration)
             {
                 $conn->Execute('UPDATE users SET enabled = 1 WHERE login = ?', $params);
                 
@@ -2184,7 +2192,7 @@ class Session
     */
     public function update_logon_try($login) 
     {
-        $this->conn->Execute("UPDATE users SET last_logon_try = NOW() WHERE login = ?", array($login));
+        $this->conn->Execute("UPDATE users SET last_logon_try = UTC_TIMESTAMP() WHERE login = ?", array($login));
     }
     
     
@@ -2231,6 +2239,7 @@ class Session
         $login = strtolower($login);
         
         $params = array(
+            gmdate('Y-m-d H:i:s'),
             $login,
             $login_method,
             $name,
@@ -2248,7 +2257,7 @@ class Session
         
         
         /* Insert into OSSIM database */
-        $query = "INSERT INTO users (login, login_method, name, pass, email, company, department, template_id, language, first_login, timezone, is_admin, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, UNHEX(?), ?, ?, ?, ?, UNHEX(?))";
+        $query = "INSERT INTO users (last_pass_change, login, login_method, name, pass, email, company, department, template_id, language, first_login, timezone, is_admin, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UNHEX(?), ?, ?, ?, ?, UNHEX(?))";
         
         
         $rs = $conn->Execute($query, $params);
@@ -2677,7 +2686,7 @@ class Session
         $params = array($pass, $login);
         
         $query  = 'UPDATE users SET pass = ?';
-        $query .= ($log == TRUE) ? ', last_pass_change=CURRENT_TIMESTAMP()' : '';    
+        $query .= ($log == TRUE) ? ', last_pass_change=UTC_TIMESTAMP()' : '';
         $query .= " WHERE login = ?";
         $query .= (!empty($current_pass)) ? " AND (pass='".md5($current_pass)."' OR pass='".hash('sha256', $current_pass)."')" : '';
         
@@ -2710,7 +2719,7 @@ class Session
     {
         global $_SESSION;
         
-        $date = date('Y-m-d H:i:s');
+        $date = gmdate('Y-m-d H:i:s');
         
         $db = new ossim_db();
         $conn = $db->connect();
@@ -2772,12 +2781,12 @@ class Session
                 $counter++; 
             }
             
-            if (preg_match('/[\!\'\$\%\&\/\(\)\|\#\~\.\,\?\=\-\_\<\>]/', $pass))
+            if (preg_match('/[\>\<\.\!¡#\$%\^&\*_\-\=\+\:;,~@\[\]\{\}\|\?¿\\\(\)\/ºª·¨]/', $pass))
             { 
                 $counter++; 
             }
             
-            return ($counter < 3) ? FALSE : TRUE;
+            return ($counter < 4) ? FALSE : TRUE;
         } 
         
         return TRUE;        
@@ -4415,7 +4424,7 @@ class Session
      */
     public static function admin_logcheck_ajax()
     {
-        if (!Session::am_i_admin())
+        if (!self::am_i_admin())
         {
             $_error_msg = _('You do not have permissions to see this section.');
             Util::response_bad_request($_error_msg, 401);
@@ -5084,18 +5093,26 @@ class Session
         
         $expired_timeout = intval($conf->get_conf('session_timeout')) * 60;
                                     
-        if ($expired_timeout != 0)
+        if ($expired_timeout != 0 && !empty($_SERVER['REQUEST_URI'])) // Only requests from a web browser
         { 
             $time = gmdate('U');
-        
-            if (isset($_SESSION['_expiration_time']) && intval($_SESSION['_expiration_time']) + $expired_timeout < $time) 
+            $et   = intval($_SESSION['_expiration_time']);
+
+            if (file_exists('/tmp/debug_exp'))
+            {
+                $exp  = $et + $expired_timeout;
+                $to   = ($exp < $time) ? "Yes" : "No";
+                file_put_contents('/tmp/exp', session_id().", $et + $expired_timeout = $exp < $time => $to\n", FILE_APPEND);
+            }
+
+            if ($et>0 && ($et + $expired_timeout) < $time) 
             {
                 $ossim_link     = $conf->get_conf('ossim_link');
                 $login_location = preg_replace("/(\/)+/","/",$ossim_link . '/session/login.php?action=logout&timeout=1');
                 
                 header("Location: $login_location");
             }
-            
+
             //Only update if not exists bypass => header ajax responses
             if (intval(GET('bypassexpirationupdate')) != 1 && intval(POST('bypassexpirationupdate')) != 1) 
             {

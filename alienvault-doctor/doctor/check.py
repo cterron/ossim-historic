@@ -96,6 +96,14 @@ class Check:
         items = config_file.items(section)
 
         try:
+            # Retrieve first the formatted_output field
+            for (name, value) in items:
+                if name == 'formatted_output':
+                    self.__formatted_output = value.replace("{nl}", "\n")
+                    items.remove((name, value))
+                    break
+
+            # Now the rest
             for (name, value) in items:
                 if name == 'checksum':
                     self.__type = name
@@ -154,9 +162,7 @@ class Check:
                     self.__summary_failed = value
                 elif name == 'remediation':
                     self.__remediation = value
-                elif name == 'formatted_output':
-                    self.__formatted_output = value.replace("{nl}", "\n")
-                elif name == 'strike_zone':
+                elif name == 'affects_strike_zone':
                     if value in ['True', 'False']:
                         self.__strike_zone = eval(value)
                 else:
@@ -294,19 +300,22 @@ class Check:
 
         return False
 
-    def check_appliance_type(self, hw_profile, appliance_types):
+    def check_appliance_type(self, hw_profile, appliance_types, ignore_dummy_platform):
         # Treat the empty list as 'current'
 
-        if appliance_types == []:
-            if hw_profile.lower() in self.__appliance_type:
-                return True
-
-        if 'current' in appliance_types:
-            if hw_profile.lower() in self.__appliance_type:
-                return True
-
-        if hw_profile.lower() in appliance_types and hw_profile.lower() in self.__appliance_type:
+        if ignore_dummy_platform:
             return True
+        else:
+            if appliance_types == []:
+                if hw_profile.lower() in self.__appliance_type:
+                    return True
+
+            if 'current' in appliance_types:
+                if hw_profile.lower() in self.__appliance_type:
+                    return True
+
+            if hw_profile.lower() in appliance_types and hw_profile.lower() in self.__appliance_type:
+                return True
 
         return False
 
@@ -459,16 +468,21 @@ class Check:
 
         # Check hardware requirements.
         for hw_req in self.__hw_list.split(','):
+
             (hw_req_pretty, eval_str) = Wildcard.hw_config(hw_req)
             if not eval(eval_str):
                 outcome = False
                 description += "\n\t %s" % hw_req_pretty
-                aux = re.findall(r'(\S+)(>=|==|<=)(\S+)', eval_str)
-                # fo += "%s: Condition (available vs expected) --> %s;" % (hw_req_pretty, eval_str)
-                fo += "%s: Expected a value %s %s, but %s found; " % (hw_req_pretty,
-                                                                      aux[0][1],
-                                                                      aux[0][2],
-                                                                      aux[0][0])
+                if hw_req == '@is_vm@':
+                    fo += "%s; " % hw_req_pretty
+                    break
+                else:
+                    aux = re.findall(r'(\S+)(>=|==|<=)(\S+)', eval_str)
+                    # fo += "%s: Condition (available vs expected) --> %s;" % (hw_req_pretty, eval_str)
+                    fo += "%s: Expected a value %s %s, but %s found; " % (hw_req_pretty,
+                                                                          aux[0][1],
+                                                                          aux[0][2],
+                                                                          aux[0][0])
 
         return (outcome, description, fo)
 
@@ -674,7 +688,8 @@ class Check:
                     try:
                         partial.append(bool(eval(eval_str)))
                     except Exception as e:
-                        raise CheckError('Could not evaluate "%s": %s' % (eval_str, e), self.__plugin.get_name())
+                        raise CheckError(msg='Could not evaluate "%s": %s' % (eval_str, e),
+                                         plugin=self.__plugin.get_name())
 
                     if not partial[-1]:
                         include_final_fo = True

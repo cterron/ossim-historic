@@ -136,7 +136,7 @@ $sort_sql = $qro->GetSortSQL($qs->GetCurrentSort() , $qs->GetCurrentCannedQueryS
 /* mstone 20050405 add sid & ip counts */
 
 
-$sql = "SELECT acid_event.plugin_id, acid_event.plugin_sid, count(DISTINCT(ip_src)) as saddr_cnt, count(DISTINCT(ip_dst)) as daddr_cnt, $counter " . $sort_sql[0] . $from . $where . " GROUP BY plugin_id, plugin_sid HAVING sig_cnt>0 " . $sort_sql[1];    
+$sql = "SELECT acid_event.plugin_id, acid_event.plugin_sid, count(DISTINCT(ip_src)) as saddr_cnt, count(DISTINCT(ip_dst)) as daddr_cnt, $counter " . $sort_sql[0] . $from . $where . " GROUP BY plugin_id, plugin_sid HAVING sig_cnt>0 " . $sort_sql[1];
 
 
 $sqlips = "SELECT max(timestamp) as last " . $sort_sql[0] . $from . $where . $nevents;
@@ -149,7 +149,7 @@ $trdata = array(0,0,$tr);
 if ($tr=="range") {
     $desde = strtotime($_SESSION["time"][0][4]."-".$_SESSION["time"][0][2]."-".$_SESSION["time"][0][3]." 00:00:00");
     $hasta = strtotime($_SESSION["time"][1][4]."-".$_SESSION["time"][1][2]."-".$_SESSION["time"][1][3]." 23:59:59");
-    $diff = $hasta - $desde; 
+    $diff = $hasta - $desde;
     if ($diff > 2678400) $tr = "all";
     elseif ($diff > 1296000) $tr = "month";
     elseif ($diff > 604800) $tr = "weeks";
@@ -195,7 +195,7 @@ $_SESSION['_siem_current_query_graph'] = $sqlgraph;
 //echo $sql."<br>".$sqlgraph."<br>".$interval." ".$tr;
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS UNIQUE:$sql\n$sqlalerts\n$sqlips\n$sqlgraph\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS UNIQUE:$sql\n$sqlalerts\n$sqlips\n$sqlgraph\n", FILE_APPEND);
 }
 /* Run the Query again for the actual data (with the LIMIT) */
 session_write_close();
@@ -268,19 +268,19 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $perc , 'center', 'middle', 'nowrap');
     if ($db->baseGetDBversion() >= 100) $addr_link = '&amp;sig_type=1&amp;sig%5B0%5D=%3D&amp;sig%5B1%5D=' . urlencode($sig_id);
     else $addr_link = '&amp;sig%5B0%5D=%3D&amp;sig%5B1%5D=' . urlencode($sigstr);
-    
+
     qroPrintEntry(BuildUniqueAddressLink(1, $addr_link, '', 'qlink') .  Util::number_format_locale($num_src_ip,0) . '</A>', 'center', 'middle', 'nowrap');
     qroPrintEntry(BuildUniqueAddressLink(2, $addr_link, '', 'qlink') .  Util::number_format_locale($num_dst_ip,0) . '</A>', 'center', 'middle', 'nowrap');
-    
+
     qroPrintEntry( '<div id="le'.$pid.'" style="padding:0px 4px"></div>', 'center', 'middle', 'nowrap');
-    
+
     // GRAPH
     qroPrintEntry('<div id="plotarea' . $pid . '" class="plot"></div>', 'center', 'middle');
-    
+
     qroPrintEntryFooter();
     $i++;
     $prev_time = null;
-    
+
     // report_data
     $report_data[] = array (
         trim(html_entity_decode($despues)),
@@ -288,7 +288,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
         "", "",
         "", "", "", "", "", "", "",
         0 ,$num_src_ip, $num_dst_ip
-    );    
+    );
 }
 $result->baseFreeRows();
 $qro->PrintFooter();
@@ -309,7 +309,7 @@ if (!$export)
 {
 ?>
 <script>
-	var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
+    var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
     var plots=new Array();
     var pi = 0;
     function load_content() {
@@ -319,11 +319,11 @@ if (!$export)
         var pid = item.replace(/plotarea/,'');
         $.ajax({
             beforeSend: function() {
-                $('#le'+pid).html(tmpimg); 
-            },        
-    		type: "GET",
-    		url: "base_stat_alerts_graph.php"+params,
-    		success: function(msg) {
+                $('#le'+pid).html(tmpimg);
+            },
+            type: "GET",
+            url: "base_stat_alerts_graph.php"+params,
+            success: function(msg) {
                 var res = msg.split(/##/);
                 $('#le'+pid).html(res[0]);
                 if (res[1] == '-')
@@ -335,9 +335,9 @@ if (!$export)
                     eval(res[1]);
                 }
                 setTimeout('load_content()',10);
-    		}
-    	});
-    } 
+            }
+        });
+    }
     $(document).ready(function() {
         $('.plot').each(function(index, item) {
             plots.push(item.id);

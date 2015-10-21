@@ -15,7 +15,7 @@
 require_once 'av_init.php';
 Session::logcheck('analysis-menu', 'EventsForensics');
 
-if (empty($_GET["sort_order"])) 
+if (empty($_GET["sort_order"]))
 {
     $_GET["sort_order"] = "occur_d";
 }
@@ -33,7 +33,7 @@ require_once 'classes/geolocation.inc';
 
 $Reputation = new Reputation();
 
-if (GET('sensor') != '') 
+if (GET('sensor') != '')
 {
     ossim_valid(GET('sensor'), OSS_DIGIT, 'illegal:' . _("sensor"));;
 }
@@ -143,25 +143,25 @@ $sort_sql = $qro->GetSortSQL($qs->GetCurrentSort() , $qs->GetCurrentCannedQueryS
 if (Session::show_entities())
 {
     $src_sql = "SELECT ip_src as ip, HEX(src_host) AS host_id, ctx, $nevents as src_num_events, 0 as dst_num_events, 0 as num_sip, COUNT( DISTINCT ip_dst ) as num_dip, $uevent as num_sig_src, 0 as num_sig_dst " . $sort_sql[0] . $from . $where . " GROUP BY ip_src,ctx HAVING src_num_events>0 " . $sort_sql[1];
-    
+
     $dst_sql = "SELECT ip_dst as ip, HEX(dst_host) AS host_id, ctx, 0 as src_num_events, $nevents as dst_num_events, COUNT( DISTINCT ip_src ) as num_sip, 0 as num_dip, 0 as num_sig_src, $uevent as num_sig_dst " . $sort_sql[0] . $from . $where . " GROUP BY ip_dst,ctx HAVING dst_num_events>0 " . $sort_sql[1];
-    
+
     $sql = "SELECT SQL_CALC_FOUND_ROWS ip, hex(ctx) as ctx, sum(src_num_events) as src_num_events, sum(dst_num_events) as dst_num_events, sum(num_sig_src) as num_sig_src, sum(num_sig_dst) as num_sig_dst, sum(num_sip) as num_sip,sum(num_dip) as num_dip, host_id
-        	FROM (($src_sql) UNION ($dst_sql)) as u GROUP BY ip,ctx " . $sort_sql[1];
+            FROM (($src_sql) UNION ($dst_sql)) as u GROUP BY ip,ctx " . $sort_sql[1];
 }
-else 
+else
 {
     $src_sql = "SELECT ip_src as ip, HEX(src_host) AS host_id, sensor_id, $nevents as src_num_events, 0 as dst_num_events, 0 as num_sip, COUNT( DISTINCT ip_dst ) as num_dip, $uevent as num_sig_src, 0 as num_sig_dst " . $sort_sql[0] . $from . ",device " . $where . " AND device.id=acid_event.device_id GROUP BY ip_src,device.sensor_id HAVING src_num_events>0 " . $sort_sql[1];
 
     $dst_sql = "SELECT ip_dst as ip, HEX(dst_host) AS host_id, sensor_id, 0 as src_num_events, $nevents as dst_num_events, COUNT( DISTINCT ip_src ) as num_sip, 0 as num_dip, 0 as num_sig_src, $uevent as num_sig_dst " . $sort_sql[0] . $from . ",device " . $where . " AND device.id=acid_event.device_id GROUP BY ip_dst,device.sensor_id HAVING dst_num_events>0 " . $sort_sql[1];
 
     $sql = "SELECT SQL_CALC_FOUND_ROWS ip, HEX(sensor_id) as sensor_id, sum(src_num_events) as src_num_events, sum(dst_num_events) as dst_num_events, sum(num_sig_src) as num_sig_src, sum(num_sig_dst) as num_sig_dst, sum(num_sip) as num_sip,sum(num_dip) as num_dip, host_id
-        	FROM (($src_sql) UNION ($dst_sql)) as u GROUP BY ip,sensor_id " . $sort_sql[1];
-}    	
+            FROM (($src_sql) UNION ($dst_sql)) as u GROUP BY ip,sensor_id " . $sort_sql[1];
+}
 
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS IP:$sql\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS IP:$sql\n", FILE_APPEND);
 }
 
 /* Run the Query again for the actual data (with the LIMIT) */
@@ -185,13 +185,13 @@ if ($qs->num_result_rows > 0)
     $qro->PrintHeader();
 }
 $i = 0;
-$report_data = array(); // data to fill report_data 
+$report_data = array(); // data to fill report_data
 
 if (is_array($_SESSION["server"]) && $_SESSION["server"][0]!="")
-	$_conn = $dbo->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
+    $_conn = $dbo->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
 else
-	$_conn = $dbo->connect();
-	
+    $_conn = $dbo->connect();
+
 while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $currentIP = inet_ntop($myrow[0]);
     $host_id   = $myrow[8];
@@ -214,7 +214,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     /* Check for a NULL IP which indicates an event (e.g. portscan)
     * which has no IP
     */
-    if ($no_ip) 
+    if ($no_ip)
     {
         qroPrintEntry(gettext("unknown"));
         qroPrintEntry(gettext("N/A"), "center", "middle");
@@ -232,21 +232,21 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
             $country_img = "";
             $slnk        = "";
         }
-        
+
         $div = '<div id="'.$currentIP.';'.$currentIP.';'.$host_id.'" ctx="'.((Session::show_entities()) ? $ctx : Session::get_default_ctx()).'" class="HostReportMenu" style="padding:0px 0px 0px 25px">'; // '.getrepbgcolor($prio,1).'
-		$bdiv = '</div>';
+        $bdiv = '</div>';
         qroPrintEntry( $div . $country_img . '&nbsp;' . BuildAddressLink($currentIP, 32) . $currentIP . '</A>&nbsp;' . $bdiv,'left','','nowrap');
         qroPrintEntry(getrepimg($prio,$rel,$act,$currentIP), "center", "middle");
     }
-    
+
     if ($resolve_IP == 1) qroPrintEntry('&nbsp;&nbsp;' . baseGetHostByAddr($currentIP, $ctx, $db) . '&nbsp;&nbsp;');
     /* Print # of Occurances */
     $tmp_iplookup = 'base_qry_main.php?num_result_rows=-1' . '&amp;submit=' . gettext("Query DB") . '&amp;current_view=-1';
     $tmp_iplookup2 = 'base_stat_alerts.php?num_result_rows=-1' . '&amp;submit=' . gettext("Query DB") . '&amp;current_view=-1&sort_order=occur_d';
-        
+
     if ($no_ip) $url_criteria_src = BuildSrcIPFormVars(NULL_IP);
     else $url_criteria_src = BuildSrcIPFormVars($currentIP);
-     
+
     if ($no_ip) $url_criteria_dst = BuildDstIpFormVars(NULL_IP);
     else $url_criteria_dst = BuildDstIPFormVars($currentIP);
 
@@ -259,7 +259,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     qroPrintEntry(Util::number_format_locale($num_dip,0), "center", "middle");
     qroPrintEntryFooter();
     ++$i;
-    
+
     /* report_data
     $report_data[] = array (
         $currentIP, $slnk,
@@ -283,4 +283,3 @@ if ($debug_time_mode >= 1) {
 }
 $db->baseClose();
 echo "</body>\r\n</html>";
-?>

@@ -167,7 +167,6 @@ sim_organizer_get_type(void)
         (GInstanceInitFunc) sim_organizer_instance_init, NULL /* value table */
       };
 
-    g_type_init();
 
     object_type = g_type_register_static(G_TYPE_OBJECT, "SimOrganizer",
                                          &type_info, 0);
@@ -316,14 +315,15 @@ sim_organizer_run (SimOrganizer *organizer)
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
 
   // New thread for the Monitor requests. Rules will be inserted into a queue, and then extracted in this thread
-  thread = g_thread_create(sim_organizer_thread_monitor_rule, NULL, FALSE, NULL);
+  thread = g_thread_new("sim_organizer_thread_monitor_rule", sim_organizer_thread_monitor_rule, NULL);
   g_return_if_fail(thread);
 
-  ar_thread = g_thread_create_full(sim_connect_send_alarm, organizer->_priv->config, 0, FALSE, TRUE, G_THREAD_PRIORITY_NORMAL, NULL);
+  ar_thread = g_thread_new("sim_connect_send_alarm", sim_connect_send_alarm, organizer->_priv->config);
   g_return_if_fail(ar_thread);
 
   //Thread to delete backlogs
-  thread = g_thread_create(sim_organizer_thread_delete_backlogs, NULL, FALSE, NULL);
+  thread = g_thread_new("sim_organizer_thread_monitor_rule",sim_organizer_thread_delete_backlogs, NULL);
+
   g_return_if_fail(thread);
 
 

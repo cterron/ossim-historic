@@ -34,17 +34,7 @@
 
 require_once 'av_init.php';
 
-
-// Log check by s_type
-if (GET('s_type') == 'ocs')
-{
-    Session::logcheck('configuration-menu', 'AlienVaultInventory');
-}
-else
-{
-    Session::logcheck('environment-menu', 'AlienVaultInventory');
-}
-
+Session::logcheck('environment-menu', 'AlienVaultInventory');
 
 $sensor_id = GET('sensor_id');
 

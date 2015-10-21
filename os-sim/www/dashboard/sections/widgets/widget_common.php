@@ -250,19 +250,7 @@ function rgbToHex($rgb)
 
 function get_widget_colors($steps=0) 
 { 
-	$chart_color = array(
-		"#FAC800",
-		"#7D71BD",
-		"#2FC9E5",
-		"#B722E8",
-		"#FF8A00",
-		"#F65DC9",
-		"#1E2AD1",
-		"#837B67",
-		"#9455F8",
-		"#1881FA"
-	);
-	
+	$chart_color  = Util::get_chart_colors();
 	$color_result = array();
 	$total        = count($chart_color);
 	

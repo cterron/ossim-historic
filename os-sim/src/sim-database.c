@@ -46,8 +46,6 @@
 
 extern SimMain    ossim;
 
-//gboolean static restarting_mysql = FALSE; //no mutex needed
-
 enum
 {
   DESTROY,
@@ -56,7 +54,7 @@ enum
 
 
 struct _SimDatabasePrivate {
-  GStaticRecMutex *mutex;
+  GRecMutex mutex;
   GdaConnection   *conn;        /* Connection */
 
   gchar           *name;        /* DS Name */
@@ -67,6 +65,7 @@ struct _SimDatabasePrivate {
 };
 
 static gpointer parent_class = NULL;
+
 /* We don't use signals */
 //static gint sim_database_signals[LAST_SIGNAL] = { 0 };
 
@@ -92,7 +91,7 @@ sim_database_impl_finalize (GObject  *gobject)
 
   gda_connection_close (database->_priv->conn);
 
-  g_static_rec_mutex_free (database->_priv->mutex);
+  g_rec_mutex_clear (&database->_priv->mutex);
 
   g_free (database->_priv);
 
@@ -119,8 +118,7 @@ sim_database_instance_init (SimDatabase *database)
 
   database->_priv->autocommit = TRUE; //by default, we want to write everything
 
-  database->_priv->mutex = g_new0 (GStaticRecMutex, 1);
-  g_static_rec_mutex_init (database->_priv->mutex);
+  g_rec_mutex_init (&database->_priv->mutex);
 }
 
 /* Public Methods */
@@ -145,7 +143,6 @@ sim_database_get_type (void)
       NULL                        /* value table */
     };
 
-    g_type_init ();
 
     object_type = g_type_register_static (G_TYPE_OBJECT, "SimDatabase", &type_info, 0);
   }
@@ -241,12 +238,11 @@ sim_database_execute_no_query  (SimDatabase  *database,
 
   g_return_val_if_fail (SIM_IS_DATABASE (database), -1);
   g_return_val_if_fail (buffer != NULL, -1);
-
 #ifdef USE_UNITTESTS
   return 0;
 #endif
 
-  g_static_rec_mutex_lock (database->_priv->mutex);
+  g_rec_mutex_lock (&database->_priv->mutex);
 
   // GDA non select is used for normal storage or before massive insertion is initialized
   if (ossim.container && (sim_container_get_storage_type(ossim.container) == 3))
@@ -337,7 +333,7 @@ sim_database_execute_no_query  (SimDatabase  *database,
 
   }
 
-  g_static_rec_mutex_unlock (database->_priv->mutex);
+  g_rec_mutex_unlock (&database->_priv->mutex);
   return ret;
 }
 
@@ -362,7 +358,7 @@ sim_database_execute_single_command (SimDatabase  *database,
   return NULL;
 #endif
 
-  g_static_rec_mutex_lock (database->_priv->mutex);
+  g_rec_mutex_lock (&database->_priv->mutex);
 
   while (!GDA_IS_CONNECTION (database->_priv->conn) || !gda_connection_is_opened (database->_priv->conn))
   {
@@ -404,7 +400,7 @@ sim_database_execute_single_command (SimDatabase  *database,
   }
 
   error = NULL;
-  model = gda_execute_select_command (database->_priv->conn, buffer, &error);
+  model = gda_connection_execute_select_command (database->_priv->conn, buffer, &error);
   if (error)
   {
     if (error->domain == GDA_SERVER_PROVIDER_ERROR)
@@ -441,7 +437,7 @@ sim_database_execute_single_command (SimDatabase  *database,
     }
   }
 
-  g_static_rec_mutex_unlock (database->_priv->mutex);
+  g_rec_mutex_unlock (&database->_priv->mutex);
 
   return model;
 }

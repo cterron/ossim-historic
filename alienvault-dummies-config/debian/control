@@ -23,7 +23,6 @@ Homepage: http://www.alienvault.com/
 # - number of file descriptors
 #alienvault-syslog
 #alienvault-logrotate
-#alienvault-ocsinventory-server
 #alienvault-samba
 
 Package: alienvault-apache2
@@ -37,6 +36,10 @@ Architecture: all
 Depends: ${misc:Depends}
 Pre-Depends: augeas-tools
 Description: Configuration package for augeas
+
+Package: alienvault-clean-sessions
+Architecture: all
+Description: Package to clean active sessions during startup
 
 Package: alienvault-crypto
 Architecture: all
@@ -150,16 +153,15 @@ Description: Configuration package for pam
 
 Package: alienvault-php5
 Architecture: all
-Depends: ${misc:Depends}
-Pre-Depends: php5, php5-common
+Depends: ${misc:Depends}, php5-cli (>= 5.6.9), libapache2-mod-php5 (>= 5.6.9)
+Pre-Depends: php5, php5-common, php5-cli, libapache2-mod-php5
 Description: Configuration package for php5
 
 Package: alienvault-plymouth
 Architecture: all
 Pre-Depends: plymouth, initramfs-tools, v86d
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, plymouth-themes
 Replaces: plymouth
-Breaks: plymouth (>= 0.8.5.1-5)
 Description: Graphical boot animation for AlienVault appliances
 
 Package: alienvault-postfix
@@ -227,8 +229,8 @@ Description: AlienVault System Benchmark
 
 Package: alienvault-vpn
 Architecture: all
-Pre-Depends: alienvault-crypto, ossim-utils, alienvault-api-scripts, augeas-tools
-Depends: alienvault-firewall (>= ${source:Upstream-Version})
+Pre-Depends: alienvault-crypto, ossim-utils, alienvault-api-core, augeas-tools
+Depends: alienvault-firewall (>= ${source:Upstream-Version}), easy-rsa
 Replaces: alienvault-vpn
 Description: Configuration package for vpn infraestructure
 

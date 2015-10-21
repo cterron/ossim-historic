@@ -123,16 +123,18 @@ foreach ($tlabels as $label) {
 
 $conf = $GLOBALS["CONF"];
 if ($multiple_colors)
-	$colors=array("#006699","#CC0000","#009900","yellow","pink","#40E0D0","#00008B","#800080","#FFA500","#A52A2A");
+{
+	$colors = Util::get_chart_colors();
+}
 else
-	$colors=array("#ADD8E6","#00BFFF","#4169E1","#4682B4","#0000CD","#483D8B","#00008B","#3636db","#1390fa","#6aafea");
+{
+	$colors = array('#ADD8E6','#00BFFF','#4169E1','#4682B4','#0000CD','#483D8B','#00008B','#3636db','#1390fa','#6aafea');
+}
 
-//$colors=array("#D6302C","#3933FC","green","yellow","pink","#40E0D0","#00008B",'#800080','#FFA500','#A52A2A');
 
 $jpgraph = $conf->get_conf("jpgraph_path");
 require_once "$jpgraph/jpgraph.php";
 require_once "$jpgraph/jpgraph_pie.php";
-require_once "$jpgraph/jpgraph_pie3d.php";
 // Setup graph
 $graph = new PieGraph(400, 400, "auto");
 $graph->SetAntiAliasing();
@@ -142,13 +144,13 @@ $graph->SetMarginColor('#fafafa');
 
 $graph->title->SetFont(FF_FONT1, FS_BOLD);
 // Create pie plot
-$p1 = new PiePlot3d($data);
-$p1->SetHeight(12);
+$p1 = new PiePlot($data);
+//$p1->SetHeight(12);
 $p1->SetSize(0.3);
 if (count($labels)>1)
-	$p1->SetCenter(0.5,0.25);
+	$p1->SetCenter(0.5,0.5);
 else
-	$p1->SetCenter(0.57,0.25);
+	$p1->SetCenter(0.57,0.3);
 
 $p1->SetLabels($labels);
 $p1->SetLabelPos(1);
@@ -156,9 +158,9 @@ $p1->SetLabelPos(1);
 if ($multiple_colors) {
 	$p1->SetLegends($legend);
 	$graph->legend->SetPos(0.5,0.95,'center','bottom');
-	$graph->legend->SetShadow('#fafafa',0);
 	$graph->legend->SetFrameWeight(0);
 	$graph->legend->SetFillColor('#fafafa');
+	$graph->legend->SetShadow(FALSE);
 }
 
 $graph->SetFrame(false);

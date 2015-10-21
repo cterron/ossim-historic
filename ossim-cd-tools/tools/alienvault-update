@@ -8,6 +8,8 @@ use Config::Tiny;
 #use DBI;
 #use MIME::Base64;
 #use Frontier::Daemon;
+use Email::Valid;
+use Config::IniFiles;
 
 
 use lib '/usr/share/alienvault-center/lib';
@@ -46,7 +48,6 @@ my $feed = 0;
 #my $vpre = 0;
 #my $vpost = 0;
 my $wget_useragent = q{};
-my $alienvault_useragent = '/usr/bin/alienvault-useragent';
 my $REL3=q{RELEASES};
 
 #
@@ -72,7 +73,7 @@ sub config_check();     # requires defined %configcolor;  # colours configuratio
 sub help();             # help(string: $helpCmd);
 sub apt_status();
 sub feed_update();
-
+sub check_pro(); # Check free / pro and return licenses
 
 #
 # MAIN
@@ -94,126 +95,90 @@ sub main() {
         exit $ERROR_HA_RUNNING;
     }
 
-	console_log("Checking APT status");
-	apt_status();
+    console_log("Checking APT status");
+    apt_status();
 
-	my %sysconf = Avrepository::get_current_repository_info();
+    my %sysconf = Avrepository::get_current_repository_info();
 
-	#print $sysconf{'distro'};
-	
-	#my @response_msg = %sysconf;
-	#$current_version_local = $response_msg[1];
-	$current_version_local = $sysconf{'distro'};
+    #print $sysconf{'distro'};
+    
+    #my @response_msg = %sysconf;
+    #$current_version_local = $response_msg[1];
+    $current_version_local = $sysconf{'distro'};
 
-	$cversion = $sysconf{'version'};
-	$csubversion = $sysconf{'subversion'};
-	$csubsubversion = $sysconf{'subsubversion'};
+    $cversion = $sysconf{'version'};
+    $csubversion = $sysconf{'subversion'};
+    $csubsubversion = $sysconf{'subsubversion'};
 
-   	# product(free/pro/demo).version.subversion.subsubversion 
-	$wget_useragent = "Wget.AVInt-$current_version_local.$cversion.$csubversion.$csubsubversion";
-	$wget_useragent = "\"`$alienvault_useragent` WGET\"" if ( -x $alienvault_useragent);
+    # product(free/pro/demo).version.subversion.subsubversion 
+    $wget_useragent = "ossim-wget-version";
+    verbose_log ("User Agent set to $wget_useragent");
 
 
 
-#	$vpre = get_current_oct_version();
+#   $vpre = get_current_oct_version();
 
-	system("mkdir $tmppath") if (! -d "$tmppath");
+    system("mkdir $tmppath") if (! -d "$tmppath");
 
     if ( $feed == 1 ) {
         feed_update();
-		console_log("Finished");
+        console_log("Finished");
         exit 0;
     }
 
 
-	## update
-	console_log("Starting update");
-			$flag = "-v" if ($VERBOSELOG == 1);
-			my $script_name;
+    ## update
+    console_log("Starting update");
+    $flag = "-v" if ($VERBOSELOG == 1);
+    my $script_name;
+    my ($ispro, $lic) = check_pro();
+    # Remove old repos
+    #system("rm -f /etc/apt/sources.list.d/alienvault*.list");
+    #build_free_repos();
+    #build_pro_repos ($lic) if ($ispro);
+    # Repos updates in script
+    # Remove the old scripts
+    my @scripts = ("alienvault5_update-script",
+                    "alienvault5_update-script.sig");
+    @oldfiles = map ("$tmppath/$_", @scripts);
+    unlink @oldfiles;
+    # Download fiels
+    foreach my $script (@scripts)
+    {
+        verbose_log("Downloading $script to $tmppath/$script");
+        system("wget -U $wget_useragent -O $tmppath/$script $dataserver/alienvault5/RELEASES/$script");
+    }
+    # Check signatures
+    @checkfiles = ("alienvault5_update-script");
+    foreach my $script (@checkfiles)
+    {
+        my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$script.sig");
+        if ($valid_sig != 0)
+        {
+            say("Invalid signature for upgrade file $script");
+            exit $ERROR_INVALID_SIGNATURE4;
+        }
 
-			my $fl = 0;
-			if ($current_version_local eq "alienvault3-pro"){ $fl = 1;}
-			if ($current_version_local eq "alienvault3"){ $fl = 1;}
-
-			if ( $fl == 1 ){
-				$script_name = "alienvault3_update-script";
-			}else{
-				$script_name = "alienvault4_update-script";
-				#if ( $current_version_local eq "unstable-pro"){
-				if ( $current_version_local eq "alienvault4-pro"){
-					if ( ( $encoded // 0 ) == 1){ 
-						$script_name = "alienvault4_encoded_update-script"; 
-					}
-					
-					if ( ( $saqqara // 0 ) == 1){ 
-						$script_name = "alienvault4_saqqara_update-script"; 
-					}
-						
-				}
-			}
-
-			if ( -f "$tmppath/$script_name"){
-				verbose_log("Delete $tmppath/$script_name");
-				system("rm -rf $tmppath/$script_name");
-			}
-                        system("rm -rf $tmppath/$script_name.sig") if ( -f "$tmppath/$script_name.sig" );
-
-
-
-			verbose_log("Download $tmppath/$script_name");
-			#system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/RELEASES/$script_name");
-			system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/$REL3/$script_name");
-
-			if ( -s "$tmppath/$script_name" ){
-				system("wget -U $wget_useragent -O $tmppath/$script_name.sig $dataserver/$REL3/$script_name.sig");
-				if ( -s "$tmppath/$script_name.sig"){
-					my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$script_name.sig");
-					if ($valid_sig != 0) {
-						say("Invalid signature for upgrade file $script_name");
-						exit $ERROR_INVALID_SIGNATURE4;
-					}
-				} else {
-					say("Signature not available for upgrade file $script_name");
-					exit $ERROR_UNAVAILABLE_SIGNATURE4;
-				}
-
-				verbose_log("Exec: $tmppath/$script_name");
-				$flag_processed = ( $flag // q{} );
-				my $code_result = system("/bin/bash $tmppath/$script_name $flag_processed");
-                                my $update_result = $code_result >> 8; 
-                                if ($update_result != 0) {
-                                    console_log("There was an error updating the system");
-                                    exit $update_result;
-                                }
+    }
+    foreach my $script (@checkfiles)
+    {
+        verbose_log("Exec: $tmppath/$script");
+        $flag_processed = ( $flag // q{} );
+        my $code_result = system("/bin/bash $tmppath/$script $flag_processed");
+        my $update_result = $code_result >> 8; 
+        if ($update_result != 0) {
+            console_log("There was an error updating the system");
+            exit $update_result;
+        }
                                     
-
-				my $info_version_file="/etc/alienvault-center/alienvault-info-version";
-				if ( -s "$info_version_file" ){
-                			my @ivcontent = `cat $info_version_file`;
-			                if (not map(/^Subsubversion:*/,@ivcontent)) {
-						system("echo \"Subsubversion: N\" >> $info_version_file");
-					}
-				}else{
-					#system("echo \"Product: alienvault4\" > $info_version_file");
-					system("echo \"Product: $current_version_local\" > $info_version_file");
-                                        system("echo \"Version: 4\" >> $info_version_file");
-                                        system("echo \"Subversion: 1\" >> $info_version_file");
-                                        system("echo \"Subsubversion: 0\" >> $info_version_file");
-				}
-				system("sed -i 's/^Version:.*/Version: 4/' $info_version_file");
-				system("sed -i 's/^Subversion:.*/Subversion: 1/' $info_version_file");
-				system("sed -i 's/^Subsubversion:.*/Subsubversion: 0/' $info_version_file");
-
-			}
-
-#			$vpost = get_current_oct_version();
-			console_log("Finished");
+    }
+    console_log("Finished");
 
 }
 
-	#
-	# END MAIN
-	#
+    #
+    # END MAIN
+    #
 
 # Parse and check arguments
 parse_argv();
@@ -247,18 +212,18 @@ sub parse_argv() {
                         $config{'add_vpnnode'} = "$parms[1]";
                         $dialog_active = 0;
                         }
-		elsif ($parms[0] eq "--upgrade") {
-			say 'The OSSIM upgrade tool is no longer supported. Please contact support@alienvault.com for more information.';
+        elsif ($parms[0] eq "--upgrade") {
+            say 'The OSSIM upgrade tool is no longer supported. Please contact support@alienvault.com for more information.';
                         exit 1;
-		}
+        }
                 elsif ($parms[0] eq "-uc" ) {
-			say 'The OSSIM upgrade tool is no longer supported. Please contact support@alienvault.com for more information.';
+            say 'The OSSIM upgrade tool is no longer supported. Please contact support@alienvault.com for more information.';
                         exit 1;
                         }
                 elsif (($parms[0] eq "--release") || ($parms[0] eq "-r")) {
                         if ($parms[1] eq "") { error("branch needed (example: --release=rc4.2.2");}
                         $config{'release'} = "$parms[1]";
-			$REL3=qq{RELEASES_$config{'release'}};
+            $REL3=qq{RELEASES_$config{'release'}};
                         $dialog_active = 0;
                         }
                 else {
@@ -273,7 +238,7 @@ sub parse_argv() {
 
 sub config_check() {
 
-	# Checks configuration validity
+    # Checks configuration validity
         my $noerror = 1;
 
 
@@ -315,11 +280,11 @@ Command line options:
         --quiet (or -q)
           Quiet mode.
 
-		--encoded (or -e)
-		  Install alienvault-server especial version for encoding.
-		
-		--feed
-		  Update packages from feed.
+        --encoded (or -e)
+          Install alienvault-server especial version for encoding.
+        
+        --feed
+          Update packages from feed.
 
 For more info, please visit $web
 
@@ -328,25 +293,98 @@ exit;
 }
 
 sub apt_status(){
-	my $LCK=0;
-	my $dpk_g=`which dpkg`;$dpk_g=~ s/\n//g;
-	while (1) {
-		if ( $LCK == 1 ) {
-			console_log("Running 'dpkg --configure -a --force-confnew' to correct the problem");
-			system("$dpk_g --configure -a --force-confnew");
-			last;
-		}
-		# looking for 'E: dpkg was interrupted, you must manually run 'dpkg --configure -a' to correct the problem.',
-		# which can be obtained with simulate too
-		my @aptstatus = `apt-get -s -d install ossim-cd-tools 2>&1`;
-		if (map(/^E: dpkg was interrupted*/,@aptstatus)) {
-			my $MSG=join('\n',@aptstatus);
-			console_log("$MSG");
-			$LCK=1;
-		}else{
-			last;
-		}
-	}
+    my $LCK=0;
+    my $dpk_g=`which dpkg`;$dpk_g=~ s/\n//g;
+    while (1) {
+        if ( $LCK == 1 ) {
+            console_log("Running 'dpkg --configure -a --force-confnew' to correct the problem");
+            system("$dpk_g --configure -a --force-confnew");
+            last;
+        }
+        # looking for 'E: dpkg was interrupted, you must manually run 'dpkg --configure -a' to correct the problem.',
+        # which can be obtained with simulate too
+        my @aptstatus = `apt-get -s -d install ossim-cd-tools 2>&1`;
+        if (map(/^E: dpkg was interrupted*/,@aptstatus)) {
+            my $MSG=join('\n',@aptstatus);
+            console_log("$MSG");
+            $LCK=1;
+        }else{
+            last;
+        }
+    }
+}
+
+sub build_free_repos()
+{
+    verbose_log ("Add free repositories");
+    open (my $fh, '>', '/etc/apt/sources.list') || die ("Can't open sources.list: $!");
+    print $fh "deb http://data.alienvault.com/alienvault5/mirror/jessie/ jessie main contrib\n";
+    print $fh "deb http://data.alienvault.com/alienvault5/mirror/jessie-security/ jessie/updates main contrib\n";
+    close $fh;
+    open (my $fh, '>', '/etc/apt/sources.list.d/alienvault5.list') || die ("Can't open /etc/apt/sources.list.d/alienvault5.list $!");
+    print $fh "deb http://data.alienvault.com/alienvault5/alienvault/ binary/\n";
+    print $fh "deb http://data.alienvault.com/alienvault5/feed/ binary/\n";
+    print $fh "deb http://data.alienvault.com/alienvault5/plugins-feed/ binary/\n";
+    close $fh;
+}
+sub build_pro_repos()
+{
+    my $key = shift (@_); # Odio perl
+    verbose_log ("Add pro repositories");
+    open (my $fh, '>', '/etc/apt/sources.list.d/alienvault5-pro.list') || die ("Can't open /etc/apt/sources.list.d/alienvault5.list $!");
+    print $fh "deb http://data.alienvault.com/alienvault5/$key  binary/\n";
+    print $fh "deb http://data.alienvault.com/alienvault5/feed_$key  binary/\n";
+    close $fh;
+    open (my $fh, '>',  '/etc/apt/sources.list.d/alienvault5-pro-etpro.list') || die ("Can't open  /etc/apt/sources.list.d/alienvault5-pro $!");
+    print $fh "deb http://data.alienvault.com/alienvault5/feed_etpro_$key binary/\n";
+    close $fh;
+}
+sub check_pro(){
+    verbose_log("Check for professional version");
+    my $ret = 0;
+    my $lic = "";
+    my $result = system("dpkg -l  alienvault-professional 2> /dev/null");
+    if ($result == 0)
+    {
+        if ( -s "/etc/ossim/ossim.lic")
+        {
+            my $cfg = Config::IniFiles->new( -file => "/etc/ossim/ossim.lic" );
+            # Get the key value
+            $key = $cfg->val("appliance", "key");
+            if (defined($key))
+            {
+                # Check for key 
+                if (Email::Valid->address ($key))
+                {
+                    console_log ("Can't update trials");
+                    exit -1;
+                }
+                else
+                {
+                    $lic = $key;
+                    $ret = 1;
+                }
+            }
+            else
+            {
+                console_log ("Bad license file");
+                exit -1;
+            }
+        }
+        else
+        {
+            console_log ("Can't update unregistered  professional versions");
+            exit -1;
+        }
+    
+         
+    }
+    else
+    {
+        $ret = 0;
+    }
+    
+    return ($ret,$lic);
 }
 
 sub feed_update() {
@@ -360,28 +398,26 @@ sub feed_update() {
     }
 
     verbose_log("Download $tmppath/$script_name");
-    #system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/RELEASES/$script_name");
-    system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/$REL3/$script_name");
+    system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/alienvault5/RELEASES/$script_name");
 
     if ( -s "$tmppath/$script_name" ) {
-        system("wget -U $wget_useragent -O $tmppath/$script_name.sig $dataserver/$REL3/$script_name.sig");
-	if ( -s "$tmppath/$script_name.sig"){
+        system("wget -U $wget_useragent -O $tmppath/$script_name.sig $dataserver/alienvault5/RELEASES/$script_name.sig");
+    if ( -s "$tmppath/$script_name.sig"){
             my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$script_name.sig");
-	    if ($valid_sig != 0) {
-		    say("Invalid signature for upgrade file $script_name");
-		    exit $ERROR_INVALID_SIGNATURE_FEED;
-	    }
+        if ($valid_sig != 0) {
+            say("Invalid signature for upgrade file $script_name");
+            exit $ERROR_INVALID_SIGNATURE_FEED;
+        }
 
             verbose_log("Exec: $tmppath/$script_name");
             system("/bin/bash $tmppath/$script_name");
-	} else {
+    } else {
             say("Signature not available for upgrade file $script_name");
             exit $ERROR_UNAVAILABLE_SIGNATURE_FEED;
-	}
+    }
     }
 
     console_log("Done.");
 }
 
-
-
+# 

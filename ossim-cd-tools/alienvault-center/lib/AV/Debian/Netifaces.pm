@@ -32,6 +32,7 @@ package AV::Debian::Netifaces;
 use v5.10;
 use strict;
 use warnings;
+no warnings 'experimental::smartmatch';
 
 #use diagnostics;
 use File::Copy;

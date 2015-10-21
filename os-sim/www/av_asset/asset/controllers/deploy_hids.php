@@ -281,12 +281,13 @@ try
             $job_id = $res['job_id'];
 
             $attempts = 0;
+            $max_attempts = 80;
 
             $data = Ossec_agent::check_deployment_status($job_id);
 
-            while ($data['status'] == 'in_progress' && $attempts < 20)
+            while ($data['status'] == 'in_progress' && $attempts < $max_attempts)
             {
-                sleep(2);
+                sleep(3);
 
                 $data = Ossec_agent::check_deployment_status($job_id);
 
@@ -294,7 +295,7 @@ try
             }
 
 
-            if ($attempts >= 20)
+            if ($attempts >= $max_attempts)
             {
                 $e_msg = _('Connection has timed out. Please deploy the HIDS agent again');
 

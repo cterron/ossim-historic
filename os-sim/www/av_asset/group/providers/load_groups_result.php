@@ -45,7 +45,6 @@
 require_once 'av_init.php';
 
 
-set_time_limit(300);
 session_write_close();
 
 Session::logcheck('environment-menu', 'PolicyHosts');

@@ -251,12 +251,12 @@ class Log_action
         $db =   new ossim_db();
         $conn = $db->connect();
         
-        if (!Log_action::log_action_to_db($conn, $log_code)) 
+        if (!self::log_action_to_db($conn, $log_code)) 
         {
             return FALSE;
         }
         
-        $user_ip = Log_action::get_userip();
+        $user_ip = self::get_userip();
         $user    = Session::get_session_user();
         
         if ($user == "" && $extrainfo[0] != "") 
@@ -264,9 +264,9 @@ class Log_action
             $user = $extrainfo[0];
         }
         
-        $info = Log_action::get_loginfo($conn, $log_code);
+        $info = self::get_loginfo($conn, $log_code);
         
-        $info = Log_action::log_action_replace($info, $extrainfo);
+        $info = self::log_action_replace($info, $extrainfo);
         $log_syslog = $conf->get_conf("log_syslog");
         
         if ($log_syslog) 

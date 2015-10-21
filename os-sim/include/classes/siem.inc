@@ -374,7 +374,7 @@ class Siem
         
         if (file_exists('/tmp/debug_siem'))
         {
-            error_log("Siem::get_events():$sql\n", 3, "/tmp/siem");
+            file_put_contents("/tmp/siem", "Siem::get_events():$sql\n", FILE_APPEND);
         }
         
         $list = array();
@@ -579,7 +579,7 @@ class Siem
         
         if (file_exists('/tmp/debug_siem'))
         {
-            error_log("Siem::get_events_total():$sql\n", 3, "/tmp/siem");
+            file_put_contents("/tmp/siem", "Siem::get_events_total():$sql\n", FILE_APPEND);
         }
         
         
@@ -674,12 +674,14 @@ class Siem
         
         // Join needed for extra_data filters
         $extra_join = (preg_match('/extra\_data\./', $where)) ? ', alienvault_siem.extra_data' : '';
-        
+
+        // Join needed for reputation filters
+        $otx_join = (preg_match('/otx\_data\./', $where)) ? ', alienvault_siem.otx_data' : '';
+
         // Database selector to fix the 'device' filter
         $where = preg_replace('/FROM device/', 'FROM alienvault_siem.device', $where);
-        
-        // Use ac_acid_event?
-        if ($extra_join == '' && $rep_join == '' && !preg_match("/idm_data|ip_proto|layer4|ossim_|_hostname|_mac/",$where))
+
+        if ($extra_join == '' && $rep_join == '' && $otx_join == '' && !preg_match("/idm_data|ip_proto|layer4|ossim_|_hostname|_mac/",$where))
         {
             $counter = 'SUM(acid_event.cnt)';
             if (!preg_match("/ip_src|ip_dst/",$where))
@@ -694,7 +696,7 @@ class Siem
         else
         {
             $counter = 'COUNT(acid_event.id)';
-            $tables  = "alienvault_siem.acid_event $tax_join $rep_join $extra_join";
+            $tables  = "alienvault_siem.acid_event $tax_join $rep_join $otx_join $extra_join";
         }
         
         // WARNING: remove alienvault_siem database selection from query when be posible
@@ -751,7 +753,7 @@ class Siem
 
         if (file_exists('/tmp/debug_siem'))
         {
-            error_log("Siem::get_graph_data():$sqlgraph\n", 3, "/tmp/siem");
+            file_put_contents("/tmp/siem", "Siem::get_graph_data():$sqlgraph\n", FILE_APPEND);
         }
 
         $rs = $tmpconn->Execute($sqlgraph);
@@ -820,13 +822,13 @@ class Siem
         {
             if (!$rs->EOF)
             {
-                $row["username"] = trim($rs->fields["username"]);
-                $row["domain"]   = trim($rs->fields["domain"]);
+                $row["idm_username"] = trim($rs->fields["username"]);
+                $row["idm_domain"]   = trim($rs->fields["domain"]);
                 
-                if (!empty($row["username"]))
+                if (!empty($row["idm_username"]))
                 {
-                    $idm_u = $row["username"];
-                    $idm_d = ($row["domain"] != '') ? "@".$row["domain"] : '';
+                    $idm_u = $row["idm_username"];
+                    $idm_d = ($row["idm_domain"] != '') ? "@".$row["idm_domain"] : '';
                 
                     if (intval($row["from_src"]))
                     {
@@ -937,7 +939,16 @@ class Siem
         $fields['sensor'] = $name;
 
         // Date
-        $fields['date'] = $row['timestamp'];
+        $tz = Util::get_timezone();
+        if ($tz != 0 && !empty($row['timestamp']))
+        {
+            $timestamp_utc  = strtotime($row['timestamp'].' GMT');
+            $fields['date'] = gmdate("Y-m-d H:i:s",$timestamp_utc+(3600*$tz));
+        }
+        else
+        {
+            $fields['date'] = $row['timestamp'];
+        }
         
         // Context
         $ctx               = strtoupper(bin2hex($row['ctx']));
@@ -1008,8 +1019,8 @@ class Siem
         $fields['maxrisk'] = $maxrisk;
         
         // Username@domain
-        $fields['username'] = $row['idm_data.username'];
-        $fields['domain']   = $row['idm_data.domain'];
+        $fields['username'] = $row['idm_username'];
+        $fields['domain']   = $row['idm_domain'];
         
         return $fields;
     }

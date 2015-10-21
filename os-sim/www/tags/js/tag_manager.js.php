@@ -361,4 +361,13 @@ $(document).ready(function ()
             do_action(data, $av_info, [clear_form_fields, redraw_table]);
         }
     });
+
+    // Cancel form
+    $('#cancel').click(function ()
+    {
+        if (typeof parent.GB_close == 'function')
+        {
+            parent.GB_close();
+        }
+    });
 });

@@ -32,6 +32,7 @@ package Avconfig_profile_common;
 use v5.10;
 use strict;
 use warnings;
+no warnings 'experimental::smartmatch';
 #use diagnostics;
 use Perl6::Slurp;
 
@@ -157,12 +158,6 @@ sub config_common($) {
                 system($command);
             }
 
-	    # force update munin configuration files 
-
-	    $command = "/usr/bin/alienvault-update_sensors";
-	    debug_log("$command");
-	    system($command);
-
         }
 
         # admin_ip change detect
@@ -184,10 +179,6 @@ sub config_common($) {
             }
 
             %config      = AV::ConfigParser::current_config;
-
-		    $command = "/usr/bin/alienvault-update_sensors";
-		    debug_log("$command");
-			system($command);
 	    }
 
 
@@ -197,70 +188,6 @@ sub config_common($) {
 
 
         system("sed -i 's:^\\^\\?PRUNEPATHS=\\\".*:PRUNEPATHS=\\\"/var/tmp /var/ossim\\\":' /etc/cron.daily/locate");
-
-        # munin-node #1498
-        if ( -f "/etc/munin/munin-node.conf" ) {
-            my $machine_name = `hostname -f`;
-            verbose_log("Common Profile: Configuring Munin-node");
-
-            open MUNINNODEFILE, "> /etc/munin/munin-node.conf";
-            print MUNINNODEFILE<<EOF;
-$script_msg
-
-log_level 4
-log_file /var/log/munin/munin-node.log
-pid_file /var/run/munin/munin-node.pid
-background 1
-setseid 1
-user root
-group root
-setsid yes
-
-# Regexps for files to ignore
-ignore_file ~\$
-ignore_file \\.bak\$
-ignore_file \%\$
-ignore_file \\.dpkg-(tmp|new|old|dist)\$
-ignore_file \\.rpm(save|new)\$
-ignore_file \\.pod\$
-
-# Set this if the client doesn't report the correct hostname when telnetting to
-# localhost, port 4949
-host_name $machine_name
-
-# A list of addresses that are allowed to connect.  This must be a regular
-# expression, since Net::Server does not understand CIDR-style network notation
-# unless the perl module Net::CIDR is installed.  You may repeat the allow line
-# as many times as you'd like. Syntax looks like: ^192.168.1.2\$
-Allow ^.*\$
-
-# Which address to bind to;
-# host 127.0.0.1
-host *
-
-# And which port
-port 4949
-
-EOF
-            close(MUNINNODEFILE);
-        }
-
-        # #2630 Disable missbehaving munin plugins
-        if ( -f "/usr/share/munin/plugins/smart_" ) {
-            unlink("/usr/share/munin/plugins/smart_");
-            $reset{'munin-node'} = 1;
-        }
-        my $munin_plugins_dir = "/etc/munin/plugins/";
-        opendir DIR, $munin_plugins_dir or die "Cannot open dir $!";
-        while ( my $filename = readdir(DIR) ) {
-            if ( $filename =~ /smart_.*./ ) {
-                chomp($filename);
-                my $file_path = $munin_plugins_dir . $filename;
-                unlink($file_path);
-                $reset{'munin-node'} = 1;
-            }
-        }
-
 
         my $alienvault_funcions = "/etc/alienvaultfunctions";
         if ( !-f "$alienvault_funcions" ) {
@@ -362,6 +289,7 @@ $script_msg
 # Fredrik Steen <stone\@debian.org>
 startup=1
 # CHECK_INTERVALS=180
+START=yes
 EOF
         close(MONITDEFAULTFILE);
 
@@ -403,7 +331,7 @@ if ( -f "/etc/ossim/first_login" ){
     my $pname = `cat /etc/ossim/first_login` ; $pname =~ s/\n//g;
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.1.1 - \\m - \\l
+AlienVault USM 5.2.0 - \\m - \\l
 
 =========================================================================
 == #### First time instructions ####   
@@ -415,7 +343,7 @@ EOF
 }else{
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.1.1 - \\m - \\l
+AlienVault USM 5.2.0 - \\m - \\l
 
 EOF
 }
@@ -470,13 +398,11 @@ close(MOTDFILE);
         system($command);
 
         # source.list
-		my $release_version = "alienvault4";
+	my $release_version = "alienvault5";
         my $arch;
         if ( $zn eq "head" ) {
             console_log("Common Profile: Updating repositories");
             dp("Updating repositories");
-            my $repolenny
-                = "deb ftp://ftp.us.debian.org/debian/ squeeze main contrib non-free";
 
             # amd64 or x86_64 ?
             chomp(my $uname_m = `uname -m`);
@@ -523,13 +449,10 @@ close(MOTDFILE);
                 or die "Error opening file $!";
 
             print SOURCELISTFILE
-                "deb http://data.alienvault.com/mirror/squeeze/ squeeze main contrib\n";
+                "deb http://data.alienvault.com/alienvault5/mirror/jessie/ jessie main contrib\n";
 
             print SOURCELISTFILE
-                "deb http://data.alienvault.com/mirror/squeeze_security/ squeeze/updates main contrib\n";
-
-            print SOURCELISTFILE
-                "deb http://data.alienvault.com/mirror/squeeze_lts/ squeeze-lts main contrib\n";
+                "deb http://data.alienvault.com/alienvault5/mirror/jessie-security/ jessie/updates main contrib\n";
 
             close(SOURCELISTFILE);
 

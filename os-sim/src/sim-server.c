@@ -68,8 +68,8 @@ struct _SimServerPrivate
   SimInet		* ip;
   gchar			* name;
 
-  GCond			* sessions_cond;		//condition & mutex to control fully_stablished var.
-  GMutex		* sessions_mutex;
+  GCond			 sessions_cond;		//condition & mutex to control fully_stablished var.
+  GMutex		 sessions_mutex;
 };
 
 typedef struct {
@@ -94,8 +94,8 @@ static void
 sim_server_impl_finalize (GObject  *gobject)
 {
   SimServer *server = SIM_SERVER (gobject);
-	g_cond_free (server->_priv->sessions_cond);
-	g_mutex_free (server->_priv->sessions_mutex);
+	g_cond_clear (&server->_priv->sessions_cond);
+	g_mutex_clear (&server->_priv->sessions_mutex);
 
   if (server->_priv->id)
     g_object_unref (server->_priv->id);
@@ -139,8 +139,8 @@ sim_server_instance_init (SimServer * server)
   server->_priv->ip = NULL;
   server->_priv->name = NULL;
 
-  server->_priv->sessions_cond = g_cond_new();
-  server->_priv->sessions_mutex = g_mutex_new();
+  g_cond_init(&server->_priv->sessions_cond);
+  g_mutex_init(&server->_priv->sessions_mutex);
 }
 
 /* Public Methods */
@@ -165,7 +165,6 @@ sim_server_get_type (void)
               NULL                        /* value table */
     };
     
-    g_type_init ();
                                                                                                                              
     object_type = g_type_register_static (G_TYPE_OBJECT, "SimServer", &type_info, 0);
   }
@@ -340,7 +339,7 @@ sim_server_listen_run (SimServer *server, gboolean is_server)
     session_data->socket    = socket;
     
 		/* Session Thread */		
-    thread = g_thread_create(sim_server_session, session_data, FALSE, &error);
+    thread = g_thread_new("sim_server_session", sim_server_session, session_data);
 		
 	  if (thread == NULL && error)
     {
@@ -461,12 +460,12 @@ sim_server_append_session (SimServer     *server,
   g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
 
-  g_mutex_lock (server->_priv->sessions_mutex);
+  g_mutex_lock (&server->_priv->sessions_mutex);
 //  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
 //    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
 
   server->_priv->sessions = g_list_append (server->_priv->sessions, session);
-  g_mutex_unlock (server->_priv->sessions_mutex);
+  g_mutex_unlock (&server->_priv->sessions_mutex);
 
 }
 
@@ -486,7 +485,7 @@ sim_server_remove_session (SimServer     *server,
 	  
 	void * tmp = session;
 
-  g_mutex_lock (server->_priv->sessions_mutex);
+  g_mutex_lock (&server->_priv->sessions_mutex);
 //  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
 //  	g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
 
@@ -495,7 +494,7 @@ sim_server_remove_session (SimServer     *server,
 	if(session)
 	g_object_unref (session);//first, remove the data inside the session
 
-  g_mutex_unlock (server->_priv->sessions_mutex);
+  g_mutex_unlock (&server->_priv->sessions_mutex);
 
 
 	return 1;
@@ -593,7 +592,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
   g_return_if_fail (SIM_IS_SERVER (server));
   g_return_if_fail (SIM_IS_RULE (rule));
 		
-  g_mutex_lock (server->_priv->sessions_mutex);
+  g_mutex_lock (&server->_priv->sessions_mutex);
 //  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
 //    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
 
@@ -626,7 +625,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
             data->command = cmd;
             ossim_debug ( "sim_server_push_session_plugin_command 5");
 
-            thread = g_thread_create (sim_server_thread_monitor_requests, data, FALSE, &error);
+            thread = g_thread_new ("sim_server_thread_monitor_requests", sim_server_thread_monitor_requests, data);
             if (thread == NULL && error)
             {
               g_message ("thread error %d: %s", error->code, error->message);
@@ -646,7 +645,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
       
     list = list->next;
   }
-  g_mutex_unlock (server->_priv->sessions_mutex);
+  g_mutex_unlock (&server->_priv->sessions_mutex);
 }
 
 gpointer 
@@ -685,7 +684,7 @@ sim_server_reload (SimServer  *server,
   g_return_if_fail (SIM_IS_SERVER (server));
   g_return_if_fail (SIM_IS_CONTEXT (context));
 
-  g_mutex_lock (server->_priv->sessions_mutex);
+  g_mutex_lock (&server->_priv->sessions_mutex);
 //  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
 //    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
 
@@ -699,7 +698,7 @@ sim_server_reload (SimServer  *server,
 
     list = list->next;
   }
-  g_mutex_unlock (server->_priv->sessions_mutex);
+  g_mutex_unlock (&server->_priv->sessions_mutex);
 }
 
 
@@ -831,7 +830,7 @@ void sim_server_debug_print_sessions (SimServer *server)
 	GList *list;
 	int a=0;
 	
- 	g_mutex_lock (server->_priv->sessions_mutex);
+ 	g_mutex_lock (&server->_priv->sessions_mutex);
 //  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
 //		g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
 
@@ -843,7 +842,7 @@ void sim_server_debug_print_sessions (SimServer *server)
 		a++;		
 		list = list->next;
 	}							 
-	g_mutex_unlock (server->_priv->sessions_mutex);
+	g_mutex_unlock (&server->_priv->sessions_mutex);
 		
 }
 
@@ -919,7 +918,7 @@ sim_server_get_sensor_by_ia_port (SimServer *server,
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
   g_return_val_if_fail (SIM_IS_INET (inet), NULL);
 
-	g_mutex_lock (server->_priv->sessions_mutex);
+	g_mutex_lock (&server->_priv->sessions_mutex);
 
 	list = server->_priv->sessions;
   while (list)
@@ -931,13 +930,13 @@ sim_server_get_sensor_by_ia_port (SimServer *server,
           && sim_session_get_port (session) == port)
 			{	
         g_object_ref (session);
-  			g_mutex_unlock (server->_priv->sessions_mutex);
+  			g_mutex_unlock (&server->_priv->sessions_mutex);
 				return session;
 			}
   	}
 	  list = list->next;
 	}
-	g_mutex_unlock (server->_priv->sessions_mutex);
+	g_mutex_unlock (&server->_priv->sessions_mutex);
 	return NULL;
 }
 
@@ -1025,7 +1024,7 @@ sim_server_get_sensor_uuids_unique (SimServer *server, GPtrArray **pparray)
       g_message ("%s: Internal error", __FUNCTION__);
       break;
     }
-    g_mutex_lock (server->_priv->sessions_mutex);
+    g_mutex_lock (&server->_priv->sessions_mutex);
     list = g_list_first (server->_priv->sessions);
     while (list)
     {
@@ -1046,7 +1045,7 @@ sim_server_get_sensor_uuids_unique (SimServer *server, GPtrArray **pparray)
     }
     /* For each key, add the uuid to the array. Now we must duplicate the uuid */
     g_hash_table_foreach (hash,sim_server_populate_sensor_array, (gpointer) array); 
-    g_mutex_unlock (server->_priv->sessions_mutex);
+    g_mutex_unlock (&server->_priv->sessions_mutex);
 
     
     result = TRUE;

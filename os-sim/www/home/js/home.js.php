@@ -343,7 +343,7 @@ function get_notifications_number()
 {
     $.ajax(
     {
-        data: {},
+        data: {"bypassexpirationupdate": "1"},
         type: 'POST',
         url: '<?php echo AV_MAIN_PATH ?>/message_center/providers/get_notifications_stats.php',
         dataType: 'json',

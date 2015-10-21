@@ -107,16 +107,17 @@ if (jQuery) (function ($) {
     function position(object) {
 
         var dropdown = $('.dropdown:visible').eq(0),
-            trigger = dropdown.data('dropdown-trigger'),
-            hOffset = trigger ? parseInt(trigger.attr('data-horizontal-offset') || 0, 10) : null,
-            vOffset = trigger ? parseInt(trigger.attr('data-vertical-offset') || 0, 10) : null;
+            trigger  = dropdown.data('dropdown-trigger'),
+            hOffset  = trigger ? parseInt(trigger.attr('data-horizontal-offset') || 0, 10) : null,
+            vOffset  = trigger ? parseInt(trigger.attr('data-vertical-offset') || 0, 10) : null,
+            d_height = dropdown.height();
 
         if (dropdown.length === 0 || !trigger) return;
         
         if (typeof object != 'undefined')
         {
-            var min_w = $(object).outerWidth();
-            
+            var min_w = $(object).outerWidth(true);
+
             dropdown.css('min-width', min_w + 'px');
         }
 
@@ -129,18 +130,18 @@ if (jQuery) (function ($) {
 
             var top = trigger.position().top + trigger.outerHeight(true) - parseInt(trigger.css('margin-top'), 10) + vOffset
 
-            left = left.toPrecision(4) + 'px';
 
-            dropdown.css({
-                left: Math.floor(left),
-                top: Math.floor(top)
-            });
+            //Check the menu is not higher than the window size
+            var top_offset = trigger.offset().top + trigger.outerHeight() + vOffset;
+            if ((top_offset + d_height) > $(window).height())
+            {
+                top = trigger.position().top - vOffset - d_height + 1;
+            }
         }
         else // ...or relative to document
         {
-            var left     = 0
-            var top      = trigger.offset().top + trigger.outerHeight() + vOffset //Getting vertical position
-            var d_height = dropdown.height()
+            var left = 0;
+            var top  = trigger.offset().top + trigger.outerHeight() + vOffset; //Getting vertical position
 
             //Getting horizontal position
             if (dropdown.hasClass('dropdown-anchor-right'))
@@ -157,13 +158,13 @@ if (jQuery) (function ($) {
             {
                 top = trigger.offset().top - vOffset - d_height
             }
-
-            dropdown.css(
-            {
-                left: Math.floor(left),
-                top: Math.floor(top)
-            });
         }
+
+        dropdown.css(
+        {
+            left: Math.floor(left),
+            top: Math.floor(top)
+        });
     }
 
     $(document).on('click.dropdown', '[data-dropdown]', show);

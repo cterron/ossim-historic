@@ -70,7 +70,6 @@
 /* anything done with this program, code, or items         */
 /* discovered with this program's use.                     */
 /***********************************************************/
-#error_reporting(E_ALL);
 
 ini_set("max_execution_time","720");
 

@@ -33,6 +33,7 @@ use v5.10;
 #use strict;
 #use warnings;
 #use diagnostics;
+no warnings 'experimental::smartmatch';
 
 use AV::ConfigParser;
 use AV::Log;
@@ -531,65 +532,6 @@ sub config_profile_sensor() {
 
         }
 
-    }
-
-
-    # munin-node
-    if ( -f "/etc/munin/munin-node.conf" ) {
-        verbose_log("Sensor Profile: Configuring Munin-node");
-	my $machine= `hostname -f`;
-	my $machine_name = lc($machine);
-
-        open MUNINNODEFILE, "> /etc/munin/munin-node.conf";
-        print MUNINNODEFILE<<EOF;
-$script_msg
-
-log_level 4
-log_file /var/log/munin/munin-node.log
-pid_file /var/run/munin/munin-node.pid
-background 1
-setseid 1
-user root
-group root
-setsid yes
-
-# Regexps for files to ignore
-
-ignore_file ~\$
-ignore_file \\.bak\$
-ignore_file \%\$
-ignore_file \\.dpkg-(tmp|new|old|dist)\$
-ignore_file \\.rpm(save|new)\$
-ignore_file \\.pod\$
-
-# Set this if the client doesn't report the correct hostname when
-# telnetting to localhost, port 4949
-#
-host_name $machine_name
-
-# A list of addresses that are allow ^192.168.1.2\$
-# regular expression, due to brain damage in Net::Server, which
-# doesn't understand CIDR-style network notation.  You may repeat
-
-Allow ^.*\$
-
-# Which address to bind to;
-host *
-# host 127.0.0.1
-
-# And which port
-port 4949
-
-EOF
-        close(MUNINNODEFILE);
-
-        # Disable munin server when framework is not installed with sensor
-        if ( ( $profile_framework != 1 ) && ( -f "/etc/cron.d/munin" ) ) {
-            unlink("/etc/cron.d/munin");
-        }
-
-        console_log("Restarting munin-node");
-        system("/etc/init.d/munin-node restart $stdout $stderr");
     }
 
     #monit

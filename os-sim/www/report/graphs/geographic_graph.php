@@ -94,22 +94,20 @@ foreach ($tlabels as $label) {
 
 //
 $conf = $GLOBALS["CONF"];
-$colors=array("#E9967A","#F08080","#FF6347","#FF4500","#FF0000","#DC143C","#B22222");
 
 $jpgraph = $conf->get_conf("jpgraph_path");
 require_once "$jpgraph/jpgraph.php";
 require_once "$jpgraph/jpgraph_pie.php";
-require_once "$jpgraph/jpgraph_pie3d.php";
+
 // Setup graph
-$graph = new PieGraph(350, 420, "auto");
+$graph = new PieGraph(400, 500, "auto");
 $graph->SetAntiAliasing();
 $graph->SetMarginColor('#fafafa');
 
 $graph->title->SetFont(FF_FONT1, FS_BOLD);
 // Create pie plot
-$p1 = new PiePlot3d($data);
-$p1->SetHeight(12);
-$p1->SetSize(0.5);
+$p1 = new PiePlot($data);
+$p1->SetSize(0.3);
 if (count($labels)>1)
 	$p1->SetCenter(0.5,0.25);
 else
@@ -117,15 +115,15 @@ else
 $p1->SetLegends($legend);
 $p1->SetLabels($labels);
 $p1->SetLabelPos(1);
-$graph->legend->SetPos(0.5,0.95,'center','bottom');
-$graph->legend->SetShadow('#fafafa',0);
-$graph->legend->SetFrameWeight(1);
+$graph->legend->SetPos(0.5,0.9,'center','bottom');
+$graph->legend->SetShadow(FALSE);
+$graph->legend->SetFrameWeight(0);
 $graph->legend->SetFillColor('#fafafa');
-$graph->legend->SetColumns(2);
+$graph->legend->SetColumns(3);
 $graph->SetFrame(false);
-//$p1->SetSliceColors($colors);
+$p1->SetSliceColors(Util::get_chart_colors());
 //$p1->SetStartAngle(M_PI/8);
-$p1->ExplodeSlice(0);
+//$p1->ExplodeSlice(0);
 $graph->Add($p1);
 $graph->Stroke();
 unset($graph);

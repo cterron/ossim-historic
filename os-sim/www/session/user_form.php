@@ -126,7 +126,7 @@ $login_enable_ldap = ($conf->get_conf('login_enable_ldap') == 'yes') ? TRUE : FA
 
 $login_method      = ($login_enable_ldap == TRUE) ? 'ldap' : 'pass';
 
-$last_pass_change  = date('Y-m-d H:i:s');
+$last_pass_change  = gmdate('Y-m-d H:i:s');
 
 $first_login  	   = 0;
 $is_admin     	   = 0;
@@ -890,131 +890,133 @@ if ($login != '')
 	</script>
 
 	<style type='text/css'>
-		#container_center 
-		{ 
-			margin: 20px auto; 
-			width: 640px;
-		}
-		
-		#container_center table 
-		{ 
-			width: 100%; 
-			margin: auto;
-		}
-		
-		#container_center td 
-		{ 
-			vertical-align:middle;
-			white-space: nowrap;
-		}		
-		
-		#container_center .s_label, #container_center .label
+        #container_center
         {
-            font-size: 12px;              		
+            margin: 20px auto;
+            width: 640px;
         }
-        
+
+        #container_center table
+        {
+            width: 100%;
+            margin: auto;
+        }
+
+        #container_center td
+        {
+            vertical-align:middle;
+            white-space: nowrap;
+        }
+
+        #container_center .s_label, #container_center .label
+        {
+            font-size: 12px;
+        }
+
         #container_center label.y_n
         {
-            font-size: 11px !important;              		
+            font-size: 11px !important;
         }
-						
-		input[type="text"], input[type="password"], select
-		{
-			width: 99% !important;
-			height: 20px !important;
-		} 
-		
-		#template_id
-		{ 
-		    width: 250px !important;
-		}
-		
-		#e_container 
-		{ 
-		    padding: 5px 0px 3px 0px;
-    		
-		}
-		
-		#entity_to_add 
-		{ 
-		    width: 250px !important; 
-		}
-		
-		#entities { 
-		    height: 100px !important;    		
-		}
-		
-		#c_tree
-		{
-    		vertical-align: top !important;
-    		padding-top: 0px !important;
-		}
-		
-		ul.dynatree-container
-		{
-    		padding-top: 5px !important;
-    		margin-top: 5px !important;
-		} 
 
-		#entities_tree 
-		{ 
-		    text-align: left; 
-		}
-			
-		#assets { 
-		    height: 100px !important;    		
-		}
-		#sensors 
-		{ 
-		    height: 50px !important;    		
-		}
-		
-		#td_assets 
-		{ 
-		    vertical-align: top !important;
-		}
-		
-		#sel_assets 
-		{ 
-			padding-top: 12px;
-			vertical-align: top !important;
-		}
-						
-		.text_login
-		{
-			filter:alpha(opacity=50);
-			-moz-opacity:0.5;
-			-khtml-opacity: 0.5;
-			opacity: 0.5;
-			font-style: italic;
-			cursor: default;
-		}
-		
-		.padding_bottom
-		{
-    		padding-bottom: 10px;
-		}
-		
-		#pass1_bar 
-		{
-			max-width: 100% !important;
-		}
-		
-		#av_info
-		{ 
-		    margin: 20px auto;    		
-		}
-		
-        #av_info_assets
-		{ 
-		    margin: 10px auto;
-		}
-        
-        #send 
-        { 
-            margin: 0px 8px 0px 0px; 
+        input[type="text"], input[type="password"], select
+        {
+            width: 99% !important;
+            height: 20px !important;
         }
-		
+
+        #template_id
+        {
+            width: 250px !important;
+        }
+
+        #e_container
+        {
+            padding: 5px 0px 3px 0px;
+
+        }
+
+        #entity_to_add
+        {
+            width: 250px !important;
+        }
+
+        #entities
+        {
+            height: 100px !important;
+        }
+
+        #c_tree
+        {
+            vertical-align: top !important;
+            padding-top: 0px !important;
+        }
+
+        ul.dynatree-container
+        {
+            padding-top: 5px !important;
+            margin-top: 5px !important;
+        }
+
+        #entities_tree
+        {
+            text-align: left;
+        }
+
+        #assets
+        {
+            height: 100px !important;
+        }
+        #sensors
+        {
+            height: 50px !important;
+        }
+
+        #td_assets
+        {
+            vertical-align: top !important;
+        }
+
+        #sel_assets
+        {
+            padding-top: 12px;
+            vertical-align: top !important;
+        }
+
+        .text_login
+        {
+            filter:alpha(opacity=50);
+            -moz-opacity:0.5;
+            -khtml-opacity: 0.5;
+            opacity: 0.5;
+            font-style: italic;
+            cursor: default;
+        }
+
+        .padding_bottom
+        {
+            padding-bottom: 10px;
+        }
+
+        #pass1_bar
+        {
+            max-width: 100% !important;
+        }
+
+        #av_info
+        {
+            margin: 20px auto;
+        }
+
+        #av_info_assets
+        {
+            margin: 10px auto;
+        }
+
+        #send
+        {
+            margin: 0px 8px 0px 0px;
+        }
+
 	</style>
 </head>
 
@@ -1085,22 +1087,21 @@ if ($login != '')
 				<tr>
 					<th><label for="login"><?php echo _('User login') . required(); ?></label></th>
 					<td class="nobborder">
-						<?php 
-						if ($login != '' && (!$duplicate && $_GET['load_cookies'] != '1'))
-						{ 
+						<?php
+                        if ($login != '' && (!$duplicate && $_GET['load_cookies'] != '1'))
+						{
 							?>
 							<input type="text" name="text_login" id="text_login" class='text_login' maxlength="64" disabled='disabled' readonly='readonly' autocomplete="off" value="<?php echo $login?>"/>
-							<input type="hidden" class='vfield' name="login" id="login" value="<?php echo $login ?>"/>
+							<input type="hidden" class='vfield' maxlength="64" name="login" id="login" value="<?php echo $login ?>"/>
 							<?php 
-						} 
-						else 
-						{ 
+						}
+						else
+						{
 							?>
 							<input type="text" name="login" id="login" class='vfield' maxlength="64" autocomplete="off" value="<?php echo $login?>"/>
 							<?php 
-						} 
+						}
 						?>
-						
 					</td>
 				</tr>
 
@@ -1108,11 +1109,11 @@ if ($login != '')
 				<tr>
 					<th><label for="user_name"><?php echo _('User name'). required();?></label></th>
 					<td class="nobborder">
-						<input type="text" autocomplete="off" class='vfield' name="user_name" id="user_name" value="<?php echo $user_name?>"/>
+						<input type="text" autocomplete="off" maxlength="128" class='vfield' name="user_name" id="user_name" value="<?php echo $user_name?>"/>
 					</td>
 				</tr>
 			
-								
+
 				<!-- User email -->
 				<tr>
 					<th><label for="email"><?php echo _('User email');?><img style='margin-left: 3px;' src="../pixmaps/email_icon.gif"/></label></th>
@@ -1170,13 +1171,13 @@ if ($login != '')
 					<!-- Company -->
 					<tr>
 						<th><label for="company"><?php echo _('Company');?></label></th>
-						<td class="nobborder"><input type="text" name="company" class='vfield' value="<?php echo $company?>"/></td>
+						<td class="nobborder"><input type="text" name="company" maxlength="128" class='vfield' value="<?php echo $company?>"/></td>
 					</tr>
 					
 					<!-- Department -->
 					<tr>
 						<th><label for="department"><?php echo _('Department');?></label></th>
-						<td class="nobborder"><input type="text" name="department" class='vfield' value="<?php echo $department?>"/></td>
+						<td class="nobborder"><input type="text" name="department" maxlength="128" class='vfield' value="<?php echo $department?>"/></td>
 					</tr>
 					<?php 
 				} 

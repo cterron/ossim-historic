@@ -37,6 +37,36 @@ require_once 'config.php';
 
 Session::logcheck("environment-menu", "EventsVulnerabilities");
 
+$getParams = array('schedid', 'sortby', 'sortdir', 'viewall', 'setstatus', 'enabled', 'job_id', 'rs_page', 'page');
+
+switch ($_SERVER['REQUEST_METHOD']) {
+case "GET" :
+    foreach($getParams as $gp)
+    {
+		if (isset($_GET[$gp])) {
+			$$gp=Util::htmlentities(escape_sql(trim($_GET[$gp]), $dbconn));
+		} else {
+			$$gp="";
+		}
+    }
+
+    $range_start = "";
+    $range_end   = "";
+
+	break;
+}
+
+$rs_page = intval($rs_page);
+$page    = intval($page);
+
+# Handle $disp var separate due to a invalid return value with htmlentities
+$disp = GET('disp');
+ossim_valid($disp, 'playTask', 'pauseTask', 'stopTask', 'resumeTask', 'deleteTask', OSS_NULLABLE, 'Illegal:'._('Disp'));
+if (ossim_error())
+{
+    die(_('Invalid Disp Parameter'));
+}
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -55,6 +85,19 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
 	<script type="text/javascript" src="../js/jquery.cookie.js"></script>
 	<script type="text/javascript" src="../js/jquery.json-2.2.js"></script>
     <style type="text/css">
+        .tmargin
+        {
+            margin: 5px 0px 0px 0px;
+        }
+        .lmargin
+        {
+            margin: 0px 0px 0px 38px;
+        }
+        .img_disabled
+        {
+            cursor: default;
+            opacity: 0.3;
+        }
         #legend
         {
             width: 100px !important;
@@ -129,59 +172,73 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
 	
 	<script type='text/javascript'>
 		var refresh = true;
+		var rto     = null;
+		var params  = "&rs_page=<?php echo $rs_page ?>&page=<?php echo $page ?>";
 
 		function postload() {
 			<?php
 			if(Vulnerabilities::scanner_type() == "omp") 
 			{ 
 				?>
-				refresh_state();
+				rto = setTimeout(refresh_state,1000);
 				<?php
 			}
 			?>
 			
 			$('.tip').tipTip({defaultPosition:"right",maxWidth:'400px'});
 			
+            $(".pn_buttons").click(function(event){
+                refresh = false;
+            });
+
 			$(".manageJob").click(function(event){
 				if (window.event && jQuery.browser.msie){ window.event.cancelBubble=true; }
 				else { event.stopPropagation(); }
 				
-				var tmp     = $(this).attr("id").split('#');
+				var image_id = $(this).attr("id");
+				var tmp     = image_id.split('_');
 				var command = tmp[0];
 				var id      = tmp[1];
 				
-				$('#changing_task_status_'+id).toggle();
+				$('#changing_task_status_' + id).toggle();
+
+
+				$('#' + image_id).off();
+				$('#' + image_id).addClass('img_disabled');
 
 				$.ajax({
 					type: "GET",
 					url: "manage_jobs.php",
 					data: { disp: command, job_id: id },
 					success: function(msg) {
-						if(command=='pause_task') {
+
+						if(command=='pauseTask') {
 							alert("<?php echo Util::js_entities(_("Pausing job, please wait a few seconds."))?>");
-							document.location.reload();
+							document.location.href="<?php echo Menu::get_menu_url('manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs') ?>" + params;
 						}
-						else if(command=='play_task') {
+						else if(command=='playTask') {
 							alert("<?php echo Util::js_entities(_("Starting job, please wait a few seconds."))?>");
-							document.location.reload();
+							document.location.href="<?php echo Menu::get_menu_url('manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs') ?>" + params;
 						}
-						else if(command=='stop_task') {
+						else if(command=='stopTask') {
 							alert("<?php echo Util::js_entities(_("Stopping job, please wait a few seconds."))?>");
-							setTimeout('document.location.href="<?php echo Menu::get_menu_url('manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs') ?>"',25000);
+							setTimeout('document.location.href="<?php echo Menu::get_menu_url('manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs') ?>'+params+'"',25000);
 						}
-						else if(command=='resume_task') {
+						else if(command=='resumeTask') {
 							alert("<?php echo Util::js_entities(_("Resuming job, please wait a few seconds."))?>");
-							document.location.reload();
+							document.location.href="<?php echo Menu::get_menu_url('manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs') ?>" + params;
 						}
 					}
 				});
 			});
-			setInterval('refresh_page()',120000);
+			setTimeout(refresh_page,180000);
 		}
 
 		function refresh_page() {
 			if(refresh) {
-				location.reload();
+                clearTimeout(rto);
+                rto = null;
+                document.location.href="<?php echo Menu::get_menu_url('manage_jobs.php', 'environment', 'vulnerabilities', 'scan_jobs') ?>" + params;
 			}
 		}
 		
@@ -204,7 +261,7 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
 				$.ajax({
 					type: "GET",
 					url: "manage_jobs.php",
-					data: { disp: 'delete_task', job_id: id },
+					data: { disp: 'deleteTask', job_id: id },
 					success: function(msg) {
         				$.ajax({
         					type: "GET",
@@ -315,7 +372,7 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
 							$.sparkline_display_visible();
 						}
 						// 
-						setTimeout (refresh_state,4000);
+						rto = setTimeout (refresh_state,5000);
 					}
 				});
 			}
@@ -416,38 +473,6 @@ $pageTitle = _("Manage Jobs");
 require_once 'functions.inc';
 require_once 'ossim_sql.inc';
 
-$myhostname="";
-
-$getParams = array('schedid', 'sortby', 'sortdir', 'viewall', 'setstatus', 'enabled', 'job_id');
-
-$hosts = array();
-//$hosts = host_ip_name($dbconn);
-
-switch ($_SERVER['REQUEST_METHOD']) {
-case "GET" :
-    foreach($getParams as $gp)
-    {
-		if (isset($_GET[$gp])) {
-			$$gp=Util::htmlentities(escape_sql(trim($_GET[$gp]), $dbconn));
-		} else {
-			$$gp="";
-		}
-    }
-
-    $range_start = "";
-    $range_end   = "";
-
-	break;
-}
-
-# Handle $disp var separate due to a invalid return value with htmlentities
-$disp = GET('disp');
-ossim_valid($disp, 'play_task', 'pause_task', 'stop_task', 'resume_task', 'delete_task', OSS_NULLABLE, 'Illegal:'._('Disp'));
-if (ossim_error())
-{
-    die(_('Invalid Disp Parameter'));
-}
-
 $version = $conf->get_conf("ossim_server_version");
 
 list($arruser, $user) = Vulnerabilities::get_users_and_entities_filter($dbconn);
@@ -524,8 +549,8 @@ function set_status ( $schedid, $enabled ) {
 
 function main_page ( $viewall, $sortby, $sortdir )
 {
-	global $uroles, $username, $dbconn, $hosts;
-    global $arruser, $user;
+	global $uroles, $username, $dbconn;
+    global $arruser, $user, $rs_page;
 
     $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
 
@@ -566,8 +591,8 @@ else $page = 1;
 
 $pagesize = 10;
 
-if($username=="admin") {$query = "SELECT count(id) as num FROM vuln_jobs";}
-else {$query = "SELECT count(id) as num FROM vuln_jobs where username='$username'";}
+if($username=="admin") {$query = "SELECT count(id) as num FROM vuln_jobs WHERE status !='R'";}
+else {$query = "SELECT count(id) as num FROM vuln_jobs where username='$username' WHERE status !='R'";}
 
 $result = $dbconn->Execute($query);
 $jobCount =$result->fields["num"];
@@ -579,7 +604,7 @@ $num_pages = ceil($jobCount/$pagesize);
 //echo "page:[".$page."]";
 
 if (Vulnerabilities::scanner_type() == "omp") { // We can display scan status with OMP protocol
-    echo Vulnerabilities::get_omp_running_scans($dbconn);
+    echo Vulnerabilities::get_omp_running_scans($dbconn, $rs_page);
 }
 else { // Nessus
     all_jobs(0,10, "R");
@@ -774,14 +799,14 @@ $out = all_jobs(($page-1)*$pagesize,$pagesize);
         			}
                     elseif ($page==1){
         				echo '<a href="" class="link_paginate_disabled" onclick="return false">< ' . _("PREVIOUS") . '</a>';
-        				echo '<a class="lmargin" href="'.$page_url.'?page='.($page+1).'">'._("NEXT").' ></a>&nbsp;';
+                        echo '<a class="lmargin" href="'.$page_url.'?page='.($page+1).'&rs_page='.$rs_page.'">'._("NEXT").' ></a>&nbsp;';
         			}
                     elseif($page == $num_pages){
-        				echo '<a href="'.$page_url.'?page='.($page-1).'">< '._("PREVIOUS").'</a>';
+                        echo '<a href="'.$page_url.'?page='.($page-1).'&rs_page='.$rs_page.'">< '._("PREVIOUS").'</a>';
         				echo '<a class="lmargin link_paginate_disabled" href="" onclick="return false">' . _("NEXT").' ></a>';
         			}
                     else {
-        				echo '<a href="'.$page_url.'?page='.($page-1).'">< '._("PREVIOUS").'</a><a class="lmargin" href="'.$page_url.'?page='.($page+1).'">'._("NEXT").' ></a>';
+                        echo '<a href="'.$page_url.'?page='.($page-1).'&rs_page='.$rs_page.'">< '._("PREVIOUS").'</a><a class="lmargin" href="'.$page_url.'?page='.($page+1).'&rs_page='.$rs_page.'">'._("NEXT").' ></a>';
         			}
                 }
                 ?>
@@ -792,7 +817,7 @@ $out = all_jobs(($page-1)*$pagesize,$pagesize);
 <?
 }
 
-$commands = array('play_task', 'pause_task', 'stop_task', 'resume_task', 'delete_task'); // OMP commands
+$commands = array('playTask', 'pauseTask', 'stopTask', 'resumeTask', 'deleteTask'); // OMP commands
 
 if ( in_array($disp, $commands) ) { // get server info to manage tasks
 
@@ -825,23 +850,23 @@ switch($disp) {
             Util::execute_command("sudo /usr/share/ossim/scripts/vulnmeter/cancel_scan.pl ?", array($schedid));
         }
         break;
-    case "play_task":
+    case "playTask":
         $omp->play_task($job_id);
         break;
         
-    case "pause_task":
+    case "pauseTask":
         $omp->pause_task($job_id);
         break;
         
-    case "stop_task":
+    case "stopTask":
         $omp->stop_task($job_id);
         break;
         
-    case "resume_task":
+    case "resumeTask":
         $omp->resume_task($job_id);
         break;
         
-    case "delete_task":
+    case "deleteTask":
         $omp->delete_task($job_id);
         break;
 

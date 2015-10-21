@@ -189,7 +189,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DOS LOIC Javascrip
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET DOS High Orbit Ion Cannon (HOIC) Attack Inbound Generic Detection Double Spaced UA"; flow:established,to_server; content:"User-Agent|3a 20 20|";  http_raw_header; content:"User-Agent|3a 20 20|"; fast_pattern:only; threshold: type both, track by_src, count 225, seconds 60; reference:url,blog.spiderlabs.com/2012/01/hoic-ddos-analysis-and-detection.html; classtype:attempted-dos; sid:2014153; rev:4;)
 
 #
-#alert tcp any any -> $HOME_NET 3389 (msg:"ET DOS Microsoft Remote Desktop (RDP) Syn then Reset 30 Second DoS Attempt"; flags:R; flow:to_server; flowbits:isset,ms.rdp.synack; flowbits:isnotset,ms.rdp.established; flowbits:unset,ms.rdp.synack; reference:cve,2012-0152; classtype:attempted-dos; sid:2014384; rev:8;)
+alert tcp any any -> $HOME_NET 3389 (msg:"ET DOS Microsoft Remote Desktop (RDP) Syn then Reset 30 Second DoS Attempt"; flags:R; flow:to_server; flowbits:isset,ms.rdp.synack; flowbits:isnotset,ms.rdp.established; flowbits:unset,ms.rdp.synack; reference:cve,2012-0152; classtype:attempted-dos; sid:2014384; rev:8;)
 
 #
 alert tcp $HOME_NET 3389 -> any any (msg:"ET DOS Microsoft Remote Desktop (RDP) Syn/Ack Outbound Flowbit Set"; flow:from_server,not_established; flags:SA; flowbits:isnotset,ms.rdp.synack; flowbits:set,ms.rdp.synack; flowbits:noalert; reference:cve,2012-0152; classtype:not-suspicious; sid:2014385; rev:6;)

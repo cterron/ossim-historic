@@ -38,7 +38,6 @@ Session::logcheck('environment-menu', 'EventsVulnerabilities');
 
 function hosts_fqdns_to_insert($conn, $report_id, $plugins) 
 {
-    $in_assets = array();
     $ips = array();
     
     $conn->SetFetchMode(ADODB_FETCH_ASSOC);

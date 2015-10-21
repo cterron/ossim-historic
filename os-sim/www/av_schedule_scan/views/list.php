@@ -36,7 +36,6 @@ require_once 'av_init.php';
 
 $scan_types = array(
     'nmap' => 5,
-    'ocs'  => 3,
     'wmi'  => 4
 );
 
@@ -54,15 +53,7 @@ if (!array_key_exists($s_type, $scan_types))
 //Save current scan type in memory
 $_SESSION['av_inventory_type'] = $s_type;
 
-// Logcheck by s_type
-if ($s_type == 'ocs')
-{
-    Session::logcheck('configuration-menu', 'AlienVaultInventory');
-}
-else
-{
-    Session::logcheck('environment-menu', 'AlienVaultInventory');
-}
+Session::logcheck('environment-menu', 'AlienVaultInventory');
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

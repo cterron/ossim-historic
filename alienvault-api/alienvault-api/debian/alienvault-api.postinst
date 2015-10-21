@@ -55,22 +55,28 @@ case "$1" in
         grep --fixed-strings --quiet "Listen 40011" /etc/apache2/ports.conf || echo "Listen 40011"  >> /etc/apache2/ports.conf
 
         # Create secret key
-        if [ ! -f /usr/share/alienvault/api/secret.py ]
+        if [ ! -f /usr/share/python/alienvault-api/secret.py ]
         then
-            echo "key = '$(pwgen -s 24)'" > /usr/share/alienvault/api/secret.py
+            echo "key = '$(pwgen -s 24)'" > /usr/share/python/alienvault-api/secret.py
         fi
 
         # Fix a condition specific to versions < 4.12.0
         if [ ! -z "$2" ]; then
             if dpkg --compare-versions "$2" le "4.12.0"; then
-                kill -9 `pgrep -lf celery.bin.celeryd | awk '{print $1}'`  > /dev/null 2>&1 || true
-                kill -9 `pgrep -lf /usr/share/alienvault/api_core/bin/celerybeat | awk '{print $1}'`  > /dev/null 2>&1 || true
+                kill -9 `pgrep -f celeryd`  > /dev/null 2>&1 || true
+                kill -9 `pgrep -f celerybeat`  > /dev/null 2>&1 || true
             fi
+        fi
+
+        # Set scripts as executables.
+        if [ -d "/usr/share/python/alienvault-api/scripts/" ]; then
+            chown avapi:alienvault /usr/share/python/alienvault-api/scripts/*
+            chmod 770 /usr/share/python/alienvault-api/scripts/*
         fi
 
         # Enable the apache2 configuration.
         if [ -x "/usr/sbin/a2ensite" ]; then
-           /usr/sbin/a2ensite alienvault-api.conf
+           a2ensite alienvault-api.conf
         fi
     ;;
 

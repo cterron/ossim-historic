@@ -10,7 +10,7 @@ header("Content-type: text/css");
 {
     width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 20px 20px 0px 20px;
     position: relative;
     overflow: hidden;
 }
@@ -20,10 +20,20 @@ header("Content-type: text/css");
     margin-bottom: 5px;
 }
 
+#action_buttons
+{
+    margin-bottom: 20px;
+    text-align: center;
+}
 
 /**********************
  ****** Tag Form ******
  **********************/
+
+#tag_form
+{
+    margin:0 auto;
+}
 
 #tag_form_container
 {
@@ -63,8 +73,12 @@ header("Content-type: text/css");
 
 #send
 {
-    display: block;
     margin: 0 auto;
+}
+
+#cancel
+{
+    margin-left: 5px;
 }
 
 fieldset

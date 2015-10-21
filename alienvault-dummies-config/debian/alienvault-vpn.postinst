@@ -1,10 +1,9 @@
-#!/bin/sh
+#
 # postinst script for alienvault-vpn
 #
 # see: dh_installdeb(1)
 
 set -e
-
 # summary of how this script can be called:
 #        * <postinst> `configure' <most-recently-configured-version>
 #        * <old-postinst> `abort-upgrade' <new version>
@@ -51,7 +50,8 @@ client-to-client
 EOF
                  )
 
-EASY_RSA_PATH="/usr/share/doc/openvpn/examples/easy-rsa/2.0"
+EASY_RSA_PATH="/usr/share/easy-rsa"
+export OPENSSL="openssl"
 EASY_RSA_VARS_TEMPLATE=$(cat <<EOF
 # Configuration file provided by the alienvault-vpn package.
 export EASY_RSA="$EASY_RSA_PATH"
@@ -89,7 +89,7 @@ read_from_config_file(){
 
     VPN_ENTRY="/files$VPN_CORE_CONF_FILE/$VPN_INTERFACE"
 
-    value=$(augtool <<EOF
+    value=$(augtool --noautoload <<EOF
 set /augeas/load/Puppet/lens "Puppet.lns"
 set /augeas/load/Puppet/incl "$VPN_CORE_CONF_FILE"
 load
@@ -120,7 +120,7 @@ write_to_config_file() {
 
     VPN_ENTRY="/files$VPN_CORE_CONF_FILE/$VPN_INTERFACE"
 
-    augtool <<EOF
+    augtool --noautoload  <<EOF
 set /augeas/load/Puppet/lens "Puppet.lns"
 set /augeas/load/Puppet/incl "$VPN_CORE_CONF_FILE"
 load
@@ -251,7 +251,9 @@ configure_server_certs() {
 
     EASY_RSA_DIR="$EASY_RSA_PATH"
     EASY_RSA_VARS_FILE="$EASY_RSA_DIR/vars"
-    BLACKLIST_4096_FILE="/usr/share/openssl-blacklist/blacklist.RSA-4096"
+    
+    BLACKLIST_4096_DIR="/usr/share/openssl-blacklist"
+    BLACKLIST_4096_FILE="$BLACKLIST_4096_DIR/blacklist.RSA-4096"
 
     # This only applies on 'Server' profiles.
     if [ -z "$SERVER_PROFILE" ]; then
@@ -292,8 +294,15 @@ configure_server_certs() {
         cp -rf keys/* "$VPN_KEY_DIR"
     fi
 
+    # OpenVPN requires client-config-dir to exist in the server to start VPN
+    VPN_CCD_DIR="/etc/openvpn/ccd"
+    [ -d "$VPN_CCD_DIR" ] || mkdir -p "$VPN_CCD_DIR"
+
     # Avoid a common openvpn complaint: "could not open database for 4096 bits"
     # (https://help.ubuntu.com/community/OpenVPN)
+    # This workaround requires openssl-blacklist directory to exist, but jessie does not
+    # have this dependency, so we will create that dir manually
+    [ -d "$BLACKLIST_4096_DIR" ] || mkdir -p "$BLACKLIST_4096_DIR"
     [ -f "$BLACKLIST_4096_FILE" ] || touch "$BLACKLIST_4096_FILE"
 }
 

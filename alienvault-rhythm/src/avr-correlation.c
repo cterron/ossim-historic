@@ -143,7 +143,6 @@ avr_correlation_get_type (void)
       NULL                        /* value table */
     };
 
-    g_type_init ();
     object_type = g_type_register_static (G_TYPE_OBJECT, "AvrCorrelation", &type_info, 0);
   }
   return object_type;
@@ -191,10 +190,6 @@ avr_correlation_new (AvrType type,
   const gchar * file_path = "/var/log/suricata/eve.json";  // TODO: make this parametric.
   gint file_fd = 0;
   GError * error = NULL;
-
-  // Thread subsystem init
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
 
   correlation = AVR_CORRELATION(g_object_new (AVR_TYPE_CORRELATION, NULL));
   correlation->_priv->type = type;
@@ -272,8 +267,6 @@ avr_correlation_run (AvrCorrelation * correlation,
 {
   g_return_val_if_fail (AVR_IS_CORRELATION(correlation), G_MINOFFSET);
 
-  GThread * loop_thread = NULL;
-  GError * error = NULL;
   FILE *fd;
 
   if (current_position == G_MINOFFSET)
@@ -298,23 +291,10 @@ avr_correlation_run (AvrCorrelation * correlation,
 
   correlation->_priv->start_position = current_position;
 
-  loop_thread = g_thread_create((GThreadFunc)_avr_correlation_loop, (gpointer)correlation, FALSE, &error);
-  if ((loop_thread == NULL) || (error != NULL))
-  {
-    if (error != NULL)
-    {
-      g_critical ("Cannot create main correlation thread: %s", error->message);
-      g_error_free(error);
-    }
-    else
-    {
-      g_critical ("Cannot create main correlation thread: %s", error->message);
-    }
-  }
+  (void)g_thread_new("_avr_correlation_loop", (GThreadFunc)_avr_correlation_loop, (gpointer)correlation);
 
   return current_position;
 }
-
 
 //
 // Private methods

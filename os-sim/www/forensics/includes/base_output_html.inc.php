@@ -1457,12 +1457,14 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
         include("base_header.php");
     }
 }
-function PrintBASESubFooter() {
+
+function PrintBASESubFooter()
+{
     GLOBAL $BASE_VERSION, $BASE_path, $BASE_urlpath, $Use_Auth_System;
     echo "\n\n<!-- BASE Footer -->\n";
-    //include("$BASE_path/base_footer.php");
     echo "\n\n";
 }
+
 function PrintFramedBoxHeader($title, $fore, $back) {
     echo '
 <TABLE class="transparent" WIDTH="100%" CELLSPACING=0 CELLPADDING=0 BORDER=0>
@@ -1471,6 +1473,7 @@ function PrintFramedBoxHeader($title, $fore, $back) {
   <TR><TD align="center" class="headerpr" style="font-size:14px">&nbsp;' . $title . '&nbsp;</TD></TR>
     <TR><TD>';
 }
+
 function PrintFramedBoxFooter() {
     echo '
   </TD></TR></TABLE>
@@ -1549,7 +1552,7 @@ function PrintPredefinedViews()
     <div id="custom_views" class="dropdown dropdown-secondary dropdown-close dropdown-tip dropdown-anchor-right dropdown-scrolling" style='display:none'>
         <ul id="custom_views_ul" class="dropdown-menu">
             <?php
-                if (!$opensource && Session::am_i_admin()) {
+                if (Session::am_i_admin()) {
             ?>
             <li><a href="#" onclick="GB_show('<?php echo _("Edit Current View") ?>','/forensics/custom_view_edit.php?edit=1',480,700);$('#custom_views').hide();return false"><?php echo _("Edit Current View") ?>&nbsp;</a></li>
             <li><a href="#" onclick="GB_show('<?php echo _("Create new custom view")?>','/forensics/custom_view_edit.php',480,700);$('#custom_views').hide();return false"><?php echo _("Create New View")?>&nbsp;</a></li>

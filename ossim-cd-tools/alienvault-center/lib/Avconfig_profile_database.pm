@@ -31,6 +31,7 @@ package Avconfig_profile_database;
 use v5.10;
 use strict;
 use warnings;
+no warnings 'experimental::smartmatch';
 #use diagnostics;
 
 use Config::Tiny;

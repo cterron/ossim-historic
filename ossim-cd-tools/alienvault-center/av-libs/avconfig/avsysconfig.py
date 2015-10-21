@@ -35,7 +35,7 @@ import re
 from utils import is_ipv4
 from netinterfaces import get_network_interfaces
 from IPy import IP
-
+import augeas
 from avconfigparsererror import AVConfigParserErrors
 from avsysconfigtriggerlaunch import AVSysConfigTriggerLaunch
 
@@ -48,18 +48,24 @@ class AVSysConfig (object):
         self.__system_id = system_id
         self.__system_type = system_type
 
-        augeas = imp.load_source('augeas', '/usr/share/alienvault/api_core/lib/python2.6/site-packages/augeas.py')
+        #augeas = imp.load_source('augeas', '/usr/share/alienvault/api_core/lib/python2.6/site-packages/augeas.py')
         self.__augeas_iface = augeas.Augeas(flags=augeas.Augeas.SAVE_BACKUP)
         self.__augeas_host = augeas.Augeas(flags=augeas.Augeas.SAVE_BACKUP)
         self.__augeas_vpn = augeas.Augeas(flags=augeas.Augeas.SAVE_BACKUP)
 
         # Load extra files into Augeas...
         self.__augeas_vpn.set('/augeas/load/Puppet/lens', 'Puppet.lns')
-        self.__augeas_vpn.set('/augeas/load/Puppet/incl', '/etc/alienvault/network/vpn.conf')
+        try:
+            self.__augeas_vpn.set('/augeas/load/Puppet/incl', '/etc/alienvault/network/vpn.conf')
+        except ValueError:
+            self.__augeas_vpn.set('/augeas/load/Puppet/incl[1]', '/etc/alienvault/network/vpn.conf')
         self.__augeas_vpn.load()
 
         self.__augeas_iface.set('/augeas/load/Puppet/lens', 'Puppet.lns')
-        self.__augeas_iface.set('/augeas/load/Puppet/incl', '/etc/alienvault/network/interfaces.conf')
+        try:
+            self.__augeas_iface.set('/augeas/load/Puppet/incl', '/etc/alienvault/network/interfaces.conf')
+        except ValueError:
+            self.__augeas_iface.set('/augeas/load/Puppet/incl[1]', '/etc/alienvault/network/interfaces.conf')
         self.__augeas_iface.load()
 
         # Get some interesting information from ossim_setup.conf
@@ -108,7 +114,7 @@ class AVSysConfig (object):
         """
         data = ''
         for key, (path, desc) in self.__pending.iteritems():
-            data += '\n[%s]\n%s' % (key, desc)
+            data += '\n[%s]\n%s' % (key, desc if desc != 'TBD' else 'not set')
         return data
 
     def apply_changes (self):
@@ -441,6 +447,14 @@ class AVSysConfig (object):
 
         return AVConfigParserErrors.ALL_OK
 
+    def is_net_iface_address_set(self, iface):
+        """ Return whether a iface addess is set
+        """
+        try:
+            address = self.__augeas_iface.get("/files/etc/alienvault/network/interfaces.conf/%s/address" % iface)
+        except Exception:
+            address = 'TBD'
+        return address != 'TBD'
 
     #
     # Private methods

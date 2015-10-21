@@ -463,16 +463,19 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
 
             $('a.new_comment').on('click', anchor_link);
             
-            $('.ticket_body img').on('click', function()
+            
+            $('.ticket_body img').on('load', function()
             {
-                var url = $(this).attr('src');
+                $(this).on('click', function()
+                {
+                    var url = $(this).attr('src');
+                    window.open(url);
+                }).attr('title', "<?php echo _('Click here to view the original image.') ?>").tipTip();
                 
-                window.open(url)    
-            
+            }).on('error', function()
+            {
+                $(this).off('click').attr('title', '').css('cursor', 'default');
             });
-            
-            $('.ticket_body img').attr('title', 'Click here to view the original image').tipTip();
-            
         });
         </script>
 

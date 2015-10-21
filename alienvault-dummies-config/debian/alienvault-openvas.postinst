@@ -124,6 +124,9 @@ case "$1" in
             sed -i /etc/init.d/openvas-manager \
                 -e "/\$DAEMONOPTS --slisten=\$SCANNER_ADDRESS/d" \
                 -e "/\$DAEMONOPTS --sport=\$SCANNER_PORT/d"
+            # Fix the command line
+            sed -i /etc/init.d/openvas-manager \
+                -e "s/start-stop-daemon --start --exec \$DAEMON -- \$DAEMONOPTS 2>\&1 >\/dev\/null/start-stop-daemon --start --exec \$DAEMON -- \$DAEMONOPTS >\/dev\/null 2>\&1/" 
 
             # Disable SSL
             if [ -z "`grep \"GNUTLS_PRIORITIES\" /etc/init.d/openvas-manager`" ]; then

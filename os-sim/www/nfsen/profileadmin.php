@@ -888,7 +888,7 @@ print "ADD PROFILE, type $type";
 	$cmd_opts['shadow'] = $profileinfo['shadow'];
 
 print "Add profile";
-print_r($cmd_opts);
+
 	$cmd_out = nfsend_query("add-profile", $cmd_opts, 0);
 	if ( is_bool($cmd_out) && $cmd_out == FALSE ) {
 		// Add profile failed.
@@ -915,7 +915,7 @@ ob_clean();
 		$cmd_opts['sourcelist'] = $channel;
 
 print "Add channel '$channel'";
-print_r($cmd_opts);
+
 		$cmd_out = nfsend_query("add-channel", $cmd_opts, 0);
 		if ( is_bool($cmd_out) && $cmd_out == FALSE ) {
 			// Add channel failed. - hmm .. ugly
@@ -926,7 +926,7 @@ print "Add channel failed.";
 			$cmd_opts['profile'] = $profileinfo['profileswitch'];
 			$cmd_opts['force']   = 1;
 print "Delete profile";
-print_r($cmd_opts);
+
 			$cmd_out = nfsend_query("delete-profile", $cmd_opts, 0);
 
 			if ( is_bool($cmd_out) && $cmd_out == FALSE ) {
@@ -945,7 +945,7 @@ print "All channels added";
 	unset($cmd_opts);
 	$cmd_opts['profile']  = $profileinfo['profileswitch'];
 print "Commit profile";
-print_r($cmd_opts);
+
 	$cmd_out = nfsend_query("commit-profile", $cmd_opts, 0);
 
 	if ( is_bool($cmd_out) && $cmd_out == FALSE ) {
@@ -953,7 +953,7 @@ print_r($cmd_opts);
 print "Commit failed";
 		$cmd_opts['force']   = 1;
 print "Force delete profile";
-print_r($cmd_opts);
+
 		$cmd_out = nfsend_query("delete-profile", $cmd_opts, 0);
 
 		if ( is_bool($cmd_out) && $cmd_out == FALSE ) {

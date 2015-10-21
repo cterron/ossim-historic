@@ -53,6 +53,9 @@
  * @copyright  2007-2014 AlienVault
  * @link       https://www.alienvault.com/ AlienVault web page
  */
+
+set_time_limit(0);
+
 class Protocol
 {
     /**

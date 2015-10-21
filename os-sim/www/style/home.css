@@ -683,8 +683,8 @@ img
     display: none;
     position: absolute;
     padding: 2px;
-    top: -6px;
-    right: 8px;
+    top: -9px;
+    right: 4px;
     min-width: 10px;
     text-align: center;
     color: #FFF;
@@ -697,11 +697,16 @@ img
     background: rgb(145, 203, 5) !important;
 }
 
+#link_notification_center
+{
+    display: inline-table;
+}
+
 #notif_bubble.exceed_notif
 {
     line-height: 14px;
-    top: -8px;
-    right: 6px;
+    top: -10px;
+    right: 2px;
     padding: 1px 1px 1px 2px;
 }
 
@@ -867,5 +872,19 @@ img
     width:100%;
     clear:both;
     height:1px;
+}
+
+
+
+/*******************************************************
+******              Printing styles               ******
+********************************************************/
+
+@media print
+{
+    #c_nav_container, #c_header, #notif_container, #c_help
+    {
+        display: none !important;
+    }
 }
 

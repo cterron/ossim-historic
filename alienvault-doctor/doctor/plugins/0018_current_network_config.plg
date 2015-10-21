@@ -2,7 +2,7 @@
 name=0018 Current network configuration
 id=0018
 description=Monitors the network configuration searching for network problems.
-strike_zone=True
+affects_strike_zone=True
 category=network
 type=command
 command=ifconfig
@@ -21,7 +21,7 @@ summary_failed=Loopback interface is not available
 remediation=The loopback interface is actually used by AlienVault product during normal operation. Therefore, it always has to be correctly configured, regardless of whether the AlienVault system is attached to a network or not.
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Checks that all configured interfaces (the ones present in ossim_setup.conf)
 # are up and running
@@ -38,7 +38,7 @@ summary_failed=Configured and running network interfaces do not match
 remediation=The number of configured network interfaces and running network interfaces do not match. Please check the network configuration to adjust the running interfaces
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Look for network errors as far as interfaces are concerned (reported by
 # ifconfig)
@@ -85,5 +85,5 @@ summary_failed=MTU value has been modified
 remediation=Modifying the MTU value is not supported and may lead some tools like Suricata to stop working properly. Please check your network configuration
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 

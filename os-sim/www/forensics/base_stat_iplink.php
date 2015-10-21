@@ -27,6 +27,8 @@ if(GET('fqdn') == 'yes' || GET('fqdn') == 'no')
     $_SESSION['siem_default_group'] = "base_stat_iplink.php?sort_order=events_d&fqdn=" . GET('fqdn');
 }
 
+if ($_REQUEST['sort_order']=='') $_GET['sort_order']='events_d';
+
 $geoloc = new Geolocation('/usr/share/geoip/GeoLiteCity.dat');
 
 $submit = ImportHTTPVar("submit", VAR_ALPHA | VAR_SPACE, array(
@@ -36,7 +38,7 @@ $submit = ImportHTTPVar("submit", VAR_ALPHA | VAR_SPACE, array(
 ));
 $fqdn = ImportHTTPVar("fqdn", VAR_ALPHA | VAR_SPACE);
 $et = new EventTiming($debug_time_mode);
-$cs = new CriteriaState("base_stat_iplink.php");
+$cs = new CriteriaState('base_stat_iplink.php', '&fqdn='.$fqdn);
 $cs->ReadState();
 // Check role out and redirect if needed -- Kevin
 $roleneeded = 10000;
@@ -94,13 +96,14 @@ $qro->AddTitle(gettext("Unique Dst Ports"), "dport_a", "", " ORDER BY clayer4 AS
 $qro->AddTitle(gettext("Unique Events"), "sig_a", "", " ORDER BY csig ASC", "sig_d", "", " ORDER BY csig DESC");
 $qro->AddTitle(gettext("Total Events"), "events_a", "", " ORDER BY ccid ASC", "events_d", "", " ORDER BY ccid DESC");
 $sort_sql = $qro->GetSortSQL($qs->GetCurrentSort() , $qs->GetCurrentCannedQuerySort());
-$sql = "SELECT acid_event.ip_src, acid_event.ip_dst, acid_event.ip_proto, hex(acid_event.ctx) as ctx, COUNT(DISTINCT acid_event.layer4_dport) as clayer4, COUNT(acid_event.id) as ccid, COUNT(DISTINCT acid_event.plugin_id, acid_event.plugin_sid) csig, HEX(acid_event.src_host) AS src_host, HEX(acid_event.dst_host) AS dst_host " . $sort_sql[0] . $from . $where . " GROUP by ip_src, ip_dst, ip_proto " . $sort_sql[1] ;
+$sql = "SELECT SQL_CALC_FOUND_ROWS acid_event.ip_src, acid_event.ip_dst, acid_event.ip_proto, hex(acid_event.ctx) as ctx, COUNT(DISTINCT acid_event.layer4_dport) as clayer4, COUNT(acid_event.id) as ccid, COUNT(DISTINCT acid_event.plugin_id, acid_event.plugin_sid) csig, HEX(acid_event.src_host) AS src_host, HEX(acid_event.dst_host) AS dst_host " . $sort_sql[0] . $from . $where . " GROUP by ip_src, ip_dst, ip_proto " . $sort_sql[1] ;
 #$sql = "SELECT DISTINCT acid_event.ip_src, acid_event.ip_dst, acid_event.ip_proto " . $sort_sql[0] . $from . $where . $sort_sql[1];
 /* Run the Query again for the actual data (with the LIMIT) */
 $qs->current_view = $submit;
 //echo "<br>$sql<br>\n";
 session_write_close();
 $result = $qs->ExecuteOutputQuery($sql, $db);
+$qs->GetCalcFoundRows('', $result->baseRecordCount(), $db);
 
 $et->Mark("Retrieve Query Data");
 // if ($debug_mode == 1) {

@@ -190,10 +190,6 @@ alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey 
 
 #Matt Jonkman
 #
-alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey Connect Reply and Server List"; dsize:>200; content:"|e3 0b|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003313; classtype:policy-violation; sid:2003313; rev:3;)
-
-#Matt Jonkman
-#
 #alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Search Request (by file hash)"; dsize:19; content:"|e3 0e 14|"; depth:3; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003314; classtype:policy-violation; sid:2003314; rev:3;)
 
 #Matt Jonkman
@@ -328,14 +324,6 @@ alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET P2P Bittorrent P2
 #by Philipp Seidel
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET P2P Client User-Agent (Shareaza 2.x)"; flow:to_server,established; content:"|0d 0a|User-Agent|3a| Shareaza 2."; reference:url,shareaza.sourceforge.net; reference:url,doc.emergingthreats.net/2011707; classtype:policy-violation; sid:2011707; rev:4;)
-
-#Submitted by marcamone
-#
-#alert tcp $HOME_NET any -> 38.115.131.0/24 2234 (msg:"ET P2P Soulseek traffic (1)"; flow: established; reference:url,www.slsknet.org; reference:url,doc.emergingthreats.net/bin/view/Main/2001185; classtype:policy-violation; sid:2001185; rev:8;)
-
-#Submitted by marcamone
-#
-#alert tcp $HOME_NET any -> 38.115.131.0/24 5534 (msg:"ET P2P Soulseek traffic (2)"; flow: established; reference:url,www.slsknet.org; reference:url,doc.emergingthreats.net/bin/view/Main/2001186; classtype:policy-violation; sid:2001186; rev:8;)
 
 #Submitted by marcamone
 #

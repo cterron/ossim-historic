@@ -30,7 +30,6 @@
 * Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 *
 */
-set_time_limit(300);
 
 require_once 'av_init.php';
 

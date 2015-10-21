@@ -8,6 +8,7 @@ INCLUDES =  $(LIBGDA_CFLAGS) \
   $(LIBGEOIP_CFLAGS) \
   $(LIBSOUP_CFLAGS) \
   $(LIBBSON_CFLAGS) \
+  $(LIBZLIB_CFLAGS) \
   -DG_LOG_DOMAIN=\"OSSIM\" \
   -DOS_SIM_GLOBAL_CONFIG_FILE=\""$(sysconfdir)/ossim/server/config.xml"\" \
   -DOS_SIM_GLOBAL_DIRECTIVE_FILE=\""$(sysconfdir)/ossim/server/directives.xml"\" \
@@ -82,7 +83,7 @@ ossim_server_SOURCES = \
 	  sim-user-auth.c \
 		main.c
 
-ossim_server_LDADD = $(LIBGDA_LIBS) $(GNET_LIBS) $(GLIB_LIBS) $(GIO_LIBS) $(OPENSSL_LIBS) $(LIBUUID_LIBS) $(LIBPCRE_LIBS) $(LIBTIDY_LIBS) $(JSON_GLIB_LIBS) $(LIBGEOIP_LIBS) $(LIBSOUP_LIBS) $(LIBBSON_LIBS) libparser.a
+ossim_server_LDADD = $(LIBGDA_LIBS) $(GNET_LIBS) $(GLIB_LIBS) $(GIO_LIBS) $(OPENSSL_LIBS) $(LIBUUID_LIBS) $(LIBPCRE_LIBS) $(LIBTIDY_LIBS) $(JSON_GLIB_LIBS) $(LIBGEOIP_LIBS) $(LIBSOUP_LIBS) $(LIBBSON_LIBS) $(LIBZLIB_LIBS) -lm libparser.a
 
 SUBDIRS = tests
 

@@ -648,7 +648,8 @@ $db->close();
             else
             {
                 $i = 1;
-                $checked_by_default = FALSE;
+
+                $any_s_checked = FALSE;
 
                 foreach($all_sensors as $s_id => $s_data)
                 {
@@ -673,10 +674,19 @@ $db->close();
                     $s_chk_checked = '';
 
                     //Sensors of selected CTX are checked by default
-                    if ($s_status == 'enabled' && $checked_by_default == FALSE)
+                    if ($s_status == 'enabled')
                     {
-                        $s_chk_checked      = " checked='checked'";
-                        $checked_by_default = TRUE;
+                        if ($is_new_net == TRUE && $any_s_checked == FALSE)
+                        {
+                            //Select first sensor by default for new networks
+                            $s_chk_checked = " checked='checked'";
+                            $any_s_checked = TRUE;
+                        }
+                        else if ($is_new_net == FALSE && array_key_exists($s_id, $sensors))
+                        {
+                            $s_chk_checked = " checked='checked'";
+                            $any_s_checked = TRUE;
+                        }
                     }
 
                     $s_chk_id     = ' id = "sboxs'.$i.'"';

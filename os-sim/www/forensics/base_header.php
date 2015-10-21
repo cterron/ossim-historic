@@ -360,6 +360,7 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                     if ($_GET["sort_order"] != "") $params.= "&sort_order=" . urlencode($_GET["sort_order"]);
                     if ($_GET["proto"]      != "") $params.= "&proto=" . urlencode($_GET["proto"]);
                     if ($_GET["port_type"]  != "") $params.= "&port_type=" . urlencode($_GET["port_type"]);
+                    if ($_GET["fqdn"]       != "") $params.= "&fqdn=" . urlencode($_GET["fqdn"]);
                     ?>
                     <div class='siem_form_title'><?php echo _("Show Events") ?></div>
 

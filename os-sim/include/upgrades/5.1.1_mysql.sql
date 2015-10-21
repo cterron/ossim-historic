@@ -8,7 +8,7 @@ UPDATE custom_report_types SET inputs = 'Top Events List:top:text:OSS_DIGIT:50:1
 DELETE FROM port WHERE protocol_name in ('6','17');
 
 REPLACE INTO config (conf, value) VALUES ('latest_asset_change', utc_timestamp());
-REPLACE INTO config (conf, value) VALUES ('last_update', '2015-08-11');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2015-09-15');
 REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.1.1');
 
 COMMIT;

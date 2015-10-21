@@ -33,7 +33,8 @@ use v5.10;
 #use strict;
 #use warnings;
 #use diagnostics;
-
+no warnings 'experimental::smartmatch';
+no warnings 'experimental::lexical_topic';
 use DBI;
 use MIME::Base64;
 use Time::Local;
@@ -82,8 +83,8 @@ my $db_reb='no';
 my $monit_file="/etc/monit/monitrc";
 my $monitdefault_file = "/etc/default/monit";
 my $nagiosapache_file = "/etc/nagios3/apache2.conf";
-my $defaultapache_file = "/etc/apache2/sites-available/default";
-my $frameworkapache_file = "/etc/ossim/framework/apache.conf";
+my $defaultapache_file = "/etc/apache2/sites-available/alienvault.conf";
+my $frameworkapache_file = "/etc/ossim/sites-available/ossim-framework.conf";
 
 my $avgroup="alienvault";
 
@@ -270,136 +271,6 @@ sub main() {
 
 	if (exists $config{'update_sensors'}) {
 
-        if ($profile_framework==1) {
-
-            my $munin_conf_file="/etc/munin/munin.conf";
-            my $munin_include ="/etc/munin/munin.conf.include";
-            if ( -f $munin_conf_file){
-                verbose_log("Configuring munin");
-                #Include FrameWork
-                my $system_framework_name=`cat /etc/hosts | grep $config{'framework_ip'} | awk '{print \$2}' | head -1`;
-                # Get the current name
-                my $current_name = gethostbyaddr($config{'framework_ip'}, AF_INET);
-                chomp($system_framework_name);
-                my $fw_ip=$config{'framework_ip'};
-                my $fn;
-                if ($system_framework_name eq '') {
-                    # If framework name is empty, we use the IP address
-                    $fn = $fw_ip;
-                }else{
-                    # Munin must work with lowercase hostnames
-                    $fn = $system_framework_name;
-                }
-                if (defined($curren_name))
-                {
-                    $fn = $current_name;
-                }
-                else
-                {
-                    $fn = $fw_ip;
-                }
-                open my $munin_framework_conf_fh, ">", "$munin_conf_file" or die "Error opening file $!";
-                print {$munin_framework_conf_fh} <<EOF;
-$script_msg
-# Please use /etc/munin/munin.conf.include to add your own hosts
-#
-# All hostnames must be entered in lowercase
-
-dbdir   /var/lib/munin
-htmldir /var/www/munin
-logdir  /var/log/munin
-rundir  /var/run/munin
-tmpldir /etc/munin/templates
-
-# Framework: $fn
-[$fn]
-    address $fw_ip
-    use_node_name yes
-
-EOF
-                    #Include DataBase
-                    my $ddbb_ip=$config{'database_ip'};
-                # Allinone profiles should not repeat components
-                if ($fw_ip ne $ddbb_ip){
-                    if ( ($ddbb_ip ne "127.0.0.1") && ($ddbb_ip ne $fw_ip) ) {
-                        print {$munin_framework_conf_fh} <<EOF;
-# Database: $ddbb_ip
-[$ddbb_ip]
-    address $ddbb_ip
-    use_node_name yes
-
-EOF
-                    }
-                }
-                # Include known sensors
-                my @sensor_db=`echo "select * from sensor;" |ossim-db | grep -v "priority" | cut -f1,2`;
-                for my $varsen (@sensor_db){
-                    $varsen =~ s/\n//g;
-                    my ($sen_name, $sen_ip) = split(/\s+/, $varsen);
-                    my $sn;
-                    if ($sen_name eq ''){
-                        # If sensor name is empty, we use the IP address:
-                        $sn = $sen_ip;
-                    }else{
-                        # Munin internally works with lowercase hostnames
-                        $sn = $sen_name;
-                    }
-                    # Allinone profiles should not repeat components
-                    if ( ($fw_ip ne $sen_ip) && ($ddbb_ip ne $sen_ip) ) {
-                        print {$munin_framework_conf_fh} <<EOF;
-# Sensor: $sn
-[$sn]
-    address $sen_ip
-    use_node_name yes
-
-EOF
-                    }
-                }
-                print {$munin_framework_conf_fh} <<EOF;
-
-# End of automated configuration by ossim-reconfig
-
-EOF
-                    close $munin_framework_conf_fh;
-
-                # Import include file for munin
-                # If empty or not there, create an example file.
-                if ( (-z $munin_include) || (! -f $munin_include) ){
-                    open my $munin_include_file_fh, ">", "$munin_include" or die "Error opening file $!";
-                    print {$munin_include_file_fh} <<EOF;
-# Munin configuration include file for AlienVault's OSSIM
-#
-# Manually introduce hosts here, following same syntax as /etc/munin/munin.conf
-# Hosts will be included in the main munin configuration by a cron job running
-# ossim-reconfig --update_sensors
-#
-# Please make sure no duplicates are found in /etc/munin/munin.conf
-# IMPORTANT: Always use lowercase for hostnames
-#
-# Also make sure you add the propper firewall rule so that the sensors can talk
-# to the framework on port tcp/4949
-#
-#
-# Example entry:
-# [hostname.domainname]
-#          address 192.168.0.1
-#          use_node_name yes
-#
-
-EOF
-                        close $munin_include_file_fh;
-                }else{
-                    my $command="grep -v \"^\#\" $munin_include >> $munin_conf_file";
-                    debug_log("$command");
-                    system($command);
-                }
-                # Munin node is not modified by --update_sensors, no need to restart it.
-                #console_log("Restarting munin-node");
-                #system("/etc/init.d/munin-node restart $stdout $stderr");
-            }
-
-        }
-
         exit 0;
 	}
 
@@ -487,7 +358,7 @@ EOF
     {
         # disable_servicies is removing heartbeat/mysql and mysql from the run level. 
         system("update-rc.d heartbeat defaults  $stdout $stderr ");
-        system("update-rc.d mysql defaults  $stdout $stderr ");
+        system("update-rc.d mysql defaults  $stdout $stderr ") if -e "/etc/init.d/mysql";
     }
 
 
@@ -705,11 +576,6 @@ sub restart_services(){
             console_log("Restarting nagios3");dp("Restarting nagios3");
             system("/etc/init.d/nagios3 restart  $stdout $stderr ");
             system("update-rc.d nagios3 defaults  $stdout $stderr ");}
-
-        if($reset{'munin-node'}){
-            console_log("Restarting munin-node");dp("Restarting munin-node");
-            system("/etc/init.d/munin-node restart  $stdout $stderr ");
-            system("update-rc.d munin-node defaults  $stdout $stderr ");}
 
         if($reset{'nessusd'}){
             console_log("Restarting nessusd");dp("Restarting nessusd");

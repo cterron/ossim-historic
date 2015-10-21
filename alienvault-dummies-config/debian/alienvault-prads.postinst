@@ -163,6 +163,8 @@ configure_iface_scripts () {
         rm -f "$agent_cfg_file_aux"
 
     fi
+
+    find /var/log/ossim/ -name "prads*" -exec chmod 644 {} \;
 }
 
 

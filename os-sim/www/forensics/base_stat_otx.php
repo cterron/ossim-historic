@@ -19,7 +19,6 @@ require ("$BASE_path/includes/base_include.inc.php");
 include_once ("$BASE_path/base_db_common.php");
 include_once ("$BASE_path/base_common.php");
 include_once ("$BASE_path/base_qry_common.php");
-set_time_limit(300);
 
 if (GET('sensor') != "") ossim_valid(GET('sensor'), OSS_DIGIT, 'illegal:' . _("sensor"));;
 
@@ -102,7 +101,7 @@ $sql = "SELECT SQL_CALC_FOUND_ROWS hex(otx_data.pulse_id) as pulse, COUNT(distin
 // use accumulate tables only with timestamp criteria
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS OTX:$sql\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS OTX:$sql\n", FILE_APPEND);
 }
 
 /* Run the Query again for the actual data (with the LIMIT) */
@@ -204,4 +203,3 @@ $et->PrintTiming();
 $db->baseClose();
 echo "</body>\r\n</html>";
 $geoloc->close();
-?>

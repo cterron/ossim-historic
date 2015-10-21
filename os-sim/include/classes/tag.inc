@@ -756,7 +756,7 @@ class Tag
 
         while (!$rs->EOF)
         {
-            $tag                               = Tag::get_object($conn, $rs->fields['id']);
+            $tag                               = self::get_object($conn, $rs->fields['id']);
             $component_tags[$rs->fields['id']] = $tag;
 
             $rs->MoveNext();

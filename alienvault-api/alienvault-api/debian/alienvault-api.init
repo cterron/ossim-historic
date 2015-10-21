@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          alienvault-api
 # Required-Start:    $remote_fs $syslog rabbitmq-server redis-server alienvault-redis-server-otx
@@ -20,16 +20,15 @@
 NAME=api
 DESC="AlienVault API"
 
-
-CELERYD="/usr/share/alienvault/api/scripts/venv_celeryd.sh"
-CELERYBEAT="/usr/share/alienvault/api/scripts/venv_celerybeat.sh"
+CELERYD="/usr/share/python/alienvault-api/scripts/venv_celeryd.sh"
+CELERYBEAT="/usr/share/python/alienvault-api/scripts/venv_celerybeat.sh"
 CELERYD_PID="/var/run/alienvault/w1.pid"
 CELERYBEAT_PID="/var/run/alienvault/beat.pid"
 
 #
 # Function to cleanup rabbit queues.
 #
-function cleanup_rabbit_queues() {
+cleanup_rabbit_queues() {
   log_daemon_msg "Clean up rabbit queues"
   rabbitmqctl stop_app > /dev/null 2>&1
   rabbitmqctl reset > /dev/null 2>&1
@@ -41,8 +40,6 @@ function cleanup_rabbit_queues() {
 # Function that starts the daemon/service
 #
 do_start() {
-
-
   # We don't want to process old tasks, so reset our rabbitapp.
   cleanup_rabbit_queues
 
@@ -104,7 +101,7 @@ case "$1" in
     1) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
   esac
   ;;
-  restart)
+  restart|force-reload)
   log_daemon_msg "Restarting $DESC" "$NAME"
   log_success_msg
   do_stop
@@ -133,7 +130,7 @@ case "$1" in
   esac
   ;;
   *)
-  echo "Usage: $SCRIPTNAME {start|stop|restart|reload}" >&2
+  echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
   ;;
 esac
 

@@ -11,9 +11,9 @@ raw_limit=1000
 # Verifies that the connection recovery with a remote server has been successful
 [00490001]
 severity=Warning
-pattern=(?:\d{4}-\d{2}-\d{2}\s(?:\d{2}\:?){3}\sOSSIM-Message\:\sTrying\sto\sconnect\sto\s\'(\S+)\'\.{3})|(?:\d{4}-\d{2}-\d{2}\s(?:\d{2}\:?){3}\sOSSIM-Message\:\sConnected\sto\s\'(\S+)\'\safter\s\d+\sretries\s\(\d+\.\d+\ssecs\))
+pattern=(?:\d{4}-\d{2}-\d{2}\s(?:\d{2}\:?){3}\sOSSIM-Message\:\sTrying\sto\sconnect\sto\s\'(\S+)\'\.{3}.*$\n(?:^.*$\n)+\d{4}-\d{2}-\d{2}\s(?:\d{2}\:?){3}\sOSSIM-Message\:\sConnected\sto\s\'(\S+)\'\safter\s\d+\sretries\s\(\d+\.\d+\ssecs\))
 conditions=@string@;@string@:==count[position[0]]
-formatted_output=Connection to @string@ have not been recovered (@string@ seconds)
+formatted_output=Connection to @string@ have not been recovered
 fail_if_empty=False
 description=Verifies that the connection recovery with a remote server has been successful
 summary_passed=No connection recovery issues found

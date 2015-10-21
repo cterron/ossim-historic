@@ -129,6 +129,12 @@ configure_etc_hosts_file(){
     ADMIN_IP=$(grep "^admin_ip=.*" "$OSSIM_SETUP_CONF" 2> /dev/null | cut -d "=" -f 2 || true)
     HOSTNAME=$(grep "^hostname=.*" "$OSSIM_SETUP_CONF" 2> /dev/null | cut -d "=" -f 2 || true)
     DOMAIN=$(grep "^domain=.*" "$OSSIM_SETUP_CONF" 2> /dev/null | cut -d "=" -f 2 || true)
+    
+    # Remove duplicated entries in /etc/hosts
+    ETC_HOSTS_FILE="/etc/hosts"
+    cat "$ETC_HOSTS_FILE" | uniq > "$ETC_HOSTS_FILE.aux"
+    mv "$ETC_HOSTS_FILE.aux" "$ETC_HOSTS_FILE"
+
     # Use correctly the augtool
     key_host=$(augtool match /files/etc/hosts/*/canonical "$HOSTNAME.$DOMAIN" 2> /dev/null | sed 's/\/canonical$//g')
     if [ -n "$key_host" ]; then

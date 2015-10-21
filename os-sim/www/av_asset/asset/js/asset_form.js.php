@@ -103,7 +103,7 @@ function Av_tabs_asset_edition(tab_config)
 
                 if (form_options.type == 'single' && asset_data.is_editable == 'no')
                 {
-                    show_warning_no_editable('av_tab_info', asset_data.ctx.related__server);
+                    show_warning_no_editable('av_tab_info', asset_data.ctx.related_server);
 
                     $("#asset_form input").addClass('disabled').attr("disabled", "disabled");
                     $("#asset_form select").addClass('disabled').attr("disabled", "disabled");
@@ -204,7 +204,7 @@ function Av_tabs_asset_edition(tab_config)
 
         if (form_options.type == 'single' && asset_data.is_editable == 'no')
         {
-            show_warning_no_editable('av_tab_info', asset_data.ctx.related__server);
+            show_warning_no_editable('av_tab_info', asset_data.ctx.related_server);
         }
 
 
@@ -241,7 +241,7 @@ function Av_tabs_asset_edition(tab_config)
 
         if (form_options.type == 'single' && asset_data.is_editable == 'no')
         {
-            show_warning_no_editable('av_tab_info', asset_data.ctx.related__server);
+            show_warning_no_editable('av_tab_info', asset_data.ctx.related_server);
         }
 
 
@@ -275,7 +275,7 @@ function Av_tabs_asset_edition(tab_config)
 
         if (form_options.type == 'single' && asset_data.is_editable == 'no')
         {
-            show_warning_no_editable('av_tab_info', asset_data.ctx.related__server);
+            show_warning_no_editable('av_tab_info', asset_data.ctx.related_server);
         }
 
 

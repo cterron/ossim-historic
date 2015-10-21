@@ -4,7 +4,7 @@ id=0008
 description=Check the integrity of the default Agent rsyslog configuration files.
 category=alienvault
 profiles=Sensor:>4.0
-strike_zone=True
+affects_strike_zone=True
 type=command
 command=diff -burq /etc/rsyslog.d/ /usr/share/alienvault-plugins/d_clean/rsyslog/
 
@@ -22,7 +22,7 @@ summary_failed=The default AlienVault Agent rsyslog files have been modified
 remediation=Modifying the default Agent rsyslog files is not supported. Please contact support and/or restore the plugin package
 appliance_type=@all_sensor_profiles@,@all_aio_profiles@,@all_usm_standard_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Checks if the rsyslog files provided by the ossim-agent package have
 # not been properly installed in /etc/rsyslog.d/ directory
@@ -38,4 +38,4 @@ summary_failed=The default AlienVault Agent rsyslog files have not been properly
 remediation=Your system does not have all the default Agent rsyslog files. Please contact support and/or restore the plugin package
 appliance_type=@all_sensor_profiles@,@all_aio_profiles@,@all_usm_standard_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True

@@ -263,19 +263,17 @@ sim_parse_validate_pulse (bson_iter_t * piter, SimCommand * cmd_base, unsigned l
           guint count = 0;
           if (bson_iter_recurse (&iter, &iterarray))
           {
-          while (bson_iter_next (&iterarray))
-          {
-            const gchar *subkey;
-            const char  *ioc;
-            subkey = bson_iter_key (&iterarray);
-            uint32_t len;
-            ioc =  bson_iter_utf8(&iterarray, &len);
-            count++;
-          }
-          if (count == 0)
-            result = FALSE;
-          else  
-            result = TRUE; 
+            while (bson_iter_next (&iterarray))
+            {
+              bson_iter_key (&iterarray);
+              uint32_t len;
+              bson_iter_utf8(&iterarray, &len);
+              count++;
+            }
+            if (count == 0)
+              result = FALSE;
+            else
+              result = TRUE; 
           }
           else
           {

@@ -71,7 +71,6 @@
 /* discovered with this program's use.                     */
 /***********************************************************/
 
-#error_reporting(E_ALL);
 ini_set("max_execution_time","720");
 
 define('FPDF_FONTPATH','inc/font/');
@@ -199,7 +198,6 @@ if ( $filterip ) {
     $query_host = "AND t1.hostIP='$filterip'";
 }
 
-set_time_limit(300);
 $chinese = false;    // the language is not chinese by default
 
 //start pdf file, add page, set font

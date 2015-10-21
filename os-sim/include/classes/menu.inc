@@ -350,9 +350,6 @@ class Menu
                         + Option:Remote Interfaces
                     + R_lmenu:
                         + (empty)
-                + Hmenu:Scheduler (Alienvault Inventory)
-                    + L_lmenu:
-                        + Option:OCS
                 + Hmenu:Locations
                 + Hmenu:Smart Event Collection
             + Submenu:Threat Intelligence
@@ -1061,81 +1058,66 @@ class Menu
 
             $perm_m_reports         = $perm_ossim_reports || $perm_usm_reports;
 
+            $category_list          = Av_report::get_menu_categories($conn, TRUE);
+
+            $report_opts            = array();
+
+            foreach ($category_list as $cat_id => $cat_name)
+            {
+                $report_opts[$cat_id] = array(
+                    "name"       => $cat_name['short'],
+                    "menu_title" => _('Reports'), //We want the submenu title to be always "Report"
+                    "enabled"    => $perm_usm_reports,
+                    "hmenu"      => array(
+                        "overview" => array(
+                            "name"    => $cat_name['long'],
+                            "enabled" => $perm_report_overview,
+                            "url"     => "/report/wizard_custom_reports.php?category=" . $cat_id
+                        ),
+
+                        "modules" => array(
+                            "name"    => _("Modules"),
+                            "enabled" => $perm_report_modules,
+                            "url"     => "/report/wizard_subreports.php"
+                        ),
+
+
+                        "layouts" => array(
+                            "name"    => _("Layouts"),
+                            "enabled" => $perm_report_layouts,
+                            "url"     => "/report/wizard_profiles.php",
+                            "r_lmenu" => array (
+                                "new_layout" => array(
+                                    "name"       => _("New Layout"),
+                                    "enabled"    => TRUE,
+                                    "display_in" => "greybox",
+                                    "url"        => "/report/wizard_manage_profiles.php"
+                                )
+                            )
+                        ),
+
+                        "scheduler" => array(
+                            "name"    => _("Scheduler"),
+                            "enabled" => $perm_report_scheduler,
+                            "url"     => "/report/wizard_scheduler.php",
+                            "r_lmenu" => array (
+                                "new_scheduler" => array(
+                                    "name"       => _("Schedule a Report"),
+                                    "enabled"    => TRUE,
+                                    "display_in" => "iframe",
+                                    "url"        => "/report/wizard_scheduler.php?ws_new=new"
+                                )
+                            )
+                        )
+                    )
+                );
+            }
+
             $this->menus['reports'] = array(
                 "name"     => _("Reports"),
                 "enabled"  => $perm_m_reports,
                 "display"  => TRUE,
-                "submenu"  => array(
-
-                    /* USM Reports */
-                    "usm_reports" => array(
-                        "name"    => _("USM Reports"),
-                        "enabled" => $perm_usm_reports,
-                        "hmenu"   => array(
-                            "overview" => array(
-                                "name"    => _("Overview"),
-                                "enabled" => $perm_report_overview,
-                                "url"     => "/report/wizard_custom_reports.php",
-                                "r_lmenu" => array (
-                                    "new_custom_report" => array(
-                                        "name"       => _("New Custom Report"),
-                                        "enabled"    => $this->check_perm("report-menu", "ReportsCreateCustom"),
-                                        "display_in" => "iframe",
-                                        "url"        => "/report/wizard.php"
-                                    )
-                                )
-                            ),
-
-                            "modules" => array(
-                                "name"    => _("Modules"),
-                                "enabled" => $perm_report_modules,
-                                "url"     => "/report/wizard_subreports.php"
-                            ),
-
-
-                            "layouts" => array(
-                                "name"    => _("Layouts"),
-                                "enabled" => $perm_report_layouts,
-                                "url"     => "/report/wizard_profiles.php",
-                                "r_lmenu" => array (
-                                    "new_layout" => array(
-                                        "name"       => _("New Layout"),
-                                        "enabled"    => TRUE,
-                                        "display_in" => "greybox",
-                                        "url"        => "/report/wizard_manage_profiles.php"
-                                    )
-                                )
-                            ),
-
-                            "scheduler" => array(
-                                "name"    => _("Scheduler"),
-                                "enabled" => $perm_report_scheduler,
-                                "url"     => "/report/wizard_scheduler.php",
-                                "r_lmenu" => array (
-                                    "new_scheduler" => array(
-                                        "name"       => _("Schedule a Report"),
-                                        "enabled"    => TRUE,
-                                        "display_in" => "iframe",
-                                        "url"        => "/report/wizard_scheduler.php?ws_new=new"
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    /* OSSIM Reports */
-                    "ossim_reports" => array(
-                        "name"    => _("OSSIM Reports"),
-                        "enabled" => $perm_ossim_reports,
-                        "hmenu"   => array(
-                            "overview" => array(
-                                "name"    => _("OSSIM Reports"),
-                                "enabled" => TRUE,
-                                "url"     => "/report/os_report_list.php"
-                            )
-                        )
-                    )
-                )
+                "submenu"  => $report_opts
             );
         }
         else
@@ -1208,7 +1190,6 @@ class Menu
         $perm_sensors   = $this->check_perm("configuration-menu", "PolicySensors");
         $perm_servers   = $this->check_perm("configuration-menu", "PolicyServers");
         $perm_wi        = $this->is_menu_pro() && $this->check_perm("configuration-menu", "PolicyServers");
-        $perm_scheduler = $this->check_perm("configuration-menu", "AlienVaultInventory");
 
         $perm_components  = $perm_av_center || $perm_sensors || $perm_servers || $perm_wi;
 
@@ -1225,7 +1206,7 @@ class Menu
 
         $perm_location    = $this->is_user_admin();
 
-        $perm_deployment  = $perm_components || $perm_scheduler || $perm_sec || $perm_location;
+        $perm_deployment  = $perm_components || $perm_sec || $perm_location;
 
 
         /* Threat Intelligence */
@@ -1359,19 +1340,6 @@ class Menu
                                     "name"    => _("Remote Interfaces"),
                                     "enabled" => $perm_wi,
                                     "url"     => "/remote_interfaces/index.php"
-                                )
-                            )
-                        ),
-
-                        "scheduler"  => array(
-                            "name"    => _("Scheduler"),
-                            "enabled" => $perm_scheduler,
-                            "url"     => "av_schedule_scan/views/list.php?s_type=ocs",
-                            "l_lmenu" => array(
-                                "software_inventory" => array(
-                                    "name"    => _("Software Inventory"),
-                                    "enabled" => TRUE,
-                                    "url"     => "av_schedule_scan/views/list.php?s_type=ocs"
                                 )
                             )
                         ),
@@ -1829,7 +1797,6 @@ class Menu
                     continue;
                 }
 
-
                 $this->set_menu_option($menu_id, $submenu_id);
 
                 $info[$menu_id.'-'.$submenu_id]['items'] = array();
@@ -1892,6 +1859,7 @@ class Menu
                 $default_url  = (empty($p_url['query'])) ? $default_url."?" : $default_url."&";
                 $default_url .= "m_opt=".$this->m_option."&sm_opt=".$this->sm_option;
 
+                $info[$menu_id.'-'.$submenu_id]['menu_title']     = $submenu_data['menu_title'];
                 $info[$menu_id.'-'.$submenu_id]['default_url']    = $default_url;
                 $info[$menu_id.'-'.$submenu_id]['default_option'] = $this->h_option;
                 $info[$menu_id.'-'.$submenu_id]['html']           = $this->render_hmenu();

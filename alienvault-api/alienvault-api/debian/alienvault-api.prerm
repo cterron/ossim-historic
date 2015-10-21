@@ -9,7 +9,7 @@ case "$1" in
     upgrade|remove)
         # Disable the apache2 configuration.
         if [ -x "/usr/sbin/a2dissite" ]; then
-           /usr/sbin/a2dissite alienvault-api.conf
+           a2dissite alienvault-api.conf
         fi
         ;;
 

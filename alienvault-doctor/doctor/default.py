@@ -44,6 +44,8 @@ output_file_prefix = 'data'
 output_raw = False
 version = 'VERSION'
 nickname = 'Mewes'
+ko = False
+ignore_dummy = False
 version_string = 'AlienVault Doctor version %s\n' % version
 
 error_codes = {'invalid_dir': -1,

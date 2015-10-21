@@ -655,7 +655,7 @@ class Alarm_groups
         
         if (file_exists("/tmp/debug_alarm"))
         {
-            error_log("ALARM GROUP:$query\n",3,"/tmp/alarms");
+            file_put_contents("/tmp/alarms", "ALARM GROUP:$query\n", FILE_APPEND);
         }
         
         $ret = array();

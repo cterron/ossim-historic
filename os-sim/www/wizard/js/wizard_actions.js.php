@@ -817,7 +817,7 @@ function delete_member(id, type)
 /*  Function to insert a new host  */
 function insert_new_host(ip, name, type)
 {
-    if (ip == '' || name == '')
+    if (ip == '' || name == '')
     {
         return false;
     }
@@ -877,7 +877,7 @@ function insert_new_host(ip, name, type)
 /*  Function to insert a new net  */
 function insert_new_net(cidr, name, descr)
 {
-    if (cidr == '' || name == '')
+    if (cidr == '' || name == '')
     {
         return false;
     }

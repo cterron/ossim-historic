@@ -81,6 +81,7 @@ $| = 1;
 
 use Getopt::Std;
 use Data::Dumper;
+use lib "/usr/share/ossim/include";
 
 my %loginfo;         # plot information hash
    $loginfo{'1'} = "FATAL";
@@ -798,7 +799,7 @@ sub update_openvas_plugins {
         elsif( int($cvss_base) >= 2 && int($cvss_base) < 5 ) {
             $risk = 3;
         }
-        elsif( int($cvss_base) >= 0 && int($cvss_base) < 2 ) {
+        elsif( int($cvss_base) > 0 && int($cvss_base) < 2 ) {
             $risk = 6;
         }
         #logwriter( " $oid [$cvss_base] $risk .", 4 );

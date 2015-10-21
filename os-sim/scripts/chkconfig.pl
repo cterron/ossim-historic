@@ -31,6 +31,8 @@
 
 # Use all the "used". This makes sure our perl environment is sane. If some of
 # these complain then some of the other perl scripts won't work for you.
+
+use lib '/usr/share/ossim/include';
 use ossim_conf;
 use DBI;
 use POSIX;
@@ -39,7 +41,6 @@ use RRDs;
 use CGI;
 use File::Temp;
 use Compress::Zlib;
-use Switch;
 use IO::Socket;
 use Socket;
 use Sys::Syslog;

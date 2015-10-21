@@ -188,11 +188,6 @@ try
     $av_scan = new Av_scan($targets_p, $sensor, $scan_options);
     $av_scan->run();
 
-    //File to cache scan object
-    $scan_file = 'last_asset_object-'.md5($user);
-
-    Av_scan::set_object_in_file($av_scan, $scan_file);
-
     echo "Asset scan:\n";
     echo "\tTargets: ".$av_scan->get_targets('scan_format')."\n";
     echo "\tSensor: ".$av_scan->get_sensor()."\n";

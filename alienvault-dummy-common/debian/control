@@ -9,9 +9,11 @@ Homepage: http://www.alienvault.com
 Package: alienvault-dummy-common
 Architecture: all
 Pre-Depends: augeas-tools
-Depends: ${shlibs:Depends}, ${misc:Depends}, sudo, molly-guard, locales-all, bc, ntpdate, psmisc, htop, munin, lynx, sysstat, libdbi-perl, openvpn, openvpn-blacklist, screen, zip, unzip, liblwp-useragent-determined-perl, libnet-irc-perl, smartmontools, ethtool, bash-completion, expect, snmp, snmpd, locate, vim, joe, python-statgrab, wget, iptraf, rsync, ipcalc, binutils, netdiag, chkconfig, iotop, lsof, tcpdump, less, irqbalance, bsd-mailx,
+Depends: ${shlibs:Depends}, ${misc:Depends}, sudo, molly-guard, locales-all, bc, ntpdate, psmisc, htop, lynx, sysstat, libdbi-perl, openvpn, openvpn-blacklist, screen, zip, unzip, liblwp-useragent-determined-perl, libnet-irc-perl, smartmontools, ethtool, bash-completion, expect, snmp, snmpd, locate, vim, joe, python-statgrab, wget, iptraf, rsync, ipcalc, binutils, netdiag, chkconfig, iotop, lsof, tcpdump, less, irqbalance, bsd-mailx,
  ipmitool,
- munin-node,
+ sysvinit-core,
+ aptitude,
+ file,
 # We need the openvt binary for first-boot.sh / finish ami build scripts
  kbd,
 # This is needed to show up some extra info in the web UI.
@@ -23,7 +25,6 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, sudo, molly-guard, locales-all, bc,
  ossim-utils (>= 1:${source:Upstream-Version}),
  alienvault-firewall (>= ${source:Upstream-Version}),
  alienvault-api-core (>= ${source:Upstream-Version}),
- alienvault-api-scripts (>= ${source:Upstream-Version}),
  alienvault-doctor (>= ${source:Upstream-Version}),
  alienvault-monit (>= ${source:Upstream-Version}),
  alienvault-logrotate (>= ${source:Upstream-Version}),

@@ -85,7 +85,6 @@ else
     */
     
     set_time_limit(0);
-    ini_set('session.bug_compat_warn','off');
     
     $report_id = POST('report_id');
 	$section   = POST('section');

@@ -177,7 +177,7 @@ require_once 'av_init.php';
                             e.stopPropagation();
                             e.preventDefault();
                             
-                            window.open(__otx_base_url + 'browse?q=' + v, '_blank');
+                            window.open(__otx_base_url + 'browse?q=' + v + '<?php echo Otx::get_anchor('&') ?>', '_blank');
                         },
                         "data-pulse-list": "tag-list"
                     }).appendTo($tag_div);
@@ -192,7 +192,7 @@ require_once 'av_init.php';
                         e.stopPropagation();
                         e.preventDefault();
                         
-                        window.open(__otx_base_url +'pulse/'+ pulse.id, '_blank');
+                        window.open(__otx_base_url +'pulse/'+ pulse.id + '<?php echo Otx::get_anchor() ?>', '_blank');
                     },
                     "data-pulse-list": "view_account",
                 }).appendTo($cell);
@@ -429,7 +429,7 @@ require_once 'av_init.php';
                     "class"     :"p_text pulse_name",
                     "html"      : __this.name,
                     "data-pulse": "name",
-                    "href"      : __otx_base_url + 'pulse/'+ __this.id,
+                    "href"      : __otx_base_url + 'pulse/' + __this.id + '<?php echo Otx::get_anchor() ?>',
                     "target"    : "_blank"
                 }).appendTo($cell);
                 
@@ -453,7 +453,7 @@ require_once 'av_init.php';
                             e.stopPropagation();
                             e.preventDefault();
                             
-                            window.open(__otx_base_url + 'browse?q=' + v, '_blank');
+                            window.open(__otx_base_url + 'browse?q=' + v + '<?php echo Otx::get_anchor('&') ?>', '_blank');
                         }
                     }).appendTo(tag_div);
                 });
@@ -521,7 +521,7 @@ require_once 'av_init.php';
                         
                         $('<a/>', 
                         {
-                            "href"  : __otx_base_url + "indicator/"+ aData.type +"/"+ aData.indicator,
+                            "href"  : __otx_base_url + "indicator/"+ aData.type +"/"+ aData.indicator + '<?php echo Otx::get_anchor() ?>',
                             "target": "_blank",
                             "html"  : '<img src="/ossim/pixmaps/show_details.png" height="16px"/>'
                         }).appendTo(cell);

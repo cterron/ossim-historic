@@ -2648,7 +2648,7 @@ class Asset_net extends Asset
                     AND net.id = net_cidrs.net_id
                     $perms_where
                     AND INET6_ATON(?) >= net_cidrs.begin
-                    AND net_cidrs.end <= INET6_ATON(?)
+                    AND INET6_ATON(?) <= net_cidrs.end
                     AND net_sensor_reference.sensor_id = UNHEX(?)
                     ORDER BY endd-begind";
 

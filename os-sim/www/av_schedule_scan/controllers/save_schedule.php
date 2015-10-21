@@ -37,16 +37,7 @@ require_once 'av_init.php';
 
 $s_type = GET('s_type');
 
-// Logcheck by s_type
-if ($s_type == 'ocs')
-{
-    Session::logcheck('configuration-menu', 'AlienVaultInventory');
-}
-else
-{
-    Session::logcheck('environment-menu', 'AlienVaultInventory');
-}
-
+Session::logcheck('environment-menu', 'AlienVaultInventory');
 
 /****************************************************
  ************** Configuration Options ***************
@@ -54,7 +45,6 @@ else
 
 $scan_types = array(
     'nmap' => 5,
-    'ocs'  => 3,
     'wmi'  => 4
 );
 
@@ -62,7 +52,7 @@ $scan_types = array(
 //Validation array
 
 $validate = array (
-    's_type'      => array('validation' => 'nmap,ocs,wmi',                     'e_message' => 'illegal:' . _('Scheduler Type')),
+    's_type'      => array('validation' => 'nmap,wmi',                         'e_message' => 'illegal:' . _('Scheduler Type')),
     'task_id'     => array('validation' => 'OSS_DIGIT, OSS_NULLABLE',          'e_message' => 'illegal:' . _('Task ID')),
     'task_name'   => array('validation' => 'OSS_ALPHA, OSS_SPACE, OSS_SCORE',  'e_message' => 'illegal:' . _('Name')),
     'task_sensor' => array('validation' => 'OSS_HEX',                          'e_message' => 'illegal:' . _('Sensor')),
@@ -123,8 +113,12 @@ if (GET('ajax_validation') == TRUE)
 
                 if (!Asset_net::is_cidr_in_my_nets($conn, $params))
                 {
-                    $data['status']                   = 'error';
-                    $validation_errors[$_GET['name']] = sprintf(_("Error! The network %s is not allowed.  Please check your network settings"), Util::htmlentities($params));
+                    $data = array(
+                        'status' => 'error',
+                        'data'   => array(
+                            $_GET['name'] => sprintf(_("Error! The network %s is not allowed.  Please check your network settings"), Util::htmlentities($params))
+                        )
+                    );
                 }
 
                 $db->close();
@@ -153,8 +147,12 @@ if (GET('ajax_validation') == TRUE)
 
                 if (ossim_error())
                 {
-                    $data['status']                   = 'error';
-                    $validation_errors[$_GET['name']] = sprintf(_("Error! The credential format is not allowed.  Please check the format again"));
+                    $data = array(
+                        'status' => 'error',
+                        'data'   => array(
+                            $_GET['name'] => sprintf(_("Error! The credential format is not allowed.  Please check the format again"))
+                        )
+                    );
                 }
             }
         }
@@ -165,8 +163,12 @@ if (GET('ajax_validation') == TRUE)
 
             if ($frequency < 1800)
             {
-                $data['status']                   = 'error';
-                $validation_errors[$_GET['name']] = sprintf(_('Invalid time between scans').'. <br/>'._('Entered value').": '<strong>%s</strong>' (1800(s) "._('minimum').")", Util::htmlentities($frequency));
+                $data = array(
+                    'status' => 'error',
+                    'data'   => array(
+                        $_GET['name'] => sprintf(_('Invalid time between scans').'. <br/>'._('Entered value').": '<strong>%s</strong>' (1800(s) "._('minimum').")", Util::htmlentities($frequency))
+                    )
+                );
             }
         }
     }

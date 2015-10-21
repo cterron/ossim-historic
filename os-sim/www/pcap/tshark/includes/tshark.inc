@@ -104,12 +104,12 @@ class Tshark {
             $output = Util::execute_command($cmd, $params, 'string');
             $this->put_max_len($output);
             
-            $cmd    = "tshark -r ? -R ? -T psml -n";
+            $cmd    = "tshark -r ? -R ? -T psml -n -2";
             $params = array($file, $filter); 
             $output = Util::execute_command($cmd, $params, 'string');
 
-            if (!preg_match('<structure>',$output)){
-                $cmd    = "tshark -r ? -T psml -n";
+            if (!preg_match('<structure>',$output) && !empty($filter)){
+                $cmd    = "tshark -r ? -T psml -n -2";
                 $params = array($file); 
                 $output = Util::execute_command($cmd, $params, 'string');
                 $this->put_filter('');
@@ -253,7 +253,7 @@ class Tshark {
     
     public function print_pdml($id)
     {
-        $cmd      = "tshark -r ? -T pdml -n ?"; 
+        $cmd      = "tshark -r ? -T pdml -n -Y ?"; 
         $params   = array($this->file_pcap, "frame.number==".$id);
         $xml_pdml = Util::execute_command($cmd, $params, 'string');
         
@@ -311,7 +311,7 @@ class Tshark {
     
     public function print_text_bin($id)
     {
-        $cmd    = "tshark -r ? -T text -x -n ?";
+        $cmd    = "tshark -r ? -T text -x -n -Y ?";
         $params = array($this->file_pcap, "frame.number==".$id); 
         $salida = "";
         $lines  = explode("\n",Util::execute_command($cmd, $params, 'string'));
@@ -329,9 +329,9 @@ class Tshark {
         switch ($type){
 	    case "All":
                 $interval = round($this->get_max_len() / 30, 6);
-                $filter   = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
+                $filter   = $this->get_filter() == "" ? "" : ",".$this->get_filter();
                 $cmd      = "tshark -r ? -q -z ?";
-                $params   = array($this->get_file_pcap(), "io,stat,".$interval.",");
+                $params   = array($this->get_file_pcap(), "io,stat,".$interval);
                 $lines    = explode("\n",Util::execute_command($cmd, $params, 'string'));
 		$values   = array();
 		$i        = 0;
@@ -386,9 +386,9 @@ class Tshark {
             
             case "AllFilter":
                 $interval = round($this->get_max_len() / 30, 6);
-                $filter = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
+                $filter = $this->get_filter() == "" ? "" : ",".$this->get_filter();
                 $cmd    = "tshark -r ? -q -z ?";
-                $params = array($this->get_file_pcap(), "io,stat,".$interval.",".$filter);
+                $params = array($this->get_file_pcap(), "io,stat,".$interval.$filter);
 		$lines  = explode("\n", Util::execute_command($cmd, $params, 'string'));
 		$values = array();
 		$i=0;
@@ -396,7 +396,7 @@ class Tshark {
 		foreach ($lines as $line){
 			if ($line==="")
 				continue;
-			if (preg_match("/\|\s*([0-9\.]*)\s*<>\s*([0-9\.]*)\s*\|\s*([0-9]*)\s*\|\s*([0-9]*)\s*\|\s*([0-9]*)\s*\|\s*([0-9]*)\s*\|/",$line,$matches)){
+			if (preg_match("/\|\s*([0-9\.]*)\s*<>\s*([0-9\.]*)\s*\|\s*([0-9]*)\s*\|\s*([0-9]*)\s*\|\s*([0-9]*)\s*\|/",$line,$matches)){
 				foreach($matches as $key => $match){
 							if ($key == 0) continue;
 							$values[$i][$key-1] = $match;
@@ -450,7 +450,7 @@ class Tshark {
             
             case "Protocols":
                 $interval = round($this->get_max_len() / 30, 6);
-                $filter   = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
+                $filter   = $this->get_filter() == "" ? "" : ",".$this->get_filter() ;
                 $cmd      = "tshark -r ? -q -z ?";
                 $params   = array($this->get_file_pcap(), "io,stat,".$interval.",tcp,udp,not udp && not tcp");
 		$lines    = explode("\n", Util::execute_command($cmd, $params, 'string'));
@@ -525,7 +525,7 @@ class Tshark {
                 $interval = round($this->get_max_len() / 30, 6);
                 $filter = $this->get_filter() ;
                 $cmd    = "tshark -r ? -q -z ?";
-                $params = array($this->get_file_pcap(), "io,stat,".$interval.",tcp && ".$filter.",udp && ".$filter.",not udp && not tcp && ".$filter.",");
+                $params = array($this->get_file_pcap(), "io,stat,".$interval.",tcp && ".$filter.",udp && ".$filter.",not udp && not tcp && ".$filter);
 				$lines  = explode("\n", Util::execute_command($cmd, $params, 'string'));
 				$values = array();
 				$i=0;
@@ -596,9 +596,9 @@ class Tshark {
             break;
             case "sparkline":
                 $interval = round($this->get_max_len() / 30, 6);
-                $filter   = $this->get_filter() == "" ? "" : ",'".$this->get_filter()."'" ;
+                $filter   = $this->get_filter() == "" ? "" : ",".$this->get_filter();
                 $cmd      = "tshark -r ? -q -z ?";
-                $params   = array($this->get_file_pcap(), "io,stat,".$interval.",");
+                $params   = array($this->get_file_pcap(), "io,stat,".$interval);
                 $lines    = explode("\n", Util::execute_command($cmd, $params, 'string'));
         		$values   = array();
         		$i        = 0;

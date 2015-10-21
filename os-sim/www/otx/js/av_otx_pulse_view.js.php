@@ -147,7 +147,7 @@ require_once 'av_init.php';
                     $('<a/>',
                     {
                         'html': pulse.name,
-                        'href': __otx_url + 'pulse/' + id,
+                        'href': __otx_url + 'pulse/' + id + '<?php echo Otx::get_anchor() ?>',
                         'target': '_blank'
                     }).appendTo($('[data-ioc="pulse-name"]', __self).empty());
                     
@@ -182,7 +182,7 @@ require_once 'av_init.php';
                 <div id="pulse_list_wrap" class="data_wrapper"> \
                     <div class="pulse_name" data-ioc="pulse-name"></div> \
                     <div class="pulse_descr" data-ioc="pulse-descr"></div> \
-                    <div class="i_title"><?php echo _('OTX Indictators of Compromise:') ?></div> \
+                    <div class="i_title"><?php echo _('OTX Indicators of Compromise:') ?></div> \
                     <table data-ioc="pulse-table" class="table_data"> \
                         <thead> \
                             <th><?php echo _('Type') ?></th> \
@@ -235,7 +235,7 @@ require_once 'av_init.php';
                         
                         $('<a/>', 
                         {
-                            "href"  : __otx_url + "indicator/"+ aData.type +"/"+ aData.value,
+                            "href"  : __otx_url + "indicator/"+ aData.type +"/"+ aData.value + '<?php echo Otx::get_anchor() ?>',
                             "target": "_blank",
                             "html"  : '<img src="/ossim/pixmaps/show_details.png" height="16px"/>'
                         }).appendTo(cell);
@@ -295,7 +295,7 @@ require_once 'av_init.php';
                         
                         $('<a/>', 
                         {
-                            "href"  : url,
+                            "href"  : url + '<?php echo Otx::get_anchor() ?>',
                             "target": "_blank",
                             "html"  : '<img src="/ossim/pixmaps/show_details.png" height="16px"/>'
                         }).appendTo(cell);

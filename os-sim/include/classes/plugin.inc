@@ -242,7 +242,7 @@ class Plugin
     {
         Ossim_db::check_connection($conn);
 
-        $ptypes      = Plugin::get_ptypes($conn);
+        $ptypes      = self::get_ptypes($conn);
         $iffoundrows = preg_match('/LIMIT/i', $args) ? TRUE : FALSE;
         $select      = ($iffoundrows) ? 'SQL_CALC_FOUND_ROWS *' : '*';
         $query       = ossim_query("SELECT $select FROM plugin $args");
@@ -555,7 +555,7 @@ class Plugin
     {
         $plugins  = array();
         
-        $all_plugins = Plugin::get_plugins_from_api(Util::uuid_format($sensor_id), array('per_asset' => TRUE));
+        $all_plugins = self::get_plugins_from_api(Util::uuid_format($sensor_id), array('per_asset' => TRUE));
         
         // Resolve Vendor/Model/Version selected to plugin names
         foreach ($vmv_by_asset as $id => $selected_vmv)

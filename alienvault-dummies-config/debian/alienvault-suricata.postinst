@@ -72,7 +72,7 @@ configure_afpacket_in_yaml() {
 configure_sysctl() {
 
     echo "Reloading sysctl configuration"
-    sysctl -p "$SYSCTL_SURICATA_CONF_FILE"
+    sysctl -p "$SURICATA_SYSCTL_CONF_FILE"
 }
 
 
@@ -248,8 +248,7 @@ configure_rule_files_in_yaml() {
 
     echo "Configuring rule-files.yaml"
 
-    if [ ! -f "$SURICATA_RULE_FILES_YAML" ]; then
-        echo "%YAML 1.1
+    echo "%YAML 1.1
 ---
 default-rule-path: /etc/suricata/rules
 rule-files:
@@ -337,9 +336,8 @@ rule-files:
 - suricata-http-events.rules
 - suricata-smtp-events.rules
 - suricata-stream-events.rules" > "$SURICATA_RULE_FILES_YAML"
-    fi
-
-    agent_version=$(dpkg -p ossim-agent | grep Version | cut -d':' -f2 | tr -d ' ')
+    
+    agent_version=$(dpkg -l ossim-agent | grep "ossim-agent" | awk '{ print $3 }' | cut -d':' -f1)
     if [ "$agent_version" = "10" ]; then
         sed -i "/emerging-/d" "$SURICATA_RULE_FILES_YAML" 
     else
@@ -406,7 +404,7 @@ case "$1" in
                     configure_default_file "1" "0"
                     configure_plugin_file
                     configure_nics
-					configure_afpacket_in_yaml
+                    configure_afpacket_in_yaml
                     restart_suricata
                 ;;
 

@@ -457,6 +457,15 @@ class Upgrade
             }
         }
     }
+
+    public function update_module_dr()
+    {
+        try
+        {
+            Util::execute_command('php /usr/share/ossim/scripts/report_module_count_update.php > /dev/null 2>&1 &');
+        }
+        catch (Exception $e) {}
+    }
 }
 
 /* End of file Upgrade.inc */

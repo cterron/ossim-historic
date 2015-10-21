@@ -82,11 +82,11 @@ struct _SimContextPrivate
   GHashTable       *taxonomy_products;
 
   /* Mutex */
-  GStaticRWLock   sem_policies;
-  GMutex         *mutex_plugins;
-  GMutex         *mutex_plugin_sids;
-  GMutex         *mutex_hosts_nets;
-  GStaticRWLock   mutex_host_plugin_sids;
+  GMutex         mutex_plugins;
+  GMutex         mutex_plugin_sids;
+  GMutex         mutex_hosts_nets;
+  GRWLock         sem_policies;
+  GRWLock   mutex_host_plugin_sids;
 };
 
 #define SIM_CONTEXT_GET_PRIVATE(self) (G_TYPE_INSTANCE_GET_PRIVATE ((self), SIM_TYPE_CONTEXT, SimContextPrivate))
@@ -175,12 +175,11 @@ sim_context_instance_init (SimContext *self)
                                                          NULL, (GDestroyNotify) g_list_free);
 
   /* Mutex */
-  g_static_rw_lock_init (&self->priv->sem_policies);
-
-  self->priv->mutex_plugins = g_mutex_new ();
-  self->priv->mutex_plugin_sids = g_mutex_new ();
-  self->priv->mutex_hosts_nets = g_mutex_new ();
-  g_static_rw_lock_init (&self->priv->mutex_host_plugin_sids);
+  g_mutex_init(&self->priv->mutex_plugins);
+  g_mutex_init(&self->priv->mutex_plugin_sids);
+  g_mutex_init(&self->priv->mutex_hosts_nets);
+  g_rw_lock_init (&self->priv->sem_policies);
+  g_rw_lock_init (&self->priv->mutex_host_plugin_sids);
 }
 
 /**
@@ -275,12 +274,11 @@ sim_context_finalize (GObject *self)
     priv->taxonomy_products = NULL;
   }
 
-  g_static_rw_lock_free (&priv->sem_policies);
-
-  g_mutex_free (priv->mutex_plugins);
-  g_mutex_free (priv->mutex_plugin_sids);
-  g_mutex_free (priv->mutex_hosts_nets);
-  g_static_rw_lock_free (&priv->mutex_host_plugin_sids);
+  g_mutex_clear (&priv->mutex_plugins);
+  g_mutex_clear (&priv->mutex_plugin_sids);
+  g_mutex_clear (&priv->mutex_hosts_nets);
+  g_rw_lock_clear (&priv->sem_policies);
+  g_rw_lock_clear (&priv->mutex_host_plugin_sids);
 
   G_OBJECT_CLASS (parent_class)->finalize (self);
 }
@@ -526,13 +524,13 @@ sim_context_get_plugin (SimContext *context,
   g_return_val_if_fail (SIM_IS_CONTEXT (context), NULL);
   g_return_val_if_fail (id > 0, NULL);
 
-  g_mutex_lock (context->priv->mutex_plugins);
+  g_mutex_lock (&context->priv->mutex_plugins);
 
   plugin = g_hash_table_lookup (context->priv->plugins, GUINT_TO_POINTER (id));
   if (plugin)
     g_object_ref (plugin);
 
-  g_mutex_unlock (context->priv->mutex_plugins);
+  g_mutex_unlock (&context->priv->mutex_plugins);
 
   return plugin;
 }
@@ -556,9 +554,9 @@ sim_context_add_new_plugin (SimContext * context,
   sim_plugin_set_id (plugin, id);
   sim_plugin_set_name (plugin, name);
 
-  g_mutex_lock (context->priv->mutex_plugins);
+  g_mutex_lock (&context->priv->mutex_plugins);
   g_hash_table_insert (context->priv->plugins, GINT_TO_POINTER (id), plugin);
-  g_mutex_unlock (context->priv->mutex_plugins);
+  g_mutex_unlock (&context->priv->mutex_plugins);
 
   return;
 }
@@ -579,7 +577,7 @@ sim_context_load_plugins (SimContext *context)
   GList *plugins;
   gint   counter = 0;
 
-  g_mutex_lock (context->priv->mutex_plugins);
+  g_mutex_lock (&context->priv->mutex_plugins);
 
   /* Adds a reference to common plugins */
   plugins = sim_container_get_common_plugins (ossim.container);
@@ -603,7 +601,7 @@ sim_context_load_plugins (SimContext *context)
     plugins = g_list_next (plugins);
   }
 
-  g_mutex_unlock (context->priv->mutex_plugins);
+  g_mutex_unlock (&context->priv->mutex_plugins);
 
   return counter;
 }
@@ -633,13 +631,13 @@ sim_context_add_plugin_sid (SimContext   *context,
 
   cantor_key = sim_plugin_sid_get_cantor_key (plugin_sid);
 
-  g_mutex_lock (context->priv->mutex_plugin_sids);
+  g_mutex_lock (&context->priv->mutex_plugin_sids);
 
   g_hash_table_replace (context->priv->plugin_sids,
                         GUINT_TO_POINTER (cantor_key),
                         g_object_ref (plugin_sid));
 
-  g_mutex_unlock (context->priv->mutex_plugin_sids);
+  g_mutex_unlock (&context->priv->mutex_plugin_sids);
 }
 
 /**
@@ -668,13 +666,13 @@ sim_context_get_plugin_sid (SimContext *context,
 
   cantor_key = CANTOR_KEY (id, sid);
 
-  g_mutex_lock (context->priv->mutex_plugin_sids);
+  g_mutex_lock (&context->priv->mutex_plugin_sids);
 
   plugin_sid = g_hash_table_lookup (context->priv->plugin_sids, GUINT_TO_POINTER (cantor_key));
   if (plugin_sid)
     g_object_ref (plugin_sid);
 
-  g_mutex_unlock (context->priv->mutex_plugin_sids);
+  g_mutex_unlock (&context->priv->mutex_plugin_sids);
 
   return plugin_sid;
 }
@@ -699,7 +697,7 @@ sim_context_load_plugin_sids (SimContext *context)
   GList *plugin_sids;
   gint   counter = 0;
 
-  g_mutex_lock (context->priv->mutex_plugin_sids);
+  g_mutex_lock (&context->priv->mutex_plugin_sids);
 
   /* Adds a reference to common plugin sids */
   plugin_sids = sim_container_get_common_plugin_sids (ossim.container);
@@ -727,7 +725,7 @@ sim_context_load_plugin_sids (SimContext *context)
     plugin_sids = g_list_next (plugin_sids);
   }
 
-  g_mutex_unlock (context->priv->mutex_plugin_sids);
+  g_mutex_unlock (&context->priv->mutex_plugin_sids);
 
   return counter;
 }
@@ -751,7 +749,7 @@ sim_context_load_directive_plugin_sids (SimContext *context,
   g_return_if_fail (SIM_IS_CONTEXT (context));
   g_return_if_fail (SIM_IS_UUID (plugin_ctx));
 
-  g_mutex_lock (context->priv->mutex_plugin_sids);
+  g_mutex_lock (&context->priv->mutex_plugin_sids);
 
   /* Add directives plugin sids (1505) */
   plugin_sids = sim_db_load_plugin_sids (context->priv->database, plugin_ctx);
@@ -765,7 +763,7 @@ sim_context_load_directive_plugin_sids (SimContext *context,
     plugin_sids = g_list_next (plugin_sids);
   }
 
-  g_mutex_unlock (context->priv->mutex_plugin_sids);
+  g_mutex_unlock (&context->priv->mutex_plugin_sids);
 }
 
 /*
@@ -791,13 +789,13 @@ sim_context_has_host_with_inet (SimContext *context,
   g_return_val_if_fail (SIM_IS_CONTEXT (context), FALSE);
   g_return_val_if_fail (SIM_IS_INET (inet), FALSE);
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   host = g_hash_table_lookup (context->priv->hosts, inet);
   if (host)
     found = TRUE;
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return found;
 }
@@ -818,9 +816,9 @@ void sim_context_append_host (SimContext     *context,
 {
   g_return_if_fail (SIM_IS_CONTEXT (context));
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
   sim_context_append_host_ul (context, host);
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 }
 
 /**
@@ -840,14 +838,14 @@ sim_context_get_host_by_inet (SimContext *context,
 
   g_return_val_if_fail (SIM_IS_CONTEXT (context), NULL);
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   host = g_hash_table_lookup (context->priv->hosts, inet);
 
   if (host)
     g_object_ref (host);
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return host;
 }
@@ -869,7 +867,7 @@ sim_context_get_host_by_name (SimContext *context,
   GHashTableIter iter;
   gpointer key, value;
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   g_hash_table_iter_init (&iter, context->priv->hosts);
   while (g_hash_table_iter_next (&iter, &key, &value))
@@ -882,7 +880,7 @@ sim_context_get_host_by_name (SimContext *context,
     }
   }
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return host_matched;
 }
@@ -903,14 +901,14 @@ sim_context_get_host_by_id (SimContext *context,
 
   g_return_val_if_fail (SIM_IS_CONTEXT (context), NULL);
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   host = g_hash_table_lookup (context->priv->host_ids, (gconstpointer)id);
 
   if (host)
     g_object_ref (host);
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return host;
 }
@@ -932,7 +930,7 @@ sim_context_load_hosts (SimContext  *context)
   host_list = sim_db_load_hosts (context->priv->database, context->priv->id);
   node = host_list;
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
   while (node)
   {
     SimHost *host = (SimHost *)node->data;
@@ -941,7 +939,7 @@ sim_context_load_hosts (SimContext  *context)
 
     node = g_list_next (node);
   }
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   g_list_free (host_list);
 
@@ -997,7 +995,7 @@ sim_context_reload_hosts (SimContext  *context)
   host_list = sim_db_load_hosts (context->priv->database, context->priv->id);
   node = host_list;
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   old_hosts = context->priv->hosts;
   old_host_ids = context->priv->host_ids;
@@ -1015,7 +1013,7 @@ sim_context_reload_hosts (SimContext  *context)
     node = g_list_next (node);
   }
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   /* Remove previous host data*/
   if (old_hosts != NULL)
@@ -1053,7 +1051,7 @@ sim_context_reload_nets (SimContext  *context)
   net_list = sim_db_load_nets (context->priv->database, context->priv->id);
   node = net_list;
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   old_nets = context->priv->nets;
   old_net_ids = context->priv->net_ids;
@@ -1076,7 +1074,7 @@ sim_context_reload_nets (SimContext  *context)
     node = g_list_next (node);
   }
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   /* Remove previous nets data */
   if (old_nets != NULL)
@@ -1109,13 +1107,13 @@ sim_context_get_net_by_name (SimContext  *context,
   g_return_val_if_fail (SIM_IS_CONTEXT (context), NULL);
   g_return_val_if_fail (name, NULL);
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   net = g_hash_table_lookup (context->priv->nets, (gpointer)name);
   if (net)
     g_object_ref (net);
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return net;
 }
@@ -1137,13 +1135,13 @@ sim_context_get_net_by_id (SimContext  *context,
   g_return_val_if_fail (SIM_IS_CONTEXT (context), NULL);
   g_return_val_if_fail (SIM_IS_UUID(id), NULL);
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   net = g_hash_table_lookup (context->priv->net_ids, (gpointer)id);
   if (net)
     g_object_ref (net);
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return net;
 }
@@ -1165,7 +1163,7 @@ sim_context_load_nets (SimContext *context)
   net_list = sim_db_load_nets (context->priv->database, context->priv->id);
   node = net_list;
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   while (node)
   {
@@ -1175,7 +1173,7 @@ sim_context_load_nets (SimContext *context)
     node = g_list_next (node);
   }
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   g_list_free (net_list);
 
@@ -1263,9 +1261,9 @@ sim_context_has_inet_in_nets (SimContext  *context,
   gboolean found = FALSE;
 
   // Search in all_nets
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
   found = sim_network_has_inet (context->priv->all_nets, inet);
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return found;
 }
@@ -1289,9 +1287,9 @@ sim_context_is_inet_in_homenet (SimContext  *context,
   if (!sim_inet_is_homenet_checked (inet))
   {
     // Search inet in HOME_NET only once
-    g_mutex_lock (context->priv->mutex_hosts_nets);
+    g_mutex_lock (&context->priv->mutex_hosts_nets);
     gboolean found = sim_network_has_inet (context->priv->home_net, inet);
-    g_mutex_unlock (context->priv->mutex_hosts_nets);
+    g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
     sim_inet_set_is_in_homenet (inet, found);
   }
@@ -1336,13 +1334,13 @@ sim_context_get_homenet_inet (SimContext  *context,
   if (sim_inet_is_homenet_checked (inet) && !sim_inet_is_in_homenet (inet))
     return NULL;
 
-  g_mutex_lock (context->priv->mutex_hosts_nets);
+  g_mutex_lock (&context->priv->mutex_hosts_nets);
 
   homenet_inet = sim_network_search_inet (context->priv->home_net, inet);
   if (homenet_inet)
     g_object_ref (homenet_inet);
 
-  g_mutex_unlock (context->priv->mutex_hosts_nets);
+  g_mutex_unlock (&context->priv->mutex_hosts_nets);
 
   return homenet_inet;
 }
@@ -1586,7 +1584,7 @@ void
 sim_context_lock_host_plugin_sids_r (SimContext *context)
 {
   g_return_if_fail (SIM_IS_CONTEXT (context));
-  g_static_rw_lock_reader_lock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_reader_lock (&context->priv->mutex_host_plugin_sids);
 }
 
 /**
@@ -1599,7 +1597,7 @@ void
 sim_context_unlock_host_plugin_sids_r (SimContext *context)
 {
   g_return_if_fail (SIM_IS_CONTEXT (context));
-  g_static_rw_lock_reader_unlock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_reader_unlock (&context->priv->mutex_host_plugin_sids);
 }
 
 /**
@@ -1612,7 +1610,7 @@ void
 sim_context_lock_host_plugin_sids_w (SimContext *context)
 {
   g_return_if_fail (SIM_IS_CONTEXT (context));
-  g_static_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
 }
 
 /**
@@ -1625,7 +1623,7 @@ void
 sim_context_unlock_host_plugin_sids_w (SimContext *context)
 {
   g_return_if_fail (SIM_IS_CONTEXT (context));
-  g_static_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
 }
 
 /**
@@ -1678,7 +1676,7 @@ sim_context_get_event_host_plugin_sid (SimContext *context,
                       CANTOR_KEY (sim_uuid_hash (sim_context_get_id (event->context)),
                                   CANTOR_KEY (event->plugin_id, event->plugin_sid)));
 
-  g_static_rw_lock_reader_lock (&context->priv->mutex_host_plugin_sids);
+    g_rw_lock_reader_lock (&context->priv->mutex_host_plugin_sids);
 
   host_plugin_sid = (SimHostPluginSid *)g_hash_table_lookup (context->priv->host_plugin_sids, GUINT_TO_POINTER (key));
   if (host_plugin_sid)
@@ -1687,7 +1685,8 @@ sim_context_get_event_host_plugin_sid (SimContext *context,
   if(plugin_sid)
     g_object_ref (plugin_sid);
 
-  g_static_rw_lock_reader_unlock (&context->priv->mutex_host_plugin_sids);
+    g_rw_lock_reader_unlock (&context->priv->mutex_host_plugin_sids);
+  
 
   return plugin_sid;
 }
@@ -1703,12 +1702,12 @@ sim_context_get_host_plugin_sid_list (SimContext *context)
 {
   GList * host_plugin_sids = NULL;
 
-  g_static_rw_lock_reader_lock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_reader_lock (&context->priv->mutex_host_plugin_sids);
   SIM_WHILE_HASH_TABLE (context->priv->host_plugin_sids)
   {
     host_plugin_sids = g_list_prepend (host_plugin_sids, (gpointer) value);
   }
-  g_static_rw_lock_reader_unlock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_reader_unlock (&context->priv->mutex_host_plugin_sids);
 
   return (host_plugin_sids);
 }
@@ -1749,9 +1748,9 @@ sim_context_try_set_host_plugin_sid (SimContext * context,
     host_plugin_sid->reference_id = plugin_reference->reference_id;
     host_plugin_sid->reference_sid = plugin_reference->reference_sid;
 
-    g_static_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
+    g_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
     g_hash_table_insert (context->priv->host_plugin_sids, GUINT_TO_POINTER (key), host_plugin_sid);
-    g_static_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
+    g_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
 
     try = TRUE;
   }
@@ -1797,10 +1796,10 @@ sim_context_load_host_plugin_sids (SimContext *context)
 
     if (sid)
     {
-      g_static_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
+      g_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
       g_hash_table_insert (context->priv->host_plugin_sids, GUINT_TO_POINTER (key), host_plugin_sid);
       host_plugin_sid_num ++;
-      g_static_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
+      g_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
     }
 
     node = g_list_next (node);
@@ -1850,12 +1849,12 @@ sim_context_reload_host_plugin_sids (SimContext *context)
   }
 
   /* Replace data */
-  g_static_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_writer_lock (&context->priv->mutex_host_plugin_sids);
 
   old_data = context->priv->host_plugin_sids;
   context->priv->host_plugin_sids = new_data;
 
-  g_static_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
+  g_rw_lock_writer_unlock (&context->priv->mutex_host_plugin_sids);
 
   /* Unref old data */
   g_hash_table_unref (old_data);
@@ -1962,7 +1961,7 @@ sim_context_get_event_policy (SimContext *context,
   }
 
   // check if some policy applies
-  g_static_rw_lock_reader_lock (&context->priv->sem_policies);
+  g_rw_lock_reader_lock (&context->priv->sem_policies);
   list = context->priv->policies;
   while (list)
   {
@@ -1980,7 +1979,7 @@ sim_context_get_event_policy (SimContext *context,
 
     list = list->next;
   }
-  g_static_rw_lock_reader_unlock (&context->priv->sem_policies);
+  g_rw_lock_reader_unlock (&context->priv->sem_policies);
 
   g_free (src_port_protocol);
   g_free (dst_port_protocol);
@@ -2010,9 +2009,9 @@ sim_context_load_policies (SimContext *context)
 
   policies = sim_db_load_policies (context->priv->database, context->priv->id);
 
-  g_static_rw_lock_writer_lock (&context->priv->sem_policies);
+  g_rw_lock_writer_lock (&context->priv->sem_policies);
   context->priv->policies = policies;
-  g_static_rw_lock_writer_unlock (&context->priv->sem_policies);
+  g_rw_lock_writer_unlock (&context->priv->sem_policies);
 
   return (g_list_length (policies));
 }
@@ -2036,10 +2035,10 @@ sim_context_reload_policies (SimContext *context)
   new_list = sim_db_load_policies (context->priv->database,
                                    context->priv->id);
 
-  g_static_rw_lock_writer_lock (&context->priv->sem_policies);
+  g_rw_lock_writer_lock (&context->priv->sem_policies);
   previous_list = context->priv->policies;
   context->priv->policies = new_list;
-  g_static_rw_lock_writer_unlock (&context->priv->sem_policies);
+  g_rw_lock_writer_unlock (&context->priv->sem_policies);
 
   /* Remove previous data */
   if (previous_list != NULL)

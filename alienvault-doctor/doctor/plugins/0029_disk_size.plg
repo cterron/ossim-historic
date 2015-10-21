@@ -3,9 +3,9 @@ name=0029 Disk size
 id=0029
 description=Checks the disk size
 category=system
-strike_zone=True
+affects_strike_zone=True
 type=command
-command=aux_size=$(fdisk -l | egrep 'xvda1|sda1'); grepped=$(echo "$aux_size" | grep '*' || echo ''); echo $(COLUMNS=200 dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw)' | awk '{ print $2 }'):$([ -n "$grepped" ] && echo "$grepped" | awk '{ print $5 }' | sed -e 's/+//' || echo "$aux_size" | awk '{ print $4 }'| sed -e 's/+//')
+command=device=$(fdisk -l | egrep 'xvda1|sda1'| awk '{ print $1}'); block_count=$(dumpe2fs "$device" 2>/dev/null | grep -i "^Block count:" | awk '{ print $3 }'); blocks=$(echo "$block_count*4" | bc); echo $(COLUMNS=200 dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw)' | awk '{ print $2 }'):$blocks
 raw_limit=100
 
 [00290001]
@@ -19,7 +19,7 @@ summary_failed=The disk size doesn't match the standard ones
 remediation=Appliances are designed to work nicely within the standard disk size. 
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 
 # checks with +- 50GB (13107200 blocks)

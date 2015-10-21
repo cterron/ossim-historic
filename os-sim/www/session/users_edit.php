@@ -36,13 +36,6 @@ require_once 'av_init.php';
 require_once 'languages.inc';
 
 
-function dateDiff_min($startDate, $endDate)
-{
-    $to_time   = strtotime($startDate);
-    $from_time = strtotime($endDate);
-    return floor(abs($to_time - $from_time) / 60);
-}
-
 Session::useractive('../session/login.php');
 
 $conf = $GLOBALS['CONF'];
@@ -116,8 +109,7 @@ if (GET('ajax_validation') == TRUE)
         {
             case 'login':
 
-                $login = GET($_GET['name']);
-
+                $login    = trim(GET($_GET['name']));
                 $s_login  = escape_sql($login, $conn, FALSE);
                 $u_list   = Session::get_list($conn, "WHERE login='".$s_login."'");
 
@@ -132,34 +124,35 @@ if (GET('ajax_validation') == TRUE)
             case 'pass1':
             case 'pass2':
 
-            if ($login_method == 'pass' && ($mode == 'insert' || ($mode == 'update' && !empty($pass1) && !empty($pass2))))
+            // Get password length
+            $conf = $GLOBALS['CONF'];
+
+            $pass_length_min = $conf->get_conf('pass_length_min');
+            $pass_length_min = intval($pass_length_min);
+            $pass_length_min = ($pass_length_min < 7 || $pass_length_min > 255) ? 7 : $pass_length_min;
+
+            $pass_length_max = $conf->get_conf('pass_length_max');
+            $pass_length_max = intval($pass_length_max);
+            $pass_length_max = ($pass_length_max > 255 || $pass_length_max < $pass_length_min) ? 255 : $pass_length_max;
+
+            $pass_expire_min = ($conf->get_conf('pass_expire_min')) ? $conf->get_conf('pass_expire_min') : 0;
+
+            $pass = GET($_GET['name']);
+
+            if (mb_strlen($pass) < $pass_length_min)
             {
-                // Get password length
-                $conf = $GLOBALS['CONF'];
-
-                $pass_length_min = ($conf->get_conf('pass_length_min')) ? $conf->get_conf('pass_length_min') : 7;
-                $pass_length_max = ($conf->get_conf('pass_length_max')) ? $conf->get_conf('pass_length_max') : 255;
-
-                $pass_length_max = ($pass_length_max < $pass_length_min || $pass_length_max < 1) ? 255 : $pass_length_max;
-                $pass_expire_min = ($conf->get_conf('pass_expire_min')) ? $conf->get_conf('pass_expire_min') : 0;
-
-                $pass = GET($_GET['name']);
-
-                if (strlen($pass) < $pass_length_min)
-                {
-                    $data['status']              = 'error';
-                    $data['data'][$_GET['name']] = _('Password is not long enough').' ['._('Minimum password size is').' '.$pass_length_min.']';
-                }
-                elseif (strlen($pass) > $pass_length_max)
-                {
-                    $data['status']              = 'error';
-                    $data['data'][$_GET['name']] = _('Password is long enough').' ['._('Maximum password size is').' '.$pass_length_max.']';
-                }
-                elseif (!Session::pass_check_complexity($pass))
-                {
-                    $data['status']              = 'error';
-                    $data['data'][$_GET['name']] = _('Password is not strong enough. Check the password policy configuration for more details');
-                }
+                $data['status']        = 'error';
+                $data['data']['pass1'] = _('Password is not long enough').' ['._('Minimum password size is').' '.$pass_length_min.']';
+            }
+            elseif (mb_strlen($pass) > $pass_length_max)
+            {
+                $data['status']         = 'error';
+                $data['data']['pass1']  = _('Password is too long').' ['._('Maximum password size is').' '.$pass_length_max.']';
+            }
+            elseif (!Session::pass_check_complexity(utf8_decode($pass)))
+            {
+                $data['status']        = 'error';
+                $data['data']['pass1'] = _("The password does not meet the password complexity requirements.<br/>Password should contain lowercase and uppercase letters, digits and special characters");
             }
 
             break;
@@ -194,15 +187,10 @@ $login_method      = POST('login_method');
 
 $c_pass            = POST('c_pass');
 
-if (POST('ajax_validation_all') == TRUE)
-{
-    $c_pass = utf8_decode($c_pass);
-}
-
 if ($login_method == 'pass')
 {
-    $pass1    = POST('pass1');
-    $pass2    = POST('pass2');
+    $pass1 = POST('pass1');
+    $pass2 = POST('pass2');
 }
 else
 {
@@ -276,12 +264,12 @@ if (empty($validation_errors['login']))
     {
         if (!$am_i_admin && !$am_i_proadmin)
         {
-            $validation_errors['login']  = _("You don't have permission to create users");
+            $validation_errors['login'] = _("You don't have permission to create users");
         }
         else
         {
-            $s_login  = escape_sql($login, $conn, FALSE);
-            $u_list   = Session::get_list($conn, "WHERE login='".$s_login."'");
+            $s_login = escape_sql($login, $conn, FALSE);
+            $u_list  = Session::get_list($conn, "WHERE login='".$s_login."'");
 
             if (count($u_list) > 0)
             {
@@ -304,7 +292,7 @@ if (empty($validation_errors['login']))
 
 
 //Checking password field requirements
-if (empty($validation_errors['pass']))
+if (empty($validation_errors['c_pass']) && empty($validation_errors['pass2']) && empty($validation_errors['pass1']))
 {
     //Checking current password
     $admin_login_method = $myself->get_login_method();
@@ -313,57 +301,61 @@ if (empty($validation_errors['pass']))
     {
         if ($myself->get_pass() != md5($c_pass) && $myself->get_pass() != hash('sha256', $c_pass))
         {
-            $validation_errors['pass'] = _('Authentication failure').'. '._('Admin password is not correct');
+            $validation_errors['c_pass'] = _('Authentication failure').'. '._("Current password is not correct");
         }
     }
     else
     {
         if (!Session::login_ldap($myself->get_login(), $c_pass))
         {
-            $validation_errors['pass'] = _('Authentication failure').'. '._('Admin password is not correct');
+            $validation_errors['c_pass'] = _('Authentication failure').'. '._('Current password is not correct');
         }
     }
 
     if (empty($validation_errors['pass']))
     {
-        if ($login_method != 'ldap' && !empty($pass1) && !empty($pass2))
+        if ($login_method != 'ldap' && (!empty($pass1) || !empty($pass2)))
         {
             //Getting password length
             $conf = $GLOBALS['CONF'];
 
-            $pass_length_min = ($conf->get_conf('pass_length_min')) ? $conf->get_conf('pass_length_min') : 7;
-            $pass_length_max = ($conf->get_conf('pass_length_max')) ? $conf->get_conf('pass_length_max') : 255;
+            $pass_length_min = $conf->get_conf('pass_length_min');
+            $pass_length_min = intval($pass_length_min);
+            $pass_length_min = ($pass_length_min < 7 || $pass_length_min > 255) ? 7 : $pass_length_min;
 
-            $pass_length_max = ($pass_length_max < $pass_length_min || $pass_length_max < 1) ? 255 : $pass_length_max;
+            $pass_length_max = $conf->get_conf('pass_length_max');
+            $pass_length_max = intval($pass_length_max);
+            $pass_length_max = ($pass_length_max > 255 || $pass_length_max < $pass_length_min) ? 255 : $pass_length_max;
+
             $pass_expire_min = ($conf->get_conf('pass_expire_min')) ? $conf->get_conf('pass_expire_min') : 0;
 
             if (0 != strcmp($pass1, $pass2))
             {
-                $validation_errors['pass'] = _('Authentication failure').'. '._('Passwords mismatch');
+                $validation_errors['pass1'] = _('Authentication failure').'. '._('Passwords mismatch');
             }
-            elseif (strlen($pass1) < $pass_length_min)
+            elseif (mb_strlen($pass1) < $pass_length_min)
             {
-                $validation_errors['pass'] = _('Password is not long enough').' ['._('Minimum password size is').' '.$pass_length_min.']';
+                $validation_errors['pass1'] = _('Password is not long enough').' ['._('Minimum password size is').' '.$pass_length_min.']';
             }
-            elseif (strlen($pass1) > $pass_length_max)
+            elseif (mb_strlen($pass1) > $pass_length_max)
             {
-                $validation_errors['pass'] = _('Password is long enough').' ['._('Maximum password size is').' '.$pass_length_max.']';
+                $validation_errors['pass1'] = _('Password is too long').' ['._('Maximum password size is').' '.$pass_length_max.']';
             }
             elseif (!Session::pass_check_complexity($pass1))
             {
-                $validation_errors['pass'] = _('Password is not strong enough. Check the password policy configuration for more details');
+                $validation_errors['pass1'] = _("The password does not meet the password complexity requirements.<br/>Password should contain lowercase and uppercase letters, digits and special characters");
             }
             elseif ($mode == 'update')
             {
                 $recent_pass = Log_action::get_last_pass($conn, $login);
 
-                if ($pass_expire_min > 0 && dateDiff_min($last_pass_change, date('Y-m-d H:i:s')) < $pass_expire_min && !Session::am_i_admin())
+                if ($pass_expire_min > 0 && Util::date_diff_min($last_pass_change, gmdate('Y-m-d H:i:s')) < $pass_expire_min && !Session::am_i_admin())
                 {
-                    $validation_errors['pass'] = _('Password lifetime is too short to allow change. Wait a few minutes...');
+                    $validation_errors['pass1'] = _('Password lifetime is too short to allow change. Wait a few minutes...');
                 }
                 elseif (count($recent_pass) > 0 && (in_array(md5($pass1),$recent_pass) || in_array(hash('sha256', $pass1),$recent_pass)))
                 {
-                    $validation_errors['pass'] = _('This password is recently used. Try another');
+                    $validation_errors['pass1'] = _('This password is recently used. Try another');
                 }
             }
         }
@@ -458,7 +450,7 @@ if (POST('ajax_validation_all') == TRUE)
             // MENUS
             if (!$pro && $am_i_admin && !$is_my_profile)
             {
-                $insert_menu = true;
+                $insert_menu = TRUE;
                 $perms       = array();
 
                 list($menu_perms, $perms_check) = Session::get_menu_perms($conn);

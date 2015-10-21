@@ -159,7 +159,7 @@ if (!$flag_error_api && !$flag_error_frm && (!empty($array_result_api) || !empty
     
             if ($tz != 0)
             {
-                $log_date = gmdate("Y-m-d H:i:s",strtotime($log_date)+(3600*$tz));
+                $log_date = gmdate("Y-m-d H:i:s",strtotime(Util::utc_from_localtime($log_date))+(3600*$tz));
             }
     
             //IF INFO -> COLOR = DFF7FF

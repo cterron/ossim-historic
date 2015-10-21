@@ -91,13 +91,10 @@
 * - validate_sensor_perms($conn,$sensor_ip,$sql="")
 * - valid_echars($value)
 * - check_uniqueid($unique_id1,$unique_id2)
-* - checkpass($conn, $current_pass, $pass1, $pass2, $user)
+* - check_pass($conn, $user, $c_pass, $pass_1, $pass_2)
 * - create_valid_hostname($hostname)
 * - valid_hex32($value)
 */
-
-ini_set('session.bug_compat_warn','off');
-
 
 require_once 'IDS/Init.php';
 require_once 'classes/Util.inc';
@@ -1847,91 +1844,110 @@ function check_uniqueid($unique_id1, $unique_id2)
 }
 
 
-//Check security in passwords
-function checkpass($conn, $current_pass, $pass1, $pass2, $user)
+/**
+ * Function check_pass
+ *
+ * This function checks whether a password is valid
+ *
+ * @param object $conn     Database access object
+ * @param string $user     Current user
+ * @param string $c_pass   Current password
+ * @param string $pass_1   New password
+ * @param string $pass_2   New password (Rewrote password)
+ *
+ * @throws Av_exception If a connection error occurred
+ *
+ * @return string|boolean
+ */
+function check_pass($conn, $user, $c_pass, $pass_1, $pass_2)
 {
-	require_once "ossim_db.inc";
-	require_once "ossim_conf.inc";
+    require_once 'ossim_conf.inc';
 
-	$conf         = $GLOBALS['CONF'];
-	$conf         = (!$conf) ? new Ossim_conf() : $conf;
-	$info_error   = TRUE;
-	$error        = FALSE;
+    $conf = $GLOBALS['CONF'];
+    $conf = (!$conf) ? new Ossim_conf() : $conf;
 
-	$recent_pass = Log_action::get_last_pass($conn, $user);
+    $parameters['c_pass'] = $c_pass;
+    $parameters['pass_1'] = $pass_1;
 
-	$parameters['current_pass'] = $current_pass;
-	$parameters['pass1'] 	    = $pass1;
-	$parameters['pass2'] 	    = $pass2;
-
-
-	$validate  = array (
-		'current_pass'   => array('validation' => 'OSS_PASSWORD'  ,'e_message' => 'illegal:' . _('Current pass')),
-		'pass1'          => array('validation' => 'OSS_PASSWORD'  ,'e_message' => 'illegal:' . _('New password')),
-		'pass2'          => array('validation' => 'OSS_PASSWORD'  ,'e_message' => 'illegal:' . _('Rewrite password'))
-	);
+    $validate = array (
+        'c_pass' => array('validation' => 'OSS_NULLABLE, OSS_PASSWORD' , 'e_message' => _('Current password is not allowed')),
+        'pass_1' => array('validation' => 'OSS_NULLABLE, OSS_PASSWORD' , 'e_message' => _('New password is not allowed'))
+    );
 
 
-	foreach ($parameters as $k => $v)
-	{
-		eval("ossim_valid(\$v, ".$validate[$k]['validation'].", '".$validate[$k]['e_message']."');");
+    foreach ($parameters as $k => $v)
+    {
+        eval("ossim_valid(\$v, ".$validate[$k]['validation'].", '".$validate[$k]['e_message']."');");
 
-		if (ossim_error())
-		{
-			$info_error[] = ossim_get_error();
-			$error        = TRUE;
-
-			ossim_clean_error();
-		}
-	}
-
-	if ($error == TRUE)
-	{
-		return $info_error;
-	}
-
-	$pass_length_min = ($conf->get_conf('pass_length_min')) ? $conf->get_conf('pass_length_min') : 7;
-	$pass_length_max = ($conf->get_conf('pass_length_max')) ? $conf->get_conf('pass_length_max') : 255;
+        if (ossim_error())
+        {
+            return $validate[$k]['e_message'];
+        }
+    }
 
 
-	if (empty($current_pass))
-	{
-		return array(_('Current password is empty'));
-	}
+    $pass_length_min = $conf->get_conf('pass_length_min');
+    $pass_length_min = intval($pass_length_min);
+    $pass_length_min = ($pass_length_min < 7 || $pass_length_min > 255) ? 7 : $pass_length_min;
 
-	if (strcmp($pass1, $pass2) != '0')
-	{
-		return array(_('Passwords mismatches'));
-	}
+    $pass_length_max = $conf->get_conf('pass_length_max');
+    $pass_length_max = intval($pass_length_max);
+    $pass_length_max = ($pass_length_max > 255 || $pass_length_max < $pass_length_min) ? 255 : $pass_length_max;
 
-	if (strlen($pass1) < $pass_length_min)
-	{
-		return array(_('Password is long enough. The minimum is').' '.$pass_length_min.' '._('characters'));
-	}
 
-	if (strlen($pass1) > $pass_length_max)
-	{
-		return array(_('Password is too long. The maximum is').' '.$pass_length_max.' '._('characters'));
-	}
+    //SQL statements to get the user password
+    $q_where_1 = "WHERE login = '$user' AND (pass = '".md5($c_pass)."' OR pass = '".hash('sha256', $c_pass)."')";
+    $q_where_2 = "WHERE login = '$user' AND (pass = '".md5($pass_1)."' OR pass = '".hash('sha256', $pass_1)."')";
 
-	if (!Session::pass_check_complexity($pass1))
-	{
-		return array(_('Password is not complex enough'));
-	}
 
-	if (count($recent_pass) > 0 && (in_array(md5($pass1),$recent_pass) || in_array(hash('sha256', $pass1),$recent_pass)))
-	{
-		return array(_('This password is recently used. Try another'));
-	}
+    if (empty($c_pass))
+    {
+        return _('Current password cannot be empty');
+    }
 
-	$user_list = Session::get_list($conn, "WHERE login = '".$user."' AND (pass = '".md5($pass1)."' OR pass = '".hash('sha256', $pass1)."')");
+    $user_list = Session::get_list($conn, $q_where_1, '', TRUE);
 
-	if (count($user_list) > 0)
-	{
-		return array(_('You must change your old password'));
-	}
+    if (count($user_list) < 1)
+    {
+        return _('Current password does not match');
+    }
 
-	return TRUE;
+    if (strcmp($pass_1, $pass_2) != '0')
+    {
+        return _('Passwords mismatches');
+    }
+
+    if (mb_strlen($pass_1) < $pass_length_min)
+    {
+        return sprintf(_('Password is not long enough [Minimum password size is %s]'), $pass_length_min);
+    }
+
+    if (mb_strlen($pass_1) > $pass_length_max)
+    {
+        return sprintf(_('Password is too long [Maximum password size is %s]'), $pass_length_max);
+    }
+
+    $user_list = Session::get_list($conn, $q_where_2, '', TRUE);
+
+    if (count($user_list) > 0)
+    {
+        return _('You must change your old password');
+    }
+
+    if (Session::pass_check_complexity($pass_1) == FALSE)
+    {
+        return _("The password does not meet the password complexity requirements [Password should contain lowercase and uppercase letters, digits and special characters]");
+    }
+
+    $recent_pass = Log_action::get_last_pass($conn, $user);
+    $recent_pass = array_flip($recent_pass);
+
+    if (count($recent_pass) > 0 && (array_key_exists(md5($pass_1), $recent_pass) || array_key_exists(hash('sha256', $pass_1), $recent_pass)))
+    {
+        return _('This password is recently used. Try another');
+    }
+
+    return TRUE;
 }
 
 

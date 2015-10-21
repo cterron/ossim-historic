@@ -12,7 +12,7 @@ function av_debug_nfsen($msg)
 {
     if (file_exists('/tmp/debug_nfsen'))
 	{
-        error_log("$msg \n", 3, '/tmp/nfsen');
+    	file_put_contents("/tmp/nfsen", "$msg \n", FILE_APPEND);
     }
 }
 

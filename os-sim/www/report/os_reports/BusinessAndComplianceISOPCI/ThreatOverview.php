@@ -131,7 +131,7 @@ if ( Session::menu_perms("report-menu", "ReportsReportServer"))
                     </tr>
                     <tr>
                           <td valign="top" style="padding-top:15px;text-align: center" class="nobborder">
-                          <img src="'.$htmlPdfReport->newImage('/geoloc/graph_geoloc.php?date_from='.urlencode($date_from).'&date_to='.urlencode($date_to),'png','root').'" width="720" /></td>
+                          <img src="'.$htmlPdfReport->newImage('/report/graphs/graph_geoloc_threat.php?date_from='.urlencode($date_from).'&date_to='.urlencode($date_to),'png').'" width="720" /></td>
                     </tr>
                 </table>
             </td>

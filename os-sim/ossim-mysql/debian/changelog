@@ -1,20 +1,20 @@
-ossim-mysql (1:5.1.1-0) stable; urgency=low
+ossim-mysql (1:5.2.0-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 29 Jul 2015 07:21:24 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 17 Sep 2015 04:39:25 -0400
 
-ossim-mysql (1:5.1.0-0) stable; urgency=low
-
-  * New release
-
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 29 Jun 2015 11:29:14 -0400
-
-ossim-mysql (1:5.1.0-0) stable; urgency=low
+ossim-mysql (1:5.2-0) unstable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 29 Jun 2015 03:45:24 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Tue, 30 Jun 2015 04:30:48 -0400
+
+ossim-mysql (1:5.2-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 29 Jun 2015 03:45:58 -0400
 
 ossim-mysql (1:5.1-0) unstable; urgency=low
 

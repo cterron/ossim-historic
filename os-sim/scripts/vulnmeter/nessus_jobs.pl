@@ -151,7 +151,7 @@ use Date::Manip;
 use MIME::Lite;
 use Date::Calc qw( Delta_DHMS Add_Delta_YMD Days_in_Month );
 use Getopt::Std;
-use Switch;
+use feature "switch";
 use IO::Socket;
 use Data::Dumper;
 use POSIX qw(strftime);
@@ -162,6 +162,7 @@ use XML::Simple;
 #Declare constants
 use constant TRUE => 1;
 use constant FALSE => 0;
+no if $] >= 5.018, warnings => 'experimental::smartmatch';
 
 $|=1;
 
@@ -175,12 +176,12 @@ my %loginfo;                                                             #LOGWRI
 
 # Sanity check
 my $log_level = 4;
-my $running   = int(`ps ax|grep nessus_jobs|grep perl|grep -v grep|wc -l`);
-if ($running > 5)
-{
-  logwriter("Skip $running instances",4);
-  exit;
-}
+#my $running   = int(`ps ax|grep nessus_jobs|grep perl|grep -v grep|wc -l`);
+#if ($running > 5)
+#{
+#  logwriter("Skip $running instances",4);
+#  exit;
+#}
 
 #Read settings from the inprotect.cfg file
 #use vars qw/%CONFIG/;
@@ -616,7 +617,7 @@ sub select_job {
         
             if($free_slots<$server_slot) {
                 # launch job after 15 minutes
-                $sql = qq{ select NOW() + INTERVAL 15 Minute as next_scan  };
+                $sql = qq{ select UTC_TIMESTAMP() + INTERVAL 15 Minute as next_scan  };
 
                 $sth_sel = $dbh->prepare( $sql );
                 $sth_sel->execute(  );
@@ -629,7 +630,7 @@ sub select_job {
 
                 logwriter( "\tNot available scan slot nextscan=$next_run", 4 );
                 
-                $sql = qq{ UPDATE vuln_jobs SET status="S", scan_NEXT='$next_run', meth_Wcheck=CONCAT(meth_Wcheck, 'Not available scan slots<br />') WHERE id='$job_id' };
+                $sql = qq{ UPDATE vuln_jobs SET status="S", scan_NEXT='$next_run', meth_Wcheck=CONCAT(REPLACE(IFNULL(meth_Wcheck,''), 'Not available scan slots<br />','') , 'Not available scan slots<br />') WHERE id='$job_id' };
                 safe_db_write ( $sql, 1 );
             }
             else {
@@ -650,7 +651,7 @@ sub select_job {
                         send_error_notifications_by_email($job_id, 'Fail job too many failures'); 
                     }
                     
-                    $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' };
+                    $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' };
                     safe_db_write ( $sql, 3 );         #use insert/update routine
                 }
 
@@ -814,7 +815,7 @@ sub setup_scan {
         if($txt_unresolved_names ne "") {
             $txt_unresolved_names = "Unresolved names:\n".$txt_unresolved_names;
             
-            $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck=CONCAT(meth_Wcheck, '$txt_unresolved_names<br />') WHERE id='$job_id' };
+            $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), '$txt_unresolved_names<br />') WHERE id='$job_id' };
             safe_db_write ( $sql, 4 );  #use insert/update routine
         }
         else {
@@ -859,7 +860,7 @@ sub setup_scan {
             logwriter( "[$job_title] [ $job_id ] Completed SQL Import, scan_PID=$$", 5 );
             
             if ($omp_scan_timeout == FALSE) {
-                $sql = qq{ UPDATE vuln_jobs SET status='C', scan_PID=$$, scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' };
+                $sql = qq{ UPDATE vuln_jobs SET status='C', scan_PID=$$, scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' };
                 safe_db_write ( $sql, 4 );  #use insert/update routine
                 $already_marked = TRUE;
             }
@@ -871,14 +872,14 @@ sub setup_scan {
     }
     elsif($no_results == TRUE && $txt_meth_wcheck eq "") {
         # MARK SCAN AS COMPLETED
-        $sql = qq{ UPDATE vuln_jobs SET status='C', scan_PID=$$, scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' AND status!='T' };
+        $sql = qq{ UPDATE vuln_jobs SET status='C', scan_PID=$$, scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' AND status!='T' };
         safe_db_write ( $sql, 4 );            #use insert/update routine
         $already_marked = TRUE;
     }
 
     if ($no_results == TRUE && $max_targets>=$CONFIG{'MAX_HOSTS'} && $txt_meth_wcheck ne "") {
         # MAX EXCEED
-        $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(meth_Wcheck, '$txt_meth_wcheck'), scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
+        $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), '$txt_meth_wcheck'), scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
         safe_db_write ( $sql, 1 );
         exit;
     }    
@@ -889,7 +890,7 @@ sub setup_scan {
 
         if ( $retries_allowed eq "0" ) {
             # MARK SCAN AS FAILED
-            $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' };
+            $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' };
             safe_db_write ( $sql, 4 );            #use insert/update routine
 
         } else {
@@ -917,7 +918,7 @@ sub setup_scan {
                     send_error_notifications_by_email($job_id, $txt_meth_wcheck);
                 }
                 
-                $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(meth_Wcheck, '$txt_meth_wcheck'), scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
+                $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), '$txt_meth_wcheck'), scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
                 safe_db_write ( $sql, 1 );
 
                 #my $rid = create_report ( $job_id, $Jname, $Jtype, $juser, $Jvset, $scantime, $fk_name, "1", 
@@ -933,7 +934,7 @@ sub setup_scan {
                 
                 if (defined($txt_meth_wcheck) && $txt_meth_wcheck ne "") { # Nmap message
                     
-                    $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck=CONCAT(meth_Wcheck, '$txt_meth_wcheck') WHERE id='$job_id' }; #MARK FAILED
+                    $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), '$txt_meth_wcheck') WHERE id='$job_id' }; #MARK FAILED
                     safe_db_write ( $sql, 1 );
                 }
             }
@@ -1219,7 +1220,7 @@ sub run_nessus {
     
     
     if($nessushostip =~ m/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) {
-        $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck=CONCAT(meth_Wcheck, 'Scan Server Selected: $nessushostip<br />') WHERE id='$job_id' };
+        $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), 'Scan Server Selected: $nessushostip<br />') WHERE id='$job_id' };
         safe_db_write ( $sql, 4 );
     }
 
@@ -2238,7 +2239,7 @@ sub resetBackend {
     $sql = qq{ UPDATE vuln_jobs SET status = 'C', scan_END=scan_START WHERE status='R' };
     safe_db_write ( $sql, 4 );            #use insert/update routine
 
-    $sql = qq{ UPDATE vuln_nessus_servers SET checkin_time=now(), current_scans=0 };
+    $sql = qq{ UPDATE vuln_nessus_servers SET checkin_time=UTC_TIMESTAMP(), current_scans=0 };
     safe_db_write ( $sql, 4 );            #use insert/update routine
 
     my @tmpFileList=(
@@ -3827,18 +3828,18 @@ sub get_prefs {
         my $check_type = "";
         my $txt_data = "";
         if (  $_ ) {
-            switch ( $_ ) {
-                case "W"        { 
+            given ($_) {
+                when ("W")        {
                     $check_type = "W";
                     $txt_name = "Windows Compliance Checks[file]:Policy file #";
                     $txt_data = $wchecks;
                     }
-                case "F"        {
+                when ("F")        {
                     $check_type = "F";
                     $txt_name = "Windows File Contents Compliance Checks[file]:Policy file #"; 
                     $txt_data = $wfchecks;
                     }
-                case "U"        {
+                when ("U")        {
                     $check_type = "U";
                     $txt_name = "Unix Compliance Checks[file]:Policy file #"; 
                     $txt_data = $uchecks;
@@ -4682,7 +4683,7 @@ sub timeout {
     logwriter("Function timeout - Job Id=$job_id", 4);
     
 
-    $sql = qq{ UPDATE vuln_jobs SET status='T', meth_Wcheck=CONCAT(meth_Wcheck, 'Timeout expired<br />'), scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' };
+    $sql = qq{ UPDATE vuln_jobs SET status='T', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), 'Timeout expired<br />'), scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' };
     safe_db_write( $sql, 5);
 
     $sql = qq{ SELECT scan_SERVER FROM vuln_jobs WHERE id='$job_id' };
@@ -4709,7 +4710,7 @@ sub set_job_timeout {
     logwriter("Function set_job_timeout - Job Id=$job_id", 4);
 
     
-    $sql = qq{ UPDATE vuln_jobs SET status='T', meth_Wcheck=CONCAT(meth_Wcheck, 'Timeout expired<br />'), scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' };
+    $sql = qq{ UPDATE vuln_jobs SET status='T', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), 'Timeout expired<br />'), scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' };
     safe_db_write( $sql, 5);
 }
 
@@ -5005,7 +5006,7 @@ sub update_ossim_incidents {
         $sth_inc->finish;
 
         if ( noEmpty($id_inc) ) {
-            $sql_inc = qq{ UPDATE incident SET last_update = now() WHERE id = '$id_inc' };
+            $sql_inc = qq{ UPDATE incident SET last_update = UTC_TIMESTAMP() WHERE id = '$id_inc' };
             safe_db_write( $sql_inc, 4 );
             $sql_inc = qq{ SELECT priority FROM incident WHERE status='Closed' and id = '$id_inc' };
             $sth_inc = $dbh->prepare($sql_inc);
@@ -5030,7 +5031,7 @@ sub update_ossim_incidents {
                     $sth_inc = $dbh->prepare( $id_sql );
                     $sth_inc->execute;
                     my ( $ticket_id ) = $sth_inc->fetchrow_array;
-                    my $sql_ticket = qq { INSERT INTO incident_ticket (id, incident_id, date, status, priority, users, description) values ('$ticket_id', '$id_inc', now(), 'Open', '$priority', 'admin','Automatic open of the incident') };
+                    my $sql_ticket = qq { INSERT INTO incident_ticket (id, incident_id, date, status, priority, users, description) values ('$ticket_id', '$id_inc', UTC_TIMESTAMP(), 'Open', '$priority', 'admin','Automatic open of the incident') };
                     
                     $sth_inc = $dbh->prepare($sql_ticket);
                     $sth_inc->execute();
@@ -5054,7 +5055,7 @@ sub update_ossim_incidents {
             }
             my $priority = calc_priority($risk, $hostid, $scanid);
             $sql_inc = qq{ INSERT INTO incident(uuid, ctx, title, date, ref, type_id, priority, status, last_update, in_charge, submitter, event_start, event_end)
-                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", now(), 'Vulnerability', 'Vulnerability', '$priority', 'Open', now(), '$username', 'openvas', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
+                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", UTC_TIMESTAMP(), 'Vulnerability', 'Vulnerability', '$priority', 'Open', UTC_TIMESTAMP(), '$username', 'openvas', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
             safe_db_write ($sql_inc, 4);
             # TODO: change this for a sequence
             $sql_inc = qq{ SELECT MAX(id) id from incident };
@@ -5440,13 +5441,13 @@ sub execute_omp_command {
             if($semail eq "1") {
                 send_error_notifications_by_email($job_id_to_log, "OMP: $error");
             }
-            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(meth_Wcheck, '$error<br/>') , scan_END=now(), scan_NEXT=NULL WHERE id='$job_id_to_log' }; #MARK FAILED
+            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), '$error<br/>') , scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id_to_log' }; #MARK FAILED
             safe_db_write ( $sql, 1 );
         }elsif ($job_id ne ""){
             if($semail eq "1") {
                 send_error_notifications_by_email($job_id, "OMP: $error");
             }
-            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck='$error Retried $maxretries times.<br/>', scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
+            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck='$error Retried $maxretries times.<br/>', scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
             safe_db_write ( $sql, 1 );
         }
 
@@ -5462,7 +5463,7 @@ sub execute_omp_command {
             if($semail eq "1") {
                 send_error_notifications_by_email($job_id_to_log, "OMP: $status_text");
             }
-            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(meth_Wcheck, '$status_text<br />'), scan_END=now(), scan_NEXT=NULL WHERE id='$job_id_to_log' }; #MARK FAILED
+            $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), '$status_text<br />'), scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id_to_log' }; #MARK FAILED
             safe_db_write ( $sql, 1 );
 
             unlink $xml_output if -e $xml_output;
@@ -5551,7 +5552,9 @@ sub get_results_from_xml {
             #if($risk_factor eq "Passed")    { $risk_factor = "Info"; }
             #if($risk_factor eq "Unknown")   { $risk_factor = "Medium"; }
             #if($risk_factor eq "Failed")    { $risk_factor = "High"; }
-            
+
+            $risk_factor = "Info";
+
             if ($result->{"nvt"}->{"cvss_base"} eq "" || ref($result->{"nvt"}->{"cvss_base"}) eq 'HASH') {
                 $risk_factor = "Info";
             }
@@ -5564,7 +5567,7 @@ sub get_results_from_xml {
             elsif( int($result->{"nvt"}->{"cvss_base"}) >= 2 && int($result->{"nvt"}->{"cvss_base"}) < 5 ) {
                 $risk_factor = "Medium";
             }
-            elsif( int($result->{"nvt"}->{"cvss_base"}) >= 0 && int($result->{"nvt"}->{"cvss_base"}) < 2 ) {
+            elsif( int($result->{"nvt"}->{"cvss_base"}) > 0 && int($result->{"nvt"}->{"cvss_base"}) < 2 ) {
                 $risk_factor = "Low";
             }
 
@@ -5817,7 +5820,7 @@ sub check_running_scans {
             if ( ($status eq "Running" || $status eq "Requested" || $status eq "Pause Requested" || $status eq "Paused") ) {
                 $running   = 1;
             }
-            elsif ( ($status eq "Done" || $status eq "Stopped") ) {
+            elsif ( ($status eq "Done" || $status eq "Stopped" || $status eq "NOT_FOUND") ) {
             	if( $cpid eq "" ) {
 	            	$completed = 1;
 	            }
@@ -5852,17 +5855,17 @@ sub check_running_scans {
 	       
 		        if( process_results( \%hostHash, $job_id, $job_title, $Jtype, $juser, $Jvset, $scantime, $sensor_id ) ) {
 	            	logwriter( "[$job_title] [ $job_id ] Completed SQL Import, scan_PID=$$", 4 );
-	                $sql = qq{ UPDATE vuln_jobs SET status='C', scan_PID=$$, scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' };
+	                $sql = qq{ UPDATE vuln_jobs SET status='C', scan_PID=$$, scan_END=UTC_TIMESTAMP(), scan_NEXT=NULL WHERE id='$job_id' };
 	            }
 	            else {
 		             logwriter( "Error when importing orphan job $task_id for server $sensor_id", 5 );
-		             $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END ='$now', meth_Wcheck=CONCAT(meth_Wcheck, 'Error when importing orphan job<br />') WHERE id='$job_id' };
+		             $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END ='$now', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), 'Error when importing orphan job<br />') WHERE id='$job_id' };
 	            }
 		        
 	        }
 	        elsif($running==0) { # the job is not running in the sersor
 	            logwriter( "Job task $task_id was ended incorrectly for server $sensor_id", 5 );
-	            $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END ='$now', meth_Wcheck=CONCAT(meth_Wcheck, 'Job task was ended incorrectly<br />') WHERE id='$job_id' };
+	            $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END ='$now', meth_Wcheck=CONCAT(IFNULL(meth_Wcheck,''), 'Job task was ended incorrectly<br />') WHERE id='$job_id' };
 	        }
         
 	        safe_db_write ( $sql, 4 );  #use insert/update routine

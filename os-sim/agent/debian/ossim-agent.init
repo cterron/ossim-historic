@@ -11,8 +11,6 @@
 # Description:       Gathers and sends data to the correlation engine for further process.
 ### END INIT INFO
 
-set -e
-
 . /lib/lsb/init-functions
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin

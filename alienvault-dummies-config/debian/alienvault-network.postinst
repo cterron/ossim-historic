@@ -42,6 +42,26 @@ OLD_ADMIN_NETMASK=$(grep -w -m1 netmask "$NETWORK_INTERFACES_FILE" | grep -v loo
 # 'all' means 'restart all interfaces'
 NEEDS_INTERFACE_RESTART="no"
 
+# Augeas load network interfaces.
+LOAD_INTERFACES="set /augeas/load/Interfaces/lens Interfaces.lns
+set /augeas/load/Interfaces/incl[1] /etc/network/interfaces.d/*
+set /augeas/load/Interfaces/incl[2] /etc/network/interfaces
+set /augeas/load/Interfaces/excl[1] \"#*#\"
+set /augeas/load/Interfaces/excl[2] *.old
+set /augeas/load/Interfaces/excl[3] *.bak
+set /augeas/load/Interfaces/excl[4] *.augnew
+set /augeas/load/Interfaces/excl[5] *.augsave
+set /augeas/load/Interfaces/excl[6] *.dpkg-dist
+set /augeas/load/Interfaces/excl[7] *.dpkg-bak
+set /augeas/load/Interfaces/excl[8] *.dpkg-new
+set /augeas/load/Interfaces/excl[9] *.dpkg-old
+set /augeas/load/Interfaces/excl[10] *.rpmsave
+set /augeas/load/Interfaces/excl[11] *.rpmnew
+set /augeas/load/Interfaces/excl[12] *~
+load
+"
+
+
 check_squid_conf() {
     squid_conf_file="/etc/squid3/squid.conf"
 
@@ -268,13 +288,24 @@ update_admin_interface() {
 update_admin_ip(){
     #sed -i "s/address $OLD_ADMIN_IP/address $NEW_ADMIN_IP/g" $NETWORK_INTERFACES_FILE
     # Search for XPATH
-    xpath=$(augtool  match /files${NETWORK_INTERFACES_FILE}/iface[address = \"$OLD_ADMIN_IP\"]|sed -e 's/ //g'| cut -f 1 -d '=')
-    netmask=$(augtool get "$xpath/netmask" |sed -e 's/ //g'|cut -f 2 -d '=')
+    xpath=$(augtool --noautoload << EOF | sed -e 's/ //g'| cut -f 1 -d '='
+${LOAD_INTERFACES}
+match /files${NETWORK_INTERFACES_FILE}/iface[address = \"$OLD_ADMIN_IP\"]
+quit
+EOF
+            )
+    netmask=$(augtool --noautoload << EOF | sed -e 's/ //g'| cut -f 2 -d '='
+${LOAD_INTERFACES}
+get "$xpath/netmask"
+quit
+EOF
+           )
     network=$(ipcalc -n $NEW_ADMIN_IP/$netmask|sed -n 's/^Network:\s*\([^/]*\)\s*\(.*\)/\1/p')
     broadcast=$(ipcalc -n $NEW_ADMIN_IP/$netmask|sed -n 's/^Broadcast:\s*\(\([0-9]\{1,3\}\.\)\{3\}\([0-9]\)\{1,3\}\)\s*\(.*\)/\1/p')
     # Use Augeas to set network and broadcast 
     # Generate the file
-    augtool << EOF
+    augtool --noautoload << EOF
+    ${LOAD_INTERFACES}
     set $xpath/network $network
     set $xpath/broadcast $broadcast
     set $xpath/address $NEW_ADMIN_IP
@@ -287,11 +318,23 @@ EOF
 
 update_admin_netmask(){
     #sed -i "s/netmask $OLD_ADMIN_NETMASK/netmask $NEW_ADMIN_NETMASK/g" $NETWORK_INTERFACES_FILE
-    xpath=$(augtool match /files${NETWORK_INTERFACES_FILE}/iface[.=\"$NEW_INTERFACE\"]|sed -e 's/ //g'| cut -f 1 -d '=')
-    ipaddr=$(augtool get "$xpath/address"|sed -e s'/s //g'| cut -f 2 -d '=')
+    xpath=$(augtool --noautoload << EOF | sed -e 's/ //g'| cut -f 1 -d '='
+${LOAD_INTERFACES}
+match /files${NETWORK_INTERFACES_FILE}/iface[.=\"$NEW_INTERFACE\"]
+quit
+EOF
+
+         )
+    ipaddr=$(augtool --noautoload <<EOF |sed -e s'/s //g'| cut -f 2 -d '='
+${LOAD_INTERFACES}
+get "$xpath/address"
+quit
+EOF
+          )
     network=$(ipcalc -n $ipaddr/$NEW_ADMIN_NETMASK|sed -n 's/^Network:\s*\([^/]*\)\s*\(.*\)/\1/p')
     broadcast=$(ipcalc -n $ipaddr/$NEW_ADMIN_NETMASK|sed -n 's/^Broadcast:\s*\(\([0-9]\{1,3\}\.\)\{3\}\([0-9]\)\{1,3\}\)\s*\(.*\)/\1/p')
-    augtool << EOF
+    augtool --noautoload << EOF
+    ${LOAD_INTERFACES}
     set $xpath/netmask $NEW_ADMIN_NETMASK
     set $xpath/broadcast $broadcast
     set $xpath/network $network
@@ -333,8 +376,9 @@ migrate_network_interfaces(){
     ADMIN_GATEWAY=$(grep "^admin_gateway=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 || true)
 
     # Get network interfaces located in /etc/alienvault/network/interfaces.conf
-    AUGTOOL_OUTPUT=$(augtool << EOF
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+    AUGTOOL_OUTPUT=$(augtool --noautoload << EOF
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 match /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/address
 quit
@@ -350,8 +394,9 @@ EOF
     #
     ALL_INTERFACES=$(ip link show | grep -v lo | grep -v "link/" | awk '{ print $2 }' | tr -d ":" || true)
     for AIFACE in $ALL_INTERFACES; do
-        augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/address TBD
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${AIFACE}/netmask TBD
@@ -375,8 +420,9 @@ EOF
     #
     MONITOR_INTERFACES=$(grep "^interfaces=" "$OSSIM_SETUP_FILE" | cut -d'=' -f2 | tr ',' '\n' || true)
     for MIFACE in $MONITOR_INTERFACES; do
-        augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${MIFACE}/monitor yes
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${MIFACE}/enabled yes
@@ -389,101 +435,117 @@ EOF
     # Interfaces configured in /etc/network/interfaces, that are not set up for network monitoring,
     # i.e. have IP addresses.
     #
-    NETWORK_INTERFACES=$(augtool match /files${NETWORK_INTERFACES_FILE}/*/address | grep -oE "iface\[.*\]" | grep -v "0\.0\.0\.0" | xargs -I {} augtool get /files${NETWORK_INTERFACES_FILE}/{}/ | awk '{ print $3}' || true)
+    NETWORK_INTERFACES=$(augtool match /files${NETWORK_INTERFACES_FILE}/*/address | grep -oE "iface\[.*\]" | grep -v "0\.0\.0\.0" | xargs -I {} augtool get /files${NETWORK_INTERFACES_FILE}/{}/  | awk '{ print $3}' || true
+                      )
     for NIFACE in $NETWORK_INTERFACES; do
-        ADDRESS=$(augtool << EOF | awk '{ print $5 }'
+        ADDRESS=$(augtool --noautoload << EOF | awk '{ print $5 }'
+${LOAD_INTERFACES}
 get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/address
 quit
 EOF
                )
-        [ -z "$ADDRESS" ] || augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        [ -z "$ADDRESS" ] || augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/address ${ADDRESS}
 save
 quit
 EOF
 
-        NETMASK=$(augtool << EOF | awk '{ print $5 }'
+        NETMASK=$(augtool --noautoload << EOF | awk '{ print $5 }'
+${LOAD_INTERFACES}
 get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/netmask
 quit
 EOF
                )
-        [ -z "$NETMASK" ] || augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        [ -z "$NETMASK" ] || augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/netmask ${NETMASK}
 save
 quit
 EOF
 
-        NETWORK=$(augtool << EOF | awk '{ print $5 }'
+        NETWORK=$(augtool --noautoload << EOF | awk '{ print $5 }'
+${LOAD_INTERFACES}
 get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/network
 quit
 EOF
                )
-        [ -z "$NETWORK" ] || augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        [ -z "$NETWORK" ] || augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/network ${NETWORK}
 save
 quit
 EOF
 
-        BROADCAST=$(augtool << EOF | awk '{ print $5 }'
+        BROADCAST=$(augtool --noautoload << EOF | awk '{ print $5 }'
+${LOAD_INTERFACES}
 get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/broadcast
 quit
 EOF
                  )
-        [ -z "$BROADCAST" ] || augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        [ -z "$BROADCAST" ] || augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/broadcast ${BROADCAST}
 save
 quit
 EOF
 
-        GATEWAY=$(augtool << EOF | awk '{ print $5 }'
+        GATEWAY=$(augtool --noautoload << EOF | awk '{ print $5 }'
+${LOAD_INTERFACES}
 get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/gateway
 quit
 EOF
                )
-        [ -z "$GATEWAY" ] || augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        [ -z "$GATEWAY" ] || augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/gateway ${GATEWAY}
 save
 quit
 EOF
 
-        DNSNAMESERVERS=$(augtool << EOF | awk -F'dns-nameservers = ' '{ print $2 }'
+        DNSNAMESERVERS=$(augtool --noautoload << EOF | awk -F'dns-nameservers = ' '{ print $2 }'
+${LOAD_INTERFACES}
 get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/dns-nameservers
 quit
 EOF
                       )
-        [ -z "$DNSNAMESERVERS" ] || augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        [ -z "$DNSNAMESERVERS" ] || augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/dns-nameservers "${DNSNAMESERVERS}"
 save
 quit
 EOF
 
-        DNSSEARCH=$(augtool << EOF | awk '{ print $5 }'
+        DNSSEARCH=$(augtool --noautoload << EOF | awk '{ print $5 }'
+${LOAD_INTERFACES}
 get /files${NETWORK_INTERFACES_FILE}/iface[. = '$NIFACE']/dns-search
 quit
 EOF
                  )
-        [ -z "$DNSSEARCH" ] || augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        [ -z "$DNSSEARCH" ] || augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/dns-search ${DNSSEARCH}
 save
 quit
 EOF
 
-        augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/log_management yes
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${NIFACE}/enabled yes
@@ -495,8 +557,9 @@ EOF
     #
     # Administration network interface.
     #
-    augtool << EOF >/dev/null
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+    augtool --noautoload << EOF >/dev/null
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/address ${ADMIN_IP}
 set /files${ALIENVAULT_NETWORK_INTERFACES}/${ADMIN_INTERFACE}/netmask ${ADMIN_NETMASK}
@@ -516,8 +579,9 @@ update_network_interfaces() {
     migrate_network_interfaces ""
 
     # Now, get all the interfaces ready to be configured and proceed...
-    ENABLED_NETWORK_INTERFACES=$(augtool << EOF | grep -oE "eth." || true
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+    ENABLED_NETWORK_INTERFACES=$(augtool --noautoload << EOF | grep -oE "eth." || true
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 match /files${ALIENVAULT_NETWORK_INTERFACES}/*/enabled yes
 quit
@@ -527,31 +591,36 @@ EOF
 
     for EIFACE in $ENABLED_NETWORK_INTERFACES; do
         # Get interface roles.
-        IS_MONITOR_INTERFACE=$(augtool << EOF | grep -oE "eth." || true
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        IS_MONITOR_INTERFACE=$(augtool --noautoload << EOF | grep -oE "eth." || true
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 match /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/monitor yes
 quit
 EOF
                             )
-        IS_ADMINISTRATION_INTERFACE=$(augtool << EOF | grep -oE "eth." || true
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        IS_ADMINISTRATION_INTERFACE=$(augtool --noautoload << EOF | grep -oE "eth." || true
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 match /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/administration yes
 quit
 EOF
                                    )
-        IS_LOG_MANAGEMENT_INTERFACE=$(augtool << EOF | grep -oE "eth." || true
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+        IS_LOG_MANAGEMENT_INTERFACE=$(augtool --noautoload << EOF | grep -oE "eth." || true
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 match /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/log_management yes
 quit
 EOF
                             )
 
+
         # Reset the previous configuration first, and set common parameters.
         ifconfig $EIFACE -promisc
-        augtool << EOF >/dev/null
+        augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 rm /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']
 rm /files${NETWORK_INTERFACES_FILE}/auto[child::1 = '${EIFACE}']
 set /files${NETWORK_INTERFACES_FILE}/auto[last()+1]/1 ${EIFACE}
@@ -567,60 +636,68 @@ EOF
         #
         if [ ! -z "$IS_ADMINISTRATION_INTERFACE" ] || [ ! -z "$IS_LOG_MANAGEMENT_INTERFACE" ]; then
             # Set IP addresses.
-            ADDRESS=$(augtool << EOF | awk '{ print $3 }'
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+            ADDRESS=$(augtool --noautoload << EOF | awk '{ print $3 }'
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/address
 quit
 EOF
                    )
             if [ ! -z "$ADDRESS" ] && [ "$ADDRESS" != "TBD" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/address ${ADDRESS}
 save
 quit
 EOF
             fi
 
-            NETMASK=$(augtool << EOF | awk '{ print $3 }'
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+            NETMASK=$(augtool --noautoload << EOF | awk '{ print $3 }'
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/netmask
 quit
 EOF
                    )
             if [ ! -z "$NETMASK" ] && [ "$NETMASK" != "TBD" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/netmask ${NETMASK}
 save
 quit
 EOF
             fi
 
-            NETWORK=$(augtool << EOF | awk '{ print $3 }'
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+            NETWORK=$(augtool --noautoload << EOF | awk '{ print $3 }'
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/network
 quit
 EOF
                    )
             if [ ! -z "$NETWORK" ] && [ "$NETWORK" != "TBD" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/network ${NETWORK}
 save
 quit
 EOF
             fi
 
-            BROADCAST=$(augtool << EOF | awk '{ print $3 }'
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+            BROADCAST=$(augtool --noautoload << EOF | awk '{ print $3 }'
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/broadcast
 quit
 EOF
                      )
             if [ ! -z "$BROADCAST" ] && [ "$BROADCAST" != "TBD" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/broadcast ${BROADCAST}
 save
 quit
@@ -634,45 +711,51 @@ EOF
         #
         if [ ! -z "$IS_ADMINISTRATION_INTERFACE" ]; then
 
-            GATEWAY=$(augtool << EOF | awk '{ print $3 }'
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+            GATEWAY=$(augtool --noautoload << EOF | awk '{ print $3 }'
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/gateway
 quit
 EOF
                    )
             if [ ! -z "$GATEWAY" ] && [ "$GATEWAY" != "TBD" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/gateway ${GATEWAY}
 save
 quit
 EOF
             fi
 
-            DNSNAMESERVERS=$(augtool << EOF | awk -F'dns-nameservers = ' '{ print $2 }'
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+            DNSNAMESERVERS=$(augtool --noautoload << EOF | awk -F'dns-nameservers = ' '{ print $2 }'
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/dns-nameservers
 quit
 EOF
                           )
             if [ ! -z "$DNSNAMESERVERS" ] && [ "$DNSNAMESERVERS" != "TBD" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/dns-nameservers "${DNSNAMESERVERS}"
 save
 quit
 EOF
             fi
 
-            DNSSEARCH=$(augtool << EOF | awk '{ print $3 }'
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+            DNSSEARCH=$(augtool --noautoload << EOF | awk '{ print $3 }'
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 get /files${ALIENVAULT_NETWORK_INTERFACES}/${EIFACE}/dns-search
 quit
 EOF
                      )
             if [ ! -z "$DNSSEARCH" ] && [ "$DNSSEARCH" != "TBD" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/dns-search ${DNSSEARCH}
 save
 quit
@@ -685,7 +768,8 @@ EOF
         #
         if [ ! -z "$IS_MONITOR_INTERFACE" ]; then
             if [ -z "$IS_ADMINISTRATION_INTERFACE" ] && [ -z "$IS_LOG_MANAGEMENT_INTERFACE" ]; then
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/method manual
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/up[1] "ifconfig \$IFACE 0.0.0.0 up"
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/up[2] "ip link set \$IFACE promisc on"
@@ -695,7 +779,8 @@ save
 quit
 EOF
             else
-                augtool << EOF >/dev/null
+                augtool --noautoload << EOF >/dev/null
+${LOAD_INTERFACES}
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/method static
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/up[1] "ip link set \$IFACE promisc on"
 set /files${NETWORK_INTERFACES_FILE}/iface[.='${EIFACE}']/down[1] "ip link set \$IFACE promisc off"
@@ -711,8 +796,9 @@ EOF
     #
     # Lastly, delete remaining interfaces.
     #
-    DISABLED_NETWORK_INTERFACES=$(augtool << EOF | grep -oE "eth." || true
-set /augeas/load/Puppet/incl "${ALIENVAULT_NETWORK_INTERFACES}"
+    DISABLED_NETWORK_INTERFACES=$(augtool --noautoload << EOF | grep -oE "eth." || true
+set /augeas/load/Alienvault/lens Puppet.lns
+set /augeas/load/Alienvault/incl "${ALIENVAULT_NETWORK_INTERFACES}"
 load
 match /files${ALIENVAULT_NETWORK_INTERFACES}/*/enabled no
 quit
@@ -720,7 +806,8 @@ EOF
                                )
     for DIFACE in $DISABLED_NETWORK_INTERFACES; do
         ifdown --force $DIFACE
-        augtool <<EOF >/dev/null
+        augtool --noautoload <<EOF >/dev/null
+${LOAD_INTERFACES}
 rm /files${NETWORK_INTERFACES_FILE}/iface[.='${DIFACE}']
 rm /files${NETWORK_INTERFACES_FILE}/auto[child::1 = '${DIFACE}']
 save
@@ -752,7 +839,7 @@ case "$1" in
                     update_domain_name
                     ;;
                 alienvault-config-system-interface)
-                    update_admin_interfaces
+                    update_admin_interface
                     ;;
                 alienvault-config-system-admin-ip)
                     if [ "$NEW_INTERFACE" = "$OLD_INTERFACE" ]; then

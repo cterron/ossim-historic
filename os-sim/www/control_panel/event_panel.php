@@ -182,7 +182,7 @@ if (GET('modo') == 'responder')
 
         if (file_exists("/tmp/debug_siem"))
         {
-            error_log("$sql\n",3,"/tmp/realtime");
+            file_put_contents("/tmp/realtime", "$sql\n", FILE_APPEND);
         }
         // QUERY DEBUG:
         $rs = $conn->Execute($sql);

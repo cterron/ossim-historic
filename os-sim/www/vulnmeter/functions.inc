@@ -58,8 +58,8 @@ function get_hosts($dbconn) {
     return $hosts;
 }
 
-function hosts_to_insert($dbconn, $report_id, $hosts=array()) {
-    $in_assets = array();
+function hosts_to_insert($dbconn, $report_id, $hosts=array())
+{
     $ips = array();
 
     $query = "SELECT distinct hostIP, HEX(ctx) AS ctx FROM vuln_nessus_results WHERE report_id=?";
@@ -1082,7 +1082,6 @@ function all_jobs($offset, $pageSize, $status=""){
     $out     = 0;
     $message = "";
 
-    $version     = $conf->get_conf("ossim_server_version");
     $nessus_path = $conf->get_conf("nessus_path");
 
     list($arruser, $user) = Vulnerabilities::get_users_and_entities_filter($dbconn);
@@ -1312,11 +1311,8 @@ function all_jobs($offset, $pageSize, $status=""){
                 $scan_next = date("Y-m-d H:i:s",strtotime($scan_next));  
             }
 
-            $add_info = "ct=$curtime st=$start_date fd=$end_date";
             $arrIP = preg_split('/[\/\.]/', $nname);
 
-            $searchIP = "$arrIP[0].$arrIP[1].$arrIP[2].";
-          
             $scan_info = "";
 
             $meth_TARGETorig = $meth_TARGET;
@@ -1605,7 +1601,8 @@ function dispSQLError($err, $errNum) {
    echo "</table></center>\n";
 }
 
-function logAccess( $action ) {
+function logAccess($action)
+{
     global $logh, $username, $dbconn;
 
     $protocol = $_SERVER['HTTPS'] == 'on' ? 'https' : 'http';
@@ -1614,399 +1611,86 @@ function logAccess( $action ) {
     #$logh->log("$username : $url : Page accessed", PEAR_LOG_DEBUG);
 
     $query_log="insert into log (ip, username, url, action) values('$_SERVER[REMOTE_ADDR]','$username', '$url', '$action' )";
-    $result_log=$dbconn->execute($query_log);
 
+    $dbconn->execute($query_log);
 }
 
-function getAddress() {
-    /*** check for https ***/
-    $protocol = $_SERVER['HTTPS'] == 'on' ? 'https' : 'http';
-    /*** return the full address ***/
-    return $protocol.'://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
- }
 
-function online() {
-  global $client_uname, $client_ip, $username, $dbconn;
-  
-  $client_uname="";
-  
-  $client_ip = $_SERVER['REMOTE_ADDR'];
-  $guest = 0;
-  
-  if (isset($username)) {
-    $client_uname = $username;
-  }
-  if ( $client_uname == "" ) {
-    $client_uname = $client_ip;
-    $guest = 1;
-  }
-  
-  $past = time()-3600;
-  $query = "DELETE FROM vuln_sessions WHERE time < '$past'";
-  $dbconn->execute($query);
+function get_ip($host)
+{
+  $hostip = @gethostbyname($host);
+  $ip = ($hostip == $host) ? $host : long2ip(ip2long($hostip));
 
-  $query = "SELECT time FROM vuln_sessions WHERE uname='$client_uname'";
-  $result = $dbconn->execute($query);
-  $ctime = time();
-  if (!empty($client_uname)) {
-    $client_uname = substr($client_uname, 0,25);
-   list ( $match ) = $result->fields;
-    if ( $match ) {
-	 $dbconn->execute("UPDATE vuln_sessions SET uname='$client_uname', time='$ctime', host_addr='$client_ip', 
-	 	guest='$guest' WHERE uname='$client_uname'");
-    } else {
-	 $dbconn->execute("INSERT INTO vuln_sessions (uname, time, host_addr, guest
-	 	) VALUES ('$client_uname', '$ctime', '$client_ip', '$guest')");
-    }
-  }
-}
-
-function get_ip( $host ){
-  $hostip = @gethostbyname( $host );
-  $ip = ( $hostip == $host ) ? $host : long2ip( ip2long( $hostip ) );
-  //echo sprintf("Resolved %s to %s", $host, $ip);
   return $ip;
 } 
 
-function check_host ( $eval_hostname, $eval_hostip ) {
-	
-	#RESOLVE NAME 
-	$bname_resolve = true;
-	$bip_resolve = true;
-	$balive = false;
-	
-	$res = Util::execute_command("nslookup -timeout=1 -retry=0 ?", array($eval_hostname), 'string');
-	
- 	if (preg_match('/\nName:(.*)\n/', $res, $out)) {
-   		$lookup_hostname =  trim($out[1]);
- 	} else {
-   		$lookup_hostname =  $host;		
- 		$bname_resolve = false; 		
- 	}
-	
-	#IP LOOKUP
-	$test_ip = @gethostbyname( $eval_hostname );
-	$lookup_ip = ( $test_ip == $eval_hostname ) ? $eval_hostname : long2ip( ip2long( $test_ip ) );
-	
-	if ( $lookup_ip == $eval_hostname ) {
-		$lookup_ip = $eval_hostip;
-		$bip_resolve = false;		
-	}
-	
-	$res = Util::execute_command("ping -c 1 -w 1 ?", array($lookup_ip), 'string');
-	if (preg_match('/rtt/', $res, $out)) {
-   		$balive = true;
- 	} else {
-   		$balive = false; 		
- 	}
- 	
- 	if ( $bname_resolve & $balive ) {				#HOSTNAME IS ALIVE
- 		$match_rating = 4;
- 		$match_color = "green";
- 	}elseif ( $bname_resolve && $bip_resolve ) {	#NAME IP / MATCH ( NOT ONLINE )
- 		$match_rating = 3;
- 		$match_color = "blue";
- 	} elseif ( $bname_resolve ) {					#NAME EXISTS ( NO IP FOUND SHOULD NOT BE ALIVE )
- 		$match_rating = 2;
- 		$match_color = "yellow";
- 	} elseif ( $balive ) {							#IP IS ALIVE ( DID NOT VERIFY HOSTNAME )
- 		$match_rating = 1;
- 		$match_color = "red";
- 	} else {										#DEAD HOST NO DNS NAME
- 		$match_rating = 0;
- 		$match_color = "black";
- 	}
-		
-	$results = array(
-		"hostname" => $lookup_hostname,
-		  "hostip" => $lookup_ip,
-	  "match_name" => $bname_resolve,
-	    "match_ip" => $bip_resolve,
-		   "alive" => $balive,
-		  "rating" => $match_rating,
+
+function check_host($eval_hostname, $eval_hostip)
+{
+    #RESOLVE NAME
+    $bname_resolve = TRUE;
+    $bip_resolve = TRUE;
+    $balive = FALSE;
+
+    $res = Util::execute_command("nslookup -timeout=1 -retry=0 ?", array($eval_hostname), 'string');
+
+    if (preg_match('/\nName:(.*)\n/', $res, $out))
+    {
+        $lookup_hostname = trim($out[1]);
+    }
+    else
+    {
+        $lookup_hostname = $eval_hostname;
+        $bname_resolve   = FALSE;
+    }
+
+    #IP LOOKUP
+    $test_ip = @gethostbyname($eval_hostname);
+    $lookup_ip = ($test_ip == $eval_hostname) ? $eval_hostname : long2ip( ip2long( $test_ip ) );
+
+    if ($lookup_ip == $eval_hostname)
+    {
+        $lookup_ip   = $eval_hostip;
+        $bip_resolve = FALSE;
+    }
+
+    $res = Util::execute_command("ping -c 1 -w 1 ?", array($lookup_ip), 'string');
+    if (preg_match('/rtt/', $res, $out)) {
+        $balive = true;
+    } else {
+        $balive = false;
+    }
+
+    if ( $bname_resolve & $balive ) {               #HOSTNAME IS ALIVE
+        $match_rating = 4;
+        $match_color = "green";
+    }elseif ( $bname_resolve && $bip_resolve ) {    #NAME IP / MATCH ( NOT ONLINE )
+        $match_rating = 3;
+        $match_color = "blue";
+    } elseif ( $bname_resolve ) {                   #NAME EXISTS ( NO IP FOUND SHOULD NOT BE ALIVE )
+        $match_rating = 2;
+        $match_color = "yellow";
+    } elseif ( $balive ) {                          #IP IS ALIVE ( DID NOT VERIFY HOSTNAME )
+        $match_rating = 1;
+        $match_color = "red";
+    } else {                                        #DEAD HOST NO DNS NAME
+        $match_rating = 0;
+        $match_color = "black";
+    }
+
+    $results = array(
+        "hostname" => $lookup_hostname,
+          "hostip" => $lookup_ip,
+      "match_name" => $bname_resolve,
+        "match_ip" => $bip_resolve,
+           "alive" => $balive,
+          "rating" => $match_rating,
     "rating_color" => $match_color
-	);
-	
-	return $results;
-	
+    );
+
+    return $results;
 }
 
-function getUserRoles ($user) {
-   global $dbconn;
-   $finalroles = array();
-   // get users roles, used for access control decisions
-   //  user roles are a union of the users individually assigned roles
-   //  and any roles assigned based on user group membership
-   // get the roles from group memebership for the user
-   $query = "SELECT r.roleName
-             FROM vuln_users as u
-             LEFT JOIN vuln_user_groups as ug ON u.pn_uname = ug.pn_uname
-             LEFT JOIN vuln_group_roles as gr ON ug.gid = gr.gid
-             LEFT JOIN vuln_roles as r ON gr.roleID = r.roleID
-             WHERE u.pn_uname = '$user'";
-   $groles = $dbconn->GetArray($query);
-   if($groles === false) {
-      $errMsg[] = "SQL Error getting user groups: " . $dbconn->ErrorMsg();
-      $error = 1;
-   } else {
-      foreach($groles as $role) {
-         $finalroles[$role['roleName']] = TRUE;
-      }
-   }
-
-   // now get any directly assigned roles
-   $query = "SELECT r.roleName
-             FROM vuln_users as u
-             LEFT JOIN vuln_user_roles as ur ON u.pn_uname = ur.pn_uname
-             LEFT JOIN vuln_roles as r ON ur.roleID = r.roleID
-             WHERE u.pn_uname = '$user'";
-   $uroles = $dbconn->GetArray($query);
-   if($uroles === false) {
-      $errMsg[] = "SQL Error getting users roles: " . $dbconn->ErrorMsg();
-      $error++;
-   } else {
-      foreach($uroles as $role) {
-         $finalroles[$role['roleName']] = TRUE;
-      }
-   }
-   
-   // now set the other roles to FALSE in the array
-   $query = "SELECT roleName
-             FROM vuln_roles";
-   $roles = $dbconn->GetArray($query);
-   if($roles === false) {
-   }  else {
-      foreach($roles as $role) {
-         $finalroles[$role['roleName']] = (isset($finalroles[$role['roleName']])) ? TRUE : FALSE;
-      }
-   }
-   return $finalroles;
-}
-
-function getSiteCodes ($user) {
-   global $dbconn;
-   $finalsites = array();
-   // get users associated sites, used for access control decisions
-   //  user sites are a union of the users individually assigned site_access
-   //  and any sites assigned based on user group membership
-   // get the roles from group memebership for the user
-   // allowing tasks such as report admin / self service / scanning / etc
-   // for the associated address space
-
-   $query = "SELECT t1.site_code as siteName
-          FROM vuln_sites t1
-               LEFT JOIN vuln_org_sites t2 on t1.id = t2.siteID
-               LEFT JOIN vuln_org_users t3 on t2.orgID = t3.orgID
-          WHERE t3.pn_uname = '$user'";
-
-   
-   
-   $usites = $dbconn->GetArray($query);
-   if($usites === false) {
-      $errMsg[] = "SQL Error getting users sites: " . $dbconn->ErrorMsg();
-      $error++;
-   } else {
-      foreach( $usites as $site ) {
-         $finalsites[$site['siteName']] = TRUE;
-      }
-   }
-   
-   return $finalsites;
-}
-
-function getUserSystems ($user) {
-   global $dbconn;
-   $finalsystems = array();
-   // get users associated sites, used for access control decisions
-   //  user sites are a union of the users individually assigned site_access
-   //  and any sites assigned based on user group membership
-   // get the roles from group memebership for the user
-   // allowing tasks such as report admin / self service / scanning / etc
-   // for the associated address space
-
-   $query = "SELECT t1.acronym
-          FROM vuln_systems t1
-               LEFT JOIN vuln_system_users t2 on t1.id = t2.sysID
-          WHERE t2.pn_uname = '$user'";
-
-   
-   
-   $usystems = $dbconn->GetArray($query);
-   if($usystems === false) {
-      $errMsg[] = "SQL Error getting users sytems: " . $dbconn->ErrorMsg();
-      $error++;
-   } else {
-      foreach( $usystems as $system ) {
-         $finalsystems[$system['acronym']] = TRUE;
-      }
-   }
-   
-   return $finalsystems;
-}
-
-function getComponent ($user) {
-   global $dbconn;
-
-   // get users associated org, used for access control decisions
-   //  user sites are a union of the users individually assigned site_access
-   //  and any sites assigned based on user group membership
-   // get the roles from group memebership for the user
-   // allowing tasks such as report admin / self service / scanning / etc
-   // for the associated address space
-
-   $query = "SELECT component FROM vuln_users WHERE pn_uname = '$user'";
-   $result=$dbconn->execute($query);
-   list ( $user_component ) = $result->fields;
-
-   return "$user_component";
-}
-
-
-function getuserTZ ( $username ) {
-   global $dbconn;
-
-   #MAKE SURE THERE IS A VALID ABBREV
-   $tz = "";
-   $query = "SELECT t2.abbrev FROM vuln_users t1
-   		LEFT JOIN vuln_timezones t2 on t1.user_TZ=t2.abbrev
-   		WHERE t1.pn_uname='$username'";
-   $result=$dbconn->execute($query);
-   list ( $tz ) = $result->fields;
-   return "$tz";
-
-}
-
-function switchTime_TimeZone ( $value, $to_tz, $newformat="" ) {  
-   global $username, $dbconn;
-   
-   if ( strlen($value) == 0 || $value == "now" ) {
-      #NOW
-      $arrTime = localtime(time(), true);
-      $year = 1900 + $arrTime["tm_year"];
-      $mon = 1 + $arrTime["tm_mon"];
-      $mday =  $arrTime["tm_mday"];
-      $hour = $arrTime["tm_hour"];
-      $min = $arrTime["tm_min"];
-      $sec = $arrTime["tm_sec"];	
-   } else { # A VALUE WAS PASSED
-   	   if (strlen($value) == 19) {
-   	       $year=substr($value,0,4);
-           $mon=substr($value,5,2);
-           $mday=substr($value,8,2);
-           $hour=substr($value,11,2);
-           $min=substr($value,14,2);
-           $sec=substr($value,17,2); 	       
-   	   } elseif (strlen($value) == 14) {
-   	       $year=substr($value,0,4);
-           $mon=substr($value,4,2);
-           $mday=substr($value,6,2);
-           $hour=substr($value,8,2);
-           $min=substr($value,10,2);
-           $sec=substr($value,12,2); 	
-       } else {	
-          return $value;
-       }
-   }   
-   	
-   $server_offset = date('Z');
-   $server_offset = ( $server_offset / ( 60*60 ) );	
-
-   $query = "SELECT t2.offset, t2.abbrev FROM vuln_users t1
-   		LEFT JOIN vuln_timezones t2 on t1.user_TZ=t2.abbrev
-   		WHERE t1.pn_uname='$username'";
-   $result=$dbconn->execute($query);
-   list ( $user_offset, $user_tz ) = $result->fields;	
-
-   if ( $to_tz == "user" ) {   
-      $diff_offset = ( $user_offset  - $server_offset );	
-   } elseif ( $to_tz == "server" ) { 	
-   	  $diff_offset = ( ( $user_offset  - $server_offset ) * -1 );
-   } else {
-   	  $diff_offset = 0;
-   }
-
-   if ( $newformat == "TZdate" ) {
-      $user_time = strftime("%m/%d/%Y %H:%M:%S", mktime($hour+$diff_offset,$min,$sec,$mon,$mday,$year));
-      $user_time .= " $user_tz";
-   } elseif ( $newformat == "asdate" ) {
-      $user_time = strftime("%m/%d/%Y %H:%M:%S", mktime($hour+$diff_offset,$min,$sec,$mon,$mday,$year));
-   } else {	#SQL FORMAT
-      $user_time = strftime("%Y%m%d%H%M%S", mktime($hour+$diff_offset,$min,$sec,$mon,$mday,$year));
-   }   
-      
-   return $user_time;
-   
-}
-
-function getUserOrg ($user) {
-   global $dbconn;
-
-   // get users associated org, used for access control decisions
-   //  user sites are a union of the users individually assigned site_access
-   //  and any sites assigned based on user group membership
-   // get the roles from group memebership for the user
-   // allowing tasks such as report admin / self service / scanning / etc
-   // for the associated address space
-
-   $query = "SELECT t1.org_code
-          FROM vuln_orgs t1
-               LEFT JOIN vuln_org_users t2 on t1.id = t2.orgID
-          WHERE t2.pn_uname = '$user'";
-
-   $result=$dbconn->execute($query);
-
-   list ( $org_code ) = $result->fields;
-
-   return "$org_code";
-
-}
-
-function getProfileName ($sid) {
-   global $dbconn;
-   
-   $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-
-   $query = "SELECT name, description FROM vuln_nessus_settings 
-      WHERE id='$sid' LIMIT 1";
-
-   $result=$dbconn->execute($query);
-
-   list ( $pname, $pdesc ) = $result->fields;
-
-   return "$pname - $pdesc";
-
-}
-
-function getUserName ($login) {
-   global $dbconn;
-
-   $query = "SELECT user_namef, user_namel
-             FROM vuln_contacts
-             WHERE fk_uname = '$login' LIMIT 1";
-
-   $result=$dbconn->execute($query);
-
-   list ( $fname, $lname ) = $result->fields;
-
-   return array( "login" => $login,
-                 "fname" => $fname,
-                 "lname" => $lname);
-
-}
-
-function inArray ($tmpItem, $tmpArray) {
-   $found=0;
-
-   for ($i=0; $i<count($tmpArray); $i++) {
-      if ($tmpItem==$tmpArray[$i]) {
-         $found=1;
-         break;
-      }
-   }
-
-   if ($found) { return 1; }
-   else { return 0; }
-}
 
 function getrisk($risk) {
 
@@ -2040,31 +1724,6 @@ function getrisk($risk) {
     return $risk;
 }
 
-function getScnCATID() {
-	global $dbconn;
-		
-	$query = "SELECT id FROM vuln_nessus_category WHERE name='scanner'";
-	$result=$dbconn->execute($query);
-    list ( $cat_id ) = $result->fields;
-    return $cat_id;
-}
-
-function getcrisk($risk) {
-
-    switch ($risk) {
-    case 2:
-        $risk="Failed";
-        break;
-    case 3:
-        $risk="Error";
-        break;
-    case 6:
-        $risk="Passed";
-        break;
-    }
-
-    return $risk;
-}
 
 // Activate Hyperlinks in Msg to New Windows
 function activateHyperlink($text) {
@@ -2088,175 +1747,6 @@ $text = preg_replace(
  	return $text;
 }
 
-function hostLink($host, $ip, $type = "name", $edit = FALSE) {
-
-   if($edit) {
-      $edit = "disp=edit_host";
-   } else {
-      $edit = "disp=view";
-   }
-   
-   // special case for unknown hostnames
-   if(strstr($host,"unknown")) {
-      $ip = substr($host,8);
-      $url = "<a href='hosts.php?disp=add&hostip=$ip&disp=add' onClick=\"popup('hosts.php?hostip=$ip','Add Host');return false;\" title='Add host'>Unknown</a>";
-      return $url;
-   }
-
-   // blank hostname and ip
-   if($host == "" && $ip == "") {
-      $url = "<a href='hosts.php?$edit' onClick=\"popup('hosts.php?$edit','Lookup Host');return false;\" title='Lookup host'>All</a>";
-      return $url;
-   }
-
-   if($type == "name") {
-      $url = "<a href='hosts.php?$edit&hostname=$host&hostip=$ip' onClick=\"popup('hosts.php?$edit&hostname=$host&hostip=$ip','Lookup Host');return false;\" title='Lookup host'>$host</a>";
-   } else { // IP address
-      // do special check for multiple IP addresses, comma separated
-      $ips = explode(",",$ip);
-      foreach($ips as $v) {
-         $url[] = "<a href='hosts.php?$edit&hostname=$host&hostip=$v' onClick=\"popup('hosts.php?$edit&hostname=$host&hostip=$v','Lookup IP');return false;\" title='Lookup IP'>$v</a> ";
-      }
-      $url = implode($url,",");
-   }
-   return $url;
-}
-
-function validateip($ip) {
-    $retip=0;
-
-    if (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
-        $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
-        if ($ip1<>0) {
-            $retip=1;
-        }
-    } elseif (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])-([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
-
-        $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
-        $ip2=intval($r[5])*16777216+intval($r[6])*65536+intval($r[7])*256+intval($r[8]);
-
-        if ($ip2>$ip1 and $ip1<>0) {
-            $retip=1;
-        }
-    }
-    return($retip);
-}
-
-// function to check if the submitted IP address is in an allowed Network Zone
-// that the user has rights to scan.
-function inrange($ip, $dbconn) {
-    $check=0;
-    // check for single IP address, and split it into the octets
-    if (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
-
-        $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
-        $ip2=0;
-
-        if ($ip1<>0) {
-            $check=1;
-        }
-    // check for range of IP address, and split them into the two sets of
-    // octets (for ip1 and ip2)
-    } elseif (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])-([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
-
-        $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
-        $ip2=intval($r[5])*16777216+intval($r[6])*65536+intval($r[7])*256+intval($r[8]);
-
-        if ($ip2>$ip1 and $ip1<>0) {
-            $check=1;
-        }
-    }
-
-    if ($check==1) {
-        // get the username
-        $uname=Util::htmlentities(escape_sql(trim($_SESSION['user']), $dbconn));
-        $found=0;
-
-        // get the ranges for all the Network Zones that the user has
-        // access to so we can check to see if the IP(s) are in one of them.
-        /*
-		$query="SELECT range_start, range_end 
-                FROM vuln_nessus_zone_ranges 
-                INNER JOIN vuln_nessus_user_zones 
-                   ON vuln_nessus_user_zones.zid=vuln_nessus_zone_ranges.zoneid 
-                WHERE vuln_nessus_user_zones.username='$uname'";
-
-        $result=$dbconn->execute($query);
-
-        while(!$result->EOF) {
-
-            list($range_start, $range_end)=$result->fields;
-
-            $rip1=0;
-            $rip2=0;
-
-            // single IP, range that is a single IP as well
-            if ($ip2==0 and $range_start==$range_end) {
-                $rip1=$range_start;
-
-                if ($rip1==$ip1) {
-                    $found=1;
-                    break;
-                }
-            }
-
-            // if this is a valid range (start is before end)
-            if ($range_start<$range_end) {
-
-                $rip1=$range_start;
-                $rip2=$range_end;
-
-                // for a single IP, see if it's between the start and the end
-                // (inclusive)
-                // or for a range, the starting IP and ending IP have to both
-                // be between the start and end (inclusive)
-                if (($ip1>=$rip1 and $ip1<=$rip2 and $ip2==0) 
-                     or ($ip1>=$rip1 and $ip2<=$rip2 and $ip2<>0)) {
-                    $found=1;
-                    break;
-                }
-            }
-            $result->MoveNext();
-        }*/
-        return($found);
-    } else {
-        return(0);
-    }
-}
-
-function range2List ( $istart, $iend ) {
-     
-     // generate ip addrs
-     $arry1 = explode(".",$istart);
-     $arry2 = explode(".",$iend);
-
-     $a1 = $arry1[0]; $b1 = $arry1[1]; $c1 = $arry1[2]; $d1 = $arry1[3];
-     $a2 = $arry2[0]; $b2 = $arry2[1]; $c2 = $arry2[2]; $d2 = $arry2[3];
-
-     $result = array();     
-     while( $d2 >= $d1 || $c2 > $c1 || $b2 > $b1 || $a2 > $a1){
-          if($d1 > 255){
-               $d1 = 1;
-               $c1 ++;
-          }
-
-          if($c1 > 255){
-               $c1 = 1;
-               $b1 ++;
-          } 
-
-          if($b1 > 255){
-               $b1 = 1;
-               $a1 ++;
-          } 
-
-          #echo "$a1 $b1 $c1 $d1 <br>";
-          array_push($result, $a1. "." .$b1. "." .$c1. "." .$d1 );
-          $d1 ++;
-     }
-     
-     return $result;
-}
 
 function gen_strtotime($value, $newformat) {
 
@@ -2290,26 +1780,9 @@ function gen_strtotime($value, $newformat) {
 
 }
 
-function gen_timeasstr() {
-	
-	$arrTime = localtime(time(), true);
-	
-	$year = 1900 + $arrTime["tm_year"];
-	$mon = 1 + $arrTime["tm_mon"];
-	$mday =  $arrTime["tm_mday"];
-	$hour = $arrTime["tm_hour"];
-	$min = $arrTime["tm_min"];
-	$sec = $arrTime["tm_sec"];
-	
-	
-	$ltime = sprintf("%04d%02d%02d%02d%02d%02d",$year, $mon, $mday, $hour, $min, $sec);
-	
-	return $ltime;
-}
 
 function datediff($interval, $date1, $date2)
 {
-
    //convert the dates into timestamps
   $date1 = strtotime($date1);
   $date2 = strtotime($date2);
@@ -2388,115 +1861,31 @@ function datediff($interval, $date1, $date2)
    return $diff;
 } 
 
-function addException($hostip,$res,$plugin,$schedid,$hostname) {
-   return "<br><a href='exceptions.php?disp=new&hostip=$hostip&sid=$schedid&plugin=$plugin&hostname=$hostname&rid=$res' target='_blank'>Add Exception</a>";
-}
 
-function printException($hostip, $plugin, $dbconn, $excel = FALSE, $hostname = "",
-                        $port = "", $sid = "") {
-   //$esubmit = ( strpos($_SESSION['roles'],"esubmit") ) === false ? FALSE : TRUE;
-   $esubmit = $_SESSION['roles']['esubmit'];
-   if ($hostip == "") {
-      return "No IP specified to locate exceptions.";
-   }
-   // modified to look for exceptions that include the specific IP as
-   //  well as any that are tagged for "ALL" hosts, not "Rejected" 
-   //  exceptions, though.
-   $equery="select eid, status, hostip, submitDate
-            from vuln_exceptions
-            where ( hostip LIKE '%$hostip%' OR hostip = 'ALL' )
-               and plugin = '$plugin'
-               and status <> 'Rejected'";
-   if (is_numeric($port)) {
-      $equery .= " and ( port = " . intval($port) . " OR port IS NULL )"; 
-   }
+function printLegend()
+{
+    $arrRating = array(
+        "4" => array ( "color" => "green", "description" => "HOSTNAME IS ALIVE"),
+        "3" => array ( "color" => "blue", "description" => "HOSTNAME/IP ( EXACT MATCH - NOT ONLINE )"),
+        "2" => array ( "color" => "yellow", "description" => "IP DIFFERS FROM RECORD ( LIKLEY DHCP - HOST NOT ONLINE )"),
+        "1" => array ( "color" => "red", "description" => "IP IS ALIVE ( HOSTNAME NOT IN DNS )"),
+        "0" => array ( "color" => "black", "description" => "DEAD HOST ( HOSTNAME NOT IN DNS )"),
+    );
 
-   $eresult=$dbconn->execute($equery);
-   if(!$eresult) { 
-      return $dbconn->ErrorMsg(); 
-   } else {
-      $resArray = $eresult->GetArray();
-      if (count($resArray) > 0) {
-         foreach($resArray as $num=>$resData) {
-            if($excel) {
-               $foo .= "$resData[eid] - $resData[submitDate] - $resData[status]\n";
-            } else {
-               $foo .= "<a href='exceptions.php?disp=view&eid=$resData[eid]' title='View Exception' onClick=\"popup('exceptions.php?disp=view&eid=$resData[eid]','ViewException');return false;\">";
-               $foo .= "$resData[eid]</a> - $resData[submitDate] - $resData[status]<br>\n";
-            }
-         }
-      } else {
-         $foo = "No Exceptions on file.";
-         if($esubmit && !$excel) {
-            $foo .= "<br><a href='exceptions.php?disp=new&hostip=$hostip&sid=$sid&plugin=$plugin&hostname=$hostname&port=$port' target='_blank'>Add Exception</a>";
-         }
-      }
-      return $foo;
-   }
-}
-
-function printLegend ( ) {
-
-	$arrRating = array(
-		"4" => array ( "color" => "green", "description" => "HOSTNAME IS ALIVE"),
-		"3" => array ( "color" => "blue", "description" => "HOSTNAME/IP ( EXACT MATCH - NOT ONLINE )"),
-		"2" => array ( "color" => "yellow", "description" => "IP DIFFERS FROM RECORD ( LIKLEY DHCP - HOST NOT ONLINE )"),
-		"1" => array ( "color" => "red", "description" => "IP IS ALIVE ( HOSTNAME NOT IN DNS )"),
-		"0" => array ( "color" => "black", "description" => "DEAD HOST ( HOSTNAME NOT IN DNS )"),
-	);  
-   
 $htmldetails = "<b>LEGEND</b>
 <table width=\"100%\" border=\"0\">
    <tr><td width=\"30\" >VALUE</td><td>DESCRIPTION</td></tr>";
 
-	foreach( $arrRating as $name => $value ) {   
-		$htmldetails .="<tr><td width=\"30\" bgcolor=\"$value[color]\">$name</td><td>$value[description]</td></tr>";	
-	}	
-	$htmldetails .="</table>";
-	return $htmldetails;
+    foreach( $arrRating as $name => $value )
+    {
+        $htmldetails .="<tr><td width=\"30\" bgcolor=\"$value[color]\">$name</td><td>$value[description]</td></tr>";
+    }
+
+    $htmldetails .="</table>";
+
+    return $htmldetails;
 }
 
-function arrPortResultsCompare ($arrA, $arrB)
-{
-   if ($arrA[1]==$arrB[1]) { return 0; }
-   return $arrA[1]>$arrB[1] ? 1 : -1;
-}
-
-function arrScanResultsCompare ($arrA, $arrB)
-{
-   global $sortby;
-
-   if ($sortby==1) {
-# Sort by port (tcp first, then udp) followed by risk (highest first)
-      if (($arrA[1]==$arrB[1]) && ($arrA[2]==$arrB[2])) {
-         if ($arrA[4]==$arrB[4]) { return 0; }
-         if ($arrA[4]<$arrB[4]) { return -1; }
-         if ($arrA[4]>$arrB[4]) { return 1; }
-      }
-      if (($arrA[1]==$arrB[1]) && ($arrA[2]>$arrB[2])) { return 1; }
-      if (($arrA[1]==$arrB[1]) && ($arrA[2]<$arrB[2])) { return -1; }
-      return $arrA[1]>$arrB[1] ? 1 : -1;
-   } else {
-# Sort by risk (highest first) followed by port (tcp first, then udp)
-      if ($arrA[4]==$arrB[4]) {
-         if (($arrA[1]==$arrB[1]) && ($arrA[2]==$arrB[2])) { return 0; }
-         if (($arrA[1]==$arrB[1]) && ($arrA[2]>$arrB[2])) { return 1; }
-         if (($arrA[1]==$arrB[1]) && ($arrA[2]<$arrB[2])) { return -1; }
-         if ($arrA[1]>$arrB[1]) { return 1; }
-         if ($arrA[1]<$arrB[1]) { return -1; }
-      }
-      return $arrA[4]>$arrB[4] ? 1 : -1;
-   }
-}
-
-function make_link ($type,$data) {
-   switch ($type) {
-   case 'exception':
-      return "<a href='editException.php?op=view&eid=$data'>$data</a>";
-   default:
-      break;
-   }
-}
 
 function drawForm($data, $action, $method = "POST") {
    $size = "";

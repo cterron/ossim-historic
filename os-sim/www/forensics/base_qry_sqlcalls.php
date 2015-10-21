@@ -218,7 +218,7 @@ if ($use_ac && $pre_filter)
 
     if (file_exists('/tmp/debug_siem'))
     {
-        error_log("CRITERIA:$sqlac\n", 3, "/tmp/siem");
+        file_put_contents("/tmp/siem", "CRITERIA:$sqlac\n", FILE_APPEND);
     }
 
     $resultac = $qs->ExecuteOutputQueryNoCanned($sqlac, $db);
@@ -303,7 +303,7 @@ $_SESSION['siem_current_query']       = $sql;
 /* Run the Query again for the actual data (with the LIMIT) */
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("QUERY:$sql\nGRAPH:$sqlgraph\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "QUERY:$sql\nGRAPH:$sqlgraph\n", FILE_APPEND);
 }
 
 session_write_close();
@@ -973,4 +973,3 @@ $result->baseFreeRows();
 $et->PrintForensicsTiming();
 $db->baseClose();
 //echo memory_get_peak_usage();
-?>

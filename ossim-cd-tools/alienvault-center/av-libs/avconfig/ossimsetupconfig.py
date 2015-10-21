@@ -1078,7 +1078,7 @@ class AVOssimSetupConfigHandler():
         """
         Return the first registered system in our database.
         """
-        proc = subprocess.Popen(['/usr/share/alienvault/api_core/bin/alienvault/virtual_env_run', 'get_registered_systems'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
@@ -1087,7 +1087,7 @@ class AVOssimSetupConfigHandler():
 
     def get_registered_systems_without_vpn(self):
         """Returns the list of systems without vpn"""
-        proc = subprocess.Popen(['/usr/share/alienvault/api_core/bin/alienvault/virtual_env_run', 'get_registered_systems','-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems','-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
@@ -2729,19 +2729,28 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/network/interfaces configuration
 
-    def set_net_iface_config (self, iface, address = None, netmask = None, gateway = None, dns_search= None, dns_nameservers = None, broadcast = None, network = None,
-                              is_administration = None, is_log_management = None, is_monitor = None):
+    def set_net_iface_config(self, iface,
+                             address=None,
+                             netmask=None,
+                             gateway=None,
+                             dns_search=None,
+                             dns_nameservers=None,
+                             broadcast=None,
+                             network=None,
+                             is_administration=None,
+                             is_log_management=None,
+                             is_monitor=None):
         """
         Set the network configuration for the interface 'iface'.
         """
         # Take into account that this may be the admin interface...
         # And, very important here, do not change any network option if the admin interface is being set as a monitor interface.
         if self.get_general_interface() == iface and is_monitor is None:
-            apply_on = [(x, y) for (x, y) in locals().items() if x in ['address', 'netmask', 'gateway', 'dns_search', 'dns_nameservers'] and y != None]
-            ops = {'address': (self.set_general_admin_ip, self.get_general_admin_ip()), \
-                   'netmask': (self.set_general_admin_netmask, self.get_general_admin_netmask()), \
-                   'gateway': (self.set_general_admin_gateway, self.get_general_admin_gateway()), \
-                   'dns_search': (self.set_general_domain, self.get_general_domain()), \
+            apply_on = [(x, y) for (x, y) in locals().items() if x in ['address', 'netmask', 'gateway', 'dns_search', 'dns_nameservers'] and y is not None]
+            ops = {'address': (self.set_general_admin_ip, self.get_general_admin_ip()),
+                   'netmask': (self.set_general_admin_netmask, self.get_general_admin_netmask()),
+                   'gateway': (self.set_general_admin_gateway, self.get_general_admin_gateway()),
+                   'dns_search': (self.set_general_domain, self.get_general_domain()),
                    'dns_nameservers': (self.set_general_admin_dns, self.get_general_admin_dns())}
 
             for (counter, (field, value)) in enumerate(apply_on):
@@ -2761,20 +2770,30 @@ class AVOssimSetupConfigHandler():
     def set_net_iface_name (self, whatever):
         return AVConfigParserErrors.ALL_OK
 
+    def disable_log_management_interface(self, interface):
+        return self.set_net_iface_config(interface, address='TBD', netmask='TBD', is_log_management='no')
+
     def set_net_iface_ip(self, value, modifier='eth0'):
+        if value == "" and self.get_general_interface() != modifier:
+            return self.disable_log_management_interface(modifier)
+
         check_result = self.check_interface_ip(value)
         if check_result != AVConfigParserErrors.ALL_OK:
             return check_result
         return self.set_net_iface_config(modifier, address=value, is_log_management='yes')
 
     def set_net_iface_netmask(self, value, modifier='eth0'):
+        if (value == "" and self.get_general_interface() != modifier) or \
+           not self.__sysconfig.is_net_iface_address_set(modifier):
+            return self.disable_log_management_interface(modifier)
+
         check_result = self.check_interface_netmask(value)
         if check_result != AVConfigParserErrors.ALL_OK:
             return check_result
         return self.set_net_iface_config(modifier, netmask=value, is_log_management='yes')
 
-    def set_net_iface_gateway (self, value, modifier='eth0'):
-        return self.set_net_iface_config (modifier, gateway = value, is_log_management = 'yes')
+    def set_net_iface_gateway(self, value, modifier='eth0'):
+        return self.set_net_iface_config(modifier, gateway=value, is_log_management='yes')
 
     ### /etc/hosts configuration
 
@@ -3348,7 +3367,7 @@ class AVOssimSetupConfigHandler():
         """
         Returns all the systems registered in our database.
         """
-        proc = subprocess.Popen(['/usr/share/alienvault/api_core/bin/alienvault/virtual_env_run', 'get_registered_systems'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
@@ -3356,7 +3375,7 @@ class AVOssimSetupConfigHandler():
         return registered_systems
 
     def get_allowed_values_for_registered_systems_without_vpn(self):
-        proc = subprocess.Popen(['/usr/share/alienvault/api_core/bin/alienvault/virtual_env_run', 'get_registered_systems','-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems','-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]

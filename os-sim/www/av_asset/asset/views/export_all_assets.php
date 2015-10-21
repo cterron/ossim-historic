@@ -39,7 +39,6 @@ Session::logcheck('environment-menu', 'PolicyHosts');
 if (isset($_GET['get_data']))
 {
     //Setting up a high time limit.
-    set_time_limit(360);
     
 	$db   = new ossim_db();
 	$conn = $db->connect();

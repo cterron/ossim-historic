@@ -90,7 +90,7 @@ class QueryResultsOutput {
                   }
                }
             }
-      
+
             function UnselectAll()
             {
                 for(var i=0;i<document.PacketForm.elements.length;i++)
@@ -107,7 +107,7 @@ class QueryResultsOutput {
         }
         echo '<div style="width:100%;overflow-x:auto;"><TABLE class="table_list">' . "\n" . "\n\n<!-- Query Results Title Bar -->\n   <tr>\n";
         reset($this->qroHeader);
-        $flag = 0; 
+        $flag = 0;
         $checkbox = 0;
         if ($withdetail) $allowed_cols = $_SESSION['views'][$_SESSION['current_cview']]['cols'];
         else $allowed_cols = array("");
@@ -119,7 +119,7 @@ class QueryResultsOutput {
             $coltitle = ($current_cols_titles[$colname]!="") ? $current_cols_titles[$colname] : $colname;
             $w = ($current_cols_widths[$colname]!="") ? "style='width:".$current_cols_widths[$colname]."'" : ""; // style='width:$wp%'
             if (isset($htmlPdfReport)) $htmlPdfReport->set("<th align='center' $w>$coltitle</th>\n");
-        }   
+        }
         if (isset($htmlPdfReport)) $htmlPdfReport->set("</tr>\n");
         //
         $field=0;
@@ -142,9 +142,9 @@ class QueryResultsOutput {
                 //$border = ($title['key'] == "L4-proto" || $title['key'] == "Last" || $title['key'] == "Total Events" || (preg_match("/(Dest\.|Src\.).+Addr\./",$title['key']) && $_GET['addr_type']>0) || !$flag) ? "border-bottom:1px solid #CACACA;" : "border-right:1px solid #CACACA;border-bottom:1px solid #CACACA;";
                 //$border = ($field>0 ? "border-left:1px solid #CACACA;" : "")."border-bottom:1px solid #CACACA;";
                 $flag = 1;
-                
+
                 $title['key'] = ($current_cols_titles[$title['key']]!="") ? $current_cols_titles[$title['key']] : $title['key'];
-                
+
                 if (!preg_match("/INPUT/",$title['key']) && isset($this->qroHeader2[$title['key']])) {
                     // Add asc and desc link icons
                     $sort_keys = array_keys($title["value"]);
@@ -214,7 +214,7 @@ class QueryResultsOutput {
                             $href = $this->url . "&amp;sort_order=" . $sort_keys[0];
                             $bold_s = "<font style='text-decoration:underline'>";
                             $bold_e = "</font>";
-                        }                       
+                        }
                         $print_title = "$asc_icon<a href=\"$href\">$bold_s" . $title["key"] . "$bold_e</a>$desc_icon";
                     } else {
                         $print_title = $title["key"];
@@ -226,13 +226,13 @@ class QueryResultsOutput {
             reset($this->qroHeader);
             $field++;
         }
-        
+
         /* Detail link column */
         if ($withdetail)
         {
             echo "<th></th>";
         }
-        
+
         echo "</TR>\n";
     }
     function PrintFooter() {
@@ -265,7 +265,7 @@ function qroPrintEntryTooltip($value, $halign = "center", $valign = "top", $pass
     // Clean and securize tooltip content, htmlentities does not work here
     $tooltip = str_replace("'","&#39;", $tooltip);
     $tooltip = preg_replace("/\<(\/)?script([^\>]*)\>/","&amp;lt;\\1script\\2&amp;gt;", $tooltip);
-    
+
     echo "<TD txt='".$tooltip."' class='tztooltip' style='padding:5px 4px' align=\"" . $halign . "\" valign=\"" . $valign . "\" " . $passthru . ">\n" . "  $value\n" . "</TD>\n\n";
 }
 function qroPrintEntryFooter() {

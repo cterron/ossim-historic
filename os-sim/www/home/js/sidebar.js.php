@@ -230,7 +230,10 @@ function load_open_tickets()
             $(id).text('-');
 
         },
-        complete: schedule_method('tickets')
+        complete: function()
+        { 
+            schedule_method('tickets');
+        }
     });
 }
 
@@ -302,7 +305,10 @@ function load_events_trend()
             $(id).text('-');
 
         },
-        complete: schedule_method('trend')
+        complete: function() 
+        {
+            schedule_method('trend');
+        }
     });
 }
 
@@ -354,7 +360,10 @@ function load_system_eps()
             $(id).text('-');
 
         },
-        complete: schedule_method('eps')
+        complete: function()
+        {
+            schedule_method('eps');
+        }
     });
 }
 
@@ -405,7 +414,10 @@ function load_monitored_devices()
 
             $(id).text('-');
         },
-        complete: schedule_method('devices')
+        complete: function()
+        {
+            schedule_method('devices');
+        }
     });
 }
 
@@ -472,7 +484,10 @@ function load_unresolved_alarms()
             $(id).text('-');
 
         },
-        complete: schedule_method('alarms')
+        complete: function()
+        {
+            schedule_method('alarms');
+        }
     });
 }
 
@@ -547,7 +562,10 @@ function load_active_sensors()
 
             $('#notif_sensors').text('-');
         },
-        complete: schedule_method('sensors')
+        complete: function()
+        {
+            schedule_method('sensors');
+        }
     });
 }
 

@@ -196,8 +196,8 @@ gboolean          sim_util_is_pulse_id                    (const gchar *string);
 struct _GSemaphore
 {
   gint    value;
-  GMutex *access;
-  GCond  *sig;
+  GMutex access;
+  GCond  sig;
 };
 
 typedef struct _GSemaphore GSemaphore;

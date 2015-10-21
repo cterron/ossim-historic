@@ -401,7 +401,7 @@ if(!empty($update))
     $sensor_obj->save_in_db($conn);
 
     //Update vulnerabilities data
-    $vuln_max_scans = ($vuln_max_scans > 25) ? 25 : $vuln_max_scans;
+    $vuln_max_scans = ($vuln_max_scans > 5) ? 5 : $vuln_max_scans;
 
     $v_data = array(
         'name'           => $sensor_obj->get_name(),
@@ -1096,7 +1096,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
 
             $("#msscans").slider({
                 from: 1,
-                to: 25,
+                to: 5,
                 limits: false,
                 step: 1,
                 dimension: '',
@@ -1315,7 +1315,6 @@ foreach ($sensor_ctxs as $e_id => $e_name)
 
                                                 <?php
                                                 $task_types = array(
-                                                    '3'  => _('Software Inventory'),
                                                     '4'  => _('WMI Scan'),
                                                     '5'  => _('Asset Discovery Scan')
                                                 );
@@ -1518,9 +1517,8 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                                     <td class="noborder"><input type="text" name="task_name"/></td>
                                     <td class="noborder">
                                         <select name="task_type" onchange="change_task_type(this.value, 'new')">
-                                            <option value="3"><?php echo _("Software Inventory") ?></option>
-                                            <option value="4"><?php echo _("WMI Scan") ?></option>
                                             <option value="5"><?php echo _("Asset Discovery Scan") ?></option>
+                                            <option value="4"><?php echo _("WMI Scan") ?></option>
                                         </select>
                                     </td>
                                     <td class="noborder">

@@ -202,7 +202,7 @@ $show_previous_alert = 0;
 *       max_execution_time.  Thus script can run for a total of
 *       ($max_script_runtime + max_execution_time) seconds
 */
-$max_script_runtime = 180;
+$max_script_runtime = 900;
 /* How should the IP address criteria be entered in the Search screen?
 *   1 : each octet is a separate field
 *   2 : entire address is as a single field
@@ -395,7 +395,7 @@ $priority_colors = array(
 $Geo_IPfree_file_ascii = "/usr/share/ossim/www/forensics/ips-ascii.txt";
 
 
-$otx_pulse_url  = Otx::OTX_URL . "pulse/__PULSEID__";
+$otx_pulse_url  = Otx::OTX_URL . "pulse/__PULSEID__" . Otx::get_anchor();
 $otx_detail_url = AV_MAIN_PATH . "/otx/views/view_my_pulses.php?type=event&id=__EVENTID__";
 $otx_unknown    = _('No information available. You are no longer subscribed to this pulse.');
 $otx_plugin_id  = 1701;

@@ -1,14 +1,14 @@
-alienvault-doctor (5.1.1-0) stable; urgency=low
+alienvault-doctor (5.2.0-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 29 Jul 2015 07:21:28 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 17 Sep 2015 04:39:29 -0400
 
-alienvault-doctor (5.1.0-0) stable; urgency=low
+alienvault-doctor (5.2-0) unstable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 29 Jun 2015 11:29:16 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Tue, 30 Jun 2015 04:30:51 -0400
 
 alienvault-doctor (5.1-0) unstable; urgency=low
 

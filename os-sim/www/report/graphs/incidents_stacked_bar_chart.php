@@ -32,8 +32,6 @@
 */
 
 
-set_time_limit(180);
-ini_set('session.bug_compat_warn','off');
 
 require_once 'av_init.php';
 
@@ -49,23 +47,10 @@ if (ossim_error()) {
 }
 
 // Define colors
-$color_list= array(
-                        '#D6302C',
-                        '#3933FC',
-                        'green',
-                        'yellow',
-                        'pink',
-                        '#40E0D0',
-                        '#00008B',
-                        '#800080',
-                        '#FFA500',
-                        '#A52A2A',
-                        '#228B22',
-                        '#D3D3D3'
-);
+$color_list = Util::get_chart_colors();
+$conf       = $GLOBALS["CONF"];
+$jpgraph    = $conf->get_conf("jpgraph_path");
 
-$conf    = $GLOBALS["CONF"];
-$jpgraph = $conf->get_conf("jpgraph_path");
 require "$jpgraph/jpgraph.php";
 require "$jpgraph/jpgraph_bar.php";
 
@@ -139,7 +124,7 @@ else
 			
 			$bplot->SetWidth(0.7);
 
-			$bplot->SetFillColor($color_list[$i]."@0.5");
+			$bplot->SetFillColor($color_list[$i]."@0.3");
 			$bplot->SetColor($color_list[$i]."@1");
 			
 			$bplot->SetLegend($title);
@@ -153,7 +138,6 @@ else
         // Create the grouped bar plot
         $gbplot = new AccBarPlot($bar_array);
         
-        $gbplot->SetShadow($color."@0.9",6,5);
         $gbplot->SetWidth(0.6);
         
         $graph->Add($gbplot);
@@ -165,9 +149,9 @@ else
         // Adjust the legend position
 		$graph->legend->SetColumns(3);
 		$graph->legend->SetPos(0.5,0.95,'center','bottom');
-		$graph->legend->SetShadow('#fafafa',0);
 		$graph->legend->SetFrameWeight(0);
 		$graph->legend->SetFillColor('#fafafa');
+		$graph->legend->SetShadow(FALSE);
 		
 
         $graph->Stroke();

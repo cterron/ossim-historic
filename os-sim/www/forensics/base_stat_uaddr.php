@@ -183,7 +183,7 @@ $_SESSION['_siem_mapping_where'] = preg_replace("/\s+WHERE\s+1/","",$where);
 
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS IP:$sql\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS IP:$sql\n", FILE_APPEND);
 }
 /* Run the Query again for the actual data (with the LIMIT) */
 session_write_close();
@@ -308,4 +308,3 @@ $et->PrintTiming();
 PrintBASESubFooter();
 $db->baseClose();
 echo "</body>\r\n</html>";
-?>

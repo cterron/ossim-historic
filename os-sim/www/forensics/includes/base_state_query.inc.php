@@ -127,7 +127,7 @@ class QueryState {
         if (($action == "archive_alert" || $action == "archive_alert2") && isset($_COOKIE['archive']) && $_COOKIE['archive'] == 1) {
             // We do nothing here because we are looking at the archive tables
             // We do not want to add the archive actions to this list -- Kevin
-            
+
         } else {
             $this->valid_action_list[count($this->valid_action_list) ] = $action;
         }
@@ -183,7 +183,7 @@ class QueryState {
             $sql = (empty($sql)) ? "SELECT sum(cnt) FROM ac_acid_event as acid_event WHERE $where" : $sql;
             if (file_exists('/tmp/debug_siem'))
             {
-                error_log("GetCalcRows:$sql\n\n", 3, "/tmp/siem");
+                file_put_contents("/tmp/siem", "GetCalcRows:$sql\n\n", FILE_APPEND);
             }
             $result = $db->baseExecute($sql);
             if ($result)
@@ -194,7 +194,7 @@ class QueryState {
             }
         }
         return $this->num_result_rows;
-    }    
+    }
     // Optimization Update: faster than GetNumResultRows()
     function GetCalcFoundRows($cnt_sql = "", $count = 0, $db = NULL) {
         $this->num_query_rows  = $count;
@@ -214,7 +214,7 @@ class QueryState {
                     $result->baseFreeRows();
                 }
             }
-            
+
         }
         return $this->num_result_rows;
     }
@@ -258,9 +258,9 @@ class QueryState {
                     $rt->baseFreeRows();
                 }
                 printf ( "<div class='siem_display_msg' style='float:left;margin:auto;padding:4px 0px'>". $displaying . "</div>\n", ($this->current_view * $show_rows) + 1, (($this->current_view * $show_rows) + $show_rows - 1) < $this->num_result_rows ? (($this->current_view * $show_rows) + $show_rows) : $this->num_result_rows, Util::number_format_locale($this->num_result_rows,0) );
-                
+
                 if (Session::am_i_admin()) printf ( "<div class='siem_display_msg' style='float:right;margin:auto'>". gettext(" <b>%s</b> total events in database.") . "</div>\n", Util::number_format_locale($this->num_acid_event_rows,0) );
-                           
+
                 //printf("<div style='text-align:left;margin:auto'><table><tr><td><img src='../pixmaps/arrow_green.gif'></td><td>". $displaying . "</td>\n", ($this->current_view * $show_rows) + 1, (($this->current_view * $show_rows) + $show_rows - 1) < $this->num_result_rows ? (($this->current_view * $show_rows) + $show_rows) : $this->num_result_rows, Util::number_format_locale($this->num_result_rows,0), Util::number_format_locale($this->num_acid_event_rows,0));
                 if ($sqlgraph != "") {
                     GLOBAL $db, $graph_report_type;
@@ -330,10 +330,10 @@ class QueryState {
                     $rt->baseFreeRows();
                 }
                 $from = ($this->current_view * $show_rows) + 1;
-                $to = (($this->current_view * $show_rows) + $show_rows - 1) < $this->num_result_rows ? (($this->current_view * $show_rows) + $show_rows) : $this->num_result_rows;          
+                $to = (($this->current_view * $show_rows) + $show_rows - 1) < $this->num_result_rows ? (($this->current_view * $show_rows) + $show_rows) : $this->num_result_rows;
                 $rows = ($this->num_query_rows <= $show_rows && $this->current_view==0) ? $this->num_query_rows : ( ($to>($from+$this->num_query_rows)) ? $from+$this->num_query_rows-1 : $to );
                 printf ( "<div class='siem_display_msg' style='text-align:left;float:left;margin:auto;padding:4px 0px'>". $displaying . "</div>\n", $from, $rows, $this->EstimateNumber($this->num_result_rows, $this->num_query_rows, $show_rows, $rows) );
-                
+
                 if (Session::am_i_admin()) {
                     $pinfo = "PG:".$this->current_view.",RR:".$this->num_result_rows.",QR:".$this->num_query_rows.",SR:".$show_rows;
                     printf ( "<div class='siem_display_msg' style='float:right;margin:auto;padding:4px 0px'>".gettext(" <b>%s</b> total events in database.") . "</div>\n", Util::number_format_locale($this->num_acid_event_rows,0) );
@@ -377,9 +377,9 @@ class QueryState {
             if ($this->num_query_rows > $show_rows) { // Next
                 $i = $this->current_view + 1;
                 echo '<TD><INPUT TYPE="submit" name="submit" style="display:none" id="pag' . $i . '" value="' . $i . '">
-                      <a href="" onclick="$(\'#pag' . $i . '\').click();return false">' . _("NEXT") . ' &gt;</a>' . "\n</TD>";             
+                      <a href="" onclick="$(\'#pag' . $i . '\').click();return false">' . _("NEXT") . ' &gt;</a>' . "\n</TD>";
             } else {
-                echo '<TD><a href="" class="link_paginate_disabled" onclick="return false">' . _("NEXT") . ' &gt;</a>' . "\n</TD>";             
+                echo '<TD><a href="" class="link_paginate_disabled" onclick="return false">' . _("NEXT") . ' &gt;</a>' . "\n</TD>";
             }
             echo '<script> function pag_reload()
                             {
@@ -388,11 +388,11 @@ class QueryState {
                             }
                   </script>';
             echo "\n</TR></TABLE>\n";
-        }     
+        }
         else {
-            echo '<script> 
+            echo '<script>
                 function pag_reload()
-                { 
+                {
                    var href = document.location.href.replace("&nocache=1","");
                    document.location.href = href + "&nocache=1";
                    document.location.reload(false);
@@ -423,7 +423,7 @@ class QueryState {
         while ($current_op = each($this->valid_action_op_list))
         {
             $confirm_msg = _("You are about to delete __EVENTS__ events. Are you sure you want to continue?");
-            
+
             if ($current_op["value"] == gettext("Delete ALL on Screen"))
             {
                 $confirm_msg = sprintf(_("You are about to delete %s events. Are you sure you want to continue?"), $show_rows);
@@ -432,7 +432,7 @@ class QueryState {
             {
                 $confirm_msg = _("You are about to delete selected events. Are you sure you want to continue?");
             }
-            
+
             if ($current_op["value"] == gettext("Insert into DS Group"))
             { // Exceptional case: execute a javascript function, do not submit
                 echo '<li><a href="#" onclick="dsgroup_for_selected()">' . $current_op["value"] . '</a></li>';
@@ -448,7 +448,7 @@ class QueryState {
             $bt++;
         }
         echo '</ul></div>';
-        
+
         require_once 'av_init.php';
 
         echo '<table class="transparent" style="margin-top:5px" cellspacing="0" cellpadding="0">
@@ -484,7 +484,7 @@ class QueryState {
         while ($current_op = each($this->valid_action_op_list))
         {
             $confirm_msg = _("You are about to delete __EVENTS__ events. Are you sure you want to continue?");
-            
+
             if ($current_op["value"] == gettext("Delete ALL on Screen"))
             {
                 $confirm_msg = sprintf(_("You are about to delete %s events. Are you sure you want to continue?"), $show_rows);
@@ -493,7 +493,7 @@ class QueryState {
             {
                 $confirm_msg = _("You are about to delete selected events. Are you sure you want to continue?");
             }
-            
+
             if ($current_op["value"] == gettext("Insert into DS Group"))
             { // Exceptional case: execute a javascript function, do not submit
                 echo " <INPUT TYPE=\"button\" class=\"action_button av_b_secondary\" onclick=\"dsgroup_for_selected()\" VALUE=\"" . $current_op["value"] . "\">\n";
@@ -510,9 +510,9 @@ class QueryState {
         }
         //echo "   </TD>\n" . "  </TR>\n" . " </TABLE>\n" . "</CENTER>\n\n";
         echo "   </TD><TD WIDTH=5>&nbsp;</TD>";
-        
+
         require_once 'av_init.php';
-        
+
         echo "<TD WIDTH=5>&nbsp;</TD>\n" ;
 
         echo '<td align="right" class="box" style="font-size:11px;padding-bottom:10px;vertical-align:bottom">
@@ -574,4 +574,3 @@ class QueryState {
           action = '$this->action'<BR>";
     }
 }
-?>

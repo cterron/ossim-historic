@@ -106,13 +106,14 @@ class Plugin:
     Defines a plugin with a set of conditions/actions.
     '''
     # # def __init__(self, filename, alienvault_config, severity_list, appliance_type_list, verbose, raw):
-    def __init__(self, filename, config_file, alienvault_config, severity_list, appliance_type_list, verbose, raw):
+    def __init__(self, filename, config_file, alienvault_config, severity_list, appliance_type_list, ignore_dummy_platform, verbose, raw):
         # Common properties.
         self.__config_file = None
         self.__sections = []
         self.__alienvault_config = {}
         self.__severity_list = []
         self.__appliance_type_list = []
+        self.__ignore_dummy_platform = False
         self.__verbose = 0
         self.__raw = False
         self.__name = ''
@@ -155,6 +156,7 @@ class Plugin:
         self.__alienvault_config = alienvault_config
         self.__severity_list = severity_list
         self.__appliance_type_list = appliance_type_list
+        self.__ignore_dummy_platform = ignore_dummy_platform
         self.__verbose = verbose
         self.__raw = raw
 
@@ -191,8 +193,8 @@ class Plugin:
                 self.__cutoff = self.__config_file.getboolean('properties', 'cutoff')
 
             # Check for the 'strike_zone' option
-            if self.__config_file.has_option('properties', 'strike_zone'):
-                self.__strike_zone = self.__config_file.getboolean('properties', 'strike_zone')
+            if self.__config_file.has_option('properties', 'affects_strike_zone'):
+                self.__strike_zone = self.__config_file.getboolean('properties', 'affects_strike_zone')
 
             # Check for the 'file_must_exist' option
             if self.__config_file.has_option('properties', 'file_must_exist'):
@@ -263,7 +265,8 @@ class Plugin:
                     check = Check(self, section)
                     needs_deletion = False
                     if not check.check_appliance_type(self.__alienvault_config['hw_profile'],
-                                                      self.__appliance_type_list):
+                                                      self.__appliance_type_list,
+                                                      self.__ignore_dummy_platform):
                         Output.warning("\nCheck %s is not meant to be run in %s" % (section,
                                                                                     self.__alienvault_config['hw_profile']))
                         needs_deletion = True
@@ -275,7 +278,7 @@ class Plugin:
 
                     elif not check.check_version_type():
                         Output.warning("\nCheck %s is not meant to be run in a %s license" % (section,
-                                                                                          self.__alienvault_config['versiontype']))
+                                                                                              self.__alienvault_config['versiontype']))
                         needs_deletion = True
                     if not needs_deletion:
                         self.__checks.append(check)
@@ -453,6 +456,8 @@ class Plugin:
     def get_alienvault_config(self):
         return self.__alienvault_config
 
+    def get_ignore_dummy_platform(self):
+        return self.__ignore_dummy_platform
 
       # Check if any of the categories match with the plugin ones.
     def check_category(self, categories):
@@ -554,8 +559,11 @@ class Plugin:
                                                             'debug_detail': msg.lstrip().replace('\n\t', ';'),
                                                             'pattern': check.get_pattern(),
                                                             'command': aux_command,
-                                                            'output': check.get_output(),
-                                                            'strike_zone': False}
+                                                            'output': check.get_output()}
+
+                    # If current check affects to strike_zone, set 'strike_zone' param to 'False'
+                    json_msg['checks'][check.get_name()]['strike_zone'] = False if check.get_strike_zone() else True
+
                 else:
                     json_msg['checks'][check.get_name()] = {'result': 'passed',
                                                             'severity': check.get_severity(),

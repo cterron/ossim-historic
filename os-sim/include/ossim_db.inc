@@ -122,7 +122,7 @@ class Ossim_db
         
         $this->conf = $_conf;       
         
-        if ($this->conf->get_conf('ossim_type') == 'mysql' && !function_exists('mysql_connect')) 
+        if ($this->conf->get_conf('ossim_type') == 'mysql' && !function_exists('mysqli_connect'))
         {   
             $exp_msg = _('No mysql support available in your PHP installation, try installing the php-mysql extension/package');
             

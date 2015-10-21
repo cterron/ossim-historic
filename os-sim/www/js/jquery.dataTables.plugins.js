@@ -77,12 +77,7 @@ jQuery.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnC
 };
 
 
-
-
-
-
-
-$.fn.dataTableExt.oApi.fnSetFilteringDelay = function ( oSettings, iDelay ) {
+jQuery.fn.dataTableExt.oApi.fnSetFilteringDelay = function ( oSettings, iDelay ) {
     var _that = this;
 
     if ( iDelay === undefined ) {
@@ -116,6 +111,34 @@ $.fn.dataTableExt.oApi.fnSetFilteringDelay = function ( oSettings, iDelay ) {
 };
 
 
+jQuery.fn.dataTableExt.oApi.fnStandingRedraw = function(oSettings, start, end)
+{
+    if(oSettings.oFeatures.bServerSide === false)
+    {
+        if (typeof start == 'undefined' || start == null)
+        {
+            start = oSettings._iDisplayStart;
+        }
+        if (typeof end == 'undefined' || end == null)
+        {
+            end = oSettings._iDisplayEnd;
+        }
+
+        if (start == (end - 1) && (start - oSettings._iDisplayLength) >= 0)
+        {
+            start -= oSettings._iDisplayLength;
+        }
+
+        oSettings.oApi._fnReDraw(oSettings);
+
+        // iDisplayStart has been reset to zero - so lets change it back
+        oSettings._iDisplayStart = start;
+        oSettings.oApi._fnCalculateEnd(oSettings);
+    }
+
+    // draw the 'current' page
+    oSettings.oApi._fnDraw(oSettings);
+};
 
 /* Plugin for sorting by KB,MB,B and Bytes.
  * http://datatables.net/plug-ins/sorting extended to deal with:

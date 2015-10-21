@@ -22,41 +22,34 @@ case "$1" in
         DEFAULT_GRUB_FILE="/etc/default/grub"
         MODULES_FILE="/etc/initramfs-tools/modules"
         UPDATE_GRUB2_BIN="/usr/sbin/update-grub2"
+        PLYMOUTH_STOP=$(grep "plymouth" /etc/rc.local || true)
+	sed -i 's/--retain-splash//g' /etc/init.d/plymouth
 
         if [ -f "$DEFAULT_GRUB_FILE" ] && [ -x "$UPDATE_GRUB2_BIN" ]; then
-            CONFIG_VAR="PLYMOUTH_CONFIG"
-            CONFIG_PARAMS="loglevel=3 splash video=uvesafb:1024x768-24"
-            CONFIG_LINE=$(grep "^$CONFIG_VAR=\"$CONFIG_PARAMS\"" "$DEFAULT_GRUB_FILE" || true)
-            CONFIG_INCLUDED=$(grep "^GRUB_CMDLINE_LINUX_DEFAULT.*\$$CONFIG_VAR" "$DEFAULT_GRUB_FILE" || true)
-            MODULE_INCLUDED=$(grep "^uvesafb" "$MODULES_FILE" || true)
-            CHANGED=0
+	    MD5_PREV=`md5sum $DEFAULT_GRUB_FILE | awk '{print $1}'`
+cat > $DEFAULT_GRUB_FILE << 'EOF'
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=0
+GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+PLYMOUTH_CONFIG="loglevel=3 splash video=uvesafb:640x480-24"
+ESCALATOR_CONFIG="escalator=noop"
+GRUB_CMDLINE_LINUX_DEFAULT=" $PLYMOUTH_CONFIG $ESCALATOR_CONFIG"
+GRUB_CMDLINE_LINUX=""
+EOF
+	    MD5_POST=`md5sum $DEFAULT_GRUB_FILE | awk '{print $1}'`
 
-            if [ -z "$CONFIG_LINE" ]; then
-                sed -i "$DEFAULT_GRUB_FILE" \
-                    -e "/^$CONFIG_VAR/d" \
-                    -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/$CONFIG_VAR=\"$CONFIG_PARAMS\"\n&/"
-                CHANGED=1
-            fi
+            MODULE_INCLUDED=$(grep "^uvesafb" "$MODULES_FILE" || true)
 
             if [ -z "$MODULE_INCLUDED" ]; then
                 echo "uvesafb" >> "$MODULES_FILE"
-                CHANGED=1
-            fi
-
-            if [ -z "$CONFIG_INCLUDED" ]; then
-                sed -i "$DEFAULT_GRUB_FILE" \
-                    -e "s/GRUB_GFXMODE=.*/GRUB_GFXMODE=640x480x15/" \
-                    -e "s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/" \
-                    -e "/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/s/quiet//" \
-                    -e "/GRUB_CMDLINE_LINUX_DEFAULT=\".*\"$/s/\"$/ \$$CONFIG_VAR\"/"
-                CHANGED=1
+                MD5_POST="changed"
             fi
 
             plymouth-set-default-theme alienvault --rebuild-initrd
 
-            if [ $CHANGED -ne 0 ]; then
+	    if [ "$MD5_PREV" != "$MD5_POST" ]; then
                 $UPDATE_GRUB2_BIN
-            fi
+	    fi
         fi
         ;;
 

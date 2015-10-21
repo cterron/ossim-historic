@@ -35,7 +35,7 @@ require_once 'av_init.php';
 
 Session::logcheck('environment-menu', 'PolicyHosts');
 
-
+set_time_limit(0);
 
 /****************************************************
  ******************** Scan Data *********************

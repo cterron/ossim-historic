@@ -121,32 +121,32 @@ $sort_sql = $qro->GetSortSQL($qs->GetCurrentSort() , $qs->GetCurrentCannedQueryS
 
 if (Session::show_entities())
 {
-    $sql = "SELECT acid_event.plugin_id,$counter,hex(acid_event.ctx) as ctx,product_type.name as source_type,plugin.product_type,plugin.name  " . 
-            $fromcnt  . ",alienvault.plugin LEFT JOIN alienvault.product_type ON product_type.id=plugin.product_type " . 
-            $where . " AND plugin.id=acid_event.plugin_id 
+    $sql = "SELECT acid_event.plugin_id,$counter,hex(acid_event.ctx) as ctx,product_type.name as source_type,plugin.product_type,plugin.name  " .
+            $fromcnt  . ",alienvault.plugin LEFT JOIN alienvault.product_type ON product_type.id=plugin.product_type " .
+            $where . " AND plugin.id=acid_event.plugin_id
             GROUP BY acid_event.plugin_id,acid_event.ctx " . $sort_sql[1];
-    
-    $_SESSION['_siem_plugins_query'] = "SELECT plugin_sid.name as sig_name,timestamp 
-                                        $fromplg " . 
-                                        $where . " AND acid_event.plugin_id=PLUGIN_ID AND acid_event.ctx=UNHEX('DID') 
+
+    $_SESSION['_siem_plugins_query'] = "SELECT plugin_sid.name as sig_name,timestamp
+                                        $fromplg " .
+                                        $where . " AND acid_event.plugin_id=PLUGIN_ID AND acid_event.ctx=UNHEX('DID')
                                         ORDER BY timestamp DESC LIMIT 1";
 }
 else
 {
-    $sql = "SELECT acid_event.plugin_id,$counter,acid_event.device_id as ctx,product_type.name as source_type,plugin.name  " . 
-            $fromcnt  . ",device,alienvault.plugin LEFT JOIN alienvault.product_type ON product_type.id=plugin.product_type " . 
-            $where . " AND device.id=acid_event.device_id  AND plugin.id=acid_event.plugin_id 
+    $sql = "SELECT acid_event.plugin_id,$counter,acid_event.device_id as ctx,product_type.name as source_type,plugin.name  " .
+            $fromcnt  . ",device,alienvault.plugin LEFT JOIN alienvault.product_type ON product_type.id=plugin.product_type " .
+            $where . " AND device.id=acid_event.device_id  AND plugin.id=acid_event.plugin_id
             GROUP BY acid_event.plugin_id,acid_event.device_id " . $sort_sql[1];
-        
-    $_SESSION['_siem_plugins_query'] = "SELECT plugin_sid.name as sig_name,timestamp 
-                                        $fromplg " . 
-                                        $where . " AND acid_event.plugin_id=PLUGIN_ID AND acid_event.device_id=DID 
+
+    $_SESSION['_siem_plugins_query'] = "SELECT plugin_sid.name as sig_name,timestamp
+                                        $fromplg " .
+                                        $where . " AND acid_event.plugin_id=PLUGIN_ID AND acid_event.device_id=DID
                                         ORDER BY timestamp DESC LIMIT 1";
 }
 
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS PLUGINS:$sql\n".$_SESSION['_siem_plugins_query']."\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS PLUGINS:$sql\n".$_SESSION['_siem_plugins_query']."\n", FILE_APPEND);
 }
 
 //echo $sql;
@@ -176,22 +176,22 @@ $i = 0;
 // We need to verify that it works all the time -- Kevin
 $and = (strpos($where, "WHERE") != 0) ? " AND " : " WHERE ";
 $i = 0;
-$report_data = array(); // data to fill report_data 
+$report_data = array(); // data to fill report_data
 if (is_array($_SESSION["server"]) && $_SESSION["server"][0]!="")
-	$_conn = $dbo->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
+    $_conn = $dbo->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
 else
-	$_conn = $dbo->connect();
+    $_conn = $dbo->connect();
 while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
-	$plugin_id = $myrow["plugin_id"];
+    $plugin_id = $myrow["plugin_id"];
     $plugin_name = $myrow["name"];
     $product_type = $myrow["source_type"];
     if ($product_type == "") $product_type = _("Unknown type");
-	$total_occurances = $myrow["events"];
-	$ctx = $myrow["ctx"];
+    $total_occurances = $myrow["events"];
+    $ctx = $myrow["ctx"];
 
-	/*
+    /*
     $submit = "#" . (($qs->GetCurrentView() * $show_rows) + $i) . "-" . $sig_id;
-	
+
     $tmp_rowid = rawurlencode($sig_id);
     echo '  <TD nowrap '.$bgcolor.'>&nbsp;&nbsp;
                  <INPUT TYPE="checkbox" NAME="action_chk_lst[' . $i . ']" VALUE="' . $tmp_rowid . '">
@@ -202,20 +202,20 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $urlp = "base_qry_main.php?search=1&sensor=&bsf=Query+DB&search_str=&sip=&ossim_risk_a=+&plugin=$plugin_id";
     qroPrintEntryHeader($i);
     qroPrintEntry('&nbsp;&nbsp;&nbsp;<a href="'.$urlp.'">' . $plugin_name . '</a>','left',"","nowrap",$bgcolor);
-	qroPrintEntry('&nbsp;<a href="'.$urlp.'">' . Util::number_format_locale($total_occurances,0) . '</a>',"center","","",$bgcolor);
-	$sens = (Session::show_entities() && !empty($entities[$ctx])) ? $entities[$ctx] : ((Session::show_entities()) ? _("Unknown") : GetSensorName($ctx, $db));
+    qroPrintEntry('&nbsp;<a href="'.$urlp.'">' . Util::number_format_locale($total_occurances,0) . '</a>',"center","","",$bgcolor);
+    $sens = (Session::show_entities() && !empty($entities[$ctx])) ? $entities[$ctx] : ((Session::show_entities()) ? _("Unknown") : GetSensorName($ctx, $db));
     qroPrintEntry($sens,"center","","",$bgcolor);
-	qroPrintEntry("&nbsp;&nbsp;&nbsp;$product_type" ,"left","","",$bgcolor);
+    qroPrintEntry("&nbsp;&nbsp;&nbsp;$product_type" ,"left","","",$bgcolor);
 
-	qroPrintEntry("&nbsp;<A class='usig' id='sg$plugin_id-$ctx' HREF='$urlp'>-</a>","left","","",$bgcolor);	
+    qroPrintEntry("&nbsp;<A class='usig' id='sg$plugin_id-$ctx' HREF='$urlp'>-</a>","left","","",$bgcolor);
     qroPrintEntry("<div id='ts$plugin_id-$ctx'>-</div>","center","","nowrap",$bgcolor);
     qroPrintEntryFooter();
     $i++;
     $prev_time = null;
-    
+
     // report_data
     $report_data[] = array (
-        $plugin_name, $product_type, 
+        $plugin_name, $product_type,
         "", "", "", "", $timestamp,
         "", "", "", $sens,
         $total_occurances, 0 , 0
@@ -241,7 +241,7 @@ if (!$export)
 {
 ?>
 <script>
-	var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
+    var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
     var plots=new Array();
     var pi = 0;
     function load_content() {
@@ -251,19 +251,19 @@ if (!$export)
         var pid = item.replace(/sg/,'');
         $.ajax({
             beforeSend: function() {
-				$('#sg'+pid).html(tmpimg);
-				$('#ts'+pid).html(tmpimg); 
-            },        
-    		type: "GET",
-    		url: "base_stat_plugin_data.php"+params,
-    		success: function(msg) {
-    			var res = msg.split(/##/);
-    			$('#sg'+pid).html(res[0]);
-    			$('#ts'+pid).html(res[1]);
-    			setTimeout('load_content()',10);
-    		}
-    	});
-    } 
+                $('#sg'+pid).html(tmpimg);
+                $('#ts'+pid).html(tmpimg);
+            },
+            type: "GET",
+            url: "base_stat_plugin_data.php"+params,
+            success: function(msg) {
+                var res = msg.split(/##/);
+                $('#sg'+pid).html(res[0]);
+                $('#ts'+pid).html(res[1]);
+                setTimeout('load_content()',10);
+            }
+        });
+    }
     $(document).ready(function() {
         $('.usig').each(function(index, item) {
             plots.push(item.id);
@@ -275,4 +275,3 @@ if (!$export)
 }
 
 echo "</body>\r\n</html>";
-?>

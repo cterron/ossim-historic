@@ -477,7 +477,7 @@ $db->close();
             </table>
 
             <div id='c_actions'>
-                <input type="button" id='send' value="<?php echo _('Save')?>"/>
+                <input type="button" id='send' value="<?php echo _('Deploy')?>"/>
             </div>
 
         </div>

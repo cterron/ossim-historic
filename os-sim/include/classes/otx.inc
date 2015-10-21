@@ -44,7 +44,6 @@
 
 require_once 'av_config.php';
 
-
 /**
  * Otx Class
  *
@@ -59,7 +58,7 @@ class Otx
     const OTX_URL               = 'https://otx.alienvault.com/';
     const OTX_URL_NEW_LOGIN     = 'https://otx.alienvault.com/accounts/usm';
     const OTX_URL_UPGRADE_LOGIN = 'https://otx.alienvault.com/accounts/usm/?exists=true';
-    
+
     /**
     * OTX Token
     *
@@ -128,7 +127,6 @@ class Otx
     protected $api;
     
 
-
     /**
     * Function __construct
     *
@@ -147,6 +145,35 @@ class Otx
         
         //API Connection
         $this->api = new Alienvault_client();
+    }
+    
+    
+    /**
+    * Function get_anchor
+    *
+    * This function gets the anchor
+    *
+    * @access public
+    *
+    * @return string
+    */
+    public static function get_anchor($prefix = '?')
+    {
+        GLOBAL $conf;
+        $version = $conf->get_conf("ossim_schema_version");
+
+        $av_menu = @unserialize($_SESSION['av_menu']);
+        $medium  = '';
+        if (is_object($av_menu))
+        {
+            $medium = urlencode($av_menu->get_m_option().'/'.$av_menu->get_sm_option().'/'.$av_menu->get_h_option());
+        }
+
+        $url     = $prefix . 'utm_source=' . (Session::is_pro() ? 'USM' : 'OSSIM');
+        $url    .= '&utm_medium=' . urlencode($medium);
+        $url    .= '&utm_campaign=' . urlencode($version);
+
+        return $url;
     }
     
     
@@ -253,7 +280,7 @@ class Otx
     {
         return Util::get_date_from_utc($this->latest_update, array('empty_msg' => _('Never')));
     }
-           
+    
     
     /**
     * Function set_token

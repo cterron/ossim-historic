@@ -198,7 +198,7 @@ class Notification
     */      
     public function show($display = TRUE)
     {
-        $nf_style = Notification::$wrapper_style;
+        $nf_style = self::$wrapper_style;
         $img      = 'nf_error.png';
          
         switch ($this->config['options']['type'])

@@ -202,7 +202,6 @@ if ( $numofresults < 1 )
     die(_("No vulnerabilities recorded"));
 }
 
-set_time_limit(300);
 $chinese = false;    // the language is not chinese by default
 
 //start pdf file, add page, set font
@@ -216,7 +215,12 @@ if ($is_pro)
 {
     if ($siteLogo != '')
     {
-       $pdf->Image($siteLogo,10,11,40);
+        $siteLogo_user_path = $siteLogo;
+
+        $siteLogo = preg_replace('/\.\.\/pixmaps/', '/usr/share/ossim/www/pixmaps', $siteLogo);
+        $siteLogo = (file_exists($siteLogo)) ? $siteLogo : $siteLogo_user_path;
+
+        $pdf->Image($siteLogo,10,11,40);
     }
     else
     {

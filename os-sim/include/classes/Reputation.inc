@@ -837,14 +837,14 @@ class Reputation
     *
     * @return string
     */
-    public static function getreponlyimg($prio, $act)
+    public static function getreponlyimg($prio, $act, $without_title=FALSE)
     {
         if (intval($prio) == 0) 
         {
             return '';
         }
 
-        $lnk = "<img align='absmiddle' style='margin:0px 5px 0px 0px' border='0' alt='".trim($act)."' title='".trim($act)."'";
+        $lnk = ($without_title) ? "<img align='absmiddle' style='margin:0px 5px 0px 0px' border='0'" : "<img align='absmiddle' style='margin:0px 5px 0px 0px' border='0' alt='".trim($act)."' title='".trim($act)."'";
 
         if ($prio <= 2)
         {

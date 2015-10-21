@@ -107,33 +107,13 @@ if ($action == 'logout')
 }
 
 
-/****************************************************
- **************** Configuration Data ****************
- ****************************************************/
-
-$conf = $GLOBALS['CONF'];
-
-if (!$conf)
-{
-    $conf = new Ossim_conf();
-    $GLOBALS['CONF'] = $conf;
-}
-
-//Google Maps Key
-$map_key = $conf->get_conf('google_maps_key');
-
-if ($map_key == '')
-{
-    $map_key = 'ABQIAAAAbnvDoAoYOSW2iqoXiGTpYBTIx7cuHpcaq3fYV4NM0BaZl8OxDxS9pQpgJkMv0RxjVl6cDGhDNERjaQ';
-}
-
-
 //If user is logged, redirect to home
 if (Session::get_session_user() != '')
 {
      header("Location: /ossim");
      exit();
 }
+
 
 $embed     = REQUEST('embed');
 $user      = REQUEST('user');
@@ -147,8 +127,8 @@ $fullname  = REQUEST('fullname');
 //Bookmark string
 $bookmark  = REQUEST('bookmark_string');
 
-$pass      = trim($pass);
-$pass1     = trim($pass1);
+$pass      = Util::utf8_encode2(trim($pass));
+$pass1     = Util::utf8_encode2(trim($pass1));
 $email     = trim($email);
 $fullname  = trim($fullname);
 
@@ -186,12 +166,72 @@ if (ossim_error())
 }
 
 
-/* Version */
+if(Session::is_pro())
+{
+    $trial_days = Session::trial_days_to_expire();
+
+    if($trial_days <= 0)
+    {
+        if(file_exists('/usr/share/ossim/www/session/trial/index.php'))
+        {
+            header("Location: /ossim/session/trial/index.php");
+            exit();
+        }
+    }
+}
+
+
+/****************************************************
+ **************** Configuration Data ****************
+ ****************************************************/
+
+$conf = $GLOBALS['CONF'];
+
+if (!$conf)
+{
+    $conf = new Ossim_conf();
+    $GLOBALS['CONF'] = $conf;
+}
+
+$first_login = $conf->get_conf('first_login');
+
+$first_login = ($first_login == '' || $first_login === 0 || $first_login == 'no') ? 'no' : 'yes';
+$disclaimer  = $conf->get_conf('disclaimer');
+
+
+//Password Policy
+$pass_length_min  = $conf->get_conf('pass_length_min');
+$pass_length_min  = intval($pass_length_min);
+$pass_length_min  = ($pass_length_min < 7 || $pass_length_min > 255) ? 7 : $pass_length_min;
+
+$pass_length_max  = $conf->get_conf('pass_length_max');
+$pass_length_max  = intval($pass_length_max);
+$pass_length_max  = ($pass_length_max > 255 || $pass_length_max < $pass_length_min) ? 255 : $pass_length_max;
+
+$pass_expire_max  = $conf->get_conf('pass_expire');
+$pass_expire_max  = ($pass_expire_max > 0 && $pass_expire_max != 'yes' && $pass_expire_max != 'no') ? $pass_expire_max : 0;
+$pass_expire_max  = intval($pass_expire_max);
+
+$pass_complex     = $conf->get_conf('pass_complex');
+
+$failed_retries   = $conf->get_conf('failed_retries');
+
+
+//Google Maps Key
+$map_key = $conf->get_conf('google_maps_key');
+
+if ($map_key == '')
+{
+    $map_key = 'ABQIAAAAbnvDoAoYOSW2iqoXiGTpYBTIx7cuHpcaq3fYV4NM0BaZl8OxDxS9pQpgJkMv0RxjVl6cDGhDNERjaQ';
+}
+
+
+// Version
 
 $pro = Session::is_pro();
 
 
-/*  System Name  */
+// System Name
 try
 {
     list($system_name, $system_ip) = Session::get_local_sysyem_info();
@@ -240,25 +280,10 @@ if ($bookmark != '' && $system_name != '')
 
 $failed       = TRUE;
 $default_user = '';
-$first_login  = $conf->get_conf('first_login');
 
-if($pro == TRUE)
-{
-    $trial_days = Session::trial_days_to_expire();
-
-    if($trial_days == 0)
-    {
-        if(file_exists('/usr/share/ossim/www/session/trial/index.php'))
-        {
-            header("Location: /ossim/session/trial/index.php");
-            exit();
-        }
-    }
-}
 
 
 // FIRST LOGIN
-
 $cnd_1 = ($first_login == 'yes' && $accepted == 'yes');
 $cnd_2 = ($pass != '' &&  $pass1 != '' && $pass == $pass1);
 $cnd_3 = ($email != '' && $fullname != '');
@@ -272,6 +297,32 @@ if ($cnd_1 && $cnd_2 && $cnd_3)
     if (ossim_error())
     {
         die(ossim_error());
+    }
+
+    //Check password policy
+    $pp_1 = (strlen($pass) < $pass_length_min);
+    $pp_2 = (strlen($pass) > $pass_length_max);
+    $pp_3 = (Session::pass_check_complexity($pass) == FALSE);
+
+    if ($pp_1 || $pp_2 || $pp_3)
+    {
+        if ($pp_1 == TRUE)
+        {
+            ossim_set_error(sprintf(_('Password is not long enough [Minimum password size is %s]'), $pass_length_min));
+        }
+        elseif ($pp_2 == TRUE)
+        {
+            ossim_set_error(sprintf(_('Password is too long [Maximum password size is %s]'), $pass_length_max));
+        }
+        elseif ($pp_3 == TRUE)
+        {
+            ossim_set_error(_("The password does not meet the password complexity requirements [Password should contain lowercase and uppercase letters, digits and special characters]"));
+        }
+
+        if (ossim_error())
+        {
+            die(ossim_error());
+        }
     }
 
     $config      = new Config();
@@ -357,7 +408,6 @@ if ($cnd_1 && $cnd_2)
         $first_user_login  = $session->get_first_login();
         $last_pass_change  = $session->last_pass_change();
         $login_exists      = $session->is_logged_user_in_db();
-        $lockout_duration  = intval($conf->get_conf('unlock_user_interval')) * 60;
 
 
         if ($login_return != TRUE)
@@ -371,7 +421,7 @@ if ($cnd_1 && $cnd_2)
             $bad_pass       = TRUE;
             $failed_retries = $conf->get_conf('failed_retries');
 
-            if ($login_exists && !$is_disabled && $lockout_duration > 0)
+            if ($login_exists && !$is_disabled)
             {
                 $_SESSION['bad_pass'][$user]++;
 
@@ -387,11 +437,7 @@ if ($cnd_1 && $cnd_2)
         {
             $_SESSION['bad_pass'] = '';
 
-            $pass_expire_max = ($conf->get_conf('pass_expire') > 0 && $conf->get_conf('pass_expire') != 'yes' && $conf->get_conf('pass_expire') != 'no') ? $conf->get_conf('pass_expire') : 0;
-
-            $pass_length_min = ($conf->get_conf('pass_length_min')) ? $conf->get_conf('pass_length_min') : 7;
-
-            if ($first_login == '' || $first_login == 0 || $first_login == 'no')
+            if ($first_login == 'no')
             {
                 $accepted = 'yes';
             }
@@ -402,13 +448,8 @@ if ($cnd_1 && $cnd_2)
             {
                 $first_login = 'no';
 
-    	        $client  = new Alienvault_client($user);
-    	        $client->auth()->login($user,$pass);
-
-                $iv_size           = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB); //get vector size on ECB mode
-                $iv                = mcrypt_create_iv($iv_size, MCRYPT_RAND); //Creating the vector
-                $_SESSION['mdspw'] = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $conf->get_conf('md5_salt') , $pass, MCRYPT_MODE_ECB, $iv);
-
+                $client  = new Alienvault_client($user);
+                $client->auth()->login($user, $pass);
 
                 $infolog = array($user);
                 Log_action::log(1, $infolog);
@@ -417,7 +458,7 @@ if ($cnd_1 && $cnd_2)
                 {
                     header("Location: first_login.php");
                 }
-                elseif ($pass_expire_max > 0 && dateDiff($last_pass_change,date('Y-m-d H:i:s')) >= $pass_expire_max)
+                elseif ($pass_expire_max > 0 && dateDiff($last_pass_change, gmdate('Y-m-d H:i:s')) >= $pass_expire_max)
                 {
                     header("Location: first_login.php?expired=1");
                 }
@@ -537,6 +578,8 @@ if ($system_name != '')
         var h_window;
         var __internet  = null;
         var av_bookmark = "<?php echo $bookmark ?>";
+
+
         function show_help()
         {
              var width  = 1024;
@@ -570,21 +613,109 @@ if ($system_name != '')
         };
 
 
+        function check_pass_complex()
+        {
+            var pass_complex = '<?php echo $pass_complex;?>';
+            var pass         = $('#pass').val();
+
+            if (pass_complex == 'yes')
+            {
+                var counter = 0;
+
+                if (pass.match(/[a-z]/))
+                {
+                    counter++;
+                }
+
+                if (pass.match(/[A-Z]/))
+                {
+                    counter++;
+                }
+
+                if (pass.match(/[0-9]/))
+                {
+                    counter++;
+                }
+
+                if (pass.match(/[\>\<\.\!#\$%\^&\*_\-\=\+\:;,~@\[\]\{\}\|\?\\\(\)\/\xa1\xbf\xba\xaa\xb7\xa8]/))
+                {
+                    counter++;
+                }
+
+                return (counter < 4) ? false : true;
+            }
+
+            return true;
+        }
+
+
+        function check_password()
+        {
+            var data = {
+                "status" : "success",
+                "data" : ""
+            };
+
+            var min_pass_length = <?php echo $pass_length_min;?>;
+            var max_pass_length = <?php echo $pass_length_max;?>;
+
+            var pass   = $('#pass').val();
+            var pass_1 = $('#pass1').val();
+
+            if (pass != '' &&  pass_1 != '' && pass != pass_1)
+            {
+                data.status = "error";
+                data.data   = "<?php echo _('Passwords do not match');?>";
+
+                return data;
+            }
+
+            if (pass.length < min_pass_length)
+            {
+                data.status = "error";
+                data.data = "<?php echo sprintf(_('Password is not long enough [Minimum password size is %s]'), $pass_length_min);?>";
+
+                return data;
+            }
+
+            if (pass.length > max_pass_length)
+            {
+                data.status = "error";
+                data.data   = "<?php echo sprintf(_('Password is too long [Maximum password size is %s]'), $pass_length_max);?>";
+
+                return data;
+            }
+
+            var pass_complex = check_pass_complex();
+            if (pass_complex == false)
+            {
+                data.status = "error";
+                data.data   = "<?php echo _("The password does not meet the password complexity requirements [Password should contain lowercase and uppercase letters, digits and special characters]");?>";
+
+                return data;
+            }
+
+            return data;
+        }
+
+
         <?php
         if ($first_login == 'yes')
         {
             ?>
             function check()
             {
-                if ($('#fullname').val() =='' || $('#pass').val() =='' ||  $('#pass1').val() =='' ||  $('#email').val()=='')
+                if ($('#fullname').val() == '' || $('#pass').val() == '' ||  $('#pass1').val() == '' ||  $('#email').val() == '')
                 {
                     alert("<?php echo _('Please fill all fields. Thank you')?>")
                     return false;
                 }
 
-                if ($('#pass').val()!='' &&  $('#pass1').val()!='' && $('#pass').val()!=$('#pass1').val())
+                var p_data = check_password();
+
+                if (p_data.status == 'error')
                 {
-                    alert("<?php echo _('Passwords do not match')?>")
+                    alert(p_data.data);
                     return false;
                 }
 
@@ -595,11 +726,9 @@ if ($system_name != '')
                     return false;
                 }
 
-                $('#pass').val($.base64.encode($('#pass').val()))
-                $('#pass1').val($.base64.encode($('#pass1').val()))
-
                 return true;
             }
+
 
             function toggle_map()
             {
@@ -624,11 +753,12 @@ if ($system_name != '')
             $('#bookmark_string').val(av_hash);
         }
 
+
         $(document).ready(function()
         {
             if (typeof(document.f_login) != 'undefined')
             {
-                 document.f_login.user.focus();
+                document.f_login.user.focus();
             }
 
         	$("#ftpass").fancybox({
@@ -755,10 +885,17 @@ if ($system_name != '')
 
 
                 $('#f_login').submit(function(){
+
                     if (!check())
                     {
                        return false;
                     }
+                    else
+                    {
+                        $('#pass').val($.base64.encode($('#pass').val()));
+                        $('#pass1').val($.base64.encode($('#pass1').val()))
+                    }
+
                     $('#down_button').addClass('av_b_processing');
                 });
                 <?php

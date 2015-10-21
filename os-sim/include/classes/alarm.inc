@@ -1557,7 +1557,7 @@ class Alarm
         
         if (file_exists("/tmp/debug_alarm"))
         {
-            error_log("ALARM:$sql\n",3,"/tmp/alarms");
+            file_put_contents("/tmp/alarms", "ALARM:$sql\n", FILE_APPEND);
         }
 
         $num_rows = 0;

@@ -37,7 +37,7 @@ use MIME::Base64;
 use Net::IP;
 use IO::Socket;
 use Date::Calc qw( Delta_DHMS Add_Delta_YMD Days_in_Month );
-use Switch;
+use feature "switch";
 use strict;
 use warnings;
 use POSIX qw(strftime);
@@ -176,7 +176,7 @@ sub get_results_from_file {
                 
         # to import .nbe from OMP scans
         
-        my $risk_factor = "";
+        my $risk_factor = "Info";
         
         if(!defined($description)) {  $description="";  }
         
@@ -190,7 +190,7 @@ sub get_results_from_file {
             elsif( int($1) >= 2 && int($1) < 5 ) {
                 $risk_factor = "Medium";
             }
-            elsif( int($1) >= 0 && int($1) < 2 ) {
+            elsif( int($1) > 0 && int($1) < 2 ) {
                 $risk_factor = "Low";
             }
         }
@@ -323,8 +323,7 @@ sub get_results_from_file {
 
             
                 $description =~ s/\\/\\\\/g;	#FIX TO BACKSLASHES
-                $description =~ s/\\\\n/\\n/g;	#FIX TO NEWLINE 
-                
+                $description =~ s/\\\\n/\n/g;	#FIX TO NEWLINE
 
                 my $temp = {
                     Port            => $port,
@@ -1341,12 +1340,12 @@ sub getCurrentDateTime {
     $mon++;
 
     if ( $format ) {
-        switch (lc($format)) {
-            case "datetime"        { return sprintf("%04d%02d%02d%02d%02d%02d",$year, $mon, $mday, $hour, $min, $sec); }
-            case "date"                { return sprintf("%04d%02d%02d",$year, $mon, $mday); }
-            case "time"                { return sprintf("%02d%02d%02d", $hour, $min, $sec); }
-            case "today"        { return $days[$wday]; }
-            else                { return sprintf("%04d%02d%02d%02d%02d%02d",$year, $mon, $mday, $hour, $min, $sec); }
+        given (lc($format)) {
+            when("datetime")        { return sprintf("%04d%02d%02d%02d%02d%02d",$year, $mon, $mday, $hour, $min, $sec); }
+            when("date")            { return sprintf("%04d%02d%02d",$year, $mon, $mday); }
+            when("time")            { return sprintf("%02d%02d%02d", $hour, $min, $sec); }
+            when("today")           { return $days[$wday]; }
+            default                 { return sprintf("%04d%02d%02d%02d%02d%02d",$year, $mon, $mday, $hour, $min, $sec); }
         }
     } else {
         return sprintf("%04d%02d%02d%02d%02d%02d",$year, $mon, $mday, $hour, $min, $sec);

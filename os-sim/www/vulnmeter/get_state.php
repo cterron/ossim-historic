@@ -43,6 +43,9 @@ if( !preg_match("/^[\d\#]+$/", $tasks) ) {
 }
 
 if (Vulnerabilities::scanner_type()=="omp") {
+
+    session_write_close();
+
 	$tresult = array();
 	
     $omp = new Omp();

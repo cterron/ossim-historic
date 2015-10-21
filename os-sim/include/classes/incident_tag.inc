@@ -202,7 +202,7 @@ class Incident_tag
             $rs->close();
         }
 
-        if ( array_key_exists($tag_id, Incident_tag::$tag_list))
+        if ( array_key_exists($tag_id, self::$tag_list))
         {
             return $field ? self::$tag_list[$tag_id][$field] : self::$tag_list[$tag_id];
         }

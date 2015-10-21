@@ -117,6 +117,7 @@ function Av_menu()
             this.h_menus["<?php echo $menu_id?>"]['html']           = "<?php echo str_replace("\n", "\\n", $hmenu_data['html'])?>";
             this.h_menus["<?php echo $menu_id?>"]['default_url']    = "<?php echo $hmenu_data['default_url']?>";
             this.h_menus["<?php echo $menu_id?>"]['default_option'] = "<?php echo $hmenu_data['default_option']?>";
+            this.h_menus["<?php echo $menu_id?>"]['menu_title']     = "<?php echo $hmenu_data['menu_title']?>";
             this.h_menus["<?php echo $menu_id?>"]['items']          = new Array();
 
             <?php
@@ -388,7 +389,11 @@ function Av_menu()
             }
 
             //Change and show subname title
-            var subname_title =  $(that.c_menu + " ul li ul li a.active").text();
+            /*
+            * By default the value is the the selected menu option, if you want to specify a custom name, define the
+            * field 'menu_title' in the menu class.
+            * */
+            var subname_title =  that.h_menus[that.sm_option]['menu_title'] || $(that.c_menu + " ul li ul li a.active").text();
 
             if (subname_title != '')
             {

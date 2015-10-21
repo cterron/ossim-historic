@@ -105,7 +105,6 @@
 /etc/ossim/agent/plugins/nmap-monitor.cfg
 /etc/ossim/agent/plugins/nortel-switch.cfg
 /etc/ossim/agent/plugins/ntsyslog.cfg
-/etc/ossim/agent/plugins/ocs-monitor.cfg
 /etc/ossim/agent/plugins/openldap.cfg
 /etc/ossim/agent/plugins/opennms-monitor.cfg
 /etc/ossim/agent/plugins/optenet.cfg

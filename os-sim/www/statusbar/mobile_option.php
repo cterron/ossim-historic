@@ -35,7 +35,6 @@ require_once 'av_init.php';
 //Check active session
 Session::useractive();
 
-set_time_limit(180);
 
 // Login parameter probably deprecated
 $login = GET('login');

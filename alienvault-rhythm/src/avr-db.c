@@ -129,7 +129,6 @@ avr_db_get_type (void)
       NULL                        /* value table */
     };
 
-    g_type_init ();
     object_type = g_type_register_static (G_TYPE_OBJECT, "AvrDb", &type_info, 0);
   }
   return object_type;
@@ -193,8 +192,7 @@ avr_db_new_tcp (AvrType type, gchar * hostname, gint port)
   }
 
   // Subscribe for messages
-  GThread * loop_thread = NULL;
-  loop_thread = g_thread_create((GThreadFunc)_avr_db_subscribe, (gpointer)db, FALSE, NULL);
+  (void)g_thread_new("_avr_db_subscribe", (GThreadFunc)_avr_db_subscribe, (gpointer)db);
 
   return (db);
 }
@@ -224,8 +222,7 @@ avr_db_new_unix (AvrType type, const gchar * socket)
   }
 
   // Subscribe for messages
-  GThread * loop_thread = NULL;
-  loop_thread = g_thread_create((GThreadFunc)_avr_db_subscribe, (gpointer)db, FALSE, NULL);
+  (void)g_thread_new("_avr_db_subscribe", (GThreadFunc)_avr_db_subscribe, (gpointer)db);
 
   return (db);
 }

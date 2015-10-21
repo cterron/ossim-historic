@@ -35,8 +35,6 @@ require_once 'av_init.php';
 
 Session::logcheck_ajax("dashboard-menu", "IPReputation");
 
-set_time_limit(300);
-
 /*
 * This function retrieves the IP Reputation Summary Information.
 *

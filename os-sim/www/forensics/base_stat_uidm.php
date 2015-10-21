@@ -23,7 +23,7 @@ include_once ("$BASE_path/base_qry_common.php");
 if (GET('sensor') != "") ossim_valid(GET('sensor'), OSS_DIGIT, 'illegal:' . _("sensor"));;
 
 if(GET('addr_type')=='hostname' || GET('addr_type')=='userdomain')
-{ 
+{
     $_SESSION["siem_default_group"] = "base_stat_uidm.php?addr_type=" . GET('addr_type') . "&sort_order=occur_d";
 }
 
@@ -128,7 +128,7 @@ $qro->AddTitle(_("Unique Src."), "saddr_a", " ", " ORDER BY num_sip ASC", "saddr
 $qro->AddTitle(_("Unique Dst."), "daddr_a", "  ", " ORDER BY num_dip ASC", "daddr_d", " ", " ORDER BY num_dip DESC");
 $sort_sql = $qro->GetSortSQL($qs->GetCurrentSort() , $qs->GetCurrentCannedQuerySort());
 
-if (Session::show_entities()) 
+if (Session::show_entities())
 {
     $src_sql = "SELECT $src_field as ip, COUNT(acid_event.id) as num_events, hex(ctx) as ctx, COUNT( DISTINCT acid_event.plugin_id, acid_event.plugin_sid ) as num_sig_src, 0 as num_sig_dst, 0 as num_sip, COUNT( DISTINCT ip_dst ) as num_dip " . $sort_sql[0] . $from . str_replace("SRC_DST","1",$where) . " GROUP BY ip,acid_event.ctx HAVING num_events>0 AND ip<>'' "; // . $sort_sql[1];
 
@@ -136,8 +136,8 @@ if (Session::show_entities())
 
     $sql = "SELECT SQL_CALC_FOUND_ROWS ip,ctx as context,sum(num_events) as num_events,sum(num_sig_src) as num_sig_src, sum(num_sig_dst) as num_sig_dst, sum(num_sip) as num_sip,sum(num_dip) as num_dip
             FROM (($src_sql) UNION ($dst_sql)) as u WHERE ip is not NULL GROUP BY ip,context " . $sort_sql[1];
-} 
-else 
+}
+else
 {
     $src_sql = "SELECT $src_field as ip, COUNT(acid_event.id) as num_events, sensor_id, COUNT( DISTINCT acid_event.plugin_id, acid_event.plugin_sid ) as num_sig_src, 0 as num_sig_dst, 0 as num_sip, COUNT( DISTINCT ip_dst ) as num_dip " . $sort_sql[0] . $from . ",device " . str_replace("SRC_DST","1",$where) . " AND device.id=acid_event.device_id GROUP BY ip,sensor_id HAVING num_events>0 AND ip<>'' "; // . $sort_sql[1];
 
@@ -149,7 +149,7 @@ else
 
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS IDM:$sql\n$cnt_sql\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS IDM:$sql\n$cnt_sql\n", FILE_APPEND);
 }
 /* Run the Query again for the actual data (with the LIMIT) */
 session_write_close();
@@ -188,9 +188,9 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     //echo '    <INPUT TYPE="hidden" NAME="action_lst[' . $i . ']" VALUE="' . $tmp_rowid . '"></TD>';
     /* Check for a NULL IP which indicates an event (e.g. portscan)
     * which has no IP
-    */ 
+    */
     qroPrintEntry( BuildIDMLink($currentIP,$addr_type) . $currentIP .'</A>&nbsp;' ,'center','','nowrap');
-    
+
     /* Print # of Occurances */
     $tmp_iplookup = 'base_qry_main.php?num_result_rows=-1' . '&submit=' . gettext("Query DB") . '&current_view=-1';
     $tmp_iplookup2 = 'base_stat_alerts.php?num_result_rows=-1' . '&submit=' . gettext("Query DB") . '&current_view=-1&sort_order=occur_d';
@@ -198,7 +198,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $url_criteria = BuildIDMVars($currentIP, $addr_type);
     $url_criteria_src = BuildIDMVars($currentIP, $addr_type, "src");
     $url_criteria_dst = BuildIDMVars($currentIP, $addr_type, "dst");
-    
+
     qroPrintEntry((Session::show_entities() && !empty($entities[$ctx])) ? $entities[$ctx] : ((Session::show_entities()) ? _("Unknown") : GetSensorName($ctx, $db)),'center','middle');
     qroPrintEntry('<A HREF="' . $tmp_iplookup . $url_criteria . '">' . Util::number_format_locale($num_events,0) . '</A>','center','middle');
     qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria_src . '">' . Util::number_format_locale($num_sig_src,0) . '</A>','center','middle');
@@ -207,7 +207,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     qroPrintEntry(Util::number_format_locale($num_dip,0),'center','middle');
     qroPrintEntryFooter();
     ++$i;
-    
+
 }
 $result->baseFreeRows();
 $qro->PrintFooter();
@@ -221,4 +221,3 @@ $et->PrintTiming();
 PrintBASESubFooter();
 $db->baseClose();
 echo "</body>\r\n</html>";
-?>

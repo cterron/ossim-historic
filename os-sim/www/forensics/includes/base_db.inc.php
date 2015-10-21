@@ -61,7 +61,7 @@ class baseCon {
     var $DB_host;
     var $DB_port;
     var $DB_username;
-    var $DB_memcache;     
+    var $DB_memcache;
     var $lastSQL;
     var $version;
     var $sql_trace;
@@ -87,7 +87,7 @@ class baseCon {
             $myrow = $result->fields;
             $sess_id  = Util::get_sess_cookie();
             $_SESSION[$sess_id]['_connection_id'] = $myrow[0];
-            //error_log($myrow[0]);
+            //file_put_contents("/tmp/siem", $myrow[0] . "\n", FILE_APPEND);
             $result->Close();
         }
     }
@@ -103,7 +103,7 @@ class baseCon {
         $this->DB_memcache = ( $force == 1 ) ? 0 : $db_memcache;
         if ($sql_trace_mode > 0)
         {
-        	// Open '/var/tmp/debug_sql' static, instead GLOBAL variable.
+            // Open '/var/tmp/debug_sql' static, instead GLOBAL variable.
             $this->sql_trace = fopen('/var/tmp/debug_sql', "a");
             if (!$this->sql_trace) {
                 ErrorMessage(gettext("Unable to open SQL trace file") . " '" . $sql_trace_file . "'");
@@ -116,7 +116,7 @@ class baseCon {
             $this->DB->memCacheHost = array("127.0.0.1"); /// $db->memCacheHost = $ip1; will work too
             $this->DB->memCachePort = 11211; /// this is default memCache port
             $this->DB->memCacheCompress = 0;
-        }        
+        }
         if ( intval($port) > 0 )
         {
             if ($this->DB_type == 'mysqli')
@@ -133,9 +133,9 @@ class baseCon {
         {
             require_once("classes/Util.inc");
             $tmp_host = ($port == "") ? $host : ($host . ":" . $port);
-            $errsqlconnectinfo =  gettext("<P>Check the DB connection variables in <I>base_conf.php</I> 
+            $errsqlconnectinfo =  gettext("<P>Check the DB connection variables in <I>base_conf.php</I>
               <PRE>
-               = ".Util::htmlentities($alert_dbname)."   : MySQL database name where the alerts are stored 
+               = ".Util::htmlentities($alert_dbname)."   : MySQL database name where the alerts are stored
                = ".Util::htmlentities($alert_host)."     : host where the database is stored
                = ".Util::htmlentities($alert_port)."     : port where the database is stored
                = ".Util::htmlentities($alert_user)."     : username into the database
@@ -165,7 +165,7 @@ class baseCon {
         $this->DB_host = $host;
         $this->DB_port = $port;
         $this->DB_username = $username;
-        $this->DB_memcache = ( $force == 1 ) ? 0 : $db_memcache;             
+        $this->DB_memcache = ( $force == 1 ) ? 0 : $db_memcache;
         if ($sql_trace_mode > 0)
         {
             $this->sql_trace = fopen('/var/tmp/debug_sql', "a");
@@ -180,7 +180,7 @@ class baseCon {
             $this->DB->memCacheHost = array("127.0.0.1"); /// $db->memCacheHost = $ip1; will work too
             $this->DB->memCachePort = 11211; /// this is default memCache port
             $this->DB->memCacheCompress = 0;
-        }        
+        }
         if ( intval($port) > 0 )
         {
             if ($this->DB_type == 'mysqli')
@@ -193,14 +193,14 @@ class baseCon {
             }
         }
         $db = $this->DB->PConnect($host, $username, $password, $database);
-		if (!$db)
-		{
+        if (!$db)
+        {
             require_once("classes/Util.inc");
             $tmp_host = ($port == "") ? $host : ($host . ":" . $port);
-            
-            $errsqlconnectinfo =  gettext("<P>Check the DB connection variables in <I>base_conf.php</I> 
+
+            $errsqlconnectinfo =  gettext("<P>Check the DB connection variables in <I>base_conf.php</I>
               <PRE>
-               = ".Util::htmlentities($alert_dbname)."   : MySQL database name where the alerts are stored 
+               = ".Util::htmlentities($alert_dbname)."   : MySQL database name where the alerts are stored
                = ".Util::htmlentities($alert_host)."     : host where the database is stored
                = ".Util::htmlentities($alert_port)."     : port where the database is stored
                = ".Util::htmlentities($alert_user)."     : username into the database
@@ -254,46 +254,46 @@ class baseCon {
         $this->lastSQL = $sql;
         $limit_str = "";
         $cache_secs = (preg_match("/FOUND_ROWS/i", $sql)) ? -1 : $this->DB_memcache;
-        //error_log("$cache_secs-$sql\n",3,"/tmp/fr");
-        
-		/* Check whether need to add a LIMIT / TOP / ROWNUM clause */
-		if ($num_rows == - 1)
-		{
-		      // If we have $params we must force not-cache
-			  if ($this->DB_memcache>0 && count($params) == 0)
-			  {
-			      $rs = new baseRS($this->DB->CacheExecute($cache_secs, $sql) , $this->DB_type);
-			  }
-			  else
-			  {
-			      $rs = new baseRS($this->DB->Execute($sql, $params) , $this->DB_type);
-			  }
+        //file_put_contents("/tmp/fr", "$cache_secs-$sql\n", FILE_APPEND);
+
+        /* Check whether need to add a LIMIT / TOP / ROWNUM clause */
+        if ($num_rows == - 1)
+        {
+              // If we have $params we must force not-cache
+              if ($this->DB_memcache>0 && count($params) == 0)
+              {
+                  $rs = new baseRS($this->DB->CacheExecute($cache_secs, $sql) , $this->DB_type);
+              }
+              else
+              {
+                  $rs = new baseRS($this->DB->Execute($sql, $params) , $this->DB_type);
+              }
         }
-        else 
+        else
         {
             if (($this->DB_type == "mysql") || ($this->DB_type == "mysqli") || ($this->DB_type == "mysqlt") || ($this->DB_type == "maxsql")) {
-				//echo "Objeto DB:".var_dump($this->DB)."<br>";
-				//echo "<br>EJECUTANDO($cache_secs): ".$sql . " LIMIT " . $start_row . ", " . $num_rows." en ".$this->DB_type."<br>";
-				if ($this->DB_memcache>0) $tmprow = $this->DB->CacheExecute($cache_secs, $sql . " LIMIT " . $start_row . ", " . $num_rows);
-				else                      $tmprow = $this->DB->Execute($sql . " LIMIT " . $start_row . ", " . $num_rows); 
-				//print_r($_GET);
-				//print_r($_SESSION);
-				$rs = new baseRS($tmprow , $this->DB_type);
+                //echo "Objeto DB:".var_dump($this->DB)."<br>";
+                //echo "<br>EJECUTANDO($cache_secs): ".$sql . " LIMIT " . $start_row . ", " . $num_rows." en ".$this->DB_type."<br>";
+                if ($this->DB_memcache>0) $tmprow = $this->DB->CacheExecute($cache_secs, $sql . " LIMIT " . $start_row . ", " . $num_rows);
+                else                      $tmprow = $this->DB->Execute($sql . " LIMIT " . $start_row . ", " . $num_rows);
+                //print_r($_GET);
+                //print_r($_SESSION);
+                $rs = new baseRS($tmprow , $this->DB_type);
                 $limit_str = " LIMIT " . $start_row . ", " . $num_rows;
-				//echo "<br>ROW:";
-				//var_dump($tmprow);
-				//echo "<br>ERROR MSG: " . $this->baseErrorMessage(). "<br>";
+                //echo "<br>ROW:";
+                //var_dump($tmprow);
+                //echo "<br>ERROR MSG: " . $this->baseErrorMessage(). "<br>";
             } else if ($this->DB_type == "oci8") {
-				$rs = new baseRS($this->DB->Execute($sql) , $this->DB_type);
+                $rs = new baseRS($this->DB->Execute($sql) , $this->DB_type);
                 $limit_str = " LIMIT " . $start_row . ", " . $num_rows;
             } else if ($this->DB_type == "postgres") {
-				$rs = new baseRS($this->DB->Execute($sql . " LIMIT " . $num_rows . " OFFSET " . $start_row) , $this->DB_type);
+                $rs = new baseRS($this->DB->Execute($sql . " LIMIT " . $num_rows . " OFFSET " . $start_row) , $this->DB_type);
                 $limit_str = " LIMIT " . $num_rows . " OFFSET " . $start_row;
             }
             /* Databases which do not support LIMIT (e.g. MS SQL) natively must emulated it */
             else {
                 if ($this->DB_memcache>0) $rs = new baseRS($this->DB->CacheExecute($cache_secs, $sql) , $this->DB_type);
-                else                      $rs = new baseRS($this->DB->Execute($sql) , $this->DB_type);    
+                else                      $rs = new baseRS($this->DB->Execute($sql) , $this->DB_type);
                 $i = 0;
                 while (($i < $start_row) && $rs) {
                     if (!$rs->row->EOF) $rs->row->MoveNext();
@@ -321,7 +321,7 @@ class baseCon {
         //$this->DB->CacheFlush();
         require_once("classes/Util.inc");
         Util::memcacheFlush();
-    }    
+    }
     function baseTableExists($table) {
         if (in_array($table, $this->DB->MetaTables())) return 1;
         else return 0;
@@ -450,13 +450,13 @@ class baseRS {
         return $this->row->FieldCount();
     }
     function baseRecordCount() { // Is This if statement necessary?  -- Kevin
-        
+
         // Always using mysqli driver
         if ($this->DB_type == "mysqli")
         {
             return $this->row->_numOfRows;
         }
-        
+
         /* MS SQL Server 7, MySQL, Sybase, and Postgres natively support this function */
         elseif (($this->DB_type == "mysql") || ($this->DB_type == "mysqlt") || ($this->DB_type == "maxsql") || ($this->DB_type == "mssql") || ($this->DB_type == "sybase") || ($this->DB_type == "postgres") || ($this->DB_type == "oci8")) return $this->row->RecordCount();
         /* Otherwise we need to emulate this functionality */
@@ -566,7 +566,7 @@ function RepairDBTables($db) {
     $db->baseCacheFlush();
 }
 function ClearDataTables($db) {
-    Util::execute_command('/usr/bin/ossim-db alienvault_siem < /usr/share/ossim/scripts/forensics/truncate.sql > /dev/null 2>&1');    
+    Util::execute_command('/usr/bin/ossim-db alienvault_siem < /usr/share/ossim/scripts/forensics/truncate.sql > /dev/null 2>&1');
     $db->baseCacheFlush();
     session_write_close();
     Util::execute_command('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');

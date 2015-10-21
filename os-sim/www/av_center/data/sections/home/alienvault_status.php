@@ -97,8 +97,7 @@ if (is_array($st['database']) && !empty($st['database']))
 {
     $profiles['Database'] = array(
         array('label' => 'AlienVault',      'data' => Util::bytes_to_size($st['database']['alienvault']['size'])),
-        array('label' => 'AlienVault SIEM', 'data' => Util::bytes_to_size($st['database']['alienvault_siem']['size'])),
-        array('label' => 'Inventory',       'data' => Util::bytes_to_size($st['database']['ocsweb']['size']))
+        array('label' => 'AlienVault SIEM', 'data' => Util::bytes_to_size($st['database']['alienvault_siem']['size']))
     );
 }
 

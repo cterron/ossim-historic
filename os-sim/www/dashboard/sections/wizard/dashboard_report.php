@@ -43,9 +43,9 @@ $db           = new ossim_db();
 $dbconn       = $db->connect();
 
 $creports     = array();
-$result       = $dbconn->Execute("SELECT login, name, value FROM user_config where category='custom_report' ORDER BY name ASC");
+$result       = $dbconn->Execute("SELECT login, name, value FROM user_config where category LIKE 'custom_report%' ORDER BY name ASC");
 //Wizard Perms
-$wizard_perms = get_wizard_perms($dbconn);	
+$wizard_perms = Av_report::get_report_permissions($dbconn);
 		
 while (!$result->EOF)
 {
@@ -56,13 +56,13 @@ while (!$result->EOF)
 	$user_perm         = $unserializedata["user"];
 	$entity_perm       = $unserializedata["entity"];
 	
-	$available         = check_report_availability($user_perm, $entity_perm, $result->fields["login"], $wizard_perms);
-	
+	$available         = Av_report::check_report_availability($result->fields["login"], $user_perm, $entity_perm, $wizard_perms);
+
 	if ($available == true)
 	{
 		$creports[] = $result->fields;
 	}
-		
+
 	$result->MoveNext();
 }
 

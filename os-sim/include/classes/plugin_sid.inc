@@ -396,7 +396,7 @@ class Plugin_sid
         }
         
         // To restore original table
-        $orig_list = Plugin_sid::get_list($conn, "WHERE plugin_id=$id AND sid=$sid");
+        $orig_list = self::get_list($conn, "WHERE plugin_id=$id AND sid=$sid");
         $orig_data = $orig_list[0];
         
         if (is_object($orig_data)) 
@@ -627,7 +627,7 @@ class Plugin_sid
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
         // Update to fill plugin_sid_changes table
-        Plugin_sid::update($conn, $plugin, $sid, $priority, $reliability, $category_id, $subcategory_id, $name);
+        self::update($conn, $plugin, $sid, $priority, $reliability, $category_id, $subcategory_id, $name);
         
     }
 
@@ -872,7 +872,7 @@ class Plugin_sid
 					// Zero is all sids
 					if ($p['sids'] == 0)
 					{
-						$sids = Plugin_sid::get_sids_by_id($conn, $p['id']);
+						$sids = self::get_sids_by_id($conn, $p['id']);
 					}
 					// Specific sids
 					else

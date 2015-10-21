@@ -1017,108 +1017,107 @@ echo '          </div>
 
 // END COMMON DATA
 
+/*
+if (!$src_host && !$dst_host)
+{
+    if (Session::is_pro())
+        echo '<br><div class="siem_detail_table">
+              <div class="siem_detail_section">'._("Context").'</div>
+              <div class="siem_detail_content">&nbsp;'._("Event Context information is not available").'. '.$idb->available().'</div>
+              <DIV id="src_map" style="display:none"></DIV>
+              <DIV id="dst_map" style="display:none"></DIV>
+            </div>';
+    else
+        echo '<br><div class="siem_detail_table">
+              <div class="siem_detail_section">'._("Context").'</div>
+              <div class="siem_detail_content">&nbsp;'._("Event Context information is only available in AlienVault USM Server").'</div>
+              <DIV id="src_map" style="display:none"></DIV>
+              <DIV id="dst_map" style="display:none"></DIV>
+            </div>';
+}
+*/
+
+/* USERDATA */
+
+$extradata1 = array();
+$extradata2 = array();
+if ($filename!=$empty) $extradata1["filename"] = $filename;
+if ($username!=$empty) $extradata1["username"] = $username;
+if ($password!=$empty) $extradata1["password"] = $password;
+if ($userdata1!=$empty) $extradata1["userdata1"] = $userdata1;
+if ($userdata2!=$empty) $extradata1["userdata2"] = $userdata2;
+if ($userdata3!=$empty) $extradata1["userdata3"] = $userdata3;
+
+if ($userdata4!=$empty)
+{
+    if (count($extradata1)<6) $extradata1["userdata4"] = $userdata4;
+    else                      $extradata2["userdata4"] = $userdata4;
+}
+if ($userdata5!=$empty)
+{
+    if (count($extradata1)<6) $extradata1["userdata5"] = $userdata5;
+    else                      $extradata2["userdata5"] = $userdata5;
+}
+if ($userdata6!=$empty)
+{
+    if (count($extradata1)<6) $extradata1["userdata6"] = $userdata6;
+    else                      $extradata2["userdata6"] = $userdata6;
+}
+if ($userdata7!=$empty)
+{
+    if (count($extradata1)<6) $extradata1["userdata7"] = $userdata7;
+    else                      $extradata2["userdata7"] = $userdata7;
+}
+if ($userdata8!=$empty)
+{
+    if (count($extradata1)<6) $extradata1["userdata8"] = $userdata8;
+    else                      $extradata2["userdata8"] = $userdata8;
+}
+if ($userdata9!=$empty)
+{
+    if (count($extradata1)<6) $extradata1["userdata9"] = $userdata9;
+    else                      $extradata2["userdata9"] = $userdata9;
+}
+
+if (!$is_snort && !empty($extradata1))
+{
+
+    if ($plugin_id == 5004)
+    { // Anomalies => Show userdata1 and 2 like last and new values
+        $lv = preg_replace("/(.*)\|(.*)\|(.*)/","\\3 (\\2/\\1)",$userdata1);
+        $nv = preg_replace("/(.*)\|(.*)\|(.*)/","\\3 (\\2/\\1)",$userdata2);
+        echo '<TABLE class="siem_table">
+                <TR>
+                    <th class="autow">'._("Last value").'</th>
+                    <th class="autow">'._("New value").'</th>
+                </TR>
+                <TR>
+                   <TD class="center">' . Util::htmlentities($lv) . '</TD>
+                   <TD class="center">' . Util::htmlentities($nv) . '</TD>
+                </TR>
+              </TABLE>';
+    }
+    else
+    {
+        echo '<TABLE class="siem_table"><TR>';
+        foreach ($extradata1 as $k => $v) echo '<th class="autow">'._($k).'</th>';
+        echo '</TR><TR>';
+        foreach ($extradata1 as $k => $v) echo '<TD class="center">'.Util::htmlentities($v).'</TD>';
+        echo '</TR>';
+        if (!empty($extradata2))
+        {
+            echo '<TR>';
+            foreach ($extradata2 as $k => $v) echo '<th class="autow">'._($k).'</th>';
+            echo '</TR><TR>';
+            foreach ($extradata2 as $k => $v) echo '<TD class="center">'.Util::htmlentities($v).'</TD>';
+            echo '</TR>';
+        }
+        echo '</TABLE>';
+    }
+}
+
 if (!array_key_exists("minimal_view", $_GET))
 {
-    /*
-    if (!$src_host && !$dst_host)
-    {
-        if (Session::is_pro())
-            echo '<br><div class="siem_detail_table">
-                  <div class="siem_detail_section">'._("Context").'</div>
-                  <div class="siem_detail_content">&nbsp;'._("Event Context information is not available").'. '.$idb->available().'</div>
-                  <DIV id="src_map" style="display:none"></DIV>
-                  <DIV id="dst_map" style="display:none"></DIV>
-                </div>';
-        else
-            echo '<br><div class="siem_detail_table">
-                  <div class="siem_detail_section">'._("Context").'</div>
-                  <div class="siem_detail_content">&nbsp;'._("Event Context information is only available in AlienVault USM Server").'</div>
-                  <DIV id="src_map" style="display:none"></DIV>
-                  <DIV id="dst_map" style="display:none"></DIV>
-                </div>';
-    }
-    */
-    
-    /* USERDATA */
-    
-    $extradata1 = array();
-    $extradata2 = array();
-    if ($filename!=$empty) $extradata1["filename"] = $filename;
-    if ($username!=$empty) $extradata1["username"] = $username;
-    if ($password!=$empty) $extradata1["password"] = $password;
-    if ($userdata1!=$empty) $extradata1["userdata1"] = $userdata1;
-    if ($userdata2!=$empty) $extradata1["userdata2"] = $userdata2;
-    if ($userdata3!=$empty) $extradata1["userdata3"] = $userdata3;
-    
-    if ($userdata4!=$empty)
-    {
-        if (count($extradata1)<6) $extradata1["userdata4"] = $userdata4;
-        else                      $extradata2["userdata4"] = $userdata4;
-    }
-    if ($userdata5!=$empty)
-    {
-        if (count($extradata1)<6) $extradata1["userdata5"] = $userdata5;
-        else                      $extradata2["userdata5"] = $userdata5;
-    }
-    if ($userdata6!=$empty)
-    {
-        if (count($extradata1)<6) $extradata1["userdata6"] = $userdata6;
-        else                      $extradata2["userdata6"] = $userdata6;
-    }
-    if ($userdata7!=$empty)
-    {
-        if (count($extradata1)<6) $extradata1["userdata7"] = $userdata7;
-        else                      $extradata2["userdata7"] = $userdata7;
-    }
-    if ($userdata8!=$empty)
-    {
-        if (count($extradata1)<6) $extradata1["userdata8"] = $userdata8;
-        else                      $extradata2["userdata8"] = $userdata8;
-    }
-    if ($userdata9!=$empty)
-    {
-        if (count($extradata1)<6) $extradata1["userdata9"] = $userdata9;
-        else                      $extradata2["userdata9"] = $userdata9;
-    }
-    
-    if (!$is_snort && !empty($extradata1))
-    {
-    
-        if ($plugin_id == 5004)
-        { // Anomalies => Show userdata1 and 2 like last and new values
-            $lv = preg_replace("/(.*)\|(.*)\|(.*)/","\\3 (\\2/\\1)",$userdata1);
-            $nv = preg_replace("/(.*)\|(.*)\|(.*)/","\\3 (\\2/\\1)",$userdata2);
-            echo '<TABLE class="siem_table"> 
-                    <TR>
-                        <th class="autow">'._("Last value").'</th>
-                        <th class="autow">'._("New value").'</th>
-                    </TR>
-                    <TR>
-                       <TD class="center">' . Util::htmlentities($lv) . '</TD>
-                       <TD class="center">' . Util::htmlentities($nv) . '</TD>
-                    </TR>
-                  </TABLE>';
-        }
-        else
-        {
-            echo '<TABLE class="siem_table"><TR>';
-            foreach ($extradata1 as $k => $v) echo '<th class="autow">'._($k).'</th>';
-            echo '</TR><TR>';
-            foreach ($extradata1 as $k => $v) echo '<TD class="center">'.Util::htmlentities($v).'</TD>';
-            echo '</TR>';
-            if (!empty($extradata2))
-            {
-                echo '<TR>';
-                foreach ($extradata2 as $k => $v) echo '<th class="autow">'._($k).'</th>';
-                echo '</TR><TR>';
-                foreach ($extradata2 as $k => $v) echo '<TD class="center">'.Util::htmlentities($v).'</TD>';
-                echo '</TR>';
-            }
-            echo '</TABLE>';
-        }
-    }
-    
-    
     /* KDB SECTION */
     
     $vars['_SENSOR']            = $sensor_name;

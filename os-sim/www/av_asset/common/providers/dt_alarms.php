@@ -154,13 +154,14 @@ catch(Exception $e)
     Util::response_bad_request($e->getMessage());
 }
 
+$tz = Util::get_timezone();
 
 // DATA
 $data = array();
 
 foreach ($alarms as $alarm)
 {
-	// kingdom, category and subcategory
+    // kingdom, category and subcategory
     $a_taxonomy = $alarm->get_taxonomy();
     if ($a_taxonomy['id'])
     {
@@ -176,79 +177,83 @@ foreach ($alarms as $alarm)
         $alarm_sc   = '';
     }
 
-	// Src Dst
-	$src_ip     = $alarm->get_src_ip();
-	$dst_ip     = $alarm->get_dst_ip();
-	$src_port   = $alarm->get_src_port();
-	$dst_port   = $alarm->get_dst_port();
-	$event_info = $alarm->get_event_info();
-	$src_host   = Asset_host::get_object($conn, $event_info["src_host"]);
-	$dst_host   = Asset_host::get_object($conn, $event_info["dst_host"]);
-	$src_net_id = $event_info["src_host"];
-	$dst_net_id = $event_info["dst_host"];
+    // Date
+    $timestamp_utc = Util::get_utc_unixtime(Util::timestamp2date($alarm->get_timestamp())); // $alarm->get_last()
+    $alarm_date    = gmdate("Y-m-d H:i:s",$timestamp_utc+(3600*$tz));
 
-	// Src
-	if ($no_resolv || !$src_host)
-	{
-		$src_name = $src_ip;
-		$src_desc = '';
-		$ctx_src  = $event_info["agent_ctx"];
-	}
-	elseif ($src_host)
-	{
-		$src_desc = ($src_host->get_descr() != '') ? ": ".$src_host->get_descr() : '';
-		$src_name = $src_host->get_name();
-		$ctx_src  = $src_host->get_ctx();
-	}
+    // Src Dst
+    $src_ip     = $alarm->get_src_ip();
+    $dst_ip     = $alarm->get_dst_ip();
+    $src_port   = $alarm->get_src_port();
+    $dst_port   = $alarm->get_dst_port();
+    $event_info = $alarm->get_event_info();
+    $src_host   = Asset_host::get_object($conn, $event_info["src_host"]);
+    $dst_host   = Asset_host::get_object($conn, $event_info["dst_host"]);
+    $src_net_id = $event_info["src_host"];
+    $dst_net_id = $event_info["dst_host"];
 
-	// Dst
-	if ($no_resolv || !$dst_host)
-	{
-		$dst_name = $dst_ip;
-		$dst_desc = '';
-		$ctx_dst  = $event_info["agent_ctx"];
-	}
-	elseif ($dst_host)
-	{
-		$dst_desc = ($dst_host->get_descr() != '') ? ": ".$dst_host->get_descr() : '';
-		$dst_name = $dst_host->get_name();
-		$ctx_dst  = $dst_host->get_ctx();
-	}
+    // Src
+    if ($no_resolv || !$src_host)
+    {
+        $src_name = $src_ip;
+        $src_desc = '';
+        $ctx_src  = $event_info["agent_ctx"];
+    }
+    elseif ($src_host)
+    {
+        $src_desc = ($src_host->get_descr() != '') ? ": ".$src_host->get_descr() : '';
+        $src_name = $src_host->get_name();
+        $ctx_src  = $src_host->get_ctx();
+    }
 
-	// Src icon and bold
-	$src_output   = Asset_host::get_extended_name($conn, $geoloc, $src_ip, $ctx_src, $event_info["src_host"], $event_info["src_net"]);
-	$homelan_src  = $src_output['is_internal'];
-	$src_img      = preg_replace("/scriptinfo/", '', $src_output['html_icon']); // Clean icon hover tiptip
+    // Dst
+    if ($no_resolv || !$dst_host)
+    {
+        $dst_name = $dst_ip;
+        $dst_desc = '';
+        $ctx_dst  = $event_info["agent_ctx"];
+    }
+    elseif ($dst_host)
+    {
+        $dst_desc = ($dst_host->get_descr() != '') ? ": ".$dst_host->get_descr() : '';
+        $dst_name = $dst_host->get_name();
+        $ctx_dst  = $dst_host->get_ctx();
+    }
 
-	// Dst icon and bold
-	$dst_output   = Asset_host::get_extended_name($conn, $geoloc, $dst_ip, $ctx_dst, $event_info["dst_host"], $event_info["dst_net"]);
-	$homelan_dst  = $dst_output['is_internal'];
-	$dst_img      = preg_replace("/scriptinfo/", '', $dst_output['html_icon']); // Clean icon hover tiptip
+    // Src icon and bold
+    $src_output   = Asset_host::get_extended_name($conn, $geoloc, $src_ip, $ctx_src, $event_info["src_host"], $event_info["src_net"]);
+    $homelan_src  = $src_output['is_internal'];
+    $src_img      = preg_replace("/scriptinfo/", '', $src_output['html_icon']); // Clean icon hover tiptip
 
-	//host report menu:
-	$src_hrm = "$src_ip;$src_name;".$event_info['src_host'];
-	$dst_hrm = "$dst_ip;$dst_name;".$event_info['dst_host'];
-	
-	//Port Check
-	$src_name .= ($src_port) ? ':' . $src_port : '';
-	$dst_name .= ($dst_port) ? ':' . $dst_port : '';
+    // Dst icon and bold
+    $dst_output   = Asset_host::get_extended_name($conn, $geoloc, $dst_ip, $ctx_dst, $event_info["dst_host"], $event_info["dst_net"]);
+    $homelan_dst  = $dst_output['is_internal'];
+    $dst_img      = preg_replace("/scriptinfo/", '', $dst_output['html_icon']); // Clean icon hover tiptip
 
-	//Wrapping Text
-	$src_name = Util::wordwrap($src_name, 30, '<br/>');
-	$dst_name = Util::wordwrap($dst_name, 30, '<br/>');
-	
+    //host report menu:
+    $src_hrm = "$src_ip;$src_name;".$event_info['src_host'];
+    $dst_hrm = "$dst_ip;$dst_name;".$event_info['dst_host'];
+
+    //Port Check
+    $src_name .= ($src_port) ? ':' . $src_port : '';
+    $dst_name .= ($dst_port) ? ':' . $dst_port : '';
+
+    //Wrapping Text
+    $src_name = Util::wordwrap($src_name, 30, '<br/>');
+    $dst_name = Util::wordwrap($dst_name, 30, '<br/>');
+
     //Homeland Check
     $src_name = ($homelan_src) ? " <strong>$src_name</strong>" : " $src_name";
     $dst_name = ($homelan_dst) ? " <strong>$dst_name</strong>" : " $dst_name";
-    
+
     $alarm_otx = $alarm->get_otx_icon();
-    
+
     // COLUMNS
     $_res = array();
 
     $_res['DT_RowId']  = $alarm->get_backlog_id();
 
-    $_res[] = $alarm->get_timestamp();
+    $_res[] = $alarm_date;
     $_res[] = $alarm->get_status();
     $_res[] = $alarm_ik;
     $_res[] = $alarm_sc;

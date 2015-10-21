@@ -793,7 +793,7 @@ abstract class Filter_list
 
             self::clean_selection($conn, $type);
 
-            $filter_list = Filter_list::retrieve_filter_list_session();
+            $filter_list = self::retrieve_filter_list_session();
 
             if ($filter_list instanceof Filter_list && $filter_list->get_num_filter_added() > 0)
             {

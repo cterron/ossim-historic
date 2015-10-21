@@ -3,7 +3,7 @@ name=0013 Bash history
 id=0013
 description=Searches for anomalies in the root .bash_history file.
 category=alienvault,application
-strike_zone=True
+affects_strike_zone=True
 type=file
 filename=/root/.bash_history
 raw_limit=1000
@@ -21,7 +21,7 @@ summary_failed=An AlienVault DB configuration file may been modified or deleted
 remediation=Modifying or deleting DB files may have impact on the normal operation of the AlienVault system. Check the AlienVault DB configuration files and/or reinstall the DB packages
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Parses the bash history looking for the modification of AlienVault Agent
 # configuration files
@@ -37,7 +37,7 @@ summary_failed=An AlienVault Agent configuration file might have been modified o
 remediation=AlienVault Agent configuration files are not meant to be manually modified. Please check the files in /etc/ossim and/or reinstall the packages related
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Parses the bash history looking for the modification of firewall rules
 [00130003]
@@ -52,7 +52,7 @@ summary_failed=The AlienVault firewall rules may have been modified or deleted
 remediation=The AlienVault firewall included with your AlienVault product is designed to protect the services from undesired access. Please restore the default configuration
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Parses the bash history looking for the modification of packages installation
 [00130004]
@@ -67,7 +67,7 @@ summary_failed=Installed packages may have been modified using non AlienVault-st
 remediation=AlienVault packages should be managed using the tools provided to ensure the system integrity. Using dpkg, apt and others is not supported
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Parses the bash history looking for the modification of AlienVault systems configuration files
 [00130005]
@@ -82,7 +82,7 @@ summary_failed=One or more AlienVault restricted configuration files may have be
 remediation=The packages and configuration files in the AlienVault system are interdependent. Non standard configurations are not supported
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Parses the bash history looking for the modification of protected files
 [00130006]
@@ -97,7 +97,7 @@ summary_failed=Some critical files may have been modified
 remediation=Some directories, like /usr or /lib, contain critical files that should not be modified. These operations are not supported
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Parses the bash history looking for the modification of ossim_setup.conf
 [00130007]
@@ -113,5 +113,5 @@ summary_failed=AlienVault's ossim-setup.conf file has been modified
 remediation=Configuration stored in ossim_setup.conf file is essential to guarantee the normal operation of AlienVault's system. Please revert you maual configuration 
 appliance_type=@all_profiles@
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 

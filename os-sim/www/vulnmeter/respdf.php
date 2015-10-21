@@ -71,7 +71,6 @@
 /* discovered with this program's use.                     */
 /***********************************************************/
 
-#error_reporting(E_ALL);
 ini_set("max_execution_time","720");
 
 define('FPDF_FONTPATH','inc/font/');
@@ -152,8 +151,6 @@ $query_by_user  = (!empty($arruser))? " AND t1.username in ($user) " : "";
 #DAYS PER REPORT KEY
 session_cache_limiter('none');
 session_start();
-
-//online();
 
 //Seperates the parts of the date so it doesn't just display it as one big number
 
@@ -255,7 +252,6 @@ if ( $numofresults < 1 )
     die(_("No vulnerabilities recorded"));
 }
 
-set_time_limit(300);
 $chinese = false;    // the language is not chinese by default
 
 //start pdf file, add page, set font

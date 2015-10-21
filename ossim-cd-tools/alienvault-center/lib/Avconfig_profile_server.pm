@@ -32,6 +32,7 @@ package Avconfig_profile_server;
 use v5.10;
 use strict;
 use warnings;
+no warnings 'experimental::smartmatch';
 #use diagnostics;
 use AV::ConfigParser;
 use AV::Log;

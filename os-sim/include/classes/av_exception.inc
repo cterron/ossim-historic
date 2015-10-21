@@ -174,7 +174,7 @@ class Av_exception
 
         if (is_readable(self::$_log_file))
         {
-            error_log($log_line, 3, self::$_log_file);
+            file_put_contents(self::$_log_file, $log_line, FILE_APPEND);
         }
     }
 

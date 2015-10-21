@@ -137,7 +137,7 @@ switch($msg)
                 if(count)
                 {
                     $('#remote_login').remove();
-                    document.location.href='https://<?php echo $_ip ?>/secured_nagios3/cgi-bin/status.cgi?hostgroup=all';
+                    document.location.href='https://<?php echo $_ip ?>/nagios3/cgi-bin/status.cgi?hostgroup=all';
                 }
                 else
                 {

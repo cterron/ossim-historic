@@ -53,11 +53,20 @@ else
 }
 
 
-$recent_pass = Log_action::get_last_pass($conn, $user);
-
 $conf = $GLOBALS['CONF'];
 
-if (!isset($_SESSION['_user']) && !isset($_SESSION['_backup_user']))
+if (!$conf)
+{
+    $conf = new Ossim_conf();
+    $GLOBALS['CONF'] = $conf;
+}
+
+$first_login = $conf->get_conf('first_login');
+
+$cnd_1 = (!isset($user) || empty($user));
+$cnd_2 = ($first_login == 'yes' || $first_login === 1);
+
+if ($cnd_1 || $cnd_2)
 {
     $ossim_link     = $conf->get_conf('ossim_link');
     $login_location = $ossim_link . '/session/login.php';
@@ -67,74 +76,46 @@ if (!isset($_SESSION['_user']) && !isset($_SESSION['_backup_user']))
 }
 
 
-$version      = $conf->get_conf('ossim_server_version');
-$opensource   = (!preg_match("/.*pro.*/i",$version) && !preg_match("/.*demo.*/i",$version)) ? TRUE : FALSE;
+$pass_1 = base64_decode(POST('pass1'));
+$pass_2 = base64_decode(POST('pass2'));
+$c_pass = base64_decode(POST('current_pass'));
 
-$pass1        = base64_decode(POST('pass1'));
-$pass2        = base64_decode(POST('pass2'));
-$current_pass = base64_decode(POST('current_pass'));
+$pass_1 = Util::utf8_encode2(trim($pass_1));
+$pass_2 = Util::utf8_encode2(trim($pass_2));
+$c_pass = Util::utf8_encode2(trim($c_pass));
 
 $flag         = POST('flag');
 $changeadmin  = POST('changeadmin');
 $expired      = POST('expired');
 
-ossim_valid($current_pass, OSS_PASSWORD, OSS_NULLABLE, 'illegal:' . _('Current Password'));
-ossim_valid($pass1, OSS_PASSWORD, OSS_NULLABLE,        'illegal:' . _('Password'));
-ossim_valid($pass2, OSS_PASSWORD, OSS_NULLABLE,        'illegal:' . _('Rewrite Password'));
-
-ossim_valid($flag, OSS_DIGIT, OSS_NULLABLE,            'illegal:' . _('Flag'));
-ossim_valid($changeadmin, OSS_DIGIT, OSS_NULLABLE,     'illegal:' . _('Changeadmin'));
-ossim_valid($expired, OSS_DIGIT, OSS_NULLABLE,         'illegal:' . _('Expired'));
+ossim_valid($c_pass, OSS_PASSWORD, OSS_NULLABLE,   'illegal:' . _('Current Password'));
+ossim_valid($pass_1, OSS_PASSWORD, OSS_NULLABLE,   'illegal:' . _('Password'));
+ossim_valid($pass_2, OSS_PASSWORD, OSS_NULLABLE,   'illegal:' . _('Rewrite Password'));
+ossim_valid($flag, OSS_DIGIT, OSS_NULLABLE,        'illegal:' . _('Flag'));
+ossim_valid($changeadmin, OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _('Change Admin Password'));
+ossim_valid($expired, OSS_DIGIT, OSS_NULLABLE,     'illegal:' . _('Expired'));
 
 if (ossim_error())
 {
     die(ossim_error());
 }
 
+
+$version    = $conf->get_conf('ossim_server_version');
+$opensource = (!preg_match("/.*pro.*/i", $version) && !preg_match("/.*demo.*/i", $version)) ? TRUE : FALSE;
+
+
 if ($flag != '')
 {
-    /* check passwords */
-    $pass_length_min = ($conf->get_conf('pass_length_min')) ? $conf->get_conf('pass_length_min') : 7;
-    $pass_length_max = ($conf->get_conf('pass_length_max')) ? $conf->get_conf('pass_length_max') : 255;
+    /* Connect to db */
+    $db   = new ossim_db();
+    $conn = $db->connect();
 
-    if ($pass_length_max < $pass_length_min || $pass_length_max < 1)
-    {
-        $pass_length_max = 255;
-    }
+    $res = check_pass($conn, $user, $c_pass, $pass_1, $pass_2);
 
-    if (empty($current_pass))
+    if ($res !== TRUE)
     {
-        $msg = _('Current password is empty');
-    }
-    elseif (count($user_list = Session::get_list($conn, "WHERE login = '" . $user . "'
-                           AND (pass = '" . md5($current_pass) . "'
-                             OR pass = '" . hash('sha256', $current_pass) . "')", '', TRUE)) < 1)
-    {
-        $msg = _('Current password is not correct');
-    }
-    elseif (0 != strcmp($pass1, $pass2))
-    {
-        $msg = _('Passwords mismatches');
-    }
-    elseif (strlen($pass1) < $pass_length_min)
-    {
-        $msg = _('Password is not long enough. The minimum is ').$pass_length_min._(' characters');
-    }
-    elseif (strlen($pass1) > $pass_length_max)
-    {
-        $msg = _('Password is too long. The maximum is ').$pass_length_max._(' characters');
-    }
-    elseif (!Session::pass_check_complexity($pass1))
-    {
-        $msg = _('Password is not complex enough');
-    }
-    elseif (count($recent_pass) > 0 && (in_array(md5($pass1),$recent_pass) || in_array(hash('sha256', $pass1),$recent_pass)))
-    {
-        $msg = _('This password is recently used. Try another');
-    }
-    elseif (count($user_list = Session::get_list($conn, "WHERE login = '" . $user . "' and pass = '" . md5($pass1) . "'")) > 0)
-    {
-        $msg = _('You must change your old password');
+        $msg = $res;
     }
     else
     {
@@ -142,15 +123,14 @@ if ($flag != '')
 
         unset($_SESSION['_backup_user']);
 
-        $res = Session::change_pass($conn, $user, $pass1, $current_pass);
+        $res = Session::change_pass($conn, $user, $pass_1, $c_pass);
 
         if ($res > 0)
         {
             Session::disable_first_login($conn, $user);
 
             //Relogin user
-
-            $session = new Session($user, $pass1, '');
+            $session = new Session($user, $pass_1, '');
 
             $is_disabled = $session->is_user_disabled();
 
@@ -174,6 +154,8 @@ if ($flag != '')
             $msg = _('Current password does not match');
         }
     }
+
+    $db->close();
 }
 
 
@@ -188,6 +170,7 @@ if ($flag != '')
     <script type="text/javascript" src="../js/jquery.pstrength.js"></script>
     <script type="text/javascript" src="../js/jquery.base64.js"></script>
     <link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
+    <link rel="Shortcut Icon" type="image/x-icon" href="../favicon.ico">
 
     <style type="text/css">
 
@@ -212,6 +195,7 @@ if ($flag != '')
             font-size:14px;
             width: 130px;
         }
+
         input[type="text"]:focus, input[type="password"]:focus,
         {
             outline: none;
@@ -222,11 +206,16 @@ if ($flag != '')
             width: 85%;
         }
 
+        #t_login input[type="password"]
+        {
+            width: 99%;
+        }
+
         #t_cp
         {
             margin: 130px auto 50px auto;
             border: none;
-            min-width: 400px;
+            width: 400px;
         }
 
         #t_info
@@ -279,11 +268,6 @@ if ($flag != '')
             font-size:13px;
         }
 
-        #t_login input[type="password"]
-        {
-            width: 100%;
-        }
-
     </style>
 
     <script type='text/javascript'>
@@ -296,7 +280,7 @@ if ($flag != '')
                 pass2 = jQuery.trim(pass2);
 
             var current_pass = $('#current_passu').val();
-            current_pass = jQuery.trim(current_pass);
+                current_pass = jQuery.trim(current_pass);
 
             if (pass1 != '')
             {
@@ -312,6 +296,7 @@ if ($flag != '')
             {
                 $('#current_pass').val($.base64.encode(current_pass));
             }
+
             $('#submit_button').addClass('av_b_processing');
         }
     </script>
@@ -337,7 +322,7 @@ if ($flag != '')
                                 if (Session::is_pro())
                                 {
                                     $logo_url  .= '_siem';
-                                    $logo_title = _('AlienVault Logo');
+                                    $logo_title = _('Alienvault Logo');
                                 }
 
                                 $logo_url .= '.png';
@@ -414,13 +399,13 @@ if ($flag != '')
                         {
                             ?>
                             <tr><td class="center noborder" style="color:red"><?php echo $msg?></td></tr>
-                           <?php
+                            <?php
                         }
                         ?>
 
                         <tr>
                             <td class="noborder" style="text-align:center;padding:20px">
-                                <input type="submit" class="button big" id="submit_button" value="<?php echo _('Change'); ?>"/>
+                                <input type="submit" class="button big" id="submit_button" value="<?php echo _('Change');?>"/>
                             </td>
                         </tr>
                     </table>

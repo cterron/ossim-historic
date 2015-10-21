@@ -77,41 +77,16 @@ function update_system() {
     
 }
 
-function update_system_major() {
-    wget_useragent=$(/usr/bin/alienvault-useragent)
-    tmppath="/usr/share/ossim-installer/temp"
-
-    dataserver="http://data.alienvault.com"
-    REL3="RELEASES"
-    script_name="alienvault5_update-script"
-
-    [ -f "$tmppath/$script_name" ] && rm "$tmppath/$script_name"
-    [ -f "$tmppath/$script_name.sig" ] && rm "$tmppath/$script_name.sig"
-
-    wget -U "$wget_useragent" -O $tmppath/$script_name $dataserver/$REL3/$script_name
-    if [ -s "$tmppath/$script_name" ]
-    then
-        wget -U "$wget_useragent" -O $tmppath/$script_name.sig $dataserver/$REL3/$script_name.sig
-        if [ -s "$tmppath/$script_name.sig" ]
-	    then
-            if gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$script_name.sig
-            then
-                /bin/bash $tmppath/$script_name
-                handle_exit $?
-            else
-                handle_exit 61
-	    fi
-        else
-            handle_exit 62
-        fi
-    else
-        handle_exit 60
-    fi
-}
-
 function update_system_offline() {
 
-    devname=$(fdisk -l 2>&1 | grep contain | awk '{ print $2 }' | awk -F'/' '{ print $3 }')
+    device=$(blkid -L Alienvault)
+    if [ "x$device" = "x" ]
+    then
+        handle_exit 40
+    fi
+
+    devname=$(echo $device | awk -F'/' '{print $3}')
+
     mkdir -p /media/$devname
     mount /dev/$devname /media/$devname
     update_command=$(find /media -maxdepth 2 -name av_offline_update.sh)
@@ -128,7 +103,7 @@ function update_system_offline() {
 }
 
 function analyze_update() {
-    echo "OOOOOPS: There was an error updating the system"
+    echo "There was an error updating the system, please contact support for more information"
     [ -f /etc/ossim/.update_result ] && cat "/etc/ossim/.update_result" || true
     rm -f "/etc/ossim/.update_result"
 }
@@ -189,7 +164,6 @@ function handle_exit() {
 }
 
 [ $1 == "--us" ] && update_system
-[ $1 == "--usm" ] && update_system_major
 [ $1 == "--uso" ] && update_system_offline
 [ $1 == "--au" ] && analyze_update
 

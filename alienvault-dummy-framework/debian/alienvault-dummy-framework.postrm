@@ -21,7 +21,7 @@ set -e
 
 case "$1" in
     purge|remove)
-        SOURCES_LIST="/etc/apt/sources.list.d/alienvault4.list"
+        SOURCES_LIST="/etc/apt/sources.list.d/alienvault5.list"
         sed -i "/plugins-feed/d" $SOURCES_LIST
         ;;
 

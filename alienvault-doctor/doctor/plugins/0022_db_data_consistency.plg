@@ -9,7 +9,7 @@ user=@dbuser@
 password=@dbpass@
 database=alienvault
 profiles=Database:>4.0
-strike_zone=True
+affects_strike_zone=True
 raw_limit=100
 
 # Check the integrity of server_id, server_address or ossim_server_version
@@ -27,7 +27,7 @@ summary_failed=There are null values for either server_id, server_address or oss
 remediation=Critical fields from the alienvault.config table are empty. Please check the installation and/or update the related packages properly
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Look for events without sensor_id
 [00220002]
@@ -42,7 +42,7 @@ summary_failed=Events in the database have null sensor_id values
 remediation=Events without a sensor_id value are a sign of misconfigured plugins and/or sensor properties. Please check both the sensor and plugins current configuration.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Checks if t
 severity=Warning
@@ -56,7 +56,7 @@ summary_failed=Different number of rows between SIEM tables
 remediation=Different number of rows in the SIEM database could be a result of a failed backup, or even a corrupt table. Please check the AlienVault database health
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Checks if the current event window is coherent
 [00220004]
@@ -71,7 +71,7 @@ summary_failed=Current event window is bigger than the backup one
 remediation=A malfunctioning backup system may lead to a general failure. Please check the AlienVault backup configuration
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 # Verifies that local system identifier exists
 [00220005]
@@ -87,7 +87,7 @@ summary_failed=Local system identifier does not exist
 remediation=Every system has a universally unique identifier. AlienVault processes on it, and failure to find it could point to system instability.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220006]
 severity=Alert
@@ -102,7 +102,7 @@ summary_failed=Default context ID does not exist
 remediation=Every AlienVault system has a default context ID, which is one of the AlienVault essential configuration parameters. Failure to find it could point to system instability.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220007]
 severity=Alert
@@ -117,7 +117,7 @@ summary_failed=Default engine ID does not exist
 remediation=Every AlienVault system has a default engine ID, which is one of the AlienVault essential configuration parameters. Failure to find it could point to system instability.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220008]
 severity=Error
@@ -132,7 +132,7 @@ summary_failed=Local server does not have any associated context IDs
 remediation=Servers use context IDs for event processing. Failure finding it may lead to a malfunctioning server.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220009]
 severity=Error
@@ -147,7 +147,7 @@ summary_failed=Local server does not have any associated engine IDs
 remediation=Servers use engine IDs to process events. A failure finding it points to a malfunctioning server.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220010]
 severity=Warning
@@ -161,10 +161,10 @@ summary_failed=Entities related with an unknown sensor found
 remediation=All entities must be related to registered sensors. Any entity that is not linked to a working sensor may lead to an unstable system.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220011]
-severity=Error
+severity=Warning
 query=SELECT HEX(sensor.id), sensor.name FROM sensor LEFT JOIN system ON system.sensor_id = sensor.id, sensor_properties WHERE system.sensor_id IS null AND sensor_properties.sensor_id = sensor.id AND sensor_properties.version != '';
 conditions=@string@:=="";@string@:==""
 formatted_output=Incomplete information of sensor with id @string@ and name @string@ has been found in the DB 
@@ -175,7 +175,6 @@ summary_failed=There are sensors that are not being properly managed
 remediation=In order to be properly managed, sensor data must be stored in the database. Missing sensor information may lead to further issues.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
 
 [00220012]
 severity=Error
@@ -189,7 +188,7 @@ summary_failed=There are servers that may be not properly managed
 remediation=In order to be properly managed, server data must be stored in the database. Missing server information was detected, this may lead to further issues.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220013]
 severity=Warning
@@ -203,7 +202,7 @@ summary_failed=The AlienVault database contains assets not managed by any sensor
 remediation=Every asset in the AlienVault database must be linked to a sensor. Otherwise, some of your assets may not be properly monitored, as they are not linked to any sensor.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220014]
 severity=Warning
@@ -217,7 +216,7 @@ summary_failed=The AlienVault database contains assets managed by unknown sensor
 remediation=Every asset in the AlienVault database must be linked to a sensor. Otherwise, some assets may not be properly monitored, as they are linked to unknown sensors.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220015]
 severity=Error
@@ -231,7 +230,7 @@ summary_failed=The AlienVault database contains assets that are in more than one
 remediation=Every asset in the AlienVault database must be linked to a single context. Otherwise, some of the assets may not be properly monitored, as they belong to two or more different contexts.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220016]
 severity=Warning
@@ -245,7 +244,7 @@ summary_failed=The AlienVault database contains networks not being managed by an
 remediation=Every network in the AlienVault database must be linked to a sensor. Otherwise, some of the networks may not be properly monitored, as they are not linked to any sensor.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220017]
 severity=Warning
@@ -259,7 +258,7 @@ summary_failed=The AlienVault database contains networks managed by unknown sens
 remediation=Every network in the AlienVault database must be linked to a sensor. Otherwise, some of the networks may not be properly monitored, as they are linked to unknown sensors.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220018]
 severity=Warning
@@ -273,7 +272,7 @@ summary_failed=Some users have permissions over unknown assets.
 remediation=Users are configured to have permissions over monitored assets, but having permissions over an unknown asset could be a symptom of some other data discrepancy.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220019]
 severity=Warning
@@ -287,7 +286,7 @@ summary_failed=Users have been found with permissions over unknown sensors.
 remediation=Users have permissions over the deployed sensors, but permissions over an unknown one could be a symptom of some other data discrepancy.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220020]
 severity=Warning
@@ -301,7 +300,7 @@ summary_failed=Users have been found with permissions over unknown entities.
 remediation=Users have permissions over AlienVault entities, but permissions over an unknown one could be a symptom of some other data discrepancy.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220021]
 severity=Warning
@@ -315,7 +314,7 @@ summary_failed=Some policies do not have the necessary entries in the database
 remediation=Policies depend on complex database relationships. Incomplete database relations may point to non working policies.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220022]
 severity=Warning
@@ -329,7 +328,7 @@ summary_failed=Some IP addresses have been found in two or more contexts
 remediation=Contexts are used to organize assets in an AlienVault deployment. Overlapping contexts may lead to correlation malfunction.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 
 [00220023]
 severity=Error
@@ -344,5 +343,5 @@ summary_failed=Some nested contexts are configured in cycles
 remediation=Contexts can be nested, but never form cycles. Cycles will eventually cause the AlienVault system to crash.
 appliance_type=@all_aio_profiles@,@all_logger_profiles@,@all_usm_standard_profiles@,alienvault-hw-usm-database,alienvault-hw-aio-extended
 min_doctor_version=4.15
-strike_zone=True
+affects_strike_zone=True
 

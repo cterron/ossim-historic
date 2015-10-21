@@ -17,7 +17,7 @@ set -e
 case "$1" in
     upgrade)
         # Clean up .py[co]
-        find /usr/share/alienvault/api/ -name "*.py[co]" -exec rm -f {} \; || true
+        find /usr/share/python/alienvault-api/ -name "*.py[co]" -exec rm -f {} \; || true
     ;;
 
     install|abort-upgrade)

@@ -34,7 +34,7 @@ import time
 import json
 import pwd
 import grp
-from optparse import OptionParser, OptionGroup
+from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 from ConfigParser import RawConfigParser
 import random
 from M2Crypto import EVP, RSA
@@ -67,6 +67,7 @@ class Doctor:
         self.__system_summary = []
         self.__summary = {}
         self.__in_strike_zone = True
+        self.__ignore_dummy_platform = False
         self.__output_file = ''
         self.__rc = 0
 
@@ -81,6 +82,8 @@ class Doctor:
         parser.add_option("-s", "--severity_list", dest="severity_list", default=default.severity_list, help="A list of check severities you want to run [default: run all checks]")
         parser.add_option("-a", "--appliance_type", dest="appliance_type_list", default=default.appliance_type_list, help="Appliance whose checks you want to run [default: run checks for current appliance] ")
         parser.add_option("-P", "--plugin-dir", dest="plugin_dir", default=default.plugin_dir, help="Directory where plugins are stored [default: %default]")
+        parser.add_option("-k", "--ko", dest="ko_only", default=default.ko, action="store_true", help=SUPPRESS_HELP)
+        parser.add_option("-i", "--ignore-dummy", dest="ignore_dummy", default=default.ignore_dummy, action="store_true", help=SUPPRESS_HELP)
 
         output_group = OptionGroup(parser, 'Output options')
         output_group.add_option('-o', '--output-type', dest='output_type', type='choice', choices=default.valid_output_types, default=default.output_type, help='Output type [default: %default]')
@@ -94,6 +97,9 @@ class Doctor:
         # Disable normal output for 'ansible' and 'support' output options.
         if options.output_type in ['ansible']:
             Output.set_std_output(False)
+
+        # Ignore dummy platform package
+        self.__ignore_dummy_platform = options.ignore_dummy
 
         # Get basic system info.
         self.__sysinfo = Sysinfo()
@@ -208,6 +214,7 @@ class Doctor:
                 plugin_ids = plugin_det.keys()
                 plugin_ids.sort()
 
+                failing_checks = []
                 for plugin_id in plugin_ids:
                     plugin_name = plugin_det[plugin_id]
                     result = self.__summary[plugin_name]
@@ -227,6 +234,10 @@ class Doctor:
                         Output.emphasized(header, [plugin_name, 'In the Strike Zone?'])
                         for (check_name, check_result) in checks.items():
                             if check_result['result'] == 'failed':
+                                failing_checks.append({'check': check_name,
+                                                       'severity': check_result['severity'],
+                                                       'strike_zone': check_result['strike_zone'],
+                                                       'detail': check_result['detail']})
                                 if check_result['severity'] == 'Emerg':
                                     severity_color = RED
                                 elif check_result['severity'] == 'Alert':
@@ -251,6 +262,20 @@ class Doctor:
                                     Output.emphasized('%sWord of advice: %s' % ((' '*13), check_result['remediation']), ['Word of advice'])
                             else:
                                 Output.emphasized('%s[*] %s: All good' % ((' '*9), check_name), ['*', check_name], [GREEN, EMPH])
+
+                if options.ko_only:
+                    Output.emphasized('\n\n%s%s' % (' '*5, '*'*22), ['%s%s' % (' '*5, '*'*22)])
+                    Output.emphasized('         Failing checks    ', ['Failing checks'])
+                    Output.emphasized('%s%s' % (' '*5, '*'*22), ['%s%s' % (' '*5, '*'*22)])
+                    if len(failing_checks) == 0:
+                        Output.emphasized('\n%sNone' % (' '*13))
+                    else:
+                        for check_item in failing_checks:
+                            Output.emphasized('\n%sCheck: %s' % ((' '*13), check_item['check']), ['Check'])
+                            Output.emphasized('%sSeverity: %s' % ((' '*13), check_item['severity']), ['Severity'])
+                            Output.emphasized('%sStrike Zone: %s' % ((' '*13), check_item['strike_zone']), ['Strike Zone'])
+                            Output.emphasized('%sDetail: %s' % ((' '*13), check_item['detail']), ['Detail'])
+
         elif options.output_type in ['file', 'support']:
             if self.__system_summary['Hardware profile'] != 'ossim-free':
                 full_summary = dict(self.__system_summary, **self.__summary)
@@ -376,6 +401,7 @@ class Doctor:
                                 self.__alienvault_config,
                                 self.__severity_list,
                                 self.__appliance_type_list,
+                                self.__ignore_dummy_platform,
                                 verbose,
                                 raw)
 

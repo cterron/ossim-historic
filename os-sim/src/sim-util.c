@@ -1329,16 +1329,16 @@ GSemaphore* g_semaphore_new_with_value (gint value)
 */      
 	GSemaphore *sema = (GSemaphore *) g_new ( GSemaphore, 1);
 	sema->value = value;
-	sema->access = g_mutex_new();
-	sema->sig = g_cond_new();
+	g_mutex_init(&sema->access);
+	g_cond_init(&sema->sig);
 	return sema;
 }
 
 void g_semaphore_free(GSemaphore* sema)
 {
 	g_return_if_fail (sema != NULL);
-	g_mutex_free (sema->access);
-	g_cond_free (sema->sig); 
+	g_mutex_clear (&sema->access);
+	g_cond_clear (&sema->sig); 
 }
 
 void g_semaphore_up(GSemaphore* sema)
@@ -1346,11 +1346,11 @@ void g_semaphore_up(GSemaphore* sema)
 	g_return_if_fail (sema != NULL);
 	//g_print("Try pop(++) on Semaphore %x with remaining value %d .\n", sema, sema->value);
 
-	g_mutex_lock (sema->access);
+	g_mutex_lock (&sema->access);
 
 	sema->value++;
-	g_cond_signal (sema->sig);
-	g_mutex_unlock (sema->access);
+	g_cond_signal (&sema->sig);
+	g_mutex_unlock (&sema->access);
 }
 
 void g_semaphore_down(GSemaphore* sema)
@@ -1358,13 +1358,13 @@ void g_semaphore_down(GSemaphore* sema)
 	g_return_if_fail (sema != NULL);
 	//g_print("Try push(--) on Semaphore %x with remaining value %d .\n", sema, sema->value);
 
-	g_mutex_lock (sema->access);
+	g_mutex_lock (&sema->access);
 
 	while (sema->value<1)
-		g_cond_wait (sema->sig,sema->access);
+		g_cond_wait (&sema->sig,&sema->access);
 	sema->value--;
 
-	g_mutex_unlock (sema->access);
+	g_mutex_unlock (&sema->access);
 }
 
 gboolean

@@ -4,6 +4,7 @@ use v5.10;
 use DBI;
 use MIME::Base64;
 use Time::Local;
+no warnings 'experimental::smartmatch';
 
 use lib '/usr/share/alienvault-center/lib';
 use AV::ConfigParser;
@@ -202,14 +203,6 @@ SET GLOBAL default_storage_engine=TokuDB;\" | ossim-db mysql 2> /dev/null";
     system("echo \"DROP DATABASE  IF EXISTS datawarehouse; CREATE DATABASE datawarehouse;\" | ossim-db mysql");
     system("zcat /usr/share/doc/ossim-mysql/contrib/00-create_datawarehouse_tbls_mysql.sql.gz | ossim-db datawarehouse");
 
-
-	print("Creating ocsweb ".gmtime()."...\n");
-	if (-f "/usr/share/ossim-installer/ocsweb.snapshot.sql.gz")
-	{
-        debug_log("Database Profile: Create ocsweb");
-		system("zcat /usr/share/ossim-installer/ocsweb.snapshot.sql.gz | ossim-db mysql");
-	}
-
 	print("Reconfiguring ossim-mysql-ext ".gmtime()."...\n");
     # ossim-mysql-ext aditional data
     if ( -s "/var/lib/dpkg/info/ossim-mysql-ext.postinst" )
@@ -226,6 +219,17 @@ SET GLOBAL default_storage_engine=TokuDB;\" | ossim-db mysql 2> /dev/null";
     {
     	verbose_log("Updating suricata data");
     	system("/bin/bash /var/lib/dpkg/info/suricata-rules-default.postinst configure");
+    }
+
+    # custom reports data
+    if ( $is_pro == 0 )
+    {
+        print("Alienvault-reporting postinst ".gmtime()."...\n");
+        if ( -s "/var/lib/dpkg/info/alienvault-reporting.postinst" )
+        {
+            verbose_log("Updating reporting data");
+            system("/bin/bash /var/lib/dpkg/info/alienvault-reporting.postinst configure");
+        }
     }
     
     # compliance aditional data

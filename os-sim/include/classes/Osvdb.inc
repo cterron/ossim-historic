@@ -164,7 +164,7 @@ class Osvdb {
 
 
 	public function get_manual_test() {
-        return Osvdb::sanity($this->manual_test);
+        return self::sanity($this->manual_test);
     }
 
 

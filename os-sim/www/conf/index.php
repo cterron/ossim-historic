@@ -54,17 +54,19 @@ $tz = Util::get_timezone();
 $ossim_conf     = $GLOBALS['CONF'];
 
 $section        = (POST('section') != '') ? POST('section') : GET('section');
-$flag_status    = $_GET['status'];
-$error_string   = $_GET['error'];
-$warning_string = $_GET['warning'];
+$flag_status    = GET('status');
+$flag_reconfig  = GET('reconfig');
+$error_string   = GET('error');
+$warning_string = GET('warning');
 $word           = (POST('word') != '') ? POST('word') : ((GET('word') != '') ? GET('word') : '');
 $restart_server = 0;
 
-ossim_valid($section, OSS_ALPHA, OSS_NULLABLE,                                                                    'illegal:' . _('Section'));
-ossim_valid($flag_status, OSS_DIGIT, OSS_NULLABLE,                                                                'illegal:' . _('Flag status'));
-ossim_valid($error_string, OSS_LETTER, OSS_DIGIT, OSS_NULLABLE, OSS_SPACE, OSS_COLON, OSS_SCORE, '\/',            'illegal:' . _('Error string'));
-ossim_valid($warning_string, OSS_LETTER, OSS_DIGIT, OSS_NULLABLE, OSS_SPACE, OSS_COLON, OSS_SCORE, '\.,\/\(\)',   'illegal:' . _('Warning string'));
-ossim_valid($word, OSS_INPUT, OSS_NULLABLE,                                                                       'illegal:' . _('Find Word'));
+ossim_valid($section, OSS_ALPHA, OSS_NULLABLE,                                                                          'illegal:' . _('Section'));
+ossim_valid($flag_status, OSS_DIGIT, OSS_NULLABLE,                                                                      'illegal:' . _('Flag status'));
+ossim_valid($flag_reconfig, OSS_DIGIT, OSS_NULLABLE,                                                                    'illegal:' . _('Flag reconfig'));
+ossim_valid($error_string, OSS_LETTER, OSS_DIGIT, OSS_NULLABLE, OSS_SPACE, OSS_COLON, OSS_SCORE, '\.,\/\(\)\[\]\'',     'illegal:' . _('Error string'));
+ossim_valid($warning_string, OSS_LETTER, OSS_DIGIT, OSS_NULLABLE, OSS_SPACE, OSS_COLON, OSS_SCORE, '\.,\/\(\)\[\]\'',   'illegal:' . _('Warning string'));
+ossim_valid($word, OSS_INPUT, OSS_NULLABLE,                                                                             'illegal:' . _('Find Word'));
 
 if (ossim_error())
 {
@@ -73,7 +75,14 @@ if (ossim_error())
 
 if ($flag_status == 1)
 {
-    $status_message = _('Configuration successfully updated');
+    if ($flag_reconfig)
+    {
+        $status_message = _('Your new configuration will be applied once AlienVault Reconfig completes. This might take several minutes.');
+    }
+    else
+    {
+        $status_message = _('Configuration successfully updated');
+    }
 }
 elseif($flag_status == 2)
 {
@@ -226,7 +235,7 @@ $CONFIG = array(
                         '4' => 4,
                         '5' => 5
                     ),
-                    'help' => _("Store in SIEM if event´s priority >= this value").",<br>&nbsp;&nbsp;&nbsp;"._('CLI action required:').' '._('Maintenance & Troubleshooting->Restart System Services->Restart AlienVault Server Service'),
+                    'help' => _("Store in SIEM if eventï¿½s priority >= this value").",<br>&nbsp;&nbsp;&nbsp;"._('CLI action required:').' '._('Maintenance & Troubleshooting->Restart System Services->Restart AlienVault Server Service'),
                     'desc' => _('Security Events process priority threshold'),
                     'advanced' => 1,
                     'section' => 'metrics',
@@ -273,6 +282,24 @@ $CONFIG = array(
                     ),
                     'help' => _("You can configure if you have an internet connection available so that you can load external libraries.<br/><ul><li>No: It will not load external libraries.</li><li>Yes: It will check if we have internet connection and if so, it will load external libraries.</li><li>Force Yes: It will always try to load external libraries.</li></ul>This option requires to login again."),
                     'desc' => _('Internet Connection Availability'),
+                    'advanced' => 1
+                ),
+                'framework_https_cert_plain' => array(
+                    'type' => 'textarea',
+                    'help' => _('PEM encoded X.509 certificate. Cut and paste the certificate including the "----BEGIN CERTIFICATE-----" and "-----END CERTIFICATE-----" lines'),
+                    'desc' => _('Web Server SSL Certificate (PEM format)'),
+                    'advanced' => 1
+                ),
+                'framework_https_pem_plain' => array(
+                    'type' => 'textarea',
+                    'help' => _('PEM encoded private key. Cut and paste the private key including the "-----BEGIN RSA PRIVATE KEY-----" and "-----END RSA PRIVATE KEY-----" lines'),
+                    'desc' => _('Web Server SSL Private Key (PEM format)'),
+                    'advanced' => 1
+                ),
+                'framework_https_ca_cert_plain' => array(
+                    'type' => 'textarea',
+                    'help' => _('PEM encoded X.509 certificates. Cut and paste the certificates including the "----BEGIN CERTIFICATE-----" and "-----END CERTIFICATE-----" lines'),
+                    'desc' => _('Web Server SSL CA Certificates (PEM format) <i>[optional]</i>'),
                     'advanced' => 1
                 )
             )
@@ -738,6 +765,24 @@ $CONFIG = array(
 
 ksort($CONFIG);
 
+function custom_actions($api_client, $var, $value)
+{
+    global $restart_server;
+
+    $value = trim($value);
+
+    switch ($var)
+    {
+        case 'idm_user_login_timeout':
+            $restart_server = 1;
+        break;
+
+        case 'track_usage_information':
+            $api_client->system()->set_telemetry($value > 0 ? TRUE : FALSE);
+        break;
+    }
+}
+
 function valid_value($key, $value, $numeric_values)
 {
     if (in_array($key, $numeric_values))
@@ -803,7 +848,6 @@ if (POST('update'))
         'server_port',
         'use_resolv',
         'internet_connection',
-        'use_munin',
         'frameworkd_port',
         'frameworkd_controlpanelrrd',
         'frameworkd_donagios',
@@ -852,6 +896,7 @@ if (POST('update'))
 
     $pass_fields = array();
 
+
     foreach ($CONFIG as $conf)
     {
         foreach ($conf['conf'] as $k => $v)
@@ -864,8 +909,11 @@ if (POST('update'))
     }
 
     $flag_status    = 1;
+    $flag_reconfig  = 0;
     $error_string   = '';
     $warning_string = '';
+    $certs          = FALSE;
+    $cert_options   = array('framework_https_ca_cert_plain', 'framework_https_cert_plain', 'framework_https_pem_plain');
 
     for ($i = 0; $i < POST('nconfs'); $i++)
     {
@@ -952,6 +1000,8 @@ if (POST('update'))
     }
     if ($flag_status != 2)
     {
+        $api_client = new Alienvault_client();
+
         for ($i = 0; $i < POST('nconfs'); $i++)
         {
             if ( isset($_POST["conf_$i"]) && isset($_POST["value_$i"]) )
@@ -970,21 +1020,18 @@ if (POST('update'))
                         Log_action::log(7, array("variable: ".POST("conf_$i")));
 
                         // Special cases
-                        if (POST("conf_$i") == 'idm_user_login_timeout')
+                        custom_actions($api_client, POST("conf_$i"), POST("value_$i"));
+
+                        if (in_array(POST("conf_$i"), $cert_options))
                         {
-                            $restart_server = 1;
-                        }
-                        if (POST("conf_$i") == 'track_usage_information')
-                        {
-                            $client = new Alienvault_client();
-                            $client->system()->set_telemetry((POST("value_$i") > 0) ? TRUE : FALSE);
+                            $certs = TRUE;
                         }
                     }
                 }
             }
         }
     }
-
+    
     // check valid pass length max
     if(intval($pass_length_max) < intval($pass_length_min) || intval($pass_length_max) < 1 || intval($pass_length_max) > 255)
     {
@@ -1001,8 +1048,28 @@ if (POST('update'))
         $config->update('pass_expire_min' , 0);
     }
 
+    // Check and set certificates
+    $lastconfig = new Config(); // To get latest inserted values
 
-    $url = $_SERVER['SCRIPT_NAME'] . "?word=" . $word . "&section=" . $section . "&status=" . $flag_status . "&error=" . urlencode($error_string) . "&warning=" . urlencode($warning_string);
+    $cert = $lastconfig->get_conf('framework_https_crt');
+    $pkey = $lastconfig->get_conf('framework_https_pem');
+
+    if ($certs)
+    {
+        $response = $api_client->system()->set_system_certificates($lastconfig->get_conf('framework_https_cert_plain'), $lastconfig->get_conf('framework_https_pem_plain'), $lastconfig->get_conf('framework_https_ca_cert_plain'));
+
+        $response = @json_decode($response, TRUE);
+
+        if (!$response || $response['status'] == 'error')
+        {
+            $error_string = sprintf(_('Unable to set SSL certificate: %s'),$response['message']);
+            $flag_status  = 2;
+        }
+
+        $flag_reconfig = 1;
+    }
+
+    $url = $_SERVER['SCRIPT_NAME'] . "?word=" . $word . "&section=" . $section . "&status=" . $flag_status . "&error=" . urlencode($error_string) . "&warning=" . urlencode($warning_string) . '&reconfig=' . $flag_reconfig;
     if ($restart_server)
     {
         header("Location: ".AV_MAIN_PATH."/conf/reload.php?what=directives&back=".urlencode($url));
@@ -1687,7 +1754,7 @@ $default_open = REQUEST('open');
                                         /* textarea */
                                         elseif ($type['type'] == 'textarea')
                                         {
-                                            $input.= "<textarea rows='2' cols='28' name=\"value_$count\" $disabled>$conf_value</textarea>";
+                                            $input.= "<textarea rows='3' cols='40' name=\"value_$count\" $disabled>$conf_value</textarea>";
                                         }
                                         /* link */
                                         elseif ($type['type'] == 'link')

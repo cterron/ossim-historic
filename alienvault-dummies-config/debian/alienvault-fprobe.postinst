@@ -35,6 +35,7 @@ configure_fprobe(){
     while [ "$(pgrep fprobe)" != "" ]
     do
         sleep 1
+	/etc/init.d/fprobe stop
     done
     /etc/init.d/fprobe start
 }

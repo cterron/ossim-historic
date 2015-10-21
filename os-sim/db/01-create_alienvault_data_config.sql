@@ -47,7 +47,7 @@ REPLACE INTO host_source_reference (`id`, `name`, `relevance`) VALUES
 (10,'NAGIOS', 6),
 (11,'NEDI',   5),
 (12,'NESSUS', 5),
-(13,'ARPWATCH',8),
+(13,'DHCP',5),
 (14,'SNARE',  5),
 (15,'ARPALERT', 5),
 (16,'POf', 5),
@@ -269,8 +269,6 @@ INSERT IGNORE INTO config (conf, value) VALUES ('phpgacl_user', 'root');
 INSERT IGNORE INTO config (conf, value) VALUES ('phpgacl_pass', 'ossim');
 INSERT IGNORE INTO config (conf, value) VALUES ('graph_link', '../report/graphs/draw_rrd.php');
 INSERT IGNORE INTO config (conf, value) VALUES ('rrdtool_lib_path', '/usr/lib/perl5/');
-INSERT IGNORE INTO config (conf, value) VALUES ('munin_link', '/munin/');
-INSERT IGNORE INTO config (conf, value) VALUES ('use_munin', '1');
 INSERT IGNORE INTO config (conf, value) VALUES ('ossim_link', '/ossim/');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_type', 'mysql');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_base', 'alienvault_siem');
@@ -456,5 +454,5 @@ INSERT IGNORE INTO config (conf, value) VALUES ('internet_connection', 1);
 
 INSERT IGNORE INTO config (conf, value) VALUES ('track_usage_information', '');
 
-REPLACE INTO config (conf, value) VALUES ('last_update', '2015-08-11');
-REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.1.1');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2015-10-06');
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.2.0');

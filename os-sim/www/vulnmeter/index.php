@@ -50,7 +50,7 @@ $widget_mode     = GET('widget_mode');
 
 ossim_valid($delete, OSS_DIGIT, OSS_NULLABLE,                                            'illegal:' . _("delete"));
 ossim_valid($scantime, OSS_DIGIT, OSS_NULLABLE,                                          'illegal:' . _("scantime"));
-ossim_valid($rvalue, OSS_SCORE, OSS_NULLABLE, OSS_DOT, OSS_ALPHA, OSS_SPACE, OSS_COLON,  'illegal:' . _("rvalue"));
+ossim_valid($rvalue, OSS_TEXT, OSS_NULLABLE,                                             'illegal:' . _("rvalue"));
 ossim_valid($value, OSS_TEXT, OSS_NULLABLE,                                              'illegal:' . _("value"));
 ossim_valid($ctx_filter, OSS_NULLABLE, OSS_HEX,                                          'illegal:' . _("ctx_filter"));
 ossim_valid($type, OSS_ALPHA, "hn", "freetext", "service", OSS_NULLABLE,                 'illegal:' . _("type"));
@@ -77,8 +77,8 @@ $conn = $db->connect();
 $pageSize = 10;
 $allres   = 1;
 
-$getParams = array( "disp", "op", "output", "scantime", "scantype", "reporttype", "key", "offset", "sortdir", "allres", "fp","nfp", "wh", "bg", "filterip", "critical", "increment","type","value", "delete", "delete_ipl_ctx", "roffset", "sreport");
-$postParams = array( "disp", "op", "output", "scantime", "type", "value", "offset",
+$getParams = array( "disp", "op", "output", "scantime", "scantype", "reporttype", "key", "offset", "sortdir", "allres", "fp","nfp", "wh", "bg", "filterip", "critical", "increment","type","value", "rvalue", "delete", "delete_ipl_ctx", "roffset", "sreport");
+$postParams = array( "disp", "op", "output", "scantime", "type", "value", "rvalue", "offset",
     "scantype", "fp","nfp", "filterip", "critical", "increment", "roffset", "sreport");
 $post = FALSE;
 
@@ -363,12 +363,11 @@ function list_reports($type, $value, $sortby, $sortdir, $widget_mode ) {
 echo "<table cellspacing='0' cellpadding='0' class='w100 transparent'>";
 echo "<tr><td class='sec_title'>"._("Scan Reports Details")."</td></tr>";
 echo "<tr><td style='padding-top:12px;' class='transparent'>";
-      echo <<<EOT
+echo '
 <center>
 <form name="hostSearch" action="index.php" method="GET">
-<input type="hidden" name="widget_mode" value="$w_val">
-<input type="text" length="25" name="rvalue" id="rvalue" value="$value">
-EOT;
+<input type="hidden" name="widget_mode" value="'.$w_val.'">
+<input type="text" length="25" name="rvalue" id="rvalue" value="'.Util::htmlentities($value).'">';
 echo "
 <input type=\"radio\" name=\"type\" value=\"scantime\" $selRadio[0]>"._("Date")."/"._("Time")."
 <input type=\"radio\" name=\"type\" value=\"jobname\" $selRadio[1]>"._("Job Name")."

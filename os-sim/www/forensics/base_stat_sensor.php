@@ -137,7 +137,7 @@ $_SESSION['_siem_sensor_query'] = $sqlsensor;
 
 if (file_exists('/tmp/debug_siem'))
 {
-    error_log("STATS SENSORS:$sql\nSTATS SENSOR UNIQUE:$sqlsensor\n", 3, "/tmp/siem");
+    file_put_contents("/tmp/siem", "STATS SENSORS:$sql\nSTATS SENSOR UNIQUE:$sqlsensor\n", FILE_APPEND);
 }
 /* Run the Query again for the actual data (with the LIMIT) */
 session_write_close();
@@ -161,37 +161,37 @@ if ($qs->num_result_rows > 0)
 }
 $i = 0;
 $sensorips = GetSensorSidsNames($db);
-$report_data = array(); // data to fill report_data 
+$report_data = array(); // data to fill report_data
 
 if (is_array($_SESSION["server"]) && $_SESSION["server"][0]!="")
-	$_conn = $dbo->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
+    $_conn = $dbo->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
 else
-	$_conn = $dbo->connect();
-	
+    $_conn = $dbo->connect();
+
 while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $device_id = $myrow['device_id'];
     list($myrow['name'],$myrow['sensor_ip']) = explode(' - ',GetSensorName($myrow['sensor_id'], $db, true));
     $sensor_ip = ($myrow['name'] == 'N/A') ? 'N/A' : $myrow['sensor_ip'];
     $device_ip = ($myrow['device_ip'] != '') ? $myrow['device_ip'].($myrow['interface'] != '' ? ':'.$myrow['interface'] : '') : '-';
     $sname     = $myrow['name'];
-    
+
     $event_cnt = $myrow['event_cnt'];
     $unique_event_cnt = ($myrow['sig_cnt']!="") ? $myrow['sig_cnt'] : "-";
     $num_src_ip = ($myrow['saddr_cnt']!="") ? $myrow['saddr_cnt'] : "-";
     $num_dst_ip = ($myrow['daddr_cnt']!="") ? $myrow['daddr_cnt'] : "-";
-	
-	$_country_aux = $geoloc->get_country_by_host($conn, $sensor_ip);
-	$country      = strtolower($_country_aux[0]);
-	$country_name = $_country_aux[1];
-	
-	$homelan = "";
-	if ($country) {
-		$country_img = " <img src=\"/ossim/pixmaps/flags/" . $country . ".png\" alt=\"$country_name\" title=\"$country_name\">";
+
+    $_country_aux = $geoloc->get_country_by_host($conn, $sensor_ip);
+    $country      = strtolower($_country_aux[0]);
+    $country_name = $_country_aux[1];
+
+    $homelan = "";
+    if ($country) {
+        $country_img = " <img src=\"/ossim/pixmaps/flags/" . $country . ".png\" alt=\"$country_name\" title=\"$country_name\">";
         $slnk = $current_url."/pixmaps/flags/".$country.".png";
-	} else {
-		$country_img = "";
-		$slnk = "";
-	}
+    } else {
+        $country_img = "";
+        $slnk = "";
+    }
     /* Print out */
     qroPrintEntryHeader($i);
     $tmp_rowid = $device_id;
@@ -201,22 +201,22 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     qroPrintEntry($sname.$country_img.$homelan, 'center', 'middle');
     qroPrintEntry($device_ip, 'center', 'middle');
     qroPrintEntry('<A HREF="base_qry_main.php?new=1&amp;sensor=' . $device_id . '&amp;num_result_rows=-1&amp;submit=' . gettext("Query DB") . '">' . Util::number_format_locale($event_cnt,0) . '</A>', 'center', 'middle');
-    
+
     qroPrintEntry( '<div id="ua'.$device_id.'" class="sens">'.$unique_event_cnt.'</div>', 'center', 'middle', 'nowrap');
-    qroPrintEntry( '<div id="sa'.$device_id.'">'.$num_src_ip.'</div>', 'center', 'middle', 'nowrap');    
-    qroPrintEntry( '<div id="da'.$device_id.'">'.$num_dst_ip.'</div>', 'center', 'middle', 'nowrap');    
-    
+    qroPrintEntry( '<div id="sa'.$device_id.'">'.$num_src_ip.'</div>', 'center', 'middle', 'nowrap');
+    qroPrintEntry( '<div id="da'.$device_id.'">'.$num_dst_ip.'</div>', 'center', 'middle', 'nowrap');
+
     /*qroPrintEntry(BuildUniqueAlertLink("?sensor=" . $device_id) . $unique_event_cnt . '</A>');
     qroPrintEntry(BuildUniqueAddressLink(1, "&amp;sensor=" . $device_id) . $num_src_ip . '</A>');
     qroPrintEntry(BuildUniqueAddressLink(2, "&amp;sensor=" . $device_id) . $num_dst_ip . '</A>');*/
     qroPrintEntryFooter();
     $i++;
-    
+
     // report_data
     $report_data[] = array (
         $sname, $slnk,
         $num_src_ip, $num_dst_ip, "", "",
-        $sensor_ip, $device_ip, "", "", "", 0, 
+        $sensor_ip, $device_ip, "", "", "", 0,
         $event_cnt, $unique_event_cnt
     );
 }
@@ -238,7 +238,7 @@ if (!$export)
 {
 ?>
 <script>
-	var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
+    var tmpimg = '<img alt="" src="data:image/gif;base64,R0lGODlhEAALAPQAAOPj4wAAAMLCwrm5udHR0QUFBQAAACkpKXR0dFVVVaamph4eHkJCQnt7e1lZWampqSEhIQMDA0VFRc3NzcHBwdra2jIyMsTExNjY2KKioo6OjrS0tNTU1AAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQJCwAAACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQJCwAAACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQJCwAAACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAkLAAAALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkECQsAAAAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAkLAAAALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkECQsAAAAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA" />';
     var sens=new Array();
     var pi = 0;
     function load_content() {
@@ -249,20 +249,20 @@ if (!$export)
         $.ajax({
             beforeSend: function() {
                 $('#ua'+pid).html(tmpimg);
-				$('#sa'+pid).html(tmpimg);
-				$('#da'+pid).html(tmpimg);  
+                $('#sa'+pid).html(tmpimg);
+                $('#da'+pid).html(tmpimg);
             },
-    		type: "GET",
-    		url: "base_stat_sensor_data.php"+params,
-    		success: function(msg) {
-    			var res = msg.split(/##/);
-    			$('#ua'+pid).html(res[0]);
-    			$('#sa'+pid).html(res[1]);
-    			$('#da'+pid).html(res[2]);
-    			setTimeout('load_content()',10);
-    		}
-    	});
-    } 
+            type: "GET",
+            url: "base_stat_sensor_data.php"+params,
+            success: function(msg) {
+                var res = msg.split(/##/);
+                $('#ua'+pid).html(res[0]);
+                $('#sa'+pid).html(res[1]);
+                $('#da'+pid).html(res[2]);
+                setTimeout('load_content()',10);
+            }
+        });
+    }
     $(document).ready(function() {
         $('.sens').each(function(index, item) {
             sens.push(item.id);
@@ -274,4 +274,3 @@ if (!$export)
 }
 
 echo "</body>\r\n</html>";
-?>

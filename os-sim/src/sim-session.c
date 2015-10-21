@@ -109,9 +109,9 @@ struct _SimSessionPrivate {
 	gboolean		fully_stablished; //If this server hasn't got local DB, the container needs to know when can
 																//ask for data to master servers. The connection will be fully_stablished when the children server (this
 																//server) had been sent a message to master server, and the master server answers with an OK.
-	GCond				*initial_cond;		//condition & mutex to control fully_stablished var.
-	GMutex			*initial_mutex;		
-	GMutex			*socket_mutex;		
+	GCond				initial_cond;		//condition & mutex to control fully_stablished var.
+	GMutex			initial_mutex;		
+	GMutex			socket_mutex;		
 
 	gint				id;			//this id is not used always. It's used to know what is the identification of the master server or
 											//frameworkd that sent a msg to this server, asking for data in a children server. I.e. server1->server2->server3. 
@@ -200,9 +200,9 @@ sim_session_finalize (GObject  *gobject)
   if (session->_priv->server)
     g_object_unref (session->_priv->server);
 
-	g_cond_free (session->_priv->initial_cond);
-	g_mutex_free (session->_priv->initial_mutex);
-	g_mutex_free (session->_priv->socket_mutex);
+	g_cond_clear (&session->_priv->initial_cond);
+	g_mutex_clear (&session->_priv->initial_mutex);
+	g_mutex_clear (&session->_priv->socket_mutex);
 
   if (session->_priv->bson_parser)
 		g_object_unref (session->_priv->bson_parser);
@@ -262,11 +262,11 @@ sim_session_instance_init (SimSession *session)
 
 	//mutex initial session init. In fact we only need the condition.
 	session->_priv->fully_stablished = FALSE;
-	session->_priv->initial_cond = g_cond_new();
-	session->_priv->initial_mutex = g_mutex_new();
+	g_cond_init(&session->_priv->initial_cond);
+	g_mutex_init(&session->_priv->initial_mutex);
 
 	//To prevent more than 1 thread writting to the socket
-	session->_priv->socket_mutex = g_mutex_new();
+	g_mutex_init(&session->_priv->socket_mutex);
 
 	session->_priv->id = 0;
 	// Init de scannner to NULL
@@ -3911,7 +3911,7 @@ sim_session_write_from_buffer (SimSession *session,
   g_return_val_if_fail (SIM_IS_SESSION (session), 0);
 
   //To prevent monitor threads writting at the same time as sessions
-  g_mutex_lock (session->_priv->socket_mutex);
+  g_mutex_lock (&session->_priv->socket_mutex);
 
   ok = sim_session_write_final (session, buffer, strlen(buffer), &n);
 
@@ -3921,7 +3921,7 @@ sim_session_write_from_buffer (SimSession *session,
     g_message ("%s: send buffer unsuccesful: %s", __func__, buffer);
   }
 
-  g_mutex_unlock (session->_priv->socket_mutex);
+  g_mutex_unlock (&session->_priv->socket_mutex);
 
   return n;
 }
@@ -4192,12 +4192,12 @@ sim_session_wait_fully_stablished (SimSession *session)
   g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
 
-	g_mutex_lock (session->_priv->initial_mutex);
+	g_mutex_lock (&session->_priv->initial_mutex);
 
 	while (!session->_priv->fully_stablished)	//this is set in sim_session_read().
-		g_cond_wait (session->_priv->initial_cond, session->_priv->initial_mutex);
+		g_cond_wait (&session->_priv->initial_cond, &session->_priv->initial_mutex);
 
-	g_mutex_unlock (session->_priv->initial_mutex);
+	g_mutex_unlock (&session->_priv->initial_mutex);
 
 }
 
@@ -4212,10 +4212,10 @@ sim_session_set_fully_stablished (SimSession *session)
   g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
 
-	g_mutex_lock (session->_priv->initial_mutex);
+	g_mutex_lock (&session->_priv->initial_mutex);
 	session->_priv->fully_stablished = TRUE;	
-	g_cond_signal(session->_priv->initial_cond);
-	g_mutex_unlock (session->_priv->initial_mutex);
+	g_cond_signal(&session->_priv->initial_cond);
+	g_mutex_unlock (&session->_priv->initial_mutex);
 
 }
 

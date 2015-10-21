@@ -354,7 +354,7 @@ if (!$noready)
                         var ip   = aux[0];
                         var name = (aux[1] != '') ? aux[1] : ip;
 
-                        var url = "/secured_nagios3/cgi-bin/status.cgi?host="+name;
+                        var url = "/nagios3/cgi-bin/status.cgi?host="+name;
                         var wnd = top.window.open(url,'nagios_'+name,'scrollbars=yes,location=no,toolbar=no,status=no,directories=no');
                     }
                     else if (action=='whois')

@@ -549,23 +549,18 @@ class Incident
         list($bgcolor, $fgcolor, $risk) = self::get_risk_info($risk);
 
         if ($link != '')
-            $html = '
-                <table align="center" style="background-color:#' . $bgcolor . '" class="transparent" width="20">
-                <tr>
-                  <td style="border-width: 0px;background-color:#' . $bgcolor . '" width="20">
-                    <b>&nbsp;<a href="'.$link.'" style="color:#' . $fgcolor . '" target="main">' . $risk . '</a>&nbsp;</b>
-                  </td>
-                </tr>
-              </table>';
+        {
+            $html = '<div style="background-color:#' . $bgcolor . ';width:60px;color:#' . $fgcolor . ';text-align:center;">
+                        <strong>&nbsp;<a href="'.$link.'" style="color:#' . $fgcolor . '" target="main">' . $risk . '</a>&nbsp;</strong>
+                     </div>';
+              
+        }
         else
-            $html = '
-                <table align="center" style="background-color:#' . $bgcolor . '" class="transparent" width="20">
-                <tr>
-                  <td style="border-width: 0px;background-color:#' . $bgcolor . ';color:#'.$fgcolor.'" width="20">
-                    <b>&nbsp;' . $risk . '&nbsp;</b>
-                  </td>
-                </tr>
-              </table>';
+        {
+            $html = '<div style="background-color:#' . $bgcolor . ';width:60px;color:#' . $fgcolor . ';text-align:center;">
+                        <strong>&nbsp;' . $risk . '&nbsp;</strong>
+                     </div>';
+        }
 
         return $html;
     }

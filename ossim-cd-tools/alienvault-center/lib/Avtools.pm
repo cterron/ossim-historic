@@ -32,6 +32,8 @@ package Avtools;
 use v5.10;
 use strict;
 use warnings;
+no warnings 'experimental::smartmatch';
+no warnings 'experimental::lexical_topic';
 #use diagnostics;
 
 use Config::Tiny;
