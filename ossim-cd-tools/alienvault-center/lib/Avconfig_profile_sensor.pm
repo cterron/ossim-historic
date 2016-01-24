@@ -47,6 +47,9 @@ my %config_agent_orig;
 my $script_msg
     = "# Automatically generated for ossim-reconfig scripts. DO NOT TOUCH!";
 my $agentcfg            = "/etc/ossim/agent/config.cfg";
+my $agentcfg_last       = "/etc/ossim/agent/config.cfg_last";
+my $asset_plugins       = "/etc/ossim/agent/config.yml";
+my $asset_plugins_last  = "/etc/ossim/agent/config.yml_last";
 my $plugins_cfg_basedir = '/etc/ossim/agent/plugins';
 my $fprobeconfig        = "/etc/default/fprobe";
 my $monit_file          = "/etc/monit/alienvault/avsensor.monitrc";
@@ -121,6 +124,7 @@ sub config_profile_sensor() {
     );
     console_log("Config Sensor Profile");
     dp("Config Sensor Profile");
+
 
     console_log("Update OSSEC plugin reference");
     dp("Update OSSEC plugin reference");
@@ -564,20 +568,56 @@ EOF
 
     }
 
-    # Remember reset
+    # Check if ossim-agent conf.cfg or conf.yml were modified;
+    my $agent_conf_changed = check_conf_diff_and_update_copy($agentcfg, $agentcfg_last);
+    my $agent_yml_changed = check_conf_diff_and_update_copy($asset_plugins, $asset_plugins_last);
+    my $restart_ossim_agent = $agent_conf_changed || $agent_yml_changed;
 
+    # Remember to reset
     $reset{'sensors'}     = 1;
     $reset{'iptables'}    = 1;
-    $reset{'ossim-agent'} = 1;
     $reset{'monit'}       = 1;
+    $reset{'fprobe'}      = 1;
+    $reset{'ossim-agent'} = $restart_ossim_agent;
 
-    #$reset{'nfsen'} = 1;
-    $reset{'fprobe'}  = 1;
+#    $reset{'nfsen'} = 1;
 #    $reset{'openvas'} = 1;
 
     return %reset;
-
 }
+
+
+sub check_conf_diff_and_update_copy {
+    my $current_conf = @_[0];
+    my $prev_conf = @_[1];
+    my $config_differs = 0;
+
+    # Check if previous config exists.
+    unless(-e $prev_conf) {
+        debug_log("$prev_conf not found. Setting ossim-agent to restart because unable to detect changes.");
+        $config_differs = 1;
+
+    } else {
+        # Check if config was modified and set a flag to restart ossim-agent.
+        my $conf_diff = `diff $current_conf $prev_conf`;
+        if ($conf_diff ne "") {
+            debug_log("There is a difference between $current_conf and $prev_conf:");
+            debug_log($conf_diff);
+            debug_log("Need to restart ossim-agent!");
+            $config_differs = 1;
+        }
+    }
+
+    # Create a copy of existing version of config for further usage (checking the diff between two copies).
+    debug_log("Creating a copy of existing $current_conf to $prev_conf...");
+    my $agentcnf_from_to = "$current_conf $prev_conf";
+    $command = "cp $agentcnf_from_to; chmod --reference=$agentcnf_from_to; chown --reference=$agentcnf_from_to";
+    debug_log($command);
+    system($command);
+
+    return $config_differs;
+}
+
 
 sub update_plugin_interfaces {
     my $plugin = shift;

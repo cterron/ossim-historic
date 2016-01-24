@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2015, Emerging Threats
+#  Copyright (c) 2003-2016, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -103,15 +103,11 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspic
 
 #by evilghost
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User Agent (Microsoft Internet Explorer)"; flow: to_server,established; content:"User-Agent|3a| Microsoft Internet Explorer"; fast_pattern:11,25; http_header; content:!"bbc.co.uk|0d 0a|"; nocase; http_header; content:!"vmware.com|0d 0a|"; nocase; http_header; content:!"rc.itsupport247.net|0d 0a|"; nocase; http_header; content:!"msn.com|0d 0a|"; nocase; http_header; content:!"msn.es|0d 0a|"; nocase; http_header; content:!"live.com|0d 0a|"; nocase; http_header; content:!"gocyberlink.com|0d 0a|"; nocase; http_header; content:!"ultraedit.com|0d 0a|"; nocase; http_header; threshold:type limit, track by_src, count 2, seconds 360; reference:url,doc.emergingthreats.net/bin/view/Main/2002400; classtype:trojan-activity; sid:2002400; rev:31;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User Agent (Microsoft Internet Explorer)"; flow: to_server,established; content:"User-Agent|3a| Microsoft Internet Explorer"; fast_pattern:11,25; http_header; content:!"bbc.co.uk|0d 0a|"; nocase; http_header; content:!"vmware.com|0d 0a|"; nocase; http_header; content:!"rc.itsupport247.net|0d 0a|"; nocase; http_header; content:!"msn.com|0d 0a|"; nocase; http_header; content:!"msn.es|0d 0a|"; nocase; http_header; content:!"live.com|0d 0a|"; nocase; http_header; content:!"gocyberlink.com|0d 0a|"; nocase; http_header; content:!"ultraedit.com|0d 0a|"; nocase; http_header; content:!"windowsupdate.com"; http_header; content:!"cyberlink.com"; http_header; content:!"lenovo.com"; http_header; threshold:type limit, track by_src, count 2, seconds 360; reference:url,doc.emergingthreats.net/bin/view/Main/2002400; classtype:trojan-activity; sid:2002400; rev:32;)
 
 #by evilghost
 #
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS User Agent Containing http Suspicious - Likely Spyware/Trojan"; flow:to_server,established; content:"User-Agent|3a|"; nocase; http_header; content:!"rss"; nocase; http_header; pcre:"/User-Agent\:[^\n]+http\:\/\//iH"; reference:url,doc.emergingthreats.net/bin/view/Main/2003394; classtype:trojan-activity; sid:2003394; rev:9;)
-
-#by evilghost
-#
-#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious Mozilla User-Agent Likely Fake (Mozilla/5.0)"; flow:to_server,established; content:"User-Agent|3a| Mozilla/5.0|0d 0a|"; fast_pattern:5,20; nocase; http_header; content:!"|0d 0a|Host|3a| download.releasenotes.nokia.com"; http_header; content:!"Mozilla/5.0|0d 0a|Connection|3a| Close|0d 0a 0d 0a|"; http_header; reference:url,doc.emergingthreats.net/2009295; classtype:trojan-activity; sid:2009295; rev:12;)
 
 #Pluses in a UA, suspicious as well
 #

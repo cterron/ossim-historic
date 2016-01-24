@@ -1,0 +1,262 @@
+# Emerging Threats Pro
+#   http://www.emergingthreatspro.com
+#
+# This distribution may contain rules under three different licenses. 
+#
+#  Rules with sids 1 through 3464, and 100000000 through 100000908 are under the GPLv2.
+#  A copy of that license is available at http://www.gnu.org/licenses/gpl-2.0.html
+#
+#  Rules with sids 2000000 through 2799999 are from Emerging Threats and are covered under the BSD License 
+#  as follows:
+#
+#*************************************************************
+#  Copyright (c) 2003-2015, Emerging Threats
+#  All rights reserved.
+#  
+#  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
+#  following conditions are met:
+#  
+#  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following 
+#    disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
+#    following disclaimer in the documentation and/or other materials provided with the distribution.
+#  * Neither the name of the nor the names of its contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+#  
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+#  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+#  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+#  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+#
+#*************************************************************
+#
+#
+#  Rules with sids 2800000 through 2900000 are provided by Emerging Threats Pro and are covered by the license
+#  provided in this distribution titled ETPRO-License.txt
+#
+#
+
+# This Ruleset is EmergingThreats Pro optimized for suricata-1.3.
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL CONTROL MICROSYSTEMS (Event 31) Reboot or Restart"; dnp3_cmd_fc:13; classtype:misc-activity; sid:2801004; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL CONTROL MICROSYSTEMS (Event 31) Reboot or Restart"; dnp3_cmd_fc:14; classtype:misc-activity; sid:2801005; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 502 (msg:"ETPRO SCADA_SPECIAL CONTROL MICROSYSTEMS (Event 24) View Device Status"; modbus_func:1; classtype:misc-activity; sid:2801018; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 502 (msg:"ETPRO SCADA_SPECIAL CONTROL MICROSYSTEMS (Event 47) Device Poll All"; modbus_func:1; modbus_unit:0; classtype:misc-activity; sid:2801019; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 502 (msg:"ETPRO SCADA_SPECIAL DIRECTLOGIC (Event 49) Request Controller ID"; flow:established; modbus_func:17; classtype:misc-activity; sid:2801055; rev:1;)
+
+#
+#alert tcp any 20000 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 16) Failed Checksum Error"; flow:established; dnp3_checksum:incorrect; classtype:misc-activity; sid:2801093; rev:1;)
+
+#
+#alert tcp any 20000 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 20) Function Not Available Error"; flow:established; dnp3_resp_ii:unknown_func; classtype:misc-activity; sid:2801094; rev:1;)
+
+#
+#alert tcp any 20000 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 21) Point Not Available"; flow:established,to_client; dnp3_resp_ii:unknown_object; classtype:misc-activity; sid:2801095; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 31) Reboot or Restart"; dnp3_cmd_fc:13; classtype:misc-activity; sid:2801096; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 31) Reboot or Restart"; dnp3_cmd_fc:14; classtype:misc-activity; sid:2801097; rev:1;)
+
+#
+#alert tcp any 20000 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 33)Change Date Attempt"; dnp3_cmd_fc:2; dnp3_cmd_ot:50; dnp3_resp_ot:32; classtype:misc-activity; sid:2801098; rev:1;)
+
+#
+#alert tcp any 20000 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 33)Change Time Attempt"; dnp3_cmd_fc:2; dnp3_cmd_ot:50; dnp3_resp_ot:32; classtype:misc-activity; sid:2801099; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 29)Software Upload"; flow:established; cip_service:79; cip_response:06; classtype:misc-activity; sid:2801103; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 502 (msg:"ETPRO SCADA_SPECIAL PROSOFT (Event 49) Request Controller ID"; flow:established; modbus_func:17; classtype:misc-activity; sid:2801104; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 31)Reboot or Restart"; flow:established; cip_service:5; classtype:misc-activity; sid:2801107; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 31)Reboot or Restart"; flow:established; cip_service:6; classtype:misc-activity; sid:2801108; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 11)Unlock PLC Attempt"; flow:established; cip_service:76; classtype:misc-activity; sid:2801109; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 10)Lock PLC Attempt"; flow:established; cip_service:77; classtype:misc-activity; sid:2801110; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 10)Lock PLC Attempt"; flow:established; cip_service:78; classtype:misc-activity; sid:2801111; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 33)Change Date Attempt"; dsize:56; flow:established; cip_service:4; cip_response:00; content:"|010006|"; offset:50; depth:3; classtype:misc-activity; sid:2801112; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 32)Change Time Attempt"; dsize:56; flow:established; cip_service:4; cip_response:00; content:"|010006|"; offset:50; depth:3; classtype:misc-activity; sid:2801113; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL 2 Kick Timers detected"; flow:established; cip_service:75; flowbits:set,ktime; classtype:misc-activity; sid:2801114; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL Start detected"; flowbits:isset,ktime; flow:established; cip_service:6; flowbits:set,detstart; classtype:misc-activity; sid:2801115; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 12)Remote Mode Change Attempt"; flowbits:isset,detstart; flow:established; cip_service:76; classtype:misc-activity; sid:2801116; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL 2 Kick Timers Detected"; flow:established; cip_service:75; flowbits:set,ktime; classtype:misc-activity; sid:2801117; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL Stop Detected"; flowbits:isset,ktime; flow:established; cip_service:7; flowbits:set,detstop; classtype:misc-activity; sid:2801118; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 12)Remote Mode Change Attempt"; flowbits:isset,detstop; flow:established; cip_service:76; classtype:misc-activity; sid:2801119; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL 3 Kick Timers Detected"; flow:established; cip_service:75; flowbits:set,3ktime; classtype:misc-activity; sid:2801120; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 12)Remote Mode Change Attempt"; flowbits:isset,3ktime; flow:established; cip_service:76; classtype:misc-activity; sid:2801121; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 24) View Device Status"; dnp3_cmd_fc:1; classtype:misc-activity; sid:2801122; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 502 (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 24) View Device Status"; flow:established; modbus_func:1; classtype:misc-activity; sid:2801123; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 502 (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 24) View Device Status"; flow:established; modbus_func:2; classtype:misc-activity; sid:2801124; rev:1;)
+
+#
+#alert tcp any 44818 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL ROCKWELL (Event 29)Software Upload"; flow:established; cip_service:79; classtype:misc-activity; sid:2801125; rev:1;)
+
+#
+#alert tcp any 20000 -> $HOME_NET any (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 20) Function Not Available Error"; flow:established; dnp3_resp_ii:unknown_func; classtype:misc-activity; sid:2801164; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 31) Reboot or Restart"; dnp3_cmd_fc:13; classtype:misc-activity; sid:2801165; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 31) Reboot or Restart"; dnp3_cmd_fc:14; classtype:misc-activity; sid:2801166; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 31) Reboot or Restart"; dnp3_cmd_fc:13; classtype:misc-activity; sid:2801167; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 31) Reboot or Restart"; dnp3_cmd_fc:14; classtype:misc-activity; sid:2801168; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 33)Date Change Attempt"; dnp3_cmd_fc:2; dnp3_cmd_ot:50; classtype:misc-activity; sid:2801169; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 32)Time Change Attempt"; dnp3_cmd_fc:2; dnp3_cmd_ot:50; classtype:misc-activity; sid:2801170; rev:1;)
+
+#
+#alert tcp any any -> $HOME_NET 20000 (msg:"ETPRO SCADA_SPECIAL SCHWEITZER (Event 24) View Device Status"; dnp3_cmd_fc:1; classtype:misc-activity; sid:2801171; rev:1;)
+
+#
+#alert tcp any any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Disable Unsolicited Responses"; dnp3_cmd_fc:21; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:attempted-dos; sid:2801694; rev:1;)
+
+#
+#alert tcp any any <> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Non-DNP3 Communication on a DNP3 Port"; flow:established; pcre:"/(?!\x05\x64)/iAR"; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:non-standard-protocol; sid:2801695; rev:1;)
+
+#
+alert tcp $DNP3_SERVER $DNP3_PORTS -> $DNP3_CLIENT any (msg:"ETPRO SCADA_SPECIAL DNP3 Unsolicited Response Storm"; flow:established; content:"|82|"; offset:12; depth:1; threshold: type threshold, track by_src, count 5, seconds 10; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:attempted-dos; sid:2801696; rev:1;)
+
+#
+#alert tcp $DNP3_CLIENT any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Cold Restart From Authorized Client"; dnp3_cmd_fc:13; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:attempted-dos; sid:2801697; rev:1;)
+
+#
+#alert tcp !$DNP3_CLIENT any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Cold Restart From Unauthorized Client"; dnp3_cmd_fc:13; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:denial-of-service; sid:2801698; rev:3;)
+
+#
+#alert tcp !$DNP3_CLIENT any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Unauthorized Read Request to a PLC"; dnp3_cmd_fc:1; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:bad-unknown; sid:2801699; rev:1;)
+
+#
+#alert tcp !$DNP3_CLIENT any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Unauthorized Write Request to a PLC"; flow:from_client,established; content:"|05 64|"; depth:2; pcre:"/[\S\s]{10}(\x02|\x04|\x05|\x06|\x09|\x0A|\x0F|\x12)/iAR"; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:bad-unknown; sid:2801700; rev:1;)
+
+#
+#alert tcp !$DNP3_CLIENT any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Unauthorized Miscellaneous Request to a PLC"; flow:from_client,established; content:"|05 64|"; depth:2; pcre:"/[\S\s]{10}(\x03|\x07|\x08|\x0B|\x0C|\x10|\x11|\x13|\x14|\x15|\x16|\x17|\x18|\x19|\x1A|\x1B|\x1C|\x1D|\x1E)/iAR"; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:bad-unknown; sid:2801701; rev:1;)
+
+#
+#alert tcp any any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Stop Application"; dnp3_cmd_fc:18; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:denial-of-service; sid:2801702; rev:1;)
+
+#
+#alert tcp any any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Warm Restart"; dnp3_cmd_fc:14; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:attempted-dos; sid:2801703; rev:1;)
+
+#
+#alert tcp $DNP3_CLIENT any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Broadcast Request from Authorized Client"; flow:from_client,established; content:"|FF FF|"; offset:4; depth:2; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:misc-attack; sid:2801704; rev:1;)
+
+#
+#alert tcp !$DNP3_CLIENT any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Broadcast Request from Unauthorized Client"; flow:from_client,established; content:"|FF FF|"; offset:4; depth:2; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:misc-attack; sid:2801705; rev:1;)
+
+#
+#alert tcp $DNP3_SERVER $DNP3_PORTS -> any any (msg:"ETPRO SCADA_SPECIAL DNP3 Points List Scan"; flow:established; content:"|81|"; offset:12; depth:1; pcre:"/[\S\s]{1}(\x02|\x04|\x06|\x0a|\x0c|\x0e)/iAR"; threshold: type threshold, track by_src, count 5, seconds 30; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:attempted-recon; sid:2801706; rev:1;)
+
+#
+#alert tcp $DNP3_SERVER $DNP3_PORTS -> any any (msg:"ETPRO SCADA_SPECIAL DNP3 Function Code Scan"; flow:established; content:"|81|"; offset:12; depth:1; pcre:"/[\S\s]{1}(\x01)/iAR"; threshold: type threshold, track by_src, count 3, seconds 60; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:attempted-recon; sid:2801707; rev:1;)
+
+#
+#alert tcp any any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Time Change Attempt"; dnp3_cmd_fc:2; dnp3_cmd_ot:50; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:misc-activity; sid:2801708; rev:1;)
+
+#
+#alert tcp any any -> $DNP3_SERVER $DNP3_PORTS (msg:"ETPRO SCADA_SPECIAL DNP3 Failed Checksum Error"; flags: PA; dnp3_checksum:incorrect; reference:url,digitalbond.com/tools/quickdraw/dnp3-rules; classtype:bad-unknown; sid:2801709; rev:1;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Reboot or Restart from Unauthorized Client"; flags:PA; cip_service:5; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:attempted-dos; sid:2801751; rev:5;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Reboot or Restart from Unauthorized Client"; flags:PA; cip_service:6; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:attempted-dos; sid:2801752; rev:3;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Reboot or Restart from Authorized Client"; flags:PA; cip_service:5; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:denial-of-service; sid:2801753; rev:1;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Reboot or Restart from Authorized Client"; flags:PA; cip_service:6; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:denial-of-service; sid:2801754; rev:1;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Unlock PLC Attempt from Unauthorized Client"; flags:PA; cip_service:76; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801755; rev:1;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Unlock PLC Attempt from Authorized Client"; flags:PA; cip_service:76; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801756; rev:1;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Lock PLC Attempt from Unauthorized Client"; flags:PA; cip_service:77; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801757; rev:2;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Lock PLC Attempt from Unauthorized Client"; flags:PA; cip_service:78; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801758; rev:1;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Lock PLC Attempt from Authorized Client"; flags:PA; cip_service:77; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801759; rev:1;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Lock PLC Attempt from Authorized Client"; flags:PA; cip_service:78; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801780; rev:1;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Stop Detected from Unauthorized Client"; flowbits:isset,ktime; flags:PA; cip_service:7; flowbits:set,detstop; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:denial-of-service; sid:2801781; rev:1;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Stop Detected from Authorized Client"; flowbits:isset,ktime; flags:PA; cip_service:7; flowbits:set,detstop; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:denial-of-service; sid:2801782; rev:1;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Remote Mode Change Attempt from Unauthorized Client"; flowbits:isset,detstop; flags:PA; cip_service:76; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801783; rev:1;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Remote Mode Change Attempt from Authorized Client"; flowbits:isset,detstop; flags:PA; cip_service:76; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801784; rev:1;)
+
+#
+#alert tcp !$ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Software Upload from Unauthorized Client"; flags:PA; cip_service:79; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801785; rev:1;)
+
+#
+#alert tcp $ENIP_CLIENT 44818 -> $ENIP_SERVER any (msg:"ETPRO SCADA_SPECIAL ENIP/CIP Software Upload from Authorized Client"; flags:PA; cip_service:79; reference:url,digitalbond.com/tools/quickdraw/ethernetip-rules; classtype:misc-attack; sid:2801786; rev:1;)
+

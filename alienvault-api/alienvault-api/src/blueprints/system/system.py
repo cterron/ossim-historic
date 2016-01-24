@@ -43,6 +43,7 @@ from apimethods.system.system import apimethod_get_remote_software_update
 from apimethods.system.system import asynchronous_update
 from apimethods.system.system import check_update_and_reconfig_status
 from apimethods.system.system import set_system_certificate
+from apimethods.system.system import check_if_process_is_running
 from apimethods.utils import is_valid_ipv4
 from apimethods.utils import is_json_boolean, is_json_true
 from apimethods.system.system import get_jobs_running
@@ -431,3 +432,27 @@ def set_certificate(system_id):
         return make_error(str(job_id), 500)
 
     return make_ok(job_id=job_id)
+
+
+@blueprint.route('/<system_id>/status/ready_for_update', methods=['GET'])
+@document_using('static/apidocs/system.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
+def is_system_ready_for_update(system_id):
+    """ Find out if a system is ready for update.
+        Determine whether openvas is still rebuilding (ENG-100405).
+
+    The blueprint handle the following url:
+    GET /av/api/1.0/system/<system_id>/status/ready_for_update
+
+    Args:
+        system_id (str): String with system id (uuid) or local
+
+    """
+    is_ready = True
+    ps_filters = ['openvasmd --update', 'openvasmd --rebuild', 'openvasmd: Updating', 'openvasmd: Reloading']
+    for ps_filter in ps_filters:
+        if check_if_process_is_running(system_id, ps_filter)[1]:
+            is_ready = False
+            break
+    return make_ok(is_ready=is_ready)

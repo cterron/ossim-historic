@@ -47,7 +47,6 @@ catch(Exception $e)
     ;
 }
 
-
 if ($_SERVER['SCRIPT_NAME'] != '/ossim/av_center/data/sections/common/real_time.php')
 {
     exit();
@@ -61,7 +60,6 @@ ossim_valid($id_section,  OSS_ALPHA, OSS_SCORE, OSS_BRACKET, 'illegal:' . _('Sec
 
 
 $data = array();
-
 if (!ossim_error())
 {
     if ($id_section == 'home')
@@ -88,7 +86,6 @@ if (!ossim_error())
     elseif ($id_section == 'sw_pkg_installing')
     {
         $us = Av_center::get_update_status($system_id);
-
         if ($us['status'] == 'fail')
         {
             $us['status'] = 'error';
@@ -121,6 +118,11 @@ if (!ossim_error())
 
         $data['status'] = $us['status'];
         $data['data']   = $us['msg'];
+    }
+    elseif ($id_section == 'sw_pkg_busy')
+    {
+        $us =  Av_center::check_update_running($system_id);
+	$data = json_decode($us);
     }
 
     echo json_encode($data);

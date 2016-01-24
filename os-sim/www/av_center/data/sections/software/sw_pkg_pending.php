@@ -177,18 +177,18 @@ catch (\Exception $e)
                 <?php 
                 $cond1 = is_array($packages_info) && !empty($packages_info); //Package list condition
                 $cond2 = $res_si['packages']['pending_updates'] == TRUE; //Pending updates condition
-                
+               
                 if ($cond1 && $cond2)
                 {
                     if ($res_si['packages']['pending_feed_updates'] == TRUE)
                     {
                     ?>
-                        <input type='button' id='install_rules' name='install_rules' class='av_b_secondary' value='<?php echo _('Update feed only')?>'/>
+                        <input type='button' id='install_rules' name='install_rules' class='av_b_secondary av_b_processing' value='<?php echo _('Update feed only')?>'/>
                     <?php
                     }
                     ?>
 
-                    <input type='button' id='install_updates_1' name='install_updates_1' value='<?php echo _('Upgrade')?>'/>
+                    <input type='button' id='install_updates_1' name='install_updates_1' class='av_b_processing' value='<?php echo _('Upgrade')?>'/>
                     <?php
                 }
                 ?>
@@ -198,9 +198,49 @@ catch (\Exception $e)
 </div>
 
 <script type='text/javascript'>
+    var update_status = 1;
+    var upgrade_btn = $("#install_updates_1");
+    var update_btn = $("#install_rules");
 
+//inherited callback
+    Software.check_update_running_success = function(data) {
+        if (typeof data != 'undefined' && typeof data.data != 'undefined' && typeof data.data.is_ready != 'undefined') {
+            update_status=data.data.is_ready;
+            if (update_status) {
+                upgrade_btn.removeClass("av_b_disabled");
+            } else {
+                upgrade_btn.addClass("av_b_disabled");
+            }
+        }
+    }
+    function update_monitor() {
+//avoid pending requests
+        if (update_status !== "") {
+            update_status = "";
+            Software.check_update_running();
+        }
+        setTimeout(function() {update_monitor();},1000);
+    }
+    $(document).ready(function() {
+	if (upgrade_btn) {
+		$.post("data/sections/check_disk_space.php",{"system_id" : '<?php echo $system_id; ?>'},function(data) {
+			data = $.parseJSON(data);
+                	update_btn.removeClass("av_b_processing");
+	                upgrade_btn.removeClass("av_b_processing");
+                        upgrade_btn.addClass("av_b_disabled");
+			if (data.size_avail > data.limit) {
+				//Monitor is started only if there is enoght disk space
+				update_monitor();
+			} else {
+				update_btn.addClass("av_b_disabled");
+			}
+			if (data.message) {
+				$("#cont_buttons .rbtn").append("<div class='red'>"+data.message+"</div>");
+			}
+		});
+	}
+    });
     $('#check_updates').bind('click', function() { Software.check_updates()});
-
     <?php
     if ($id_section == 'sw_pkg_checking' && $res_si['status'] !== 0)
     {
@@ -228,9 +268,9 @@ catch (\Exception $e)
     if (is_array($packages_info) && !empty($packages_info))
     {
         ?>
-        $('#install_updates_1').on('click', function() { Software.install_updates('update_system', 'install_updates_1') });
-                        
-        $('#install_rules').on('click', function() { Software.install_updates('update_system_feed', 'install_rules') });
+//when button is disabled (class) - click will not work
+        $('.rbtn').on('click', '#install_updates_1:not(.av_b_disabled,.av_b_processing)', function() {Software.install_updates('update_system', 'install_updates_1') });
+        $('.rbtn').on('click', '#install_rules:not(.av_b_disabled,.av_b_processing)', function() {$(this).addClass('av_b_processing'); Software.install_updates('update_system_feed', 'install_rules') });
 
         $('.t_info_pkg').dataTable({
             "iDisplayLength": 10,

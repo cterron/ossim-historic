@@ -59,11 +59,13 @@ from apiexceptions.hids import APIInvalidAgentID
 
 
 from celerymethods.tasks import celery_instance
+from celerymethods.utils import only_one_task
 
 logger = get_logger("celery")
 
 
 @celery_instance.task
+@only_one_task(key="deploy_agent", timeout=60)
 def ossec_win_deploy(sensor_id, asset_id, windows_ip, windows_username, windows_password, windows_domain,
                      agent_id=None):
     """ Deploy HIDS agent on a Windows System

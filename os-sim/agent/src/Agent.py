@@ -46,6 +46,7 @@ import subprocess as sub
 # LOCAL IMPORTS
 #
 from Config import Conf, Plugin, Aliases, CommandLineOptions
+from ConfigParser import Error as BaseConfigError
 from ParserLog import ParserLog
 from ParserJson import ParserJson
 from Watchdog import Watchdog
@@ -287,7 +288,7 @@ class Agent:
 
         for plugin_path_config in config_new['plugins']:
             for plugin_path, plugin_config in plugin_path_config.items():
-                #check if specified encoding
+                # check if specified encoding
                 data = plugin_path.split('|')
                 path = data[0]
                 encoding = 'latin1'
@@ -297,7 +298,7 @@ class Agent:
                     try:
                         logger.info("Using encoding: %s for plugin: %s" % (encoding, path))
                         codecs.lookup(encoding)
-                    except LookupError, e:
+                    except LookupError:
                         logger.warning("Invalid encoding:%s, using default encoding ...latin1")
                         encoding = 'latin1'
 
@@ -308,9 +309,13 @@ class Agent:
                 plugin = Plugin()
                 plugin.read([path], encoding)
 
-                for section_name, section_config in plugin_config.items():
-                    for config_name, config_value in section_config.items():
-                        plugin.set(section_name, config_name, config_value)
+                try:
+                    for section_name, section_config in plugin_config.items():
+                        for config_name, config_value in section_config.items():
+                            plugin.set(section_name, config_name, config_value)
+                except BaseConfigError as err:
+                    logger.error('Failed to update plugin configuration for "%s". Reason: %s' % (path, err))
+                    continue
 
                 name = os.path.basename(path)
                 name = re.sub('\.cfg$', '', name)
@@ -320,9 +325,7 @@ class Agent:
                 plugin.replace_aliases(self.__aliases)
                 plugin.replace_config(self.conf)
                 self.__plugins.append(plugin)
-                self.__nrules += len(plugin.sections()) \
-                                 - plugin.sections().count('translation') \
-                                 - 1  # [config]
+                self.__nrules += len(plugin.sections()) - plugin.sections().count('translation') - 1  # [config]
                 if plugin.has_option('config', 'custom_functions_file'):
                     self.__readCustomPluginFunctions(plugin, plugin.get('config', 'custom_functions_file'))
 

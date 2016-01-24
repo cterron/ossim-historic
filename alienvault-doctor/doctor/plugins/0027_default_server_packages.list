@@ -259,6 +259,7 @@ kbd
 keyboard-configuration
 klibc-utils
 kmod
+krb5-locales
 laptop-detect
 less
 libacl1:amd64

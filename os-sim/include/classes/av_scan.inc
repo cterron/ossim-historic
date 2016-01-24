@@ -765,6 +765,12 @@ class Av_scan
                         }
 
                         $host->set_ips($ips);
+
+                        $host->set_sensors($sensors);
+
+                        $host->set_asset_value($asset_value);
+
+                        $host->set_external($external);
                     }
                     else
                     {

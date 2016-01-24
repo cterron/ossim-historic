@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2015, Emerging Threats
+#  Copyright (c) 2003-2016, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -361,7 +361,7 @@ alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT phoeni
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Apple Quicktime Invalid SMIL URI Buffer Overflow Attempt"; flow:established,to_client; content:"|3C|smil"; nocase; content:"|3C|img src="; nocase; distance:0; content:!"http"; nocase; within:20; content:"|3A|//"; within:20; isdataat:700,relative; content:!"|3C 2F|smil|3E|"; nocase; within:700; content:!"|0A|"; within:700; reference:url,securitytracker.com/alerts/2010/Aug/1024336.html; reference:bugtraq,41962; reference:cve,2010-1799; classtype:attempted-user; sid:2011366; rev:2;)
 
 #
-#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_CLIENT PROPFIND Flowbit Set"; flow:established,to_server; content:"PROPFIND "; http_method; nocase; flowbits:set,ET_PROPFIND; flowbits:noalert; classtype:misc-activity; sid:2011456; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_CLIENT PROPFIND Flowbit Set"; flow:established,to_server; content:"PROPFIND"; http_method; nocase; flowbits:set,ET_PROPFIND; flowbits:noalert; classtype:misc-activity; sid:2011456; rev:4;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT DLL or EXE File From Possible WebDAV Share, Possible DLL Preloading Exploit Attempt"; flowbits:isset,ET_PROPFIND; flow:established,to_client; content:"|0d 0a 0d 0a|MZ"; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; reference:url,blog.metasploit.com/2010/08/exploiting-dll-hijacking-flaws.html; reference:url,www.us-cert.gov/cas/techalerts/TA10-238A.html; reference:url,www.microsoft.com/technet/security/advisory/2269637.mspx; reference:url,blogs.technet.com/b/srd/archive/2010/08/23/more-information-about-dll-preloading-remote-attack-vector.aspx; reference:url,blog.metasploit.com/2010/08/better-faster-stronger.html; reference:url,blog.rapid7.com/?p=5325; classtype:attempted-user; sid:2011457; rev:6;)
@@ -802,16 +802,16 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Generic HeapSp
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Possible CVE-2014-1761 HTTP"; flow:from_server,established; file_data; content:"{|5c|rt{"; content:"|5c|objocx|5c|"; distance:0; content:"MSComctlLib."; content:"|5c|u-554"; fast_pattern; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; content:"|5c|u-554"; distance:0; reference:url,blogs.technet.com/b/srd/archive/2014/03/24/security-advisory-2953095-recommendation-to-stay-protected-and-for-detections.aspx; classtype:attempted-user; sid:2018313; rev:5;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICOUS Possible automated connectivity check (www.google.com)"; flow:established,to_server; dsize:35<>41; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|"; distance:1; content:"google.com|0d 0a 0d 0a|"; distance:0; within:18; fast_pattern; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018430; rev:2;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICIOUS Possible automated connectivity check (www.google.com)"; flow:established,to_server; dsize:35<>41; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|"; distance:1; content:"google.com|0d 0a 0d 0a|"; distance:0; within:18; fast_pattern; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018430; rev:2;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICOUS Possible automated connectivity check (www.msn.com)"; flow:established,to_server; dsize:37; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.msn.com|0d 0a 0d 0a|"; distance:1; within:23; fast_pattern:3,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018431; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICIOUS Possible automated connectivity check (www.msn.com)"; flow:established,to_server; dsize:37; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.msn.com|0d 0a 0d 0a|"; distance:1; within:23; fast_pattern:3,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018431; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICOUS Possible automated connectivity check (www.bing.com)"; flow:established,to_server; dsize:38; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.bing.com|0d 0a 0d 0a|"; distance:1; within:24; fast_pattern:4,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018432; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICIOUS Possible automated connectivity check (www.bing.com)"; flow:established,to_server; dsize:38; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.bing.com|0d 0a 0d 0a|"; distance:1; within:24; fast_pattern:4,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018432; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICOUS Possible automated connectivity check (www.yahoo.com)"; flow:established,to_server; dsize:39; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.yahoo.com|0d 0a 0d 0a|"; distance:1; within:25; fast_pattern:5,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018433; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"ET WEB_CLIENT SUSPICIOUS Possible automated connectivity check (www.yahoo.com)"; flow:established,to_server; dsize:39; content:"GET / HTTP/1."; content:"|0d 0a|Host|3a 20|www.yahoo.com|0d 0a 0d 0a|"; distance:1; within:25; fast_pattern:5,20; threshold: type limit, count 1, seconds 300, track by_src; classtype:bad-unknown; sid:2018433; rev:1;)
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WEB_CLIENT Microsoft Application Crash Report Indicates Potential VGX Memory Corruption"; flow:established,to_server; content:"/Generic/BEX/iexplore_exe/"; http_uri; content:"/vgx_dll_unloaded/"; http_uri; fast_pattern; content:"Host|3A| watson.microsoft.com"; http_header; reference:url,community.websense.com/blogs/securitylabs/archive/2014/04/28/cve-2014-1776-using-crash-reports-to-find-possible-exploited-vulnerabilities.aspx; reference:url,www.websense.com/assets/reports/websense-crash-report-en.pdf; reference:cve,2014-1776; classtype:attempted-user; sid:2018434; rev:2;)
@@ -905,4 +905,16 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Possible CVE-2
 
 #
 alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Internet Explorer Memory Corruption Vulnerability (CVE-2015-2444)"; flow:from_server,established; file_data; content:"<style"; nocase; pcre:"/^[^>]*?>\s*?form\s*?\{\s*?-ms-behavior\s*?\x3a\s*?url/Rsi"; content:"x-ua-compatible"; nocase; pcre:"/^[\x22\x27]\s*content\s*=\s*[\x22\x27]\s*IE\s*=\s*10/Rsi"; content:"<button"; nocase; content:"<label"; nocase; distance:0; content:"<form"; nocase; distance:0; content:"<meter"; nocase; distance:0; content:"<optgroup"; nocase; distance:0; content:"<meter"; nocase; distance:0; content:"-ms-behavior"; nocase; fast_pattern:only; reference:cve,2015-2444; classtype:attempted-user; sid:2021709; rev:3;)
+
+#
+alert tcp any any -> $HOME_NET any (msg:"ET WEB_CLIENT Proxy - OWASP Zed Attack Proxy Certificate Seen"; content:"|16|"; depth:1; content:"OWASP Zed Attack Proxy Root CA"; nocase; classtype:misc-activity; sid:2021941; rev:1;)
+
+#
+alert tcp any any -> $HOME_NET any (msg:"ET WEB_CLIENT Proxy - BurpSuite PortSwigger Proxy Certificate Seen"; content:"|16|"; depth:1; content:"PortSwigger CA"; nocase; classtype:misc-activity; sid:2021942; rev:1;)
+
+#
+alert tcp any any -> $HOME_NET any (msg:"ET WEB_CLIENT Proxy - Fiddler Proxy Certificate Seen"; content:"|16|"; depth:1; content:"DO_NOT_TRUST_FiddlerRoot"; nocase; classtype:misc-activity; sid:2021943; rev:1;)
+
+#
+alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Possible eDellRoot Rogue Root CA"; flow:established,from_server; content:"|16|"; content:"|0b|"; distance:0; content:"|55 04 03|"; distance:0; content:"|09|eDellRoot"; distance:1; within:10; fast_pattern; reference:url,arstechnica.com/security/2015/11/dell-does-superfish-ships-pcs-with-self-signed-root-certificates/; classtype:trojan-activity; sid:2022134; rev:3;)
 

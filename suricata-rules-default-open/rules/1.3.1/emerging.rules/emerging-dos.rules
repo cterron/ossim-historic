@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2015, Emerging Threats
+#  Copyright (c) 2003-2016, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -177,10 +177,10 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS User-Agent used in kn
 alert http $EXTERNAL_NET any -> $HOME_NET 9495 (msg:"ET DOS IBM Tivoli Endpoint Buffer Overflow Attempt"; flow:established,to_server; content:"POST"; http_method; isdataat:261; content:!"|0A|"; depth:261; reference:url, zerodayinitiative.com/advisories/ZDI-11-169/; classtype:denial-of-service; sid:2012938; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt"; flow:to_client,established; content:"<OBJECT "; nocase; content:"classid"; nocase; distance:0; content:"CLSID"; nocase; distance:0; content:"22C83263-E4B8-4233-82CD-FB047C6BF13E"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*22C83263-E4B8-4233-82CD-FB047C6BF13E/si"; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:web-application-attack; sid:2013462; rev:2;)
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt"; flow:to_client,established; file_data; content:"<OBJECT "; nocase; content:"classid"; nocase; distance:0; content:"CLSID"; nocase; distance:0; content:"22C83263-E4B8-4233-82CD-FB047C6BF13E"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*22C83263-E4B8-4233-82CD-FB047C6BF13E/si"; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:web-application-attack; sid:2013462; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt Format String Function Call"; flow:to_client,established; content:"ActiveXObject"; nocase; content:"SkypePNRLib.PNR"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:attempted-user; sid:2013463; rev:2;)
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt Format String Function Call"; flow:to_client,established; file_data; content:"ActiveXObject"; nocase; content:"SkypePNRLib.PNR"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:attempted-user; sid:2013463; rev:3;)
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DOS LOIC Javascript DDoS Outbound"; flow:established,to_server; content:"GET"; http_method; content:"/?id="; fast_pattern; http_uri; depth:5; content:"&msg="; http_uri; distance:13; within:5; pcre:"/^\/\?id=[0-9]{13}&msg=/U"; threshold: type both, track by_src, count 5, seconds 60; reference:url,isc.sans.org/diary/Javascript+DDoS+Tool+Analysis/12442; reference:url,www.wired.com/threatlevel/2012/01/anons-rickroll-botnet; classtype:attempted-dos; sid:2014141; rev:5;)

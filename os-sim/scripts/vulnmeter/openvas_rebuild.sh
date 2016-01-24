@@ -1,4 +1,6 @@
 #!/bin/bash
+/usr/share/ossim/scripts/vulnmeter/openvas_before_start.sh
+
 /etc/init.d/openvas-manager stop
 /etc/init.d/openvas-scanner stop
 if [ "$1" == "repair" ]

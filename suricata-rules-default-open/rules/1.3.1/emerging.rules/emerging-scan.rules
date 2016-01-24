@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2015, Emerging Threats
+#  Copyright (c) 2003-2016, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -145,22 +145,22 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET SCAN Multiple FTP Administr
 #Matt Jonkman
 #Looking for brute forcing of mail services
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 110 (msg:"ET SCAN Rapid POP3 Connections - Possible Brute Force Attack"; flags: S,12; threshold: type both, track by_src, count 30, seconds 120; reference:url,doc.emergingthreats.net/2002992; classtype:misc-activity; sid:2002992; rev:6;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 110 (msg:"ET SCAN Rapid POP3 Connections - Possible Brute Force Attack"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 30, seconds 120; reference:url,doc.emergingthreats.net/2002992; classtype:misc-activity; sid:2002992; rev:7;)
 
 #Matt Jonkman
 #Looking for brute forcing of mail services
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 995 (msg:"ET SCAN Rapid POP3S Connections - Possible Brute Force Attack"; flags: S,12; threshold: type both, track by_src, count 30, seconds 120; reference:url,doc.emergingthreats.net/2002993; classtype:misc-activity; sid:2002993; rev:6;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 995 (msg:"ET SCAN Rapid POP3S Connections - Possible Brute Force Attack"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 30, seconds 120; reference:url,doc.emergingthreats.net/2002993; classtype:misc-activity; sid:2002993; rev:7;)
 
 #Matt Jonkman
 #Looking for brute forcing of mail services
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"ET SCAN Rapid IMAP Connections - Possible Brute Force Attack"; flags: S,12; threshold: type both, track by_src, count 30, seconds 60; reference:url,doc.emergingthreats.net/2002994; classtype:misc-activity; sid:2002994; rev:6;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"ET SCAN Rapid IMAP Connections - Possible Brute Force Attack"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 30, seconds 60; reference:url,doc.emergingthreats.net/2002994; classtype:misc-activity; sid:2002994; rev:7;)
 
 #Matt Jonkman
 #Looking for brute forcing of mail services
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 993 (msg:"ET SCAN Rapid IMAPS Connections - Possible Brute Force Attack"; flags: S,12; threshold: type both, track by_src, count 30, seconds 60; reference:url,doc.emergingthreats.net/2002995; classtype:misc-activity; sid:2002995; rev:9;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 993 (msg:"ET SCAN Rapid IMAPS Connections - Possible Brute Force Attack"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 30, seconds 60; reference:url,doc.emergingthreats.net/2002995; classtype:misc-activity; sid:2002995; rev:10;)
 
 #Seen being used for vuln scanning.
 #The original script it's modified from is legitimate, so there may be some falses
@@ -226,7 +226,7 @@ alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN ICMP PING IPTools"; 
 
 #by evilghost
 #
-#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN HTTP OPTIONS invalid method case"; flow:established,to_server; content:"options "; http_method; nocase; content:!"OPTIONS "; http_method; reference:url,www.w3.org/Protocols/rfc2616/rfc2616-sec9.html; reference:url,doc.emergingthreats.net/2011034; classtype:bad-unknown; sid:2011034; rev:5;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN HTTP OPTIONS invalid method case"; flow:established,to_server; content:"options"; http_method; nocase; content:!"OPTIONS"; http_method; reference:url,www.w3.org/Protocols/rfc2616/rfc2616-sec9.html; reference:url,doc.emergingthreats.net/2011034; classtype:bad-unknown; sid:2011034; rev:6;)
 
 #by Kevin Ross
 #
@@ -341,27 +341,27 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Netspark
 
 #These are intended to catch new worms and such scanning internally. Careful of falses.
 #
-alert tcp $HOME_NET any -> any 445 (msg:"ET SCAN Behavioral Unusual Port 445 traffic, Potential Scan or Infection"; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001569; classtype:misc-activity; sid:2001569; rev:13;)
+alert tcp $HOME_NET any -> any 445 (msg:"ET SCAN Behavioral Unusual Port 445 traffic, Potential Scan or Infection"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001569; classtype:misc-activity; sid:2001569; rev:14;)
 
 #These are intended to catch new worms and such scanning internally. Careful of falses.
 #
-alert tcp $HOME_NET any -> any 139 (msg:"ET SCAN Behavioral Unusual Port 139 traffic, Potential Scan or Infection"; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001579; classtype:misc-activity; sid:2001579; rev:13;)
+alert tcp $HOME_NET any -> any 139 (msg:"ET SCAN Behavioral Unusual Port 139 traffic, Potential Scan or Infection"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001579; classtype:misc-activity; sid:2001579; rev:14;)
 
 #These are intended to catch new worms and such scanning internally. Careful of falses.
 #
-alert tcp $HOME_NET any -> any 137 (msg:"ET SCAN Behavioral Unusual Port 137 traffic, Potential Scan or Infection"; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001580; classtype:misc-activity; sid:2001580; rev:13;)
+alert tcp $HOME_NET any -> any 137 (msg:"ET SCAN Behavioral Unusual Port 137 traffic, Potential Scan or Infection"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001580; classtype:misc-activity; sid:2001580; rev:14;)
 
 #These are intended to catch new worms and such scanning internally. Careful of falses.
 #
-alert tcp $HOME_NET any -> any 135 (msg:"ET SCAN Behavioral Unusual Port 135 traffic, Potential Scan or Infection"; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001581; classtype:misc-activity; sid:2001581; rev:13;)
+alert tcp $HOME_NET any -> any 135 (msg:"ET SCAN Behavioral Unusual Port 135 traffic, Potential Scan or Infection"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 70 , seconds 60; reference:url,doc.emergingthreats.net/2001581; classtype:misc-activity; sid:2001581; rev:14;)
 
 #These are intended to catch new worms and such scanning internally. Careful of falses.
 #
-alert tcp $HOME_NET any -> any 1434 (msg:"ET SCAN Behavioral Unusual Port 1434 traffic, Potential Scan or Infection"; flags: S,12; threshold: type both, track by_src, count 40 , seconds 60; reference:url,doc.emergingthreats.net/2001582; classtype:misc-activity; sid:2001582; rev:13;)
+alert tcp $HOME_NET any -> any 1434 (msg:"ET SCAN Behavioral Unusual Port 1434 traffic, Potential Scan or Infection"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 40 , seconds 60; reference:url,doc.emergingthreats.net/2001582; classtype:misc-activity; sid:2001582; rev:14;)
 
 #These are intended to catch new worms and such scanning internally. Careful of falses.
 #
-alert tcp $HOME_NET any -> any 1433 (msg:"ET SCAN Behavioral Unusual Port 1433 traffic, Potential Scan or Infection"; flags: S,12; threshold: type both, track by_src, count 40 , seconds 60; reference:url,doc.emergingthreats.net/2001583; classtype:misc-activity; sid:2001583; rev:14;)
+alert tcp $HOME_NET any -> any 1433 (msg:"ET SCAN Behavioral Unusual Port 1433 traffic, Potential Scan or Infection"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 40 , seconds 60; reference:url,doc.emergingthreats.net/2001583; classtype:misc-activity; sid:2001583; rev:15;)
 
 #by Kevin Ross. Use these externally only, they'll be very noisy internally!
 #
@@ -455,11 +455,11 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Sqlmap S
 
 #Submitted by Matt Jonkman
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"ET SCAN Potential SSH Scan"; flags:S,12; threshold: type both, track by_src, count 5, seconds 120; reference:url,en.wikipedia.org/wiki/Brute_force_attack; reference:url,doc.emergingthreats.net/2001219; classtype:attempted-recon; sid:2001219; rev:19;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"ET SCAN Potential SSH Scan"; flow:to_server; flags:S,12; threshold: type both, track by_src, count 5, seconds 120; reference:url,en.wikipedia.org/wiki/Brute_force_attack; reference:url,doc.emergingthreats.net/2001219; classtype:attempted-recon; sid:2001219; rev:20;)
 
 #Submitted by Matt Jonkman
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 22 (msg:"ET SCAN Potential SSH Scan OUTBOUND"; flags:S,12; threshold: type threshold, track by_src, count 5, seconds 120; reference:url,en.wikipedia.org/wiki/Brute_force_attack; reference:url,doc.emergingthreats.net/2003068; classtype:attempted-recon; sid:2003068; rev:6;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 22 (msg:"ET SCAN Potential SSH Scan OUTBOUND"; flow:to_server; flags:S,12; threshold: type threshold, track by_src, count 5, seconds 120; reference:url,en.wikipedia.org/wiki/Brute_force_attack; reference:url,doc.emergingthreats.net/2003068; classtype:attempted-recon; sid:2003068; rev:7;)
 
 #This is the same as above but has a threshold to help keep events down, and more readily identify brute force attacks
 #
@@ -528,7 +528,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN Suspicious User-Agen
 
 #Works for other proto's, may as well extend the idea
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ET SCAN Behavioral Unusually fast Terminal Server Traffic, Potential Scan or Infection (Inbound)"; flags: S,12; threshold: type both, track by_src, count 20, seconds 360; reference:url,doc.emergingthreats.net/2001972; classtype:network-scan; sid:2001972; rev:18;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ET SCAN Behavioral Unusually fast Terminal Server Traffic, Potential Scan or Infection (Inbound)"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 20, seconds 360; reference:url,doc.emergingthreats.net/2001972; classtype:network-scan; sid:2001972; rev:19;)
 
 #Scanner using this UA, looking for many common vulns
 #
@@ -597,11 +597,11 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"ET SCAN External to Internal
 
 #by Matt Jonkman
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 5800:5820 (msg:"ET SCAN Potential VNC Scan 5800-5820"; flags:S,12; threshold: type both, track by_src, count 5, seconds 60; reference:url,doc.emergingthreats.net/2002910; classtype:attempted-recon; sid:2002910; rev:5;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 5800:5820 (msg:"ET SCAN Potential VNC Scan 5800-5820"; flow:to_server; flags:S,12; threshold: type both, track by_src, count 5, seconds 60; reference:url,doc.emergingthreats.net/2002910; classtype:attempted-recon; sid:2002910; rev:6;)
 
 #by Matt Jonkman
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 5900:5920 (msg:"ET SCAN Potential VNC Scan 5900-5920"; flags:S,12; threshold: type both, track by_src, count 5, seconds 60; reference:url,doc.emergingthreats.net/2002911; classtype:attempted-recon; sid:2002911; rev:5;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 5900:5920 (msg:"ET SCAN Potential VNC Scan 5900-5920"; flow:to_server; flags:S,12; threshold: type both, track by_src, count 5, seconds 60; reference:url,doc.emergingthreats.net/2002911; classtype:attempted-recon; sid:2002911; rev:6;)
 
 #by Kevin Ross
 #
@@ -928,7 +928,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN Kingcope KillApache.
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN Apache mod_deflate DoS via many multiple byte Range values"; flow:established,to_server; content:"Range|3a|"; nocase; content:"bytes="; nocase; distance:0; isdataat:10,relative; content:","; within:11; isdataat:10,relative; content:","; within:11; isdataat:10,relative; content:","; within:11; isdataat:70,relative; content:!"|0d 0a|"; within:12; pcre:"/Range\x3a\s?bytes=[-0-9,\x20]{100}/iH"; reference:url,seclists.org/fulldisclosure/2011/Aug/175; classtype:attempted-dos; sid:2013473; rev:5;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 3389 (msg:"ET SCAN Behavioral Unusually fast Terminal Server Traffic, Potential Scan or Infection (Outbound)"; flags: S,12; threshold: type both, track by_src, count 20, seconds 360; reference:url,threatpost.com/en_us/blogs/new-worm-morto-using-rdp-infect-windows-pcs-082811; classtype:misc-activity; sid:2013479; rev:3;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 3389 (msg:"ET SCAN Behavioral Unusually fast Terminal Server Traffic, Potential Scan or Infection (Outbound)"; flow:to_server; flags: S,12; threshold: type both, track by_src, count 20, seconds 360; reference:url,threatpost.com/en_us/blogs/new-worm-morto-using-rdp-infect-windows-pcs-082811; classtype:misc-activity; sid:2013479; rev:4;)
 
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN McAfee/Foundstone Scanner Web Scan"; flow:established,to_server; content:"User-Agent|3A| Mozilla/5.0 (Windows|3B| Windows NT 6.1|3B| en-US)|0D 0A|"; http_header; fast_pattern:20,20; content:"|0D 0A|Accept-Encoding|3A| text|0D 0A|"; http_header; threshold: type both, count 2, seconds 120, track by_src; reference:url,www.mcafee.com/us/products/vulnerability-manager.aspx; classtype:attempted-recon; sid:2013492; rev:4;)
@@ -952,7 +952,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Apache mo
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN FHScan core User-Agent Detect"; flow:to_server,established; content:"FHScan Core 1."; http_user_agent; reference:url,www.tarasco.org/security/FHScan_Fast_HTTP_Vulnerability_Scanner/index.html; classtype:attempted-recon; sid:2014541; rev:5;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN Arachni Scanner Web Scan"; flow:established,to_server; content:"Arachni/"; http_header; pcre:"/User-Agent\x3a[^\r\n]+Arachni\/\d\.\d\.\d$/iH"; threshold: type limit, track by_src, count 1, seconds 300; reference:url,arachni-scanner.com; reference:url,github.com/Zapotek/arachni; classtype:attempted-recon; sid:2014869; rev:4;)
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN Arachni Scanner Web Scan"; flow:established,to_server; content:"Arachni/"; http_header; pcre:"/User-Agent\x3a[^\r\n]+Arachni\/v?\d\.\d\.\d$/iH"; threshold: type limit, track by_src, count 1, seconds 300; reference:url,arachni-scanner.com; reference:url,github.com/Zapotek/arachni; classtype:attempted-recon; sid:2014869; rev:5;)
 
 #
 #alert tcp [184.154.42.194,50.116.22.209,69.64.43.135,69.64.43.137,69.64.43.142,216.17.107.104,216.17.102.194,216.17.106.90,216.17.107.174,64.6.100.124,46.17.98.214] any -> $HOME_NET any (msg:"ET SCAN critical.io Scan"; threshold: type limit, track by_src, seconds 3600, count 1; reference:url,critical.io/; classtype:network-scan; sid:2014893; rev:5;)
@@ -1043,4 +1043,13 @@ alert tcp $HOME_NET any -> any any (msg:"ET SCAN Nmap NSE Heartbleed Response"; 
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET SCAN Xenu Link Sleuth Scanner Outbound"; flow:to_server,established; content:"GET"; http_method; content:"Xenu Link Sleuth"; http_user_agent; fast_pattern:only; classtype:attempted-recon; sid:2021058; rev:3;)
+
+#
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN abdullkarem Wordpress PHP Scanner"; flow:established,to_server; content:"GET"; http_method; content:".php?"; nocase; http_uri; content:"&php"; nocase; http_uri; distance:0; content:"&wphp"; nocase; http_uri; distance:0; content:"&abdullkarem="; nocase; http_uri; fast_pattern; distance:0; content:"|20|HTTP/1.0|0d 0a|Host|3a 20|"; classtype:web-application-attack; sid:2021949; rev:2;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET SCAN Possible Scanning for Vulnerable JBoss"; flow:established,to_server; content:"POST"; http_method; content:"/invoker/"; http_uri; depth:9; content:"servlet/"; http_uri; content:"Content-Type|3a 20|application/x-java-serialized-object|3b 0d 0a|"; http_header; content:"org.jboss.invocation.MarshalledValue"; http_client_body; reference:url,blog.imperva.com/2015/12/zero-day-attack-strikes-again-java-zero-day-vulnerability-cve-2015-4852-tracked-by-imperva.html; classtype:web-application-attack; sid:2022240; rev:2;)
+
+#
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN COMMIX Command injection scan attempt"; flow:to_server,established; content:"|55 73 65 72 2d 41 67 65 6e 74 3a 20 63 6f 6d 6d 69 78|"; fast_pattern:only; http_header; threshold: type limit, count 1, seconds 60, track by_src; reference:url,github.com/stasinopoulos/commix/blob/master/README.md; classtype:web-application-activity; sid:2022243; rev:2;)
 

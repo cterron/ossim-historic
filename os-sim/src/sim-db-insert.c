@@ -939,14 +939,13 @@ sim_db_insert_sensor (SimDatabase  * database,
   query = g_strdup_printf ("INSERT INTO sensor (id, name, ip, port, connect, tzone) "
                            "VALUES (%s, '%s', %s, %d, %d, '%4.2f') "
                            "ON DUPLICATE KEY UPDATE "
-                           "name = '%s', ip = %s, port = %d, connect = %d, tzone = '%4.2f'",
+                           "ip = %s, port = %d, connect = %d, tzone = '%4.2f'",
                            sim_uuid_get_db_string (sim_sensor_get_id (sensor)),
                            sim_sensor_get_name (sensor),
                            sim_inet_get_db_string (sim_sensor_get_ia (sensor)),
                            sim_sensor_get_port (sensor),
                            sim_sensor_is_connect (sensor),
                            sim_sensor_get_tzone (sensor),
-                           sim_sensor_get_name (sensor),
                            sim_inet_get_db_string (sim_sensor_get_ia (sensor)),
                            sim_sensor_get_port (sensor),
                            sim_sensor_is_connect (sensor),

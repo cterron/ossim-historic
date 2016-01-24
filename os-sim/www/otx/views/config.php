@@ -125,7 +125,7 @@ $perms = array(
         
             <div id='token_text' data-otx='text-token'>
                 <?php 
-                    $msg = _('Connect your OTX account to %s by adding your OTX key in the space below. If you do not have an OTX key, <a href="javascript:;" data-otx="get-token">sign up</a> for an OTX account now!');
+                    $msg = _('Connect your OTX account to %s by adding your <a href="javascript:;" data-otx="get-token-login">OTX key</a> in the space below. If you do not have an OTX key, <a href="javascript:;" data-otx="get-token">sign up</a> for an OTX account now!');
                     
                     echo sprintf($msg, (Session::is_pro() ? 'USM' : 'OSSIM' ));
                 ?>

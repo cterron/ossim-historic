@@ -1067,6 +1067,8 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 			disen(val, $('input[name=cross_correlate]'),$('#cross_correlate_text'));
 			disen(val, $('input[name=store]'),$('#store_text'));
 			disen(val, $('input[name=qualify]'),$('#qualify_text'));
+			var tooltip = $("#sim_tt");
+			val ? tooltip.hide() : tooltip.show();
 		}
 	
 		function tsem(val)
@@ -2027,7 +2029,8 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 		
 			// Textareas
 			$('textarea').elastic();
-			
+			//initialize tooltips on startup
+			$('.av_tooltip').tipTip();
             acc_width = $('body').width() - 4;
 						
 			load_multiselect();
@@ -3384,6 +3387,7 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 											<div class='cont_elem'>
 												<input type="radio" name="sim" onchange="tsim(1);drawpolicy();" value="1" <?php echo ($sim == 1) ? "checked='checked'" : "" ?>/> <?php echo _("Yes"); ?>
 												<input type="radio" name="sim" onchange="tsim(0);drawpolicy();" value="0" <?php echo ($sim == 0) ? "checked='checked'" : "" ?>/> <?php echo _("No"); ?>
+												<span id="sim_tt" class="c_av_tooltip hidden"><img class="av_tooltip" src="/ossim/pixmaps/warning.png" title="<?php echo _("Note: SIEM must be set to 'yes' in order for the policy action to be executed. If SIEM is set to 'no', no action will take place.")?>" /></span>
 											</div>
 											<span style="padding-left: 4px;">*</span>
 										</td>

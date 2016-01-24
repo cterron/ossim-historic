@@ -159,7 +159,7 @@ Description: Configuration package for php5
 
 Package: alienvault-plymouth
 Architecture: all
-Pre-Depends: plymouth, initramfs-tools, v86d
+Pre-Depends: plymouth, initramfs-tools, v86d, grub-pc
 Depends: ${misc:Depends}, plymouth-themes
 Replaces: plymouth
 Description: Graphical boot animation for AlienVault appliances

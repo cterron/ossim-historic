@@ -760,7 +760,12 @@ elseif (!array_key_exists("noback", $_GET))
     $back = str_replace(_('Security Events'),_('Back'),$back);
     echo "<div align='center'>$back</div><br/>";
 }
-
+else
+{
+    ?><div class="av_breadcrumb title_header">
+        <div class="siem_title"><?php echo $signature ?></div>
+    </div><?php
+}
 $txtzone = "<a href=\"javascript:;\" class=\"tzoneimg\" txt=\"<img src='../pixmaps/timezones/".rawurlencode(Util::timezone($tz)).".png' width='400' height='205' border=0>\">".Util::timezone($tz)."</a>";
 
 // Taxonomy

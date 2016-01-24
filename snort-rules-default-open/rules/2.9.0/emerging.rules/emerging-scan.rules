@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2015, Emerging Threats
+#  Copyright (c) 2003-2016, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -952,7 +952,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Apache mo
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN FHScan core User-Agent Detect"; flow:to_server,established; content:"FHScan Core 1."; http_header; reference:url,www.tarasco.org/security/FHScan_Fast_HTTP_Vulnerability_Scanner/index.html; classtype:attempted-recon; sid:2014541; rev:4;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN Arachni Scanner Web Scan"; flow:established,to_server; content:"Arachni/"; http_header; pcre:"/User-Agent\x3a[^\r\n]+Arachni\/\d\.\d\.\d$/iH"; threshold: type limit, track by_src, count 1, seconds 300; reference:url,arachni-scanner.com; reference:url,github.com/Zapotek/arachni; classtype:attempted-recon; sid:2014869; rev:3;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN Arachni Scanner Web Scan"; flow:established,to_server; content:"Arachni/"; http_header; pcre:"/User-Agent\x3a[^\r\n]+Arachni\/v?\d\.\d\.\d$/iH"; threshold: type limit, track by_src, count 1, seconds 300; reference:url,arachni-scanner.com; reference:url,github.com/Zapotek/arachni; classtype:attempted-recon; sid:2014869; rev:4;)
 
 #
 #alert tcp [184.154.42.194,50.116.22.209,69.64.43.135,69.64.43.137,69.64.43.142,216.17.107.104,216.17.102.194,216.17.106.90,216.17.107.174,64.6.100.124,46.17.98.214] any -> $HOME_NET any (msg:"ET SCAN critical.io Scan"; flags:S; threshold: type limit, track by_src, seconds 3600, count 1; reference:url,critical.io/; classtype:network-scan; sid:2014893; rev:4;)
@@ -1043,4 +1043,13 @@ alert tcp $HOME_NET any -> any any (msg:"ET SCAN Nmap NSE Heartbleed Response"; 
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET SCAN Xenu Link Sleuth Scanner Outbound"; flow:to_server,established; content:"GET"; http_method; content:"User-Agent|3a 20|Xenu Link Sleuth"; http_header; fast_pattern:12,16; classtype:attempted-recon; sid:2021058; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN abdullkarem Wordpress PHP Scanner"; flow:established,to_server; content:"GET"; http_method; content:".php?"; nocase; http_uri; content:"&php"; nocase; http_uri; distance:0; content:"&wphp"; nocase; http_uri; distance:0; content:"&abdullkarem="; nocase; http_uri; fast_pattern; distance:0; content:"|20|HTTP/1.0|0d 0a|Host|3a 20|"; classtype:web-application-attack; sid:2021949; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Possible Scanning for Vulnerable JBoss"; flow:established,to_server; content:"POST"; http_method; content:"/invoker/"; http_uri; depth:9; content:"servlet/"; http_uri; content:"Content-Type|3a 20|application/x-java-serialized-object|3b 0d 0a|"; http_header; content:"org.jboss.invocation.MarshalledValue"; http_client_body; reference:url,blog.imperva.com/2015/12/zero-day-attack-strikes-again-java-zero-day-vulnerability-cve-2015-4852-tracked-by-imperva.html; classtype:web-application-attack; sid:2022240; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN COMMIX Command injection scan attempt"; flow:to_server,established; content:"|55 73 65 72 2d 41 67 65 6e 74 3a 20 63 6f 6d 6d 69 78|"; fast_pattern:only; http_header; threshold: type limit, count 1, seconds 60, track by_src; reference:url,github.com/stasinopoulos/commix/blob/master/README.md; classtype:web-application-activity; sid:2022243; rev:1;)
 

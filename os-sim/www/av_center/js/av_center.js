@@ -383,6 +383,9 @@ Main.external_access = function(data, id_section, show_loading){
     section = new Section(data, id_section, 1);
     section.load_section(id_section);
 }
+//this will init status object with system_id => status key/value pair
+//do handle avoid panding requests
+Main.realtime_status = {};
 
 Main.display_avc_info = function(show_loading){
     var xhr = $.ajax({
@@ -422,19 +425,20 @@ Main.display_avc_info = function(show_loading){
             $("#avc_data").html('');
             $('#avc_data').css('height', 'auto');
             var status = data.split("###");
-
             if (status[0] == 'error')
             {
-                display_sec_errors(status[1]);
-
                 var time = 60000;
+                display_sec_errors(status[1]);
                 timer = window.setInterval(function(){Main.display_avc_info(true);}, time);
             }
             else
             {
+                var time = 1000;
                 $("#avc_data").html(status[1]);
-
-                var time = 60000;
+                //pre populate object with ready status set to 1 - to be able to start request
+                $('#tbody_avcl tr').each(function(index) {
+                    Main.realtime_status[Main.get_system_id_from_tr($(this))] = 0;
+                });
                 timer = window.setInterval(function(){Main.real_time();}, time);
             }
         }
@@ -443,17 +447,18 @@ Main.display_avc_info = function(show_loading){
     ajax_requests.add_request(xhr);
 };
 
+Main.get_system_id_from_tr = function(tr) {
+    return tr.attr('id').replace('row_', '');
+};
 
 Main.real_time = function(){
-
     if ($('.td_no_av_components').length == 0)
     {
         $('#tbody_avcl tr').each(function(index) {
-
-            var system_id = $(this).attr('id').replace('row_', '');
-
-            if (system_id != null)
+            var system_id = Main.get_system_id_from_tr($(this));
+            if (system_id != null && Main.realtime_status[system_id] == 1)
             {
+                Main.realtime_status[system_id] = 0;
                 Main.update_system_information(system_id);
             }
         });
@@ -487,7 +492,7 @@ Main.update_system_information = function(system_id){
             }
         },
         success: function(data){
-
+            Main.realtime_status[system_id] = 1;
             var row_id = '#row_' + system_id;
 
             //Remove load image
@@ -1856,7 +1861,7 @@ Software.install_updates_rt = function(){
         {
 
             //Check expired session
-            var session = new Session(data, '');
+            var session = new Session(data,'');
 
             if (session.check_session_expired() == true)
             {
@@ -1930,7 +1935,26 @@ Software.install_updates_rt = function(){
 
     ajax_requests.add_request(xhr);
 };
+/*pre define callbacks*/
+Software.check_update_running_success = function() {};
+Software.check_update_running_error = function() {};
 
+Software.check_update_running = function() {
+    var xhr = $.ajax({
+        type: "POST",
+        data: "system_id="+section.system_id+"&id_section=sw_pkg_busy",
+        url: "data/sections/common/real_time.php",
+        dataType: "json",
+        cache: false,
+        success: function(data){
+            Software.check_update_running_success(data);
+        },
+        error:  function(data){
+            Software.check_update_running_error(data);
+        },
+    });
+    ajax_requests.add_request(xhr);
+}
 
 /*******************************************************
 *******         Home - Configuration          **********

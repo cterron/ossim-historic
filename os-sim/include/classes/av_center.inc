@@ -1561,6 +1561,11 @@ class Av_center
         return $res;
     }
 
+    public function check_update_running($system_id) {
+        $client   = new Alienvault_client();
+        return $client->system($system_id)->get_update_running_status($system_id);
+    }
+
 
     /**
      * This method gets information about installed system packages

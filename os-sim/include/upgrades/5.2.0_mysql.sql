@@ -52,7 +52,7 @@ END$$
 
 DELIMITER ;
 
-DELETE ct FROM component_tags ct,tag t WHERE ct.id_tag=t.id AND t.ctx=unhex('00000000000000000000000000000000') AND t.type='alarm';
+DELETE ct FROM component_tags ct,tag t WHERE ct.id_tag=t.id AND t.id NOT IN (0xA3200000000000000000000000000000,0xA3100000000000000000000000000000) AND t.ctx=unhex('00000000000000000000000000000000') AND t.type='alarm';
 DELETE FROM tag WHERE id NOT IN (0xA3200000000000000000000000000000,0xA3100000000000000000000000000000) AND ctx=unhex('00000000000000000000000000000000') AND type='alarm';
 
 REPLACE INTO `custom_report_types` (`id`, `name`, `type`, `file`, `inputs`, `sql`, `dr`) VALUES (360, 'Trends', 'Availability', 'Availability/Trends.php', 'Sensor:sensor_nagios:select:OSS_HEX.OSS_NULLABLE:SENSORNAGIOS:;Assumed Host Status:ahstatus:select:OSS_DIGIT.OSS_DOT.OSS_NULLABLE:ASSUMEDHOSTSTATE:5', '', 4);

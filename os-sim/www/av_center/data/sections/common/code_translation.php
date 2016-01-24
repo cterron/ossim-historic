@@ -76,6 +76,7 @@ $__m_updates = array(
     '300057' => _('Error: Invalid signature for upgrade file (feed).'),
     '300058' => _('Error: Signature unavailable for upgrade file (feed).'),
     '300059' => _('Error: System running in HA Mode. Aborting update'),
+    '300070' => _('Not enough free disk space to install the latest updates.'),
     '300090' => _('An existing task running.'),
     '300091' => _('Something wrong happened while running the alienvault update.'),
     '300092' => _('Something wrong happened while retrieving the alienvault-update log file.'),

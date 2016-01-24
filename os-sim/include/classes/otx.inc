@@ -55,10 +55,11 @@ require_once 'av_config.php';
  */
 class Otx
 {
-    const OTX_URL               = 'https://otx.alienvault.com/';
-    const OTX_URL_NEW_LOGIN     = 'https://otx.alienvault.com/accounts/usm';
-    const OTX_URL_UPGRADE_LOGIN = 'https://otx.alienvault.com/accounts/usm/?exists=true';
-
+    const OTX_URL		= 'https://otx.alienvault.com/';
+    const OTX_URL_NEW_LOGIN	= 'https://otx.alienvault.com/accounts/signup/?next=/accounts/%s/&utm_medium=inproduct&utm_source=%s';
+    const OTX_URL_EXISTING_LOGIN= 'https://otx.alienvault.com/accounts/login/?next=/accounts/%s/';
+    const OTX_URL_UPGRADE_LOGIN	= 'https://otx.alienvault.com/accounts/usm/?exists=true';
+        
     /**
     * OTX Token
     *
@@ -795,5 +796,9 @@ class Otx
         
         return $f_pulse;    
     }
-    
+
+    public static function getLoginURL($isnew = false) {
+    	$text = Session::is_pro() ? "usm" : "ossim";
+    	return sprintf($isnew ? self::OTX_URL_NEW_LOGIN : self::OTX_URL_EXISTING_LOGIN, $text, strtoupper($text));
+    }
 }

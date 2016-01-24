@@ -1,3 +1,0 @@
-# Where to chdir at start.
-CELERYBEAT_CHDIR="/usr/share/alienvault/"
-

@@ -1713,7 +1713,7 @@ function load_handler_step_otx()
 
     $('#b_get_otx_token').on('click', function()
     {
-        var url = "<?php echo Otx::OTX_URL_NEW_LOGIN ?>";
+        var url = "<?php echo Otx::getLoginURL(true) ?>";
 
         av_window_open(url,
         {

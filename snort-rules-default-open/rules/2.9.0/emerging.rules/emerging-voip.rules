@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2015, Emerging Threats
+#  Copyright (c) 2003-2016, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -107,4 +107,13 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP Possible Inbound VOI
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP Possible Misuse Call from Cisco ooh323"; flow:to_server,established; content:"|28 06|cisco|00|"; offset:14; depth:8; content:"|b8 00 00 27 05|ooh323|06|"; distance:0; within:60; reference:url,videonationsltd.co.uk/2015/04/h-323-cisco-spam-calls/; classtype:misc-attack; sid:2021066; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP Possible Misuse Call from MERA RTU"; flow:to_server,established; content:"|22 c0 09 00 7a b7 07|MERA RTU|08|"; classtype:misc-attack; sid:2022022; rev:1;)
+
+#
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP Q.931 Call Setup - Inbound"; flow:to_server,established; content:"|08|"; offset:4; depth:1; content:"|05 04|"; distance:3; within:2; classtype:misc-activity; sid:2022023; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP H.323 in Q.931 Call Setup - Inbound"; flow:to_server,established; content:"|08|"; offset:4; depth:1; byte_jump:1,0,relative; content:"|05 04|"; within:2; byte_jump:1,0,relative; content:"|70|"; byte_jump:1,0,relative; content:"|7E|"; within:1; byte_test:1,!&,0x0F,3,relative; isdataat:31; classtype:misc-activity; sid:2022024; rev:1;)
 

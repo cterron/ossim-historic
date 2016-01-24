@@ -30,6 +30,7 @@
 
 import time
 import ast
+import redis
 from celery.utils.log import get_logger
 from celery.task.control import inspect
 from celery.task.control import revoke
@@ -37,7 +38,10 @@ from amqplib import client_0_8 as amqp
 import json
 from ansiblemethods.system.system import ansible_get_process_pid
 import api_log
+
+
 logger = get_logger("celery")
+redis_instance = redis.Redis("localhost")
 
 
 class JobResult():
@@ -85,7 +89,7 @@ def exist_task_running(task_type, current_task_request, param_to_compare=None, a
     """
     try:
         # Get the current task_id
-        ## alienvault_reconfigure.request.id
+        # alienvault_reconfigure.request.id
         current_task_id = current_task_request.id
         i = inspect()
         current_task_start_time = time.time()
@@ -303,6 +307,7 @@ def stop_running_task(task_id, force=True):
         return False, str(e)
     return True, ""
 
+
 def is_task_in_rabbit(task_id):
     """Checks if the task is in rabbit or not. If the task is found returns the json data, otherwise returns none
     {u'retries': 0, u'task': u'celerymethods.tasks.monitor_tasks.monitor_retrieves_remote_info', u'eta': None, u'args': [], u'expires': None, u'callbacks': None, u'errbacks': None, u'kwargs': {}, u'id': u'de1cd3b1-d001-4bea-a050-8ffe610bee21', u'utc': False}
@@ -381,3 +386,39 @@ def is_task_in_celery(task_id):
         api_log.error("[is_task_in_celery] An error occurred while reading the task list %s" % str(exp))
 
     return None
+
+
+def only_one_task(function=None, key="", timeout=None):
+    """Enforce only one celery task at a time.
+
+    Args:
+        function(obj): wrapped function.
+        key(str): key value for a lock identification in Redis.
+        timeout(int): time to live for the lock.
+    """
+
+    def _dec(run_func):
+        """Decorator."""
+
+        def _caller(*args, **kwargs):
+            """Caller."""
+            ret_value = None
+            have_lock = False
+            lock = redis_instance.lock(key, timeout=timeout)
+            try:
+                # Wait while previous task is running.
+                while not have_lock:
+                    have_lock = lock.acquire(blocking=False)
+                    time.sleep(1)
+
+                ret_value = run_func(*args, **kwargs)
+            except redis.exceptions.RedisError as err:
+                logger.error("Failed to acquire a lock while adding HIDS agent. Reason: %s" % err)
+
+            finally:
+                if have_lock:
+                    lock.release()
+
+            return ret_value
+        return _caller
+    return _dec(function) if function is not None else _dec

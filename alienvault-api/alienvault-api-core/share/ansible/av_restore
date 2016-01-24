@@ -235,7 +235,7 @@ def match_backup_profile(backup_type, backup_file, profile):
         return False, "Backup profile doesn't match system profile"
 
     if (backup_info['version'] != system_info['version'] and
-            backup_info['version'] == 'OSSIM'):
+            backup_info['version'] == 'ALIENVAULT'):
         return False, "Backup cannot be restored on this system"
 
     if backup_info['version_number'] != system_info['version_number']:

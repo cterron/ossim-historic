@@ -963,6 +963,13 @@ else return '{
         return $response;
     }
 
+    public function get_update_running_status($system_id)
+    {
+        $response = $this->conn->do_request("/system/$system_id/status/ready_for_update", 'GET');
+        return $response;
+    }
+
+
 }
 
 /* End of file system.inc */

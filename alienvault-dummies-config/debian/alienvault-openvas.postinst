@@ -80,6 +80,7 @@ case "$1" in
 
             echo "Updating openvas-scanner init.d error message..."
             sed -i /etc/init.d/openvas-scanner \
+                -e 's/^# Required-Start:.*/# Required-Start: $ALL/' \
                 -e "s/echo \"ERROR.\"/echo \"openvassd.\"/"
 
             echo "Updating openvas-scanner init.d exit status..."
@@ -117,6 +118,7 @@ case "$1" in
             sed -i /etc/init.d/openvas-manager \
                 -e 's/echo "ERROR."/echo "openvasmd."/' \
                 -e 's/exit 1/exit 0/' \
+                -e 's/^# Required-Start:.*/# Required-Start: $ALL/' \
                 -e 's/^# Default-Start:.*/# Default-Start: 2 3 4 5/' \
                 -e 's/^# Default-Stop:.*/# Default-Stop: 0 1 6/'
 
@@ -178,6 +180,9 @@ case "$1" in
                 dpkg-trigger --no-await alienvault-openvas-restart
             fi
 
+            echo "Update logrotate scripts for openvas manager and scanner..."
+            sed -i /etc/logrotate.d/openvas-manager -e "s/if \[ -s \/var\/run\/openvasmd.pid \]; then kill -1 \`cat \/var\/run\/openvasmd.pid\`; fi/\/usr\/share\/ossim\/scripts\/vulnmeter\/openvas_before_start.sh;/";
+            sed -i /etc/logrotate.d/openvas-scanner -e "s/if \[ -s \/var\/run\/openvassd.pid \]; then kill -1 \`cat \/var\/run\/openvassd.pid\`; fi/\/usr\/share\/ossim\/scripts\/vulnmeter\/openvas_before_start.sh;/";
             echo "Done!"
     ;;
 

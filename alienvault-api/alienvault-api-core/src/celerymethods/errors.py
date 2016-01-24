@@ -51,6 +51,7 @@ SYSTEM_UPDATE_ERROR_STRINGS = {
     "60" : ("300060", "Error: Cannot download upgrade file (AV5)"),
     "61" : ("300061", "Error: Invalid signature for upgrade file (AV5)"),
     "62" : ("300062", "Error: Signature unavailable for upgrade file (AV5)"),
+    "70" : ("300070", "Not enough free disk space to install the latest updates."),
     "90" : ("300090", "An existing task running"),
     "91" : ("300091", "Something wrong happened while running the alienvault update"),
     "92" : ("300092", "Something wrong happened while retrieving the alienvault-update log file"),

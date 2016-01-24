@@ -1,2 +1,10 @@
-*.pyc
-.fseventsd/
+# Ignore all packages files
+
+*.deb
+*.swp
+
+# Files from os-sim (Symbolic links)
+
+
+# Backup files
+*~

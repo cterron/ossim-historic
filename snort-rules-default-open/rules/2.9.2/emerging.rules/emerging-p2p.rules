@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2015, Emerging Threats
+#  Copyright (c) 2003-2016, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -81,7 +81,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET P2P Bittorrent P2P
 
 #By Chich Thierry
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P BitTorrent peer sync"; flow:established; content:"|00 00 00 0d 06 00|"; depth:6; threshold: type limit, track by_dst, seconds 300, count 1; reference:url,bitconjurer.org/BitTorrent/protocol.html; reference:url,doc.emergingthreats.net/bin/view/Main/2000334; classtype:policy-violation; sid:2000334; rev:12;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET !7680 (msg:"ET P2P BitTorrent peer sync"; flow:established; content:"|00 00 00 0d 06 00|"; depth:6; threshold: type limit, track by_dst, seconds 300, count 1; reference:url,bitconjurer.org/BitTorrent/protocol.html; reference:url,doc.emergingthreats.net/bin/view/Main/2000334; classtype:policy-violation; sid:2000334; rev:13;)
 
 #By Chich Thierry
 #
@@ -177,7 +177,7 @@ alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey 
 
 #Matt Jonkman
 #
-alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Publicize File"; dsize:>15; content:"|e3 0c|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003310; classtype:policy-violation; sid:2003310; rev:3;)
+alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Publicize File"; dsize:>15; content:"|e3 0c|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003310; classtype:policy-violation; sid:2003310; rev:4;)
 
 #Matt Jonkman
 #
@@ -193,7 +193,7 @@ alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey 
 
 #Matt Jonkman
 #
-alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey Search Reply"; dsize:>200; content:"|e3 0f|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003315; classtype:policy-violation; sid:2003315; rev:3;)
+alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey Search Reply"; dsize:>200; content:"|e3 0f|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003315; classtype:policy-violation; sid:2003315; rev:4;)
 
 #Matt Jonkman
 #
@@ -386,7 +386,7 @@ alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P eMule KA
 
 #by christopher campesi
 #
-alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P eMule Kademlia Hello Request"; dsize:<48; content:"|e4 11|"; depth:2; threshold: type limit, count 5, seconds 600, track by_src; reference:url,emule-project.net; reference:url,doc.emergingthreats.net/2009970; classtype:policy-violation; sid:2009970; rev:4;)
+alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P eMule Kademlia Hello Request"; dsize:<48; content:"|e4 11|"; depth:2; threshold: type limit, count 5, seconds 600, track by_src; reference:url,emule-project.net; reference:url,doc.emergingthreats.net/2009970; classtype:policy-violation; sid:2009970; rev:5;)
 
 #by christopher campesi
 #
@@ -495,4 +495,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET P2P BitTorrent - T
 
 #
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET P2P zzima_loader"; flow:established, to_server; content: "GET"; http_method; content:"/zzima_loader/"; fast_pattern:only; http_uri; content:"User-Agent|3a| zzima-nloader/ 1.0.3.1"; http_header; content:!"Referer|3a|"; http_header; reference:md5,810b4464785d8d007ca0c86c046ac0ef; classtype:trojan-activity; sid:2018532; rev:1;)
+
+#
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 7680 (msg:"ET P2P MS WUDO Peer Sync"; flow:established; content:"|00 00 00 0d 06 00|"; depth:6; reference:url,bitconjurer.org/BitTorrent/protocol.html; reference:url,windows.microsoft.com/en-us/windows-10/windows-update-delivery-optimization-faq; classtype:policy-violation; sid:2022371; rev:1;)
 

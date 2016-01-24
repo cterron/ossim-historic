@@ -186,6 +186,7 @@ function AV_otx_config(p)
             $('[data-otx="edit-account"]').on('click', __edit_view);
             $('[data-otx="cancel-edition"]').on('click', __refresh_data);
             $('[data-otx="get-token"]').on('click', get_token);
+            $('[data-otx="get-token-login"]').on('click', get_token_login);
             $('[data-otx="account-status"]').on('toggle', change_contributing);
             
             //Loading the OTX detail
@@ -272,9 +273,15 @@ function AV_otx_config(p)
     
     
     function get_token()
-    {
-        var url = "<?php echo Otx::OTX_URL_NEW_LOGIN ?>";
+    { 
+        var url = "<?php echo Otx::getLoginURL(true) ?>";
         av_window_open(url); 
+    }
+
+    function get_token_login()
+    {
+        var url = "<?php echo Otx::getLoginURL(false) ?>";
+        av_window_open(url);
     }
     
     

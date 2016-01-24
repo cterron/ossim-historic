@@ -129,7 +129,7 @@ class Alienvault_client
         {
             if ($response['message'] != '')
             {
-                $error_msg = $response['message'];
+                $error_msg =  _($response['message']);
             }
             elseif ($response['status_long_message'] != '')
             {

@@ -121,46 +121,7 @@ while (!$result->EOF)
 						else 
 						{
 							$tooltip  .= "<br><span style='font-weight:bold'>"._("Date range:")."</span> <span style='font-weight:normal'></span>";
-							
-							switch($value["date_range"]) 
-							{
-								case "week":    
-								    $tooltip  .= _("Current week");  
-								    break;
-								    
-								case "month":   
-								    $tooltip  .= _("Current month"); 
-								    break;
-								    
-								case "year":    
-								    $tooltip  .= _("Current year");  
-								    break;
-								
-								case "last7":   
-								    $tooltip  .= _("Last 7 days");   
-								    break;
-								
-								case "last15":  
-								    $tooltip  .= _("Last 15 days");  
-								    break;
-								
-								case "last30":  
-								    $tooltip  .= _("Last 30 days");  
-								    break;
-								
-								case "last60":  
-								    $tooltip  .= _("Last 60 days");  
-								    break;
-								
-								case "last90":  
-								    $tooltip  .= _("Last 90 days"); 
-								    break;
-								
-								case "last365": 
-								    $tooltip  .= _("Last 365 days"); 
-								    break;
-							}						
-							
+							$tooltip  .= Av_report::get_date_name_range($value["date_range"]);
 							$tooltip  .= "</span>";										
 						}
 						

@@ -96,7 +96,7 @@ UPDATE plugin SET source_type = 'Unified threat management', vendor = 'GFI' wher
 UPDATE plugin SET source_type = 'Intrusion Prevention', vendor = 'McAfee' where id = 1551;
 UPDATE plugin SET source_type = 'Remote Application Access', vendor = 'Oracle' where id = 1552;
 UPDATE plugin SET source_type = 'Proxy', vendor = 'Squid' where id = 1553;
-UPDATE plugin SET source_type = 'Firewall', vendor = 'Fortinet' where id = 1554;
+UPDATE plugin SET source_type = 'Unified threat management', vendor = 'Fortinet' where id = 1554;
 UPDATE plugin SET source_type = 'Antivirus', vendor = 'Sourcefire' where id = 1555;
 UPDATE plugin SET source_type = 'Antivirus', vendor = 'Symantec' where id = 1556;
 UPDATE plugin SET source_type = 'Router/Switch', vendor = 'Nortel' where id = 1557;
@@ -172,7 +172,7 @@ UPDATE plugin SET source_type = 'Server', vendor = 'Linux' where id = 1632;
 UPDATE plugin SET source_type = 'Firewall', vendor = 'Motorola' where id = 1633;
 UPDATE plugin SET source_type = 'Endpoint Security', vendor = 'Inmunity' where id = 1634;
 UPDATE plugin SET source_type = 'Firewall', vendor = 'Juniper' where id = 1635;
-UPDATE plugin SET source_type = 'Firewall', vendor = 'Cisco' where id = 1636;
+UPDATE plugin SET source_type = 'Unified threat management', vendor = 'Cisco' where id = 1636;
 UPDATE plugin SET source_type = 'VPN', vendor = 'Linux' where id = 1637;
 UPDATE plugin SET source_type = 'Server', vendor = 'Linux' where id = 1638;
 UPDATE plugin SET source_type = 'Server', vendor = 'Linux' where id = 1639;
@@ -320,7 +320,7 @@ UPDATE plugin SET source_type = 'Firewall', vendor = 'TrendMicro' where id = 706
 UPDATE plugin SET source_type = 'Firewall', vendor = 'TrendMicro' where id = 7069;
 UPDATE plugin SET source_type = 'Router/Switch', vendor = 'TrendMicro' where id = 7070;
 UPDATE plugin SET source_type = 'Firewall', vendor = 'TrendMicro' where id = 7071;
-UPDATE plugin SET source_type = 'Firewall', vendor = 'TrendMicro' where id = 7072;
+UPDATE plugin SET source_type = 'Unified threat management', vendor = 'TrendMicro' where id = 7072;
 UPDATE plugin SET source_type = 'Mail Server', vendor = 'TrendMicro' where id = 7073;
 UPDATE plugin SET source_type = 'Mail Server', vendor = 'TrendMicro' where id = 7074;
 UPDATE plugin SET source_type = 'Mail Server', vendor = 'TrendMicro' where id = 7075;

@@ -65,6 +65,7 @@ my $ERROR_UNAVAILABLE_SIGNATURE4 = 56;
 my $ERROR_INVALID_SIGNATURE_FEED = 57;
 my $ERROR_UNAVAILABLE_SIGNATURE_FEED = 58;
 my $ERROR_HA_RUNNING = 59;
+my $ERROR_NO_FREE_SPACE_ON_DISK = 70;
 
 # function
 sub main();             # main program body
@@ -114,8 +115,6 @@ sub main() {
     $wget_useragent = "ossim-wget-version";
     verbose_log ("User Agent set to $wget_useragent");
 
-
-
 #   $vpre = get_current_oct_version();
 
     system("mkdir $tmppath") if (! -d "$tmppath");
@@ -125,7 +124,6 @@ sub main() {
         console_log("Finished");
         exit 0;
     }
-
 
     ## update
     console_log("Starting update");
@@ -234,8 +232,6 @@ sub parse_argv() {
         }
 }
 
-
-
 sub config_check() {
 
     # Checks configuration validity
@@ -292,7 +288,7 @@ EOF
 exit;
 }
 
-sub apt_status(){
+sub apt_status() {
     my $LCK=0;
     my $dpk_g=`which dpkg`;$dpk_g=~ s/\n//g;
     while (1) {
@@ -314,8 +310,7 @@ sub apt_status(){
     }
 }
 
-sub build_free_repos()
-{
+sub build_free_repos() {
     verbose_log ("Add free repositories");
     open (my $fh, '>', '/etc/apt/sources.list') || die ("Can't open sources.list: $!");
     print $fh "deb http://data.alienvault.com/alienvault5/mirror/jessie/ jessie main contrib\n";
@@ -327,8 +322,8 @@ sub build_free_repos()
     print $fh "deb http://data.alienvault.com/alienvault5/plugins-feed/ binary/\n";
     close $fh;
 }
-sub build_pro_repos()
-{
+
+sub build_pro_repos() {
     my $key = shift (@_); # Odio perl
     verbose_log ("Add pro repositories");
     open (my $fh, '>', '/etc/apt/sources.list.d/alienvault5-pro.list') || die ("Can't open /etc/apt/sources.list.d/alienvault5.list $!");
@@ -339,7 +334,8 @@ sub build_pro_repos()
     print $fh "deb http://data.alienvault.com/alienvault5/feed_etpro_$key binary/\n";
     close $fh;
 }
-sub check_pro(){
+
+sub check_pro() {
     verbose_log("Check for professional version");
     my $ret = 0;
     my $lic = "";
@@ -376,7 +372,6 @@ sub check_pro(){
             console_log ("Can't update unregistered  professional versions");
             exit -1;
         }
-    
          
     }
     else
@@ -414,10 +409,8 @@ sub feed_update() {
     } else {
             say("Signature not available for upgrade file $script_name");
             exit $ERROR_UNAVAILABLE_SIGNATURE_FEED;
-    }
+        }
     }
 
     console_log("Done.");
 }
-
-# 
