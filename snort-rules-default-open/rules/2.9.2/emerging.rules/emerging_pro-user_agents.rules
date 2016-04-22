@@ -68,7 +68,7 @@
 
 #Sandnet analysis
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS sgrunt Dialer User Agent (sgrunt)"; flow:to_server,established; content:"sgrunt"; fast_pattern:only; http_header; pcre:"/User-Agent\:[^\n]+sgrunt/Hi"; reference:url,www3.ca.com/securityadvisor/pest/pest.aspx?id=453096347; reference:url,doc.emergingthreats.net/2003385; classtype:trojan-activity; sid:2003385; rev:11;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS sgrunt Dialer User Agent (sgrunt)"; flow:to_server,established; content:"sgrunt"; fast_pattern:only; http_header; pcre:"/User-Agent\:[^\n]+sgrunt/Hi"; reference:url,www3.ca.com/securityadvisor/pest/pest.aspx?id=453096347; reference:url,doc.emergingthreats.net/2003385; classtype:trojan-activity; sid:2003385; rev:11;)
 
 #by Pedro Marinho
 #
@@ -122,11 +122,11 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious Us
 
 #Pluses in a UA, suspicious as well
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User Agent (_)"; flow:to_server,established; content:"User-Agent|3a| _"; http_header; reference:url,doc.emergingthreats.net/bin/view/Main/2007942; classtype:trojan-activity; sid:2007942; rev:7;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User Agent (_)"; flow:to_server,established; content:"User-Agent|3a| _"; http_header; reference:url,doc.emergingthreats.net/bin/view/Main/2007942; classtype:trojan-activity; sid:2007942; rev:7;)
 
 #Pluses in a UA, suspicious as well
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User Agent (BlackSun)"; flow:to_server,established; content:"User-Agent|3a| BlackSun"; nocase; http_header; reference:url,www.bitdefender.com/VIRUS-1000328-en--Trojan.Pws.Wow.NCY.html; reference:url,doc.emergingthreats.net/bin/view/Main/2008983; classtype:trojan-activity; sid:2008983; rev:6;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User Agent (BlackSun)"; flow:to_server,established; content:"User-Agent|3a| BlackSun"; nocase; http_header; reference:url,www.bitdefender.com/VIRUS-1000328-en--Trojan.Pws.Wow.NCY.html; reference:url,doc.emergingthreats.net/bin/view/Main/2008983; classtype:trojan-activity; sid:2008983; rev:6;)
 
 #by evilghost
 #
@@ -158,7 +158,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS 180 Solutions
 
 #Matt Jonkman, From spyware listening post data
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Gator Agent Traffic"; flow: to_server,established; content:"User-Agent|3a|"; nocase; http_header; content:" Gator"; nocase; fast_pattern; within:150; http_header; pcre:"/User-Agent\:[^\n]+Gator/Hi"; reference:url,doc.emergingthreats.net/2000026; classtype:policy-violation; sid:2000026; rev:37;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Gator Agent Traffic"; flow: to_server,established; content:"User-Agent|3a|"; nocase; http_header; content:" Gator"; nocase; fast_pattern; within:150; http_header; pcre:"/User-Agent\:[^\n]+Gator/Hi"; reference:url,doc.emergingthreats.net/2000026; classtype:policy-violation; sid:2000026; rev:37;)
 
 #from sandnet data
 #Disabling by default, hits on the VB api, not unique to this virus.
@@ -166,7 +166,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Gator Agent T
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Bancos User-Agent Detected vb wininet"; flow:established,to_server; content:"vb wininet"; nocase; http_user_agent; reference:url,doc.emergingthreats.net/2004114; classtype:trojan-activity; sid:2004114; rev:7;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User Agent (ScrapeBox)"; flow:to_server,established; content:"|0d 0a|User-Agent|3a| ScrapeBox"; http_header; classtype:trojan-activity; sid:2011282; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User Agent (ScrapeBox)"; flow:to_server,established; content:"|0d 0a|User-Agent|3a| ScrapeBox"; http_header; classtype:trojan-activity; sid:2011282; rev:3;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS RogueAntiSpyware Spyware User Agent"; flow: established,to_server; content:"User-Agent|3a| Msobe|5f|"; http_header; reference:url,www.threatexpert.com/report.aspx?md5=7648f4a5ac688309b129bfca15f1cf96; classtype:trojan-activity; sid:2800867; rev:2;)
@@ -208,10 +208,10 @@ alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ETPRO USER_AGENTS Yo
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO USER_AGENTS Virut Trojan UA Detected"; flow:established,to_server; content:"User-Agent|3a| NetLog"; http_header; classtype:trojan-activity; sid:2801296; rev:3;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO USER_AGENTS Flipopia Related Malware UA Detected"; flow:established,to_server; content:"User-Agent|3a| Flipopia"; http_header; nocase; classtype:trojan-activity; sid:2801299; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO USER_AGENTS Flipopia Related Malware UA Detected"; flow:established,to_server; content:"User-Agent|3a| Flipopia"; http_header; nocase; classtype:trojan-activity; sid:2801299; rev:3;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS W32/Goolbot.E Checkin UA Detected iamx"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| iamx/"; http_header; classtype:trojan-activity; sid:2012246; rev:4;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS W32/Goolbot.E Checkin UA Detected iamx"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| iamx/"; http_header; classtype:trojan-activity; sid:2012246; rev:4;)
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS  SUSPICIOUS UA Starting With IE6"; flow:established,to_server; content:"User-Agent|3a| IE6"; http_header; classtype:trojan-activity; sid:2801300; rev:5;)
@@ -247,13 +247,13 @@ alert http $HOME_NET any -> $EXTERNAL_NET 8083 (msg:"ETPRO USER_AGENTS Trojan-Do
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO USER_AGENTS suspicious user agent (The Http-string-downloader)"; flow:to_server,established; content:"User-Agent|3a| The Http-string-downloader"; http_header; classtype:trojan-activity; sid:2801350; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User-Agent VCTestClient"; flow:to_server,established; content:"|0d 0a|User-Agent|3a| VCTestClient"; nocase; http_header; classtype:trojan-activity; sid:2012386; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User-Agent VCTestClient"; flow:to_server,established; content:"|0d 0a|User-Agent|3a| VCTestClient"; nocase; http_header; classtype:trojan-activity; sid:2012386; rev:2;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspicious User-Agent PrivacyInfoUpdate"; flow:to_server,established; content:"|0d 0a|User-Agent|3a| PrivacyInfoUpdate"; nocase; http_header; classtype:trojan-activity; sid:2012387; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO USER_AGENTS qqkuyou Related Checkin"; flow:established,to_server; content:"User-Agent|3a| Open URL Application"; http_header; classtype:trojan-activity; sid:2801395; rev:4;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO USER_AGENTS qqkuyou Related Checkin"; flow:established,to_server; content:"User-Agent|3a| Open URL Application"; http_header; classtype:trojan-activity; sid:2801395; rev:4;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Avzhan DDoS Bot User-Agent MyIE"; flow:established,to_server; content:"User-Agent|3a|Mozilla"; http_header; content:"|3b| MyIE "; fast_pattern; http_header; within:100; reference:url,asert.arbornetworks.com/2010/09/another-family-of-ddos-bots-avzhan/; reference:url,blog.fireeye.com/research/2010/10/avzhan-botnet-the-story-of-evolution.html; classtype:trojan-activity; sid:2013258; rev:7;)
@@ -310,7 +310,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Win32.Phobiq Keylogger Checkin"; flow:established,to_server; content:"User-Agent|3a| FENG"; http_header; classtype:trojan-activity; sid:2802018; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS suspicious User Agent (Lotto)"; flow:to_server,established; content:"User-Agent|3a| Lotto"; http_header; classtype:trojan-activity; sid:2012695; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS suspicious User Agent (Lotto)"; flow:to_server,established; content:"User-Agent|3a| Lotto"; http_header; classtype:trojan-activity; sid:2012695; rev:2;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User-Agent String (AskPartnerCobranding)"; flow:to_server,established; content:"User-Agent|3a| AskPartner"; http_header; classtype:trojan-activity; sid:2012734; rev:4;)
@@ -319,7 +319,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS suspicious Us
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS suspicious user agent string (changhuatong)"; flow:to_server,established; content:"User-Agent|3a 20|changhuatong"; http_header; classtype:trojan-activity; sid:2012751; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS suspicious user agent string (CholTBAgent)"; flow:to_server,established; content:"User-Agent|3a 20|CholTBAgent"; http_header; threshold: type limit, count 2, seconds 40, track by_src; classtype:trojan-activity; sid:2012757; rev:5;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS suspicious user agent string (CholTBAgent)"; flow:to_server,established; content:"User-Agent|3a 20|CholTBAgent"; http_header; threshold: type limit, count 2, seconds 40, track by_src; classtype:trojan-activity; sid:2012757; rev:5;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious user agent (mdms)"; flow:to_server,established; content:"GET"; http_method; content:"User-Agent|3a| mdms|0d 0a|"; http_header; classtype:trojan-activity; sid:2012761; rev:2;)
@@ -334,7 +334,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS suspicious us
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Delf/Buzus Checkin UA"; flow:established,to_server; content:"User-Agent|3a| dwn|0d 0a|"; http_header; classtype:trojan-activity; sid:2802175; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Win32.Orsam/Cosmo Trojan User-Agent"; flow:established,to_server; content:"User-Agent|3a| E.WinInet"; http_header; classtype:trojan-activity; sid:2802190; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Win32.Orsam/Cosmo Trojan User-Agent"; flow:established,to_server; content:"User-Agent|3a| E.WinInet"; http_header; classtype:trojan-activity; sid:2802190; rev:3;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious User-Agent SameAgent"; flow:established,to_server; content:"User-Agent|3a| SameAgent"; http_header; classtype:trojan-activity; sid:2802191; rev:3;)
@@ -352,7 +352,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User-Agent SimpleClient 1.0"; flow:established,to_server; content:"User-Agent|3A| SimpleClient "; http_header; reference:url,www.fortiguard.com/encyclopedia/virus/symbos_sagasi.a!tr.html; classtype:bad-unknown; sid:2012860; rev:4;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Known Skunkx DDOS Bot User-Agent Cyberdog"; flow:established,to_server; content:"User-Agent|3A| Cyberdog"; http_header; nocase; reference:url,asert.arbornetworks.com/2011/03/skunkx-ddos-bot-analysis/; classtype:trojan-activity; sid:2012893; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Known Skunkx DDOS Bot User-Agent Cyberdog"; flow:established,to_server; content:"User-Agent|3A| Cyberdog"; http_header; nocase; reference:url,asert.arbornetworks.com/2011/03/skunkx-ddos-bot-analysis/; classtype:trojan-activity; sid:2012893; rev:2;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious User-Agent Fragment (WORKED)"; flow:established,to_server; content:"WORKED"; http_header; pcre:"/User-Agent\x3a[^\n]+WORKED/H"; classtype:trojan-activity; sid:2012909; rev:3;)
@@ -367,7 +367,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Suspicious us
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS RogueSoftware.MacOS.MacProtector.A User-Agent"; flow:to_server,established; content:"|0D 0A|User|2D|Agent|3A| MacProtector"; nocase; http_header; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Rogue%3AMacOS_X%2FFakeMacdef&ThreatID=-2147321947; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2011-050910-3353-99&tabid=2; reference:url,www.securelist.com/en/blog/208188067/Mac_Protector_Register_your_copy_now_Part_2; classtype:trojan-activity; sid:2802928; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious user agent (Duckling/1.0)"; flow:to_server,established; content:"GET"; http_method; content:"User-Agent|3a| Duckling/"; nocase; http_header; classtype:trojan-activity; sid:2802933; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious user agent (Duckling/1.0)"; flow:to_server,established; content:"GET"; http_method; content:"User-Agent|3a| Duckling/"; nocase; http_header; classtype:trojan-activity; sid:2802933; rev:3;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Rescudos ROSE Essentials Gaming User Agent"; flow:established,to_server; content:"User-Agent|3a 20|Rescudo|27|s ROSE Essentials"; http_header; reference:url,forums.warpportal.com/index.php?/topic/21959-rescudos-rose-essentials-version-48; classtype:policy-violation; sid:2802947; rev:2;)
@@ -379,13 +379,13 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS EmailSiphon Suspicious User-Agent Outbound"; flow:established,to_server; content:"EmailSiphon"; nocase; http_user_agent; depth:11; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013033; rev:3;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Binget PHP Library User Agent Outbound"; flow:established,to_server; content:"User-Agent|3a| Binget/"; nocase; http_header; reference:url,www.bin-co.com/php/scripts/load/; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013050; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Binget PHP Library User Agent Outbound"; flow:established,to_server; content:"User-Agent|3a| Binget/"; nocase; http_header; reference:url,www.bin-co.com/php/scripts/load/; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013050; rev:2;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS pxyscand/ Suspicious User Agent Outbound"; flow:established,to_server; content:"User-Agent|3a| pxyscand/"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013052; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS PyCurl Suspicious User Agent Outbound"; flow:established,to_server; content:"User-Agent|3a| PyCurl"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013054; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS PyCurl Suspicious User Agent Outbound"; flow:established,to_server; content:"User-Agent|3a| PyCurl"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013054; rev:2;)
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious User-Agent (MyLove)"; flow:to_server,established; content:"User-Agent|3a| MyLove|0d 0a|"; http_header; nocase; classtype:trojan-activity; sid:2803009; rev:2;)
@@ -397,7 +397,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious User-Agent (auto_plugin)"; flow:to_server,established; content:"User-Agent|3a| auto_plugin"; http_header; nocase; classtype:trojan-activity; sid:2803079; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET USER_AGENTS Atomic_Email_Hunter User-Agent Inbound"; flow:established,to_server; content:"User-Agent|3a| Atomic_Email_Hunter/"; fast_pattern:12,20; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013173; rev:3;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET USER_AGENTS Atomic_Email_Hunter User-Agent Inbound"; flow:established,to_server; content:"User-Agent|3a| Atomic_Email_Hunter/"; fast_pattern:12,20; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013173; rev:3;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Atomic_Email_Hunter User-Agent Outbound"; flow:established,to_server; content:"User-Agent|3a| Atomic_Email_Hunter/"; fast_pattern:12,20; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013174; rev:3;)
@@ -406,7 +406,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET USER_AGENTS Atomic_Email_
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious User-Agent (GeneralDownloadApplication)"; flow:to_server,established; content:"User-Agent|3a| GeneralDownloadApplication|0d 0a|"; http_header; classtype:trojan-activity; sid:2803117; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious user agent(vTask)"; flow:to_server,established; content:"User-Agent|3a| vTask|0d 0a|"; http_header; reference:url,www.threatexpert.com/reports.aspx?find=03a29a0e4b51b7af4e2c8bd8ecce5ec6; classtype:trojan-activity; sid:2803382; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious user agent(vTask)"; flow:to_server,established; content:"User-Agent|3a| vTask|0d 0a|"; http_header; reference:url,www.threatexpert.com/reports.aspx?find=03a29a0e4b51b7af4e2c8bd8ecce5ec6; classtype:trojan-activity; sid:2803382; rev:2;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious User-Agent (webdate)"; flow:to_server,established; content:"User-Agent|3a| webdate|0d 0a|"; http_header; classtype:trojan-activity; sid:2803466; rev:4;)
@@ -418,7 +418,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO USER_AGENTS Suspicious
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Win32/OnLineGames User-Agent (Revolution Win32)"; flow:established,to_server; content:"User-Agent|3A 20|Revolution"; http_header; reference:url,threatexpert.com/report.aspx?md5=1431f4ab4bbe3ad1087eb14cf4d7dff9; classtype:trojan-activity; sid:2013542; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Trojan Downloader User-Agent BGroom"; flow:established,to_server; content:"User-Agent|3A 20|BGroom"; http_header; classtype:trojan-activity; sid:2013717; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Trojan Downloader User-Agent BGroom"; flow:established,to_server; content:"User-Agent|3A 20|BGroom"; http_header; classtype:trojan-activity; sid:2013717; rev:2;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET USER_AGENTS Trojan Downloader User-Agent (Tiny)"; flow:established,to_server; content:"User-Agent|3A 20|tiny|0D 0A|"; http_header; classtype:trojan-activity; sid:2013718; rev:2;)

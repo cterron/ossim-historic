@@ -40,7 +40,7 @@
 
 #Submitted by Thomas Alex
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"ET MISC HP Web JetAdmin ExecuteFile admin access"; flow: to_server,established; content:"/plugins/framework/script/content.hts"; nocase; content:"ExecuteFile"; nocase; reference:bugtraq,10224; reference:url,doc.emergingthreats.net/2001055; classtype:attempted-admin; sid:2001055; rev:6;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"ET MISC HP Web JetAdmin ExecuteFile admin access"; flow: to_server,established; content:"/plugins/framework/script/content.hts"; nocase; content:"ExecuteFile"; nocase; reference:bugtraq,10224; reference:url,doc.emergingthreats.net/2001055; classtype:attempted-admin; sid:2001055; rev:6;)
 
 #
 #alert icmp $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL MISC Time-To-Live Exceeded in Transit"; icode:0; itype:11; classtype:misc-activity; sid:2100449; rev:7;)
@@ -82,7 +82,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"ET MISC HP Web JetAdmin Exec
 #alert tcp $EXTERNAL_NET 80 -> $HOME_NET any (msg:"GPL MISC Connection Closed MSG from Port 80"; flow:from_server,established; content:"Connection closed by foreign host"; nocase; classtype:unknown; sid:2100488; rev:5;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 113 (msg:"GPL MISC ident version request"; flow:to_server,established; content:"VERSION|0A|"; depth:16; reference:arachnids,303; classtype:attempted-recon; sid:2100616; rev:5;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 113 (msg:"GPL MISC ident version request"; flow:to_server,established; content:"VERSION|0A|"; depth:16; reference:arachnids,303; classtype:attempted-recon; sid:2100616; rev:5;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 119 (msg:"GPL MISC AUTHINFO USER overflow attempt"; flow:to_server,established; content:"AUTHINFO"; nocase; content:"USER"; distance:0; nocase; isdataat:200,relative; pcre:"/^AUTHINFO\s+USER\s[^\n]{200}/smi"; reference:arachnids,274; reference:bugtraq,1156; reference:cve,2000-0341; classtype:attempted-admin; sid:2101538; rev:14;)
@@ -124,22 +124,22 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 113 (msg:"GPL MISC ident version reques
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 4321 (msg:"GPL MISC rwhoisd format string attempt"; flow:to_server,established; content:"-soa %p"; reference:bugtraq,3474; reference:cve,2001-0838; classtype:misc-attack; sid:2101323; rev:7;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 513 (msg:"GPL MISC rlogin bin"; flow:to_server,established; content:"bin|00|bin|00|"; reference:arachnids,384; classtype:attempted-user; sid:2100602; rev:6;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 513 (msg:"GPL MISC rlogin bin"; flow:to_server,established; content:"bin|00|bin|00|"; reference:arachnids,384; classtype:attempted-user; sid:2100602; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 513 (msg:"GPL MISC rlogin echo++"; flow:to_server,established; content:"echo |22| + + |22|"; reference:arachnids,385; classtype:bad-unknown; sid:2100603; rev:6;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 513 (msg:"GPL MISC rlogin echo++"; flow:to_server,established; content:"echo |22| + + |22|"; reference:arachnids,385; classtype:bad-unknown; sid:2100603; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 513 (msg:"GPL MISC rlogin root"; flow:to_server,established; content:"root|00|root|00|"; reference:arachnids,389; classtype:attempted-admin; sid:2100606; rev:6;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 513 (msg:"GPL MISC rlogin root"; flow:to_server,established; content:"root|00|root|00|"; reference:arachnids,389; classtype:attempted-admin; sid:2100606; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh echo + +"; flow:to_server,established; content:"echo |22|+ +|22|"; reference:arachnids,388; classtype:attempted-user; sid:2100608; rev:6;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh echo + +"; flow:to_server,established; content:"echo |22|+ +|22|"; reference:arachnids,388; classtype:attempted-user; sid:2100608; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh froot"; flow:to_server,established; content:"-froot|00|"; reference:arachnids,387; classtype:attempted-admin; sid:2100609; rev:6;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh froot"; flow:to_server,established; content:"-froot|00|"; reference:arachnids,387; classtype:attempted-admin; sid:2100609; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh root"; flow:to_server,established; content:"root|00|root|00|"; reference:arachnids,391; classtype:attempted-admin; sid:2100610; rev:6;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh root"; flow:to_server,established; content:"root|00|root|00|"; reference:arachnids,391; classtype:attempted-admin; sid:2100610; rev:6;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 79 (msg:"GPL MISC Finger bomb attempt"; flow:to_server,established; content:"@@"; reference:arachnids,381; reference:cve,1999-0106; classtype:attempted-dos; sid:2100328; rev:10;)
@@ -151,13 +151,13 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"GPL MISC rsh root"; flow:to_s
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 79 (msg:"GPL MISC Finger remote command pipe execution attempt"; flow:to_server,established; content:"|7C|"; reference:arachnids,380; reference:bugtraq,2220; reference:cve,1999-0152; classtype:attempted-user; sid:2100327; rev:10;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin file write attempt"; flow:to_server,established; content:"/plugins/framework/script/tree.xms"; nocase; content:"WriteToFile"; nocase; reference:bugtraq,9973; classtype:web-application-activity; sid:2102549; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin file write attempt"; flow:to_server,established; content:"/plugins/framework/script/tree.xms"; nocase; content:"WriteToFile"; nocase; reference:bugtraq,9973; classtype:web-application-activity; sid:2102549; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin remote file upload attempt"; flow:to_server,established; content:"/plugins/hpjwja/script/devices_update_printer_fw_upload.hts"; nocase; content:"Content-Type|3A|"; nocase; content:"Multipart"; distance:0; nocase; reference:bugtraq,9978; classtype:web-application-activity; sid:2102547; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin remote file upload attempt"; flow:to_server,established; content:"/plugins/hpjwja/script/devices_update_printer_fw_upload.hts"; nocase; content:"Content-Type|3A|"; nocase; content:"Multipart"; distance:0; nocase; reference:bugtraq,9978; classtype:web-application-activity; sid:2102547; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin setinfo access"; flow:to_server,established; content:"/plugins/hpjdwm/script/test/setinfo.hts"; nocase; reference:bugtraq,9972; classtype:web-application-activity; sid:2102548; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin setinfo access"; flow:to_server,established; content:"/plugins/hpjdwm/script/test/setinfo.hts"; nocase; reference:bugtraq,9972; classtype:web-application-activity; sid:2102548; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 873 (msg:"GPL MISC rsync backup-dir directory traversal attempt"; flow:to_server,established; content:"--backup-dir"; pcre:"/--backup-dir\s+\x2e\x2e\x2f/"; reference:bugtraq,10247; reference:cve,2004-0426; reference:nessus,12230; classtype:string-detect; sid:2102561; rev:5;)
@@ -178,22 +178,22 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"GPL MISC HP Web JetAdmin set
 #alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid directory response"; flow:from_server,established; content:"E protocol error|3A| invalid directory syntax in"; reference:bugtraq,6650; reference:cve,2003-0015; classtype:misc-attack; sid:2102011; rev:5;)
 
 #
-alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid module response"; flow:from_server,established; content:"cvs server|3A| cannot find module"; content:"error"; distance:1; classtype:misc-attack; sid:2102013; rev:3;)
+#alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid module response"; flow:from_server,established; content:"cvs server|3A| cannot find module"; content:"error"; distance:1; classtype:misc-attack; sid:2102013; rev:3;)
 
 #
-alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid repository response"; flow:from_server,established; content:"error "; content:"|3A| no such repository"; content:"I HATE YOU"; classtype:misc-attack; sid:2102009; rev:3;)
+#alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid repository response"; flow:from_server,established; content:"error "; content:"|3A| no such repository"; content:"I HATE YOU"; classtype:misc-attack; sid:2102009; rev:3;)
 
 #
-alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid user authentication response"; flow:from_server,established; content:"E Fatal error, aborting."; content:"|3A| no such user"; classtype:misc-attack; sid:2102008; rev:5;)
+#alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS invalid user authentication response"; flow:from_server,established; content:"E Fatal error, aborting."; content:"|3A| no such user"; classtype:misc-attack; sid:2102008; rev:5;)
 
 #
-alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS missing cvsroot response"; flow:from_server,established; content:"E protocol error|3A| Root request missing"; classtype:misc-attack; sid:2102012; rev:3;)
+#alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS missing cvsroot response"; flow:from_server,established; content:"E protocol error|3A| Root request missing"; classtype:misc-attack; sid:2102012; rev:3;)
 
 #
 #alert tcp $HOME_NET 2401 -> $EXTERNAL_NET any (msg:"GPL MISC CVS non-relative path error response"; flow:from_server,established; content:"E cvs server|3A| warning|3A| cannot make directory CVS in /"; reference:bugtraq,9178; reference:cve,2003-0977; classtype:misc-attack; sid:2102317; rev:5;)
 
 #
-alert tcp $HOME_NET 5631 -> $EXTERNAL_NET any (msg:"GPL MISC Invalid PCAnywhere Login"; flow:from_server,established; content:"Invalid login"; depth:13; offset:5; classtype:unsuccessful-user; sid:2100511; rev:6;)
+#alert tcp $HOME_NET 5631 -> $EXTERNAL_NET any (msg:"GPL MISC Invalid PCAnywhere Login"; flow:from_server,established; content:"Invalid login"; depth:13; offset:5; classtype:unsuccessful-user; sid:2100511; rev:6;)
 
 #
 #alert tcp any any <> any 179 (msg:"GPL MISC BGP invalid length"; flow:stateless; content:"|FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF|"; byte_test:2,<,19,0,relative; reference:bugtraq,6213; reference:cve,2002-1350; reference:url,sf.net/tracker/index.php?func=detail&aid=744523&group_id=53066&atid=469575; classtype:bad-unknown; sid:2102158; rev:9;)
@@ -226,5 +226,5 @@ alert tcp $HOME_NET 5631 -> $EXTERNAL_NET any (msg:"GPL MISC Invalid PCAnywhere 
 #alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL MISC Teardrop attack"; fragbits:M; id:242; reference:bugtraq,124; reference:cve,1999-0015; reference:nessus,10279; reference:url,www.cert.org/advisories/CA-1997-28.html; classtype:attempted-dos; sid:2100270; rev:7;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 23 (msg:"ET MISC RuggedCom factory account backdoor"; flow:to_server,established; content:"factory"; fast_pattern:only; flowbits:isset,ET.RUGGED.BANNER; pcre:"/factory[\r\n\x00]+[0-9]{9}/"; reference:url,www.exploit-db.com/exploits/18779/; reference:url,arstechnica.com/business/news/2012/04/backdoor-in-mission-critical-hardware-threatens-power-traffic-control-systems.ars; classtype:attempted-admin; sid:2014646; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 23 (msg:"ET MISC RuggedCom factory account backdoor"; flow:to_server,established; content:"factory"; fast_pattern:only; flowbits:isset,ET.RUGGED.BANNER; pcre:"/factory[\r\n\x00]+[0-9]{9}/"; reference:url,www.exploit-db.com/exploits/18779/; reference:url,arstechnica.com/business/news/2012/04/backdoor-in-mission-critical-hardware-threatens-power-traffic-control-systems.ars; classtype:attempted-admin; sid:2014646; rev:3;)
 

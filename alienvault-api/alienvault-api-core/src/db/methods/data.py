@@ -695,7 +695,7 @@ def delete_messages(messages):
 
 
 @require_db
-def db_insert_current_status_message(message_id, component_id, component_type, additional_info, replace):
+def db_insert_current_status_message(message_id, component_id, component_type, additional_info, replace, created = datetime.utcnow()):
     """Inserts a new notification on the system. The related message id should exists.
     Args:
         message_id (str:uuid string): Message id related with the notification
@@ -717,22 +717,19 @@ def db_insert_current_status_message(message_id, component_id, component_type, a
         return False, "The given message_id doesn't exist"
     if status_message is None:
         return False, "The given message_id doesn't exist. Message is None"
-
     component_id_binary = get_bytes_from_uuid(component_id)
-    if component_id_binary is None or component_id_binary == "":
+    if (component_id_binary is None or component_id_binary == "") and component_type != "external":
         return False, "Invalid component_id"
-
     if replace is True:
         success, msg = delete_current_status_messages([msg_id_binary])
         if not success:
             return success, "Unable to remove previous messages for the given message ID."
-
     try:
         db.session.begin()
         current_status_message = Current_Status()
         current_status_message.id = uuid4().bytes
         current_status_message.component_type = component_type
-        current_status_message.creation_time = datetime.utcnow()
+        current_status_message.creation_time = created
         current_status_message.message_id = msg_id_binary
         current_status_message.additional_info = additional_info
         current_status_message.suppressed = 0

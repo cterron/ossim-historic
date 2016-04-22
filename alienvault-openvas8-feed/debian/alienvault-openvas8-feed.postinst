@@ -128,9 +128,13 @@ configure_openvas_feed(){
 
     if [ ${new_install} -eq 1 ]
     then
-        # Create ossim user
+        # Create regular ossim user
         pass=$(openvasmd --create-user=ossim | grep -o -P "(?<=').*(?=')")
         /usr/bin/omp -h 127.0.0.1 -p 9390 -u ossim -w ${pass} -iX "<modify_user><name>ossim</name><password>ossim</password></modify_user>"
+
+        # Create ossim admin user needed for omp.inc wrapper
+        adm_pass=$(openvasmd --create-user=ovas-super-admin --role="Super Admin" | grep -o -P "(?<=').*(?=')")
+        /usr/bin/omp -h 127.0.0.1 -p 9390 -u ovas-super-admin -w ${adm_pass} -iX "<modify_user><name>ovas-super-admin</name><password>ovas-super-admin</password></modify_user>"
 
         # Get default profiles ids
         default_id=`/usr/bin/omp -h 127.0.0.1 -p 9390 -u ossim -w ossim -iX "<GET_CONFIGS />" | grep -B 4 '<name>Full and fast</name>' | awk -F '"' '{print $2}'`

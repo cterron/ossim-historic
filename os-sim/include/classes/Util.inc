@@ -42,8 +42,57 @@
  * @copyright  2007-2015 AlienVault
  * @link       https://www.alienvault.com/
  */
+define("LAST_UPDATE","/var/log/alienvault/update/");
+define("UPDATE_LOG_PATTERN","/alienvault[0-9]_update-script-[0-9]+\.log/");
+define("LAST_UPDATE_LOCK","/usr/share/ossim/www/tmp/last_system_update_message.lock");
+
 class Util
 {
+    public static function update_error_codes() {
+        return array(
+            "SUCCESS",
+            "ERROR_UNKNOWN_PARAM",
+            "ERROR_NO_OSSIM_SETUP",
+            "ERROR_NO_PROFILES_FOUND",
+            "ERROR_PACKAGE_INDEX_RESYNCHRONIZATION",
+            "ERROR_APT_GET_UPDATE",
+            "ERROR_REMOVE_OCS_INVENTORY",
+            "ERROR_CAN_BE_UPDATED",
+            "ERROR_REWRITE_SOURCES_LIST",
+            "ERROR_CHECKUNINSTALL_LIBIO_SOCKET_INET6_PERL",
+            "ERROR_APT_GET_INSTALL_ALIENVAULT_LICENSE",
+            "ERROR_APT_GET_INSTALL_ALIENVAULT_PROFESSIONAL",
+            "ERROR_STOP_MONIT",
+            "ERROR_APT_GET_REMOVE_LIBHTP1",
+            "ERROR_APT_GET_INSTALL_DUMMY_SENSOR_SURICATA",
+            "ERROR_APT_GET_REMOVE_PHP5_SUHOSIN",
+            "ERROR_APT_GET_INSTALL_LIBMYSQLCLIENT16",
+            "ERROR_UNKNOWN_LIBMYSQLCLIENT16_VERSION",
+            "ERROR_HOLD_LIBMYSQLCLIENT16",
+            "ERROR_UNHOLD_APACHE2",
+            "ERROR_REINSTALL_DAQ",
+            "ERROR_PERCONADBPASS",
+            "ERROR_BUILDLOAD_PRESEED_CONF",
+            "ERROR_DEBCONF_SELECTIONS_RECONFIGURE_DASH",
+            "ERROR_APT_GET_INSTALL_DASH",
+            "ERROR_CHECKINSTALL_BSD_MAILX",
+            "ERROR_UPGRADE_DIST_DOWNLOAD_ONLY",
+            "ERROR_UPGRADE_DIST",
+            "ERROR_UPDATE_IGB_PFRING",
+            "ERROR_UNINSTALL_SQUID2",
+            "ERROR_APT_GET_AUTOREMOVE",
+            "ERROR_APTITUDE_PURGE",
+            "ERROR_PLATFORM_UPDATE_DISABLED",
+            "ERROR_PLATFORM_UPDATE_INVALID_REPOS"
+        );
+    }
+
+    public static function get_update_error($code) {
+        $codes = self::update_error_codes();
+        return $codes[$code];
+    }
+
+
     /**
      * Function beautify
      *
@@ -2975,6 +3024,65 @@ class Util
         return array('#FAC800','#7D71BD', '#2FC9E5', '#B722E8', '#FF8A00', '#F65DC9', '#1E2AD1', '#837B67', '#9455F8', '#1881FA');
     }
     
+    public static function get_last_log_file() {
+        $latest_ctime = 0;
+        $latest_filename = '';    
+        $d = dir(LAST_UPDATE);
+        while (false !== ($entry = $d->read())) {
+            $filepath = LAST_UPDATE."/{$entry}";
+            if (!is_file($filepath) || filectime($filepath) <= $latest_ctime || !preg_match(UPDATE_LOG_PATTERN,$entry)) {
+                continue;
+            }
+            $latest_ctime = filectime($filepath);
+            $latest_filename = $filepath;
+        }
+        return $latest_filename;
+    }
+    
+    public function read_last_line($file) {
+        if (!file_exists($file)) {
+            return 0;
+        }
+        $fp = fopen($file, 'r');
+        if (!$fp) {
+            return 0;
+        }
+        $eol = "\n";
+        $pos = -1; $line = ''; $c = '';
+        do {
+            $line = $c . $line;
+            fseek($fp, $pos--, SEEK_END);
+            $c = fgetc($fp);
+        } while (trim($line) == "" || $c != $eol);
+        return trim($line);
+    }
+
+    public static function get_last_update_log_result()
+    {
+        $file = self::get_last_log_file();
+        $line = self::read_last_line($file);
+//update correct
+        if ($line === 0 || strpos($line, "finished")) {
+            return 0;
+        }
+        preg_match("/[0-9]+$/",$line,$match);
+        return self::get_update_error($match[0]);
+    }
+
+    public static function get_last_update_log_time()
+    {
+        $file = self::get_last_log_file();
+        return filemtime($file);
+    }
+
+    public function check_update_message_lock_present($uuid) {
+        if ($uuid == file_get_contents(LAST_UPDATE_LOCK)) {
+            return false;
+        }
+        file_put_contents(LAST_UPDATE_LOCK,$uuid);
+        return true;
+    }
+
 }
 
 /* End of file Util.inc */

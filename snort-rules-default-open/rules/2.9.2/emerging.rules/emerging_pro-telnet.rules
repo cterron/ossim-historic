@@ -43,26 +43,26 @@
 
 #by Kevin Ross
 #
-alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET TELNET External Telnet Attempt To Cisco Device With No Telnet Password Set (Automatically Dissalowed Until Password Set)"; flow:from_server; content:"Password required, but none set"; depth:31; reference:url,doc.emergingthreats.net/bin/view/Main/2008860; classtype:attempted-admin; sid:2008860; rev:4;)
+#alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET TELNET External Telnet Attempt To Cisco Device With No Telnet Password Set (Automatically Dissalowed Until Password Set)"; flow:from_server; content:"Password required, but none set"; depth:31; reference:url,doc.emergingthreats.net/bin/view/Main/2008860; classtype:attempted-admin; sid:2008860; rev:4;)
 
 #by Kevin Ross
 #
 #alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET TELNET External Telnet Login Prompt from Cisco Device"; flow:from_server,established; pcre:"/^(\r\n)*/"; content:"User Access Verification"; within:24; reference:url,doc.emergingthreats.net/bin/view/Main/2008861; classtype:attempted-admin; sid:2008861; rev:6;)
 
 #
-alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"GPL TELNET Bad Login"; flow:from_server,established; content:"Login incorrect"; nocase; fast_pattern:only; classtype:bad-unknown; sid:2101251; rev:9;)
+#alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"GPL TELNET Bad Login"; flow:from_server,established; content:"Login incorrect"; nocase; fast_pattern:only; classtype:bad-unknown; sid:2101251; rev:9;)
 
 #
 #alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET TELNET access"; flow:from_server,established; content:"|FF FD|"; rawbytes; content:"|FF FD|"; distance:0; rawbytes; content:"|FF FD|"; distance:0; rawbytes; reference:arachnids,08; reference:cve,1999-0619; reference:nessus,10280; classtype:not-suspicious; sid:2100716; rev:14;)
 
 #
-alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET TELNET login failed"; flow:from_server,established; content:"Login failed"; nocase; classtype:bad-unknown; sid:2100492; rev:10;)
+#alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET TELNET login failed"; flow:from_server,established; content:"Login failed"; nocase; classtype:bad-unknown; sid:2100492; rev:10;)
 
 #
-alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET Telnet Root not on console"; flow:from_server,established; content:"not on system console"; fast_pattern:only; nocase; reference:arachnids,365; classtype:bad-unknown; sid:2100717; rev:9;)
+#alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET Telnet Root not on console"; flow:from_server,established; content:"not on system console"; fast_pattern:only; nocase; reference:arachnids,365; classtype:bad-unknown; sid:2100717; rev:9;)
 
 #
-alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET root login"; flow:from_server,established; content:"login|3A| root"; fast_pattern:only; classtype:suspicious-login; sid:2100719; rev:8;)
+#alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET root login"; flow:from_server,established; content:"login|3A| root"; fast_pattern:only; classtype:suspicious-login; sid:2100719; rev:8;)
 
 #
 #alert tcp $EXTERNAL_NET 23 -> $HOME_NET any (msg:"ETPRO TELNET Multiple Vendor Telnet Client LINEMODE Buffer Overflow"; flow:to_client,established; content:"|FF FA 22 03|"; rawbytes; content:!"|FF F0|"; rawbytes; within:123; content:"|FF F0|"; rawbytes; offset:127; reference:cve,CVE-2005-0469; reference:bugtraq,12918; reference:secunia,14745; classtype:attempted-admin; sid:2800030; rev:3;)

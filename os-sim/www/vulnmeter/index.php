@@ -30,15 +30,12 @@
 * Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 *
 */
-
 ini_set("max_execution_time","360");
 require_once 'av_init.php';
 require_once 'config.php';
 require_once 'functions.inc';
 require_once 'ossim_sql.inc';
-
 Session::logcheck("environment-menu", "EventsVulnerabilities");
-
 $delete          = GET('delete');
 $scantime        = GET('scantime');
 $rvalue          = GET('rvalue');
@@ -57,7 +54,6 @@ ossim_valid($type, OSS_ALPHA, "hn", "freetext", "service", OSS_NULLABLE,        
 ossim_valid($delete_ipl_ctx, OSS_BASE64, OSS_NULLABLE,                                   'illegal:' . _("delete_ipl_ctx"));
 ossim_valid($sortby, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,                                  'illegal:' . _("sort by"));
 ossim_valid($widget_mode, OSS_DIGIT, OSS_NULLABLE,                                       'illegal:' . _("Widget Mode"));
-
 if (ossim_error()) {
     die(ossim_error());
 }
@@ -69,10 +65,8 @@ if ( $type=="net" && preg_match("/\d+\.\d+\.\d+\.\d+\/\d+/",$value) ){
 }
 
 $widget_mode = ($widget_mode == 1) ? TRUE : FALSE;
-
 $db = new ossim_db();
 $conn = $db->connect();
-
 // number of hosts to show per page with viewing all
 $pageSize = 10;
 $allres   = 1;
@@ -81,7 +75,6 @@ $getParams = array( "disp", "op", "output", "scantime", "scantype", "reporttype"
 $postParams = array( "disp", "op", "output", "scantime", "type", "value", "rvalue", "offset",
     "scantype", "fp","nfp", "filterip", "critical", "increment", "roffset", "sreport");
 $post = FALSE;
-
 switch ($_SERVER['REQUEST_METHOD'])
 {
 case "GET" :
@@ -104,26 +97,16 @@ case "POST" :
    }
     break;
 }
-
 $offset  = intval($offset);   // latest results table
 
 $roffset = intval($roffset);  // reports table
 
 $sreport = intval($sreport);  // to show reports
-
-//for autocomplete input
-
-$autocomplete_keys = array('hosts_ips', 'nets_cidrs', 'sensors');
-$assets            = Autocomplete::get_autocomplete($dbconn, $autocomplete_keys);
-
 // ctx permissions
 
 $perms_where = (Session::get_ctx_where() != "") ? " AND ctx in (".Session::get_ctx_where().")" : "";
-
 list($arruser, $user) = Vulnerabilities::get_users_and_entities_filter($conn);
-
 // Delete Section
-
 if( !empty($delete) && !empty($scantime) ){ // a single scan in latest results tables
     $params = array($delete, $scantime);
     $query = "SELECT hostIP, HEX(ctx) as ctx, sid, username FROM vuln_nessus_latest_reports WHERE report_key=? and scantime=? $perms_where";
@@ -148,7 +131,6 @@ if( !empty($delete) && !empty($scantime) ){ // a single scan in latest results t
 }
 else if( !empty($delete) ) // a report
 {
-
     $query_onlyuser = (!empty( $arruser)) ?  " AND username in ($user)" : "" ;
 
     $dbconn->execute("DELETE FROM vuln_jobs WHERE report_id = $delete $query_onlyuser");
@@ -186,7 +168,6 @@ else if( !empty($delete_ipl_ctx) ) { // all results for a IP in latest results
 }
 
 function list_reports($type, $value, $sortby, $sortdir, $widget_mode ) {
-
    global $allres, $roffset, $pageSize, $dbconn;
    global $user, $arruser;
    
@@ -238,7 +219,6 @@ function list_reports($type, $value, $sortby, $sortdir, $widget_mode ) {
      LEFT JOIN vuln_nessus_settings t3 ON t1.sid=t3.id
      LEFT JOIN vuln_jobs t4 on t1.report_id = t4.report_id $leftjoin
      WHERE t1.deleted = '0' AND t1.scantime IS NOT NULL ";
-
     //Set up the SQL query based on the search form input (if any)
     switch($type) {
 		case "scantime":
@@ -327,7 +307,6 @@ function list_reports($type, $value, $sortby, $sortdir, $widget_mode ) {
 			$stext       = "";
 		break;
 	}
-
 	$reportCount = 0;
 
 	if(!$filteredView)
@@ -353,7 +332,6 @@ function list_reports($type, $value, $sortby, $sortdir, $widget_mode ) {
       $next = $roffset + $pageSize;
 
       $pageEnd = $roffset + $pageSize;
-
       $value = html_entity_decode($value);
       
       $w_val = intval($widget_mode);
@@ -423,7 +401,6 @@ EOT;
          // query for reports for each IP
          
          $perms_where = Asset_host::get_perms_where('host.', TRUE);
-         
          if (!empty($perms_where))
          {
              $query_risk = "SELECT count(lr.risk) as count, lr.risk, lr.hostIP, lr.ctx
@@ -471,17 +448,11 @@ EOT;
         $data['xlink'] = "rescsv.php?scantime=".$data['scantime']."&scantype=".$data['scantype']."&key=".$data['report_key'].$more;
         $data['xbase'] = "restextsummary.php?scantime=".$data['scantime']."&scantype=".$data['scantype'].$more."&key=".$data['report_key'];
         $list = array();
-
 		if($data["report_type"]=="I")
-		{
+		{ 
 		    $perms_where = Asset_host::get_perms_where('host.', TRUE);
-		
-            $dbconn->execute("CREATE TEMPORARY TABLE tmph (id binary(16) NOT NULL,ip varchar(64) NOT NULL,ctx binary(16) NOT NULL, PRIMARY KEY ( id, ip ));");
-            $dbconn->execute("REPLACE INTO tmph SELECT id, inet6_ntoa(ip), ctx FROM host, host_ip WHERE host.id=host_ip.host_id $perms_where;");
-            
-            $result_import = $dbconn->execute("SELECT DISTINCT hostIP, HEX(vuln_nessus_results.ctx) as ctx, hex(id) as host_id FROM vuln_nessus_results LEFT JOIN tmph ON tmph.ctx=vuln_nessus_results.ctx AND hostIP=tmph.ip WHERE report_id = " . $data['report_id']);
-            
-            
+                    $result_import = $dbconn->execute("select v1.hostIP, hex(h.ctx), hex(h.id) from (select distinct inet6_aton(hostIP) as hostIP_aton, hostIP, ctx from vuln_nessus_results where report_id =  {$data['report_id']}) as v1
+                             JOIN  host h ON h.ctx = v1.ctx join host_ip ON host_ip.ip = v1.hostIP_aton AND host_ip.host_id = h.id");
             while (!$result_import->EOF)
 			{
                 if( valid_hex32($result_import->fields["host_id"]) ) {
@@ -493,8 +464,6 @@ EOT;
 
                 $result_import->MoveNext();
             }
-            
-            $dbconn->execute("DROP TABLE tmph;");
         }
         else {
             $list = explode("\n", trim($data['meth_target']));
@@ -533,7 +502,6 @@ EOT;
 
             $data['target'] = $list[0]." ... ".$list[count($list)-1];
         }
-
 		if ($data["report_type"]=="I") $data["jobname"] = $data["report_name"];
 
         if( ($data['vSerious'] == 0 && $data['vHigh'] == 0 && $data['vMed'] == 0 && $data['vLow'] == 0 &&  $data['vInfo'] == 0) && $vulns_in_report )
@@ -548,7 +516,6 @@ EOT;
         $data['target'] = preg_replace("/[0-9a-f]{32}#/i","",$data['target']);
         $tdata[] = $data;
       }
-
       if($sortdir == "ASC") { $sortdir = "DESC"; } else { $sortdir = "ASC"; }
       $url = $_SERVER['SCRIPT_NAME'] . "?offset=0&sortby=%var%&sortdir=$sortdir".$url_filter;
 
@@ -581,7 +548,6 @@ EOT;
                "Low" => array( 'var' => 'vLow', 'link' => $url ),
                "Info" => array( 'var' => 'vInfo', 'link' => $url ),
                "Links" => $fieldMapLinks);
-
       if(count($tdata)>0) {
         drawTable($fieldMap, $tdata, "Hosts", get_hosts($dbconn));
       }
@@ -590,9 +556,9 @@ EOT;
             <tr><td class="nobborder" style="text-align:center;padding: 8px 0px 0px 0px;"><strong><?php echo _("No reports found"); ?></strong><br/><br/></td></tr>
         </table>
       <?php
+
         }
    }
-
    // draw the pager again, if viewing all hosts
    if($last!=0) {    
    ?>
@@ -646,7 +612,6 @@ EOT;
   <script type="text/javascript" src="/ossim/js/jquery-ui.min.js"></script>
   <script type="text/javascript" src="/ossim/js/jquery.tipTip.js"></script>
   <script type="text/javascript" src="/ossim/js/jquery.simpletip.js"></script>
-  <script type="text/javascript" src="/ossim/js/jquery.autocomplete.pack.js"></script>
   <!--[if IE]><script language="javascript" type="text/javascript" src="../js/jqplot/excanvas.js"></script><![endif]-->
   <script language="JavaScript" src="/ossim/js/jquery.flot.pie.js"></script>
   <script type="text/javascript" src="/ossim/js/vulnmeter.js"></script>
@@ -654,7 +619,12 @@ EOT;
   <?php require ("../host_report_menu.php"); ?>
 
   <style type="text/css">
-
+	.ui-autocomplete {
+		width:300px;
+	}
+	#ui-active-menuitem {
+		background-color: #16A7C9;
+	}
 	img.downclick { cursor:pointer; }
 
 
@@ -747,24 +717,20 @@ EOT;
 		});
 
         // Autocomplete assets
-        var assets = [
-            <?php echo $assets ?>
-        ];
-        $(".assets").autocomplete(assets, {
-            minChars: 0,
-            width: 300,
-            max: 100,
-            matchContains: true,
-            autoFill: true,
-            formatItem: function(row, i, max) {
-                return row.txt;
-            }
-        }).result(function(event, item) {
-
-            $('#assets').val(item.ip);
-
+        $(".assets").autocomplete(assets,{
+            source: function(request, response) {
+                $.ajax({
+                    url: "/ossim/vulnmeter/asset.list.php",
+                    dataType: "json",
+                    cache: false,
+                    type: "get",
+                    data: { term: request.term }
+               }).done(function(data) {
+                    response(data);
+               });
+            },
+            minLength: 3
         });
-
         $('.downclick').bind("click",function(){
             var cls = $(this).attr('value');
             $('.'+cls).toggle();
@@ -846,10 +812,8 @@ EOT;
 <head>
 <body>
 <?php
-
 //Local menu
 include_once '../local_menu.php';
-
 
 // * For current vulnerabilities
 function list_results ( $type, $value, $ctx_filter, $sortby, $sortdir ) {
@@ -876,7 +840,6 @@ function list_results ( $type, $value, $ctx_filter, $sortby, $sortdir ) {
 
     $queryw="";
     $queryl="";
-
     $querys = "SELECT distinct t1.hostIP, HEX(t1.ctx) as ctx, t1.scantime, t1.username, t1.scantype, t1.report_key, t1.report_type as report_type, t1.sid, t3.name as profile
     FROM vuln_nessus_latest_reports AS t1 LEFT JOIN vuln_nessus_settings AS t3 ON t1.sid = t3.id, vuln_nessus_latest_results AS t5
     WHERE
@@ -993,7 +956,6 @@ function list_results ( $type, $value, $ctx_filter, $sortby, $sortdir ) {
 echo "<table class='w100 transparent'>";
 echo "<tr><td class='sec_title'>"._("Asset Vulnerability Details")."</td></tr>";
 echo "<tr><td style='padding:12px 0px 0px 0px;' class='transparent'>";
-
 ?>
     <div id='cvleftdiv'>
         <a id="new_scan_button" class="button" href="<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?action=create_scan&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities','scan_jobs'); ?>" style="text-decoration:none;">
@@ -1028,7 +990,6 @@ EOT;
       echo " "._("found matching search criteria")." | ";
       echo " <a href='index.php' alt='"._("View All Reports")."'>"._("View All Reports")."</a></p>";
    }
-
    echo "<p>";
    echo $stext;
    echo "</p>";
@@ -1050,7 +1011,6 @@ EOT;
     }
 
     $_SESSION["_dreport_ids"]=implode(",", $delete_ids);
-
    //echo "$querys$queryw$queryl";
    if($result === false) {
       $errMsg[] = _("Error getting results").": " . $dbconn->ErrorMsg();
@@ -1064,7 +1024,6 @@ EOT;
        $data['vSerious'] = 0;
        
        $perms_where  = Asset_host::get_perms_where('host.', TRUE);
-
        if (!empty($perms_where))
        {
            $queryt = "SELECT count(lr.result_id) AS total, lr.risk, lr.hostIP, HEX(lr.ctx) AS ctx
@@ -1134,7 +1093,6 @@ EOT;
         $data['vMed'] = 0;
         $data['vLow'] = 0;
         $data['vInfo'] = 0;
-
          // query for reports for each IP
          $query_risk = "SELECT distinct risk, port, protocol, app, scriptid, msg, hostIP FROM vuln_nessus_latest_results WHERE hostIP = '".$data['hostIP'];
          $query_risk.= "' AND username = '".$data['username']."' AND sid =".$data['sid']." AND ctx = UNHEX('".$data['ctx']."') AND falsepositive='N'";
@@ -1153,7 +1111,6 @@ EOT;
                 $data['vSerious']++;
             $result_risk->MoveNext();
          }
-         
          $data['plink'] = "lr_respdf.php?treport=latest&ipl=" . urlencode($data['hostIP']) . "&ctx=".$data['ctx'] . "&scantype=" . $data['scantype'];
          $data['hlink'] = "lr_reshtml.php?treport=latest&ipl=" . urlencode($data['hostIP']) . "&ctx=".$data['ctx'] . "&scantype=" . $data['scantype'];
          $data['xlink'] = "lr_rescsv.php?treport=latest&ipl=" . urlencode($data['hostIP']) . "&ctx=".$data['ctx'] . "&scantype=" . $data['scantype'];
@@ -1194,7 +1151,6 @@ EOT;
     }
       if($sortdir == "ASC") { $sortdir = "DESC"; } else { $sortdir = "ASC"; }
       $url = $_SERVER['SCRIPT_NAME'] . "?offset=$offset&sortby=%var%&sortdir=$sortdir".$url_filter;
-
       $fieldMapLinks = array();
 
          $fieldMapLinks = array(

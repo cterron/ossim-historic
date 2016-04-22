@@ -1399,12 +1399,18 @@ function set_ls_key_status(k, status)
 /************************************************************************************/
 
 
-function GB_onhide(url)
+function GB_onhide(url,params)
 {
 	if (url.match(/newincident/))
 	{
 		document.location.href="../incidents/index.php?m_opt=analysis&sm_opt=tickets&h_opt=tickets"
 	}
+	else if (typeof(params) == 'object' && typeof params['url_detail'] != 'undefined')
+	{
+		if (typeof(parent.show_overlay_spinner)=='function') parent.show_overlay_spinner(true);
+		$(".closeimg",window.parent.document).click();
+		document.location.href = params['url_detail'];
+       }
 }
 
 

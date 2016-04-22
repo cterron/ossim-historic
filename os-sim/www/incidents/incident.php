@@ -1170,7 +1170,7 @@ $taghtm = count($taga) ? implode(' - ', $taga) : _('n/a');
                     ?>
                     <div id='del_button_layer'>
                         <form method="POST" name='f_del_ticket' id='f_del_ticket' action="<?php echo $del_url ?>">
-                            <input type="button" name="del_ticket" id="del_ticket" class="av_b_secondary small" value="<?php echo _('Delete ticket') ?>">
+                            <input type="button" name="del_ticket" id="del_ticket" class="av_b_secondary small" value="<?php echo _('Delete note') ?>">
                         </form>
                     </div>
                     <?php

@@ -5669,7 +5669,7 @@
 2007646 || ET TROJAN Farfli User Agent Detected || url,doc.emergingthreats.net/2007646
 2007647 || ET DELETED Casalemedia.com Related User Agent (0 0 ...) || url,doc.emergingthreats.net/2007647
 2007648 || ET MALWARE Spyware User-Agent (XXX) || url,doc.emergingthreats.net/bin/view/Main/2007648
-2007649 || ET MALWARE Spylog.ru Related Spyware Checkin || url,doc.emergingthreats.net/bin/view/Main/2007649
+2007649 || ET DELETED Spylog.ru Related Spyware Checkin || url,doc.emergingthreats.net/bin/view/Main/2007649
 2007650 || ET TROJAN Mac Trojan HTTP Checkin (accept-language violation) || url,doc.emergingthreats.net/2007650
 2007651 || ET ATTACK_RESPONSE x2300 phpshell detected || url,doc.emergingthreats.net/bin/view/Main/2007651 || url,www.rfxn.com/vdb.php
 2007652 || ET ATTACK_RESPONSE c99shell phpshell detected || url,doc.emergingthreats.net/bin/view/Main/2007652 || url,www.rfxn.com/vdb.php
@@ -8866,7 +8866,7 @@
 2011329 || ET WEB_CLIENT Possible PDF Launch Function Remote Code Execution Attempt with Name Representation Obfuscation || url,blog.didierstevens.com/2008/04/29/pdf-let-me-count-the-ways/ || url,www.m86security.com/labs/i/PDF-Launch-Feature-Used-to-Install-Zeus,trace.1301~.asp || url,blog.didierstevens.com/2010/03/31/escape-from-foxit-reader/ || url,www.h-online.com/security/news/item/Adobe-issues-official-workaround-for-PDF-vulnerability-971932.html || url,www.sudosecure.net/archives/673 || url,www.h-online.com/security/news/item/Criminals-attempt-to-exploit-unpatched-hole-in-Adobe-Reader-979286.html || url,www.kb.cert.org/vuls/id/570177
 2011330 || ET DELETED DRIVEBY Fragus - landing page delivered
 2011334 || ET MALWARE User-Agent (C\\WINDOWS\\system32\\NetLogom.exe)
-2011335 || ET TROJAN Sality Variant Checkin Activity || url,www.threatexpert.com/report.aspx?md5=f39d0a669ad98b95370a4f525d7d79ec || url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Virus%3AWin32%2FSality.AU
+2011335 || ET DELETED Sality Variant Checkin Activity || url,www.threatexpert.com/report.aspx?md5=f39d0a669ad98b95370a4f525d7d79ec || url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Virus%3AWin32%2FSality.AU
 2011336 || ET TROJAN Win32/Keatep.B Checkin || md5,239aacf49bb6381fd71841fda4d4ee58 || url,microsoft.com/security/portal/threat/encyclopedia/entry.aspx?Name=TrojanSpy%3AWin32/Keatep.B || url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Virus%3AWin32%2FSality.AU
 2011337 || ET TROJAN Sality Variant Downloader Activity (2) || url,www.threatexpert.com/report.aspx?md5=579f2e29434218d62d31625d369cbc42 || url,www.threatexpert.com/report.aspx?md5=76cf08503cdd036850bcc4f29f64022f
 2011338 || ET TROJAN Sality Variant Downloader Activity (3) || url,www.threatexpert.com/report.aspx?md5=438bcb3c4a304b65419674ce8775d8a3
@@ -12738,7 +12738,7 @@
 2015557 || ET WEB_CLIENT Potential MSXML2.FreeThreadedDOMDocument Uninitialized Memory Corruption Attempt || cve,2012-1889
 2015558 || ET DELETED g01pack Exploit Kit Landing Page 3
 2015559 || ET CURRENT_EVENTS Cridex Self Signed SSL Certificate (TR, Some-State, Internet Widgits)
-2015560 || ET TROJAN ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Shylock or URLzone C2) || url,sslbl.abuse.ch
+2015560 || ET TROJAN ET TROJAN ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Likely Shylock, URLzone, or Gootkit C2) || url,sslbl.abuse.ch
 2015561 || ET INFO PDF Using CCITTFax Filter || url,blog.fireeye.com/research/2012/07/analysis-of-a-different-pdf-malware.html#more || url,nakedsecurity.sophos.com/2012/04/05/ccittfax-pdf-malware/
 2015562 || ET TROJAN Trojan.Win32.Jorik.Totem.vg HTTP request || md5,cf5df13f8498326f1c6407749b3fe160
 2015563 || ET ACTIVEX Possible BarCodeWiz BarcodeWiz.dll ActiveX Control Barcode Method Remote Buffer Overflow Attempt || url,securityfocus.com/bid/54701
@@ -13462,8 +13462,8 @@
 2016317 || ET TROJAN Suspicious user-agent (f**king)
 2016318 || ET MOBILE_MALWARE Android/Ksapp.A Checkin || url,symantec.com/connect/blogs/mdk-largest-mobile-botnet-china || url,www.fortiguard.com/latest/mobile/4158213 || url,anubis.iseclab.org/?action=result&task_id=16b7814b794cd728435e122ca2c2fcdd3 || md5,13e6ce4aac7e60b10bfde091c09b9d88 || md5,e6d9776113b29680aec73ac2d1445946
 2016319 || ET CURRENT_EVENTS Impact Exploit Kit Landing Page
-2016320 || ET CURRENT_EVENTS Exploit Kit Java gif download
-2016321 || ET CURRENT_EVENTS Possible g01pack Jar download
+2016320 || ET DELETED Exploit Kit Java gif download
+2016321 || ET DELETED Possible g01pack Jar download
 2016322 || ET DOS LibuPnP CVE-2012-5958 ST DeviceType Buffer Overflow || cve,CVE-2012-5962 || cve,CVE_2012-5958
 2016323 || ET DOS LibuPnP CVE-2012-5963 ST UDN Buffer Overflow || cve,CVE-2012-5963
 2016324 || ET DOS LibuPnP CVE-2012-5964 ST URN ServiceType Buffer Overflow || cve,CVE-2012-5964
@@ -13537,7 +13537,7 @@
 2016399 || ET TROJAN W32/FloatingCloud.Banker CnC Beacon || url,www.securelist.com/en/blog/798/God_horses_are_floating_clouds_The_story_of_a_Chinese_banker_Trojan
 2016400 || ET CURRENT_EVENTS Flash Action Script Invalid Regex CVE-2013-0634 || cve,2013-0634
 2016401 || ET CURRENT_EVENTS Flash Action Script Invalid Regex CVE-2013-0634 || cve,2013-0364
-2016402 || ET CURRENT_EVENTS Exploit Kit Java png download
+2016402 || ET DELETED Exploit Kit Java png download
 2016403 || ET CURRENT_EVENTS CoolEK Payload - obfuscated binary base 0
 2016404 || ET INFO MPEG Download Over HTTP (1)
 2016405 || ET DELETED CoolEK - PDF Exploit - Feb 12 2013
@@ -13629,7 +13629,7 @@
 2016492 || ET CURRENT_EVENTS CoolEK/BHEK/Impact EK Java7 Exploit Class Request (3)
 2016493 || ET CURRENT_EVENTS CoolEK/BHEK/Impact EK Java7 Exploit Class Request (3)
 2016494 || ET INFO Serialized Java Applet (Used by some EKs in the Wild)
-2016495 || ET CURRENT_EVENTS Exploit Kit Java .psd download
+2016495 || ET DELETED Exploit Kit Java .psd download
 2016496 || ET TROJAN Gimemo Ransomware Checkin
 2016497 || ET CURRENT_EVENTS StyX Landing Page (2)
 2016498 || ET CURRENT_EVENTS Styx Exploit Kit Landing Applet With Payload || md5,9a17d72f6234a1dc930ffe6b1681504c || url,malwaremustdie.blogspot.co.uk/2013/02/the-infection-of-styx-exploit-kit.html
@@ -13640,7 +13640,7 @@
 2016503 || ET INFO Java Serialized Data
 2016504 || ET INFO Serialized Data request
 2016505 || ET INFO file possibly containing Serialized Data file
-2016506 || ET CURRENT_EVENTS Exploit Kit Java jpeg download
+2016506 || ET DELETED Exploit Kit Java jpeg download
 2016507 || ET TROJAN W32/Caphaw Requesting Additional Modules From CnC || url,www.welivesecurity.com/2013/02/25/caphaw-attacking-major-european-banks-with-webinject-plugin/
 2016508 || ET TROJAN W32/Caphaw CnC Configuration File Request || url,www.welivesecurity.com/2013/02/25/caphaw-attacking-major-european-banks-with-webinject-plugin/
 2016509 || ET TROJAN W32/Zbot.Variant Fake MSIE 6.0 UA
@@ -14614,7 +14614,7 @@
 2017508 || ET DELETED Styx J7u21 click2play bypass
 2017509 || ET CURRENT_EVENTS Possible J7u21 click2play bypass
 2017510 || ET EXPLOIT Metasploit CVE-2013-3205 Exploit Specific
-2017511 || ET TROJAN DeputyDog callback || url,www.fireeye.com/blog/technical/cyber-exploits/2013/09/operation-deputydog-zero-day-cve-2013-3893-attack-against-japanese-targets.html
+2017511 || ET TROJAN APT.Agtid callback || url,www.fireeye.com/blog/technical/cyber-exploits/2013/09/operation-deputydog-zero-day-cve-2013-3893-attack-against-japanese-targets.html
 2017512 || ET CURRENT_EVENTS W32/Caphaw DriveBy Campaign Statistic.js || url,blog.damballa.com/archives/2147 || url,research.zscaler.com/2013/09/a-new-wave-of-win32caphaw-attacks.html
 2017513 || ET CURRENT_EVENTS W32/Caphaw DriveBy Campaign Ping.html || url,blog.damballa.com/archives/2147 || url,research.zscaler.com/2013/09/a-new-wave-of-win32caphaw-attacks.html
 2017515 || ET INFO User-Agent (python-requests) Inbound to Webserver
@@ -15628,7 +15628,7 @@
 2018551 || ET TROJAN EtumBot GET File Data Upload || md5,ca838b98ca0f516858a8a523dcd1338d || url,www.arbornetworks.com/asert/2014/06/illuminating-the-etumbot-apt-backdoor/
 2018552 || ET TROJAN Backdoor.Win32/Etumbot.B Requesting RC4 Key || url,arbornetworks.com/asert/wp-content/uploads/2014/06/ASERT-Threat-Intelligence-Brief-2014-07-Illuminating-Etumbot-APT.pdf || md5,ff5a7a610746ab5492cc6ab284138852 || md5,82d4850a02375a7447d2d0381b642a72
 2018553 || ET TROJAN Pandemiya User-Agent || url,blogs.rsa.com/new-pandemiya-trojan-emerges-alternative-zeus-based-variants
-2018554 || ET TROJAN Putter Panda CnC HTTP Request || md5,544fca6eb8181f163e2768c81f2ba0b3 || url,resources.crowdstrike.com/putterpanda/
+2018554 || ET TROJAN Putter Panda HTTPClient CnC HTTP Request || md5,544fca6eb8181f163e2768c81f2ba0b3 || url,resources.crowdstrike.com/putterpanda/
 2018555 || ET TROJAN Putter Panda 3PARA RAT initial beacon || url,resources.crowdstrike.com/putterpanda/
 2018556 || ET CURRENT_EVENTS SUSPICIOUS EXE Download from Google Common Data Storage with no Referer || md5,71e752dd4c4df15a910c17eadb8b15ba || md5,9fcbc6def809520e77dd7af984f82fd5
 2018557 || ET MALWARE PUP Win32.SoftPulse Checkin || md5,50f1fc1085f18a25c09c08566fc1a457 || md5,9aa08a2700074c7a8a81e49dc8396e00
@@ -15818,7 +15818,7 @@
 2018752 || ET TROJAN Generic .bin download from Dotted Quad
 2018753 || ET MALWARE W32/SearchSuite Install CnC Beacon || md5,77e33e8a53e2a0dbc06c921de9b71142 || md5,7203a56c3888e819c602e758fce823fa
 2018754 || ET SCAN Possible WordPress xmlrpc.php wp.getUsersBlogs Flowbit Set || url,isc.sans.edu/diary/+WordPress+brute+force+attack+via+wp.getUsersBlogs/18427
-2018755 || ET SCAN Possible WordPress xmlrpc.php BruteForce in Progress || url,isc.sans.edu/diary/+WordPress+brute+force+attack+via+wp.getUsersBlogs/18427
+2018755 || ET SCAN Possible WordPress xmlrpc.php BruteForce in Progress - Response || url,isc.sans.edu/diary/+WordPress+brute+force+attack+via+wp.getUsersBlogs/18427
 2018756 || ET CURRENT_EVENTS XMLDOM Check for Presence Kaspersky AV Observed in RIG EK || url,research.zscaler.com/2014/07/de-obfuscating-dom-based-javascript.html
 2018757 || ET CURRENT_EVENTS XMLDOM Check for Presence TrendMicro AV Observed in RIG EK || url,research.zscaler.com/2014/07/de-obfuscating-dom-based-javascript.html
 2018758 || ET CURRENT_EVENTS Possible Upatre SSL Cert twitterbacklinks.com || md5,4cb5a748416b9f03d875245437344177
@@ -16520,7 +16520,7 @@
 2019466 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS CnC) || url,sslbl.abuse.ch
 2019467 || ET TROJAN Win32/Spy.KeyLogger.ODN Checkin || md5,4e83c405f35efd128ab8c324c12dbde9
 2019468 || ET DELETED Win32/Spy.KeyLogger.ODN Exfiltrating Data || md5,4e83c405f35efd128ab8c324c12dbde9
-2019469 || ET TROJAN Deputy Dog checkin || url,www.fireeye.com/blog/technical/cyber-exploits/2013/09/operation-deputydog-zero-day-cve-2013-3893-attack-against-japanese-targets.html || md5,70e87b2898333e11344b16a72183f8e9
+2019469 || ET DELETED APT.Fexel Checkin || url,www.fireeye.com/blog/technical/cyber-exploits/2013/09/operation-deputydog-zero-day-cve-2013-3893-attack-against-japanese-targets.html || md5,70e87b2898333e11344b16a72183f8e9
 2019470 || ET CURRENT_EVENTS Win32/Zbot SSL Cert Oct 17 2014 || md5,ae773f234152fb5df1ab35116dbb82bd
 2019471 || ET TROJAN Possible IRCBot.DDOS Common Commands || md5,ef54080af1782dd29356032b7ff20849
 2019477 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dyre CnC) || url,sslbl.abuse.ch
@@ -18012,8 +18012,8 @@
 2020995 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M0
 2020996 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M1
 2020997 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M2
-2020998 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M3
-2020999 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M4
+2020998 || ET DELETED Fiesta Payload/Exploit URI Struct M3
+2020999 || ET DELETED Fiesta Payload/Exploit URI Struct M4
 2021000 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M5
 2021001 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M6
 2021002 || ET CURRENT_EVENTS Fiesta Payload/Exploit URI Struct M7
@@ -18483,7 +18483,7 @@
 2021523 || ET TROJAN PoisonIvy HTTP CnC Beacon || url,blog.jpcert.or.jp/2015/07/poisonivy-adapts-to-communicate-through-authentication-proxies.html || md5,1aca09c5eefb37539e86ec86dd3be72f
 2021524 || ET DELETED KINS/ZeusVM Variant CnC Beacon || md5,7a015848f24de23da43e2ca9970df11e
 2021525 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Ransomware CnC) || url,sslbl.abuse.ch
-2021526 || ET TROJAN Linux/ChinaZ DDoS Bot Checkin 3 || url,blog.malwaremustdie.org/2015/06/the-elf-chinaz-reloaded.html
+2021526 || ET TROJAN Linux/ChinaZ 2.0 DDoS Bot Checkin 3 || url,blog.malwaremustdie.org/2015/06/the-elf-chinaz-reloaded.html
 2021527 || ET TROJAN Possible Zberp receiving config via image file (steganography) 3 || url,blog.malwarebytes.org/security-threat/2014/02/hiding-in-plain-sight-a-story-about-a-sneaky-banking-trojan/ || md5,7ba76b0ec1249b19a46e1603e5ab0a90
 2021528 || ET TROJAN KINS/ZeusVM Variant Retrieving Config || md5,7a015848f24de23da43e2ca9970df11e
 2021529 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex CnC) || url,sslbl.abuse.ch || md5,32230d747829dcf77841f594aa54915a
@@ -18716,7 +18716,7 @@
 2021757 || ET EXPLOIT Possible Android Stagefright MP4 CVE-2015-1538 - Shell || url,blog.zimperium.com/the-latest-on-stagefright-cve-2015-1538-exploit-is-now-available-for-testing-purposes/ || cve,2015-1538
 2021758 || ET EXPLOIT Possible Android Stagefright MP4 CVE-2015-1538 - ROP || url,blog.zimperium.com/the-latest-on-stagefright-cve-2015-1538-exploit-is-now-available-for-testing-purposes/ || cve,2015-1538
 2021759 || ET EXPLOIT Possible Android Stagefright MP4 CVE-2015-1538 - STSC || url,blog.zimperium.com/the-latest-on-stagefright-cve-2015-1538-exploit-is-now-available-for-testing-purposes/ || cve,2015-1538
-2021760 || ET CURRENT_EVENTS PHISH Generic Webmail - Landing Page Sept 11
+2021760 || ET DELETED PHISH Generic Webmail - Landing Page Sept 11
 2021761 || ET CURRENT_EVENTS Possible PHISH - Generic Status Messages Sept 11
 2021762 || ET CURRENT_EVENTS Spartan EK Secondary Flash Exploit DL || url,www.mysonicwall.com/sonicalert/searchresults.aspx?ev=article&id=854
 2021763 || ET CURRENT_EVENTS Possible Spartan EK Landing Sept 12 2015 || url,www.mysonicwall.com/sonicalert/searchresults.aspx?ev=article&id=854
@@ -19316,6 +19316,195 @@
 2022369 || ET EXPLOIT Possible CVE-2016-0777 Server Advertises Suspicious Roaming Support || url,www.qualys.com/2016/01/14/cve-2016-0777-cve-2016-0778/openssh-cve-2016-0777-cve-2016-0778.txt || cve,2016-0777
 2022370 || ET EXPLOIT Possible CVE-2016-0777 Client Sent Roaming Resume Request || url,www.qualys.com/2016/01/14/cve-2016-0777-cve-2016-0778/openssh-cve-2016-0777-cve-2016-0778.txt || cve,2016-0777
 2022371 || ET P2P MS WUDO Peer Sync || url,windows.microsoft.com/en-us/windows-10/windows-update-delivery-optimization-faq || url,bitconjurer.org/BitTorrent/protocol.html
+2022372 || ET CURRENT_EVENTS Chrome Extension Phishing DNS Request || url,www.seancassidy.me/lostpass.html
+2022373 || ET CURRENT_EVENTS Chrome Extension Phishing HTTP Request || url,www.seancassidy.me/lostpass.html
+2022374 || ET CURRENT_EVENTS Suspicious LastPass URI Structure - Possible Phishing || url,www.seancassidy.me/lostpass.html
+2022376 || ET CURRENT_EVENTS Suspicious Script Loaded from Pastebin
+2022377 || ET INFO DYNAMIC_DNS HTTP Request to a *.dnsalias.ru Domain
+2022378 || ET INFO DYNAMIC_DNS HTTP Request to a *.dnsip.ru Domain
+2022379 || ET INFO DYNAMIC_DNS HTTP Request to a *.dyn-dns.ru Domain
+2022380 || ET INFO DYNAMIC_DNS HTTP Request to a *.dns-free.ru Domain
+2022381 || ET INFO DYNAMIC_DNS Query to a Suspicious *.dnsalias.ru Domain
+2022382 || ET INFO DYNAMIC_DNS Query to a Suspicious *.dnsip.ru Domain
+2022383 || ET INFO DYNAMIC_DNS Query to a Suspicious *.dyn-dns.ru Domain
+2022384 || ET INFO DYNAMIC_DNS Query to a Suspicious *.dns-free.ru Domain
+2022385 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022386 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch || md5,9b8fed949202b860d49f326d5e33bb35
+2022387 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch || md5,9b8fed949202b860d49f326d5e33bb35
+2022388 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch || md5,105213be0a168d5e3eb0e4ff0262cf12
+2022389 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch || md5,105213be0a168d5e3eb0e4ff0262cf12
+2022390 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch || md5,678129a67898174fdb7e8c70ebcca6c3
+2022391 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
+2022392 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
+2022393 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
+2022394 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
+2022395 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
+2022396 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
+2022397 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022398 || ET TROJAN Cryptolocker Payment Page (4nauizsaaopuj3qj)
+2022399 || ET TROJAN Cryptolocker Payment Page (aynfksddnnfwkd)
+2022400 || ET TROJAN Cryptolocker Payment Page (krfdnhfnsai3d)
+2022401 || ET TROJAN Backdoor family PCRat/Gh0st CnC traffic (OUTBOUND) 104 || url,researchcenter.paloaltonetworks.com/2015/09/musical-chairs-multi-year-campaign-involving-new-variant-of-gh0st-malware/
+2022402 || ET TROJAN Win32/7ev3n Ransomware Initial Checkin || md5,9f8bc96c96d43ecb69f883388d228754
+2022403 || ET TROJAN Win32/7ev3n Ransomware Process Checkin || md5,9f8bc96c96d43ecb69f883388d228754
+2022404 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch
+2022405 || ET POLICY External IP Lookup - meuip.net.br
+2022406 || ET TROJAN LeChiffre Ransomware CnC || url,blog.malwarebytes.org/intelligence/2016/01/draft-lechiffre-a-manually-run-ransomware/ || md5,4523ccfd191dcceeae8e884f82f5c7ad
+2022407 || ET TROJAN Win32/Kaicone.A Checkin via HTTP POST || md5,0dfaf7a70859ddb86296276dc20ce1ae
+2022408 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022409 || ET CURRENT_EVENTS Fake AV Phone Scam Landing Jan 26 2016
+2022410 || ET CURRENT_EVENTS Chrome Tech Support Scam Landing Jan 26 2016
+2022411 || ET TROJAN Scarlet Mimic DNS Lookup 1 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022412 || ET TROJAN Scarlet Mimic DNS Lookup 2 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022413 || ET TROJAN Scarlet Mimic DNS Lookup 3 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022414 || ET TROJAN Scarlet Mimic DNS Lookup 4 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022415 || ET TROJAN Scarlet Mimic DNS Lookup 5 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022416 || ET TROJAN Scarlet Mimic DNS Lookup 6 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022417 || ET TROJAN Scarlet Mimic DNS Lookup 7 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022418 || ET TROJAN Scarlet Mimic DNS Lookup 8 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022419 || ET TROJAN Scarlet Mimic DNS Lookup 9 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022420 || ET TROJAN Scarlet Mimic DNS Lookup 10 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022421 || ET TROJAN Scarlet Mimic DNS Lookup 11 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022422 || ET TROJAN Scarlet Mimic DNS Lookup 12 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022423 || ET TROJAN Scarlet Mimic DNS Lookup 13 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022424 || ET TROJAN Scarlet Mimic DNS Lookup 14 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022425 || ET TROJAN Scarlet Mimic DNS Lookup 15 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022426 || ET TROJAN Scarlet Mimic DNS Lookup 16 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022427 || ET TROJAN Scarlet Mimic DNS Lookup 17 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022428 || ET TROJAN Scarlet Mimic DNS Lookup 18 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022429 || ET TROJAN Scarlet Mimic DNS Lookup 19 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022430 || ET TROJAN Scarlet Mimic DNS Lookup 20 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022431 || ET TROJAN Scarlet Mimic DNS Lookup 21 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022432 || ET TROJAN Scarlet Mimic DNS Lookup 22 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022433 || ET TROJAN Scarlet Mimic DNS Lookup 23 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022434 || ET TROJAN Scarlet Mimic DNS Lookup 24 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022435 || ET TROJAN Scarlet Mimic DNS Lookup 25 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022436 || ET TROJAN Scarlet Mimic DNS Lookup 26 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022437 || ET TROJAN Scarlet Mimic DNS Lookup 27 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022438 || ET TROJAN Scarlet Mimic DNS Lookup 28 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022439 || ET TROJAN Scarlet Mimic DNS Lookup 29 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022440 || ET TROJAN Scarlet Mimic DNS Lookup 30 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022441 || ET TROJAN Scarlet Mimic DNS Lookup 31 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022442 || ET TROJAN Scarlet Mimic DNS Lookup 32 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022443 || ET TROJAN Scarlet Mimic DNS Lookup 33 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022444 || ET TROJAN Scarlet Mimic DNS Lookup 34 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022445 || ET TROJAN Scarlet Mimic DNS Lookup 35 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022446 || ET TROJAN Scarlet Mimic DNS Lookup 36 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022447 || ET TROJAN Scarlet Mimic DNS Lookup 37 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022448 || ET TROJAN Scarlet Mimic DNS Lookup 38 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022449 || ET TROJAN Scarlet Mimic DNS Lookup 39 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022450 || ET TROJAN Scarlet Mimic DNS Lookup 40 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022451 || ET TROJAN Scarlet Mimic DNS Lookup 41 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022452 || ET TROJAN Scarlet Mimic DNS Lookup 42 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022453 || ET TROJAN Scarlet Mimic DNS Lookup 43 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022455 || ET TROJAN Scarlet Mimic DNS Lookup 45 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022456 || ET TROJAN Scarlet Mimic DNS Lookup 46 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022457 || ET TROJAN Scarlet Mimic DNS Lookup 47 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022458 || ET TROJAN Scarlet Mimic DNS Lookup 48 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022459 || ET TROJAN Scarlet Mimic DNS Lookup 49 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022460 || ET TROJAN Scarlet Mimic DNS Lookup 50 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022461 || ET TROJAN Scarlet Mimic DNS Lookup 44 || url,researchcenter.paloaltonetworks.com/2016/01/scarlet-mimic-years-long-espionage-targets-minority-activists/
+2022462 || ET TROJAN Neutrino Checkin 2 || url,securitykitten.github.io/an-evening-with-n3utrino/ || md5,25bd222c947fcbb7e1fb9f6e176ea53f
+2022463 || ET TROJAN Neutrino Checkin 3 || url,securitykitten.github.io/an-evening-with-n3utrino/ || md5,25bd222c947fcbb7e1fb9f6e176ea53f
+2022464 || ET CURRENT_EVENTS Evil Redirector Leading to EK Jan 27 2016 (Evil Keitaro FB Set)
+2022465 || ET CURRENT_EVENTS Evil Redirector Leading to EK (Known Evil Keitaro TDS)
+2022466 || ET CURRENT_EVENTS Possible Keitaro TDS Redirect
+2022467 || ET TROJAN Bedep Connectivity Check M2
+2022468 || ET TROJAN CenterPOS User Agent Observed || url,www.fireeye.com/blog/threat-research/2016/01/centerpos_an_evolvi.html || md5,0e278436fb49f9ab0d1a3da792cfb0c3
+2022469 || ET TROJAN CenterPOS CnC || url,www.fireeye.com/blog/threat-research/2016/01/centerpos_an_evolvi.html || md5,0e278436fb49f9ab0d1a3da792cfb0c3
+2022470 || ET TROJAN CenterPOS Delete Plugins || url,www.fireeye.com/blog/threat-research/2016/01/centerpos_an_evolvi.html || md5,0e278436fb49f9ab0d1a3da792cfb0c3
+2022471 || ET TROJAN CenterPOS Load Plugins || url,www.fireeye.com/blog/threat-research/2016/01/centerpos_an_evolvi.html || md5,0e278436fb49f9ab0d1a3da792cfb0c3
+2022472 || ET TROJAN CenterPOS CnC 2 || url,www.fireeye.com/blog/threat-research/2016/01/centerpos_an_evolvi.html || md5,0e278436fb49f9ab0d1a3da792cfb0c3
+2022473 || ET TROJAN CustomRAT DNS lookup
+2022474 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch
+2022475 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Ursnif Injects) || url,sslbl.abuse.ch
+2022476 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gootkit CnC) || url,sslbl.abuse.ch
+2022477 || ET TROJAN Mokes CnC Keep-Alive || url,securelist.com/blog/research/73503/from-linux-to-windows-new-family-of-cross-platform-desktop-backdoors-discovered/
+2022478 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Zeus CnC) || url,sslbl.abuse.ch
+2022479 || ET CURRENT_EVENTS EITest Evil Redirect Leading to EK Feb 01 2016 || url,malware-traffic-analysis.net/2016/01/26/index.html
+2022480 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gootkit CnC) || url,sslbl.abuse.ch
+2022481 || ET CURRENT_EVENTS Evil Redirect Compromised WP Feb 01 2016 || url,blog.sucuri.net/2016/02/massive-admedia-iframe-javascript-infection.html
+2022482 || ET TROJAN JS/Nemucod requesting EXE payload 2016-02-01 || md5,8bdc81393a4fcfaf6d1b8dc01486f2f0 || url,certego.net/en/news/italian-spam-campaigns-using-js-nemucod-downloader/
+2022483 || ET TROJAN JS/Nemucod requesting EXE payload 2016-01-28 || md5,d5c5cc9cae2e9a7a2d3a77efcb526e4c || url,certego.net/en/news/italian-spam-campaigns-using-js-nemucod-downloader/
+2022484 || ET CURRENT_EVENTS RIG encrypted payload Feb 02 (1)
+2022485 || ET WEB_SERVER Possible Compromised Webserver Retriving Inject
+2022486 || ET CURRENT_EVENTS Possible Phishing Landing via GetGoPhish Phishing Tool || url,getgophish.com
+2022487 || ET CURRENT_EVENTS Successful Phishing Attempt via GetGoPhish Phishing Tool || url,getgophish.com
+2022488 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Quakbot CnC) || url,sslbl.abuse.ch
+2022489 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022490 || ET TROJAN TeslaCrypt/AlphaCrypt Variant .onion Payment Domain(yez2o5lwqkmlv5lc)
+2022491 || ET TROJAN Download Request Containing Suspicious Filename - Crypted || md5,1e2fa2e401cd2295a03ba8d8d3d3698b || md5,e953e6b3be506c5b8ca80fbcd79c065e || md5,ff823130efcdf8ab267cad92eb5b90d7
+2022492 || ET TROJAN Win32/Fluxer CnC Checkin || md5,648f432b41f3bcebc1a599f529055cf0
+2022493 || ET CURRENT_EVENTS Evil Redirector Leading to EK Feb 05 2016
+2022494 || ET TROJAN Win32/LockScreen CnC HTTP Pattern || md5,8df8d0cd70f96538211c65fb6361704d
+2022495 || ET TROJAN Win32/HydraCrypt CnC Beacon 1
+2022496 || ET CURRENT_EVENTS Evil Redirector Leading to EK Feb 07 2016
+2022497 || ET CURRENT_EVENTS Successful Apple Phish Feb 6th M1
+2022498 || ET CURRENT_EVENTS Successful Apple Phish Feb 6th M2
+2022499 || ET CURRENT_EVENTS Successful Apple Phish Feb 6th M3
+2022500 || ET CURRENT_EVENTS Xbagger Macro Encrypted DL
+2022501 || ET TROJAN TeslaCrypt/AlphaCrypt Variant .onion Payment Domain(fwgrhsao3aoml7ej)
+2022502 || ET TROJAN Suspicious Accept in HTTP POST - Possible Alphacrypt/TeslaCrypt || md5,35a6de1e8dbea19bc44cf49ae0cae59e
+2022503 || ET CURRENT_EVENTS Dridex AlphaNum DL Feb 10 2016
+2022504 || ET TROJAN Alphacrypt/TeslaCrypt Ransomware CnC Beacon || md5,a3440b6117f3783989683753c9f394dd
+2022505 || ET TROJAN W32/Gaudox Checkin || md5,5d662258fd506b87dc5d3f8fce1ff784
+2022506 || ET EXPLOIT Possible CVE-2016-1287 Invalid Fragment Size Inbound || url,blog.exodusintel.com/2016/02/10/firewall-hacking
+2022507 || ET TROJAN TeslaCrypt/AlphaCrypt Payment DNS Lookup || md5,ff50a331feec575b505976cb0506ebfd
+2022508 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022509 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022510 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch || md5,23cfdb9896cadd54f935ed4e2df2e0a4
+2022511 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch
+2022512 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch
+2022513 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch
+2022514 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gootkit CnC) || url,sslbl.abuse.ch
+2022515 || ET EXPLOIT Possible CVE-2016-1287 Invalid Fragment Size Inbound 2 || url,blog.exodusintel.com/2016/02/10/firewall-hacking
+2022516 || ET EXPLOIT Possible CVE-2016-1287 Invalid Fragment Size Inbound 3 || url,blog.exodusintel.com/2016/02/10/firewall-hacking
+2022517 || ET MOBILE_MALWARE Android/Fakeinst.KD .onion Proxy Domain || md5,111b71c120167b5b571ee5501ffef65e || url,www.csis.dk/da/csis/blog/4818/
+2022518 || ET EXPLOIT D-Link DCS-930L Remote Command Execution attempt || url,www.exploit-db.com/exploits/39437/
+2022519 || ET TROJAN Bedep Connectivity Check M3
+2022520 || ET POLICY Possible HTA Application Download || url,www.trustedsec.com/july-2015/malicious-htas/
+2022521 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022522 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022523 || ET WEB_CLIENT Internet Explorer Memory Corruption Vulnerability (CVE-2016-0063) || cve,2016-0063
+2022524 || ET EXPLOIT MS16-009 IE MSHTML Form Element Type Confusion (CVE-2016-0061) || cve,2016-0061
+2022525 || ET CURRENT_EVENTS Fake Hard Drive Delete Scam Landing Feb 16 M1
+2022526 || ET CURRENT_EVENTS Fake Hard Drive Delete Scam Landing Feb 16 M2
+2022527 || ET CURRENT_EVENTS Fake Hard Drive Delete Scam Landing Feb 16 M3
+2022528 || ET CURRENT_EVENTS Fake Hard Drive Delete Scam Landing Feb 16 M4
+2022529 || ET TROJAN W32/GCman.Backdoor CnC Beacon || url,securelist.com/blog/research/73638/apt-style-bank-robberies-increase-with-metel-gcman-and-carbanak-2-0-attacks/ || md5,8a18846e17244db9af90009ddab341ce
+2022530 || ET CURRENT_EVENTS Fake Virus Phone Scam Landing Feb 17
+2022531 || ET EXPLOIT Possible 2015-7547 Malformed Server response || cve,2015-7547
+2022533 || ET POLICY HotSpotShield Activity || md5,45f4e1bb4efd12f0e8b949174a198bf3
+2022534 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Quakbot CnC) || url,sslbl.abuse.ch
+2022535 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dridex) || url,sslbl.abuse.ch
+2022536 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Qadars CnC) || url,sslbl.abuse.ch
+2022537 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Quakbot CnC) || url,sslbl.abuse.ch
+2022538 || ET TROJAN Ransomware Locky CnC Beacon || md5,b06d9dd17c69ed2ae75d9e40b2631b42
+2022539 || ET TROJAN Possible OceanLotus Time Check to Microsoft.com || url,www.alienvault.com/open-threat-exchange/blog/oceanlotus-for-os-x-an-application-bundle-pretending-to-be-an-adobe-flash-update
+2022540 || ET TROJAN Possible OceanLotus CnC Heartbeat || url,www.alienvault.com/open-threat-exchange/blog/oceanlotus-for-os-x-an-application-bundle-pretending-to-be-an-adobe-flash-update
+2022541 || ET TROJAN Possible OceanLotus C2 Checkin || url,www.alienvault.com/open-threat-exchange/blog/oceanlotus-for-os-x-an-application-bundle-pretending-to-be-an-adobe-flash-update
+2022542 || ET EXPLOIT Possible 2015-7547 PoC Server Response || cve,2015-7547
+2022543 || ET EXPLOIT Possible CVE-2015-7547 Long Response to A lookup || cve,2015-7547
+2022544 || ET EXPLOIT Possible CVE-2015-7547 Long Response to AAAA lookup || cve,2015-7547
+2022545 || ET EXPLOIT Possible CVE-2015-7547 Malformed Server Response A/AAAA || cve,2015-7547
+2022546 || ET EXPLOIT Possible CVE-2015-7547 A/AAAA Record Lookup Possible Forced FallBack(fb set) || cve,2015-7547
+2022547 || ET EXPLOIT Possible CVE-2015-7547 Large Response to A/AAAA query || cve,2015-7547
+2022548 || ET TROJAN Ransomware Locky .onion Payment Domain || md5,b06d9dd17c69ed2ae75d9e40b2631b42
+2022549 || ET CURRENT_EVENTS Dridex DL Pattern Feb 18 2016
+2022550 || ET CURRENT_EVENTS Possible Malicious Macro DL EXE Feb 2016
+2022551 || ET POLICY Logmein.com/Join.me SSL Remote Control Access
+2022552 || ET TROJAN FrameworkPOS CnC Server Reporting IP Address To Agent || md5,591e820591e10500fe939d6bd50e6776 || url,threatstream.com/blog/three-month-frameworkpos-malware-campaign-nabs-43000-credits-cards-from-point-of-sale-systems
+2022553 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Malware CnC) || url,sslbl.abuse.ch
+2022554 || ET EXPLOIT FireEye Detection Evasion %temp% attempt - Inbound || url,labs.bluefrostsecurity.de/advisories/bfs-sa-2016-001/
+2022555 || ET TROJAN Linux/Tsunami DNS Request (updates.absentvodka.com) || url,blog.linuxmint.com/?p=2994
+2022556 || ET TROJAN Linux/Tsunami DNS Request (updates.mintylinux.com) || url,blog.linuxmint.com/?p=2994
+2022557 || ET TROJAN Linux/Tsunami DNS Request (eggstrawdinarry.mylittlerepo.com) || url,blog.linuxmint.com/?p=2994
+2022558 || ET TROJAN Linux/Tsunami DNS Request (linuxmint.kernel-org.org) || url,blog.linuxmint.com/?p=2994
+2022559 || ET TROJAN FrameworkPOS Covert DNS CnC Initial Check In || md5,591e820591e10500fe939d6bd50e6776 || url,threatstream.com/blog/three-month-frameworkpos-malware-campaign-nabs-43000-credits-cards-from-point-of-sale-systems
+2022560 || ET TROJAN Ransomware Locky .onion Payment Domain || url,www.hybrid-analysis.com/sample/02b21d4a90a2a50506711a9c120b1e51f77084eba25688f7db2b9571037465dc?environmentId=1
+2022561 || ET TROJAN TeslaCrypt/AlphaCrypt Variant .onion Payment Domain(xlowfznrg4wf7dli)
+2022562 || ET MOBILE_MALWARE Backdoor.AndroidOS.Torec.a .onion Proxy Domain || md5,58fed8b5b549be7ecbfbc6c63b84a728
+2022563 || ET MOBILE_MALWARE Backdoor.AndroidOS.Torec.a .onion Proxy Domain 2 || md5,8d260ab2bb36aeaf5b033b80b6bc1e6a
 2100110 || GPL DELETED netbus getinfo || arachnids,403
 2100116 || GPL TROJAN BackOrifice access || arachnids,399
 2100139 || GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP || cve,2005-2678
@@ -21215,6 +21404,8 @@
 2400026 || ET DROP Spamhaus DROP Listed Traffic Inbound group 27 || url,www.spamhaus.org/drop/drop.lasso
 2400027 || ET DROP Spamhaus DROP Listed Traffic Inbound group 28 || url,www.spamhaus.org/drop/drop.lasso
 2400028 || ET DROP Spamhaus DROP Listed Traffic Inbound group 29 || url,www.spamhaus.org/drop/drop.lasso
+2400029 || ET DROP Spamhaus DROP Listed Traffic Inbound group 30 || url,www.spamhaus.org/drop/drop.lasso
+2400030 || ET DROP Spamhaus DROP Listed Traffic Inbound group 31 || url,www.spamhaus.org/drop/drop.lasso
 2402000 || ET DROP Dshield Block Listed Source group 1 || url,feed.dshield.org/block.txt
 2403300 || ET CINS Active Threat Intelligence Poor Reputation IP group 1 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
 2403301 || ET CINS Active Threat Intelligence Poor Reputation IP group 2 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
@@ -21276,56 +21467,14 @@
 2403357 || ET CINS Active Threat Intelligence Poor Reputation IP group 58 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
 2403358 || ET CINS Active Threat Intelligence Poor Reputation IP group 59 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
 2403359 || ET CINS Active Threat Intelligence Poor Reputation IP group 60 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
-2404000 || ET CNC Shadowserver Reported CnC Server IP group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404001 || ET CNC Shadowserver Reported CnC Server IP group 2 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404002 || ET CNC Shadowserver Reported CnC Server IP group 3 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404003 || ET CNC Shadowserver Reported CnC Server IP group 4 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404004 || ET CNC Shadowserver Reported CnC Server IP group 5 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404005 || ET CNC Shadowserver Reported CnC Server IP group 6 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404006 || ET CNC Shadowserver Reported CnC Server IP group 7 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404007 || ET CNC Shadowserver Reported CnC Server IP group 8 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404008 || ET CNC Shadowserver Reported CnC Server IP group 9 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404009 || ET CNC Shadowserver Reported CnC Server IP group 10 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404010 || ET CNC Shadowserver Reported CnC Server IP group 11 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404011 || ET CNC Shadowserver Reported CnC Server IP group 12 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404012 || ET CNC Shadowserver Reported CnC Server IP group 13 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404013 || ET CNC Shadowserver Reported CnC Server IP group 14 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404014 || ET CNC Shadowserver Reported CnC Server IP group 15 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404015 || ET CNC Shadowserver Reported CnC Server IP group 16 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404016 || ET CNC Shadowserver Reported CnC Server IP group 17 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404017 || ET CNC Shadowserver Reported CnC Server IP group 18 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404018 || ET CNC Shadowserver Reported CnC Server IP group 19 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404019 || ET CNC Shadowserver Reported CnC Server IP group 20 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404020 || ET CNC Shadowserver Reported CnC Server IP group 21 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404021 || ET CNC Shadowserver Reported CnC Server IP group 22 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404022 || ET CNC Shadowserver Reported CnC Server IP group 23 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404023 || ET CNC Shadowserver Reported CnC Server IP group 24 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404024 || ET CNC Shadowserver Reported CnC Server IP group 25 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404025 || ET CNC Shadowserver Reported CnC Server IP group 26 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404026 || ET CNC Shadowserver Reported CnC Server IP group 27 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404027 || ET CNC Shadowserver Reported CnC Server IP group 28 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404028 || ET CNC Shadowserver Reported CnC Server IP group 29 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404029 || ET CNC Shadowserver Reported CnC Server IP group 30 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404030 || ET CNC Shadowserver Reported CnC Server IP group 31 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404031 || ET CNC Shadowserver Reported CnC Server IP group 32 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404032 || ET CNC Shadowserver Reported CnC Server IP group 33 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404033 || ET CNC Shadowserver Reported CnC Server IP group 34 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404034 || ET CNC Shadowserver Reported CnC Server IP group 35 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404035 || ET CNC Shadowserver Reported CnC Server IP group 36 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404036 || ET CNC Shadowserver Reported CnC Server IP group 37 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404037 || ET CNC Shadowserver Reported CnC Server IP group 38 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404038 || ET CNC Shadowserver Reported CnC Server IP group 39 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404039 || ET CNC Shadowserver Reported CnC Server IP group 40 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404040 || ET CNC Shadowserver Reported CnC Server IP group 41 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404041 || ET CNC Shadowserver Reported CnC Server IP group 42 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404042 || ET CNC Shadowserver Reported CnC Server IP group 43 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404043 || ET CNC Shadowserver Reported CnC Server IP group 44 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404044 || ET CNC Shadowserver Reported CnC Server IP group 45 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404045 || ET CNC Shadowserver Reported CnC Server IP group 46 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404046 || ET CNC Shadowserver Reported CnC Server IP group 47 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404047 || ET CNC Shadowserver Reported CnC Server IP group 48 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404048 || ET CNC Shadowserver Reported CnC Server IP group 49 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404049 || ET CNC Shadowserver Reported CnC Server group 50 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
+2403360 || ET CINS Active Threat Intelligence Poor Reputation IP group 61 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
+2403361 || ET CINS Active Threat Intelligence Poor Reputation IP group 62 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
+2403362 || ET CINS Active Threat Intelligence Poor Reputation IP group 63 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
+2403363 || ET CINS Active Threat Intelligence Poor Reputation IP group 64 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
+2403364 || ET CINS Active Threat Intelligence Poor Reputation IP group 65 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
+2403365 || ET CINS Active Threat Intelligence Poor Reputation IP group 66 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
+2403366 || ET CINS Active Threat Intelligence Poor Reputation IP group 67 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
+2403367 || ET CINS Active Threat Intelligence Poor Reputation IP group 68 || url,www.networkcloaking.com/cins || url,www.cinsscore.com
 2404150 || ET CNC Zeus Tracker Reported CnC Server group 1 || url,zeustracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404151 || ET CNC Zeus Tracker Reported CnC Server group 2 || url,zeustracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404152 || ET CNC Zeus Tracker Reported CnC Server group 3 || url,zeustracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
@@ -21349,7 +21498,6 @@
 2404170 || ET CNC Zeus Tracker Reported CnC Server group 21 || url,zeustracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404171 || ET CNC Zeus Tracker Reported CnC Server group 22 || url,zeustracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404172 || ET CNC Zeus Tracker Reported CnC Server group 23 || url,zeustracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2404173 || ET CNC Zeus Tracker Reported CnC Server group 24 || url,zeustracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404200 || ET CNC Palevo Tracker Reported CnC Server group 1 || url,palevotracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404201 || ET CNC Palevo Tracker Reported CnC Server group 2 || url,palevotracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404202 || ET CNC Palevo Tracker Reported CnC Server group 3 || url,palevotracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
@@ -21378,53 +21526,6 @@
 2404321 || ET CNC Feodo Tracker Reported CnC Server group 22 || url,feodotracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404322 || ET CNC Feodo Tracker Reported CnC Server group 23 || url,feodotracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2404323 || ET CNC Feodo Tracker Reported CnC Server group 24 || url,feodotracker.abuse.ch || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405000 || ET CNC Shadowserver Reported CnC Server Port 22 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405001 || ET CNC Shadowserver Reported CnC Server Port 80 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405002 || ET CNC Shadowserver Reported CnC Server Port 81 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405003 || ET CNC Shadowserver Reported CnC Server Port 443 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405004 || ET CNC Shadowserver Reported CnC Server Port 1023 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405005 || ET CNC Shadowserver Reported CnC Server Port 1337 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405006 || ET CNC Shadowserver Reported CnC Server Port 1863 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405007 || ET CNC Shadowserver Reported CnC Server Port 2222 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405008 || ET CNC Shadowserver Reported CnC Server Port 2319 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405009 || ET CNC Shadowserver Reported CnC Server Port 3211 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405010 || ET CNC Shadowserver Reported CnC Server Port 3303 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405011 || ET CNC Shadowserver Reported CnC Server Port 3921 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405012 || ET CNC Shadowserver Reported CnC Server Port 4042 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405013 || ET CNC Shadowserver Reported CnC Server Port 4244 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405014 || ET CNC Shadowserver Reported CnC Server Port 4367 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405015 || ET CNC Shadowserver Reported CnC Server Port 4466 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405016 || ET CNC Shadowserver Reported CnC Server Port 5050 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405017 || ET CNC Shadowserver Reported CnC Server Port 6556 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405018 || ET CNC Shadowserver Reported CnC Server Port 6660 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405019 || ET CNC Shadowserver Reported CnC Server Port 6664 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405020 || ET CNC Shadowserver Reported CnC Server Port 6666 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405021 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405022 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 2 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405023 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 3 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405024 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 4 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405025 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 5 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405026 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 6 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405027 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 7 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405028 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 8 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405029 || ET CNC Shadowserver Reported CnC Server Port 6667 Group 9 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405030 || ET CNC Shadowserver Reported CnC Server Port 6668 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405031 || ET CNC Shadowserver Reported CnC Server Port 6669 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405032 || ET CNC Shadowserver Reported CnC Server Port 6768 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405033 || ET CNC Shadowserver Reported CnC Server Port 7000 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405034 || ET CNC Shadowserver Reported CnC Server Port 7100 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405035 || ET CNC Shadowserver Reported CnC Server Port 7771 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405036 || ET CNC Shadowserver Reported CnC Server Port 8080 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405037 || ET CNC Shadowserver Reported CnC Server Port 8585 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405038 || ET CNC Shadowserver Reported CnC Server Port 9000 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405039 || ET CNC Shadowserver Reported CnC Server Port 10324 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405040 || ET CNC Shadowserver Reported CnC Server Port 11830 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405041 || ET CNC Shadowserver Reported CnC Server Port 13001 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405042 || ET CNC Shadowserver Reported CnC Server Port 16667 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405043 || ET CNC Shadowserver Reported CnC Server Port 17405 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405044 || ET CNC Shadowserver Reported CnC Server Port 19899 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405045 || ET CNC Shadowserver Reported CnC Server Port 32000 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405046 || ET CNC Shadowserver Reported CnC Server Port 33333 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2500000 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 1 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2500002 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 2 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2500004 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 3 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
@@ -21458,6 +21559,11 @@
 2500060 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 31 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2500062 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 32 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2500064 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 33 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
+2500066 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 34 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
+2500068 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 35 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
+2500070 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 36 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
+2500072 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 37 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
+2500074 || ET COMPROMISED Known Compromised or Hostile Host Traffic group 38 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2520000 || ET TOR Known Tor Exit Node Traffic group 1 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520002 || ET TOR Known Tor Exit Node Traffic group 2 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520004 || ET TOR Known Tor Exit Node Traffic group 3 || url,doc.emergingthreats.net/bin/view/Main/TorRules
@@ -21548,14 +21654,6 @@
 2520174 || ET TOR Known Tor Exit Node Traffic group 88 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520176 || ET TOR Known Tor Exit Node Traffic group 89 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520178 || ET TOR Known Tor Exit Node Traffic group 90 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520180 || ET TOR Known Tor Exit Node Traffic group 91 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520182 || ET TOR Known Tor Exit Node Traffic group 92 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520184 || ET TOR Known Tor Exit Node Traffic group 93 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520186 || ET TOR Known Tor Exit Node Traffic group 94 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520188 || ET TOR Known Tor Exit Node Traffic group 95 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520190 || ET TOR Known Tor Exit Node Traffic group 96 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520192 || ET TOR Known Tor Exit Node Traffic group 97 || url,doc.emergingthreats.net/bin/view/Main/TorRules
-2520194 || ET TOR Known Tor Exit Node Traffic group 98 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2522000 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 1 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2522002 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 2 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2522004 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 3 || url,doc.emergingthreats.net/bin/view/Main/TorRules
@@ -22246,6 +22344,14 @@
 2523374 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 688 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2523376 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 689 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2523378 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 690 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523380 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 691 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523382 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 692 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523384 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 693 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523386 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 694 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523388 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 695 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523390 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 696 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523392 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 697 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523394 || ET TOR Known Tor Relay/Router (Not Exit) Node Traffic group 698 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 100000102 || GPL DELETED Halocon Denial of Service Empty UDP Packet || bugtraq,12281
 100000103 || GPL DELETED Breed Game Server Denial of Service Empty UDP Packet || bugtraq,12262
 100000104 || GPL DELETED Amp II 3D Game Server Denial of Service Empty UDP Packet || bugtraq,12192

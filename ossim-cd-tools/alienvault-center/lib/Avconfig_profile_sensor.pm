@@ -569,6 +569,7 @@ EOF
     }
 
     # Check if ossim-agent conf.cfg or conf.yml were modified;
+    # config.yml might be unavailable if per-asset plugins are not enabled;
     my $agent_conf_changed = check_conf_diff_and_update_copy($agentcfg, $agentcfg_last);
     my $agent_yml_changed = check_conf_diff_and_update_copy($asset_plugins, $asset_plugins_last);
     my $restart_ossim_agent = $agent_conf_changed || $agent_yml_changed;
@@ -591,6 +592,12 @@ sub check_conf_diff_and_update_copy {
     my $current_conf = @_[0];
     my $prev_conf = @_[1];
     my $config_differs = 0;
+
+    # Check if current config is available, if not - skip this check.
+    unless(-e $current_conf) {
+        debug_log("$current_conf not found. Skipping...");
+        return $config_differs;
+    }
 
     # Check if previous config exists.
     unless(-e $prev_conf) {

@@ -93,25 +93,66 @@ class System_notifications
     {
         $response = $this->api->data('')->get_status_messages($filters, $pagination);
         $response = @json_decode($response, TRUE);
+        $this->check_user_error($response);
+        $messages = array();
+        $total    = $response['data']['total'];
 
-        if (!$response || $response['status'] == 'error')
+        foreach($response['data']['messages'] as $msg)
         {
-            $exp_msg = $this->api->get_error_message($response);
-
-            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
-        }
-        else
-        {
-            $messages = array();
-            $total    = $response['data']['total'];
-
-            foreach($response['data']['messages'] as $msg)
-            {
-                $messages[$msg['id']] = $this->format_message($msg);
-            }
+            $messages[$msg['id']] = $this->format_message($msg);
         }
 
         return array($messages, $total);
+    }
+
+
+    public function check_user_error($response) {
+        if (!$response || $response['status'] == 'error')
+        {
+            $exp_msg = $this->api->get_error_message($response);
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+        }
+        return true;
+    }
+
+    public function get_status_message($msg_id)
+    {
+        $response = $this->api->data('')->get_status_message($msg_id);
+        $response = @json_decode($response, TRUE);
+        if (!$response || $response['status'] == 'error') {
+            return false;
+        }
+        return $this->format_message($response['data']);
+    }
+
+    public function verify_last_update_notification() {
+        if (!$update_res = Util::get_last_update_log_result()) {
+            return false;
+        }
+        $mtime = Util::get_last_update_log_time();
+        $message_id = strtoupper(md5($mtime+$update_res));
+        if (!Util::check_update_message_lock_present($message_id)) {
+            return false;
+        }
+        if ($this->get_status_message($message_id)) {
+            return false;
+        }
+        $response = $this->api->data('')->save_status_message(array(
+               'message_id'	=> Util::uuid_format($message_id),
+               'msg_type'	=> "Update",
+               'msg_title'	=> "Update error - unable to complete for SYSTEM_NAME",
+               'msg_description'=> "Message: Unable to complete update for SYSTEM_NAME. $update_res ",
+               'msg_actions'	=> "Please check your network settings and try again. If you are still unable to update your system, please contact AlienVault Support.",
+               'msg_source'	=> "external",
+               'component_type'	=> "external",
+               'created'	=> gmdate("Y-m-d H:i:s",$mtime),
+               'additional_info'=> '{"system_id": "'.Util::get_system_uuid().'"}'
+        ));
+        $response = @json_decode($response, TRUE);
+        if (!$response || $response['status'] == 'error') {
+            return false;
+        }
+        return true;
     }
 
 
@@ -202,7 +243,6 @@ class System_notifications
         $message_id      = strtoupper(str_replace('-', '', $message['message_id']));
         $component_type  = $message['component_type'];
         $additional_info = $message['additional_info'];
-
         // Format creation_time
         $message['creation_time'] = $date;
 
@@ -393,11 +433,9 @@ class System_notifications
             {
                 $db   = new Ossim_db();
                 $conn = $db->connect();
-
                 try
                 {
                     $system_info = Av_center::get_system_info_by_id($conn, $additional_info['system_id']);
-
                     if (!empty($system_info['data']['name']))
                     {
                         $system_name = $system_info['data']['name'];
@@ -415,7 +453,7 @@ class System_notifications
         $system_name = empty($system_name) ? 'Unknown' : $system_name;
 
         $message['message_description'] = str_replace(array('SYSTEM_NAME'), array($system_name), $message['message_description']);
-
+        $message['message_title'] = str_replace(array('SYSTEM_NAME'), array($system_name), $message['message_title']);
 
         // Format message_actions
         if ($component_type == 'net')

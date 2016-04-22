@@ -28,8 +28,7 @@
 
 import api_log
 import uuid
-from db.methods.host import (get_host_by_host_id,
-                             get_all_hosts)
+import db.methods
 from apimethods.data.idmconn import IDMConnection
 
 
@@ -45,7 +44,7 @@ def get_host_details(host_id):
           or the error string otherwise
     """
 
-    return get_host_by_host_id(host_id)
+    return db.methods.host.get_host_by_host_id(host_id)
 
 
 def get_host_details_list():
@@ -62,7 +61,7 @@ def get_host_details_list():
     host_ids = []
     rc = False
     try:
-        rc, host_ids = get_all_hosts()
+        rc, host_ids = db.methods.host.get_all_hosts()
     except Exception, msg:
         api_log.error("Error retrieving the list of hosts: %s" % str(msg))
         return False, host_ids

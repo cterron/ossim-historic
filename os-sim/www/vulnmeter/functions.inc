@@ -1062,6 +1062,17 @@ div.legend td { text-align:left; font-size:11px }
 <?
 }
 
+function get_alternative_report($nid,$nname,$system_end_date,$report_id,$dbconn) {
+    $tempname = "$nid - $nname";
+    $query = "SELECT report_id FROM vuln_nessus_report_stats WHERE report_id = $report_id OR dtLastUpdated  = '$system_end_date' OR '$tempname' LIKE CONCAT(name,'%')";
+    $rx = $dbconn->Execute ( $query );
+    if ($rx->NumRows()===1 && $rx->fields["report_id"] != $report_id) {
+        return $rx->fields["report_id"];
+    }
+    return false;
+}
+
+
 function all_jobs($offset, $pageSize, $status=""){
     global $username, $uroles, $dbconn, $hosts;
     
@@ -1138,7 +1149,7 @@ function all_jobs($offset, $pageSize, $status=""){
         {
             list ($task_id, $failed_attempts, $meth_Wcheck, $profile, $report_key, $report_id, $scan_next, $meth_TARGET, $id_report, $failed_attempts, $scan_PRIORITY,
                   $scan_PID, $nid, $nname, $nusername, $start_date, $end_date, $submit_date, $nstatus, $nnotify, $shostname) = $result->fields;
-            
+            $system_end_date = $end_date;
             $targets_to_resolve = explode("\n",$meth_TARGET);
             $ttargets           = array();
         
@@ -1210,9 +1221,11 @@ function all_jobs($offset, $pageSize, $status=""){
             if( $shostname == "" ) {
                 $shostname = "-";
             }
-            
-            $query = "SELECT DISTINCT risk, port, protocol, app, scriptid, msg, hostIP, HEX(ctx) as ctx FROM vuln_nessus_results
+            $getRiskQuery = function($report_id) {
+                return "SELECT DISTINCT risk, port, protocol, app, scriptid, msg, hostIP, HEX(ctx) as ctx FROM vuln_nessus_results
                         WHERE report_id in ($report_id) AND scriptid <> 10180 AND falsepositive='N'";
+            };
+            $query = $getRiskQuery($report_id);
             
             $vulns           = -1;    // vulns to display
             $vulns_in_report = false;
@@ -1221,6 +1234,25 @@ function all_jobs($offset, $pageSize, $status=""){
                 print 'error: ' . $conn->ErrorMsg() . '<BR>';
                 exit ();
             }
+//hack to fix problematic reports
+
+            if ($report_id != 0 && $status != "R" && $resv->EOF) {
+                $rid = get_alternative_report($nid,$nname,$system_end_date,$report_id,$dbconn);
+		if ($rid) {
+			$report_id = $rid;
+			$query = $getRiskQuery($report_id);
+			$resv = $dbconn->Execute ( $query );
+			if (!$resv->EOF) {
+				$query = "SELECT report_key,scantime FROM vuln_nessus_reports WHERE report_id = {$report_id }";
+				$rx = $dbconn->Execute ( $query );
+				if (!$rx->EOF) {
+					$id_report = $rx->fields["scantime"];
+					$report_key = $rx->fields["report_key"];					
+				}
+			}
+		}
+            }
+
             while (! $resv->EOF) {
                 $vulns_in_report = true;
                 if(Session::hostAllowed_by_ip_ctx($dbconn, $resv->fields["hostIP"], $resv->fields['ctx'])) { 
@@ -1450,7 +1482,6 @@ function all_jobs($offset, $pageSize, $status=""){
                             $sInfo.="<img align=\"absmiddle\" class= \"disabled\" src=\"./images/relaunch.gif\" border=\"0\" title=\""._("Action not allowed")."\" alt=\""._("Action not allowed")."\"/>&nbsp;";
                         }
                     }
-                   
                     if (!$vulns_in_report) {
                         // report without results
                         $vulns = 0;
@@ -2379,7 +2410,6 @@ function cellprint ($map, $data, $entry, $color, $image, $class, $random, $hosts
              if ( !empty ( $linkData['onclick'] )) { $onclick = "onclick='".$linkData['onclick']."'"; }
              if ( !empty ( $linkData['target'] )) { $target = "target=\"".$linkData['target'] ."\""; }
              $link = str_replace("%param%", $entry[$linkData['param']], $linkData['url']);
-
             if(!$disable_report && !($vSerious==0 && $vHigh==0 && $vMed==0 && $vLow==0 && $vInfo==0)) {
             
             	 

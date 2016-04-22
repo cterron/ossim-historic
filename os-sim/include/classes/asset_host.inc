@@ -1551,7 +1551,7 @@ class Asset_host extends Asset
         }
         elseif ($nagios_status == '0')
         {
-            // Down -> Red
+            // Pending -> Gray
             $availability_value = _('Pending');
             $availability_level = 0;
         }
@@ -3341,7 +3341,7 @@ class Asset_host extends Asset
         $q_join      = '';
         $perms_where = self::get_perms_where('h.', TRUE);
         $q_where     = $perms_where;
-
+	$q_select = '';
 
         if (!empty($filters['where']))
         {
@@ -3357,76 +3357,53 @@ class Asset_host extends Asset
         {
             $q_where  .= ' ORDER BY '.$filters['order_by'];
         }
-
-
-        $query = "SELECT COUNT(h.id) AS ips
-            FROM host h $q_join, host_ip hi
-            WHERE h.id = hi.host_id
-            $q_where";
+        if (!empty($filters['limit']))
+        {
+            $q_where  .= ' LIMIT '.$filters['limit'];
+            if (!$cache) {
+		 $q_select = " SQL_CALC_FOUND_ROWS ";
+            }
+        }
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
-
+        $query = "SELECT $q_select HEX(h.id) AS id, inet6_ntoa(hi.ip) AS ip,
+                HEX(h.ctx) AS ctx, h.hostname, h.external_host
+		FROM host h 
+		JOIN host_ip hi ON h.id = hi.host_id
+		$q_join
+                    WHERE 1
+                    $q_where";
         $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
-
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-
-        if (!$rs->EOF)
+        while (!$rs->EOF)
         {
-            $total = $rs->fields['ips'];
-            $block = 2000;
-            $rs->Free();
-
-            for ($i=0; $i<=$total; $i+=$block)
-            {
-                //By blocks
-                $query = "SELECT HEX(h.id) AS id, inet6_ntoa(hi.ip) AS ip,
-                    HEX(h.ctx) AS ctx, h.hostname, h.external_host
-                    FROM host h $q_join, host_ip hi
-                    WHERE h.id = hi.host_id
-                    $q_where
-                    LIMIT $i, $block";
-
-                $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
-
-                if (!$rs)
-                {
-                    Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-                }
-
-                while (!$rs->EOF)
-                {
-                    $hosts_by_ip[$rs->fields['ip']][$rs->fields['ctx']] = array(
+            $hosts_by_ip[$rs->fields['ip']][$rs->fields['ctx']] = array(
                         'id'          => $rs->fields['id'],
                         'name'        => $rs->fields['hostname'],
                         'is_internal' => !$rs->fields['external_host']
-                    );
-
-                    if (!array_key_exists($rs->fields['id'], $hosts_by_id))
-                    {
-                        $hosts_by_id[$rs->fields['id']] = array(
+            );
+            if (!array_key_exists($rs->fields['id'], $hosts_by_id))
+            {
+                $hosts_by_id[$rs->fields['id']] = array(
                             'id'          => $rs->fields['id'],
                             'name'        => $rs->fields['hostname'],
                             'ips'         => $rs->fields['ip'],
                             'ctx'         => $rs->fields['ctx'],
                             'is_internal' => !$rs->fields['external_host']
                         );
-                    }
-                    else
-                    {
-                        $hosts_by_id[$rs->fields['id']]['ips'] .= ','.$rs->fields['ip'];
-                    }
-
-                    $rs->MoveNext();
-                }
-
-                $rs->Free();
             }
+            else
+            {
+                $hosts_by_id[$rs->fields['id']]['ips'] .= ','.$rs->fields['ip'];
+            }
+            $rs->MoveNext();
         }
-
-        return array($hosts_by_ip, $hosts_by_id);
+        $rs->Free();
+        $counter = !$cache && !empty($filters['limit']) ? Ossim_db::get_found_rows($conn, $query) : count($hosts_by_id);
+        return array($hosts_by_ip, $hosts_by_id, $counter);
     }
 
 
@@ -3525,7 +3502,6 @@ class Asset_host extends Asset
 
         $q_where  = $perms_where;
 
-
         if (!empty($filters['where']))
         {
             $q_where  .= 'AND '.$filters['where'];
@@ -3533,56 +3509,51 @@ class Asset_host extends Asset
 
         if (!empty($filters['order_by']))
         {
-            $q_where  .= ' ORDER BY '.$filters['order_by'];
+            $q_order  .= ' ORDER BY '.$filters['order_by'];
         }
         else
         {
             //Order by default
-            $q_where  .= ' ORDER BY hi.ip';
+            $q_order  .= ' ORDER BY hi.ip';
         }
 
-
-        $query = ossim_query("SELECT count(DISTINCT host.id) AS total
-           FROM host $tables, host_ip hi
-           WHERE hi.host_id = host.id $q_where");
-
-        //echo $query."<br>";
+        if (!empty($filters['limit']))
+        {
+            $offset = isset($filters['offset']) && $filters['offset'] ? $filters['offset'] : 0;
+            $q_limit  = "LIMIT $offset,{$filters['limit']}";
+        }
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
-
-        $rf = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
-
-        if (!$rf)
-        {
-            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        }
-
-        $foundrows = $rf->fields['total'];
-
-        $block = 2000;
-        $rf->Free();
-
-        for ($i=0; $i<=$foundrows; $i+=$block)
-        {
-            $query = ossim_query("SELECT DISTINCT host.hostname, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, INET6_NTOA(hi.ip) AS ip
+        $query = ossim_query("SELECT host.hostname, HEX(host.id) AS h_id, HEX(host.ctx) AS h_ctx, INET6_NTOA(hi.ip) AS ip
                 FROM host $tables, host_ip hi
                 WHERE hi.host_id = host.id
                 AND hi.ip > 0x0
                 $q_where
-                LIMIT $i, $block");
+		GROUP BY host.hostname
+		$q_order
+		$q_limit
+                ");
+        $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
 
-            //echo $query."<br>";
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
 
-            $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
-
-            if (!$rs)
+        while (!$rs->EOF)
+        {
+            if($by_ip == TRUE)
             {
-                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                $hosts[$rs->fields['h_id']] = array(
+                    $rs->fields['h_id'],
+                    $rs->fields['h_ctx'],
+                    $rs->fields['ip'],
+                    $rs->fields['hostname']
+                );
             }
-
-            while (!$rs->EOF)
+            else
             {
-                if($by_ip == TRUE)
+                if (!array_key_exists($rs->fields['h_id'], $hosts))
                 {
                     $hosts[$rs->fields['h_id']] = array(
                         $rs->fields['h_id'],
@@ -3593,28 +3564,12 @@ class Asset_host extends Asset
                 }
                 else
                 {
-                    if (!array_key_exists($rs->fields['h_id'], $hosts))
-                    {
-                        $hosts[$rs->fields['h_id']] = array(
-                            $rs->fields['h_id'],
-                            $rs->fields['h_ctx'],
-                            $rs->fields['ip'],
-                            $rs->fields['hostname']
-                        );
-                    }
-                    else
-                    {
-                        //Host has several IPs
-                        $hosts[$rs->fields['h_id']][2] .= ', '.$rs->fields['ip'];
-                    }
+                    //Host has several IPs
+                    $hosts[$rs->fields['h_id']][2] .= ', '.$rs->fields['ip'];
                 }
-
-                $rs->MoveNext();
             }
-
-            $rs->Free();
+            $rs->MoveNext();
         }
-
         return $hosts;
     }
 

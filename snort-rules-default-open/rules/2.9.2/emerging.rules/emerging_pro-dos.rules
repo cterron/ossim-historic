@@ -55,7 +55,7 @@
 
 #Submitted by Cody Hatch
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"ET DOS Cisco 514 UDP flood DoS"; content:"|25 25 25 25 25 58 58 25 25 25 25 25|"; reference:url,www.cisco.com/warp/public/707/IOS-cbac-dynacl-pub.shtml; reference:url,doc.emergingthreats.net/bin/view/Main/2000010; classtype:attempted-dos; sid:2000010; rev:11;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"ET DOS Cisco 514 UDP flood DoS"; content:"|25 25 25 25 25 58 58 25 25 25 25 25|"; reference:url,www.cisco.com/warp/public/707/IOS-cbac-dynacl-pub.shtml; reference:url,doc.emergingthreats.net/bin/view/Main/2000010; classtype:attempted-dos; sid:2000010; rev:11;)
 
 #Submitted by Cody Hatch
 #
@@ -71,7 +71,7 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 514 (msg:"ET DOS Cisco 514 UDP flood Do
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 6014 (msg:"ET DOS IBM DB2 kuddb2 Remote Denial of Service Attempt"; flow:established,to_server; content:"|00 05 03 31 41|"; reference:url,www.securityfocus.com/bid/38018; reference:url,intevydis.blogspot.com/2010/01/ibm-db2-97-kuddb2-dos.html; reference:url,doc.emergingthreats.net/2010755; classtype:attempted-dos; sid:2010755; rev:4;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 6014 (msg:"ET DOS IBM DB2 kuddb2 Remote Denial of Service Attempt"; flow:established,to_server; content:"|00 05 03 31 41|"; reference:url,www.securityfocus.com/bid/38018; reference:url,intevydis.blogspot.com/2010/01/ibm-db2-97-kuddb2-dos.html; reference:url,doc.emergingthreats.net/2010755; classtype:attempted-dos; sid:2010755; rev:4;)
 
 #by Blake Hartstein of Demarc
 #Cleaned up depth/offset/distance - Daniel Clemens
@@ -101,7 +101,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 6014 (msg:"ET DOS IBM DB2 kuddb2 Remote
 
 #Erik Fichtner
 #
-alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET DOS Excessive SMTP MAIL-FROM DDoS"; flow: to_server, established; content:"MAIL FROM|3a|"; nocase; window: 0; id:0; threshold: type limit, track by_src, count 30, seconds 60; reference:url,doc.emergingthreats.net/bin/view/Main/2001795; classtype:denial-of-service; sid:2001795; rev:9;)
+#alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET DOS Excessive SMTP MAIL-FROM DDoS"; flow: to_server, established; content:"MAIL FROM|3a|"; nocase; window: 0; id:0; threshold: type limit, track by_src, count 30, seconds 60; reference:url,doc.emergingthreats.net/bin/view/Main/2001795; classtype:denial-of-service; sid:2001795; rev:9;)
 
 #by Kevin Ross
 #
@@ -141,7 +141,7 @@ alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET DOS Excessive SMTP MAIL
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 5900 (msg:"ET DOS Possible VNC ClientCutText Message Denial of Service/Memory Corruption Attempt"; flow:established,to_server; content:"|06|"; depth:1; isdataat:1000,relative; content:!"|0A|"; within:1000; reference:url,www.fortiguard.com/encyclopedia/vulnerability/vnc.server.clientcuttext.message.memory.corruption.html; reference:url,doc.emergingthreats.net/2011732; classtype:attempted-dos; sid:2011732; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 5900 (msg:"ET DOS Possible VNC ClientCutText Message Denial of Service/Memory Corruption Attempt"; flow:established,to_server; content:"|06|"; depth:1; isdataat:1000,relative; content:!"|0A|"; within:1000; reference:url,www.fortiguard.com/encyclopedia/vulnerability/vnc.server.clientcuttext.message.memory.corruption.html; reference:url,doc.emergingthreats.net/2011732; classtype:attempted-dos; sid:2011732; rev:2;)
 
 #
 #alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL DOS IGMP dos attack"; fragbits:M+; ip_proto:2; reference:bugtraq,514; reference:cve,1999-0918; reference:url,www.microsoft.com/technet/security/bulletin/MS99-034.mspx; classtype:attempted-dos; sid:2100272; rev:11;)
@@ -231,25 +231,25 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 5900 (msg:"ET DOS Possible VNC ClientCu
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 3128 (msg:"ETPRO DOS Squid Proxy FTP URI Processing Denial of Service"; flow:established,to_server; content:"ftp|3A 2F 2F|"; nocase; content:"|3b|"; distance:0; content:"type|3D|"; nocase; content:"d"; nocase; distance:0; byte_test:1,!,0x2F,0,relative; reference:cve,CVE-2007-0247; reference:bugtraq,22079; reference:secunia,23805; classtype:denial-of-service; sid:2800728; rev:3;)
 
 #
-alert tcp any any -> $HOME_NET 3000 (msg:"ET DOS ntop Basic-Auth DOS inbound"; flow:established,to_server; content:"GET "; nocase; depth:4; content:"/configNtop.html"; distance:0; within:20; nocase; content:"Authorization|3a|"; nocase; content: "Basic"; distance:0; within:20; content:"=="; distance:0; within:100; reference:url,www.securityfocus.com/bid/36074; reference:url,www.securityfocus.com/archive/1/505862; reference:url,www.securityfocus.com/archive/1/505876; classtype:denial-of-service; sid:2011511; rev:1;)
+#alert tcp any any -> $HOME_NET 3000 (msg:"ET DOS ntop Basic-Auth DOS inbound"; flow:established,to_server; content:"GET "; nocase; depth:4; content:"/configNtop.html"; distance:0; within:20; nocase; content:"Authorization|3a|"; nocase; content: "Basic"; distance:0; within:20; content:"=="; distance:0; within:100; reference:url,www.securityfocus.com/bid/36074; reference:url,www.securityfocus.com/archive/1/505862; reference:url,www.securityfocus.com/archive/1/505876; classtype:denial-of-service; sid:2011511; rev:1;)
 
 #
-alert tcp $HOME_NET any -> any 3000 (msg:"ET DOS ntop Basic-Auth DOS outbound"; flow:established,to_server; content:"GET "; nocase; depth:4; content:"/configNtop.html"; distance:0; within:20; nocase; content:"Authorization|3a|"; nocase; content: "Basic"; distance:0; within:20; content:"=="; distance:0; within:100; reference:url,www.securityfocus.com/bid/36074; reference:url,www.securityfocus.com/archive/1/505862; reference:url,www.securityfocus.com/archive/1/505876; classtype:denial-of-service; sid:2011512; rev:1;)
+#alert tcp $HOME_NET any -> any 3000 (msg:"ET DOS ntop Basic-Auth DOS outbound"; flow:established,to_server; content:"GET "; nocase; depth:4; content:"/configNtop.html"; distance:0; within:20; nocase; content:"Authorization|3a|"; nocase; content: "Basic"; distance:0; within:20; content:"=="; distance:0; within:100; reference:url,www.securityfocus.com/bid/36074; reference:url,www.securityfocus.com/archive/1/505862; reference:url,www.securityfocus.com/archive/1/505876; classtype:denial-of-service; sid:2011512; rev:1;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET 389 (msg:"ETPRO DOS OpenLDAP Modrdn RDN NULL String Denial of Service Attempt"; flow:to_server,established; content:"|30|"; offset:0; depth:1; content:"|6c|"; distance:0; content:"|04|"; distance:0; content:"|3d 01 01|"; reference:cve,CVE-2010-0212; reference:bugtraq,41770; classtype:attempted-user; sid:2800799; rev:3;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected outbound"; flow:established,to_server; content:"User-agent|3a| Mozilla/5.0 (Windows|3b| U|3b| Windows NT 5.1|3b| ru|3b| rv|3a|1.8.1.1) Gecko/20061204 Firefox/2.0.0.1"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011821; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected outbound"; flow:established,to_server; content:"User-agent|3a| Mozilla/5.0 (Windows|3b| U|3b| Windows NT 5.1|3b| ru|3b| rv|3a|1.8.1.1) Gecko/20061204 Firefox/2.0.0.1"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011821; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected inbound"; flow:established,to_server; content:"User-agent|3a| Mozilla/5.0 (Windows|3b| U|3b| Windows NT 5.1|3b| ru|3b| rv|3a|1.8.1.1) Gecko/20061204 Firefox/2.0.0.1"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011822; rev:3;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected inbound"; flow:established,to_server; content:"User-agent|3a| Mozilla/5.0 (Windows|3b| U|3b| Windows NT 5.1|3b| ru|3b| rv|3a|1.8.1.1) Gecko/20061204 Firefox/2.0.0.1"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011822; rev:3;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected outbound 2"; flow:established,to_server; content:"User-agent|3a| Opera/9.02 (Windows NT 5.1|3b| U|3b| ru)"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011823; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected outbound 2"; flow:established,to_server; content:"User-agent|3a| Opera/9.02 (Windows NT 5.1|3b| U|3b| ru)"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011823; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected inbound 2"; flow:established,to_server; content:"User-agent|3a| Opera/9.02 (Windows NT 5.1|3b| U|3b| ru)"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011824; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS User-Agent used in known DDoS Attacks Detected inbound 2"; flow:established,to_server; content:"User-agent|3a| Opera/9.02 (Windows NT 5.1|3b| U|3b| ru)"; http_header; reference:url,www.linuxquestions.org/questions/linux-security-4/massive-ddos-need-advice-help-795298/; classtype:denial-of-service; sid:2011824; rev:4;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 3128 (msg:"ETPRO DOS Squid Proxy String Processing NULL Pointer Dereference Vulnerability"; flow:established,to_server; content:"Expect|3A 0d 0a 0d|"; http_raw_header; reference:bugtraq,42982; reference:url,www.squid-cache.org/Advisories/SQUID-2010_3.txt; classtype:denial-of-service; sid:2800857; rev:1;)
@@ -270,10 +270,10 @@ alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ETPRO DOS UDP Based D0S LOIC 
 alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO DOS UDP Based D0S LOIC Low Orbit Ion Cannon Attack OUTBOUND Default String U dun goofed"; dsize:12; content:"U dun goofed"; detection_filter: track by_src, count 5, seconds 30; classtype:denial-of-service; sid:2800982; rev:4;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 6666:7000 (msg:"ETPRO DOS LOIC Low Orbit Ion Cannon DDOS Tool IRC checkin"; flow:to_server,established; content:"Newfag|27|s remote LOIC"; classtype:trojan-activity; sid:2800983; rev:2;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 6666:7000 (msg:"ETPRO DOS LOIC Low Orbit Ion Cannon DDOS Tool IRC checkin"; flow:to_server,established; content:"Newfag|27|s remote LOIC"; classtype:trojan-activity; sid:2800983; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET 6666:7000 -> $HOME_NET any (msg:"ETPRO DOS LOIC Low Orbit Ion Cannon DDOS Tool Launch Attack Command"; flow:from_server,established; content:"!lazor default targethost|3D|"; classtype:trojan-activity; sid:2800984; rev:2;)
+#alert tcp $EXTERNAL_NET 6666:7000 -> $HOME_NET any (msg:"ETPRO DOS LOIC Low Orbit Ion Cannon DDOS Tool Launch Attack Command"; flow:from_server,established; content:"!lazor default targethost|3D|"; classtype:trojan-activity; sid:2800984; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO DOS iCal Null pointer de-reference Count Variable"; flow:to_server,established; content:"BEGIN|3A|VCALENDAR|0A|"; content:"RRULE|3A|FREQ|3D|DAILY|3B|INTERVAL|3D|1|3B|COUNT|3D|2147483646|0A|"; reference:cve,CVE-2008-2006; reference:url,www.coresecurity.com/?action=item&id=2219; classtype:attempted-user; sid:2801212; rev:2;)
@@ -288,7 +288,7 @@ alert tcp $EXTERNAL_NET 6666:7000 -> $HOME_NET any (msg:"ETPRO DOS LOIC Low Orbi
 alert tcp $EXTERNAL_NET any -> $HOME_NET 1530 (msg:"ETPRO DOS HP Data Protector Manager RDS Denial of Service"; flow:to_server,established; content:"|23 8c 29 b6|"; depth:4; byte_test:4,>,0xFFFF,0,relative; reference:bugtraq,45725; reference:url,exploit-db.com/exploits/15940/; reference:cve,2011-0514; classtype:attempted-admin; sid:2801241; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET 9495 (msg:"ET DOS IBM Tivoli Endpoint Buffer Overflow Attempt"; flow:established,to_server; content:"POST"; http_method; isdataat:261; content:!"|0A|"; depth:261; reference:url, zerodayinitiative.com/advisories/ZDI-11-169/; classtype:denial-of-service; sid:2012938; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET 9495 (msg:"ET DOS IBM Tivoli Endpoint Buffer Overflow Attempt"; flow:established,to_server; content:"POST"; http_method; isdataat:261; content:!"|0A|"; depth:261; reference:url, zerodayinitiative.com/advisories/ZDI-11-169/; classtype:denial-of-service; sid:2012938; rev:2;)
 
 #
 #alert udp $EXTERNAL_NET !53 -> $HOME_NET 1478 (msg:"ETPRO DOS Microsoft Host Integration Server snabase.exe Denial of Service 1"; dsize:>494; reference:url,www.aluigi.org/adv/snabase_1-adv.txt; classtype:attempted-dos; sid:2802937; rev:7;)
@@ -315,25 +315,25 @@ alert http $EXTERNAL_NET any -> $HOME_NET 9495 (msg:"ET DOS IBM Tivoli Endpoint 
 #alert udp $EXTERNAL_NET !53 -> $HOME_NET 1478 (msg:"ETPRO DOS Microsoft Host Integration Server snabase.exe Denial of Service 8"; dsize:>494; content:"|00 00 02|"; depth:3; pcre:"/\x00[^\x00]{90}/"; reference:url,www.aluigi.org/adv/snabase_1-adv.txt; classtype:attempted-dos; sid:2802944; rev:7;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 1478 (msg:"ETPRO DOS Microsoft Host Integration Server snabase.exe Infinite Loop Denial of Service (Exploit Specific)"; flow:to_server; content:"|00 00|"; depth:2; content:"|CA FE|"; offset:4; depth:2; reference:url,www.aluigi.org/adv/snabase_1-adv.txt; classtype:attempted-dos; sid:2802958; rev:1;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 1478 (msg:"ETPRO DOS Microsoft Host Integration Server snabase.exe Infinite Loop Denial of Service (Exploit Specific)"; flow:to_server; content:"|00 00|"; depth:2; content:"|CA FE|"; offset:4; depth:2; reference:url,www.aluigi.org/adv/snabase_1-adv.txt; classtype:attempted-dos; sid:2802958; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ETPRO DOS Likely AnonCannon HTTP Denial of Service"; flow:to_server,established; content:!"HTTP |20 2f 31 2e|"; dsize:26; content:"Your argument is invalid|0d 0a|"; depth:26; threshold:type limit,count 5,track by_src,seconds 300; reference:url,www.sourceforge.net/projects/anoncannon/; classtype:attempted-dos; sid:2803076; rev:1;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ETPRO DOS Likely AnonCannon HTTP Denial of Service"; flow:to_server,established; content:!"HTTP |20 2f 31 2e|"; dsize:26; content:"Your argument is invalid|0d 0a|"; depth:26; threshold:type limit,count 5,track by_src,seconds 300; reference:url,www.sourceforge.net/projects/anoncannon/; classtype:attempted-dos; sid:2803076; rev:1;)
 
 #
 alert udp any any -> $HOME_NET 67 (msg:"ETPRO DOS ISC DHCP Server Packet Processing Denial of Service"; dsize:43<>240; content:"|01|"; depth:1; reference:cve,2011-2748; reference:url,www.isc.org/software/dhcp/advisories/cve-2011-2748; reference:url,www.secunia.com/advisories/45582; classtype:attempted-dos; sid:2803496; rev:1;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt"; flow:to_client,established; content:"<OBJECT "; nocase; content:"classid"; nocase; distance:0; content:"CLSID"; nocase; distance:0; content:"22C83263-E4B8-4233-82CD-FB047C6BF13E"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*22C83263-E4B8-4233-82CD-FB047C6BF13E/si"; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:web-application-attack; sid:2013462; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt"; flow:to_client,established; content:"<OBJECT "; nocase; content:"classid"; nocase; distance:0; content:"CLSID"; nocase; distance:0; content:"22C83263-E4B8-4233-82CD-FB047C6BF13E"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*22C83263-E4B8-4233-82CD-FB047C6BF13E/si"; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:web-application-attack; sid:2013462; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt Format String Function Call"; flow:to_client,established; content:"ActiveXObject"; nocase; content:"SkypePNRLib.PNR"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:attempted-user; sid:2013463; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS Skype FindCountriesByNamePattern property Buffer Overflow Attempt Format String Function Call"; flow:to_client,established; content:"ActiveXObject"; nocase; content:"SkypePNRLib.PNR"; nocase; distance:0; content:".FindCountriesByNamePattern"; nocase; reference:url,garage4hackers.com/f43/skype-5-x-activex-crash-poc-981.html; classtype:attempted-user; sid:2013463; rev:2;)
 
 #
-alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO DOS Win32/Whybo.F DDoS Traffic Outbound"; content:"fuckwebfuckwebfuckweb"; depth:21; threshold:type limit, track by_src, count 1, seconds 30; classtype:denial-of-service; sid:2803686; rev:1;)
+#alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO DOS Win32/Whybo.F DDoS Traffic Outbound"; content:"fuckwebfuckwebfuckweb"; depth:21; threshold:type limit, track by_src, count 1, seconds 30; classtype:denial-of-service; sid:2803686; rev:1;)
 
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ETPRO DOS Win32/Whybo.F DDoS Traffic Inbound"; content:"fuckwebfuckwebfuckweb"; depth:21; threshold:type limit, track by_src, count 1, seconds 30; classtype:denial-of-service; sid:2803691; rev:1;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ETPRO DOS Win32/Whybo.F DDoS Traffic Inbound"; content:"fuckwebfuckwebfuckweb"; depth:21; threshold:type limit, track by_src, count 1, seconds 30; classtype:denial-of-service; sid:2803691; rev:1;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ETPRO DOS Microsoft Forefront Unified Access Gateway DoS Attempt 1"; flow:established,to_client; content:"NLSessionStrunkname=|3b|"; http_header; content:"NLSessionStrunkname="; nocase; distance:0; http_header; reference:cve,CVE-2011-2012; classtype:attempted-dos; sid:2803845; rev:5;)
@@ -342,13 +342,13 @@ alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ETPRO DOS Win32/Whybo.F DDoS 
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ETPRO DOS Microsoft Forefront Unified Access Gateway DoS Attempt 2"; flow:established,to_client; content:"NLSessionStrunkname="; http_header; content:"NLSessionStrunkname=|3b|"; nocase; distance:0; http_header; reference:cve,CVE-2011-2012; classtype:attempted-dos; sid:2803846; rev:5;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DOS LOIC Javascript DDoS Outbound"; flow:established,to_server; content:"GET"; http_method; content:"/?id="; fast_pattern; http_uri; depth:5; content:"&msg="; http_uri; distance:13; within:5; pcre:"/^\/\?id=[0-9]{13}&msg=/U"; threshold: type both, track by_src, count 5, seconds 60; reference:url,isc.sans.org/diary/Javascript+DDoS+Tool+Analysis/12442; reference:url,www.wired.com/threatlevel/2012/01/anons-rickroll-botnet; classtype:attempted-dos; sid:2014141; rev:5;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DOS LOIC Javascript DDoS Outbound"; flow:established,to_server; content:"GET"; http_method; content:"/?id="; fast_pattern; http_uri; depth:5; content:"&msg="; http_uri; distance:13; within:5; pcre:"/^\/\?id=[0-9]{13}&msg=/U"; threshold: type both, track by_src, count 5, seconds 60; reference:url,isc.sans.org/diary/Javascript+DDoS+Tool+Analysis/12442; reference:url,www.wired.com/threatlevel/2012/01/anons-rickroll-botnet; classtype:attempted-dos; sid:2014141; rev:5;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS High Orbit Ion Cannon (HOIC) Attack Inbound Generic Detection Double Spaced UA"; flow:established,to_server; content:"User-Agent|3a 20 20|";  http_raw_header; content:"User-Agent|3a 20 20|"; fast_pattern:only; threshold: type both, track by_src, count 225, seconds 60; reference:url,blog.spiderlabs.com/2012/01/hoic-ddos-analysis-and-detection.html; classtype:attempted-dos; sid:2014153; rev:5;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DOS High Orbit Ion Cannon (HOIC) Attack Inbound Generic Detection Double Spaced UA"; flow:established,to_server; content:"User-Agent|3a 20 20|";  http_raw_header; content:"User-Agent|3a 20 20|"; fast_pattern:only; threshold: type both, track by_src, count 225, seconds 60; reference:url,blog.spiderlabs.com/2012/01/hoic-ddos-analysis-and-detection.html; classtype:attempted-dos; sid:2014153; rev:5;)
 
 #
-alert tcp any any -> $HOME_NET 3389 (msg:"ET DOS Microsoft Remote Desktop (RDP) Syn then Reset 30 Second DoS Attempt"; flags:R; flow:to_server; flowbits:isset,ms.rdp.synack; flowbits:isnotset,ms.rdp.established; flowbits:unset,ms.rdp.synack; reference:cve,2012-0152; classtype:attempted-dos; sid:2014384; rev:8;)
+#alert tcp any any -> $HOME_NET 3389 (msg:"ET DOS Microsoft Remote Desktop (RDP) Syn then Reset 30 Second DoS Attempt"; flags:R; flow:to_server; flowbits:isset,ms.rdp.synack; flowbits:isnotset,ms.rdp.established; flowbits:unset,ms.rdp.synack; reference:cve,2012-0152; classtype:attempted-dos; sid:2014384; rev:8;)
 
 #
 alert tcp $HOME_NET 3389 -> any any (msg:"ET DOS Microsoft Remote Desktop (RDP) Syn/Ack Outbound Flowbit Set"; flow:from_server; flags:SA; flowbits:isnotset,ms.rdp.synack; flowbits:set,ms.rdp.synack; flowbits:noalert; reference:cve,2012-0152; classtype:not-suspicious; sid:2014385; rev:5;)
@@ -384,16 +384,16 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ETPRO DOS Microsoft Remote D
 alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ETPRO DOS Microsoft Remote Desktop Protocol (RDP) DoS 3"; flow:to_server,established; content:"|03 00|"; depth:2; content:"|e0|"; distance:3; within:1; content:"|03 00|"; distance:0; content:"|f0|"; distance:3; within:1; content:"|7f 65|"; distance:1; within:2; content:"|04 01 01 04 01 01 01 01 ff 30|"; distance:3; within:10; content:"|02|"; distance:1; within:1; byte_test:1,>,2,0,relative,big; byte_test:1,!&,0x80,0,relative,big; byte_test:1,!&,0x80,1,relative,big; reference:cve,2012-2526; classtype:attempted-dos; sid:2805327; rev:1;)
 
 #
-alert udp any any -> $HOME_NET 53 (msg:"ET DOS DNS Amplification Attack Inbound"; content:"|01 00 00 01 00 00 00 00 00 01|"; depth:10; offset:2; pcre:"/^[^\x00]+?\x00/R"; content:"|00 ff 00 01 00 00 29|"; within:7; fast_pattern; byte_test:2,>,4095,0,relative; threshold: type both, track by_dst, seconds 60, count 5; classtype:bad-unknown; sid:2016016; rev:8;)
+#alert udp any any -> $HOME_NET 53 (msg:"ET DOS DNS Amplification Attack Inbound"; content:"|01 00 00 01 00 00 00 00 00 01|"; depth:10; offset:2; pcre:"/^[^\x00]+?\x00/R"; content:"|00 ff 00 01 00 00 29|"; within:7; fast_pattern; byte_test:2,>,4095,0,relative; threshold: type both, track by_dst, seconds 60, count 5; classtype:bad-unknown; sid:2016016; rev:8;)
 
 #
 #alert udp $HOME_NET 53 -> any any (msg:"ET DOS DNS Amplification Attack Outbound"; content:"|01 00 00 01 00 00 00 00 00 01|"; depth:10; offset:2; pcre:"/^[^\x00]+?\x00/R"; content:"|00 ff 00 01 00 00 29|"; within:7; fast_pattern; byte_test:2,>,4095,0,relative; threshold: type limit, track by_src, seconds 60, count 1; classtype:bad-unknown; sid:2016017; rev:7;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET DOS LOIC POST"; flow:established,to_server; content:"POST"; http_method; content:"13"; depth:2; http_client_body; content:"=MSG"; fast_pattern; http_client_body; distance:11; within:4; pcre:"/^13\d{11}/P"; threshold:type limit, track by_src, count 1, seconds 300; classtype:web-application-attack; sid:2016030; rev:4;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET DOS LOIC POST"; flow:established,to_server; content:"POST"; http_method; content:"13"; depth:2; http_client_body; content:"=MSG"; fast_pattern; http_client_body; distance:11; within:4; pcre:"/^13\d{11}/P"; threshold:type limit, track by_src, count 1, seconds 300; classtype:web-application-attack; sid:2016030; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET DOS LOIC GET"; flow:established,to_server; content:"GET"; http_method; content:"/?msg=MSG"; http_uri; threshold:type limit, track by_src, count 1, seconds 300; classtype:web-application-attack; sid:2016031; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET DOS LOIC GET"; flow:established,to_server; content:"GET"; http_method; content:"/?msg=MSG"; http_uri; threshold:type limit, track by_src, count 1, seconds 300; classtype:web-application-attack; sid:2016031; rev:3;)
 
 #
 alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"ET DOS LibuPnP CVE-2012-5958 ST DeviceType Buffer Overflow"; content:"|0D 0A|ST|3A|"; nocase; pcre:"/^[^\r\n]*schemas\x3adevice\x3a[^\r\n\x3a]{181}/Ri"; content:"schemas|3a|device"; nocase; fast_pattern:only; reference:cve,CVE_2012-5958; reference:cve,CVE-2012-5962; classtype:attempted-dos; sid:2016322; rev:1;)

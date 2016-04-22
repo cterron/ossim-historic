@@ -603,7 +603,7 @@ class Incident_ticket
         $values                        = self::get_email_template_values($conn, $incident_id, $ticket_id);
         $values['TICKET_DESCRIPTION']  = _("You're subscribed to this ticket or you're in charge");
 
-        $incident    = Incident::get_list_all($conn, 'WHERE incident.id='.intval($incident_id));
+        $incident    = Incident::get_list_all($conn, array("where" => 'WHERE incident.id='.intval($incident_id)));
         $in_charge   = $incident[0]->get_in_charge();
 
         if (valid_hex32($in_charge))

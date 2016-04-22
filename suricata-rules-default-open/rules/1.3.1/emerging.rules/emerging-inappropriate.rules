@@ -121,7 +121,7 @@
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL INAPPROPRIATE fuck fuck fuck"; flow:to_client,established; content:"fuck fuck fuck"; nocase; classtype:policy-violation; sid:2101316; rev:9;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL INAPPROPRIATE fuck movies"; flow:to_client,established; content:"fuck movies"; nocase; classtype:policy-violation; sid:2101320; rev:9;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL INAPPROPRIATE fuck movies"; flow:to_client,established; content:"fuck movies"; nocase; classtype:policy-violation; sid:2101320; rev:9;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL INAPPROPRIATE hardcore anal"; flow:to_client,established; content:"hardcore anal"; nocase; classtype:policy-violation; sid:2101311; rev:9;)

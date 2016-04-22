@@ -64,7 +64,7 @@
 
 #by matt jonkman
 #
-alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM SDBot HTTP Checkin"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| Mozilla/3.0 (compatible|3b| Indy Library)|0d 0a 0d 0a|quem=dodoi&tit="; content:"&txt="; distance:0; within:40; reference:url,doc.emergingthreats.net/2007914; classtype:trojan-activity; sid:2007914; rev:4;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM SDBot HTTP Checkin"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| Mozilla/3.0 (compatible|3b| Indy Library)|0d 0a 0d 0a|quem=dodoi&tit="; content:"&txt="; distance:0; within:40; reference:url,doc.emergingthreats.net/2007914; classtype:trojan-activity; sid:2007914; rev:4;)
 
 #by matt jonkman. Win32.Socks.s
 #
@@ -87,13 +87,13 @@ alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM Win32.Socks.
 alert udp $HOME_NET any -> $EXTERNAL_NET 1434 (msg:"GPL WORM Slammer Worm propagation attempt OUTBOUND"; content:"|04|"; depth:1; content:"|81 F1 03 01 04 9B 81 F1|"; content:"sock"; content:"send"; reference:bugtraq,5310; reference:bugtraq,5311; reference:cve,2002-0649; reference:nessus,11214; reference:url,vil.nai.com/vil/content/v_99992.htm; classtype:misc-attack; sid:2102004; rev:8;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Carrier.ih Checkin (hello)"; flow:to_server,established; dsize:12; content:"|5b|S|5d|hello|7c 5b|E|5d|"; depth:12; classtype:trojan-activity; sid:2800818; rev:1;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Carrier.ih Checkin (hello)"; flow:to_server,established; dsize:12; content:"|5b|S|5d|hello|7c 5b|E|5d|"; depth:12; classtype:trojan-activity; sid:2800818; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Carrier.ih (infection)"; flow:to_server,established; content:"|5b|S|5d|USB|7c|Infected Drive "; depth:22; classtype:trojan-activity; sid:2800819; rev:2;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Carrier.ih (infection)"; flow:to_server,established; content:"|5b|S|5d|USB|7c|Infected Drive "; depth:22; classtype:trojan-activity; sid:2800819; rev:2;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO WORM Worm.Win32.Soglueda.A Checkin"; flow:to_server,established; content:"POST"; http_method; content:"a="; nocase; depth:2; http_client_body; content:"Fecha "; nocase; content:" Hora "; nocase; distance:0; within:16; content:" Ventana|3a| "; nocase; distance:0; within:18; pcre:"/^Fecha \d{2}\x2f\d{2}\x2f\d{4} Hora \d{2}\x3a\d{2}\x3a\d{2} Ventana\x3a/mi"; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3AWin32%2FSoglueda.A; classtype:trojan-activity; sid:2801224; rev:6;)
+#alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO WORM Worm.Win32.Soglueda.A Checkin"; flow:to_server,established; content:"POST"; http_method; content:"a="; nocase; depth:2; http_client_body; content:"Fecha "; nocase; content:" Hora "; nocase; distance:0; within:16; content:" Ventana|3a| "; nocase; distance:0; within:18; pcre:"/^Fecha \d{2}\x2f\d{2}\x2f\d{4} Hora \d{2}\x3a\d{2}\x3a\d{2} Ventana\x3a/mi"; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3AWin32%2FSoglueda.A; classtype:trojan-activity; sid:2801224; rev:6;)
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ETPRO WORM Worm.Win32.Kelihos.A Checkin 1"; flow:to_server,established; content:"GET /"; nocase; depth:5; content:"|0D 0A 0D 0A 01 02 01 01 01 01 02 01|"; offset:32; depth:256; content:"|00 00 00 00 01|"; distance:4; within:5; reference:url,www.about-threats.trendmicro.com/Malware.aspx?language=us&name=WORM_KELIHOS.SM; classtype:trojan-activity; sid:2801228; rev:2;)
@@ -105,25 +105,25 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM Possible Worm
 alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Autorun.AAV Checkin"; flow:to_server,established; content:"UNIX UNIX |3A|"; offset:5; depth:128; nocase; pcre:"/USER \S+ UNIX UNIX \x3A/mi"; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fAutorun.AAV; classtype:trojan-activity; sid:2801287; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1234 (msg:"ETPRO WORM Worm.Win32.Slenfbot.G Checkin 1"; flow:to_server,established; content:"NICK NEW-["; depth:10; nocase; pcre:"/^\S{3}|[0123]\d|\S{0,8}|\d{3,6}\x5D/Ri"; classtype:trojan-activity; sid:2801289; rev:1;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1234 (msg:"ETPRO WORM Worm.Win32.Slenfbot.G Checkin 1"; flow:to_server,established; content:"NICK NEW-["; depth:10; nocase; pcre:"/^\S{3}|[0123]\d|\S{0,8}|\d{3,6}\x5D/Ri"; classtype:trojan-activity; sid:2801289; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1234 (msg:"ETPRO WORM Worm.Win32.Slenfbot.G Checkin 2"; flow:to_server,established; content:"PASS xxx|0D|"; depth:9; nocase; flowbits:set,ETPRO.slenfbot_g_pass; flowbits:noalert; classtype:trojan-activity; sid:2801290; rev:1;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1234 (msg:"ETPRO WORM Worm.Win32.Slenfbot.G Checkin 2"; flow:to_server,established; content:"PASS xxx|0D|"; depth:9; nocase; flowbits:set,ETPRO.slenfbot_g_pass; flowbits:noalert; classtype:trojan-activity; sid:2801290; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1234 (msg:"ETPRO WORM Worm.Win32.Slenfbot.G Checkin 3"; flow:to_server,established; flowbits:isset,ETPRO.slenfbot_g_pass; content:"NICK ["; depth:6; pcre:"/^\S{3}|[0123]\d|\S{0,8}|\d{3,6}\x5D/Ri"; flowbits:unset,ETPRO.slenfbot_g_pass; classtype:trojan-activity; sid:2801291; rev:1;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1234 (msg:"ETPRO WORM Worm.Win32.Slenfbot.G Checkin 3"; flow:to_server,established; flowbits:isset,ETPRO.slenfbot_g_pass; content:"NICK ["; depth:6; pcre:"/^\S{3}|[0123]\d|\S{0,8}|\d{3,6}\x5D/Ri"; flowbits:unset,ETPRO.slenfbot_g_pass; classtype:trojan-activity; sid:2801291; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Imamihong.A flowbits set 1"; flow:to_server,established; dsize:4; content:"|1a e2 68 54|"; flowbits:set,ETPRO.Imamihong.A.TSL.a; flowbits:noalert; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801383; rev:1;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Imamihong.A flowbits set 1"; flow:to_server,established; dsize:4; content:"|1a e2 68 54|"; flowbits:set,ETPRO.Imamihong.A.TSL.a; flowbits:noalert; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801383; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET 1024: -> $HOME_NET any (msg:"ETPRO WORM Worm.Win32.Imamihong.A Activity 1"; flow:from_server,established; flowbits:isset,ETPRO.Imamihong.A.TSL.a; dsize:4; content:"|29 E0 14 77|"; flowbits:unset,ETPRO.Imamihong.A.TSL.a; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801384; rev:1;)
+#alert tcp $EXTERNAL_NET 1024: -> $HOME_NET any (msg:"ETPRO WORM Worm.Win32.Imamihong.A Activity 1"; flow:from_server,established; flowbits:isset,ETPRO.Imamihong.A.TSL.a; dsize:4; content:"|29 E0 14 77|"; flowbits:unset,ETPRO.Imamihong.A.TSL.a; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801384; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Imamihong.A flowbits set 1"; flow:to_server,established; dsize:4; content:"|EF 6D 51 23|"; flowbits:set,ETPRO.Imamihong.A.TSL.b; flowbits:noalert; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801385; rev:1;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1024: (msg:"ETPRO WORM Worm.Win32.Imamihong.A flowbits set 1"; flow:to_server,established; dsize:4; content:"|EF 6D 51 23|"; flowbits:set,ETPRO.Imamihong.A.TSL.b; flowbits:noalert; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801385; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET 1024: -> $HOME_NET any (msg:"ETPRO WORM Worm.Win32.Imamihong.A Activity 2"; flow:from_server,established; flowbits:isset,ETPRO.Imamihong.A.TSL.b; dsize:4; content:"|21 43 65 87|"; flowbits:unset,ETPRO.Imamihong.A.TSL.b; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801386; rev:1;)
+#alert tcp $EXTERNAL_NET 1024: -> $HOME_NET any (msg:"ETPRO WORM Worm.Win32.Imamihong.A Activity 2"; flow:from_server,established; flowbits:isset,ETPRO.Imamihong.A.TSL.b; dsize:4; content:"|21 43 65 87|"; flowbits:unset,ETPRO.Imamihong.A.TSL.b; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-013107-1441-99&tabid=2; classtype:trojan-activity; sid:2801386; rev:1;)
 
 #
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WORM Rimecud Worm checkin"; flow:established,to_server; content:"GET"; http_method; content:"User-Agent|3a| Mozilla/3.0 (compatible|3b| Indy Library)"; http_header; content:"/taskx.txt"; http_uri; fast_pattern; reference:url,www.threatexpert.com/report.aspx?md5=9623efa133415d19c941ef92a4f921fc; classtype:trojan-activity; sid:2012739; rev:2;)
@@ -132,7 +132,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WORM Rimecud Worm checkin
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Cospet.A Checkin"; flow:to_server,established; content:"|0d 0a|Content-Disposition|3a| form-data|3b| name=|22|programm|22 0d 0a 0d 0a|Windows Key|0d 0a|"; nocase; http_client_body; fast_pattern:46,20; content:"name=|22|url|22|"; nocase; distance:46; within:32; http_client_body; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=TrojanSpy%3aWin32%2fCospet.A; reference:url,www.sophos.com/en-us/threat-center/threat-analyses/viruses-and-spyware/Troj~Vakooja-K.aspx; classtype:trojan-activity; sid:2802121; rev:4;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Nokpuda.A Checkin"; flow:to_server,established; content:" Cy8oT "; http_header; pcre:"/\x0AUser-Agent\x3A \d+ Cy8oT \d+\x0D\x0A/Gi"; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fNokpuda.A; classtype:trojan-activity; sid:2802171; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Nokpuda.A Checkin"; flow:to_server,established; content:" Cy8oT "; http_header; pcre:"/\x0AUser-Agent\x3A \d+ Cy8oT \d+\x0D\x0A/Gi"; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fNokpuda.A; classtype:trojan-activity; sid:2802171; rev:2;)
 
 #
 alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Autorun.hi Checkin - SET"; flow:to_server,established; content:"STOR Ip-"; depth:8; content:".LOG|0d 0a|"; within:32; flowbits:set,ETPRO.worm.Autorun.hi; flowbits:noalert; reference:url,www.securelist.com/en/descriptions/10299686/Worm.BAT.Autorun.hi; classtype:trojan-activity; sid:2803403; rev:2;)
@@ -141,10 +141,10 @@ alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Autorun
 alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Autorun.hi Checkin"; flow:to_server,established; flowbits:isset,ETPRO.worm.Autorun.hi; dsize:12; content:"RETR hosts|0d 0a|"; depth:12; flowbits:unset,ETPRO.worm.Autorun.hi; reference:url,www.securelist.com/en/descriptions/10299686/Worm.BAT.Autorun.hi; classtype:trojan-activity; sid:2803404; rev:2;)
 
 #
-alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Ganelp.B Checkin 1"; flow:to_server,established; dsize:25; content:"STOR jrend/Ups/"; depth:15; content:"|0d 0a|"; distance:8; within:2; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fGanelp.B; classtype:trojan-activity; sid:2803422; rev:2;)
+#alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Ganelp.B Checkin 1"; flow:to_server,established; dsize:25; content:"STOR jrend/Ups/"; depth:15; content:"|0d 0a|"; distance:8; within:2; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fGanelp.B; classtype:trojan-activity; sid:2803422; rev:2;)
 
 #
-alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Ganelp.B Checkin 2"; flow:to_server,established; dsize:20; content:"USER dictio_802884|0d 0a|"; depth:20; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fGanelp.B; classtype:trojan-activity; sid:2803423; rev:2;)
+#alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ETPRO WORM Worm.Win32.Ganelp.B Checkin 2"; flow:to_server,established; dsize:20; content:"USER dictio_802884|0d 0a|"; depth:20; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fGanelp.B; classtype:trojan-activity; sid:2803423; rev:2;)
 
 #
 alert tcp any any -> any 3389 (msg:"ETPRO WORM Worm.Win32.Morto.A Propagating via Windows Remote Desktop Protocol Flowbit Set"; flow:to_server,established; dsize:31; content:"|03 00 00 1F|"; depth:4; content:"mstshash=a|0D 0A|"; nocase; distance:15; within:12; flowbits:set,worm.win32.morto.a; flowbits:noalert; reference:url,www.f-secure.com/weblog/archives/00002227.html; reference:url,www.virustotal.com/file-scan/report.html?id=3d84a7395b23bc363a52a2028cea6cedb8ea4011ebc63865581c35aaa0da5da8-1314609731; reference:url,www.symantec.com/business/security_response/writeup.jsp?docid=2011-082908-4116-99&tabid=2; reference:url,www.microsoft.com/security/portal/Threat/Encyclopedia/Entry.aspx?Name=Worm%3aWin32%2fMorto.A; reference:url,www.contagiodump.blogspot.com/2011/08/aug-28-morto-tsclient-rdp-worm-with.html; classtype:trojan-activity; sid:2803563; rev:1;)

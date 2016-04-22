@@ -157,7 +157,7 @@ class Ansible(object):
         self.__host_list = AnsibleConstants.DEFAULT_HOST_LIST
         self.callbacks = AVAnsibleCallbacks()
 
-    def run_module(self, host_list, module, args,
+    def run_module(self, host_list, module, args, timeout = AnsibleConstants.DEFAULT_TIMEOUT,
                    forks=1, ans_remote_user=AnsibleConstants.DEFAULT_REMOTE_USER,
                    ans_remote_pass=AnsibleConstants.DEFAULT_REMOTE_PASS, use_sudo=True, local=False):
         """Runs an ansible module and returns its results
@@ -177,7 +177,8 @@ class Ansible(object):
                                        transport=use_transport,
                                        remote_user=ans_remote_user,
                                        remote_pass=ans_remote_pass,
-                                       sudo=use_sudo
+                                       sudo=use_sudo,
+                                       timeout=timeout
                                        )
         data = runner.run()
         return data

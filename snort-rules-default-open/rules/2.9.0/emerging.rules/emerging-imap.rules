@@ -39,16 +39,16 @@
 # This Ruleset is EmergingThreats Open optimized for snort-2.9.0.
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP Overflow Attempt"; flow:to_server,established; content:"|E8 C0 FF FF FF|/bin/sh"; classtype:attempted-admin; sid:2100293; rev:8;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP Overflow Attempt"; flow:to_server,established; content:"|E8 C0 FF FF FF|/bin/sh"; classtype:attempted-admin; sid:2100293; rev:8;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP EXPLOIT partial body overflow attempt"; dsize:>1092; flow:to_server,established; content:" x PARTIAL 1 BODY["; reference:bugtraq,4713; reference:cve,2002-0379; classtype:misc-attack; sid:2101780; rev:10;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP append overflow attempt"; flow:established,to_server; content:"APPEND"; nocase; isdataat:100,relative; pcre:"/\sAPPEND\s[^\n]{256}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103066; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP append overflow attempt"; flow:established,to_server; content:"APPEND"; nocase; isdataat:100,relative; pcre:"/\sAPPEND\s[^\n]{256}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103066; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP auth overflow attempt"; flow:established,to_server; content:"AUTH"; nocase; isdataat:100,relative; pcre:"/AUTH\s[^\n]{100}/smi"; reference:bugtraq,8861; classtype:misc-attack; sid:2102330; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP auth overflow attempt"; flow:established,to_server; content:"AUTH"; nocase; isdataat:100,relative; pcre:"/AUTH\s[^\n]{100}/smi"; reference:bugtraq,8861; classtype:misc-attack; sid:2102330; rev:3;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP authenticate literal overflow attempt"; flow:established,to_server; content:"AUTHENTICATE"; nocase; pcre:"/\sAUTHENTICATE\s[^\n]*?\{/smi"; byte_test:5,>,256,0,string,dec,relative; reference:cve,1999-0042; reference:nessus,10292; classtype:misc-attack; sid:2102105; rev:6;)
@@ -57,7 +57,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP auth overflow attemp
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP authenticate overflow attempt"; flow:established,to_server; content:"AUTHENTICATE"; nocase; isdataat:100,relative; pcre:"/\sAUTHENTICATE\s[^\n]{100}/smi"; reference:bugtraq,12995; reference:bugtraq,130; reference:cve,1999-0005; reference:cve,1999-0042; reference:nessus,10292; classtype:misc-attack; sid:2101844; rev:12;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP copy literal overflow attempt"; flow:established,to_server; content:"COPY"; fast_pattern:only; nocase; pcre:"/\sCOPY\s[^\n]*?\{/smi"; byte_test:5,>,1024,0,string,dec,relative; reference:bugtraq,1110; classtype:misc-attack; sid:2103058; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP copy literal overflow attempt"; flow:established,to_server; content:"COPY"; fast_pattern:only; nocase; pcre:"/\sCOPY\s[^\n]*?\{/smi"; byte_test:5,>,1024,0,string,dec,relative; reference:bugtraq,1110; classtype:misc-attack; sid:2103058; rev:3;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP create buffer overflow attempt"; flow:to_server,established; content:"CREATE"; isdataat:1024,relative; pcre:"/\sCREATE\s[^\n]{1024}/smi"; reference:bugtraq,7446; classtype:misc-attack; sid:2102107; rev:4;)
@@ -69,19 +69,19 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP copy literal overflo
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP delete literal overflow attempt"; flow:established,to_server; content:"DELETE"; fast_pattern:only; nocase; pcre:"/\sDELETE\s[^\n]*?\{/smi"; byte_test:5,>,100,0,string,dec,relative; reference:bugtraq,11675; classtype:misc-attack; sid:2103008; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP delete overflow attempt"; flow:established,to_server; content:"DELETE"; nocase; isdataat:100,relative; pcre:"/\sDELETE\s[^\n]{100}/smi"; reference:bugtraq,11675; classtype:misc-attack; sid:2103007; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP delete overflow attempt"; flow:established,to_server; content:"DELETE"; nocase; isdataat:100,relative; pcre:"/\sDELETE\s[^\n]{100}/smi"; reference:bugtraq,11675; classtype:misc-attack; sid:2103007; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP examine literal overflow attempt"; flow:established,to_server; content:"EXAMINE"; fast_pattern:only; nocase; pcre:"/\sEXAMINE\s[^\n]*?\s\{/smi"; byte_test:5,>,256,0,string,dec,relative; reference:bugtraq,11775; classtype:misc-attack; sid:2103067; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP examine overflow attempt"; flow:established,to_server; content:"EXAMINE"; nocase; isdataat:100,relative; pcre:"/\sEXAMINE\s[^\n]{100}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103068; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP examine overflow attempt"; flow:established,to_server; content:"EXAMINE"; nocase; isdataat:100,relative; pcre:"/\sEXAMINE\s[^\n]{100}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103068; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP fetch literal overflow attempt"; flow:established,to_server; content:"FETCH"; fast_pattern:only; nocase; pcre:"/\sFETCH\s[^\n]*?\s\{/smi"; byte_test:5,>,256,0,string,dec,relative; reference:bugtraq,11775; classtype:misc-attack; sid:2103069; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP fetch overflow attempt"; flow:established,to_server; content:"FETCH"; nocase; isdataat:500,relative; pcre:"/\sFETCH\s[^\n]{500}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103070; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP fetch overflow attempt"; flow:established,to_server; content:"FETCH"; nocase; isdataat:500,relative; pcre:"/\sFETCH\s[^\n]{500}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103070; rev:3;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP find overflow attempt"; flow:established,to_server; content:"FIND"; nocase; isdataat:100,relative; pcre:"/\sFIND\s[^\n]{100}/smi"; reference:bugtraq,1110; reference:cve,2000-0284; reference:nessus,10374; classtype:misc-attack; sid:2101904; rev:8;)
@@ -126,14 +126,14 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP fetch overflow attem
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP status overflow attempt"; flow:established,to_server; content:"STATUS"; nocase; isdataat:100,relative; pcre:"/\sSTATUS\s[^\n]{100}/smi"; reference:bugtraq,11775; reference:bugtraq,13727; reference:cve,2005-1256; classtype:misc-attack; sid:2103072; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP subscribe literal overflow attempt"; flow:established,to_server; content:"SUBSCRIBE"; fast_pattern:only; nocase; pcre:"/\sSUBSCRIBE\s[^\n]*?\s\{/smi"; byte_test:5,>,256,0,string,dec,relative; reference:bugtraq,11775; classtype:misc-attack; sid:2103073; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP subscribe literal overflow attempt"; flow:established,to_server; content:"SUBSCRIBE"; fast_pattern:only; nocase; pcre:"/\sSUBSCRIBE\s[^\n]*?\s\{/smi"; byte_test:5,>,256,0,string,dec,relative; reference:bugtraq,11775; classtype:misc-attack; sid:2103073; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP subscribe overflow attempt"; flow:established,to_server; content:"SUBSCRIBE"; nocase; isdataat:100,relative; pcre:"/\sSUBSCRIBE\s[^\n]{100}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103074; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP subscribe overflow attempt"; flow:established,to_server; content:"SUBSCRIBE"; nocase; isdataat:100,relative; pcre:"/\sSUBSCRIBE\s[^\n]{100}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103074; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP unsubscribe literal overflow attempt"; flow:established,to_server; content:"UNSUBSCRIBE"; fast_pattern:only; nocase; pcre:"/\sUNSUBSCRIBE\s[^\n]*?\s\{/smi"; byte_test:5,>,256,0,string,dec,relative; reference:bugtraq,11775; classtype:misc-attack; sid:2103075; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP unsubscribe literal overflow attempt"; flow:established,to_server; content:"UNSUBSCRIBE"; fast_pattern:only; nocase; pcre:"/\sUNSUBSCRIBE\s[^\n]*?\s\{/smi"; byte_test:5,>,256,0,string,dec,relative; reference:bugtraq,11775; classtype:misc-attack; sid:2103075; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP unsubscribe overflow attempt"; flow:established,to_server; content:"UNSUBSCRIBE"; nocase; isdataat:100,relative; pcre:"/\sUNSUBSCRIBE\s[^\n]{100}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103076; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP unsubscribe overflow attempt"; flow:established,to_server; content:"UNSUBSCRIBE"; nocase; isdataat:100,relative; pcre:"/\sUNSUBSCRIBE\s[^\n]{100}/smi"; reference:bugtraq,11775; classtype:misc-attack; sid:2103076; rev:2;)
 

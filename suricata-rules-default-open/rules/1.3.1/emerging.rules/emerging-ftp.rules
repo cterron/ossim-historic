@@ -90,7 +90,7 @@
 
 #by Blake Hartstein of Demarc
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET FTP USER login flowbit"; flow:established,to_server; content:"USER "; nocase; depth:5; flowbits:set,ET.ftp.user.login; flowbits:noalert; reference:url,doc.emergingthreats.net/bin/view/Main/2002850; classtype:not-suspicious; sid:2002850; rev:5;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET FTP USER login flowbit"; flow:established,to_server; content:"USER "; nocase; depth:5; flowbits:set,ET.ftp.user.login; flowbits:noalert; reference:url,doc.emergingthreats.net/bin/view/Main/2002850; classtype:not-suspicious; sid:2002850; rev:5;)
 
 #by Blake Hartstein of Demarc
 #
@@ -98,33 +98,33 @@ alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET FTP USER login flowbit"; f
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username SELECT FROM SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"SELECT"; within:200; nocase; content:"FROM"; distance:0; nocase; pcre:"/SELECT.+FROM/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009981; classtype:attempted-user; sid:2009981; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username SELECT FROM SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"SELECT"; within:200; nocase; content:"FROM"; distance:0; nocase; pcre:"/SELECT.+FROM/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009981; classtype:attempted-user; sid:2009981; rev:2;)
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username DELETE FROM SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"DELETE"; within:200; nocase; content:"FROM"; distance:0; nocase; pcre:"/DELETE.+FROM/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009982; classtype:attempted-user; sid:2009982; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username DELETE FROM SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"DELETE"; within:200; nocase; content:"FROM"; distance:0; nocase; pcre:"/DELETE.+FROM/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009982; classtype:attempted-user; sid:2009982; rev:2;)
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username INSERT INTO SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"INSERT"; within:200; nocase; content:"INTO"; distance:0; nocase; pcre:"/INSERT.+INTO/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009983; classtype:attempted-user; sid:2009983; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username INSERT INTO SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"INSERT"; within:200; nocase; content:"INTO"; distance:0; nocase; pcre:"/INSERT.+INTO/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009983; classtype:attempted-user; sid:2009983; rev:2;)
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username UPDATE SET SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"UPDATE"; within:200; nocase; content:"SET"; distance:0; nocase; pcre:"/UPDATE.+SET/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009984; classtype:attempted-user; sid:2009984; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username UPDATE SET SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"UPDATE"; within:200; nocase; content:"SET"; distance:0; nocase; pcre:"/UPDATE.+SET/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009984; classtype:attempted-user; sid:2009984; rev:2;)
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username UNION SELECT SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"UNION"; within:200; nocase; content:"SELECT"; distance:0; nocase; pcre:"/UNION.+SELECT/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009985; classtype:attempted-user; sid:2009985; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username UNION SELECT SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"UNION"; within:200; nocase; content:"SELECT"; distance:0; nocase; pcre:"/UNION.+SELECT/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009985; classtype:attempted-user; sid:2009985; rev:2;)
 
 #by Kevin Ross
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username INTO OUTFILE SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"INTO"; within:200; nocase; content:"OUTFILE"; distance:0; nocase; pcre:"/INTO.+OUTFILE/i"; reference:url,www.milw0rm.com/papers/372; reference:url,www.greensql.net/publications/backdoor-webserver-using-mysql-sql-injection; reference:url,websec.wordpress.com/2007/11/17/mysql-into-outfile/; reference:url,doc.emergingthreats.net/2010081; classtype:attempted-user; sid:2010081; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username INTO OUTFILE SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"INTO"; within:200; nocase; content:"OUTFILE"; distance:0; nocase; pcre:"/INTO.+OUTFILE/i"; reference:url,www.milw0rm.com/papers/372; reference:url,www.greensql.net/publications/backdoor-webserver-using-mysql-sql-injection; reference:url,websec.wordpress.com/2007/11/17/mysql-into-outfile/; reference:url,doc.emergingthreats.net/2010081; classtype:attempted-user; sid:2010081; rev:2;)
 
 #
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP NextFTP client overflow"; flow:to_client,established; content:"|B4| |B4|!|8B CC 83 E9 04 8B 19|3|C9|f|B9 10|"; fast_pattern:only; reference:bugtraq,572; reference:cve,1999-0671; classtype:attempted-user; sid:2100308; rev:11;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP .forward"; flow:to_server,established; content:".forward"; reference:arachnids,319; classtype:suspicious-filename-detect; sid:2100334; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP .forward"; flow:to_server,established; content:".forward"; reference:arachnids,319; classtype:suspicious-filename-detect; sid:2100334; rev:7;)
 
 #
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP .rhosts"; flow:to_server,established; content:".rhosts"; reference:arachnids,328; classtype:suspicious-filename-detect; sid:2100335; rev:6;)
@@ -133,7 +133,7 @@ alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP .forward"; flow:to_se
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP ADMw0rm ftp login attempt"; flow:to_server,established; content:"USER"; nocase; content:"w0rm"; distance:1; nocase; pcre:"/^USER\s+w0rm/smi"; reference:arachnids,01; classtype:suspicious-login; sid:2100144; rev:10;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP ALLO overflow attempt"; flow:to_server,established; content:"ALLO"; nocase; isdataat:100,relative; pcre:"/^ALLO\s[^\n]{100}/smi"; reference:bugtraq,9953; classtype:attempted-admin; sid:2102449; rev:3;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP ALLO overflow attempt"; flow:to_server,established; content:"ALLO"; nocase; isdataat:100,relative; pcre:"/^ALLO\s[^\n]{100}/smi"; reference:bugtraq,9953; classtype:attempted-admin; sid:2102449; rev:3;)
 
 #
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP APPE overflow attempt"; flow:to_server,established; content:"APPE"; nocase; isdataat:100,relative; pcre:"/^APPE\s[^\n]{100}/smi"; reference:bugtraq,8315; reference:bugtraq,8542; reference:cve,2000-0133; reference:cve,2003-0466; classtype:attempted-admin; sid:2102391; rev:11;)
@@ -142,13 +142,13 @@ alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP ALLO overflow attempt
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP CEL overflow attempt"; flow:to_server,established; content:"CEL"; nocase; isdataat:100,relative; pcre:"/^CEL\s[^\n]{100}/smi"; reference:arachnids,257; reference:bugtraq,679; reference:cve,1999-0789; reference:nessus,10009; classtype:attempted-admin; sid:2100337; rev:13;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP CMD overflow attempt"; flow:to_server,established; content:"CMD"; nocase; isdataat:100,relative; pcre:"/^CMD\s[^\n]{100}/smi"; classtype:attempted-admin; sid:2101621; rev:12;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP CMD overflow attempt"; flow:to_server,established; content:"CMD"; nocase; isdataat:100,relative; pcre:"/^CMD\s[^\n]{100}/smi"; classtype:attempted-admin; sid:2101621; rev:12;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP CWD ..."; flow:to_server,established; content:"CWD"; nocase; content:"..."; distance:0; pcre:"/^CWD\s[^\n]*?\.\.\./smi"; reference:bugtraq,9237; classtype:bad-unknown; sid:2101229; rev:8;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP CWD ..."; flow:to_server,established; content:"CWD"; nocase; content:"..."; distance:0; pcre:"/^CWD\s[^\n]*?\.\.\./smi"; reference:bugtraq,9237; classtype:bad-unknown; sid:2101229; rev:8;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP CWD .... attempt"; flow:to_server,established; content:"CWD "; content:" ...."; reference:bugtraq,4884; classtype:denial-of-service; sid:2101779; rev:5;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP CWD .... attempt"; flow:to_server,established; content:"CWD "; content:" ...."; reference:bugtraq,4884; classtype:denial-of-service; sid:2101779; rev:5;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP CWD Root directory transversal attempt"; flow:to_server,established; content:"CWD"; nocase; content:"C|3A 5C|"; distance:1; fast_pattern; reference:bugtraq,7674; reference:cve,2003-0392; reference:nessus,11677; classtype:protocol-command-decode; sid:2102125; rev:10;)
@@ -235,7 +235,7 @@ alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP CWD .... attempt"; fl
 #alert ftp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP PASS overflow attempt"; flow:to_server,established,no_stream; content:"PASS"; nocase; isdataat:100,relative; pcre:"/^PASS\s[^\n]{100}/smi"; reference:bugtraq,10078; reference:bugtraq,10720; reference:bugtraq,1690; reference:bugtraq,3884; reference:bugtraq,8601; reference:bugtraq,9285; reference:cve,1999-1519; reference:cve,1999-1539; reference:cve,2000-1035; reference:cve,2002-0126; reference:cve,2002-0895; classtype:attempted-admin; sid:2101972; rev:18;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP PORT bounce attempt"; flow:to_server,established; content:"PORT"; nocase; ftpbounce; pcre:"/^PORT/smi"; classtype:misc-attack; sid:2103441; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP PORT bounce attempt"; flow:to_server,established; content:"PORT"; nocase; ftpbounce; pcre:"/^PORT/smi"; classtype:misc-attack; sid:2103441; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP RENAME format string attempt"; flow:to_server,established; content:"RENAME"; nocase; pcre:"/^RENAME\s[^\n]*?%[^\n]*?%/smi"; reference:bugtraq,9262; classtype:misc-attack; sid:2102333; rev:2;)
@@ -256,13 +256,13 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP PORT bounce attempt"; 
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP RMD overflow attempt"; flow:to_server,established; content:"RMD"; nocase; isdataat:100,relative; pcre:"/^RMD\s[^\n]{100}/smi"; reference:bugtraq,2972; reference:cve,2000-0133; reference:cve,2001-0826; reference:cve,2001-1021; classtype:attempted-admin; sid:2101976; rev:10;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP RMDIR overflow attempt"; flow:to_server,established; content:"RMDIR"; nocase; isdataat:100,relative; pcre:"/^RMDIR\s[^\n]{100}/smi"; reference:bugtraq,819; classtype:attempted-admin; sid:2101942; rev:7;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP RMDIR overflow attempt"; flow:to_server,established; content:"RMDIR"; nocase; isdataat:100,relative; pcre:"/^RMDIR\s[^\n]{100}/smi"; reference:bugtraq,819; classtype:attempted-admin; sid:2101942; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP RNFR ././ attempt"; flow:to_server,established; content:"RNFR "; nocase; content:" ././"; nocase; classtype:misc-attack; sid:2101622; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP RNFR ././ attempt"; flow:to_server,established; content:"RNFR "; nocase; content:" ././"; nocase; classtype:misc-attack; sid:2101622; rev:7;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP RNFR overflow attempt"; flow:to_server,established; content:"RNFR"; nocase; isdataat:100,relative; pcre:"/^RNFR\s[^\n]{100}/smi"; classtype:attempted-admin; sid:2103077; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP RNFR overflow attempt"; flow:to_server,established; content:"RNFR"; nocase; isdataat:100,relative; pcre:"/^RNFR\s[^\n]{100}/smi"; classtype:attempted-admin; sid:2103077; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP RNTO overflow attempt"; flow:to_server,established; content:"RNTO"; nocase; isdataat:100,relative; pcre:"/^RNTO\s[^\n]{100}/smi"; reference:bugtraq,8315; reference:cve,2000-0133; reference:cve,2001-1021; reference:cve,2003-0466; classtype:attempted-admin; sid:2102389; rev:8;)
@@ -316,7 +316,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP RNFR overflow attempt"
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP XMKD overflow attempt"; flow:to_server,established; content:"XMKD"; nocase; isdataat:100,relative; pcre:"/^XMKD\s[^\n]{100}/smi"; reference:bugtraq,7909; reference:cve,2000-0133; reference:cve,2001-1021; classtype:attempted-admin; sid:2102373; rev:5;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP authorized_keys file transferred"; flow:to_server,established; content:"authorized_keys"; classtype:suspicious-filename-detect; sid:2101927; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP authorized_keys file transferred"; flow:to_server,established; content:"authorized_keys"; classtype:suspicious-filename-detect; sid:2101927; rev:7;)
 
 #
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP command overflow attempt"; flow:to_server,established,no_stream; dsize:>100; reference:bugtraq,4638; reference:cve,2002-0606; classtype:protocol-command-decode; sid:2101748; rev:10;)
@@ -331,37 +331,37 @@ alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP authorized_keys file 
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP invalid MDTM command attempt"; flow:to_server,established; content:"MDTM"; fast_pattern:only; nocase; pcre:"/^MDTM \d+[-+]\D/smi"; reference:bugtraq,9751; reference:cve,2001-1021; reference:cve,2004-0330; classtype:attempted-admin; sid:2102416; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP invalid MODE"; flow:to_server,established; content:"MODE"; nocase; pcre:"/^MODE\s+[^ABSC]{1}/msi"; classtype:protocol-command-decode; sid:2101623; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP invalid MODE"; flow:to_server,established; content:"MODE"; nocase; pcre:"/^MODE\s+[^ABSC]{1}/msi"; classtype:protocol-command-decode; sid:2101623; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP iss scan"; flow:to_server,established; content:"pass -iss@iss"; fast_pattern:only; reference:arachnids,331; classtype:suspicious-login; sid:2100354; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP iss scan"; flow:to_server,established; content:"pass -iss@iss"; fast_pattern:only; reference:arachnids,331; classtype:suspicious-login; sid:2100354; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP large PWD command"; flow:to_server,established; content:"PWD"; isdataat:7,relative; content:!"|0A|"; within:7; nocase; classtype:protocol-command-decode; sid:2101624; rev:9;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP large PWD command"; flow:to_server,established; content:"PWD"; isdataat:7,relative; content:!"|0A|"; within:7; nocase; classtype:protocol-command-decode; sid:2101624; rev:9;)
 
 #
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP large SYST command"; flow:to_server,established; dsize:10; content:"SYST"; nocase; classtype:protocol-command-decode; sid:2101625; rev:8;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP pass wh00t"; flow:to_server,established; content:"pass wh00t"; nocase; fast_pattern:only; reference:arachnids,324; classtype:suspicious-login; sid:2100355; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP pass wh00t"; flow:to_server,established; content:"pass wh00t"; nocase; fast_pattern:only; reference:arachnids,324; classtype:suspicious-login; sid:2100355; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP passwd retrieval attempt"; flow:to_server,established; content:"RETR"; nocase; content:"passwd"; reference:arachnids,213; classtype:suspicious-filename-detect; sid:2100356; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP passwd retrieval attempt"; flow:to_server,established; content:"RETR"; nocase; content:"passwd"; reference:arachnids,213; classtype:suspicious-filename-detect; sid:2100356; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP piss scan"; flow:to_server,established; content:"pass -cklaus"; fast_pattern:only; classtype:suspicious-login; sid:2100357; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP piss scan"; flow:to_server,established; content:"pass -cklaus"; fast_pattern:only; classtype:suspicious-login; sid:2100357; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP saint scan"; flow:to_server,established; content:"pass -saint"; fast_pattern:only; reference:arachnids,330; classtype:suspicious-login; sid:2100358; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP saint scan"; flow:to_server,established; content:"pass -saint"; fast_pattern:only; reference:arachnids,330; classtype:suspicious-login; sid:2100358; rev:7;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP satan scan"; flow:to_server,established; content:"pass -satan"; fast_pattern:only; reference:arachnids,329; classtype:suspicious-login; sid:2100359; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP satan scan"; flow:to_server,established; content:"pass -satan"; fast_pattern:only; reference:arachnids,329; classtype:suspicious-login; sid:2100359; rev:7;)
 
 #
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP serv-u directory transversal"; flow:to_server,established; content:".%20."; nocase; fast_pattern:only; reference:bugtraq,2052; reference:cve,2001-0054; classtype:bad-unknown; sid:2100360; rev:9;)
 
 #
-alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP shadow retrieval attempt"; flow:to_server,established; content:"RETR"; nocase; content:"shadow"; classtype:suspicious-filename-detect; sid:2101928; rev:7;)
+#alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP shadow retrieval attempt"; flow:to_server,established; content:"RETR"; nocase; content:"shadow"; classtype:suspicious-filename-detect; sid:2101928; rev:7;)
 
 #
 #alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP tar parameters"; flow:to_server,established; content:" --use-compress-program "; nocase; fast_pattern:only; reference:arachnids,134; reference:bugtraq,2240; reference:cve,1999-0202; reference:cve,1999-0997; classtype:bad-unknown; sid:2100362; rev:14;)
@@ -403,13 +403,13 @@ alert ftp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL FTP shadow retrieval atte
 #alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL FTP FTP Bad login"; flow:from_server,established; content:"530 "; depth:4; pcre:"/^530\s+(Login|User)/smi"; classtype:bad-unknown; sid:2100491; rev:10;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Percentage Symbol Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; nocase; content:!"|0d 0a|"; within:50; content:"%"; distance:0; reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011487; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Percentage Symbol Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; nocase; content:!"|0d 0a|"; within:50; content:"%"; distance:0; reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011487; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Quotation Mark Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; content:"|22|"; distance:0; pcre:"/^USER [^\r\n]*?\x22/";  reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011488; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Quotation Mark Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; content:"|22|"; distance:0; pcre:"/^USER [^\r\n]*?\x22/";  reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011488; rev:2;)
 
 #
-alert tcp any any -> $HOME_NET 21 (msg:"ET FTP ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ)"; flow:established,to_server; content:"HELP "; depth:5; content:"ACIDBITCHEZ"; distance:0; nocase; reference:url,slashdot.org/story/10/12/02/131214/ProFTPDorg-Compromised-Backdoor-Distributed; reference:url,xorl.wordpress.com/2010/12/02/news-proftpd-owned-and-backdoored/; reference:url, sourceforge.net/mailarchive/message.php?msg_name=alpine.DEB.2.00.1012011542220.12930%40familiar.castaglia.org; classtype:trojan-activity; sid:2011994; rev:5;)
+#alert tcp any any -> $HOME_NET 21 (msg:"ET FTP ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ)"; flow:established,to_server; content:"HELP "; depth:5; content:"ACIDBITCHEZ"; distance:0; nocase; reference:url,slashdot.org/story/10/12/02/131214/ProFTPDorg-Compromised-Backdoor-Distributed; reference:url,xorl.wordpress.com/2010/12/02/news-proftpd-owned-and-backdoored/; reference:url, sourceforge.net/mailarchive/message.php?msg_name=alpine.DEB.2.00.1012011542220.12930%40familiar.castaglia.org; classtype:trojan-activity; sid:2011994; rev:5;)
 
 #
 alert ftp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET FTP Outbound Java Anonymous FTP Login"; flow:to_server,established; content:"USER anonymous|0d 0a|PASS Java1."; fast_pattern:7,20; pcre:"/^\d\.\d(_\d+)?\@\r\n/R"; flowbits:set,ET.Java.FTP.Logon; classtype:misc-activity; sid:2016687; rev:3;)

@@ -3030,6 +3030,7 @@ CREATE TABLE IF NOT EXISTS `task_inventory` (
   `task_sensor` BINARY(16) NULL DEFAULT NULL,
   `task_name` VARCHAR(255) NULL DEFAULT NULL,
   `task_targets` VARCHAR(255) NULL DEFAULT '',
+  `task_last_run` INT(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`task_id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;

@@ -33,8 +33,9 @@ from uuid import UUID
 from api.lib.auth import admin_permission, logged_permission
 from api.lib.utils import accepted_url, is_admin_user
 from api.lib.common import (make_ok, make_error, document_using, make_bad_request)
-from apimethods.data.status import get_status_messages, set_status_message_as_viewed, set_status_message_as_suppressed, get_status_message_by_id, get_status_messages_stats
+from apimethods.data.status import get_status_messages, set_status_message_as_viewed, set_status_message_as_suppressed, get_status_message_by_id, get_status_messages_stats,insert_custom_message
 from apimethods.utils import is_valid_integer, is_json_true
+from api.lib.monitors.messages import (Message)
 import api_log
 
 blueprint = Blueprint(__name__, __name__)
@@ -148,6 +149,7 @@ def set_data_status_message(status_message_id):
     return make_ok()
 
 
+
 @blueprint.route('/<message_id>', methods=['GET'])
 @document_using('static/apidocs/status.html')
 @logged_permission.require(http_exception=401)
@@ -158,3 +160,43 @@ def get_data_status_message_by_id(message_id):
     if not success:
         return make_error(data, 500)
     return make_ok(**data)
+
+
+@blueprint.route('/', methods=['POST'])
+@document_using('static/apidcos/status.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'message_id': {'type': UUID, 'optional': False},
+               'msg_level': {'type': int, 'optional': True},
+               'msg_type': {'type': str, 'optional': False},
+               'msg_message_role': {'type': str, 'optional': True},
+               'msg_action_role': {'type': str, 'optional': True},
+               'msg_title': {'type': str, 'optional': False},
+               'msg_description': {'type': str, 'optional': False},
+               'msg_actions': {'type': str, 'optional': False},
+               'msg_alternative_actions': {'type': str, 'optional': True},
+               'msg_source': {'type': str, 'optional': False},
+               'component_id': {'type': UUID, 'optional': True},
+               'component_type': {'type': str, 'optional': False},
+               'additional_info': {'type': str, 'optional': True},
+               'created': {'type': str, 'optional': True}
+})
+def save_new_message():
+    message = Message()
+    message.id =  request.form.get('message_id', None)
+    message.level = request.form.get('msg_level', "warning")
+    message.type = request.form.get('msg_type', None)
+    message.message_role = request.form.get('msg_message_role', None)
+    message.action_role = request.form.get('msg_action_role', None)
+    message.title = request.form.get('msg_title', None)
+    message.description = request.form.get('msg_description', None)
+    message.actions = request.form.get('msg_actions', None)
+    message.alternative_actions = request.form.get('msg_alternative_actions', None)
+    message.source = request.form.get('msg_source', None)
+    component_id = request.form.get('component_id', None)
+    component_type = request.form.get('component_type', None)
+    additional_info = request.form.get('additional_info', '{}')
+    created = request.form.get('created', None)
+    
+    insert_custom_message(message, component_id, component_type, additional_info, False, created)
+    return make_ok()
+

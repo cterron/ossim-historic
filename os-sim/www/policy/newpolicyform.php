@@ -3000,8 +3000,8 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 										<div style='text-align: left; padding:0 0 15px 10px; clear: both;'>
 											<div style='float: left; width:90px;'><?php echo _("Direction")?>:</div>
 											<div style='float: left;'>
-												<input type="radio" name="rep_dir" value="0" checked /> <?php echo _("Source")?>
-												<input type="radio" name="rep_dir" value="1" /> <?php echo _("Destination")?>
+												<input type="radio" name="rep_dir" value="1" checked /> <?php echo _("Source")?>
+												<input type="radio" name="rep_dir" value="0" /> <?php echo _("Destination")?>
 											</div>
 										</div>
 										

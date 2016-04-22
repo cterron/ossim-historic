@@ -32,7 +32,6 @@ from sqlalchemy.orm.exc import (NoResultFound,
                                 MultipleResultsFound)
 
 import db
-import sys
 import uuid
 
 from db.models.alienvault import (
@@ -43,6 +42,9 @@ from db.models.alienvault import (
     Host_Net_Reference
 )
 
+# Importing full package to avoid circular imports
+import apimethods
+
 from apimethods.utils import (
     get_bytes_from_uuid,
     get_uuid_string_from_bytes,
@@ -51,7 +53,6 @@ from apimethods.utils import (
     is_valid_uuid,
     get_hex_string_from_uuid
 )
-
 
 from apimethods.decorators import (
     accepted_values,
@@ -62,7 +63,6 @@ from apimethods.decorators import (
 from db.methods.sensor import get_sensor_ctx_by_sensor_id
 
 from apiexceptions.asset import APICannotGetAssetName
-
 
 import api_log
 
@@ -84,10 +84,10 @@ def get_host_by_host_id(host_id):
 
     try:
         host = db.session.query(Host).filter(Host.id == host_id_bin).one()
-    except NoResultFound, msg:
-        return (True, None)
-    except Exception, msg:
-        return (False, "Error captured while querying for host id '%s': %s" % (str(host_id), str(msg)))
+    except NoResultFound:
+        return True, None
+    except Exception as err_detail:
+        return False, "Error captured while querying for host id '%s': %s" % (str(host_id), str(err_detail))
 
     # Build the output
     host_output = {}
@@ -95,7 +95,7 @@ def get_host_by_host_id(host_id):
 
         host_dict = host.__dict__
         for key, value in host_dict.iteritems():
-            if key in ('_sa_instance_state'):
+            if key in ('_sa_instance_state',):
                 continue
             if key in ('ctx', 'id'):
                 host_output[key] = get_uuid_string_from_bytes(value)
@@ -122,7 +122,7 @@ def get_host_by_host_id(host_id):
         host_output['services'] = [x.service for x in host.host_services]
         host_output['networks'] = [get_uuid_string_from_bytes(x.net_id) for x in host.host_net_reference]
 
-    return (True, host_output)
+    return True, host_output
 
 
 @require_db
@@ -138,10 +138,10 @@ def get_all_hosts():
     """
     try:
         hosts = db.session.query(Host).all()
-    except NoResultFound, msg:
-        return (True, None)
-    except Exception, msg:
-        return (False, "Error captured while querying for hosts': %s" % (str(msg)))
+    except NoResultFound:
+        return True, None
+    except Exception as err_detail:
+        return False, "Error captured while querying for hosts': %s" % (str(err_detail))
 
     host_ids = []
     if hosts is not None:
@@ -170,10 +170,10 @@ def update_host_plugins(data):
                                               plugin_sid=0)
                         db.session.merge(host_scan)
             db.session.commit()
-    except Exception as e:
+    except Exception as err_detail:
         result = False
         db.session.rollback()
-        msg = "Unable to save data into database {0}".format(str(e))
+        msg = "Unable to save data into database {0}".format(str(err_detail))
 
     return result, msg
 
@@ -259,34 +259,46 @@ def create_host(ips, sensor_id, hostname='', fqdns='', asset_value=2, threshold_
 
         db.session.commit()
 
-    except Exception, msg:
+    except Exception as err_detail:
         db.session.rollback()
-        message = "There was a problem adding new Host %s to the database: %s" % (hostname, str(msg))
+        message = "There was a problem adding new Host %s to the database: %s" % (hostname, str(err_detail))
         api_log.error(message)
         return False, message
 
-    update_host_net_reference()
+    update_host_net_reference(hostid=host_id)
 
     # Send refresh to server
     if refresh:
-        refresh_hosts(sensor_id)
+        # Updated because original function was changed and previous version will not work.
+        apimethods.host.host.refresh_hosts()
 
     return True, host_id
 
 
 @require_db
-def update_host_net_reference():
+def update_host_net_reference(hostid=None):
     """
-        Update host_net_reference table with hosts data
+        Update host_net_reference table with hosts data.
+        Modified to only update host provided.  This query locks the asset db,
+        if you have a large number of assets this can cause issues when adding hosts.
+        Will default to previous behavior if no host is passed.
     """
-    query = "REPLACE INTO host_net_reference SELECT host.id, net_id FROM host, host_ip, net_cidrs WHERE host.id = host_ip.host_id AND host_ip.ip >= net_cidrs.begin AND host_ip.ip <= net_cidrs.end"
+    # Original Query
+    query = ("REPLACE INTO host_net_reference "
+             "SELECT host.id, net_id FROM host, host_ip, net_cidrs "
+             "WHERE host.id = host_ip.host_id AND host_ip.ip >= net_cidrs.begin AND host_ip.ip <= net_cidrs.end")
+
+    # Check if hostid is passed and valid, if yes modify original query
+    if hostid is not None and is_valid_uuid(hostid):
+        query += " AND host.id = unhex(\'%s\')" % get_hex_string_from_uuid(hostid)
 
     try:
         db.session.begin()
         db.session.connection(mapper=Host_Net_Reference).execute(query)
         db.session.commit()
-    except Exception as msg:
+    except Exception as err_detail:
         db.session.rollback()
+        api_log.error("There was a problem while updating host net reference: %s" % str(err_detail))
         return False
     return True
 
@@ -311,9 +323,8 @@ def get_host_id_by_ip_ctx(ip, ctx, output='str'):
             return False, "IP address and/or context could not be empty"
     except NoResultFound:
         return True, host_id
-    except Exception as msg:
-        msg = str(msg)
-        api_log.error(msg)
+    except Exception as err_detail:
+        api_log.error(str(err_detail))
         return False, "Asset ID not found in the system"
 
     if output == 'str':
@@ -337,8 +348,8 @@ def get_name_by_host_id(host_id):
 
         if host_data:
             host_name = host_data.hostname
-    except Exception as msg:
-        api_log.error("[get_name_by_host_id] {0}".format(msg))
+    except Exception as err_detail:
+        api_log.error("[get_name_by_host_id] {0}".format(str(err_detail)))
         raise APICannotGetAssetName(host_id)
 
     return host_name

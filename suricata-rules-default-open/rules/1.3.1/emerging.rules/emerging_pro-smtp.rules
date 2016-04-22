@@ -72,7 +72,7 @@
 #alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy decode"; flow:to_server,established; content:"vrfy"; nocase; content:"decode"; distance:1; nocase; pcre:"/^vrfy\s+decode/smi"; reference:arachnids,373; reference:bugtraq,10248; reference:cve,1999-0096; classtype:attempted-recon; sid:2100672; rev:10;)
 
 #
-alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy root"; flow:to_server,established; content:"vrfy"; nocase; content:"root"; distance:1; nocase; pcre:"/^vrfy\s+root/smi"; classtype:attempted-recon; sid:2101446; rev:7;)
+#alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy root"; flow:to_server,established; content:"vrfy"; nocase; content:"root"; distance:1; nocase; pcre:"/^vrfy\s+root/smi"; classtype:attempted-recon; sid:2101446; rev:7;)
 
 #
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"GPL SMTP OUTBOUND bad file attachment"; flow:to_server,established; content:"Content-Disposition|3A|"; nocase; content:"filename"; distance:0; pcre:"/filename\s*=\s*.*?\.(?=[abcdehijlmnoprsvwx])(a(d[ep]|s[dfx])|c([ho]m|li|md|pp)|d(iz|ll|ot)|e(m[fl]|xe)|h(lp|sq|ta)|jse?|m(d[abew]|s[ip])|p(p[st]|if|[lm]|ot)|r(eg|tf)|s(cr|[hy]s|wf)|v(b[es]?|cf|xd)|w(m[dfsz]|p[dmsz]|s[cfh])|xl[tw]|bat|ini|lnk|nws|ocx)[\x27\x22\n\r\s]/iR"; classtype:suspicious-filename-detect; sid:2100721; rev:10;)
@@ -81,7 +81,7 @@ alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy root"; flow:
 #alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP SMTP relaying denied"; flow:established,from_server; content:"550 5.7.1"; depth:70; reference:arachnids,249; reference:url,mail-abuse.org/tsi/ar-fix.html; classtype:misc-activity; sid:2100567; rev:12;)
 
 #
-alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP AUTH LOGON brute force attempt"; flow:from_server,established; content:"Authentication unsuccessful"; offset:54; nocase; threshold:type threshold, track by_dst, count 5, seconds 60; classtype:suspicious-login; sid:2102275; rev:3;)
+#alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP AUTH LOGON brute force attempt"; flow:from_server,established; content:"Authentication unsuccessful"; offset:54; nocase; threshold:type threshold, track by_dst, count 5, seconds 60; classtype:suspicious-login; sid:2102275; rev:3;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"ETPRO SMTP Ipswitch IMail IMAP LOGIN Command Buffer Overflow"; flow:to_server,established; content:"LOGIN"; nocase; isdataat:100,relative; pcre:"/^[\x20\x09]+[^\x20\x09\r\n]{513}/GRi"; reference:cve,CVE-2005-1255; reference:bugtraq,13727; classtype:attempted-admin; sid:2800055; rev:2;)
@@ -93,25 +93,25 @@ alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP AUTH LOGON brute 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Microsoft Exchange Server iCal Properties Handling Denial of Service"; flow:to_server,established; content:"X-MICROSOFT-CDO-MODPROPS|3a|"; pcre:"/^[^\r\n]*X-MICROSOFT-CDO-MODPROPS/R"; content:"X-MICROSOFT-CDO-MODPROPS"; reference:cve,CVE-2007-0039; reference:bugtraq,23808; reference:secunia,25183; classtype:attempted-dos; sid:2800062; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP IBM Lotus Notes MIF Attachment Viewer Buffer Overflow 1"; flow:to_server,established; content:"<MIFFile"; pcre:"/<MIFFile\s+[1-9\.]+>\s*#(?!(=0A=)).{76}/"; reference:bugtraq,26175; reference:secunia,27279; classtype:attempted-admin; sid:2800190; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP IBM Lotus Notes MIF Attachment Viewer Buffer Overflow 1"; flow:to_server,established; content:"<MIFFile"; pcre:"/<MIFFile\s+[1-9\.]+>\s*#(?!(=0A=)).{76}/"; reference:bugtraq,26175; reference:secunia,27279; classtype:attempted-admin; sid:2800190; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP IBM Lotus Notes MIF Attachment Viewer Buffer Overflow 2"; flow:to_server,established; content:"<MIFFile"; isdataat:88,relative; content:!"|20 09|"; within:88; pcre:"/<[^\x20\x09>]{88}/"; reference:bugtraq,26175; reference:secunia,27279; classtype:attempted-admin; sid:2800191; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP IBM Lotus Notes MIF Attachment Viewer Buffer Overflow 2"; flow:to_server,established; content:"<MIFFile"; isdataat:88,relative; content:!"|20 09|"; within:88; pcre:"/<[^\x20\x09>]{88}/"; reference:bugtraq,26175; reference:secunia,27279; classtype:attempted-admin; sid:2800191; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell Groupwise Internet Agent RCPT Command Buffer Overflow"; flow:to_server,established; content:"RCPT"; depth:4; nocase; content:"TO|3a|"; nocase; distance:0; within:5; isdataat:256,relative; content:!"|0d 0a|"; within:256; pcre:"/^RCPT[\x09\x20]+TO\x3a[\x09\x20]*([^\r\n]{256}|<[^>\r\n]{256}>)\r?\n$/im"; reference:bugtraq,33560; reference:secunia,33744; classtype:attempted-user; sid:2800418; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell Groupwise Internet Agent RCPT Command Buffer Overflow"; flow:to_server,established; content:"RCPT"; depth:4; nocase; content:"TO|3a|"; nocase; distance:0; within:5; isdataat:256,relative; content:!"|0d 0a|"; within:256; pcre:"/^RCPT[\x09\x20]+TO\x3a[\x09\x20]*([^\r\n]{256}|<[^>\r\n]{256}>)\r?\n$/im"; reference:bugtraq,33560; reference:secunia,33744; classtype:attempted-user; sid:2800418; rev:3;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell GroupWise Internet Agent SMTP AUTH LOGIN Command Buffer Overflow"; flow:to_server,established; content:"AUTH LOGIN"; nocase; pcre:"/^AUTH LOGIN[^\r]*\n/i"; reference:cve,CVE-2009-1636; reference:bugtraq,35065; classtype:attempted-admin; sid:2800469; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Ipswitch IMail Server List Mailer Reply-To Address Buffer Overflow"; flow:to_server,established; content:"Reply-To|3a|"; nocase; isdataat:256,relative; content:!"|0a|"; within:256; pcre:"/^Reply-To\x3a[\x09\x20]*\S{256}/im"; reference:bugtraq,41717; classtype:attempted-admin; sid:2800578; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Ipswitch IMail Server List Mailer Reply-To Address Buffer Overflow"; flow:to_server,established; content:"Reply-To|3a|"; nocase; isdataat:256,relative; content:!"|0a|"; within:256; pcre:"/^Reply-To\x3a[\x09\x20]*\S{256}/im"; reference:bugtraq,41717; classtype:attempted-admin; sid:2800578; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Ipswitch IMail Server Mailing List Message Subject Buffer Overflow"; flow:to_server,established; content:"Subject|3a|"; nocase; isdataat:256,relative; pcre:"/Subject\x3a[\x09\x20]+[^\r\n]*\x5b\x3a[^\r\n\x5d]*\x3a\x5d/i"; pcre:"/\x3fQ\x3f[^\r\n]{256}/iR"; classtype:attempted-admin; sid:2800579; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Ipswitch IMail Server Mailing List Message Subject Buffer Overflow"; flow:to_server,established; content:"Subject|3a|"; nocase; isdataat:256,relative; pcre:"/Subject\x3a[\x09\x20]+[^\r\n]*\x5b\x3a[^\r\n\x5d]*\x3a\x5d/i"; pcre:"/\x3fQ\x3f[^\r\n]{256}/iR"; classtype:attempted-admin; sid:2800579; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP IBM Lotus Domino nrouter.exe iCalendar MAILTO Stack Buffer Overflow"; flow:established,to_server; content:"ORGANIZER|3a|"; nocase; content:"MAILTO|3A|"; nocase; content:!"|0d 0a|"; within:20; isdataat:1020,relative;distance:1020;content:!"|0d 0a|";within:2; reference:bugtraq,43219; classtype:attempted-user; sid:2800833; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP IBM Lotus Domino nrouter.exe iCalendar MAILTO Stack Buffer Overflow"; flow:established,to_server; content:"ORGANIZER|3a|"; nocase; content:"MAILTO|3A|"; nocase; content:!"|0d 0a|"; within:20; isdataat:1020,relative;distance:1020;content:!"|0d 0a|";within:2; reference:bugtraq,43219; classtype:attempted-user; sid:2800833; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell GroupWise Internet Agent Content-Type Buffer Overflow"; flow:to_server,established; content:"|0a|Content|2d|Type"; nocase; content:"|3a|"; distance:0; isdataat:256,relative; content:!"|0a|"; within:256; reference:bugtraq,44732; classtype:attempted-admin; sid:2800889; rev:2;)
@@ -120,7 +120,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP IBM Lotus Domino nr
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell GroupWise Internet Agent Content-Type Buffer Overflow"; flow:to_server,established; content:"|0a|Content|2d|Type|3a|"; nocase; isdataat:256,relative; content:!"|0d 0a|"; within:256; classtype:attempted-admin; sid:2800929; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell GroupWise Internet Agent RRULE Parsing Buffer Overflow smtp"; flow:to_server,established; content:"RRULE|3a|"; nocase; isdataat:2048,relative; content:!"|0a|"; within:2048; reference:bugtraq,44732; classtype:attempted-admin; sid:2800933; rev:1;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell GroupWise Internet Agent RRULE Parsing Buffer Overflow smtp"; flow:to_server,established; content:"RRULE|3a|"; nocase; isdataat:2048,relative; content:!"|0a|"; within:2048; reference:bugtraq,44732; classtype:attempted-admin; sid:2800933; rev:1;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Exim string_format Remote Code Execution Attempt"; flow:to_server,established; content:"|0a|DATA|0a|"; content:!"|0a 0a|"; within:8189; reference:cve,CVE-2010-4344; reference:bugtraq,45308; classtype:attempted-admin; sid:2800977; rev:3;)
@@ -129,7 +129,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Novell GroupWise In
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Exim string_format Remote Code Execution"; flow:to_server,established; content:"|0a|DATA|0d|"; content:!"|0d 0a 0d 0a|"; within:8189; reference:cve,CVE-2010-4344; reference:bugtraq,45308; classtype:attempted-admin; sid:2800979; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ET SMTP Potential Exim HeaderX with run exploit attempt"; flow:established,to_server; content:"|0d 0a|HeaderX|3a 20|"; nocase; content:"run{"; distance:0; reference:url,www.exim.org/lurker/message/20101207.215955.bb32d4f2.en.html; reference:url,eclists.org/fulldisclosure/2010/Dec/221; classtype:attempted-admin; sid:2012054; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ET SMTP Potential Exim HeaderX with run exploit attempt"; flow:established,to_server; content:"|0d 0a|HeaderX|3a 20|"; nocase; content:"run{"; distance:0; reference:url,www.exim.org/lurker/message/20101207.215955.bb32d4f2.en.html; reference:url,eclists.org/fulldisclosure/2010/Dec/221; classtype:attempted-admin; sid:2012054; rev:3;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET SMTP IBM Lotus Domino iCalendar Email Address Stack Buffer Overflow Attempt"; flow:to_server,established; content:"|0d 0a|ORGANIZER"; content:"mailto|3a|"; nocase; within:50; isdataat:2000,relative; content:!"|0a|"; within:2000; reference:url,www.exploit-db.com/exploits/15005/; reference:cve,2010-3407; classtype:attempted-user; sid:2012135; rev:3;)
@@ -147,19 +147,19 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Postfix SASL AUTH H
 alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ETPRO SMTP Postfix SASL AUTH Handle Reuse Memory Corruption(Published Exploit) 3"; flow:established, to_server; flowbits:isset,ETPRO.postfix201117201; content:"AUTH|20|DIGEST|2d|MD"; nocase; depth:14; reference:cve,CVE-2011-1720; reference:url,www.postfix.org/CVE-2011-1720.html; classtype:attempted-user; sid:2802836; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Abuseat.org Block Message"; flow:established,from_server; content:"abuseat.org"; classtype:not-suspicious; sid:2012982; rev:3;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Abuseat.org Block Message"; flow:established,from_server; content:"abuseat.org"; classtype:not-suspicious; sid:2012982; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Spamcop.net Block Message"; flow:established,from_server; content:"spamcop.net"; classtype:not-suspicious; sid:2012983; rev:2;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Spamcop.net Block Message"; flow:established,from_server; content:"spamcop.net"; classtype:not-suspicious; sid:2012983; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sophos.com Block Message"; flow:established,from_server; content:"sophos.com"; classtype:not-suspicious; sid:2012984; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sorbs.net Block Message"; flow:established,from_server; content:"sorbs.net"; classtype:not-suspicious; sid:2012985; rev:2;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sorbs.net Block Message"; flow:established,from_server; content:"sorbs.net"; classtype:not-suspicious; sid:2012985; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Robtex.com Block Message"; flow:established,from_server; content:"robtex.com"; classtype:not-suspicious; sid:2012986; rev:2;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Robtex.com Block Message"; flow:established,from_server; content:"robtex.com"; classtype:not-suspicious; sid:2012986; rev:2;)
 
 #
 alert smtp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SMTP EXE - ZIP file with .pif filename inside"; flow:established; content:"|0D 0A 0D 0A|UmFyI"; pcre:"/^[A-Za-z0-9\/\+\x0D\x0A]+?(LnBpZ|5waW|ucGlm)/R"; classtype:bad-unknown; sid:2018144; rev:2;)

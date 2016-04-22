@@ -165,7 +165,7 @@ switch($type)
 	
 		$operator = ($chart_info['type'] != '')? $chart_info['type'] : 'max';
 
-		$list     = Incident::get_list_filtered($conn, $param_filters["assets"], " AND incident.status = 'Open'", $param_filters["user"]);
+		$list     = Incident::get_list_filtered($conn, $param_filters["assets"], array("where" => " AND incident.status = 'Open'"), $param_filters["user"]);
 		
 		if (is_array($list) && !empty($list))
 		{

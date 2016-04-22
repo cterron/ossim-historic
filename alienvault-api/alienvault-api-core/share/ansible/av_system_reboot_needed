@@ -34,7 +34,12 @@ import pwd
 import grp
 import re
 import subprocess
-import apt
+
+try:
+    from apt_pkg import version_compare
+except ImportError:
+    # older vesion
+    from apt import VersionCompare as version_compare
 
 VERSION = "0.0.1"
 DOCUMENTATION = """
@@ -96,7 +101,7 @@ def _is_kernel_updated():
                 latest_installed_version = matched_versions[0]
 
                 for current_version in matched_versions:
-                    vc = apt.VersionCompare(latest_installed_version, current_version)
+                    vc = version_compare(latest_installed_version, current_version)
                     if vc < 0:
                         latest_installed_version = current_version
 

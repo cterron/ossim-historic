@@ -37,7 +37,8 @@ from db.methods.data import (get_current_status_messages,
 
 from db.methods.data import (load_mcserver_messages,
                              delete_messages,
-                             db_insert_current_status_message)
+                             db_insert_current_status_message,
+                             load_messages_to_db)
 
 from db.methods.system import get_system_id_from_local, db_get_hostname
 
@@ -46,7 +47,6 @@ from time import time
 import os.path
 
 from datetime import datetime
-
 
 def _format_handle_n_assets(message, additional_info):
     """
@@ -245,3 +245,10 @@ def insert_current_status_message(message_id, component_id, component_type, addi
         if not success:
             return False, "Cannot retrieve the local system id"
     return db_insert_current_status_message(message_id, component_id, component_type, additional_info, replace)
+
+
+def insert_custom_message(message, component_id, component_type, additional_info, replace, created = None):
+    success, data = load_messages_to_db([message])
+    if success:
+        return db_insert_current_status_message(message.id,component_id, component_type, additional_info, replace, created)
+    return (False, "error")

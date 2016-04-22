@@ -234,6 +234,7 @@ sub aes_encrypt_db() {
             "UPDATE alienvault.config SET `value` = AES_ENCRYPT('$db_pass','$key_str') WHERE `value` = '$db_pass' AND `conf` = 'snort_pass';",
             "UPDATE alienvault.config SET `value` = AES_ENCRYPT('$db_pass','$key_str') WHERE `value` = '$db_pass' AND `conf` = 'bi_pass';",
             "UPDATE alienvault.config SET `value` = AES_ENCRYPT('ossim','$key_str') WHERE  `conf` = 'nessus_pass';",
+            "UPDATE alienvault.config SET `value` = AES_ENCRYPT('ovas-super-admin','$key_str') WHERE  `conf` = 'nessus_admin_pass';",
             "UPDATE alienvault.config SET `value` = AES_ENCRYPT('$db_pass','$key_str') WHERE `value` = '$db_pass' AND `conf` = 'osvdb_pass';",
             "UPDATE alienvault.config SET `value` = AES_ENCRYPT('$db_pass','$key_str') WHERE `value` = '$db_pass' AND `conf` = 'backup_pass';",
             "UPDATE alienvault.config SET `value` = AES_ENCRYPT('$db_pass','$key_str') WHERE `value` = '$db_pass' AND `conf` = 'phpgacl_pass';",

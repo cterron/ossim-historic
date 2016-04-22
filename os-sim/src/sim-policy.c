@@ -1203,7 +1203,7 @@ sim_policy_match (SimPolicy       * policy,
   if (match)
     ossim_debug ("       src_ip: %s OK!; Match with policy: %s", ip_temp, sim_uuid_get_string (policy->_priv->id));
   else
-    ossim_debug ("       src_ip: %s Doesn't matches with any", ip_temp);
+    ossim_debug ("       src_ip: %s Doesn't match with any", ip_temp);
   g_free (ip_temp);
 #endif
 
@@ -1226,11 +1226,11 @@ sim_policy_match (SimPolicy       * policy,
   }
 
 #ifdef POLICY_DEBUG
-  gchar *ip_temp = sim_inet_get_canonical_name (event->dst_ia);
+  ip_temp = sim_inet_get_canonical_name (event->dst_ia);
   if (match)
     ossim_debug ("       dst_ip: %s OK!; Match with policy: %s", ip_temp, sim_uuid_get_string (policy->_priv->id));
   else
-    ossim_debug ("       dst_ip: %s Doesn't matches with any", ip_temp);
+    ossim_debug ("       dst_ip: %s Doesn't match with any", ip_temp);
   g_free (ip_temp);
 #endif
 
@@ -1398,6 +1398,8 @@ sim_policy_match (SimPolicy       * policy,
       match = FALSE;
       continue;
     }
+
+    list = list->next;
   }
 #ifdef POLICY_DEBUG
   ossim_debug ( "       reputation src %s", match ? "MATCHED" : "NOT MATCHED");
@@ -1433,6 +1435,8 @@ sim_policy_match (SimPolicy       * policy,
       match = FALSE;
       continue;
     }
+
+    list = list->next;
   }
 #ifdef POLICY_DEBUG
   ossim_debug ( "       reputation dst %s", match ? "MATCHED" : "NOT MATCHED");

@@ -996,10 +996,6 @@ class BackupManager(threading.Thread):
                 if events_to_delete != 0:
                     logger.info("Events to delete: '%s' events from %s to %s" % (events_to_delete, begin_date, end_date ))
 
-                    # Delete acumulate tables entries
-                    deletes.append("DELETE FROM alienvault_siem.ac_acid_event WHERE timestamp <= '%s';" % end_date)
-                    deletes.append("DELETE FROM alienvault_siem.po_acid_event WHERE timestamp <= '%s';" % end_date)
- 
                     block = 100000
 
                     delete_tmp_table = "alienvault_siem.backup_delete_temporal"
@@ -1021,12 +1017,16 @@ class BackupManager(threading.Thread):
                     deletes.append("DROP TABLE %s;" % (delete_mem_table))
                     deletes.append("DROP TABLE %s;" % (delete_tmp_table))
 
+                    # Delete acumulate tables entries
+                    deletes.append("DELETE FROM alienvault_siem.ac_acid_event WHERE timestamp <= '%s';" % end_date)
+                    deletes.append("DELETE FROM alienvault_siem.po_acid_event WHERE timestamp <= '%s';" % end_date)
+
                 # Go to the next date
                 next_date = self.__getOldestEventInDatabaseDateTime(begin_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1))
 
                 # Check last day of events
                 if begin_date.day == next_date.day:
-                    break;
+                    break
 
                 begin_date = next_date
 
@@ -1040,12 +1040,11 @@ class BackupManager(threading.Thread):
                 logger.error("Error running delete: %s" )
 
     def __deleteByBackupDays(self):
-        """Runs the delete command using the backup_day threshold
+        """ Runs the delete command using the backup_day threshold
         """
         #
         # Check by backup days.
         #
-        backupdays = 0
         try:
             backupdays = int(self.__bkConfig['backup_day'])
         except Exception, e:
@@ -1060,14 +1059,12 @@ class BackupManager(threading.Thread):
 
 
     def __deleteByNumberOfEvents(self):
-        """Runs the delete using the maximum number of events in the database
-        as threshold.
+        """ Runs the delete using the maximum number of events in the database
+            as threshold.
         """
-        limit_date = None
         #
         # Check by max number of events in the Database.
         #
-        max_events = 0
         try:
             max_events = int(self.__bkConfig['backup_events'])
         except Exception,e:

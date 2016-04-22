@@ -659,13 +659,11 @@ class Av_sensor extends Av_component
 
         $credentials = array();
 
-        $uuid = Util::get_encryption_key();
-
-        $query  = "SELECT port, user, PASSWORD, AES_DECRYPT(PASSWORD,'$uuid') AS pass_decrypt, max_scans
+        $query  = "SELECT port, user, PASSWORD, AES_DECRYPT(PASSWORD, ?) AS pass_decrypt, max_scans
             FROM vuln_nessus_servers
             WHERE hostname = ?";
 
-        $params = array($this->get_id());
+        $params = array(Util::get_encryption_key(), $this->get_id());
 
         $rs = $conn->Execute($query, $params);
 
@@ -685,6 +683,40 @@ class Av_sensor extends Av_component
         }
 
         return $credentials;
+    }
+
+
+    public function get_ossim_conf()
+    {
+        $conf = $GLOBALS['CONF'];
+        if (!$conf)
+        {
+            $conf = new Ossim_conf();
+            $GLOBALS['CONF'] = $conf;
+        }
+        return $conf;
+    }
+
+
+    public function get_vs_default_credentials()
+    {
+        $conf = $this->get_ossim_conf();
+
+        return array(
+            'user'     => $conf->get_conf("nessus_user", FALSE),
+            'password' => $conf->get_conf("nessus_pass", FALSE),
+        );
+    }
+
+
+    public function get_vs_admin_credentials() 
+    {
+        $conf = $this->get_ossim_conf();
+
+        return array(
+            'user'     => $conf->get_conf("nessus_admin_user", FALSE),
+            'password' => $conf->get_conf("nessus_admin_pass", FALSE),
+        );
     }
 
 
@@ -737,6 +769,56 @@ class Av_sensor extends Av_component
 
 
     /**
+    * This function saves default vulnerability scanner configuration
+    *
+    * @param object  $conn   Database access object
+    * @param array   $data   Scanner credentials
+    *
+    * @throws Exception  If a connection error occurred
+    *
+    * @return boolean
+    */
+    public function configure_vs($conn, $data)
+    {
+        $conf = $this->get_ossim_conf();
+
+        $params = array(
+            $data['name'],
+            'Remote Host',
+            $this->get_id(),
+            intval($conf->get_conf("nessus_port")),
+            '',
+            '',
+            '2.2.10',
+            'GPL only',
+            '200704181215',
+            '5',
+            '0',
+            'R',
+            '',
+            'admin',
+            NULL ,
+            'A',
+            $data['enabled']
+        );
+
+        $query = 'REPLACE INTO vuln_nessus_servers (name, description, hostname,
+            port, user, PASSWORD, server_nversion, server_feedtype, server_feedversion,
+            max_scans, current_scans, TYPE, site_code, owner, checkin_time, status , enabled)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        return TRUE;       
+    }
+
+
+    /**
     * This function saves vulnerability scanner credentials
     *
     * @param object  $conn   Database access object
@@ -752,91 +834,105 @@ class Av_sensor extends Av_component
 
         if (!$this->is_vs_configured($conn))
         {
-            $conf = $GLOBALS['CONF'];
-
-            if (!$conf)
-            {
-                $conf = new Ossim_conf();
-                $GLOBALS['CONF'] = $conf;
-            }
-
-            $params = array(
-                $data['name'],
-                'Remote Host',
-                $this->get_id(),
-                intval($conf->get_conf("nessus_port")),
-                '',
-                '',
-                '2.2.10',
-                'GPL only',
-                '200704181215',
-                '5',
-                '0',
-                'R',
-                '',
-                'admin',
-                NULL ,
-                'A',
-                $data['enabled']
-            );
-
-            $query = 'REPLACE INTO vuln_nessus_servers (name, description, hostname,
-                port, user, PASSWORD, server_nversion, server_feedtype, server_feedversion,
-                max_scans, current_scans, TYPE, site_code, owner, checkin_time, status , enabled)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-
-            $rs = $conn->Execute($query, $params);
-
-            if (!$rs)
-            {
-                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-            }
+            $this->configure_vs($conn, $data);
         }
 
         if (count($data) > 4 && count($data) < 7)
         {
+            $vs_prev_credentials = $this->get_vs_credentials($conn);
+            $conf = $this->get_ossim_conf();
+
+            $new_user = $data['user'];
+            $raw_password = $data['password'];
+            $new_password = (Util::is_fake_pass($raw_password)) ? $vs_prev_credentials['password'] : $raw_password;
+            $restore_defaults = ( empty($new_password) or empty($new_user) );
+
+            if ($restore_defaults) {
+                // Special case: restore default credentials;
+                $vs_default_credentials = $this->get_vs_default_credentials();
+                $new_user = $vs_default_credentials['user'];
+                $new_password = $vs_default_credentials['password'];
+            }
+
+            // Starts update transaction;
+            $conn->Execute('START TRANSACTION;');
+
             $params = array(
                 $data['name'],
-                $data['user'],
+                $new_user,
                 $data['port'],
                 $data['vuln_max_scans'],
                 $data['enabled'],
-                0
+                0,
+                $new_password,
             );
 
             $query = 'UPDATE vuln_nessus_servers
                 SET name= ?, user= ?, port = ?, max_scans= ?,
                 enabled = ?, current_scans = ?';
 
-            if (!Util::is_fake_pass($data['password']))
+            if($restore_defaults)
             {
-                $params[] = $data['password'];
-
-                if(!empty($data['password']))
-                {
-                    $params[] = Util::get_encryption_key();
-
-                    $query .= ', PASSWORD = AES_ENCRYPT(?,?)';
-                }
-                else
-                {
-                    $query .= ', PASSWORD = ?';
-                }
+                $query .= ', PASSWORD = ?'; // Reset to default password.
             }
-
+            else
+            {
+                $params[] = Util::get_encryption_key();
+                $query .= ', PASSWORD = AES_ENCRYPT(?,?)';
+            }
+            
             $params[] = $this->get_id();
 
             $query .= ' WHERE hostname = ?';
 
             $rs = $conn->Execute($query, $params);
+            $result = TRUE;
 
-            if (!$rs)
+            // Update OpenVAS credentials;
+            if ($rs)
             {
-                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                $result = $this->update_openvas_instance($conn, $vs_prev_credentials["port"], $new_user, $new_password);
+            }
+
+            if (!$rs or !$result)
+            {
+                $db_error_msg = $conn->ErrorMsg();
+                $conn->Execute('ROLLBACK;');
+                Av_exception::throw_error(Av_exception::DB_ERROR, empty($db_error_msg) ? "Failed to update OpenVAS credentials" : $db_error_msg);
+            }
+            else
+            {
+                $conn->Execute('COMMIT;');
             }
         }
-
+        
         return TRUE;
+    }
+
+
+    public function update_openvas_instance($conn, $port_connected, $new_user, $new_password)
+    {
+        $response = TRUE;
+
+        $vs_super_user=$this->get_vs_admin_credentials($conn);
+
+        $omp = new Omp($this->get_ip(), $port_connected, $vs_super_user['user'], $vs_super_user['password']);
+        $omp_user = $omp->get_omp_user_by_name($new_user);       
+           
+        if ($omp_user)
+        {
+            $response = $omp->update_user($omp_user, $new_user, $new_password);        
+        } else
+        {
+            $response = $omp->create_user($new_user, $new_password);
+        }
+
+        if (!$response){
+            // Log error if update procedure failed.
+            Av_exception::write_log(Av_exception::USER_ERROR, $omp->get_error_msg());
+        }
+
+        return $response;
     }
 
 
@@ -2354,14 +2450,16 @@ class Av_sensor extends Av_component
             $q_where  .= ' AND '.$filters['where'];
         }
 
-        if (!empty($filters['order_by']))
+        if (empty($filters['order_by']))
         {
-            $q_where  .= ' ORDER BY '.$filters['order_by'];
+            $filters['order_by'] = "name";
         }
+        $q_where  .= ' ORDER BY '.$filters['order_by'];
 
         if (!empty($filters['limit']))
         {
-            $q_where  .= ' LIMIT '.$filters['limit'];
+            $offset = isset($filters['offset']) && $filters['offset'] ? $filters['offset'] : 0;
+            $q_where  .= "LIMIT $offset,{$filters['limit']}";
         }
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
@@ -2569,11 +2667,11 @@ class Av_sensor extends Av_component
         {
             $q_where  .= ' AND '.$filters['where'];
         }
-
-        if (!empty($filters['order_by']))
+        if (empty($filters['order_by']))
         {
-            $q_where  .= ' ORDER BY '.$filters['order_by'];
+            $filters['order_by'] = "name";
         }
+        $q_where  .= ' ORDER BY '.$filters['order_by'];
 
         if (!empty($filters['limit']))
         {

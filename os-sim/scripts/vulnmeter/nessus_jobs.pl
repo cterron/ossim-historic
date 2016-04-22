@@ -838,7 +838,7 @@ sub setup_scan {
     #MAKE IT GLOBAL FOR USE WITH INCIDENT TRACKER
     @vuln_nessus_plugins = get_plugins( $Jvset, $job_id );
 
-    @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $Jname, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator);
+    @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $job_title, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator);
     
     $scantime = getCurrentDateTime();
 

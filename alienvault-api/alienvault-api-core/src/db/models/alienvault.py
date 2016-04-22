@@ -4122,6 +4122,7 @@ class Task_Inventory (Base):
     task_sensor = Column('task_sensor', BINARY(16), ForeignKey('sensor.id'), primary_key=False)
     task_period = Column('task_period', INTEGER, primary_key=False)
     task_params = Column('task_params', VARCHAR(255), primary_key=False)
+    task_last_run = Column('task_last_run', INTEGER(11), primary_key=False)
     #
     # Relations:
     #
@@ -4137,6 +4138,7 @@ class Task_Inventory (Base):
             'task_sensor': get_uuid_string_from_bytes(self.task_sensor),
             'task_period': self.task_period,
             'task_params': self.task_params,
+            'task_last_run': self.task_last_run,
         }
 
 

@@ -175,6 +175,10 @@ try
 
     // Call API to get status messages
     $status = new System_notifications();
+    //check if last update is error
+    $status->verify_last_update_notification();
+
+//$status->get_status_message("2A483FC9F04443558CCC51DC8780F94B");
     list($message_list, $total_messages) = $status->get_status_messages($filters, $pagination);
 
     // Wiki Parser

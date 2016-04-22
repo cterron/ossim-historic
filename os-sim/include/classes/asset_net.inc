@@ -2762,52 +2762,32 @@ class Asset_net extends Asset
             $q_where  .= ' ORDER BY '.$filters['order_by'];
         }
 
-        // First count to do block requests
-        $query = ossim_query("SELECT count(DISTINCT net.id) AS total FROM net $tables $q_where");
+        if (!empty($filters['limit']))
+        {
+            $offset = isset($filters['offset']) && $filters['offset'] ? $filters['offset'] : 0;
+            $q_where  .= "LIMIT $offset,{$filters['limit']}";
+        }
 
-        $conn->SetFetchMode(ADODB_FETCH_ASSOC);
+        $query = ossim_query("SELECT DISTINCT net.name, net.ips, HEX(net.id) AS n_id, HEX(net.ctx) AS n_ctx
+                FROM net $tables
+                $q_where");
 
-        $rf    = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
-
-        if (!$rf)
+        $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
-
-        $foundrows = $rf->fields['total'];
-
-        $block = 2000;
-        $rf->Free();
-
-
-        for ($i = 0; $i <= $foundrows; $i += $block)
+        while (!$rs->EOF)
         {
-            $query = ossim_query("SELECT DISTINCT net.name, net.ips, HEX(net.id) AS n_id, HEX(net.ctx) AS n_ctx
-                FROM net $tables
-                $q_where
-                LIMIT $i, $block");
+            $nets[] = array (
+                $rs->fields['n_id'],
+                $rs->fields['n_ctx'],
+                $rs->fields['ips'],
+                $rs->fields['name']
+            );
 
-            $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
-
-            if (!$rs)
-            {
-                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-            }
-
-            while (!$rs->EOF)
-            {
-                $nets[] = array (
-                    $rs->fields['n_id'],
-                    $rs->fields['n_ctx'],
-                    $rs->fields['ips'],
-                    $rs->fields['name']
-                );
-
-                $rs->MoveNext();
-            }
-
-            $rs->Free();
+            $rs->MoveNext();
         }
 
         return $nets;

@@ -66,7 +66,7 @@
 #alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy decode"; flow:to_server,established; content:"vrfy"; nocase; content:"decode"; distance:1; nocase; pcre:"/^vrfy\s+decode/smi"; reference:arachnids,373; reference:bugtraq,10248; reference:cve,1999-0096; classtype:attempted-recon; sid:2100672; rev:10;)
 
 #
-alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy root"; flow:to_server,established; content:"vrfy"; nocase; content:"root"; distance:1; nocase; pcre:"/^vrfy\s+root/smi"; classtype:attempted-recon; sid:2101446; rev:7;)
+#alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy root"; flow:to_server,established; content:"vrfy"; nocase; content:"root"; distance:1; nocase; pcre:"/^vrfy\s+root/smi"; classtype:attempted-recon; sid:2101446; rev:7;)
 
 #
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"GPL SMTP OUTBOUND bad file attachment"; flow:to_server,established; content:"Content-Disposition|3A|"; nocase; content:"filename"; distance:0; pcre:"/filename\s*=\s*.*?\.(?=[abcdehijlmnoprsvwx])(a(d[ep]|s[dfx])|c([ho]m|li|md|pp)|d(iz|ll|ot)|e(m[fl]|xe)|h(lp|sq|ta)|jse?|m(d[abew]|s[ip])|p(p[st]|if|[lm]|ot)|r(eg|tf)|s(cr|[hy]s|wf)|v(b[es]?|cf|xd)|w(m[dfsz]|p[dmsz]|s[cfh])|xl[tw]|bat|ini|lnk|nws|ocx)[\x27\x22\n\r\s]/iR"; classtype:suspicious-filename-detect; sid:2100721; rev:10;)
@@ -75,28 +75,28 @@ alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP vrfy root"; flow:
 #alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP SMTP relaying denied"; flow:established,from_server; content:"550 5.7.1"; depth:70; reference:arachnids,249; reference:url,mail-abuse.org/tsi/ar-fix.html; classtype:misc-activity; sid:2100567; rev:12;)
 
 #
-alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP AUTH LOGON brute force attempt"; flow:from_server,established; content:"Authentication unsuccessful"; offset:54; nocase; threshold:type threshold, track by_dst, count 5, seconds 60; classtype:suspicious-login; sid:2102275; rev:3;)
+#alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP AUTH LOGON brute force attempt"; flow:from_server,established; content:"Authentication unsuccessful"; offset:54; nocase; threshold:type threshold, track by_dst, count 5, seconds 60; classtype:suspicious-login; sid:2102275; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ET SMTP Potential Exim HeaderX with run exploit attempt"; flow:established,to_server; content:"|0d 0a|HeaderX|3a 20|"; nocase; content:"run{"; distance:0; reference:url,www.exim.org/lurker/message/20101207.215955.bb32d4f2.en.html; reference:url,eclists.org/fulldisclosure/2010/Dec/221; classtype:attempted-admin; sid:2012054; rev:3;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ET SMTP Potential Exim HeaderX with run exploit attempt"; flow:established,to_server; content:"|0d 0a|HeaderX|3a 20|"; nocase; content:"run{"; distance:0; reference:url,www.exim.org/lurker/message/20101207.215955.bb32d4f2.en.html; reference:url,eclists.org/fulldisclosure/2010/Dec/221; classtype:attempted-admin; sid:2012054; rev:3;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET SMTP IBM Lotus Domino iCalendar Email Address Stack Buffer Overflow Attempt"; flow:to_server,established; content:"|0d 0a|ORGANIZER"; content:"mailto|3a|"; nocase; within:50; isdataat:2000,relative; content:!"|0a|"; within:2000; reference:url,www.exploit-db.com/exploits/15005/; reference:cve,2010-3407; classtype:attempted-user; sid:2012135; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Abuseat.org Block Message"; flow:established,from_server; content:"abuseat.org"; classtype:not-suspicious; sid:2012982; rev:3;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Abuseat.org Block Message"; flow:established,from_server; content:"abuseat.org"; classtype:not-suspicious; sid:2012982; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Spamcop.net Block Message"; flow:established,from_server; content:"spamcop.net"; classtype:not-suspicious; sid:2012983; rev:2;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Spamcop.net Block Message"; flow:established,from_server; content:"spamcop.net"; classtype:not-suspicious; sid:2012983; rev:2;)
 
 #
 #alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sophos.com Block Message"; flow:established,from_server; content:"sophos.com"; classtype:not-suspicious; sid:2012984; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sorbs.net Block Message"; flow:established,from_server; content:"sorbs.net"; classtype:not-suspicious; sid:2012985; rev:2;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sorbs.net Block Message"; flow:established,from_server; content:"sorbs.net"; classtype:not-suspicious; sid:2012985; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Robtex.com Block Message"; flow:established,from_server; content:"robtex.com"; classtype:not-suspicious; sid:2012986; rev:2;)
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Robtex.com Block Message"; flow:established,from_server; content:"robtex.com"; classtype:not-suspicious; sid:2012986; rev:2;)
 
 #
 alert smtp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SMTP EXE - ZIP file with .pif filename inside"; flow:established; content:"|0D 0A 0D 0A|UmFyI"; pcre:"/^[A-Za-z0-9\/\+\x0D\x0A]+?(LnBpZ|5waW|ucGlm)/R"; classtype:bad-unknown; sid:2018144; rev:2;)

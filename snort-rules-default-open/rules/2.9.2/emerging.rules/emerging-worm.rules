@@ -61,7 +61,7 @@
 
 #by matt jonkman
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM SDBot HTTP Checkin"; flow:established,to_server; content:"User-Agent|3a| Mozilla/3.0 (compatible|3b| Indy Library)|0d 0a|"; http_header; content:"quem=dodoi&tit="; depth:15; http_client_body; fast_pattern; content:"&txt="; http_client_body; offset:15; depth:40;  reference:url,doc.emergingthreats.net/2007914; classtype:trojan-activity; sid:2007914; rev:4;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM SDBot HTTP Checkin"; flow:established,to_server; content:"User-Agent|3a| Mozilla/3.0 (compatible|3b| Indy Library)|0d 0a|"; http_header; content:"quem=dodoi&tit="; depth:15; http_client_body; fast_pattern; content:"&txt="; http_client_body; offset:15; depth:40;  reference:url,doc.emergingthreats.net/2007914; classtype:trojan-activity; sid:2007914; rev:4;)
 
 #by matt jonkman. Win32.Socks.s
 #

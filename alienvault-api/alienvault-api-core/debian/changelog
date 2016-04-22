@@ -1,3 +1,15 @@
+alienvault-api-core (5.2.2-0) stable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 11 Feb 2016 06:44:34 -0500
+
+alienvault-api-core (5.2.2-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 18 Jan 2016 09:17:14 -0500
+
 alienvault-api-core (5.2.1-0) stable; urgency=low
 
   * New release

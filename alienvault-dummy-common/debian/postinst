@@ -136,7 +136,7 @@ configure_etc_hosts_file(){
     mv "$ETC_HOSTS_FILE.aux" "$ETC_HOSTS_FILE"
 
     # Use correctly the augtool
-    key_host=$(augtool match /files/etc/hosts/*/canonical "$HOSTNAME.$DOMAIN" 2> /dev/null | sed 's/\/canonical$//g')
+    key_host=$(augtool match /files/etc/hosts/*/canonical "$HOSTNAME.$DOMAIN" 2> /dev/null | head -1 | sed 's/\/canonical$//g')
     if [ -n "$key_host" ]; then
         IP_HOSTS_FILE=$(augtool get "$key_host"/ipaddr| cut -d ' ' -f 3)
         ALIAS_HOSTS_FILE=$(augtool get "$key_host"/alias[1]|cut -d ' ' -f 3) # Only first alias
@@ -144,7 +144,7 @@ configure_etc_hosts_file(){
     else
         IP_HOSTS_FILE=""
         ALIAS_HOSTS_FILE=""
-        CONICAL_HOSTS_FILE=""
+        CANONICAL_HOSTS_FILE=""
     fi
 
     # We assume our host is always in the second entry. Just do not touch it.
@@ -164,7 +164,7 @@ EOF
             augtool << EOF
 set /files/etc/hosts/01/ipaddr "$ADMIN_IP"
 set /files/etc/hosts/01/canonical "$HOSTNAME.$DOMAIN"
-set /files/etc/hosts/01/alias[last()+1] "$HOSTNAME"
+set /files/etc/hosts/01/alias[1] "$HOSTNAME"
 save
 quit
 EOF
@@ -174,7 +174,7 @@ EOF
         [ ! "$CANONICAL_HOSTS_FILE" = "$HOSTNAME.$DOMAIN" ]) && [ -n "$key_host" ]; then
         augtool << EOF
 set "$key_host/alias[1]" "$HOSTNAME"
-set "$key_host" "$HOSTNAME.$DOMAIN"
+set "$key_host/canonical" "$HOSTNAME.$DOMAIN"
 save
 quit
 EOF

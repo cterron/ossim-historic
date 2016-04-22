@@ -76,6 +76,7 @@ class Omp
         require_once "ossim_db.inc";
         $this->db = new ossim_db();
         $this->conn = $this->db->connect();
+
         
         $this->latest_binary_location = "/usr/bin/omp";  // ** to use standard input **
    
@@ -111,7 +112,118 @@ class Omp
     }
 
 
-    // ------  private functions ------
+    /*****************************************************
+     *
+     * Open VAS user-related methods.
+     *  - get_roles
+     *  - get_users
+     *  - get_omp_user
+     *  - get_error_msg
+     *  - create_user
+     *  - update_user
+     *  - update_user_pass
+     *
+     *****************************************************/
+
+    public function get_error_msg(){
+        return $this->error_message;
+    }
+
+
+    public function get_roles() {
+        $roles = array();
+
+        $xml = $this->execute_command('<get_roles />');
+        if ($xml == FALSE) {
+            return 0;
+        }
+
+        foreach ($xml->role as $role) {
+            $roles[(string)$role->name] = (string)$role['id'];
+        }
+
+        return $roles;
+    }
+
+
+    public function get_users() {
+        $users = array();
+
+        $xml = $this->execute_command('<get_users />');
+        if ($xml == FALSE) {
+            return $users;
+        }
+
+        foreach ($xml->user as $user) {
+            $user_data = array();
+            
+            $user_data['user_id'] = (string)$user['id'];
+            $user_data['role_id'] = (string)$user->role['id'];
+            $user_data['role_name'] = (string)$user->role->name;
+
+            $users[(string)$user->name] = $user_data;
+        }
+
+        return $users;
+    }
+
+
+    public function get_omp_user_by_name($username) {
+        $users = array_keys($this->get_users());
+
+        foreach ($users as $user) {
+            if ($user === $username) { return $user; }
+        }
+
+        return "";
+    }
+
+
+    public function create_user($username, $password) {
+        $roles = $this->get_roles();
+
+        if ( empty($roles) ) {
+            return FALSE;
+        }
+
+        $cmd = "<create_user><name>%s</name><password>%s</password><role id=\"%s\"/></create_user>";
+
+        $xml = $this->execute_command(sprintf($cmd, $username, $password, $roles['Admin']));
+
+        if ($xml == FALSE) {
+            return FALSE; 
+        }
+
+        return TRUE;
+    }
+
+
+    public function update_user($old_user, $new_user, $password) {
+        $cmd="<modify_user><name>%s</name><new_name>%s</new_name><password>%s</password></modify_user>";
+
+        $xml = $this->execute_command(sprintf($cmd, $old_user, $new_user, $password));
+        // Try to update pass if such username already exists;
+        if ($xml == FALSE) {
+            return $this->update_user_pass($new_user, $password);
+        }
+
+        return TRUE;        
+    }
+
+
+    public function update_user_pass($username, $password) {
+        $cmd="<modify_user><name>%s</name><password>%s</password></modify_user>";
+
+        $xml = $this->execute_command(sprintf($cmd, $username, $password));
+        
+        if ($xml == FALSE) {
+            return FALSE;
+        }
+
+        return TRUE;
+
+    }
+
     
     public function execute_command ($command, $sinput=TRUE) {
         
@@ -190,6 +302,7 @@ class Omp
         return $config_id;
     }
 
+    // ------  private functions ------
 
     private function delete_tasks_by_config_id($config) {
         

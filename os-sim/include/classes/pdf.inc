@@ -463,7 +463,10 @@ class Pdf extends FPDF
 			return NULL;
         }
         
-		$args = " AND incident.ref = '$ref' AND  $priority $fil ORDER BY incident.priority DESC";
+		$args = array(
+			"where" => " AND incident.ref = '$ref' AND  $priority $fil ",
+			"order" => " ORDER BY incident.priority DESC"
+		);
 		
 		$incident_list = Incident::get_list_filtered($conn, $host, $args, $user);
         		
@@ -533,8 +536,11 @@ class Pdf extends FPDF
         
         $this->Write(DEFAULT_LINE_HEIGTH, _("List of $ref" . "s:"));
         $this->Ln(DEFAULT_LINE_HEIGTH);
-        
-        $incident_list = Incident::get_list($this->ossim_conn, " AND ref = '$ref' and $priority $fil ORDER BY priority DESC");
+        $args = array(
+		"where" =>  " AND ref = '$ref' and $priority $fil ",
+		"order" => " ORDER BY priority DESC"
+	);
+        $incident_list = Incident::get_list($this->ossim_conn, $args);
         if (is_array($incident_list)) 
         {
             foreach ($incident_list as $incident) 
@@ -573,7 +579,7 @@ class Pdf extends FPDF
         $this->Ln(DEFAULT_LINE_HEIGTH * 2);    
         $this->Ln(DEFAULT_LINE_HEIGTH);
 				       
-		$incident_list = Incident::get_list_filtered($conn, $assets, "AND ref = '$ref' AND $priority $fil", $user);
+		$incident_list = Incident::get_list_filtered($conn, $assets, array("where" => " AND ref = '$ref' AND $priority $fil"), $user);
 		
 		
 		foreach ($incident_list as $incident)
@@ -605,7 +611,7 @@ class Pdf extends FPDF
 
     public function Incident($incident_id) 
     {
-        $incident_list = Incident::get_list($this->ossim_conn, " AND incident.id = $incident_id");
+        $incident_list = Incident::get_list($this->ossim_conn, array("where" => " AND incident.id = $incident_id"));
         $incident = $incident_list[0];
         
         /* title */        
@@ -780,7 +786,7 @@ class Pdf extends FPDF
 
     public function IncidentNoPDF($incident_id) 
     {
-        $incident_list = Incident::get_list($this->ossim_conn, " AND incident.id = $incident_id");
+        $incident_list = Incident::get_list($this->ossim_conn, array("where" => " AND incident.id = $incident_id"));
         $incident = $incident_list[0];
         
         $content = array();

@@ -810,14 +810,22 @@ class Incident
     }
 
 
-    public function get_list_all($conn, $args = '')
+    public function get_list_all($conn, $args = array())
     {
         $tz = Util::get_timezone();
-
+        $where = isset($args["where"]) ? $args["where"] : "";
+        $having = isset($args["having"]) ? " HAVING ".$args["having"] : "";
+        $order = isset($args["order"]) ? $args["order"] : "";
         $list  = array();
-        $query = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter,
-                    incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end
-                    FROM incident $args";
+        $query = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.ref, incident.type_id as type, incident.submitter as submitter,
+                    incident.priority, incident.in_charge, incident.status
+                             DATE_ADD(incident.last_update, INTERVAL $tz HOUR) as last_update,
+                             DATE_ADD(incident.event_start, INTERVAL $tz HOUR) as event_start,
+                             DATE_ADD(incident.event_end, INTERVAL $tz HOUR) as event_end,
+                             DATE_ADD(incident.date, INTERVAL $tz HOUR) as date
+                    FROM incident 
+		$where $having $order
+		";
 
         $query = ossim_query($query);
 
@@ -829,14 +837,6 @@ class Incident
 
         while (!$rs->EOF)
         {
-            if($tz != 0)
-            {
-                $rs->fields["date"]        = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["date"])+3600*$tz);
-                $rs->fields["last_update"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["last_update"])+3600*$tz);
-                $rs->fields["event_start"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_start"])+3600*$tz);
-                $rs->fields["event_end"]   = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_end"])+3600*$tz);
-            }
-
             if($rs->fields["ref"] == '')
             {
                 $rs->fields["ref"] = "Custom";
@@ -1032,33 +1032,40 @@ class Incident
     }
 
 
-    public static function get_list($conn, $args = '', $user = '')
+    public static function get_list($conn, $args = array(), $user = '')
     {
         $tz    = Util::get_timezone();
         $list  = array();
 
         $user  = (empty($user)) ? Session::get_session_user() : $user;
-
-
         $user_list = self::get_allowed_users($conn, $user);//Users that I can view their tickets
-
-
+	$where = isset($args["where"]) ? $args["where"] : "";
+        $having = isset($args["having"]) ? " HAVING ".$args["having"] : "";
+        $order = isset($args["order"]) ? $args["order"] : "";
         if(empty($user_list))
         {
-            $query   = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref,
+            $query   = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.ref,
                              incident.type_id as type, incident.submitter as submitter,
                              incident.priority, incident.in_charge, incident.status,
-                             incident.last_update, incident.event_start, incident.event_end
-                      FROM incident WHERE 1=1 $args";
+                             DATE_ADD(incident.last_update, INTERVAL $tz HOUR) as last_update,
+                             DATE_ADD(incident.event_start, INTERVAL $tz HOUR) as event_start,
+                             DATE_ADD(incident.event_end, INTERVAL $tz HOUR) as event_end,
+                             DATE_ADD(incident.date, INTERVAL $tz HOUR) as date
+                      FROM incident WHERE 1=1
+                      $where $having $order
+           ";
         }
         else
         {
             $user_where = "'".implode("', '", $user_list)."'";
 
-            $query   = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref,
+            $query   = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.ref,
                              incident.type_id as type, incident.submitter as submitter,
                              incident.priority, incident.in_charge, incident.status,
-                             incident.last_update, incident.event_start, incident.event_end
+                             DATE_ADD(incident.last_update, INTERVAL $tz HOUR) as last_update,
+                             DATE_ADD(incident.event_start, INTERVAL $tz HOUR) as event_start,
+                             DATE_ADD(incident.event_end, INTERVAL $tz HOUR) as event_end,
+                             DATE_ADD(incident.date, INTERVAL $tz HOUR) as date
                       FROM incident
                       LEFT JOIN incident_ticket ON incident_ticket.incident_id = incident.id
                       LEFT JOIN incident_subscrip ON incident_subscrip.incident_id = incident.id
@@ -1070,7 +1077,7 @@ class Incident
                         incident_ticket.transferred in ($user_where) OR
                         incident_subscrip.login in ($user_where)
                         )
-                      $args
+			$where $having $order
                     ";
 
         }
@@ -1082,17 +1089,8 @@ class Incident
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-
         while (!$rs->EOF)
         {
-            if($tz != 0)
-            {
-                $rs->fields["date"]        = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["date"])+3600*$tz);
-                $rs->fields["last_update"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["last_update"])+3600*$tz);
-                $rs->fields["event_start"] = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_start"])+3600*$tz);
-                $rs->fields["event_end"]   = gmdate("Y-m-d H:i:s",Util::get_utc_unixtime($rs->fields["event_end"])+3600*$tz);
-            }
-
             if($rs->fields["ref"] == '')
             {
                 $rs->fields["ref"] = "Custom";
@@ -1102,7 +1100,6 @@ class Incident
 
             $rs->MoveNext();
         }
-
         return $list;
     }
 
@@ -1139,7 +1136,6 @@ class Incident
 
             return $list;
         }
-
         // Network or Host filter
         $list = array();
 
@@ -1220,7 +1216,10 @@ class Incident
         if ($host_where   == '') $host_where  ="1=1";
         if ($host_where_2 == '') $host_where_2="1=1";
         if ($host_where_3 == '') $host_where_3="1=1";
-
+	$qwhere = (isset($args["where"]) ? $args["where"] : " ") .
+		(isset($args["having"]) ? " HAVING ". $args["having"] : " ") .
+		(isset($args["order"]) ? $args["order"] : " ");
+	$args = $qwhere;
         $query = "(SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.date, incident.ref, incident.type_id as type, incident.submitter as submitter, incident.priority, incident.in_charge, incident.status, incident.last_update, incident.event_start, incident.event_end,a.src_ips
                  FROM incident,incident_alarm a
                  WHERE incident.id=a.incident_id AND ($host_where) $args)
@@ -1241,7 +1240,6 @@ class Incident
                  FROM incident,incident_metric a
                  WHERE incident.id=a.incident_id AND ($host_where_3) $args)
                 ";
-
         $query = ossim_query($query);
 
         $rs = $conn->Execute($query);

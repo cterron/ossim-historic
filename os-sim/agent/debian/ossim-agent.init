@@ -110,6 +110,13 @@ d_stop() {
             rm -rf $PIDFILE
         fi
     fi
+
+    # if there are nmap processes running - kill them.
+    running_nmap=`pgrep nmap | wc -l`
+    if [ $running_nmap -gt 0 ]
+    then
+       kill -9 `pgrep nmap` > /dev/null
+    fi
 }
 
 d_restart() {

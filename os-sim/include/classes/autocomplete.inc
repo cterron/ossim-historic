@@ -57,6 +57,30 @@
 class Autocomplete
 {
 
+    public static function get_autocomplete_jquery($conn, $keys, $term = null, $limit = null)
+    {
+        Ossim_db::check_connection($conn);
+
+        $json = array();
+
+        foreach($keys as $k)
+        {
+            $_function = "self::autocomplete_$k";
+            if(is_callable($_function))
+            {
+                $_json = call_user_func_array($_function, array($conn, $term, $limit));
+		if (!$_json) continue;
+		$_json = json_decode("[".$_json."]");
+		foreach ($_json as $_jsn) 
+		{
+                    $json[] = array("label"=>$_jsn->txt,"value"=>$_jsn->ip);
+		}
+            }
+        }
+        return  json_encode($json);
+    }
+
+
     public static function get_autocomplete($conn, $keys, $expire = 0)
     {
         Ossim_db::check_connection($conn);
@@ -69,8 +93,7 @@ class Autocomplete
 
             if(is_callable($_function))
             {
-                $_json = self::get_cache_file($conn, $k, $expire);
-                
+		$_json = self::get_cache_file($conn, $k, $expire);
                 if(empty($_json))
                 {
                     $_json = call_user_func_array($_function, array($conn));
@@ -87,7 +110,6 @@ class Autocomplete
                 }
             }
         }
-
         return implode(",\n", $json);
     }
 
@@ -243,7 +265,7 @@ class Autocomplete
     }
 
 
-    public static function autocomplete_sensors($conn)
+    public static function autocomplete_sensors($conn, $term = null, $limit = null)
     {
         $json   = array();
         $filter = array();
@@ -252,6 +274,13 @@ class Autocomplete
 
         try
         {
+            if ($term)
+            {
+                $filter["where"] = " (sensor.name LIKE '%$term%' OR INET6_NTOA(sensor.ip) LIKE '%$term%') ";
+            }
+            if ($limit) {
+                $filter["limit"] = $limit;
+            }
             $sensor_list = Av_sensor::get_basic_list($conn, $filter);
         }
         catch(Exception $e)
@@ -334,13 +363,21 @@ class Autocomplete
     }
 
 
-    public static function autocomplete_hosts_ips($conn)
+    public static function autocomplete_hosts_ips($conn, $term = null, $limit = null)
     {
         $json = array();
 
         try
         {
-            $host_list = Asset_host::get_list_tree($conn);
+            $filters = array();
+            if ($term)
+            {
+                $filters["where"] = " (host.hostname LIKE '%$term%' OR INET6_NTOA(hi.ip) LIKE '%$term%') ";
+            }
+            if ($limit) {
+                $filters["limit"] = $limit;
+            }
+            $host_list = Asset_host::get_list_tree($conn,'',$filters);
         }
         catch(Exception $e)
         {
@@ -362,18 +399,26 @@ class Autocomplete
             $json[] = json_encode($_json);
 
         }
-
         return implode(",\n", $json);
     }
 
 
-    public static function autocomplete_nets_cidrs($conn)
+    public static function autocomplete_nets_cidrs($conn,$term=null,$limit=null)
     {
         $json = array();
 
         try
         {
-            $net_list = Asset_net::get_list_tree($conn);
+            $filters = array();
+            if ($term)
+            {
+                $filters["where"] = " (net.name LIKE '%$term%' OR net.ips LIKE '%$term%') ";
+            }
+            if ($limit) {
+                $filters["limit"] = $limit;
+            }
+
+            $net_list = Asset_net::get_list_tree($conn, '', $filters);
         }
         catch(Exception $e)
         {

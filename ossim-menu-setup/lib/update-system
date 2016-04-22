@@ -29,10 +29,14 @@ ERROR_STRING=( "Successful update"
 "Error installing mailbsdx"
 "Error while downloading packages prior to a dist-upgrade operation"
 "Error during a dist-upgrade operation"
+"Error while updating igb-pfring"
 "Error while uninstalling squid2"
 "Error while autoremoving unnecessary packages"
 "Error while purging files/packages not needed any more"
-"Update still not available for this platform")
+"Update still not available for this platform"
+"Repository check detected a problem"
+"The update process could not complete due to a database error. Please review the update logs or contact Technical Support"
+"Failed to find mysqlcheck command. Please check your configuration or contact Technical Support")
 
 ALIENVAULT_UPDATE_ERROR_STRING=( "Error: There is an update instance running. Aborting update"
 "Error: Invalid signature for upgrade file (AV3)"

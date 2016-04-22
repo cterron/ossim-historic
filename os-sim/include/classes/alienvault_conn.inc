@@ -196,13 +196,13 @@ class Alienvault_conn {
     private function format_query($parameters, $primary='=', $secondary='&')
     {
         $query = '';
-
-        foreach($parameters as $key => $value)
-        {
-            $pair   = array(urlencode($key), urlencode($value));
-            $query .= implode($primary, $pair) . $secondary;
+        if ($parameters) {
+            foreach($parameters as $key => $value)
+            {
+                $pair   = array(urlencode($key), urlencode($value));
+                $query .= implode($primary, $pair) . $secondary;
+            }
         }
-
         return rtrim($query, $secondary);
     }
 
@@ -288,7 +288,6 @@ class Alienvault_conn {
         }
 
         $response = curl_exec($handle);
-
         // Save curl error
 
         $this->error = curl_error($handle);

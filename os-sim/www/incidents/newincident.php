@@ -76,7 +76,7 @@ if ($edit)
     }
 
 
-    $list = Incident::get_list($conn, "AND incident.id=$incident_id");
+    $list = Incident::get_list($conn, array("where" => " AND incident.id=$incident_id "));
 
     if (count($list) != 1)
     {

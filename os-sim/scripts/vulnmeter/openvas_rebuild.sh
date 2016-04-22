@@ -17,9 +17,9 @@ done
 openvasmd --rebuild
 /etc/init.d/openvas-manager start
 
-
 VERSION=`/usr/sbin/openvasmd --version | grep 'OpenVAS Manager' | awk '{print $3}' | awk -F '.' '{print $1}'`
 
 if [ "$1" == "repair" ] && [[ $VERSION -ge 6 ]]; then
-  openvasmd --create-user=ossim --role=Admin && openvasmd --user=ossim --new-password=ossim
+  openvasmd --create-user=ossim --role="Admin" && openvasmd --user=ossim --new-password=ossim
+  openvasmd --create-user=ovas-super-admin --role="Super Admin" && openvasmd --new-password=ovas-super-admin --user=ovas-super-admin
 fi

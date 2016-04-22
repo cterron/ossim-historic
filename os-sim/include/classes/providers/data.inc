@@ -145,6 +145,20 @@ class Data_provider extends Provider
     }
 
 
+    public function get_status_message($msg_id)
+    {
+        $response = $this->conn->do_request($this->common_url.'/status/'.$msg_id, array());
+        return $response;
+    }
+
+
+    public function save_status_message($data)
+    {
+        $response = $this->conn->do_request("$this->common_url/status/", $data, 'POST');
+        return $response;
+    }
+
+
     /**
      * This functions gets status messages stats
      *

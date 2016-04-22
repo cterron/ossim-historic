@@ -75,11 +75,11 @@
 
 #Submitted 2005-09-04 by David Maciejak
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Barracuda Spam Firewall img.pl Remote Command Execution Attempt"; flow: to_server,established; uricontent:"/cgi-bin/img.pl?"; nocase; pcre:"/(f=.+\|)/Ui"; reference:bugtraq,14712; reference:url,doc.emergingthreats.net/2002362; classtype:web-application-attack; sid:2002362; rev:6;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Barracuda Spam Firewall img.pl Remote Command Execution Attempt"; flow: to_server,established; uricontent:"/cgi-bin/img.pl?"; nocase; pcre:"/(f=.+\|)/Ui"; reference:bugtraq,14712; reference:url,doc.emergingthreats.net/2002362; classtype:web-application-attack; sid:2002362; rev:6;)
 
 #Submitted 2005-11-22 by David Maciejak (with thanks to Nicob for pointing it out)
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Barracuda Spam Firewall img.pl Remote Directory Traversal Attempt"; flow: to_server,established; uricontent:"/cgi-bin/img.pl?"; nocase; pcre:"/(f=\.\..+)/Ui"; reference:bugtraq,14710; reference:url,doc.emergingthreats.net/2002685; classtype:web-application-attack; sid:2002685; rev:6;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Barracuda Spam Firewall img.pl Remote Directory Traversal Attempt"; flow: to_server,established; uricontent:"/cgi-bin/img.pl?"; nocase; pcre:"/(f=\.\..+)/Ui"; reference:bugtraq,14710; reference:url,doc.emergingthreats.net/2002685; classtype:web-application-attack; sid:2002685; rev:6;)
 
 #Submitted 2008-08-14 by David Maciejak
 #
@@ -119,7 +119,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Barrac
 
 #by mareadmin
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Bot Search RFI Scan (ByroeNet/Casper-Like sun4u)"; flow:established,to_server; content:"|0D 0A|User-Agent|3a| Mozilla/4.76 [ru] (X11|3b| U|3b| SunOS 5.7 sun4u)"; nocase; reference:url,eromang.zataz.com/2010/07/13/byroenet-casper-bot-search-e107-rce-scanner/; reference:url,doc.emergingthreats.net/2011244; classtype:web-application-attack; sid:2011244; rev:5;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Bot Search RFI Scan (ByroeNet/Casper-Like sun4u)"; flow:established,to_server; content:"|0D 0A|User-Agent|3a| Mozilla/4.76 [ru] (X11|3b| U|3b| SunOS 5.7 sun4u)"; nocase; reference:url,eromang.zataz.com/2010/07/13/byroenet-casper-bot-search-e107-rce-scanner/; reference:url,doc.emergingthreats.net/2011244; classtype:web-application-attack; sid:2011244; rev:5;)
 
 #by eric romang
 #
@@ -155,7 +155,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Po
 
 #by Kevin Ross
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Cisco IOS HTTP Server Exec Command Execution Attempt"; flow:to_server,established; content:"/level/15/exec/-/"; fast_pattern:only; nocase; http_uri; pcre:"/\x2Flevel\x2F15\x2Fexec\x2F\x2D\x2F[a-z]/Ui"; reference:url,doc.emergingthreats.net/2010623; classtype:web-application-attack; sid:2010623; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Cisco IOS HTTP Server Exec Command Execution Attempt"; flow:to_server,established; content:"/level/15/exec/-/"; fast_pattern:only; nocase; http_uri; pcre:"/\x2Flevel\x2F15\x2Fexec\x2F\x2D\x2F[a-z]/Ui"; reference:url,doc.emergingthreats.net/2010623; classtype:web-application-attack; sid:2010623; rev:4;)
 
 #by kevin ross
 #
@@ -195,11 +195,11 @@ alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Cisco 
 
 #some kind of robot/scripted web scanner. Some reports that it's looking for awstats installs
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER DataCha0s Web Scanner/Robot"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| DataCha0s"; nocase; reference:url,www.internetofficer.com/web-robot/datacha0s.html; reference:url,doc.emergingthreats.net/2003616; classtype:web-application-activity; sid:2003616; rev:38;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER DataCha0s Web Scanner/Robot"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| DataCha0s"; nocase; reference:url,www.internetofficer.com/web-robot/datacha0s.html; reference:url,doc.emergingthreats.net/2003616; classtype:web-application-activity; sid:2003616; rev:38;)
 
 #by kevin ross
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible D-Link Router HNAP Protocol Security Bypass Attempt"; flow:established,to_server; content:"POST"; http_method; content:"/HNAP1/"; http_uri; nocase; content:"SOAPAction|3A|"; nocase; content:"DeviceSettings"; within:100; nocase; pcre:"/SoapAction\x3A.+\x2FHNAP1\x2F(set|get)DeviceSettings/si"; reference:url,www.securityfocus.com/bid/37690; reference:url,doc.emergingthreats.net/2010698; classtype:web-application-attack; sid:2010698; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible D-Link Router HNAP Protocol Security Bypass Attempt"; flow:established,to_server; content:"POST"; http_method; content:"/HNAP1/"; http_uri; nocase; content:"SOAPAction|3A|"; nocase; content:"DeviceSettings"; within:100; nocase; pcre:"/SoapAction\x3A.+\x2FHNAP1\x2F(set|get)DeviceSettings/si"; reference:url,www.securityfocus.com/bid/37690; reference:url,doc.emergingthreats.net/2010698; classtype:web-application-attack; sid:2010698; rev:4;)
 
 #by David Maciejak
 #
@@ -239,15 +239,15 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible D-Lin
 
 #by Kevin Ross
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER cmd.exe In URI - Possible Command Execution Attempt"; flow:to_server,established; uricontent:"/cmd.exe"; nocase; reference:url,doc.emergingthreats.net/2009361; classtype:attempted-recon; sid:2009361; rev:5;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER cmd.exe In URI - Possible Command Execution Attempt"; flow:to_server,established; uricontent:"/cmd.exe"; nocase; reference:url,doc.emergingthreats.net/2009361; classtype:attempted-recon; sid:2009361; rev:5;)
 
 #by Kevin Ross
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER /system32/ in Uri - Possible Protected Directory Access Attempt"; flow:to_server,established; uricontent:"/system32/"; nocase; reference:url,doc.emergingthreats.net/2009362; classtype:attempted-recon; sid:2009362; rev:5;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER /system32/ in Uri - Possible Protected Directory Access Attempt"; flow:to_server,established; uricontent:"/system32/"; nocase; reference:url,doc.emergingthreats.net/2009362; classtype:attempted-recon; sid:2009362; rev:5;)
 
 #by Kevin Ross
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Suspicious Chmod Usage in URI"; flow:to_server,established; content:"chmod"; fast_pattern:only; nocase; http_uri; pcre:"/chmod\s+([+-][rwx]|[0-7])/Ui"; reference:url,doc.emergingthreats.net/2009363; classtype:attempted-admin; sid:2009363; rev:6;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Suspicious Chmod Usage in URI"; flow:to_server,established; content:"chmod"; fast_pattern:only; nocase; http_uri; pcre:"/chmod\s+([+-][rwx]|[0-7])/Ui"; reference:url,doc.emergingthreats.net/2009363; classtype:attempted-admin; sid:2009363; rev:6;)
 
 #by kevin ross
 #
@@ -288,7 +288,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Su
 
 #Submitted by Matt Jonkman
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER IIS ASP.net Auth Bypass / Canonicalization % 5 C"; flow: to_server,established; uricontent:".aspx"; nocase; content:"GET"; nocase; depth: 3; content:"%5C"; depth: 200; nocase; content:"aspx"; within:100; reference:url,doc.emergingthreats.net/2001343; classtype:web-application-attack; sid:2001343; rev:22;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER IIS ASP.net Auth Bypass / Canonicalization % 5 C"; flow: to_server,established; uricontent:".aspx"; nocase; content:"GET"; nocase; depth: 3; content:"%5C"; depth: 200; nocase; content:"aspx"; within:100; reference:url,doc.emergingthreats.net/2001343; classtype:web-application-attack; sid:2001343; rev:22;)
 
 #by kevin ross
 #
@@ -304,11 +304,11 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER II
 
 #by mex
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER JBOSS/JMX REMOTE WAR deployment attempt (POST)"; flow:established,to_server; content:"POST "; nocase; depth:5; uricontent:"/jmx-console/HtmlAdaptor"; nocase; content:"action=invokeOp&name=jboss.deployment"; nocase; content:"flavor%253DURL%252Ctype%253DDeploymentScanner"; within:50; nocase; content:"=http%3A%2F%2F"; within:40; reference:url,www.notsosecure.com/folder2/2009/10/27/hacking-jboss-with-jmx-console/; reference:url,www.nruns.com/_downloads/Whitepaper-Hacking-jBoss-using-a-Browser.pdf; reference:url,doc.emergingthreats.net/2010379; classtype:web-application-attack; sid:2010379; rev:5;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER JBOSS/JMX REMOTE WAR deployment attempt (POST)"; flow:established,to_server; content:"POST "; nocase; depth:5; uricontent:"/jmx-console/HtmlAdaptor"; nocase; content:"action=invokeOp&name=jboss.deployment"; nocase; content:"flavor%253DURL%252Ctype%253DDeploymentScanner"; within:50; nocase; content:"=http%3A%2F%2F"; within:40; reference:url,www.notsosecure.com/folder2/2009/10/27/hacking-jboss-with-jmx-console/; reference:url,www.nruns.com/_downloads/Whitepaper-Hacking-jBoss-using-a-Browser.pdf; reference:url,doc.emergingthreats.net/2010379; classtype:web-application-attack; sid:2010379; rev:5;)
 
 #by mex
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER JBOSS/JMX REMOTE WAR deployment attempt (GET)"; flow:established,to_server; content:"GET "; nocase; depth:4; uricontent:"/jmx-console/HtmlAdaptor?action=invokeOpByName&name=jboss.deployment"; uricontent:"DeploymentScanner"; nocase; uricontent:"methodName=addURL"; nocase; uricontent:"=http"; nocase; reference:url,www.notsosecure.com/folder2/2009/10/27/hacking-jboss-with-jmx-console/; reference:url,www.nruns.com/_downloads/Whitepaper-Hacking-jBoss-using-a-Browser.pdf; reference:url,doc.emergingthreats.net/2010380; classtype:web-application-attack; sid:2010380; rev:5;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER JBOSS/JMX REMOTE WAR deployment attempt (GET)"; flow:established,to_server; content:"GET "; nocase; depth:4; uricontent:"/jmx-console/HtmlAdaptor?action=invokeOpByName&name=jboss.deployment"; uricontent:"DeploymentScanner"; nocase; uricontent:"methodName=addURL"; nocase; uricontent:"=http"; nocase; reference:url,www.notsosecure.com/folder2/2009/10/27/hacking-jboss-with-jmx-console/; reference:url,www.nruns.com/_downloads/Whitepaper-Hacking-jBoss-using-a-Browser.pdf; reference:url,doc.emergingthreats.net/2010380; classtype:web-application-attack; sid:2010380; rev:5;)
 
 #by Kevin Ross
 #
@@ -324,7 +324,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER JB
 
 #Submitted by bdoctor
 #
-alert http $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER MSSQL Server OLEDB asp error"; flow: established,from_server; content:"Microsoft OLE DB Provider for SQL Server error"; reference:url,www.wiretrip.net/rfp/p/doc.asp/i2/d42.htm; reference:url,doc.emergingthreats.net/2001768; classtype:web-application-activity; sid:2001768; rev:11;)
+#alert http $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER MSSQL Server OLEDB asp error"; flow: established,from_server; content:"Microsoft OLE DB Provider for SQL Server error"; reference:url,www.wiretrip.net/rfp/p/doc.asp/i2/d42.htm; reference:url,doc.emergingthreats.net/2001768; classtype:web-application-activity; sid:2001768; rev:11;)
 
 #by Jaime Blasco
 #
@@ -372,7 +372,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER At
 
 #by shirkdog
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Attack Tool Morfeus F Scanner"; flow:established,to_server; content:"Morfeus"; nocase; http_user_agent; depth:7; reference:url,www.webmasterworld.com/search_engine_spiders/3227720.htm; reference:url,doc.emergingthreats.net/2003466; classtype:web-application-attack; sid:2003466; rev:13;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Attack Tool Morfeus F Scanner"; flow:established,to_server; content:"Morfeus"; nocase; http_user_agent; depth:7; reference:url,www.webmasterworld.com/search_engine_spiders/3227720.htm; reference:url,doc.emergingthreats.net/2003466; classtype:web-application-attack; sid:2003466; rev:13;)
 
 #by shirkdog
 #
@@ -380,7 +380,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Attack Too
 
 #by Wolvee
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Nagios statuswml.cgi Remote Arbitrary Shell Command Injection attempt"; flow:to_server,established; content:"GET "; nocase; depth:4; uricontent:"/statuswml.cgi?"; nocase; uricontent:"ping"; nocase; pcre:"/ping\s*=\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[^\x26\x0D\x0A]*\x3B)/Ui"; reference:bugtraq,35464; reference:url,doc.emergingthreats.net/2009670; classtype:web-application-attack; sid:2009670; rev:9;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Nagios statuswml.cgi Remote Arbitrary Shell Command Injection attempt"; flow:to_server,established; content:"GET "; nocase; depth:4; uricontent:"/statuswml.cgi?"; nocase; uricontent:"ping"; nocase; pcre:"/ping\s*=\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[^\x26\x0D\x0A]*\x3B)/Ui"; reference:bugtraq,35464; reference:url,doc.emergingthreats.net/2009670; classtype:web-application-attack; sid:2009670; rev:9;)
 
 #by Blake Hartstein at Demarc
 #
@@ -388,7 +388,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Na
 
 #by Michael Scheidell
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER osCommerce extras/update.php disclosure"; flow:to_server,established; uricontent:"extras/update.php"; nocase; reference:url,retrogod.altervista.org/oscommerce_22_adv.html; reference:url,doc.emergingthreats.net/2002864; classtype:attempted-recon; sid:2002864; rev:6;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER osCommerce extras/update.php disclosure"; flow:to_server,established; uricontent:"extras/update.php"; nocase; reference:url,retrogod.altervista.org/oscommerce_22_adv.html; reference:url,doc.emergingthreats.net/2002864; classtype:attempted-recon; sid:2002864; rev:6;)
 
 #Submitted by Mark Tombaugh, 2005/07/20
 #Note: Oracle Reports can run on any TCP port. Please configure HTTP_PORTS appropriately.
@@ -403,7 +403,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER osComm
 #Submitted by Mark Tombaugh, 2005/07/20
 #Note: Oracle Reports can run on any TCP port. Please configure HTTP_PORTS appropriately.
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Oracle Reports OS Command Injection Attempt"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:"report="; nocase; pcre:"/(showenv|parsequery|rwservlet)\?.*report=.*\.(rdf|rep)/Ui"; reference:url,www.oracle.com/technology/products/reports/index.html; reference:url,www.red-database-security.com/advisory/oracle_reports_run_any_os_command.html; reference:url,doc.emergingthreats.net/2002133; classtype:web-application-activity; sid:2002133; rev:10;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Oracle Reports OS Command Injection Attempt"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:"report="; nocase; pcre:"/(showenv|parsequery|rwservlet)\?.*report=.*\.(rdf|rep)/Ui"; reference:url,www.oracle.com/technology/products/reports/index.html; reference:url,www.red-database-security.com/advisory/oracle_reports_run_any_os_command.html; reference:url,doc.emergingthreats.net/2002133; classtype:web-application-activity; sid:2002133; rev:10;)
 
 #by Wolvee
 #
@@ -415,19 +415,19 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Or
 
 #by mex
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (phpinfo)"; flow:to_server,established; uricontent:"?=PHPB8B5F2A0-3C92-11d3-A3A9-4C7B08C10000"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011141; classtype:attempted-recon; sid:2011141; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (phpinfo)"; flow:to_server,established; uricontent:"?=PHPB8B5F2A0-3C92-11d3-A3A9-4C7B08C10000"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011141; classtype:attempted-recon; sid:2011141; rev:3;)
 
 #by mex
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (php-logo)"; flow:to_server,established; uricontent:"?=PHPE9568F34-D428-11d2-A769-00AA001ACF42"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011142; classtype:attempted-recon; sid:2011142; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (php-logo)"; flow:to_server,established; uricontent:"?=PHPE9568F34-D428-11d2-A769-00AA001ACF42"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011142; classtype:attempted-recon; sid:2011142; rev:3;)
 
 #by mex
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (zend-logo)"; flow:to_server,established; uricontent:"?=PHPE9568F35-D428-11d2-A769-00AA001ACF42"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011143; classtype:attempted-recon; sid:2011143; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (zend-logo)"; flow:to_server,established; uricontent:"?=PHPE9568F35-D428-11d2-A769-00AA001ACF42"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011143; classtype:attempted-recon; sid:2011143; rev:3;)
 
 #by mex
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (funny-logo)"; flow:to_server,established; uricontent:"?=PHPE9568F36-D428-11d2-A769-00AA001ACF42"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011144; classtype:attempted-recon; sid:2011144; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Easteregg Information-Disclosure (funny-logo)"; flow:to_server,established; uricontent:"?=PHPE9568F36-D428-11d2-A769-00AA001ACF42"; reference:url,osvdb.org/12184; reference:url,www.0php.com/php_easter_egg.php; reference:url,seclists.org/nmap-dev/2010/q2/569; reference:url,doc.emergingthreats.net/2011144; classtype:attempted-recon; sid:2011144; rev:3;)
 
 #From Erik Fichtner
 #
@@ -439,11 +439,11 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Exploit Su
 
 #by David Wharton
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Generic Remote File Include Attempt (HTTPS)"; flow:to_server,established; uricontent:".php"; nocase; uricontent:"=https|3a|/"; nocase; pcre:"/\x2Ephp\x3F.{0,300}\x3Dhttps\x3A\x2F[^\x3F\x26]+\x3F/Ui"; reference:url,doc.emergingthreats.net/2009152; classtype:web-application-attack; sid:2009152; rev:8;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Generic Remote File Include Attempt (HTTPS)"; flow:to_server,established; uricontent:".php"; nocase; uricontent:"=https|3a|/"; nocase; pcre:"/\x2Ephp\x3F.{0,300}\x3Dhttps\x3A\x2F[^\x3F\x26]+\x3F/Ui"; reference:url,doc.emergingthreats.net/2009152; classtype:web-application-attack; sid:2009152; rev:8;)
 
 #by David Wharton
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Generic Remote File Include Attempt (FTP)"; flow:to_server,established; uricontent:".php"; nocase; uricontent:"=ftp|3a|/"; nocase; pcre:"/\x2Ephp\x3F.{0,300}\x3Dftp\x3A\x2F[^\x3F\x26]+\x3F/Ui"; reference:url,doc.emergingthreats.net/2009153; classtype:web-application-attack; sid:2009153; rev:8;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Generic Remote File Include Attempt (FTP)"; flow:to_server,established; uricontent:".php"; nocase; uricontent:"=ftp|3a|/"; nocase; pcre:"/\x2Ephp\x3F.{0,300}\x3Dftp\x3A\x2F[^\x3F\x26]+\x3F/Ui"; reference:url,doc.emergingthreats.net/2009153; classtype:web-application-attack; sid:2009153; rev:8;)
 
 #by David Wharton
 #
@@ -451,7 +451,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PH
 
 #by Jared Braverman
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Attack Tool Revolt Scanner"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| revolt"; reference:url,www.Whitehatsecurityresponse.blogspot.com; reference:url,doc.emergingthreats.net/2009288; classtype:web-application-attack; sid:2009288; rev:56;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Attack Tool Revolt Scanner"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| revolt"; reference:url,www.Whitehatsecurityresponse.blogspot.com; reference:url,doc.emergingthreats.net/2009288; classtype:web-application-attack; sid:2009288; rev:56;)
 
 #by Reg Quinton at UW. These are intended to be an overall catch for suspected sql injection
 #in web urls. There are more specific sigs for many of these, but these will catch all
@@ -552,7 +552,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER SQL Inject
 
 #by kevin ross
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible Attempt to Get SQL Server Version in URI using SELECT VERSION"; flow:established,to_server; content:"SELECT"; nocase; http_uri; content:"VERSION"; nocase; distance:1; http_uri; reference:url,support.microsoft.com/kb/321185; reference:url,doc.emergingthreats.net/2011037; classtype:web-application-attack; sid:2011037; rev:4;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible Attempt to Get SQL Server Version in URI using SELECT VERSION"; flow:established,to_server; content:"SELECT"; nocase; http_uri; content:"VERSION"; nocase; distance:1; http_uri; reference:url,support.microsoft.com/kb/321185; reference:url,doc.emergingthreats.net/2011037; classtype:web-application-attack; sid:2011037; rev:4;)
 
 #by kevin ross
 #
@@ -564,7 +564,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Po
 
 #MYSQL Specific
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER MYSQL Benchmark Command in URI to Consume Server Resources"; flow:established,to_server; uricontent:"BENCHMARK("; nocase; uricontent:")"; pcre:"/BENCHMARK\x28[0-9].+\x29/Ui"; reference:url,dev.mysql.com/doc/refman/5.1/en/information-functions.html#function_benchmark; reference:url,doc.emergingthreats.net/2011041; classtype:web-application-attack; sid:2011041; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER MYSQL Benchmark Command in URI to Consume Server Resources"; flow:established,to_server; uricontent:"BENCHMARK("; nocase; uricontent:")"; pcre:"/BENCHMARK\x28[0-9].+\x29/Ui"; reference:url,dev.mysql.com/doc/refman/5.1/en/information-functions.html#function_benchmark; reference:url,doc.emergingthreats.net/2011041; classtype:web-application-attack; sid:2011041; rev:3;)
 
 #MYSQL Specific
 #
@@ -572,11 +572,11 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER MY
 
 #by evilghost
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Possible SQL injection obfuscated via REVERSE function"; flow:established,to_server; uricontent:"REVERSE"; nocase; pcre:"/[^\w]REVERSE[^\w]?\(/Ui"; reference:url,snosoft.blogspot.com/2010/05/reversenoitcejni-lqs-dnilb-bank-hacking.html; reference:url,doc.emergingthreats.net/2011122; classtype:web-application-attack; sid:2011122; rev:3;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Possible SQL injection obfuscated via REVERSE function"; flow:established,to_server; uricontent:"REVERSE"; nocase; pcre:"/[^\w]REVERSE[^\w]?\(/Ui"; reference:url,snosoft.blogspot.com/2010/05/reversenoitcejni-lqs-dnilb-bank-hacking.html; reference:url,doc.emergingthreats.net/2011122; classtype:web-application-attack; sid:2011122; rev:3;)
 
 #by Kevin Ross
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /etc/shadow Detected in URI"; flow:to_server,established; content:"/etc/shadow"; http_uri; nocase; reference:url,en.wikipedia.org/wiki/Shadow_password; reference:url,doc.emergingthreats.net/2009485; classtype:attempted-recon; sid:2009485; rev:6;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /etc/shadow Detected in URI"; flow:to_server,established; content:"/etc/shadow"; http_uri; nocase; reference:url,en.wikipedia.org/wiki/Shadow_password; reference:url,doc.emergingthreats.net/2009485; classtype:attempted-recon; sid:2009485; rev:6;)
 
 #by tinytwitty
 #
@@ -592,7 +592,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /etc/shado
 
 #by a bunch of folks
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/bash In URI, Possible Shell Command Execution Attempt Within Web Exploit"; flow:established,to_server; content:"/bin/bash"; http_uri; reference:url,doc.emergingthreats.net/2010667; classtype:web-application-attack; sid:2010667; rev:6;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/bash In URI, Possible Shell Command Execution Attempt Within Web Exploit"; flow:established,to_server; content:"/bin/bash"; http_uri; reference:url,doc.emergingthreats.net/2010667; classtype:web-application-attack; sid:2010667; rev:6;)
 
 #by kevin ross
 #
@@ -608,15 +608,15 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/bash 
 
 #by evilghost
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .php~ source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".php~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009955; classtype:web-application-attack; sid:2009955; rev:10;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .php~ source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".php~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009955; classtype:web-application-attack; sid:2009955; rev:10;)
 
 #by evilghost
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .pl source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".pl~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009949; classtype:web-application-attack; sid:2009949; rev:10;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .pl source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".pl~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009949; classtype:web-application-attack; sid:2009949; rev:10;)
 
 #by evilghost
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .inc source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".inc~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009950; classtype:web-application-attack; sid:2009950; rev:10;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .inc source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".inc~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009950; classtype:web-application-attack; sid:2009950; rev:10;)
 
 #by evilghost
 #
@@ -624,15 +624,15 @@ alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde 
 
 #by evilghost
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .asp source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".asp~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009952; classtype:web-application-attack; sid:2009952; rev:10;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .asp source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".asp~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009952; classtype:web-application-attack; sid:2009952; rev:10;)
 
 #by evilghost
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .aspx source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".aspx~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009953; classtype:web-application-attack; sid:2009953; rev:10;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .aspx source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".aspx~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009953; classtype:web-application-attack; sid:2009953; rev:10;)
 
 #added by mareadmin
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .cgi source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".cgi~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2010820; classtype:web-application-attack; sid:2010820; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .cgi source disclosure vulnerability"; flow:established,to_server; content:"GET "; depth:4; nocase; uricontent:".cgi~"; nocase; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2010820; classtype:web-application-attack; sid:2010820; rev:4;)
 
 #By Blake Hartstein
 #Detects uri evasions too
@@ -645,28 +645,28 @@ alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde 
 
 #by mike cox
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Scan Precursor"; flow:established,to_server; content:"/thisdoesnotexistahaha.php"; http_uri; reference:url,doc.emergingthreats.net/2010720; classtype:web-application-attack; sid:2010720; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Scan Precursor"; flow:established,to_server; content:"/thisdoesnotexistahaha.php"; http_uri; reference:url,doc.emergingthreats.net/2010720; classtype:web-application-attack; sid:2010720; rev:4;)
 
 #By Frank Knobbe, 2005-11-02
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER sumthin scan"; flow:established,to_server; content:"GET"; nocase; http_method; content:"/sumthin"; nocase; http_uri; reference:url,www.webmasterworld.com/forum11/2100.htm; reference:url,doc.emergingthreats.net/2002667; classtype:attempted-recon; sid:2002667; rev:38;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER sumthin scan"; flow:established,to_server; content:"GET"; nocase; http_method; content:"/sumthin"; nocase; http_uri; reference:url,www.webmasterworld.com/forum11/2100.htm; reference:url,doc.emergingthreats.net/2002667; classtype:attempted-recon; sid:2002667; rev:38;)
 
 #by mareadmin
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER DFind w00tw00t GET-Requests"; flow:established,to_server; content:"GET"; nocase; http_method; content:"/w00tw00t."; nocase; http_uri; reference:url,doc.emergingthreats.net/2010794; classtype:attempted-recon; sid:2010794; rev:7;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER DFind w00tw00t GET-Requests"; flow:established,to_server; content:"GET"; nocase; http_method; content:"/w00tw00t."; nocase; http_uri; reference:url,doc.emergingthreats.net/2010794; classtype:attempted-recon; sid:2010794; rev:7;)
 
 #by kevin ross
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Possible Cisco PIX/ASA HTTP Web Interface HTTP Response Splitting Attempt"; flow:established,to_server; content:"GET "; depth:4; uricontent:"|0D 0A|Location|3A|"; nocase; reference:url,www.secureworks.com/ctu/advisories/SWRX-2010-001/; reference:url,tools.cisco.com/security/center/viewAlert.x?alertId=20737; reference:cve,2008-7257; reference:url,doc.emergingthreats.net/2011763; classtype:web-application-attack; sid:2011763; rev:3;)
 
 #split sig 
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/csh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/csh"; nocase; http_uri; classtype:web-application-attack; sid:2011464; rev:4;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/csh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/csh"; nocase; http_uri; classtype:web-application-attack; sid:2011464; rev:4;)
 
 #split sig
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/tsh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/tsh"; http_uri; nocase; classtype:web-application-attack; sid:2011466; rev:5;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/tsh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/tsh"; http_uri; nocase; classtype:web-application-attack; sid:2011466; rev:5;)
 
 #split sig
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/ksh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/ksh"; nocase; http_uri; classtype:web-application-attack; sid:2011467; rev:5;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/ksh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/ksh"; nocase; http_uri; classtype:web-application-attack; sid:2011467; rev:5;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP"; flow:to_server,established; content:"http|3a|//127.0.0.1"; pcre:"/http\x3A\/\/127\.0\.0\.1\/.*\.asp/i"; reference:cve,2005-2678; classtype:web-application-activity; sid:2100139; rev:5;)
@@ -675,7 +675,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/ksh I
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER WEB-PHP phpinfo access"; flow:to_server,established; content:"/phpinfo.php"; http_uri; nocase; reference:bugtraq,5789; reference:cve,2002-1149; reference:url,www.osvdb.org/displayvuln.php?osvdb_id=3356; classtype:successful-recon-limited; sid:2019526; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER TRACE attempt"; flow:to_server,established; content:"TRACE"; http_method; reference:bugtraq,9561; reference:nessus,11213; reference:url,www.whitehatsec.com/press_releases/WH-PR-20030120.pdf; classtype:web-application-attack; sid:2102056; rev:6;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER TRACE attempt"; flow:to_server,established; content:"TRACE"; http_method; reference:bugtraq,9561; reference:nessus,11213; reference:url,www.whitehatsec.com/press_releases/WH-PR-20030120.pdf; classtype:web-application-attack; sid:2102056; rev:6;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SERVER Tomcat null byte directory listing attempt"; flow:to_server,established; content:"|00|.jsp"; http_uri; reference:bugtraq,2518; reference:bugtraq,6721; reference:cve,2003-0042; classtype:web-application-attack; sid:2102061; rev:6;)
@@ -684,7 +684,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER TRACE attempt
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER globals.pl access"; flow:to_server,established; content:"/globals.pl"; http_uri; reference:bugtraq,2671; reference:cve,2001-0330; classtype:web-application-activity; sid:2102073; rev:5;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER mod_gzip_status access"; flow:to_server,established; content:"/mod_gzip_status"; http_uri; reference:nessus,11685; classtype:web-application-activity; sid:2102156; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER mod_gzip_status access"; flow:to_server,established; content:"/mod_gzip_status"; http_uri; reference:nessus,11685; classtype:web-application-activity; sid:2102156; rev:4;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER perl post attempt"; flow:to_server,established; content:"POST"; http_method; content:"/perl/"; http_uri; reference:bugtraq,5520; reference:cve,2002-1436; reference:nessus,11158; classtype:web-application-attack; sid:2101979; rev:6;)
@@ -717,7 +717,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER mod_gzip_stat
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER bin/python access attempt"; flow:to_server,established; content:"bin/python"; http_uri; nocase; classtype:web-application-attack; sid:2101349; rev:7;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER python access attempt"; flow:to_server,established; content:"python "; http_uri; nocase; classtype:web-application-attack; sid:2101350; rev:10;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER python access attempt"; flow:to_server,established; content:"python "; http_uri; nocase; classtype:web-application-attack; sid:2101350; rev:10;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER perl command attempt"; flow:to_server,established; content:"/perl?"; http_uri; nocase; reference:arachnids,219; reference:cve,1999-0509; reference:nessus,10173; reference:url,www.cert.org/advisories/CA-1996-11.html; classtype:attempted-recon; sid:2101649; rev:10;)
@@ -744,25 +744,25 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER python ac
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER _vti_rpc access"; flow:to_server,established; content:"/_vti_rpc"; http_uri; nocase; reference:bugtraq,2144; reference:cve,2001-0096; reference:nessus,10585; classtype:web-application-activity; sid:2100937; rev:13;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER author.exe access"; flow:to_server,established; content:"/_vti_bin/_vti_aut/author.exe"; http_uri; nocase; classtype:web-application-activity; sid:2100952; rev:9;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER author.exe access"; flow:to_server,established; content:"/_vti_bin/_vti_aut/author.exe"; http_uri; nocase; classtype:web-application-activity; sid:2100952; rev:9;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER authors.pwd access"; flow:to_server,established; content:"/authors.pwd"; http_uri; nocase; reference:bugtraq,989; reference:cve,1999-0386; reference:nessus,10078; classtype:web-application-activity; sid:2100951; rev:13;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.cnf access"; flow:to_server,established; content:"/_vti_pvt/service.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100958; rev:12;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.cnf access"; flow:to_server,established; content:"/_vti_pvt/service.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100958; rev:12;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.pwd"; flow:to_server,established; content:"/service.pwd"; http_uri; nocase; reference:bugtraq,1205; classtype:web-application-activity; sid:2100959; rev:9;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.pwd"; flow:to_server,established; content:"/service.pwd"; http_uri; nocase; reference:bugtraq,1205; classtype:web-application-activity; sid:2100959; rev:9;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER services.cnf access"; flow:to_server,established; content:"/_vti_pvt/services.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100961; rev:12;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER services.cnf access"; flow:to_server,established; content:"/_vti_pvt/services.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100961; rev:12;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER writeto.cnf access"; flow:to_server,established; content:"/_vti_pvt/writeto.cnf"; nocase; http_uri; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100965; rev:12;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER writeto.cnf access"; flow:to_server,established; content:"/_vti_pvt/writeto.cnf"; nocase; http_uri; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100965; rev:12;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /scripts/iisadmin/default.htm access"; flow:to_server,established; content:"/scripts/iisadmin/default.htm"; http_uri; nocase; classtype:web-application-attack; sid:2100994; rev:10;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /scripts/iisadmin/default.htm access"; flow:to_server,established; content:"/scripts/iisadmin/default.htm"; http_uri; nocase; classtype:web-application-attack; sid:2100994; rev:10;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER IISProtect access"; flow:to_server,established; content:"/iisprotect/admin/"; http_uri; nocase; reference:nessus,11661; classtype:web-application-activity; sid:2102131; rev:4;)
@@ -798,10 +798,10 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /scripts/
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER unicode directory traversal attempt"; flow:to_server,established; content:"/..%255c.."; nocase; reference:bugtraq,1806; reference:cve,2000-0884; reference:nessus,10537; classtype:web-application-attack; sid:2101945; rev:8;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htaccess access"; flow:to_server,established; content:".htaccess"; nocase; http_uri; classtype:attempted-recon; sid:2101129; rev:8;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htaccess access"; flow:to_server,established; content:".htaccess"; nocase; http_uri; classtype:attempted-recon; sid:2101129; rev:8;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htpasswd access"; flow:to_server,established; content:".htpasswd"; nocase; classtype:web-application-attack; sid:2101071; rev:8;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htpasswd access"; flow:to_server,established; content:".htpasswd"; nocase; classtype:web-application-attack; sid:2101071; rev:8;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /etc/passwd"; flow:to_server,established; content:"/etc/passwd"; nocase; classtype:attempted-recon; sid:2101122; rev:8;)
@@ -813,19 +813,19 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htpasswd
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~nobody access"; flow:to_server,established; content:"/~nobody"; http_uri; reference:nessus,10484; classtype:web-application-attack; sid:2101489; rev:10;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~root access"; flow:to_server,established; content:"/~root"; http_uri; nocase; classtype:attempted-recon; sid:2101145; rev:10;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~root access"; flow:to_server,established; content:"/~root"; http_uri; nocase; classtype:attempted-recon; sid:2101145; rev:10;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Apache Chunked-Encoding worm attempt"; flow:to_server,established; content:"CCCCCCC|3A| AAAAAAAAAAAAAAAAAAA"; nocase; reference:bugtraq,4474; reference:bugtraq,4485; reference:bugtraq,5033; reference:cve,2002-0071; reference:cve,2002-0079; reference:cve,2002-0392; classtype:web-application-attack; sid:2101809; rev:10;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER DELETE attempt"; flow:to_server,established; content:"DELETE"; http_method; nocase; reference:nessus,10498; classtype:web-application-activity; sid:2101603; rev:13;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER DELETE attempt"; flow:to_server,established; content:"DELETE"; http_method; nocase; reference:nessus,10498; classtype:web-application-activity; sid:2101603; rev:13;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Oracle Java Process Manager access"; flow:to_server,established; content:"/oprocmgr-status"; http_uri; reference:nessus,10851; classtype:web-application-activity; sid:2101874; rev:5;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Oracle Java Process Manager access"; flow:to_server,established; content:"/oprocmgr-status"; http_uri; reference:nessus,10851; classtype:web-application-activity; sid:2101874; rev:5;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat directory traversal attempt"; flow:to_server,established; content:"|00|.jsp"; http_uri; reference:bugtraq,2518; classtype:web-application-attack; sid:2101055; rev:12;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat directory traversal attempt"; flow:to_server,established; content:"|00|.jsp"; http_uri; reference:bugtraq,2518; classtype:web-application-attack; sid:2101055; rev:12;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat server snoop access"; flow:to_server,established; content:"/jsp/snp/"; http_uri; content:".snp"; http_uri; reference:bugtraq,1532; reference:cve,2000-0760; classtype:attempted-recon; sid:2101108; rev:13;)
@@ -870,7 +870,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat di
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER webalizer access"; flow:established,to_server; content:"/webalizer/"; nocase; http_uri; reference:bugtraq,3473; reference:cve,2001-0835; reference:nessus,10816; classtype:web-application-activity; sid:2101847; rev:12;)
 
 #
-alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL WEB_SERVER 403 Forbidden"; flow:from_server,established; content:"403"; http_stat_code; classtype:attempted-recon; sid:2101201; rev:10;)
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL WEB_SERVER 403 Forbidden"; flow:from_server,established; content:"403"; http_stat_code; classtype:attempted-recon; sid:2101201; rev:10;)
 
 #
 #alert http $HTTP_SERVERS any -> any any (msg:"ET WEB_SERVER Phoenix Exploit Kit - Admin Login Page Detected Outbound"; flow:established,to_client; content:"<title>Phoenix Exploit's Kit - Log In</title>"; classtype:bad-unknown; sid:2011280; rev:3;)
@@ -882,7 +882,7 @@ alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL WEB_SERVER 403 Forbi
 #alert http $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER Local Website Infected By Gootkit"; flow:established,from_server; content:"Gootkit iframer component"; nocase; reference:url,www.m86security.com/labs/i/GootKit--Automated-Website-Infection,trace.1368~.asp; reference:url,doc.emergingthreats.net/2011285; classtype:web-application-attack; sid:2011289; rev:3;)
 
 #
-alert http $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER Gootkit Website Infection Request for FTP Credentials from Control Server"; flow:established,to_server; content:"GET"; http_method; content:"/ftp"; nocase; http_uri; content:"User-Agent|3A| Mozilla/4.0 (compatible|3B| Win32|3B| WinHttp.WinHttpRequest"; nocase; http_header; flowbits:set,ET.GOOTKIT; reference:url,www.m86security.com/labs/i/GootKit--Automated-Website-Infection,trace.1368~.asp; reference:url,doc.emergingthreats.net/2011286; classtype:web-application-attack; sid:2011290; rev:6;)
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER Gootkit Website Infection Request for FTP Credentials from Control Server"; flow:established,to_server; content:"GET"; http_method; content:"/ftp"; nocase; http_uri; content:"User-Agent|3A| Mozilla/4.0 (compatible|3B| Win32|3B| WinHttp.WinHttpRequest"; nocase; http_header; flowbits:set,ET.GOOTKIT; reference:url,www.m86security.com/labs/i/GootKit--Automated-Website-Infection,trace.1368~.asp; reference:url,doc.emergingthreats.net/2011286; classtype:web-application-attack; sid:2011290; rev:6;)
 
 #
 #alert http $EXTERNAL_NET $HTTP_PORTS -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Gootkit Website Infection Receiving FTP Credentials from Control Server"; flowbits:isset,ET.GOOTKIT; flow:established,from_server; content:"<acc><login>"; nocase; content:"</login><pass>"; nocase; distance:0; content:"</pass><serv>"; nocase; distance:0; content:"</serv><port>21</port>"; nocase; distance:0; reference:url,www.m86security.com/labs/i/GootKit--Automated-Website-Infection,trace.1368~.asp; reference:url,doc.emergingthreats.net/2011287; classtype:web-application-attack; sid:2011287; rev:3;)
@@ -900,22 +900,22 @@ alert http $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER Go
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER ColdFusion Path Traversal (locale 5/5)"; flow:to_server,established; content:"POST"; http_method; content:"/CFIDE/administrator/enter.cfm"; http_uri; nocase; content:"locale=../../"; nocase; reference:url,h30507.www3.hp.com/t5/Following-the-White-Rabbit-A/Adobe-ColdFusion-s-Directory-Traversal-Disaster/ba-p/81964; reference:url,www.gnucitizen.org/blog/coldfusion-directory-traversal-faq-cve-2010-2861/; reference:cve,CVE-2010-2861; reference:url,www.exploit-db.com/exploits/14641/; classtype:web-application-attack; sid:2011362; rev:5;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP tags in HTTP POST"; flow:established,to_server; content:"POST"; nocase; http_method; content:"<?php"; nocase; http_client_body; fast_pattern:only; reference:url,isc.sans.edu/diary.html?storyid=9478; classtype:web-application-attack; sid:2011768; rev:6;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP tags in HTTP POST"; flow:established,to_server; content:"POST"; nocase; http_method; content:"<?php"; nocase; http_client_body; fast_pattern:only; reference:url,isc.sans.edu/diary.html?storyid=9478; classtype:web-application-attack; sid:2011768; rev:6;)
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible SQL Injection Using MSSQL sp_configure Command"; flow:established,to_server; content:"sp_configure"; http_uri; nocase; reference:url,technet.microsoft.com/en-us/library/ms188787.aspx; reference:url,technet.microsoft.com/en-us/library/ms190693.aspx; classtype:web-application-attack; sid:2011424; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER ScriptResource.axd access without t (time) parameter - possible ASP padding-oracle exploit"; flow:established,to_server; content:"GET"; http_method; content:"ScriptResource.axd"; http_uri; nocase; content:!"&t="; http_uri; nocase; content:!"&amp|3b|t="; http_uri; nocase; detection_filter:track by_src,count 15,seconds 2; reference:url,netifera.com/research/; reference:url,www.microsoft.com/technet/security/advisory/2416728.mspx; classtype:web-application-attack; sid:2011806; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER ScriptResource.axd access without t (time) parameter - possible ASP padding-oracle exploit"; flow:established,to_server; content:"GET"; http_method; content:"ScriptResource.axd"; http_uri; nocase; content:!"&t="; http_uri; nocase; content:!"&amp|3b|t="; http_uri; nocase; detection_filter:track by_src,count 15,seconds 2; reference:url,netifera.com/research/; reference:url,www.microsoft.com/technet/security/advisory/2416728.mspx; classtype:web-application-attack; sid:2011806; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER WebResource.axd access without t (time) parameter - possible ASP padding-oracle exploit"; flow:established,to_server; content:"GET"; http_method; content:"/WebResource.axd"; http_uri; nocase; content:!"&t="; http_uri; nocase; content:!"&amp|3b|t="; http_uri; nocase; detection_filter:track by_src,count 15,seconds 2; reference:url,netifera.com/research/; reference:url,www.microsoft.com/technet/security/advisory/2416728.mspx; classtype:web-application-attack; sid:2011807; rev:6;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER WebResource.axd access without t (time) parameter - possible ASP padding-oracle exploit"; flow:established,to_server; content:"GET"; http_method; content:"/WebResource.axd"; http_uri; nocase; content:!"&t="; http_uri; nocase; content:!"&amp|3b|t="; http_uri; nocase; detection_filter:track by_src,count 15,seconds 2; reference:url,netifera.com/research/; reference:url,www.microsoft.com/technet/security/advisory/2416728.mspx; classtype:web-application-attack; sid:2011807; rev:6;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/sh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/sh"; http_uri; nocase; classtype:web-application-attack; sid:2011465; rev:7;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/sh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/sh"; http_uri; nocase; classtype:web-application-attack; sid:2011465; rev:7;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER DD-WRT Information Disclosure Attempt"; flow:established,to_server; content:"/Info.live.htm"; nocase; http_uri; flowbits:set,et.ddwrt.infodis; reference:url,www.exploit-db.com/exploits/15842/; classtype:attempted-recon; sid:2012116; rev:5;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER DD-WRT Information Disclosure Attempt"; flow:established,to_server; content:"/Info.live.htm"; nocase; http_uri; flowbits:set,et.ddwrt.infodis; reference:url,www.exploit-db.com/exploits/15842/; classtype:attempted-recon; sid:2012116; rev:5;)
 
 #
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER Successful DD-WRT Information Disclosure"; flowbits:isset,et.ddwrt.infodis; flow:established,from_server; content:"lan_mac|3A 3A|"; content:"wlan_mac|3A 3A|"; distance:0; content:"lan_ip|3A 3A|"; distance:0; content:"mem_info|3A 3A|"; distance:0; reference:url,www.exploit-db.com/exploits/15842/; classtype:successful-recon-limited; sid:2012117; rev:3;)
@@ -924,19 +924,19 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER DD-WRT Informa
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Large Subnormal Double Precision Floating Point Number PHP DoS in URI"; flow:established,to_server; content:"2.2250738585072011e-308"; http_uri; nocase; reference:url,bugs.php.net/bug.php?id=53632; classtype:attempted-dos; sid:2012150; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER PHP Large Subnormal Double Precision Floating Point Number PHP DoS Inbound"; flow:established,to_server; content:"2.2250738585072011e-308"; nocase; reference:url,bugs.php.net/bug.php?id=53632; classtype:attempted-dos; sid:2012151; rev:1;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER PHP Large Subnormal Double Precision Floating Point Number PHP DoS Inbound"; flow:established,to_server; content:"2.2250738585072011e-308"; nocase; reference:url,bugs.php.net/bug.php?id=53632; classtype:attempted-dos; sid:2012151; rev:1;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Likely Malicious Request for /proc/self/environ"; flow:established,to_server; content:"/proc/self/environ"; http_uri; nocase; classtype:web-application-attack; sid:2012230; rev:4;)
+#alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Likely Malicious Request for /proc/self/environ"; flow:established,to_server; content:"/proc/self/environ"; http_uri; nocase; classtype:web-application-attack; sid:2012230; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Automated Site Scanning for backupdata"; flow:established,to_server; content:"backupdata"; nocase; http_uri; content:"User-Agent|3a| Mozilla/4.0|0d 0a|"; http_header; classtype:attempted-recon; sid:2012286; rev:5;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Automated Site Scanning for backupdata"; flow:established,to_server; content:"backupdata"; nocase; http_uri; content:"User-Agent|3a| Mozilla/4.0|0d 0a|"; http_header; classtype:attempted-recon; sid:2012286; rev:5;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Automated Site Scanning for backup_data"; flow:established,to_server; content:"backup_data"; nocase; http_uri; content:"User-Agent|3a| Mozilla/4.0|0d 0a|"; http_header; classtype:attempted-recon; sid:2012287; rev:4;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER HTTP 414 Request URI Too Large"; flow:from_server,established; content:"HTTP/1.1 414 Request-URI Too Large"; depth:35; nocase; classtype:web-application-attack; sid:2012708; rev:2;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER HTTP 414 Request URI Too Large"; flow:from_server,established; content:"HTTP/1.1 414 Request-URI Too Large"; depth:35; nocase; classtype:web-application-attack; sid:2012708; rev:2;)
 
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Apache APR apr_fnmatch Stack Overflow Denial of Service"; flow:to_server,established; urilen:>1400; content:"|2F 3F|P|3D 2A 3F 2A 3F 2A 3F 2A 3F 2A 3F|"; http_uri; pcre:"/(\x2a\x3f){700}/U"; reference:cve,2011-0419; reference:url,cxib.net/stuff/apr_fnmatch.txt; reference:url,bugzilla.redhat.com/show_bug.cgi?id=703390; classtype:attempted-dos; sid:2012926; rev:3;)
@@ -984,28 +984,28 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Possible h
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PHP Possible expect Remote File Inclusion Attempt"; flow:established,to_server; content:".php?"; http_uri; content:"=expect|3a|//"; http_uri; reference:cve,2002-0953; reference:url,diablohorn.wordpress.com/2010/01/16/interesting-local-file-inclusion-method/; classtype:web-application-attack; sid:2013009; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Binget PHP Library User Agent Inbound"; flow:established,to_server; content:"User-Agent|3a| Binget/"; nocase; http_header; reference:url,www.bin-co.com/php/scripts/load/; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013049; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Binget PHP Library User Agent Inbound"; flow:established,to_server; content:"User-Agent|3a| Binget/"; nocase; http_header; reference:url,www.bin-co.com/php/scripts/load/; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013049; rev:2;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER pxyscand Suspicious User Agent Inbound"; flow:established,to_server; content:"User-Agent|3a| pxyscand/"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013051; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PyCurl Suspicious User Agent Inbound"; flow:established,to_server; content:"User-Agent|3a| PyCurl"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013053; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER PyCurl Suspicious User Agent Inbound"; flow:established,to_server; content:"User-Agent|3a| PyCurl"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013053; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Inbound PHP User-Agent"; flow:established,to_server; content:"User-Agent|3a| PHP/"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013057; rev:3;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Inbound PHP User-Agent"; flow:established,to_server; content:"User-Agent|3a| PHP/"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013057; rev:3;)
 
 #
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER Outbound PHP User-Agent"; flow:established,to_server; content:"User-Agent|3a| PHP/"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013058; rev:3;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER Outbound PHP User-Agent"; flow:established,to_server; content:"User-Agent|3a| PHP/"; nocase; http_header; reference:url,www.useragentstring.com/pages/useragentstring.php; classtype:attempted-recon; sid:2013058; rev:3;)
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible GRANT TO SQL Injection Attempt"; flow:established,to_server; content:"GRANT"; nocase; http_uri; content:"TO"; nocase; http_uri; pcre:"/GRANT.{1,5}TO/Ui"; reference:url,beginner-sql-tutorial.com/sql-grant-revoke-privileges-roles.htm; classtype:web-application-attack; sid:2013068; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Muieblackcat scanner"; flow:established,to_server; content:"GET /muieblackcat HTTP/1.1"; depth:26; classtype:attempted-recon; sid:2013115; rev:3;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Muieblackcat scanner"; flow:established,to_server; content:"GET /muieblackcat HTTP/1.1"; depth:26; classtype:attempted-recon; sid:2013115; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER PUT Website Defacement Attempt"; flow:established,to_server; content:"PUT"; http_method; content:"<title>.|3a 3a|[+] Defaced by "; nocase; http_client_body; classtype:web-application-attack; sid:2013365; rev:2;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER PUT Website Defacement Attempt"; flow:established,to_server; content:"PUT"; http_method; content:"<title>.|3a 3a|[+] Defaced by "; nocase; http_client_body; classtype:web-application-attack; sid:2013365; rev:2;)
 
 #
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER DNS changer cPanel attempt"; flow:to_server,established; content:"pwCfm=Dn5Ch4ng3"; http_client_body; classtype:web-application-attack; sid:2013921; rev:2;)
@@ -1059,19 +1059,19 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Wordpress 
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Unusually Fast HTTP Requests With Referer Url Matching DoS Tool"; flow:to_server,established; content:"Referer|3a 20|http|3a|//code.google.com/p/slowhttptest/"; http_header; threshold: type both, track by_src, count 15, seconds 30; reference:url,community.qualys.com/blogs/securitylabs/2012/01/05/slow-read; classtype:web-application-activity; sid:2014103; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER LOIC Javascript DDoS Inbound"; flow:established,to_server; content:"GET"; http_method; content:"?id="; http_uri; content:"&msg="; http_uri; distance:13; within:5; pcre:"/\?id=[0-9]{13}&msg=[^&]+$/U"; threshold: type both, track by_src, count 5, seconds 60; reference:url,isc.sans.org/diary/Javascript+DDoS+Tool+Analysis/12442; reference:url,www.wired.com/threatlevel/2012/01/anons-rickroll-botnet; classtype:attempted-dos; sid:2014140; rev:5;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER LOIC Javascript DDoS Inbound"; flow:established,to_server; content:"GET"; http_method; content:"?id="; http_uri; content:"&msg="; http_uri; distance:13; within:5; pcre:"/\?id=[0-9]{13}&msg=[^&]+$/U"; threshold: type both, track by_src, count 5, seconds 60; reference:url,isc.sans.org/diary/Javascript+DDoS+Tool+Analysis/12442; reference:url,www.wired.com/threatlevel/2012/01/anons-rickroll-botnet; classtype:attempted-dos; sid:2014140; rev:5;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER eval/base64_decode Exploit Attempt Inbound"; flow:established,to_server; content:"eval|28|base64_decode|28|"; http_uri; classtype:web-application-attack; sid:2014296; rev:2;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER eval/base64_decode Exploit Attempt Inbound"; flow:established,to_server; content:"eval|28|base64_decode|28|"; http_uri; classtype:web-application-attack; sid:2014296; rev:2;)
 
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible SQL Injection Attempt char() Danmec related"; flow:established,to_server; content:"CHAR("; http_uri; nocase; pcre:"/CHAR\([0-9]{2,3}\)char\([^\x0d\x0a\x20]{98}/Ui"; classtype:attempted-admin; sid:2014352; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER IIS INDEX_ALLOCATION Auth Bypass Attempt"; flow:established,to_server; content:"|3a|$INDEX_ALLOCATION"; http_uri; nocase; reference:url,lists.grok.org.uk/pipermail/full-disclosure/2012-June/087269.html; classtype:bad-unknown; sid:2014886; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER IIS INDEX_ALLOCATION Auth Bypass Attempt"; flow:established,to_server; content:"|3a|$INDEX_ALLOCATION"; http_uri; nocase; reference:url,lists.grok.org.uk/pipermail/full-disclosure/2012-June/087269.html; classtype:bad-unknown; sid:2014886; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible attempt to enumerate MS SQL Server version"; flow:established,to_server; content:"@@version"; nocase; http_uri; reference:url,support.microsoft.com/kb/321185; classtype:attempted-admin; sid:2014890; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible attempt to enumerate MS SQL Server version"; flow:established,to_server; content:"@@version"; nocase; http_uri; reference:url,support.microsoft.com/kb/321185; classtype:attempted-admin; sid:2014890; rev:2;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER possible IBM Rational Directory Server (RDS) Help system href browser redirect"; flow:established,to_server; content:"/rds-help/advanced/deferredView.jsp?"; nocase; http_uri; content:"href="; nocase; http_uri; pcre:"/href=\s*(ftps?|https?|php)\:\//Ui"; reference:url,secunia.com/advisories/49627/; classtype:web-application-attack; sid:2014986; rev:2;)
@@ -1080,28 +1080,28 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible attem
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER possible IBM Rational Directory Server (RDS) Help system href Cross Site Scripting Attempt"; flow:established,to_server; content:"/rds-help/advanced/deferredView.jsp?"; nocase; http_uri; content:"href="; nocase; http_uri; pcre:"/href\x3D.+(script|alert|onmouse[a-z]+|onkey[a-z]+|onload|onunload|ondragdrop|onblur|onfocus|onclick|ondblclick|onsubmit|onreset|onselect|onchange|javascript)/Ui"; reference:url,secunia.com/advisories/49627/; classtype:web-application-attack; sid:2014987; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER IIS 8.3 Filename With Wildcard (Possible File/Dir Bruteforce)"; flow:established,to_server; content:"~1"; http_uri; fast_pattern:only; pcre:"/([\*\?]~1|~1\.?[\*\?]|\/~1\/)/U"; reference:url,soroush.secproject.com/downloadable/microsoft_iis_tilde_character_vulnerability_feature.pdf; classtype:network-scan; sid:2015023; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER IIS 8.3 Filename With Wildcard (Possible File/Dir Bruteforce)"; flow:established,to_server; content:"~1"; http_uri; fast_pattern:only; pcre:"/([\*\?]~1|~1\.?[\*\?]|\/~1\/)/U"; reference:url,soroush.secproject.com/downloadable/microsoft_iis_tilde_character_vulnerability_feature.pdf; classtype:network-scan; sid:2015023; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER possible SAP Crystal Report Server 2008 path parameter Directory Traversal vulnerability"; flow:established,to_server; content:"/PerformanceManagement/jsp/qa.jsp?"; nocase; http_uri; content:"func="; nocase; http_uri; content:"root="; nocase; http_uri; content:"path="; nocase; http_uri; content:"|2e 2e 2f|"; nocase; depth:200; reference:url,1337day.com/exploits/15332; classtype:web-application-attack; sid:2015035; rev:2;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER possible SAP Crystal Report Server 2008 path parameter Directory Traversal vulnerability"; flow:established,to_server; content:"/PerformanceManagement/jsp/qa.jsp?"; nocase; http_uri; content:"func="; nocase; http_uri; content:"root="; nocase; http_uri; content:"path="; nocase; http_uri; content:"|2e 2e 2f|"; nocase; depth:200; reference:url,1337day.com/exploits/15332; classtype:web-application-attack; sid:2015035; rev:2;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Fake Googlebot UA 1 Inbound"; flow:established,to_server; content:"User-Agent|3a|"; http_header; content:!" Mozilla/5.0 (compatible|3b| Googlebot/2.1|3b| +http|3a|//www.google.com/bot.html)|0d 0a|"; http_header; within:75; content:!" Googlebot/2.1 (+http|3a|//www.google.com/bot.html)|0d 0a|"; http_header; within:50; content:"Googlebot"; fast_pattern; http_header; nocase; distance:0; pcre:"/^User-Agent\x3a[^\r\n]+?Googlebot[^\-].+?\r$/Hmi"; reference:url,www.incapsula.com/the-incapsula-blog/item/369-was-that-really-a-google-bot-crawling-my-site; reference:url,support.google.com/webmasters/bin/answer.py?hl=en&answer=1061943; classtype:bad-unknown; sid:2015526; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Fake Googlebot UA 2 Inbound"; flow:established,to_server; content:"User-Agent|3a|"; http_header; content:!"Googlebot-News|0d 0a|"; within:16; http_header; content:!" Googlebot-Image/1.0|0d 0a|"; within:22; http_header; content:!" Googlebot-Video/1.0|0d 0a|"; within:22; http_header; content:"Googlebot-"; fast_pattern; http_header; nocase; distance:0; content:!"Mobile/2.1|3b| +http|3a|//www.google.com/bot.html)|0d 0a|"; within:46; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?Googlebot-.+?\r$/Hmi"; reference:url,www.incapsula.com/the-incapsula-blog/item/369-was-that-really-a-google-bot-crawling-my-site; reference:url,support.google.com/webmasters/bin/answer.py?hl=en&answer=1061943; classtype:network-scan; sid:2015527; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Fake Googlebot UA 2 Inbound"; flow:established,to_server; content:"User-Agent|3a|"; http_header; content:!"Googlebot-News|0d 0a|"; within:16; http_header; content:!" Googlebot-Image/1.0|0d 0a|"; within:22; http_header; content:!" Googlebot-Video/1.0|0d 0a|"; within:22; http_header; content:"Googlebot-"; fast_pattern; http_header; nocase; distance:0; content:!"Mobile/2.1|3b| +http|3a|//www.google.com/bot.html)|0d 0a|"; within:46; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?Googlebot-.+?\r$/Hmi"; reference:url,www.incapsula.com/the-incapsula-blog/item/369-was-that-really-a-google-bot-crawling-my-site; reference:url,support.google.com/webmasters/bin/answer.py?hl=en&answer=1061943; classtype:network-scan; sid:2015527; rev:2;)
 
 #
-alert http $HOME_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Magento XMLRPC-Exploit Attempt"; flow:established,to_server; content:"POST"; nocase; http_method; content:"/api/xmlrpc"; http_uri; content:"file|3a 2f 2f 2f|"; reference:url,www.magentocommerce.com/blog/comments/important-security-update-zend-platform-vulnerability/; reference:url,www.magentocommerce.com/blog/update-zend-framework-vulnerability-security-update; reference:url,www.exploit-db.com/exploits/19793/; classtype:web-application-attack; sid:2015625; rev:2;)
+#alert http $HOME_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Magento XMLRPC-Exploit Attempt"; flow:established,to_server; content:"POST"; nocase; http_method; content:"/api/xmlrpc"; http_uri; content:"file|3a 2f 2f 2f|"; reference:url,www.magentocommerce.com/blog/comments/important-security-update-zend-platform-vulnerability/; reference:url,www.magentocommerce.com/blog/update-zend-framework-vulnerability-security-update; reference:url,www.exploit-db.com/exploits/19793/; classtype:web-application-attack; sid:2015625; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Brutus Scan Inbound"; flow:established,to_server; content:"Brutus/AET"; http_user_agent; classtype:attempted-recon; sid:2015703; rev:3;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Brutus Scan Inbound"; flow:established,to_server; content:"Brutus/AET"; http_user_agent; classtype:attempted-recon; sid:2015703; rev:3;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER PHPMyAdmin BackDoor Access"; flow:established,to_server; content:"POST"; http_method; content:"/server_sync.php?"; fast_pattern:only; http_uri; content:"c="; http_uri; pcre:"/\/server_sync.php\?(?:.+?&)?c=/Ui"; reference:url,www.phpmyadmin.net/home_page/security/PMASA-2012-5.php; classtype:attempted-admin; sid:2015737; rev:6;)
 
 #
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible Oracle SQL Injection utl_inaddr call in URI"; flow:established,to_server; content:"utl_inaddr.get_host"; nocase; http_uri; fast_pattern:only; classtype:attempted-admin; sid:2015749; rev:2;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Possible Oracle SQL Injection utl_inaddr call in URI"; flow:established,to_server; content:"utl_inaddr.get_host"; nocase; http_uri; fast_pattern:only; classtype:attempted-admin; sid:2015749; rev:2;)
 
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER Image Content-Type with Obfuscated PHP (Seen with C99 Shell)"; flow:from_server,established; content:"Content-Type|3a| image/"; http_header; file_data; content:"eval(gzinflate(base64_decode("; distance:0; fast_pattern; reference:url,malwaremustdie.blogspot.jp/2012/10/how-far-phpc99shell-malware-can-go-from.html; classtype:attempted-user; sid:2015755; rev:3;)
@@ -1137,7 +1137,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER WebShell - Pos
 #alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER PIWIK Backdored Version calls home"; flow:established,to_server; content:"POST"; http_method; content:"prostoivse.com|0d 0a|"; http_header; nocase; content:"/x.php"; http_uri; content:"reff="; http_client_body; nocase; reference:url,piwik.org/blog/2012/11/security-report-piwik-org-webserver-hacked-for-a-few-hours-on-2012-nov-26th/; reference:url,forum.piwik.org/read.php?2,97666; classtype:web-application-attack; sid:2015953; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Joomla Component SQLi Attempt"; flow:established,to_server; content:"option=com_"; http_uri; nocase; content:"union"; http_uri; nocase; distance:0; content:"select"; nocase; http_uri; distance:0; content:"from"; nocase; http_uri; distance:0; content:"jos_users"; distance:0; http_uri; nocase; fast_pattern; classtype:web-application-attack; sid:2015984; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Joomla Component SQLi Attempt"; flow:established,to_server; content:"option=com_"; http_uri; nocase; content:"union"; http_uri; nocase; distance:0; content:"select"; nocase; http_uri; distance:0; content:"from"; nocase; http_uri; distance:0; content:"jos_users"; distance:0; http_uri; nocase; fast_pattern; classtype:web-application-attack; sid:2015984; rev:3;)
 
 #
 alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER WebShell - JSP RAT"; flow:established,to_client; file_data; content:"<table id=\"filetable\" class=\"filelist\" cellspacing=\"1px\" cellpadding=\"0px\">"; classtype:attempted-user; sid:2016151; rev:3;)
@@ -1386,13 +1386,13 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible A
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Command Execution CVE-2013-2251 action"; flow:established,to_server;  content:".action?"; http_uri; content:"action|3a|"; http_uri; distance:0; content:"{"; http_uri; distance:0; pcre:"/[\?&]action\x3a/U"; reference:url,struts.apache.org/release/2.3.x/docs/s2-016.html; classtype:attempted-user; sid:2017157; rev:4;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Command Execution CVE-2013-2251 redirect"; flow:established,to_server; content:".action"; http_uri; content:"redirect|3a|"; http_client_body; content:"{"; http_client_body; distance:0; pcre:"/\bredirect\x3a/P"; reference:url,struts.apache.org/release/2.3.x/docs/s2-016.html; classtype:attempted-user; sid:2017174; rev:4;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Command Execution CVE-2013-2251 redirect"; flow:established,to_server; content:"redirect|3a|"; http_client_body; content:"{"; http_client_body; distance:0; pcre:"/\bredirect\x3a/P"; reference:url,struts.apache.org/release/2.3.x/docs/s2-016.html; classtype:attempted-user; sid:2017174; rev:5;)
 
 #
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Command Execution CVE-2013-2251 redirectAction"; flow:established,to_server; content:".action"; http_uri; content:"redirectAction|3a|"; http_client_body; content:"{"; http_client_body; pcre:"/\bredirectAction\x3a/P"; reference:url,struts.apache.org/release/2.3.x/docs/s2-016.html; classtype:attempted-user; sid:2017175; rev:4;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Command Execution CVE-2013-2251 redirectAction"; flow:established,to_server; content:"redirectAction|3a|"; http_client_body; content:"{"; http_client_body; pcre:"/\bredirectAction\x3a/P"; reference:url,struts.apache.org/release/2.3.x/docs/s2-016.html; classtype:attempted-user; sid:2017175; rev:5;)
 
 #
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Command Execution CVE-2013-2251 action"; flow:established,to_server; content:".action"; http_uri; content:"action|3a|"; http_client_body; content:"{"; http_client_body; distance:0; pcre:"/\baction\x3a/P"; reference:url,struts.apache.org/release/2.3.x/docs/s2-016.html; classtype:attempted-user; sid:2017176; rev:4;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Command Execution CVE-2013-2251 action"; flow:established,to_server; content:"action|3a|"; http_client_body; content:"{"; http_client_body; distance:0; pcre:"/\baction\x3a/P"; reference:url,struts.apache.org/release/2.3.x/docs/s2-016.html; classtype:attempted-user; sid:2017176; rev:5;)
 
 #
 alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER WebShell ASPXShell - Title"; flow:established,to_client; file_data; content:"<title>"; content:"ASPX Shell"; fast_pattern; nocase;  content:"</title>"; distance:0; classtype:trojan-activity; sid:2017183; rev:4;)
@@ -1879,4 +1879,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER WEBSHELL J
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER WEBSHELL Linux/Torte Uploaded"; flow:established,to_server; content:"POST"; http_method; content:"JGVudiA9ICJYRFZTTl9TRVNTSU9OX0NPT0tJR"; http_client_body; fast_pattern:only; content:"eval(base64_decode($_REQUEST["; http_client_body; reference:url,blog.malwaremustdie.org/2016/01/mmd-0050-2016-incident-report-elf.html; classtype:attempted-admin; sid:2022359; rev:2;)
+
+#
+alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER Possible Compromised Webserver Retriving Inject"; flow:established,to_server; content:"/blog/?"; depth:7; http_uri; pcre:"/^\/blog\/\?[a-z]+&utm_source=\d+\x3a\d+\x3a\d+$/U"; pcre:"/^Host\x3a\x20(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\x3a\d{1,5})?\r?\n/Hmi"; classtype:trojan-activity; sid:2022485; rev:2;)
 

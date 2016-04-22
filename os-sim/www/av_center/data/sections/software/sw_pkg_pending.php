@@ -36,13 +36,11 @@
 require_once (dirname(__FILE__) . '/../../../config.inc');
 
 session_write_close();
-
-
 $res_si        = array();
 $packages_info = array();
 $release_info  = array();
 $error_msg     = NULL;
-
+$update_error = Util::get_last_update_log_result();
 try
 {
     //Get software information
@@ -60,7 +58,12 @@ catch (\Exception $e)
     $error_msg = $e->getMessage();
 }
 ?>
-
+<style>
+.update-error-link {
+    margin-right: 78px;
+    font-weight: normal;
+}
+</style>
 <div id='cont_sw_av'>
     <?php
     if (is_array($release_info) && !empty($release_info))
@@ -83,9 +86,11 @@ catch (\Exception $e)
         <?php
         if (!empty($res_si['last_update']) && $res_si['last_update'] != 'unknown')
         {
-            $last_update = gmdate('Y-m-d H:i:s', strtotime($res_si['last_update'].' GMT') + (3600 * Util::get_timezone()));
+            $last_update = $update_error 
+                ? "<span class='red'>"._('Update error - Unable to Complete')."</span><br/><a href='#' onclick=\"top.$('#sm_opt_message_center-message_center').trigger('click');\" class='update-error-link'>"._('See Message Center')."</a>" 
+                : "<span style='color:#4F8A10'>".gmdate('Y-m-d H:i:s', strtotime($res_si['last_update'].' GMT') + (3600 * Util::get_timezone()))."</span>";
 
-            echo "<span class='bold'>"._('Latest System Update').": <span style='color:#4F8A10'>".$last_update."</span></span>";
+            echo "<span class='bold'>"._('Latest System Update').": $last_update</span>";
         }
         else
         {
@@ -183,7 +188,7 @@ catch (\Exception $e)
                     if ($res_si['packages']['pending_feed_updates'] == TRUE)
                     {
                     ?>
-                        <input type='button' id='install_rules' name='install_rules' class='av_b_secondary av_b_processing' value='<?php echo _('Update feed only')?>'/>
+                        <input type='button' id='install_rules' name='install_rules' class='av_b_secondary' value='<?php echo _('Update feed only')?>'/>
                     <?php
                     }
                     ?>
@@ -198,9 +203,8 @@ catch (\Exception $e)
 </div>
 
 <script type='text/javascript'>
-    var update_status = 1;
+    var update_status = "";
     var upgrade_btn = $("#install_updates_1");
-    var update_btn = $("#install_rules");
 
 //inherited callback
     Software.check_update_running_success = function(data) {
@@ -225,14 +229,12 @@ catch (\Exception $e)
 	if (upgrade_btn) {
 		$.post("data/sections/check_disk_space.php",{"system_id" : '<?php echo $system_id; ?>'},function(data) {
 			data = $.parseJSON(data);
-                	update_btn.removeClass("av_b_processing");
 	                upgrade_btn.removeClass("av_b_processing");
                         upgrade_btn.addClass("av_b_disabled");
 			if (data.size_avail > data.limit) {
 				//Monitor is started only if there is enoght disk space
+				update_status = 1;
 				update_monitor();
-			} else {
-				update_btn.addClass("av_b_disabled");
 			}
 			if (data.message) {
 				$("#cont_buttons .rbtn").append("<div class='red'>"+data.message+"</div>");

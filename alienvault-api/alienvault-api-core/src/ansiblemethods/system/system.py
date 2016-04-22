@@ -409,7 +409,8 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
 
 def ansible_ping_system(system_ip):
     try:
-        response = ansible.run_module(host_list=[system_ip],
+    #hardcoded timeout to fix ENG-102699
+        response = ansible.run_module(host_list=[system_ip],timeout=5,
                                       module="ping", args="")
     except Exception as err:
         error_msg = "Something wrong happened while pinging the system: " + \

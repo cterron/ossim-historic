@@ -117,55 +117,55 @@
 #alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO Mobile Registration Request"; icode:0; itype:35; classtype:misc-activity; sid:2100423; rev:6;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING *NIX"; itype:8; content:"|10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F|"; depth:32; classtype:misc-activity; sid:2100366; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING *NIX"; itype:8; content:"|10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F|"; depth:32; classtype:misc-activity; sid:2100366; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING BSDtype"; itype:8; content:"|08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17|"; depth:32; reference:arachnids,152; classtype:misc-activity; sid:2100368; rev:7;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING BSDtype"; itype:8; content:"|08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17|"; depth:32; reference:arachnids,152; classtype:misc-activity; sid:2100368; rev:7;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING BayRS Router"; itype:8; content:"|01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F|"; depth:32; reference:arachnids,438; reference:arachnids,444; classtype:misc-activity; sid:2100369; rev:7;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING BayRS Router"; itype:8; content:"|01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F|"; depth:32; reference:arachnids,438; reference:arachnids,444; classtype:misc-activity; sid:2100369; rev:7;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING BeOS4.x"; itype:8; content:"|00 00 00 00 00 00 00 00 00 00 00 00 08 09 0A 0B|"; depth:32; reference:arachnids,151; classtype:misc-activity; sid:2100370; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING BeOS4.x"; itype:8; content:"|00 00 00 00 00 00 00 00 00 00 00 00 08 09 0A 0B|"; depth:32; reference:arachnids,151; classtype:misc-activity; sid:2100370; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Cisco Type.x"; itype:8; content:"|AB CD AB CD AB CD AB CD AB CD AB CD AB CD AB CD|"; depth:32; reference:arachnids,153; classtype:misc-activity; sid:2100371; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Cisco Type.x"; itype:8; content:"|AB CD AB CD AB CD AB CD AB CD AB CD AB CD AB CD|"; depth:32; reference:arachnids,153; classtype:misc-activity; sid:2100371; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Flowpoint2200 or Network Management Software"; itype:8; content:"|01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10|"; depth:32; reference:arachnids,156; classtype:misc-activity; sid:2100373; rev:7;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Flowpoint2200 or Network Management Software"; itype:8; content:"|01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10|"; depth:32; reference:arachnids,156; classtype:misc-activity; sid:2100373; rev:7;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING IP NetMonitor Macintosh"; itype:8; content:"|A9| Sustainable So"; depth:32; reference:arachnids,157; classtype:misc-activity; sid:2100374; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING IP NetMonitor Macintosh"; itype:8; content:"|A9| Sustainable So"; depth:32; reference:arachnids,157; classtype:misc-activity; sid:2100374; rev:8;)
 
 #
 #alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING LINUX/*BSD"; dsize:8; id:13170; itype:8; reference:arachnids,447; classtype:misc-activity; sid:2100375; rev:7;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Microsoft Windows"; itype:8; content:"0123456789abcdefghijklmnop"; depth:32; reference:arachnids,159; classtype:misc-activity; sid:2100376; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Microsoft Windows"; itype:8; content:"0123456789abcdefghijklmnop"; depth:32; reference:arachnids,159; classtype:misc-activity; sid:2100376; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Network Toolbox 3 Windows"; itype:8; content:"================"; depth:32; reference:arachnids,161; classtype:misc-activity; sid:2100377; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Network Toolbox 3 Windows"; itype:8; content:"================"; depth:32; reference:arachnids,161; classtype:misc-activity; sid:2100377; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Ping-O-MeterWindows"; itype:8; content:"OMeterObeseArmad"; depth:32; reference:arachnids,164; classtype:misc-activity; sid:2100378; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Ping-O-MeterWindows"; itype:8; content:"OMeterObeseArmad"; depth:32; reference:arachnids,164; classtype:misc-activity; sid:2100378; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Pinger Windows"; itype:8; content:"Data|00 00 00 00 00 00 00 00 00 00 00 00|"; depth:32; reference:arachnids,163; classtype:misc-activity; sid:2100379; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Pinger Windows"; itype:8; content:"Data|00 00 00 00 00 00 00 00 00 00 00 00|"; depth:32; reference:arachnids,163; classtype:misc-activity; sid:2100379; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Seer Windows"; itype:8; content:"|88 04|              "; depth:32; reference:arachnids,166; classtype:misc-activity; sid:2100380; rev:8;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Seer Windows"; itype:8; content:"|88 04|              "; depth:32; reference:arachnids,166; classtype:misc-activity; sid:2100380; rev:8;)
 
 #
 #alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Sun Solaris"; dsize:8; itype:8; reference:arachnids,448; classtype:misc-activity; sid:2100381; rev:7;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING WhatsupGold Windows"; itype:8; content:"WhatsUp - A Netw"; depth:32; reference:arachnids,168; classtype:misc-activity; sid:2100482; rev:6;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING WhatsupGold Windows"; itype:8; content:"WhatsUp - A Netw"; depth:32; reference:arachnids,168; classtype:misc-activity; sid:2100482; rev:6;)
 
 #
 #alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING Windows"; itype:8; content:"abcdefghijklmnop"; depth:16; reference:arachnids,169; classtype:misc-activity; sid:2100382; rev:8;)
 
 #
-alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING speedera"; itype:8; content:"89|3A 3B|<=>?"; depth:100; classtype:misc-activity; sid:2100480; rev:6;)
+#alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING speedera"; itype:8; content:"89|3A 3B|<=>?"; depth:100; classtype:misc-activity; sid:2100480; rev:6;)
 
 #
 #alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL ICMP_INFO PING"; icode:0; itype:8; classtype:misc-activity; sid:2100384; rev:6;)
