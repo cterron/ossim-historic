@@ -34,6 +34,7 @@ import pwd
 import grp
 import re
 import subprocess
+import apt
 
 try:
     from apt_pkg import version_compare

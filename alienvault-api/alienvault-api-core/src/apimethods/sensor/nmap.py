@@ -27,26 +27,27 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
+import ast
 import json
 import os
 import time
-from db.methods.sensor import get_sensor_ip_from_sensor_id
-from ansiblemethods.sensor.nmap import ansible_run_nmap_scan, ansible_nmap_get_scan_progress, ansible_nmap_stop, \
-    ansible_nmap_purge_scan_files, ansible_get_partial_results
-from apimethods.utils import create_local_directory
+
+import api_log
+from ansiblemethods.sensor.nmap import (ansible_run_nmap_scan, ansible_nmap_get_scan_progress, ansible_nmap_stop,
+                                        ansible_nmap_purge_scan_files, ansible_get_partial_results)
+from apiexceptions.nmap import (
+    APINMAPScanKeyNotFound, APINMAPScanException, APINMAPScanCannotBeSaved, APINMAPScanCannotRetrieveBaseFolder,
+    APINMAPScanCannotCreateLocalFolder, APINMAPScanReportNotFound, APINMAPScanCannotReadReport,
+    APINMAPScanReportCannotBeDeleted, APINMAPScanCannotRun, APINMAPScanCannotRetrieveScanProgress)
+
+from apiexceptions.sensor import APICannotResolveSensorID
+from apimethods.data.idmconn import IDMConnection
 from apimethods.sensor.sensor import get_base_path_from_sensor_id
+from apimethods.utils import create_local_directory
+from celerymethods.utils import is_task_in_celery
+from db.methods.sensor import get_sensor_ip_from_sensor_id
 from db.redis.nmapdb import NMAPScansDB, NMAPScanCannotBeSaved
 from db.redis.redisdb import RedisDBKeyNotFound
-from apimethods.data.idmconn import IDMConnection
-from apiexceptions.nmap import APINMAPScanKeyNotFound, APINMAPScanException, \
-    APINMAPScanCannotBeSaved, APINMAPScanCannotRetrieveBaseFolder, APINMAPScanCannotCreateLocalFolder, \
-    APINMAPScanReportNotFound, APINMAPScanCannotReadReport, APINMAPScanReportCannotBeDeleted, \
-    APINMAPScanCannotRun, APINMAPScanCannotRetrieveScanProgress
-from apiexceptions.sensor import APICannotResolveSensorID
-import ast
-import api_log
-
-from celerymethods.utils import is_task_in_celery
 
 
 def get_nmap_directory(sensor_id):
@@ -79,19 +80,20 @@ def apimethod_run_nmap_scan(sensor_id, target, idm, scan_type, rdns, scan_timing
                             output_file_prefix="", save_to_file=False, job_id=""):
     """Launches an MAP scan
     Args:
-        sensor_ip: The system IP where you want to get the [sensor]/interfaces from ossim_setup.conf
+        sensor_id: The system IP where you want to get the [sensor]/interfaces from ossim_setup.conf
         target: IP address of the component where the NMAP will be executed
         idm: Convert results into idm events
         scan_type: Sets the NMAP scan type
         rdns: Tells Nmap to do reverse DNS resolution on the active IP addresses it finds
         scan_timing: Set the timing template
         autodetect: Aggressive scan options (enable OS detection)
-        scan_port: Only scan specified ports
+        scan_ports: Only scan specified ports
         output_file_prefix: Prefix string to be added to the output filename
         save_to_file: Indicates whether you want to save the NMAP report to a file or not.
+        job_id: Celery job ID.
 
     Returns:
-        nmap_report = The NMAP report or the filename where the report has been saved.
+        nmap_report: The NMAP report or the filename where the report has been saved.
 
     Raises:
         APINMAPScanCannotRun
@@ -108,6 +110,7 @@ def apimethod_run_nmap_scan(sensor_id, target, idm, scan_type, rdns, scan_timing
                                                  scan_timing=scan_timing, autodetect=autodetect, scan_ports=scan_ports,
                                                  job_id=job_id)
     if not success:
+        api_log.error('Failed to launch NMAP scan: %s' % nmap_report)
         raise APINMAPScanCannotRun(nmap_report)
 
     filename = None
@@ -151,14 +154,11 @@ def apimethod_get_nmap_scan(sensor_id, task_id):
         raise APINMAPScanReportNotFound(nmap_report_path)
 
     try:
-        data = ''
         with open(nmap_report_path, "r") as f:
-            data = json.loads(f.read())
+            return json.loads(f.read())
     except Exception as e:
         api_log.error("[apimethod_get_nmap_scan] {0}".format(str(e)))
         raise APINMAPScanCannotReadReport(nmap_report_path)
-
-    return data
 
 
 def apimethod_delete_nmap_scan(sensor_id, task_id):
@@ -178,15 +178,17 @@ def apimethod_delete_nmap_scan(sensor_id, task_id):
         # When the NMAP scan has been stopped by the user, it could leave some files in tmp folder.
         apimethods_nmap_purge_scan_files(task_id)
     except Exception as exp:
-        api_log.warning("[apimethod_run_nmap_scan] Cannot purge the scan files %s" % str(exp))
+        api_log.warning("[apimethod_delete_nmap_scan] Cannot purge the scan files %s" % str(exp))
     apimethod_nmapdb_delete_task(task_id)
     directory = get_nmap_directory(sensor_id)
     nmap_report_path = "{0}/nmap_report_{1}.json".format(directory, task_id)
-    if not os.path.isfile(nmap_report_path):
-        raise APINMAPScanReportNotFound(nmap_report_path)
+
+    # if not os.path.isfile(nmap_report_path):
+    #     raise APINMAPScanReportNotFound(nmap_report_path)
 
     try:
-        os.remove(nmap_report_path)
+        if os.path.isfile(nmap_report_path):
+            os.remove(nmap_report_path)
     except Exception as e:
         api_log.error("[apimethod_delete_nmap_scan] {0}".format(str(e)))
         raise APINMAPScanReportCannotBeDeleted()
@@ -235,6 +237,19 @@ def apimethod_get_nmap_scan_list(user):
     return user_scans
 
 
+def apimethod_delete_running_scans(user):
+    """Deletes orphaned NMAP scans which are running on background and not tracked from UI.
+
+    Args:
+        user: User login
+    Raises:
+        Exception: When something wrong happen
+    """
+    active_scan_list = [scan for scan in apimethod_get_nmap_scan_list(user) if scan.get('status', '') == 'In Progress']
+    for scan in active_scan_list:
+        apimethod_delete_nmap_scan(scan['sensor_id'], scan['job_id'])
+
+
 def apimethod_get_nmap_scan_status(task_id):
     """Returns the nmap status for the given task
     Args:
@@ -245,7 +260,7 @@ def apimethod_get_nmap_scan_status(task_id):
         APINMAPScanKeyNotFound: When the given id doesn't exist
         APINMAPScanException: When something wrong happen
     """
-
+    db = None  # To prevent from NameError in finally clause
     try:
         # the nmap could be scheduled in celery but not launched.
         # in this case there is no nmap status on the database.
@@ -263,7 +278,7 @@ def apimethod_get_nmap_scan_status(task_id):
                 task = is_task_in_celery(task_id)
                 if task is not None:
                     if task_id == task['id']:
-                        task_kwargs = task['kwargs']
+                        task_kwargs = ast.literal_eval(task['kwargs'])
                         # La info va a de kwargs
                         job = {"job_id": task['id'],
                                "sensor_id": task_kwargs['sensor_id'],
@@ -277,11 +292,10 @@ def apimethod_get_nmap_scan_status(task_id):
                                                "scan_ports": task_kwargs['scan_ports']},
                                "status": "In Progress",
                                "scanned_hosts": 0,
-                               "scan_user": task_kwargs['scan_ports'],
+                               "scan_user": task_kwargs['user'],
                                "start_time": int(time.time()),
                                "end_time": -1,
-                               "remaining_time": -1
-                               }
+                               "remaining_time": -1}
                         tries = 0
 
                 time.sleep(1)
@@ -332,6 +346,7 @@ def apimethods_stop_scan(task_id):
         except Exception as e:
             raise APINMAPScanException(str(e))
 
+
 def apimethods_nmap_purge_scan_files(task_id):
     """Purge the given scan files
     Raises:
@@ -339,7 +354,6 @@ def apimethods_nmap_purge_scan_files(task_id):
         APINMAPScanKeyNotFound
         APINMAPScanException
     """
-    # Stops the celery task.
     job = apimethod_get_nmap_scan_status(task_id)
 
     (result, sensor_ip) = get_sensor_ip_from_sensor_id(job["sensor_id"], local_loopback=False)
@@ -355,6 +369,7 @@ def apimethod_nmapdb_add_task(task_id, task_data):
         APINMAPScanCannotBeSaved
     """
     rt = False
+    db = None  # To prevent from NameError in finally clause
     try:
         db = NMAPScansDB()
         db.add(task_id, task_data)
@@ -391,24 +406,23 @@ def apimethod_nmapdb_update_task(task_id, task_data):
 
 
 def apimethod_nmapdb_delete_task(task_id):
-    """Deelte
+    """Delete task from the nmapdb
     Raises:
         APINMAPScanCannotBeSaved
     """
+    db = None
     try:
         db = NMAPScansDB()
         db.delete_key(task_id)
-    except Exception:
-        raise
     finally:
         del db
 
+
 def apimethod_nmap_purge_database():
     """Purge the redis database"""
+    db = None
     try:
         db = NMAPScansDB()
         db.flush()
-    except Exception:
-        raise
     finally:
         del db

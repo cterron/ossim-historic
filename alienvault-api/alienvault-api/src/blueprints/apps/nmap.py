@@ -27,27 +27,26 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 import time
-from flask import Blueprint, request
-from flask.ext.login import current_user
-from api.lib.auth import admin_permission, logged_permission
-from api.lib.utils import accepted_url
-from api.lib.common import (
-    http_method_dispatcher, make_ok, make_error, check,
-    document_using, validate_json, if_content_exists_then_is_json)
-
-from netaddr import IPAddress, IPNetwork
 from uuid import UUID
 
-from celerymethods.jobs.nmap import run_nmap_scan, monitor_nmap_scan
-from apimethods.sensor.nmap import apimethod_get_nmap_scan, apimethod_delete_nmap_scan, apimethod_get_nmap_scan_status, \
-    apimethods_stop_scan, apimethod_get_nmap_scan_list
-from apiexceptions.nmap import APINMAPScanKeyNotFound, APINMAPScanException, \
-    APINMAPScanCannotRetrieveBaseFolder, APINMAPScanCannotCreateLocalFolder, \
-    APINMAPScanReportNotFound, APINMAPScanCannotReadReport, APINMAPScanReportCannotBeDeleted
-from apiexceptions.sensor import APICannotResolveSensorID
+from flask import Blueprint, request
+from flask.ext.login import current_user
+from netaddr import IPAddress, IPNetwork
 
-# from apimethods.sensor.nmap import apimethod_nmapdb_add_task
 from api import app
+from api.lib.auth import logged_permission
+from api.lib.common import (make_ok, make_error, document_using)
+from api.lib.utils import accepted_url
+from apiexceptions.nmap import (
+    APINMAPScanKeyNotFound, APINMAPScanException, APINMAPScanCannotRetrieveBaseFolder,
+    APINMAPScanCannotCreateLocalFolder, APINMAPScanReportNotFound, APINMAPScanCannotReadReport,
+    APINMAPScanReportCannotBeDeleted)
+from apiexceptions.sensor import APICannotResolveSensorID
+from apimethods.sensor.nmap import (
+    apimethod_get_nmap_scan, apimethod_delete_nmap_scan, apimethod_get_nmap_scan_status, apimethods_stop_scan,
+    apimethod_get_nmap_scan_list, apimethod_delete_running_scans)
+from celerymethods.jobs.nmap import run_nmap_scan, monitor_nmap_scan
+
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -148,12 +147,18 @@ def do_nmap_scan():
     if len(ftargets) < 1:
         return make_error("No valid targets to scan", 500)
 
+    try:
+        # Delete all orphan scans which are running on background for current user.
+        apimethod_delete_running_scans(current_user.login)
+    except Exception as err:
+        return make_error("Cannot flush old scans before running new nmap scan %s" % str(err), 500)
+
     job = run_nmap_scan.delay(sensor_id=sensor_id, target=','.join(ftargets),
                               targets_number=targets_number,
                               scan_type=scan_type,
                               rdns=rdns, scan_timing=scan_timing,
                               autodetect=autodetect,
-                                scan_ports=scan_ports, idm=idm,
+                              scan_ports=scan_ports, idm=idm,
                               user=current_user.login)
     monitor_nmap_scan.delay(sensor_id=sensor_id, task_id=job.id)
     time.sleep(2)
@@ -195,8 +200,8 @@ def get_nmap_scan(task_id):
         return make_error(str(e), 500)
     except APINMAPScanReportNotFound as e:
         return make_error(str(e), 404)
-    except:
-        return make_error(data, 500)
+    except Exception as e:
+        return make_error(str(e), 500)
 
     return make_ok(result=data)
 

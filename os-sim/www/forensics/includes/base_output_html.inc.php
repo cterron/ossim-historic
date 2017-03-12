@@ -1551,13 +1551,9 @@ function PrintPredefinedViews()
 
     <div id="custom_views" class="dropdown dropdown-secondary dropdown-close dropdown-tip dropdown-anchor-right dropdown-scrolling" style='display:none'>
         <ul id="custom_views_ul" class="dropdown-menu">
-            <?php
-                if (Session::am_i_admin()) {
-            ?>
             <li><a href="#" onclick="GB_show('<?php echo _("Edit Current View") ?>','/forensics/custom_view_edit.php?edit=1',480,700);$('#custom_views').hide();return false"><?php echo _("Edit Current View") ?>&nbsp;</a></li>
             <li><a href="#" onclick="GB_show('<?php echo _("Create new custom view")?>','/forensics/custom_view_edit.php',480,700);$('#custom_views').hide();return false"><?php echo _("Create New View")?>&nbsp;</a></li>
             <?php
-                }
                 foreach ($_SESSION['views'] as $name=>$attr)
                 {
                     $dname     = ($name=="default") ? "Default" : $name;

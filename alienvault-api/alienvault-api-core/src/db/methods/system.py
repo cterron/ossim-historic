@@ -50,7 +50,15 @@ from db.models.alienvault import (
 
 import api_log
 from apimethods.decorators import accepted_values, accepted_types, require_db
-from apimethods.utils import get_uuid_string_from_bytes, get_bytes_from_uuid, get_ip_bin_from_str, is_valid_ipv4, get_ip_str_from_bytes
+from apimethods.utils import (
+    get_uuid_string_from_bytes,
+    get_bytes_from_uuid,
+    get_ip_bin_from_str,
+    is_valid_ipv4,
+    get_ip_str_from_bytes,
+    get_hex_string_from_uuid
+)
+
 from avconfig.ossimsetupconfig import AVOssimSetupConfigHandler
 ossim_setup = AVOssimSetupConfigHandler()
 
@@ -342,15 +350,13 @@ def get_system_ip_from_system_id(system_id, output='str', local_loopback=True):
     Return the ip of a system using its id.
     """
     try:
-        system_id_lower = system_id.lower()
-
-        if system_id_lower == 'local':
+        if is_local(system_id):
             success, system_ip = get_system_ip_from_local(output='bin', local_loopback=local_loopback)
             if not success:
                 return success, system_ip
 
         else:
-            system_id_bin = get_bytes_from_uuid(system_id_lower)
+            system_id_bin = get_bytes_from_uuid(system_id.lower())
             system = db.session.query(System).filter(System.id == system_id_bin).one()
             system_ip = system.vpn_ip if system.vpn_ip else system.admin_ip
     except NoResultFound, msg:
@@ -848,3 +854,11 @@ def db_set_config(key, value):
         api_log.error("[db_set_config] %s" % str(result))
 
     return success, result
+
+
+def is_local(system_id):
+    if system_id.lower() == 'local':
+        return True
+
+    success, local_system_id = get_system_id_from_local()
+    return success and get_hex_string_from_uuid(local_system_id) == get_hex_string_from_uuid(system_id)

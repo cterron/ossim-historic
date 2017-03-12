@@ -251,3 +251,4 @@ REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 249, 21, 'Misc');
 REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 250, 21, 'Policy');
 REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 251, 21, 'Scada');
 REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 252, 21, 'Scan');
+REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 253, 21, 'Privileged_Operation_Failed');

@@ -36,7 +36,7 @@ function tmp_insert($db, $table)
 {
 	$user = $_SESSION['_user'];
 	
-	$db->query("CREATE TABLE IF NOT EXISTS datawarehouse.tmp_user (user VARCHAR( 64 ) NOT NULL,section VARCHAR(32) NOT NULL,req varchar(10) NOT NULL, sid INT( 11 ) NOT NULL, PRIMARY KEY ( user,section,sid ))");
+	$db->query("CREATE TABLE IF NOT EXISTS datawarehouse.tmp_user (user VARCHAR( 64 ) NOT NULL,section VARCHAR(32) NOT NULL,req varchar(10) NOT NULL, sid INT( 11 ) NOT NULL, PRIMARY KEY ( user,section,sid,req ))");
 	
 	$section = preg_replace('/PCI\d*\./', '', $table);
 	

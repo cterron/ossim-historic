@@ -232,7 +232,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET SCAN Httprint 
 
 #by Jamie Riden
 #
-#alert tcp any any -> any 502 (msg:"ET SCAN Modbus Scanning detected"; content:"|00 00 00 00 00 02|"; flow:established,to_server; depth:6; threshold: type both, track by_src, count 100, seconds 10; reference:url,code.google.com/p/modscan/; reference:url,www.rtaautomation.com/modbustcp/; reference:url,doc.emergingthreats.net/2009286; classtype:bad-unknown; sid:2009286; rev:5;)
+alert tcp any any -> any 502 (msg:"ET SCAN Modbus Scanning detected"; content:"|00 00 00 00 00 02|"; flow:established,to_server; depth:6; threshold: type both, track by_src, count 100, seconds 10; reference:url,code.google.com/p/modscan/; reference:url,www.rtaautomation.com/modbustcp/; reference:url,doc.emergingthreats.net/2009286; classtype:bad-unknown; sid:2009286; rev:5;)
 
 #By Jeff Kell, tweaks by Dale Handy
 #
@@ -290,7 +290,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -sS window 4096"
 #Submitted by Joseph Gama
 #updated by mareadmin 4/2010
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -sA (1)"; fragbits:!D; dsize:0; flags:A,12; window:1024; threshold: type both, track by_dst, count 1, seconds 60; reference:url,doc.emergingthreats.net/2000538; classtype:attempted-recon; sid:2000538; rev:8;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -sA (1)"; fragbits:!D; dsize:0; flags:A,12; window:1024; threshold: type both, track by_dst, count 1, seconds 60; reference:url,doc.emergingthreats.net/2000538; classtype:attempted-recon; sid:2000538; rev:8;)
 
 #Submitted by Joseph Gama
 #updated by mareadmin 4/2010

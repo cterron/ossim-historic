@@ -80,16 +80,16 @@ try
                 $av_scan = Av_scan::get_object_from_file($scan_file);
 
                 $av_scan->delete_scan();
+                Cache_file::remove_file($scan_file);
+                $data['status'] = 'success';
+                $data['data']   = _('Asset scan has been permanently deleted');
             }
             catch(Exception $e)
             {
-                ;
+                $data['status'] = 'error';
+                $data['data']   = sprintf('Failed to delete asset scan: %s', $e->getMessage());
             }
 
-            Cache_file::remove_file($scan_file);
-
-            $data['status'] = 'success';
-            $data['data']   = _('Asset scan has been permanently deleted');
 
         break;
 
@@ -104,7 +104,8 @@ try
             }
             catch(Exception $e)
             {
-                ;
+                $data['status'] = 'error';
+                $data['data']   = sprintf('Failed to stop asset scan: %s', $e->getMessage());
             }
 
             $data['status'] = 'success';

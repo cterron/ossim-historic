@@ -146,7 +146,7 @@ use MIME::Base64;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
 use Net::IP;
 #use Net::Nslookup;
-#use Net::Netmask;
+use Net::Netmask;
 use Date::Manip;
 use MIME::Lite;
 use Date::Calc qw( Delta_DHMS Add_Delta_YMD Days_in_Month );
@@ -337,7 +337,6 @@ sub main {
         
         # set failed hung jobs
         check_running_scans ( );
-        
         #die();
         
         #CHECK FOR JOB STATUS OF "P" Pending Kill 
@@ -769,7 +768,7 @@ sub setup_scan {
            $target = get_live_subnets();
         } else {
            #$fk_name = $target;
-           $targetinfo = build_hostlist( $target );            #CODE TO HANDLE SCAN EXCEPTIONS
+           $targetinfo = "";            #CODE TO HANDLE SCAN EXCEPTIONS
         }
         #LONG LIST OF HOSTS MAY BE CAUSING INCREASED NESSUS CLIENT LOAD
         if ( $exclude_hosts eq "" ) { $targetinfo = $target; }        #NO IPS FILTERED USE CIDR
@@ -839,7 +838,6 @@ sub setup_scan {
     @vuln_nessus_plugins = get_plugins( $Jvset, $job_id );
 
     @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $job_title, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator);
-    
     $scantime = getCurrentDateTime();
 
     if ( check_dbOK() == "0" ) { $dbh = conn_db(); }
@@ -1279,7 +1277,6 @@ sub run_nessus {
             };
         }
         else {
-            
             $job_id_to_log = "$job_id";
             
             %credentials = generate_credentials($job_id);
@@ -2265,54 +2262,7 @@ sub build_hostlist {
     my ( $sql, $sth_sel );
 
     my $block = new Net::Netmask ( $CIDR );
-
-    my $host_list = "";
-    return $host_list; # DELETE
-    
-    foreach my $ip ( $block->enumerate( ) ){
-        $host_list .= "$ip\n";
-    }
-
-    #FILTER BASE & BROADCASE ADDRESS
-    my $base = $block->base();
-    my $bcast = $block->broadcast();
-    $host_list =~ s/$base\n//g;
-    $host_list =~ s/$bcast\n//g;
-
-    $sql = qq{ SELECT ip_range FROM vuln_scan_exclusions WHERE active = '1' ORDER BY ip_range };
-    logwriter( $sql, 5 );
-    $sth_sel=$dbh->prepare( $sql );
-    $sth_sel->execute;
-
-    while ( my ( $ex_CIDR )=$sth_sel->fetchrow_array ) {
-        my $exBlock = new Net::Netmask ( $ex_CIDR );
-        if ( defined( $exBlock )) {
-            foreach my $ex_ip ( $exBlock->enumerate( ) ) {
-                if ( $host_list =~ /$ex_ip\n/ ) {
-                    $exclude_hosts .= "$ex_ip\n";
-                }
-                $host_list =~ s/$ex_ip\n//g;
-            }
-        }
-    }
-
-    $sql = qq{ SELECT distinct( hostip ) FROM vuln_system_hosts
-        WHERE INET_ATON(hostip) > INET_ATON('$base') AND INET_ATON(hostip) < INET_ATON('$bcast'); };
-    logwriter( $sql, 5 );
-    $sth_sel=$dbh->prepare( $sql );
-    $sth_sel->execute;
-
-    while ( my ( $ex_ip )=$sth_sel->fetchrow_array ) {
-        if ( $host_list =~ /$ex_ip\n/ ) {
-           $exclude_hosts .= "$ex_ip\n";
-        }
-        $host_list =~ s/$ex_ip\n//g;
-    }
-
-    $sth_sel->finish;
-    logwriter( "EXCLUDING HOSTS [$exclude_hosts]", 4 );
-
-    return $host_list;
+    return $block->enumerate();
 }
 
 #pop hosthash will process the results to make the most of the data.  This will improve reporting / tracking of scanned hosts
@@ -5490,7 +5440,6 @@ sub get_results_from_xml {
     
     %apps_by_port_protocol = load_apps();
     %plugins_desc          = load_plugins_desc();
-
     # Search IPs in task details
     
     # my @tmp_hosts = split(/\n/, $targets);
@@ -6202,8 +6151,48 @@ sub get_asset_data {
         $asset_data{$ip_in_db}{'ctx'} = $ctxs{$ip_in_db};
     }
 
+
+    my $negation = 0;
     foreach my $idip (@aux) {
-        if ( $idip =~ m/^([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { #     host_id#Ip or net_id#CIDR
+        if ($idip =~ m/^\!/) {
+                $negation = 1;
+                last;
+        }
+    }
+    if ($negation) {
+        my @new_aux = ();
+        my $counter = @aux;
+        for (my $i=0;$i<$counter;$i++) {
+                my $value = @aux[$i];
+                my $val = 0;
+                if ($value =~ m/^(!)?([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})$/i ) {
+                        $val = "$1$3";
+                } elsif ($value =~ m/^(!?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})$/i ) {
+                        $val = $1;
+                }
+                if ($val) {
+                        #subnet substitution
+                        my $neg = ((index $val, "!") == 0);
+			if ($neg) {
+                            $val = substr($val,1);
+                        }
+                        my @hosts = build_hostlist($val);
+                        if ($neg) {
+                            @hosts = map { "!".$_ } @hosts;
+                        }
+                        push(@new_aux,@hosts);
+                } else {
+                        push(@new_aux,$value);
+                }
+        }
+        @aux = @new_aux;
+   }
+   my $counter = scalar @aux;
+   for (my $i=0;$i<$counter;$i++) {
+        my $idip = @aux[$i];
+	if (($idip =~ m/^\!/) || (grep {$_ eq "!".$idip } @aux)) {
+            next;
+        } elsif ( $idip =~ m/^([a-f\d]{32})#(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?)$/i ) { #host_id#Ip or net_id#CIDR
             $asset_data{$2}{'ctx'} = get_asset_ctx($idip);
             $asset_data{$2}{'id'}  = $1;
             logwriter("Search ctx by ID ".$idip." -> ".get_asset_ctx($idip), 4);

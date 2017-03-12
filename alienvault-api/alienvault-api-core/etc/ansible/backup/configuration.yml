@@ -247,7 +247,9 @@ files: [
 '/home/avapi/.ssh/',
 '/etc/ossim/ossim.lic',
 '/etc/alienvault/network/vpn.conf',
-'/etc/alienvault/network/interfaces.conf'
+'/etc/alienvault/network/interfaces.conf',
+'/etc/openvpn/',
+'/usr/share/doc/openvpn/examples/easy-rsa/2.0/keys'
 ]
 
 services: [

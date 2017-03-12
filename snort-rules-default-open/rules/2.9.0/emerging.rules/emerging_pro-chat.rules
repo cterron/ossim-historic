@@ -159,7 +159,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"ET CHAT Google Talk (Jabber)
 
 #Submitted by Scott Melnick
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET CHAT MSN status change"; flow:established,to_server; content:"CHG "; depth:55; reference:url,doc.emergingthreats.net/2002192; classtype:policy-violation; sid:2002192; rev:4;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET CHAT MSN status change"; flow:established,to_server; content:"CHG "; depth:55; reference:url,doc.emergingthreats.net/2002192; classtype:policy-violation; sid:2002192; rev:4;)
 
 #by Sp0oker
 #
@@ -352,13 +352,13 @@ alert tcp $HOME_NET any -> $AIM_SERVERS any (msg:"GPL CHAT AIM login"; flow:to_s
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL CHAT Google Talk Version Check"; flow: established,to_server; content:"/googletalk/google-talk-versioncheck.txt?"; http_uri; nocase; classtype:policy-violation; sid:2100876; rev:4;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN login attempt"; flow:to_server,established; content:"USR "; depth:4; nocase; content:" TWN "; distance:1; nocase; threshold:type limit, track by_src, count 1, seconds 60; classtype:policy-violation; sid:2101991; rev:3;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN login attempt"; flow:to_server,established; content:"USR "; depth:4; nocase; content:" TWN "; distance:1; nocase; threshold:type limit, track by_src, count 1, seconds 60; classtype:policy-violation; sid:2101991; rev:3;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN outbound file transfer request"; flow:established; content:"MSG "; depth:4; content:"Content-Type|3A| application/x-msnmsgrp2p"; nocase; content:"INVITE"; distance:0; nocase; classtype:policy-violation; sid:2101986; rev:7;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN outbound file transfer request"; flow:established; content:"MSG "; depth:4; content:"Content-Type|3A| application/x-msnmsgrp2p"; nocase; content:"INVITE"; distance:0; nocase; classtype:policy-violation; sid:2101986; rev:7;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN user search"; flow:to_server,established; content:"CAL "; depth:4; nocase; classtype:policy-violation; sid:2101990; rev:2;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN user search"; flow:to_server,established; content:"CAL "; depth:4; nocase; classtype:policy-violation; sid:2101990; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET 5050 (msg:"GPL CHAT Yahoo IM conference message"; flow:to_server,established; content:"YMSG"; depth:4; nocase; content:"|00 1D|"; depth:2; offset:10; classtype:policy-violation; sid:2102455; rev:4;)
@@ -403,7 +403,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL CHAT ICQ access"; flow:to_server,established; content:"User-Agent|3A|ICQ"; http_header; classtype:policy-violation; sid:2100541; rev:13;)
 
 #
-alert tcp $HOME_NET any <> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN message"; flow:established; content:"MSG "; depth:4; content:"Content-Type|3A|"; nocase; content:"text/plain"; distance:1; classtype:policy-violation; sid:2100540; rev:12;)
+#alert tcp $HOME_NET any <> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN message"; flow:established; content:"MSG "; depth:4; content:"Content-Type|3A|"; nocase; content:"text/plain"; distance:1; classtype:policy-violation; sid:2100540; rev:12;)
 
 #
 #alert tcp $EXTERNAL_NET 5190 -> $HOME_NET any (msg:"ETPRO CHAT Cerulean Studios Trillian Image Filename XML Tag Stack Buffer Overflow"; flow:from_server,established; content:"|2a 02|"; depth:2; content:"|00 04 00 07|"; distance:4; within:4; content:"|00 02|"; distance:0; byte_test:2,>,1024,0,relative; content:"<IMG"; distance:2; nocase; pcre:"/^[^>]*SRC(\s*=\s*(\x22[^\x22]{1024}|\x27[^\x27]{1024})|=[^\x20\x09]{1024})/Ri"; reference:cve,CVE-2008-5401; reference:bugtraq,32645; reference:secunia,33001; classtype:attempted-user; sid:2800396; rev:2;)

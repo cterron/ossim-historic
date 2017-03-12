@@ -409,19 +409,18 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
 
 def ansible_ping_system(system_ip):
     try:
-    #hardcoded timeout to fix ENG-102699
-        response = ansible.run_module(host_list=[system_ip],timeout=5,
-                                      module="ping", args="")
+        # hardcoded timeout to fix ENG-102699
+        response = ansible.run_module(host_list=[system_ip], timeout=5, module="ping", args="")
     except Exception as err:
-        error_msg = "Something wrong happened while pinging the system: " + \
-                    "%s %s" % (system_ip, str(err))
+        error_msg = "Something wrong happened while pinging the system: %s %s" % (system_ip, str(err))
         return False, error_msg
-    if 'dark' in response and system_ip in response['dark'] or \
-       'unreachable' in response:
+
+    # TODO: simplify these conditions when unit-tests will be fixed and updated.
+    if 'dark' in response and system_ip in response['dark'] or 'unreachable' in response:
         return False, "System unreachable"
 
     if 'contacted' in response and system_ip in response['contacted'] and \
-       'pong' in response['contacted'][system_ip]['ping']:
+       'pong' in response['contacted'][system_ip].get('ping', {}):
         return True, "OK"
     return False, ""
 
@@ -823,7 +822,7 @@ def ansible_get_asynchronous_command_log_file(system_ip, log_file):
                                       args=args,
                                       use_sudo=True)
         result, msg = ansible_is_valid_response(system_ip, response)
-        if not result or not 'dest' in response['contacted'][system_ip]:
+        if not result or 'dest' not in response['contacted'][system_ip]:
             error_msg = "Something wrong happened while fetching " + \
                         "the async command log file: %s" % msg
             return False, error_msg
@@ -832,7 +831,7 @@ def ansible_get_asynchronous_command_log_file(system_ip, log_file):
         rc_file_path = response['contacted'][system_ip]['dest']
         if not os.path.exists(rc_file_path):
             return False, "The local async command log file doesn't exist"
-	os.chmod(rc_file_path, 0644)
+        os.chmod(rc_file_path, 0644)
 
     except Exception as err:
         error_msg = "An error occurred while retrieving the async command " + \
@@ -1205,27 +1204,40 @@ def ansible_get_child_alarms(system_ip, delay=1, delta=3):
                 (event_id, timestamp, backlog_id) = line.split('\t')
                 data.append(event_id)
     except KeyError:
-        api_log.error("[ansible_get_child_alarms] Bad response from child server: %s" & str(output))
+        api_log.error("[ansible_get_child_alarms] Bad response from child server: %s" % str(response))
         return False, "[ansible_get_child_alarms] Bad response from child server"
     return True, data
 
 
 def ansible_resend_alarms(system_ip, alarms):
+    """ Resend alarms to AV server.
+
+    Args:
+        system_ip: destination server IP
+        alarms: alarms list, e.g. ['1b534bb0-dbc3-11e5-a68d-000c293716eb', '1b534bb0-dbc3-11e5-a68d-001c293716ea', ...]
+
+    Returns:
+        (boolean status, string msg)
+
+    Raises:
+        ValueError: badly formed hexadecimal UUID string, when wrong event ID was provided in the alarms list
+    """
     if alarms:
-        chunk_size = 10
+        chunk_size = 10  # alarm_chunks are 10 alarms
         for alarm_chunk in [alarms[x:x+chunk_size] for x in xrange(0, len(alarms), chunk_size)]:
-            # alarm_chunks are 10 alarms  
             # event_id = str(uuid.UUID(alarm))
             events = "\n".join(map(lambda x: str(uuid.UUID(x)), alarm_chunk))
             api_log.info("[ansible_resend_alarms] Resending event '%s' to server '%s'" % (str(events), system_ip))
             cmd = "echo -e \"%s\" | nc 127.0.0.1 40004 -w1" % events
-            #api_log.debug("Remote command: %s " % cmd)
+            # api_log.debug("Remote command: %s " % cmd)
             response = ansible.run_module(host_list=[system_ip],
                                           module="shell",
                                           args=cmd)
             success, msg = ansible_is_valid_response(system_ip, response)
             if not success:
-                api_log.error("[ansible_resend_alarms] Can't resend to '%s' event_id '%s'.Bailing out" % (system_ip, event_id))
-                return False, str(err)
+                err_msg = "Can't resend to '%s' event_ids: %s. Bailing out" % (system_ip, alarm_chunk)
+                api_log.error("[ansible_resend_alarms] %s" % err_msg)
+                return False, err_msg
 
     return True, ''
+

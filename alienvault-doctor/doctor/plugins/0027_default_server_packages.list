@@ -523,6 +523,7 @@ libnet-domain-tld-perl
 libnet-http-perl
 libnet-ip-perl
 libnet-irc-perl
+libnet-netmask-perl
 libnet-server-perl
 libnet-smtp-ssl-perl
 libnet-snmp-perl

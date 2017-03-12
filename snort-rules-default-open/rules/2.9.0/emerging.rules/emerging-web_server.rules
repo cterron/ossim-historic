@@ -1891,3 +1891,6 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER WEB
 #
 alert tcp $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER Possible Compromised Webserver Retriving Inject"; flow:established,to_server; content:"/blog/?"; depth:7; http_uri; pcre:"/^\/blog\/\?[a-z]+&utm_source=\d+\x3a\d+\x3a\d+$/U"; pcre:"/^Host\x3a\x20(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\x3a\d{1,5})?\r?\n/Hmi"; classtype:trojan-activity; sid:2022485; rev:1;)
 
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible Custom Content Type Manager WP Backdoor Access"; flow:established,to_server; content:"/plugins/custom-content-type-manager/auto-update.php"; http_uri; fast_pattern:32,20; nocase; reference:url,blog.sucuri.net/2016/03/when-wordpress-plugin-goes-bad.html; classtype:trojan-activity; sid:2022596; rev:3;)
+

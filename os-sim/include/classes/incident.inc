@@ -818,7 +818,7 @@ class Incident
         $order = isset($args["order"]) ? $args["order"] : "";
         $list  = array();
         $query = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.ref, incident.type_id as type, incident.submitter as submitter,
-                    incident.priority, incident.in_charge, incident.status
+                    incident.priority, incident.in_charge, incident.status,
                              DATE_ADD(incident.last_update, INTERVAL $tz HOUR) as last_update,
                              DATE_ADD(incident.event_start, INTERVAL $tz HOUR) as event_start,
                              DATE_ADD(incident.event_end, INTERVAL $tz HOUR) as event_end,

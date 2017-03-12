@@ -335,24 +335,6 @@ class DoNagios(threading.Thread):
         """
         logger.info("Making nagios changes..")
 
-        pattern = re.compile("(?P<kk>^\w[\w\-\s]+)$")
-
-        path = os.path.join(self._tmp_conf['nagios_cfgs'], "host-services")
-        for fi in os.listdir(path):
-            os.remove(os.path.join(path, fi))
-
-        path = os.path.join(self._tmp_conf['nagios_cfgs'], "hostgroup-services")
-        for fi in os.listdir(path):
-            os.remove(os.path.join(path, fi))
-
-        path = os.path.join(self._tmp_conf['nagios_cfgs'], "hostgroups")
-        for fi in os.listdir(path):
-            os.remove(os.path.join(path, fi))
-
-        path = os.path.join(self._tmp_conf['nagios_cfgs'], "hosts")
-        for fi in os.listdir(path):
-            os.remove(os.path.join(path, fi))
-
         # 1 - Load the active hosts.
         self.load_active_hosts()
 
@@ -366,10 +348,27 @@ class DoNagios(threading.Thread):
         else:
             # Store new activity diff.
             self.__save_nagios_activity_diff(current_hash)
-            
+
             services_by_host_dic = {}
             hostnames_dic = {}
             hostnames_dup_dic = {}
+            pattern = re.compile("(?P<kk>^\w[\w\-\s]+)$")
+
+            path = os.path.join(self._tmp_conf['nagios_cfgs'], "host-services")
+            for fi in os.listdir(path):
+                os.remove(os.path.join(path, fi))
+
+            path = os.path.join(self._tmp_conf['nagios_cfgs'], "hostgroup-services")
+            for fi in os.listdir(path):
+                os.remove(os.path.join(path, fi))
+
+            path = os.path.join(self._tmp_conf['nagios_cfgs'], "hostgroups")
+            for fi in os.listdir(path):
+                os.remove(os.path.join(path, fi))
+
+            path = os.path.join(self._tmp_conf['nagios_cfgs'], "hosts")
+            for fi in os.listdir(path):
+                os.remove(os.path.join(path, fi))
 
             # Looking for duplicate hostname
             for host_id, host in self.__active_hosts.iteritems():

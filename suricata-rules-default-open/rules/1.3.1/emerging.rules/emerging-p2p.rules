@@ -146,7 +146,7 @@ alert tcp any any -> any 4660:4799 (msg:"ET P2P ed2k file request answer"; flow:
 
 #By Chich Thierry
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET P2P Kaaza Media desktop p2pnetworking.exe Activity"; content:"|e30cb0|"; depth:6; threshold: type limit, track by_dst, count 1 , seconds 600; reference:url,www.giac.org/practical/GCIH/Ian_Gosling_GCIH.pdf; reference:url,doc.emergingthreats.net/bin/view/Main/2000340; classtype:policy-violation; sid:2000340; rev:10;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET P2P Kaaza Media desktop p2pnetworking.exe Activity"; content:"|e30cb0|"; depth:6; threshold: type limit, track by_dst, count 1 , seconds 600; reference:url,www.giac.org/practical/GCIH/Ian_Gosling_GCIH.pdf; reference:url,doc.emergingthreats.net/bin/view/Main/2000340; classtype:policy-violation; sid:2000340; rev:10;)
 
 #Submitted by Sam Evans
 #

@@ -269,6 +269,19 @@ $db->close();
         }
 
 
+        //Check if API session ends or no permissions.
+        function no_api_permissions(xhr_obj)
+        {
+            var no_api_permissions = false;
+            if (xhr_obj.status == 400)
+            {
+                console.log(xhr_obj.responseText);
+                no_api_permissions = (xhr_obj.responseText.indexOf("No permission") > -1 );
+                console.log(no_api_permissions);
+            }
+            return no_api_permissions;
+        }
+
 
         /****************************************************
          ****************** Scan functions ******************
@@ -407,7 +420,7 @@ $db->close();
                         }
                     }
                 }
-                catch (Err)
+                catch(Err)
                 {
                     $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
 
@@ -422,15 +435,22 @@ $db->close();
                 //Check expired session
                 var session = new Session(xhr.responseText, '');
 
-                if (session.check_session_expired() == true)
+                if (session.check_session_expired() == true || no_api_permissions(xhr))
                 {
                     session.redirect();
                     return;
                 }
 
                 $('#scan_button').removeClass('av_b_processing').prop('disabled', false);
-
-                delete_scan();
+                try
+                {
+                    // try to stop scan first to store its report instead of deleting it.
+                    stop_scan();
+                }
+                catch(Err)
+                {
+                    delete_scan();
+                }
 
                 var __error_msg = av_messages['unknown_error'];
 
@@ -474,7 +494,7 @@ $db->close();
                     //Check expired session
                     var session = new Session(xhr.responseText, '');
 
-                    if (session.check_session_expired() == true)
+                    if (session.check_session_expired() == true || no_api_permissions(xhr))
                     {
                         session.redirect();
                         return;
@@ -537,7 +557,7 @@ $db->close();
                     //Check expired session
                     var session = new Session(xhr.responseText, '');
 
-                    if (session.check_session_expired() == true)
+                    if (session.check_session_expired() == true || no_api_permissions(xhr))
                     {
                         session.redirect();
                         return;
@@ -587,7 +607,7 @@ $db->close();
                     //Check expired session
                     var session = new Session(xhr.responseText, '');
 
-                    if (session.check_session_expired() == true)
+                    if (session.check_session_expired() == true || no_api_permissions(xhr))
                     {
                         session.redirect();
                         return;
@@ -636,7 +656,7 @@ $db->close();
                     //Check expired session
                     var session = new Session(xhr.responseText, '');
 
-                    if (session.check_session_expired() == true)
+                    if (session.check_session_expired() == true || no_api_permissions(xhr))
                     {
                         session.redirect();
                         return;

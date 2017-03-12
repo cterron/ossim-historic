@@ -31,6 +31,7 @@
 import imp
 import os
 import re
+import subprocess
 
 from utils import is_ipv4
 from netinterfaces import get_network_interfaces
@@ -443,6 +444,10 @@ class AVSysConfig (object):
 
             enabled_path = entry_path + '/enabled'
             self.__augeas_vpn.set(enabled_path, enabled)
+
+            if 'no' == enabled:
+                subprocess.call('echo "update system set vpn_ip=NULL;" | ossim-db', shell=True)
+
             self.__pending['VPN interface %s enabled' % iface] = (enabled_path, enabled)
 
         return AVConfigParserErrors.ALL_OK

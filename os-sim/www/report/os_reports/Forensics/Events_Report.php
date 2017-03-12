@@ -45,7 +45,7 @@ if (Session::menu_perms("analysis-menu", "EventsForensics"))
 
 
     $db   = new Ossim_db();
-    $conn = $db->connect();
+    $conn = is_array($_SESSION["server"]) && $_SESSION["server"][0]!="" ? $db->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]) : $db->connect();
 
     $conn->SetFetchMode(ADODB_FETCH_ASSOC);
 

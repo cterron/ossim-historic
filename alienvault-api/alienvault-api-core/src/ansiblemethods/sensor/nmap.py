@@ -35,7 +35,6 @@ from ansiblemethods.helper import ansible_is_valid_response, fetch_file
 
 ansible = Ansible()
 
-
 def ansible_run_nmap_scan(sensor_ip, target, scan_type, rdns, scan_timing, autodetect, scan_ports, job_id):
     """Runs a nmap scan on the given sensor and with the given parameters.
     Args:

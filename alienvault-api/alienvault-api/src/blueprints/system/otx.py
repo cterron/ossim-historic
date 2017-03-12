@@ -203,8 +203,8 @@ def get_otx_pulse_stats_event_trend():
 
     success, trend_pulses = apimethod_get_otx_pulse_stats_event_trend(user_dic, '', day_range)
     if not success:
-        current_app.logger.error("OTX: It wasn't possible to retrieve the Events from all OTX Pulses: %s" % str(top_pulses))
-        return make_error(top_pulses, 500)
+        current_app.logger.error("OTX: It wasn't possible to retrieve the Events from all OTX Pulses: %s" % str(trend_pulses))
+        return make_error(trend_pulses, 500)
 
     return make_ok(**trend_pulses)
 
@@ -226,8 +226,3 @@ def get_otx_pulse_stats_event_top():
         return make_error(top_pulses, 500)
 
     return make_ok(**top_pulses)
-
-
-
-
-

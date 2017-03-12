@@ -1537,9 +1537,6 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Zup
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS PHISH PayPal - Account Phished"; flow:established,to_server; content:"POST"; http_method; content:"login_email="; http_client_body; content:"login_password="; http_client_body; content:"target_page="; http_client_body; classtype:bad-unknown; sid:2015972; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS PHISH Gateway POST to gateway-p"; flow:established,to_server; content:"POST"; http_method; content:"/gateway-p"; http_uri; classtype:bad-unknown; sid:2015973; rev:1;)
-
-#
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Sibhost Status Check"; flow:established,to_server; content:"POST"; http_method; content:"|29 20|Java/1"; http_header; fast_pattern:only; content:"text="; http_client_body; depth:5; pcre:"/\?(s|page|id)=\d+$/U"; classtype:trojan-activity; sid:2015974; rev:12;)
 
 #
@@ -3094,15 +3091,6 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS DRI
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Neutrino EK Java Payload Download Sep 19 2013"; flow:established,to_server; content:"Java/1."; fast_pattern:only; http_header; content:"/f"; http_uri; content:"?j"; http_uri; distance:0; pcre:"/\/f[a-z]+?\?j[a-z]+?=[a-z]+$/U"; classtype:trojan-activity; sid:2017493; rev:2;)
 
 #
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Possible JavaFX Click To Run Bypass 1"; flow:established,to_client; file_data; content:"cHJlbG9hZGVyLWNsYXNz"; reference:url,seclists.org/bugtraq/2013/Jul/41; classtype:attempted-user; sid:2017494; rev:1;)
-
-#
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Possible JavaFX Click To Run Bypass 2"; flow:established,to_client; file_data; content:"wcmVsb2FkZXItY2xhc3"; reference:url,seclists.org/bugtraq/2013/Jul/41; classtype:attempted-user; sid:2017495; rev:2;)
-
-#
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Possible JavaFX Click To Run Bypass 3"; flow:established,to_client; file_data; content:"ByZWxvYWRlci1jbGFzc"; reference:url,seclists.org/bugtraq/2013/Jul/41; classtype:attempted-user; sid:2017496; rev:2;)
-
-#
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Rawin EK - Java Exploit - bona.jar"; flow:established,to_server; content:"/bona.jar"; http_uri; classtype:trojan-activity; sid:2017497; rev:1;)
 
 #
@@ -3883,10 +3871,10 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Cur
 alert tcp $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET CURRENT_EVENTS Linksys Router Returning Device Settings To External Source"; flow:established,from_server; file_data; content:"<GetDeviceSettingsResponse>"; content:"<GetDeviceSettingsResult>"; content:"<ModelName>"; reference:url,isc.sans.edu/forums/diary/Linksys+Worm+TheMoon+Summary+What+we+know+so+far/17633; classtype:attempted-admin; sid:2018136; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic HeapSpray Construct"; flow:established,to_client; file_data; content:"CollectGarbage"; nocase; fast_pattern:only; content:"var"; pcre:"/^\s+?(?P<vname>[^\s\x3d]+)\s*?=\s*?(?:0x(?:(6[4-9a-f]|[7-9a-f])|\d{3,})|\d{3,}).+?[\s\x3b]for\s*?\([^\x3b\)]*?\x3b[^\x3b\)]+?<=?\s*?(?P=vname)[^\)]+?\)\s*?(?:\{[^}]*?|[^\r\n]*?)document\.createElement/Rsi"; classtype:bad-unknown; sid:2018145; rev:3;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic HeapSpray Construct"; flow:established,to_client; file_data; content:"CollectGarbage"; nocase; fast_pattern:only; content:"var"; pcre:"/^\s+?(?P<vname>[^\s\x3d]+)\s*?=\s*?(?:0x(?:(6[4-9a-f]|[7-9a-f])|\d{3,})|\d{3,}).+?[\s\x3b]for\s*?\([^\x3b\)]*?\x3b[^\x3b\)]+?<=?\s*?(?P=vname)[^\)]+?\)\s*?(?:\{[^}]*?|[^\r\n]*?)document\s*\.\s*createElement/Rsi"; classtype:bad-unknown; sid:2018145; rev:4;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic HeapSpray Construct"; flow:established,to_client; file_data; content:"CollectGarbage"; nocase; fast_pattern:only; content:"for"; pcre:"/^\s*?\([^\x3b\)]*?\x3b[^\x3b\)]+?<=?\s*(?:0x(?:(6[4-9a-f]|[7-9a-f])|\d{3,})|\d{3,})[^\)]+?\)\s*?(?:\{[^}]*?|[^\r\n]*?)document\.createElement/Rsi"; classtype:bad-unknown; sid:2018146; rev:2;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic HeapSpray Construct"; flow:established,to_client; file_data; content:"<script"; nocase; content:"CollectGarbage"; distance:0; fast_pattern; content:"while"; pcre:"/^\s*?\([^\)]*?(?P<var>[^\.]+)\s*?\.\s*?length\s*<\s*(?:0?[0-9]{5,}|0x[a-z0-9]{3,})[^)]+\)\s*?\{\s*?(?P=var)\s*?=\s*?(?P=var)\s*?\+\s*?(?P=var)\s*?\}/Rsi"; content:"getElementsByClassName"; distance:0; content:"CollectGarbage"; distance:0; classtype:bad-unknown; sid:2018146; rev:3;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Possible GoonEK Landing Feb 19 2014 1"; flow:from_server,established; file_data; content:"javafx_version"; nocase; fast_pattern:only; content:"jnlp_href"; nocase; content:"</applet><object"; nocase; content:"data|3a|application/x-silverlight-2"; nocase; within:100; classtype:trojan-activity; sid:2018161; rev:1;)
@@ -5827,7 +5815,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Pos
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS RIG Payload URI Struct March 20 2015"; flow:established,to_server; urilen:>220; content:"/index.php?"; http_uri; depth:11; content:"=l3S"; fast_pattern; http_uri; offset:26; depth:4; content:!"Referer|3a|"; http_header; pcre:"/^\/index\.php\?[A-Za-z0-9_-]{15}=l3S/U"; classtype:trojan-activity; sid:2020720; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS RIG Exploit URI Struct March 20 2015"; flow:established,to_server; urilen:>220; content:"/index.php?"; http_uri; depth:11; content:"=l3S"; fast_pattern; http_uri; offset:26; depth:4; content:"/?"; http_header; content:"=l3S"; http_header; pcre:"/^\/index\.php\?[A-Za-z0-9_-]{15}=l3S/U"; classtype:trojan-activity; sid:2020721; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS RIG Exploit URI Struct March 20 2015"; flow:established,to_server; urilen:>220; content:"/index.php?"; http_uri; depth:11; content:"=l3S"; fast_pattern; http_uri; offset:26; depth:4; content:"/?"; http_header; content:"=l3S"; http_header; pcre:"/^\/index\.php\?[A-Za-z0-9_-]{15}=l3S/U"; flowbits:set,ET.RIGEKExploit; classtype:trojan-activity; sid:2020721; rev:2;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS RIG Landing URI Struct March 20 2015"; flow:established,to_server; content:"/?"; http_uri; depth:2; content:"=l3S"; http_uri; fast_pattern; offset:17; depth:4; pcre:"/^\/\?[A-Za-z0-9_-]{15}=l3S/U"; classtype:trojan-activity; sid:2020722; rev:2;)
@@ -6532,7 +6520,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evi
 alert tcp $EXTERNAL_NET [443,4443] -> $HOME_NET any (msg:"ET CURRENT_EVENTS Possible Upatre/Dyre/Kegotip SSL Cert Sept 8 2015"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|02 09 00|"; distance:17; within:3; content:"|0b 30 09 06 03 55 04 06 13 02 55 53|"; distance:0; content:"|55 04 08|"; distance:0; content:"|55 04 07|"; distance:0; content:"|55 04 0a|"; distance:0; byte_extract:1,1,olength,relative; content:!"|2e|"; within:olength; content:!"|20|"; within:olength; pcre:"/^[a-zA-Z0-9]+[01]/R"; content:"|55 04 03|"; byte_test:1,>,0x40,2,relative; byte_test:1,<,0x5B,2,relative; content:"|55 04 0b|"; distance:0; byte_extract:1,1,oulength,relative; content:!"|2e|"; within:oulength; content:!"|20|"; within:oulength; pcre:"/^[a-zA-Z0-9]+[01]/R"; content:"|55 04 03|"; content:"|2a 86 48 86 f7 0d 01 09 01|"; distance:0; content:!"support@"; distance:0; pcre:"/^.{2}[A-Za-z][a-z]*?@[a-z]+\.com0/R"; content:".com0"; fast_pattern:only; reference:md5,52faadf69c492e5bea1b3ad77fd7e8b1; reference:url,us-cert.gov/ncas/alerts/TA14-300A; classtype:trojan-activity; sid:2021749; rev:5;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS SUSPICIOUS Likely Neutrino EK or other EK IE Flash request to DYNDNS set non-standard filename"; flow:established,to_server; content:"x-flash-version|3a|"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x20[^\r\n]+\.(?:g[aq]|d(?:yndns\.[a-z]{2,3}|esi)|xyz|ca?fe?|ml|t(?:k|op)|eu|pw|s(?:u|pace)|work)(?:\x3a\d{1,5})?\r$/Hmi"; content:!"/crossdomain.xml"; http_header; content:!".swf"; http_header; nocase; content:!".flv"; http_header; nocase; content:!"[DYNAMIC]"; http_header; content:!".swf"; nocase; http_uri; content:!".flv"; nocase; http_uri; content:!"/crossdomain.xml"; http_uri; content:!"|0d 0a|Cookie|3a|"; classtype:trojan-activity; sid:2021752; rev:12;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS SUSPICIOUS Likely Neutrino EK or other EK IE Flash request to DYNDNS set non-standard filename"; flow:established,to_server; content:"x-flash-version|3a|"; http_header; fast_pattern:only; pcre:"/^Host\x3a\x20[^\r\n]+\.(?:d(?:yndns\.[a-z]{2,3}|esi)|c(?:ricket|a?fe?)|(?:lin|wor)k|s(?:u|pace)|accountant|t(?:k|op)|g[aq]|xyz|eu|ml|pw)(?:\x3a\d{1,5})?\r$/Hmi"; content:!"/crossdomain.xml"; http_header; content:!".swf"; http_header; nocase; content:!".flv"; http_header; nocase; content:!"[DYNAMIC]"; http_header; content:!".swf"; nocase; http_uri; content:!".flv"; nocase; http_uri; content:!"/crossdomain.xml"; http_uri; content:!"|0d 0a|Cookie|3a|"; classtype:trojan-activity; sid:2021752; rev:13;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS possible Sofacy encrypted binary (1)"; flow:established,to_client; file_data; content:"|57 46 e8 67 27 3d 66 1a|"; within:8; flowbits:set,et.exploitkitlanding; reference:url,labsblog.f-secure.com/2015/09/08/sofacy-recycles-carberp-and-metasploit-code/; reference:url,www.isightpartners.com/2015/07/microsoft-office-zero-day-cve-2015-2424-leveraged-by-tsar-team/; classtype:trojan-activity; sid:2021755; rev:1;)
@@ -6796,24 +6784,6 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Pos
 alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Netsolhost SSL Proxying - Possible Phishing"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|secure|0a|netsolhost|03|com|00|"; nocase; distance:0; fast_pattern; classtype:trojan-activity; sid:2022136; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Angler encrypted payload Nov 23 (1)"; flow:established,to_client; file_data; content:"|01 d2 02 8b e7 98 09 18|"; distance:4; within:8; classtype:trojan-activity; sid:2022138; rev:1;)
-
-#
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Angler encrypted payload Nov 23 (2)"; flow:established,to_client; file_data; content:"|29 26 9a 62 39 55 b6 0d|"; distance:4; within:8; classtype:trojan-activity; sid:2022139; rev:1;)
-
-#
-#alert tcp [$EXTERNAL_NET,!208.85.44.0/24] $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Angler encrypted payload Nov 23 (3)"; flow:established,to_client; file_data; content:"|dc 18 02|"; distance:4; within:3; pcre:"/^(?:\x62|\x1b)/R"; classtype:trojan-activity; sid:2022140; rev:3;)
-
-#
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Angler encrypted payload Nov 23 (4)"; flow:established,to_client; file_data; content:"|f4 ec 9a|"; distance:4; within:4; pcre:"/^(?:\x8b|\xf2)/R"; classtype:trojan-activity; sid:2022141; rev:2;)
-
-#
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Angler encrypted payload Nov 23 (5)"; flow:established,to_client; file_data; content:"|63 86 34 11 a3 ae 83 1e|"; distance:4; within:8; classtype:trojan-activity; sid:2022142; rev:1;)
-
-#
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Angler encrypted payload Nov 23 (6)"; flow:established,to_client; file_data; content:"|94 ae 9f 55 3d 25 7f 7d|"; distance:4; within:8; classtype:trojan-activity; sid:2022143; rev:1;)
-
-#
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Generic Phishing Landing Uri Nov 25"; flow:to_server,established; content:"GET"; http_method; content:".php?usernms="; http_uri; fast_pattern; pcre:"/\.php\?usernms=[^@]+@[^\r\n]+$/Ui"; classtype:trojan-activity; sid:2022187; rev:1;)
 
 #
@@ -6901,7 +6871,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evi
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Possible Keitaro TDS Redirect"; flow:established,from_server; content:"302"; http_stat_code; content:"LOCATION|3a 20|http"; http_header; content:"Content-Type|3a 20|text/html|3b 20|charset=utf-8|0d 0a|"; http_header; content:"Expires|3a 20|Thu, 21 Jul 1977 07|3a|30|3a|00 GMT|0d 0a|"; http_header; fast_pattern:5,20; pcre:"/Date\x3a\x20(?P<dstring>[^\r\n]+)\r\n.*?Last-Modified\x3a\x20(?P=dstring)\r\n/Hs"; content:"Cache-Control|3a 20|max-age=0|0d 0a|Pragma|3a 20|no-cache|0d 0a|"; classtype:bad-unknown; sid:2022466; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS EITest Evil Redirect Leading to EK Feb 01 2016"; flow:established,from_server; file_data; content:"|7a 2d 69 6e 64 65 78 3a 2d 31 3b 20 6c 65 66 74 3a 33 30 30 70 78 3b 20 6f 70 61 63 69 74 79 3a 30 3b 66 69 6c 74 65 72 3a 61 6c 70 68 61 28 6f 70 61 63 69 74 79 3d 30 29 3b 20 2d 6d 6f 7a 2d 6f 70 61 63 69 74 79 3a 30 3b 22 3e|"; fast_pattern:56,20; content:"|63 6c 73 69 64 3a 64 32 37 63 64 62 36 65 2d 61 65 36 64 2d 31 31 63 66 2d 39 36 62 38 2d 34 34 34 35 35 33 35 34 30 30 30 30|"; nocase; distance:0; reference:url,malware-traffic-analysis.net/2016/01/26/index.html; classtype:trojan-activity; sid:2022479; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS EITest Evil Redirect Leading to EK Feb 01 2016"; flow:established,from_server; file_data; content:"|7a 2d 69 6e 64 65 78 3a 2d 31 3b|"; content:"|6f 70 61 63 69 74 79 3a 30 3b 66 69 6c 74 65 72 3a 61 6c 70 68 61 28 6f 70 61 63 69 74 79 3d 30 29 3b 20 2d 6d 6f 7a 2d 6f 70 61 63 69 74 79 3a 30 3b 22 3e|"; fast_pattern:32,20; distance:0; content:"|63 6c 73 69 64 3a 64 32 37 63 64 62 36 65 2d 61 65 36 64 2d 31 31 63 66 2d 39 36 62 38 2d 34 34 34 35 35 33 35 34 30 30 30 30|"; nocase; within:500; reference:url,malware-traffic-analysis.net/2016/01/26/index.html; classtype:trojan-activity; sid:2022479; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evil Redirect Compromised WP Feb 01 2016"; flow:established,from_server; file_data; content:"|5c 22 5d 5d 2e 6a 6f 69 6e 28 5c 22 5c 22 29 3b 22 29 29 3b 2f 2a|"; fast_pattern:2,20; pcre:"/^\s*[a-f0-9]{32}\s*\x2a\x2f/R"; reference:url,blog.sucuri.net/2016/02/massive-admedia-iframe-javascript-infection.html; classtype:trojan-activity; sid:2022481; rev:1;)
@@ -6955,5 +6925,161 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Fak
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Dridex DL Pattern Feb 18 2016"; flow:established,to_server; content:"GET"; http_method; content:".exe?."; http_uri; fast_pattern:only; pcre:"/\.exe\?\.\d+$/U"; content:"MSIE 7.0|3b| Windows NT"; http_header; content:!"Referer|3a|"; http_header; classtype:trojan-activity; sid:2022549; rev:1;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Malicious Macro DL EXE Feb 2016"; flow:established,to_server; content:"GET"; http_method; content:".exe"; http_uri; nocase; fast_pattern:only; content:"Accept|3a 20|*/*|0d 0a|"; depth:13; http_header; content:"Accept-Encoding|3a 20|gzip, deflate|0d 0a|"; http_header; content:"User-Agent|3a 20|Mozilla/4.0 (compatible|3b| MSIE 7.0|3b| Windows NT"; http_header; content:!"Referer|3a|"; http_header; pcre:"/\/(?:(?:s(?:ystem\/(?:logs|engine)\/[^\x2f]+?|alam|can)|p(?:(?:rogcicic|atr)ic|osts?\/[a-z0-9]+)|u(?:swinz(?:pp)?|pdate)|(?:factur|offic)e|Ozonecrytedserver|a(?:salam|dobe)|(?:dbus|ve)t|k(?:be|is)|ArfBtxz|notepad|[a-z]|calc|etna|link|\d+)\.exe$|(?:(?=[a-z0-9]*?[74])(?=[a-z0-9]*?[63])(?=[a-z0-9]*?[gf])[a-z0-9]{3,31}\+|PasswordRecovery|RemoveWAT|Dejdisc|Host\d+|Msword)\.exe)/Ui"; classtype:trojan-activity; sid:2022550; rev:4;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Malicious Macro DL EXE Feb 2016"; flow:established,to_server; content:"GET"; http_method; content:".exe"; http_uri; nocase; fast_pattern:only; content:"Accept|3a 20|*/*|0d 0a|"; depth:13; http_header; content:"Accept-Encoding|3a 20|gzip, deflate|0d 0a|"; http_header; content:"User-Agent|3a 20|Mozilla/4.0 (compatible|3b| MSIE 7.0|3b| Windows NT"; http_header; content:!"Referer|3a|"; http_header; content:!"Cookie|3a|"; pcre:"/(?:\/(?:(?:p(?:lugins\/content\/vote\/\.ssl\/[a-z0-9]|a(?:nel\/includes\/[^\x2f]+|tric)|osts?\/[a-z0-9]+|rogcicicic)|s(?:ystem\/(?:logs|engine)\/[^\x2f]+?|e(?:rv(?:au|er)|ct)|gau\/.*?|alam|ucks|can|ke)|(?=[a-z]*[0-9])(?=[0-9]*[a-z])(?!setup\d+\.exe$)[a-z0-9]{5,10}|a(?:d(?:min\/images\/\w+|obe)|salam|live|us)|m(?:edia\/files\/\w+|a(?:cros?|rch)|soffice)|d(?:o(?:c(?:\/[a-z0-9]+)?|ne)|bust)|(?:~.+?\/\.[^\x2f]+|\.css)\/.+?|in(?:voice\/[^\x2f]+|fos?)|c(?:onfig|hris|alc)|u(?:swinz\w+|pdate)|xml\/load\/[^\x2f]+|(?:[Dd]ocumen|ve)t|Ozonecrytedserver|w(?:or[dk]|insys)|t(?:mp\/.+?|est)|fa(?:cture|soo)|n(?:otepad|ach)|k(?:be|ey|is)|ArfBtxz|office|yhaooo|[a-z]|etna|link|\d+)\.exe$|(?:(?=[a-z0-9]*?[3456789][a-z0-9]*?[3456789])(?=[a-z0-9]*?[h-z])[a-z0-9]{3,31}\+|PasswordRecovery|RemoveWAT|Dejdisc|Host\d+|Msword)\.exe)|(?:^\/(?:image\/.+?\/[^\x2f]+|x\/setup)|keem)\.exe$)/Ui"; classtype:trojan-activity; sid:2022550; rev:10;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evil Redirect Leading to EK Feb 23 2016"; flow:established,from_server; file_data; content:"|29 7b 72 65 74 75 72 6e 20 4d 61 74 68 2e 72 6f 75 6e 64 28 28 28 28 28|"; content:"|29 7b 72 65 74 75 72 6e 20 4d 61 74 68 2e 72 6f 75 6e 64 28 28 28 28 28|"; distance:0; content:"|3d 66 75 6e 63 74 69 6f 6e 28 29 7b 72 65 74 75 72 6e|"; pcre:"/^\s+\d+\x3b\s*\}/R"; content:"|5d 3d 53 74 72 69 6e 67 2e 66 72 6f 6d 43 68 61 72 43 6f 64 65|"; fast_pattern; classtype:trojan-activity; sid:2022565; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Malicious Macro EXE DL AlphaNumL"; flow:established,to_server; urilen:10<>40; content:".exe"; fast_pattern; http_uri; offset:5; pcre:"/\/(?=[0-9]*?[a-z]*?[a-z0-9)(?=[a-z0-9]*[0-9][a-z]*[0-9][a-z0-9]*\.exe)(?!setup\d+\.exe)[a-z0-9]{5,15}\.exe/U"; content:"Accept|3a 20|*/*|0d 0a|"; depth:13; http_header; content:"Accept-Encoding|3a 20|gzip, deflate|0d 0a|"; http_header; content:"User-Agent|3a 20|Mozilla/4.0 (compatible|3b| MSIE 7.0|3b| Windows NT"; http_header; content:!"Referer|3a|"; http_header; classtype:trojan-activity; sid:2022566; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evil Redirect Leading to EK Feb 25 2016"; flow:established,from_server; file_data; content:"|36 31 2c 39 31 2c 33 34 2c 31 31 34 2c 31 31 38 2c 35 38 2c 34 39 2c 34 39 2c 33 34 2c 34 34 2c 33 34 2c 37 37 2c 38 33 2c 37 33 2c 36 39 2c 33 34 2c 34 34 2c 39 33 2c 35 39|"; content:"|39 39 2c 31 30 34 2c 39 37 2c 31 31 34 2c 36 37 2c 31 31 31 2c 31 30 30 2c 31 30 31 2c 36 35 2c 31 31 36|"; classtype:trojan-activity; sid:2022567; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Landing Feb 26"; flow:to_server,established; content:"GET"; http_method; content:".html"; http_uri; content:"rackcdn.com|0d 0a|"; http_header; fast_pattern; pcre:"/^\/[a-zA-Z0-9]+\.html$/U"; pcre:"/\x0d\x0aHost\x3a\x20[a-f0-9]{20}-[a-f0-9]{32}\.r[0-9]{1,2}\.cf[0-9]\.rackcdn\.com\x0d\x0a/H"; classtype:trojan-activity; sid:2022574; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain M1 Feb 29"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"helpdesk"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022575; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain M2 Feb 29"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"errorcode"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022576; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain M3 Feb 29"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"yourcomputerhave"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022577; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Phishing Landing Obfuscation Mar 1"; flow:from_server,established; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"unescape=function"; fast_pattern; content:"replace(new RegExp(|22|%26|22|, |22|g|22|), |22|&|22|)|3b|"; nocase; distance:0; content:"replace(new RegExp(|22|%3B|22|, |22|g|22|), |22 3b 22|)|3b|"; nocase; distance:0; content:"document.write"; nocase; distance:0; content:"replace(|27|<!--?--><?"; nocase; distance:0; reference:url,proofpoint.com/us/threat-insight/post/Obfuscation-Techniques-In-Phishing-Attacks; classtype:trojan-activity; sid:2022578; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET CURRENT_EVENTS MySQL Malicious Scanning 1"; flow:to_server; content:"|00 03|"; offset:3; depth:2; content:"GRANT ALTER, ALTER ROUTINE"; distance:0; nocase; within:30; content:"TO root@% WITH"; fast_pattern:only; reference:url,isc.sans.edu/diary/Quick+Analysis+of+a+Recent+MySQL+Exploit/20781; classtype:bad-unknown; sid:2022579; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET CURRENT_EVENTS MySQL Malicious Scanning 2"; flow:to_server; content:"|00 03|"; offset:3; depth:2; content:"set global log_bin_trust_function_creators=1"; fast_pattern:only; reference:url,isc.sans.edu/diary/Quick+Analysis+of+a+Recent+MySQL+Exploit/20781; classtype:bad-unknown; sid:2022580; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"ET CURRENT_EVENTS MySQL Malicious Scanning 3"; flow:to_server; content:"|00 03|"; offset:3; depth:2; content:"select unhex("; fast_pattern; distance:0; content:"into dumpfile|20 27|"; distance:0; reference:url,isc.sans.edu/diary/Quick+Analysis+of+a+Recent+MySQL+Exploit/20781; classtype:bad-unknown; sid:2022581; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Fake AV Phone Scam Domain M1 Mar 3"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"errorfound"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022591; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Fake AV Phone Scam Domain M2 Mar 3"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"unattendedfile"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022592; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Fake AV Phone Scam Domain M3 Mar 3"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"internetsituation"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022593; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Possible Phishing Landing - Data URI Inline Javascript Mar 7"; flow:established,to_client; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"data|3a|text/html|3b|"; fast_pattern; content:"|3b|base64,"; distance:0; within:21; pcre:"/^[^\x22|\x27]+<\s*?script(?:(?!<\s*?\/\s*?script).)+?data\x3atext\/html\x3b(?:charset=UTF-8\x3b)?base64\x2c/si"; reference:url,proofpoint.com/us/threat-insight/post/Obfuscation-Techniques-In-Phishing-Attacks; classtype:trojan-activity; sid:2022597; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Microsoft Fake Support Phone Scam Mar 7"; flow:from_server,established; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"<title>Microsoft"; nocase; content:"function myFunction()"; pcre:"/^\s*?\{\s*?setInterval\s*?\(\s*?function/Rsi"; content:"alert2.mp3"; fast_pattern; nocase; distance:0; classtype:trojan-activity; sid:2022602; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic Fake Support Phone Scam Mar 8"; flow:established,from_server; file_data; content:"onload=|22|myFunction|28 29 3b 22|"; fast_pattern; nocase; content:"onclick=|22|myFunction|28 29 3b 22|"; nocase; content:"onkeydown=|22|myFunction|28 29 3b 22|"; nocase; content:"onunload=|22|myFunction|28 29 3b 22|"; nocase; content:"<audio"; nocase; pcre:"/^[^\r\n]+autoplay=[\x22\x27]autoplay/Rsi"; content:"TOLL FREE"; nocase; classtype:trojan-activity; sid:2022603; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Successful Enom Phish Mar 8"; flow:to_server,established; content:"POST"; http_method; content:"enom"; http_header; nocase; content:"ctl00_ScriptManager"; depth:19; nocase; fast_pattern; http_client_body; content:"user="; nocase; http_client_body; distance:0; content:"pass"; nocase; distance:0; http_client_body; content:"Login=Login"; nocase; distance:0; http_client_body; reference:url,welivesecurity.com/2016/03/07/beware-spear-phishers-hijack-website/; classtype:trojan-activity; sid:2022604; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic Fake Support Phone Scam Mar 9 M1"; flow:established,from_server; file_data; content:"Callpixels"; fast_pattern; nocase; pcre:"/^\s*?\.\s*?Campaign\s*?\(\s*?\{\s*?campaign_key/Rsi"; content:"<audio"; nocase; pcre:"/^[^\r\n]+autoplay=[\x22\x27]autoplay/Rsi"; content:"TOLL FREE"; nocase; classtype:trojan-activity; sid:2022605; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic Fake Support Phone Scam Mar 9 M2"; flow:established,from_server; file_data; content:"//Flag we have not"; fast_pattern; nocase; content:"//The location of the page that we will load on a second pop"; nocase; distance:0; content:"//figure out what to use for default number"; nocase; distance:0; content:"//allow for the traffic source to send in their own default number"; nocase; distance:0; content:"//if no unformatted number just use it"; nocase; distance:0; classtype:trojan-activity; sid:2022606; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Generic Fake Support Phone Scam Mar 9 M3"; flow:established,from_server; file_data; content:"<title>ALERT"; fast_pattern; content:"makeNewPosition"; nocase; distance:0; content:"animateDiv"; nocase; distance:0; content:"div.fakeCursor"; nocase; distance:0; content:"<audio autoplay"; nocase; distance:0; classtype:trojan-activity; sid:2022607; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Fake Virus Phone Scam Landing Mar 9 M2"; flow:to_client,established; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"function myFunction"; nocase; fast_pattern; content:"MICROSOFT COMPUTER HAS BEEN BLOCKED"; nocase; distance:0; content:"Windows System Alert"; nocase; distance:0; content:"Contact Microsoft"; nocase; distance:0; classtype:trojan-activity; sid:2022608; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Chase Phishing Domain Mar 14"; flow:to_server,established; content:"GET"; http_method; content:"chase.com"; http_header; fast_pattern; content:!"Referer|3a 20|"; http_header; content:!"chase.com|0d 0a|"; http_header; pcre:"/^Host\x3a[^\r\n]+chase\.com[^\r\n]{20,}\r\n/Hmi"; threshold: type limit, count 1, track by_src, seconds 30; classtype:trojan-activity; sid:2022615; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Apple Phishing Domain Mar 14"; flow:to_server,established; content:"GET"; http_method; content:"apple.com"; http_header; fast_pattern; content:!"Referer|3a 20|"; http_header; content:!"apple.com|0d 0a|"; http_header; pcre:"/^Host\x3a[^\r\n]+apple\.com[^\r\n]{20,}\r\n/Hmi"; threshold: type limit, count 1, track by_src, seconds 30; classtype:trojan-activity; sid:2022616; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible USAA Phishing Domain Mar 14"; flow:to_server,established; content:"GET"; http_method; content:"usaa.com"; http_header; fast_pattern; content:!"Referer|3a 20|"; http_header; content:!"usaa.com|0d 0a|"; http_header; pcre:"/^Host\x3a[^\r\n]+usaa\.com[^\r\n]{20,}\r\n/Hmi"; threshold: type limit, count 1, track by_src, seconds 30; classtype:trojan-activity; sid:2022617; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Paypal Phishing Domain Mar 14"; flow:to_server,established; content:"GET"; http_method; content:"paypal.com"; http_header; fast_pattern; content:!"Referer|3a 20|"; http_header; content:!"paypal.com|0d 0a|"; http_header; pcre:"/^Host\x3a[^\r\n]+paypal\.com[^\r\n]{20,}\r\n/Hmi"; threshold: type limit, count 1, track by_src, seconds 30; classtype:trojan-activity; sid:2022618; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Fake AV Phone Scam Landing Mar 15"; flow:established,to_client; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"<title>Security"; fast_pattern; nocase; content:"function DetectMobile"; nocase; distance:0; content:"function myFunction"; nocase; distance:0; content:"Please call"; nocase; distance:0; classtype:trojan-activity; sid:2022619; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evil Redirector Leading to EK Mar 15 2016 M1"; flow:established,from_server; file_data; content:"|2f 2a 67 6c 6f 62 61 6c 20 4a 53 4f 4e 32 3a 74 72 75 65 20 2a 2f 0a 64 6f 63 75 6d 65 6e 74 2e 77 72 69 74 65 28 22 3c 64 69 76 20 73 74 79 6c 65 3d 27 77 69 64 74 68 3a 20 33 30 30 70 78 3b 20 68 65 69 67 68 74 3a 20 33 30 30 70 78 3b 20 70 6f 73 69 74 69 6f 6e 3a 20 61 62 73 6f 6c 75 74 65 3b 20 6c 65 66 74 3a 2d 35 30 30 70 78 3b 20 74 6f 70 3a 20 2d 35 30 30 70 78 3b 27 3e 3c 69 66 72 61 6d 65 20 73 72 63 3d|"; content:"|77 69 64 74 68 3d 27 32 35 30 27 20 68 65 69 67 68 74 3d 27 32 35 30 27 3e 3c 2f 69 66 72 61 6d 65 3e 3c 2f 64 69 76 3e 22 29 3b|"; distance:0; isdataat:!10,relative; classtype:trojan-activity; sid:2022620; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Evil Redirector Leading to EK Mar 15 2016 M2"; flow:established,to_server; content:"/track/k.track?wd="; http_uri; depth:18; content:"fid="; http_uri; content:"rds="; http_uri; classtype:trojan-activity; sid:2022621; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Likely Evil Macro EXE DL mar 15 2016"; flow:established,to_server; content:"/image/"; http_uri; depth:13; content:".exe"; http_uri; fast_pattern:only; pcre:"/^\/image\/(?:data|flags)\/[^\x2f]+\.exe$/Ui"; content:!"Referer|3a|"; http_header; classtype:trojan-activity; sid:2022622; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Mar 15"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"suspiciousactivity"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022625; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evil Redirect Leading to EK Mar 18 2016"; flow:from_server,established; file_data; content:"|52 65 67 45 78 70 28 27|"; content:"|27 2b 27 3d 28 5b 5e 3b 5d 29 7b 31 2c 7d 27 29 3b|"; distance:32; within:17; content:"|3b 64 2e 73 65 74 44 61 74 65 28 64 2e 67 65 74 44 61 74 65 28 29 2b 31 29 3b|"; content:"|3c 69 66 72 61 6d 65|"; distance:0; classtype:trojan-activity; sid:2022628; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evil Redirector Leading to EK Mar 19 2016 M1"; flow:established,from_server; file_data; content:"|2f 2a 67 6c 6f 62 61 6c 20 4a 53 4f 4e 32 3a 74 72 75 65 20 2a 2f|"; content:"|28 22 3c 64 69 76 20 73 74 79 6c 65 3d 27 77 69 64 74 68 3a 20 33 30 30 70 78 3b 20 68 65 69 67 68 74 3a 20 33 30 30 70 78 3b 20 70 6f 73 69 74 69 6f 6e 3a 20 61 62 73 6f 6c 75 74 65 3b 20 6c 65 66 74 3a 2d 35 30 30 70 78 3b 20 74 6f 70 3a 20 2d 35 30 30 70 78 3b 27 3e 3c 69 66 72 61 6d 65 20 73 72 63 3d 27 68 74 74 70|"; distance:0; content:"|77 69 64 74 68 3d 27 32 35 30 27 20 68 65 69 67 68 74 3d 27 32 35 30 27 3e 3c 2f 69 66 72 61 6d 65 3e 3c 2f 64 69 76 3e 22 29 3b|"; distance:0; classtype:trojan-activity; sid:2022629; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Evil Redirector Leading to EK Mar 19 2016 M2"; flow:established,to_server; content:"/imp/one.trk?wid="; http_uri; classtype:trojan-activity; sid:2022630; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Mar 21 M1"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"errorunauthorized"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022631; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Mar 21 M2"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"drivercrashed"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022632; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Mar 21 M3"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"computer-is-locked"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022633; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Evil Redirector Leading To EK Mar 22 2016"; flow:established,from_server; file_data; content:"|6d 6f 64 75 6c 65 2e 65 78 70 6f 72 74 73 2e 55 41 20 3d 20 55 41|"; content:"|2e 73 70 6c 69 74 28 22 2c 22 29 2c 20 69 3d 30 2c 20 6b 3b 20 66 6f 72 20 28 3b 20 6b 20 3d 20 61 5b 69 5d 2c 20 69 20 3c 20 61 2e 6c 65 6e 67 74 68 3b 20 69 2b 2b 29 20 72 2e 70 75 73 68 28|"; content:"|2e 6c 65 6e 67 74 68 3b 20 69 2b 2b 29 20 7b 20 74 72 79 20 7b 20 6e 65 77 20 41 63 74 69 76 65 58 4f 62 6a 65 63 74 28|"; classtype:trojan-activity; sid:2022635; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Mar 23"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"unauthorized-transaction"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022648; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Fake AV Phone Scam Mar 23"; flow:established,to_client; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"<title>Microsoft"; fast_pattern; nocase; content:"function myFunction"; nocase; distance:0; content:"setInterval"; nocase; distance:0; pcre:"/^\s*?\(\s*?function\s*?\(\s*?\)\s*?\{\s*?alert\s*?\(/Rsi"; content:"<audio"; nocase; distance:0; classtype:trojan-activity; sid:2022649; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS W32/Dridex Binary Download Mar 23 2016"; flow:to_server,established; content:"GET"; http_method; content:"/home.php"; http_uri; fast_pattern; content:"Accept|3a 20|*/*|0d 0a|Accept-Encoding|3 a20|gzip, deflate|0d 0a|"; http_header; content:"MSIE 7.0"; http_header; content:!"Referer|3a 20|"; http_header; pcre:"/\/home\.php$/U"; reference:md5,2f32bf996e093d5a4107d6daa6c51ec4; classtype:trojan-activity; sid:2022650; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Fake Flash Update Mar 23"; flow:established,to_client; file_data; content:"<title>Flash"; nocase; fast_pattern; content:"#prozor"; nocase; distance:0; content:"#dugme"; nocase; distance:0; content:"Latest version of Adobe"; nocase; distance:0; classtype:trojan-activity; sid:2022651; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Likely Evil EXE download from WinHttpRequest non-exe extension"; flow:established,to_client; file_data; content:"MZ"; within:2; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; flowbits:isset,et.MS.WinHttpRequest.no.exe.request; classtype:trojan-activity; sid:2022653; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Malicious Macro DL EXE Feb 2016 (WinHTTPRequest)"; flow:established,to_server; content:"GET"; http_method; content:".exe"; http_uri; nocase; fast_pattern:only; content:"WinHttp.WinHttpRequest."; http_header;  pcre:"/(?:\/(?:(?:p(?:lugins\/content\/vote\/\.ssl\/[a-z0-9]|a(?:nel\/includes\/[^\x2f]+|tric)|osts?\/[a-z0-9]+|rogcicicic)|s(?:ystem\/(?:logs|engine)\/[^\x2f]+?|e(?:rv(?:au|er)|ct)|gau\/.*?|alam|ucks|can|ke)|(?=[a-z]*[0-9])(?=[0-9]*[a-z])(?!setup\d+\.exe$)[a-z0-9]{5,10}|a(?:d(?:min\/images\/\w+|obe)|salam|live|us)|m(?:edia\/files\/\w+|a(?:cros?|rch)|soffice)|d(?:o(?:c(?:\/[a-z0-9]+)?|ne)|bust)|(?:~.+?\/\.[^\x2f]+|\.css)\/.+?|in(?:voice\/[^\x2f]+|fos?)|c(?:onfig|hris|alc)|u(?:swinz\w+|pdate)|xml\/load\/[^\x2f]+|(?:[Dd]ocumen|ve)t|Ozonecrytedserver|w(?:or[dk]|insys)|t(?:mp\/.+?|est)|fa(?:cture|soo)|n(?:otepad|ach)|k(?:be|ey|is)|ArfBtxz|office|yhaooo|[a-z]|etna|link|\d+)\.exe$|(?:(?=[a-z0-9]*?[3456789][a-z0-9]*?[3456789])(?=[a-z0-9]*?[h-z])[a-z0-9]{3,31}\+|PasswordRecovery|RemoveWAT|Dejdisc|Host\d+|Msword)\.exe)|(?:^\/(?:image\/.+?\/[^\x2f]+|x\/setup)|keem)\.exe$)/Ui"; classtype:trojan-activity; sid:2022658; rev:3;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Evil Redirector Leading to EK EITest Mar 27"; flow:established,to_server; urilen:60<>250; content:!"="; http_uri; content:!"."; http_uri; content:!"?"; http_uri; content:"x-flash-version|3a|"; fast_pattern; http_header; content:!".swf"; http_header; nocase; content:!".flv"; http_header; nocase; content:!"Cookie|3a|"; content:!"[DYNAMIC]"; http_header; pcre:"/^\/(?=[a-z][a-z\x2f]*\d[a-z\x2f]+\d[a-z\x2f]+\d[a-z\x2f]+\d[a-z\x2f]+\d)[a-z0-9\x2f]+\/$/U"; classtype:trojan-activity; sid:2022666; rev:4;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Possible Evil Redirector Leading to EK EITest Mar 27 M2"; flow:established,to_server; urilen:60<>250; content:!"="; http_uri; content:!"."; http_uri; content:!"?"; http_uri; content:"x-flash-version|3a|"; fast_pattern; http_header; content:!".swf"; http_header; nocase; content:!".flv"; http_header; nocase; content:!"[DYNAMIC]"; http_header; content:!"Cookie|3a|"; pcre:"/^\/(?=[a-z][a-z\x2f]*-[a-z\x2f]+-)[a-z\x2f-]+\/$/U"; classtype:trojan-activity; sid:2022682; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CURRENT_EVENTS Likely Evil Macro EXE DL mar 28 2016"; flow:established,to_server; content:"HEAD"; http_method; content:"User-Agent|3a 20|Microsoft BITS/7.5|0d 0a|"; http_header; fast_pattern:12,20; content:".exe"; http_uri; content:!"Referer|3a|"; http_header; pcre:"/^Host\x3a\x20[^\r\n]+(?:xyz|pw)\r?$/Hmi"; reference:md5,d599a63fac0640c21272099f39020fac; classtype:trojan-activity; sid:2022686; rev:3;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Mar 30 M1"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"diskissue"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022690; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Mar 30 M2"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"avirus"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022691; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Fake AV Phone Scam Landing Apr 1"; flow:established,to_client; file_data; content:"<title>SYSTEM ERROR WARNING"; fast_pattern; nocase; content:"function loadNumber"; nocase; distance:0; content:"campaign_key:"; nocase; distance:0; classtype:trojan-activity; sid:2022695; rev:1;)
+
+#
+alert udp $HOME_NET any -> any 53 (msg:"ET CURRENT_EVENTS Possible Fake AV Phone Scam Long Domain Apr 4"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"callasap"; fast_pattern; distance:0; nocase; pcre:"/^[a-z0-9\x02-\x50]{100,}\x00\x00\x01\x00\x01$/Rsi"; classtype:trojan-activity; sid:2022696; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET CURRENT_EVENTS Fake AV Phone Scam Landing Apr 4"; flow:to_client,established; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"catchControlKeys"; fast_pattern; content:"// Ctrl+U"; nocase; distance:0; content:"// Ctrl+C"; nocase; distance:0; content:"// Ctrl+A"; nocase; distance:0; content:"//e.cancelBubble is supported by IE"; nocase; distance:0; content:"//e.stopPropagation works in Firefox"; nocase; distance:0; classtype:trojan-activity; sid:2022697; rev:1;)
 

@@ -10,6 +10,7 @@ libopenvas8                                  8.0.4-1~bpo80+1
 openvas-cli                                  1.4.2-1~bpo80+1
 openvas-manager                              6.0.5-1~bpo80+1
 openvas-scanner                              5.0.4-1~bpo80+1
+libnet-netmask-perl                          1.9021-1
 # OSSEC
 ossec-hids                                   2.8.2-3~bpo80+1
 # Apache

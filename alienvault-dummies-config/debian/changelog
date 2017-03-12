@@ -1,8 +1,14 @@
-alienvault-dummies-config (5.2.2) stable; urgency=low
+alienvault-dummies-config (5.2.3) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 11 Feb 2016 06:44:39 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 21 Mar 2016 03:56:25 -0400
+
+alienvault-dummies-config (5.2.3) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 11 Feb 2016 06:45:33 -0500
 
 alienvault-dummies-config (5.2.2) unstable; urgency=low
 

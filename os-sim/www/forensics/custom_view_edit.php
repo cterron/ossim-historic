@@ -293,7 +293,7 @@ elseif ($save == 'delete')
         $deleted = 1;
     }
 }
-elseif ($save == 'report' && Session::am_i_admin())
+elseif ($save == 'report')
 {
     if ($msg == '')
     {
@@ -421,7 +421,7 @@ if ($opensource)
                 dividerLocation: 0.5,
             });
             <?php
-            if (Session::am_i_admin() && $forcesave)
+            if ($forcesave)
             {
                 ?>
                 document.fcols.save.value='report';document.fcols.selected_cols.value=getselectedcombovalue('cols');document.fcols.submit();
@@ -557,7 +557,7 @@ else
                     <?php
                 }
 
-                if (Session::am_i_admin() && $edit && !$opensource)
+                if ($edit && !$opensource)
                 {
                     ?>
                     <input type="button"  class="small av_b_secondary" onclick="document.fcols.save.value='report';document.fcols.selected_cols.value=getselectedcombovalue('cols');document.fcols.submit()" value="<?=_("Save as Report Module")?>">

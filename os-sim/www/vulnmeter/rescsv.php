@@ -496,7 +496,7 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
     }
 
 
-$output_name = "ScanResult_" . $scanyear . $scanmonth . $scanday . "_" . str_replace(" ","",$job_name) . ".xls";
+$output_name = "ScanResult_" . $scanyear . $scanmonth . $scanday . "_" . str_replace(" ","",$job_name) . ".xlsx";
 $output_name = preg_replace( '/-_/', "", $output_name);
 
 $objPHPExcel->setActiveSheetIndex(0)->getStyle('H')->getAlignment()->setWrapText(TRUE);
@@ -529,7 +529,7 @@ header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
 header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
 header ('Pragma: public'); // HTTP/1.0
 
-$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
 $objWriter->save('php://output');
 
 $dbconn->disconnect();

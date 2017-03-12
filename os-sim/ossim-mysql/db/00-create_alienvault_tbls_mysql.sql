@@ -5189,7 +5189,7 @@ BEGIN
     OPEN cur4;
 
     REPEAT
-        FETCH cur4 INTO _j,_a,_k,_b,_c,_d,_l,_m,_n,_p,_p,_q;
+        FETCH cur4 INTO _j,_a,_k,_b,_c,_d,_l,_m,_n,_o,_p,_q;
         IF NOT done THEN
             SET @query = 'REPLACE INTO datawarehouse.ssi (`sid`, `descr`, `priority`, `source`, `destination`, `details`, `year`, `month`, `hour`, `day`, `minute`, `volume`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
             SET @a = _a;
@@ -5206,7 +5206,7 @@ BEGIN
             SET @p = _p;
             SET @q = _q;
             PREPARE sql_query FROM @query;
-            EXECUTE sql_query USING @j, @a, @k, @b, @c, @d, @l, @m, @n, @p, @p, @q;
+            EXECUTE sql_query USING @j, @a, @k, @b, @c, @d, @l, @m, @n, @o, @p, @q;
             DEALLOCATE PREPARE sql_query;
         END IF;
     UNTIL done END REPEAT;

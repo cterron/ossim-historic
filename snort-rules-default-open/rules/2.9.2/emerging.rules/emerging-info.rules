@@ -473,7 +473,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Suspicious Wi
 #alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 3306 (msg:"ET INFO MySQL Database Query Version OS compile"; flow:to_server,established; content:"|03|"; offset:3; depth:4; content:"select |40 40|version_compile_os"; nocase; pcre:"/SELECT @@version_compile_os\s*?\x3b/i"; classtype:misc-activity; sid:2015994; rev:2;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Exectuable Download from dotted-quad Host"; flow:established,to_server; content:".exe"; http_uri; nocase; content:".exe HTTP/1."; fast_pattern:only; content:"Host|3A 20|"; http_header; content:"|2E|"; http_header; distance:1; within:3; content:"|2E|"; http_header; distance:1; within:3; content:"|2E|"; http_header; distance:1; within:3; pcre:"/^Host\x3A\x20[0-9]{1,3}\x2E[0-9]{1,3}\x2E[0-9]{1,3}\x2E[0-9]{1,3}(\x3A|\x0D\x0A)/Hmi"; classtype:trojan-activity; sid:2016141; rev:2;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Executable Download from dotted-quad Host"; flow:established,to_server; content:".exe"; http_uri; nocase; content:".exe HTTP/1."; fast_pattern:only; content:"Host|3A 20|"; http_header; content:"|2E|"; http_header; distance:1; within:3; content:"|2E|"; http_header; distance:1; within:3; content:"|2E|"; http_header; distance:1; within:3; pcre:"/^Host\x3A\x20[0-9]{1,3}\x2E[0-9]{1,3}\x2E[0-9]{1,3}\x2E[0-9]{1,3}(\x3A|\x0D\x0A)/Hmi"; classtype:trojan-activity; sid:2016141; rev:3;)
 
 #
 alert icmp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO PTUNNEL OUTBOUND"; itype:8; icode:0; content:"|D5 20 08 80|"; depth:4; reference:url,github.com/madeye/ptunnel; reference:url,cs.uit.no/~daniels/PingTunnel/#protocol; classtype:protocol-command-decode; sid:2016145; rev:2;)
@@ -1131,4 +1131,10 @@ alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to a
 
 #
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to a Suspicious *.dns-free.ru Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|dns-free|03|com"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2022384; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Single JS file inside of ZIP Download (Observed as lure in malspam campaigns)"; flow:established,to_client; file_data; content:"PK"; within:2; content:"PK|01 02|"; distance:0; pcre:"/^.{42}[\x20-\x7f]{1,500}\.jsPK\x05\x06.{4}\x01\x00\x01\x00/Rsi"; content:".jsPK|05 06|"; nocase; fast_pattern:only; classtype:misc-activity; sid:2022636; rev:2;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Possible WinHttpRequest (no .exe)"; flow:to_server,established; content:"Mozilla/4.0 (compatible|3b 20|Win32|3b 20|WinHttp.WinHttpRequest.5)"; http_header; fast_pattern:36,20; content:!"|0d 0a|Cookie|3a|"; content:!"Referer|3a|"; http_header; content:!"Accept-Language|3a|"; http_header; content:!"UA-CPU|3a|"; http_header; content:!".exe"; nocase; http_uri; content:!".msi"; nocase; http_uri; content:!".msp"; nocase; http_uri; flowbits:set,et.MS.WinHttpRequest.no.exe.request; flowbits:noalert; classtype:misc-activity; sid:2022652; rev:1;)
 

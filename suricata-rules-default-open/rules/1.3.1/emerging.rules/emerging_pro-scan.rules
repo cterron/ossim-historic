@@ -237,7 +237,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET SCAN Httprint Web Ser
 
 #by Jamie Riden
 #
-#alert tcp any any -> any 502 (msg:"ET SCAN Modbus Scanning detected"; content:"|00 00 00 00 00 02|"; flow:established,to_server; depth:6; threshold: type both, track by_src, count 100, seconds 10; reference:url,code.google.com/p/modscan/; reference:url,www.rtaautomation.com/modbustcp/; reference:url,doc.emergingthreats.net/2009286; classtype:bad-unknown; sid:2009286; rev:3;)
+alert tcp any any -> any 502 (msg:"ET SCAN Modbus Scanning detected"; content:"|00 00 00 00 00 02|"; flow:established,to_server; depth:6; threshold: type both, track by_src, count 100, seconds 10; reference:url,code.google.com/p/modscan/; reference:url,www.rtaautomation.com/modbustcp/; reference:url,doc.emergingthreats.net/2009286; classtype:bad-unknown; sid:2009286; rev:3;)
 
 #By Jeff Kell, tweaks by Dale Handy
 #

@@ -1,8 +1,14 @@
-alienvault-dummy-common (5.2.2-0) stable; urgency=low
+alienvault-dummy-common (5.2.3-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 11 Feb 2016 06:44:49 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 21 Mar 2016 03:56:36 -0400
+
+alienvault-dummy-common (5.2.3-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 11 Feb 2016 06:45:41 -0500
 
 alienvault-dummy-common (5.2.2-0) unstable; urgency=low
 

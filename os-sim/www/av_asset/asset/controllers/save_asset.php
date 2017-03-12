@@ -352,6 +352,19 @@ else
                     Asset_host_scan::save_plugin_in_db($conn, $id, 2007);
                 }
 
+                $plugins = $host->get_plugins($conn);
+                if (!empty($plugins)) {
+                    $plugins_names = array();
+                    foreach ($plugins as $plugin) {
+                        array_push($plugins_names, Plugin::get_name_by_id($conn, $plugin['plugin_id']));
+                    }
+
+                    $plugins_params = @json_encode(array($id => $plugins_names));
+                    foreach ($sensors as $sensor) {
+                        Plugin::set_plugins_by_assets($plugins_params, Util::uuid_format($sensor));
+                    }
+                }
+
                 $data['status'] = 'OK';
                 $data['data']   = _('Your changes have been saved');
 

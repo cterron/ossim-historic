@@ -1247,12 +1247,12 @@ class Alarm
         if ($ctxs != "")
         {
             $where    .= ($where=='' ? '' : ' AND ') . "a.backlog_id=ac.id_alarm AND ac.id_ctx in ($ctxs)";
-            $ctx_join .= " ,alarm_ctxs ac";
+            $ctx_join .= " JOIN alarm_ctxs ac";
         }
         if ($ctx != "")
         {
             $where    .= ($where=='' ? '' : ' AND ') . "(a.backlog_id=acc.id_alarm AND acc.id_ctx = UNHEX('$ctx') OR a.corr_engine_ctx = UNHEX('$ctx'))";
-            $ctx_join .= " ,alarm_ctxs acc";
+            $ctx_join .= " JOIN alarm_ctxs acc";
         }        
         
         return array($ctx_join, $where);
@@ -3425,7 +3425,6 @@ class Alarm
 
             $rs->MoveNext();
         }
-        
         return $pulse_list;
     }
     
@@ -3514,12 +3513,15 @@ class Alarm
         
         list($p_join, $p_where) = self::make_perms_where();
         $p_where = ($p_where) ? ' AND ' . $p_where : '';
-        
         $params  = array($backlog_id);
-        
-        $sql = "SELECT DISTINCT INET6_NTOA(e.src_ip) AS src_ip, e.rep_prio_src, e.rep_rel_src, e.rep_act_src, INET6_NTOA(e.dst_ip) AS dst_ip, e.rep_prio_dst, e.rep_rel_dst, e.rep_act_dst   
-            FROM event e, backlog_event be, alarm a $p_join 
-            WHERE a.backlog_id=UNHEX(?) AND a.backlog_id=be.backlog_id AND be.event_id = e.id AND (e.rep_prio_src > 0 OR e.rep_prio_dst > 0) $p_where;";
+
+        $sql = "SELECT DISTINCT INET6_NTOA(e.src_ip) AS src_ip, e.rep_prio_src, e.rep_rel_src, e.rep_act_src, INET6_NTOA(e.dst_ip) AS dst_ip, e.rep_prio_dst, e.rep_rel_dst, e.rep_act_dst  
+            FROM alarm a 
+            JOIN backlog_event be ON a.backlog_id=be.backlog_id 
+            JOIN event e ON be.event_id = e.id 
+            $p_join
+            WHERE a.backlog_id=UNHEX(?) AND (e.rep_prio_src > 0 OR e.rep_prio_dst > 0)
+            $p_where;";
         
         $rs  = ($cache) ? $conn->CacheExecute($sql, $params) : $conn->Execute($sql, $params);
         if (!$rs)

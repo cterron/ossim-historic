@@ -41,7 +41,7 @@
 * @copyright  2007-2013 AlienVault
 * @link       https://www.alienvault.com/
 */
-
+define("PDF_PATH","/usr/share/ossim/www/tmp/");
 
 class Pdf_report
 {
@@ -85,8 +85,7 @@ class Pdf_report
     {
         $db          = new ossim_db();
         $dbconn      = $db->connect();
-
-        $this->path   = '../tmp/';
+        $this->path   = PDF_PATH;
 
         $this->errors = array();
 
@@ -101,7 +100,7 @@ class Pdf_report
 
             $user = (empty($user)) ? Session::get_session_user() : $user;
 
-            $this->path = "../tmp/".Session::get_secure_id($user)."/".$this->getName()."/";
+            $this->path .= Session::get_secure_id($user)."/".$this->getName()."/";
 
             if (!is_dir($this->path))
             {
@@ -119,7 +118,6 @@ class Pdf_report
                 {
                     $data['assets_text'] = $data['assets'];
                 }
-
                 $data_s           = serialize($data);
                 $this->extra_data = $data;
                 $res              = file_put_contents($this->path."/data_".$this->getName().".ini", $data_s);
@@ -146,7 +144,6 @@ class Pdf_report
                         $this->extra_data = (is_array($data)) ? $data : NULL;
                     }
                 }
-
                 if (empty($data))
                 {
                     $this->extra_data = NULL;

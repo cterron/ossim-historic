@@ -36,7 +36,6 @@ require_once 'av_init.php';
 
 Session::logcheck('analysis-menu', 'EventsForensics');
 Session::logcheck('report-menu', 'ReportsReportServer');
-
 $rtype = GET('rtype');
 $pro   = Session::is_pro();
 
@@ -134,7 +133,6 @@ $path_conf = $GLOBALS["CONF"];
 /* database connect */
 $db   = new ossim_db(true);
 $conn = $db->connect();
-//$conn = $db->custom_connect('localhost',$path_conf->get_conf("ossim_user"),$path_conf->get_conf("ossim_pass"));
 
 $config = new User_config($conn);
 $default_view = ($config->get($login, 'custom_view_default', 'php', "siem") != "") ? $config->get($login, 'custom_view_default', 'php', "siem") : (($idm_enabled) ? 'IDM' : 'default');
@@ -146,9 +144,13 @@ $csv_body   = "";
 
 $var_data   = (Session::show_entities()) ? "Context" : "Sensor";
 
-
 if($type[$rtype]=="Events")
 {
+/*ENG-102941 - reconnect to the remote DB if suitable option was selected in the SIEM dropdown*/
+    if (is_array($_SESSION["server"]) && $_SESSION["server"][0]!="") {
+        $db->close();
+        $conn = $db->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
+    }
 
     $sql = "SELECT dataV1, dataV2, dataV11, dataV3, dataV5, dataV10, cell_data
             FROM datawarehouse.report_data WHERE id_report_data_type=$rtype and user='$user'";
@@ -226,7 +228,6 @@ else if($type[$rtype]=="Unique_Country_Events")
    $sql = "SELECT dataV1, dataI1, dataI2, dataI3
            FROM datawarehouse.report_data WHERE id_report_data_type=$rtype and user='$user'";
 }
-
 
 
 $result = $conn->Execute($sql);

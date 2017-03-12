@@ -27,45 +27,40 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
+import time
 from celery import current_task
-from apimethods.sensor.nmap import apimethod_run_nmap_scan, apimethod_monitor_nmap_scan, \
-    apimethods_nmap_purge_scan_files, apimethod_nmapdb_add_task, apimethod_nmapdb_get_task, \
-    apimethod_nmapdb_update_task, apimethod_nmapdb_delete_task, apimethod_delete_nmap_scan
+from celery.utils.log import get_logger
 
 from apiexceptions.nmap import APINMAPScanException
-
-from celery.utils.log import get_logger
+from apimethods.sensor.nmap import (apimethod_run_nmap_scan, apimethod_monitor_nmap_scan,
+                                    apimethod_nmapdb_add_task, apimethod_nmapdb_get_task, apimethod_nmapdb_update_task)
 from celerymethods.tasks import celery_instance
-from celery.task.control import inspect
 from celerymethods.utils import is_task_in_celery
 
 
-import time
-
 logger = get_logger("celery")
-# from celery_once.tasks import QueueOnce
-# from retrying import retry
 
 
 @celery_instance.task
 def run_nmap_scan(sensor_id, target, targets_number, scan_type, rdns, scan_timing, autodetect, scan_ports, idm, user):
     """Launches an NMAP scan
     Args:
-        sensor_ip: The system IP where you want to get the [sensor]/interfaces from ossim_setup.conf
+        sensor_id: The system ID where you want to get the [sensor]/interfaces from ossim_setup.conf
         target: IP address of the component where the NMAP will be executed
+        targets_number: Number of hosts to scan
         scan_type: Sets the NMAP scan type
         rdns: Tells Nmap to do reverse DNS resolution on the active IP addresses it finds
         scan_timing: Set the timing template
         autodetect: Aggressive scan options (enable OS detection)
-        scan_port: Only scan specified ports
+        scan_ports: Only scan specified ports
         idm: Convert results into idm events
+        user: User who launched the scan
 
     Returns:
-        A tuple (success|error, data | msgerror)
+        A tuple (success|error, data | msg_error)
     """
+    job_id = current_task.request.id
     try:
-        job = None
-        job_id = current_task.request.id
         # Create a new scan job structure. This JSON will be in redis to keep track of the scan status.
         scan_job = {"job_id": job_id,
                     "sensor_id": sensor_id,
@@ -84,6 +79,7 @@ def run_nmap_scan(sensor_id, target, targets_number, scan_type, rdns, scan_timin
                     "end_time": -1,
                     "remaining_time": -1
                     }
+        # Add data about that job in Redis
         apimethod_nmapdb_add_task(job_id, scan_job)
         # Now, launch the real NMAP scan
         apimethod_run_nmap_scan(sensor_id=sensor_id,
@@ -98,6 +94,7 @@ def run_nmap_scan(sensor_id, target, targets_number, scan_type, rdns, scan_timin
                                 save_to_file=True,
                                 job_id=job_id)
 
+        # Get current status
         job = apimethod_nmapdb_get_task(job_id)
         # Save the scan status.
         if job is not None:
@@ -113,14 +110,16 @@ def run_nmap_scan(sensor_id, target, targets_number, scan_type, rdns, scan_timin
                 tries -= 1
                 time.sleep(1)
     except Exception as e:
-        logger.error("[run_nmap_scan] {0}".format(str(e)))
+        logger.error("[run_nmap_scan] Error occurred while executing NMAP scan: {0}".format(str(e)))
         job = apimethod_nmapdb_get_task(job_id)
         if job is not None:
-            if str(job["status"]).lower() != "finished" and str(job["status"]).lower() != "stopping":  # Could be stopped by the user
+            # Could be stopped by the user
+            if str(job["status"]).lower() != "finished" and str(job["status"]).lower() != "stopping":
                 job["status"] = "Fail"
                 job["reason"] = ""
             job["remaining_time"] = 0
             job["end_time"] = int(time.time())
+            # Update task when it was finished/failed or stopped
             apimethod_nmapdb_update_task(job_id, job)
     return True
 
@@ -141,7 +140,7 @@ def monitor_nmap_scan(sensor_id, task_id):
                 job = None
 
             if job is not None and job["status"] == "In Progress":
-                # check status
+                # check job status
                 try:
                     data = apimethod_monitor_nmap_scan(sensor_id, task_id)
                 except Exception as error:
@@ -159,9 +158,11 @@ def monitor_nmap_scan(sensor_id, task_id):
                     try:
                         apimethod_nmapdb_update_task(task_id, job)
                     except Exception as error:
-                        logger.error("[monitor_nmap_scan:%s] Cannot update nmap scan status...%s" % (task_id, str(error)))
+                        logger.error("[monitor_nmap_scan:%s] Cannot update nmap scan status...%s" % (task_id,
+                                                                                                     str(error)))
         except Exception as error:
-            logger.error("[monitor_nmap_scan:%s] Unexpected exception while monitoring the NMAP scan status...%s:%s" % (task_id, type(error), str(error)))
+            logger.error("[monitor_nmap_scan:%s] Unexpected exception while monitoring the NMAP scan status..."
+                         "%s:%s" % (task_id, type(error), str(error)))
         time.sleep(10)
         task = is_task_in_celery(task_id)
     logger.warning("[monitor_nmap_scan:%s] It seems that the SCAN has finished.." % str(task_id))

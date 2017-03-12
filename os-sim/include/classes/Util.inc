@@ -133,7 +133,6 @@ class Util
         {
             $taxonomy = $alarm->get_taxonomy();
         }
-
         if (empty($taxonomy))
         {
             $taxonomy = array(
@@ -142,7 +141,6 @@ class Util
                 'category'    => '',
                 'subcategory' => ''
             );
-
             if (is_object($alarm))
             {
                 $params = array($alarm->get_plugin_sid());
@@ -214,7 +212,6 @@ class Util
             {
                 continue;
             }
-            
             switch ($k)
             {
                 case '/PROTOCOL/':
@@ -232,22 +229,26 @@ class Util
                     break;
                     
                 case '/PULSE/':
-                    
                     $replacement = '';
-                    try
-                    {
-                        $pulse_id = $alarm->get_event_data($conn, 'filename');
-                        if ($pulse_id)
-                        {
+                    $pulse_id = $alarm->get_event_data($conn, 'filename');
+                    if (!$pulse_id) {
+                        $event_id     = $alarm->get_event_id();
+                        $pulses = Siem::get_event_pulses($conn, $event_id, FALSE, TRUE);
+                        if ($pulses) {
+                            $pulse = array_shift($pulses);
+                            $replacement = $pulse["name"];
+                            break;
+                        }
+                    }
+                    if ($pulse_id) {
+                         try {
                             $otx         = new Otx();
                             $pulse       = $otx->get_pulse_detail($pulse_id, TRUE);
                             $replacement = $pulse['name'];
-                        }
+                            break;
+                        } catch (Exception $e) {}
                     }
-                    catch (Exception $e) {}
-                    
-                    $replacement = ($replacement != '') ? $replacement : _('No information available. You are no longer subscribed to this pulse.');
-
+                    $replacement = _('No information available. You are no longer subscribed to this pulse.');
                     break;
 
                 case '/SRC_IP/':
