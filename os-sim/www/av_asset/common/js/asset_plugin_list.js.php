@@ -83,7 +83,7 @@ function Av_plugin_list(config)
         var aoColumns      = dt_parameters.columns;
         var fnServerParams = dt_parameters.server_params;
         var iDisplayLength = dt_parameters.maxrows;
-        
+        this.total_counter = 0;
         __self.dt_obj = $('.table_data').dataTable( 
         {
             "bProcessing": true,
@@ -125,7 +125,6 @@ function Av_plugin_list(config)
                 if (__self.edit_mode)
                 {
                     var _asset_id = aData['DT_RowId'];
-    
                     $.each(aData['DT_RowData'], function(key, val)
                     {
                         // Create one select container for each plugin the each asset
@@ -155,7 +154,6 @@ function Av_plugin_list(config)
                             
                         }
                     });
-                    
                     var _table = '<table class="plugin_list plugin_select_container" data-asset_id="' + _asset_id + '"></table>';
                     
                     var _aux_container = (__asset_data.asset_type == 'asset') ? $("td:nth-child(1)", nRow) : $("td:nth-child(2)", nRow);
@@ -181,7 +179,7 @@ function Av_plugin_list(config)
                     },
                     "success": function (json) 
                     {
-
+			__self.total_counter = json.total_counter;
                         fnCallback(json);
 
                     },
@@ -212,8 +210,7 @@ function Av_plugin_list(config)
                             $('.plugin_list').each(function()
                             {
                                 var _asset_id = $(this).attr('data-asset_id')
-                                
-                                __self.av_plugin_obj.create(this, __self.__plugin_data[_asset_id]);
+                                __self.av_plugin_obj.create(this, __self.__plugin_data[_asset_id], __self.total_counter);
                             });
                             
                             __self.__plugin_data = {}; // Clean aux data for next requests

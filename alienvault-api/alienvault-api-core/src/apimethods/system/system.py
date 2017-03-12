@@ -381,7 +381,6 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
                 error_msg = "System was not inserted, cannot continue"
                 return (False, error_msg)
 
-
     # Now that the system is in the database, check if it is a server and
     # open the firewall, if it is required.
     if 'server' in system_info['profile']:
@@ -389,7 +388,6 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
                                             trigger="alienvault-add-server")
         if not trigger_success:
             api_log.error(msg)
-
 
     (success, msg) = create_directory_for_ossec_remote(system_info['system_id'])
     if not success:
@@ -478,7 +476,7 @@ def apimethod_delete_system(system_id):
                     "<%s>" % str(local_ip)
         return success, error_msg
 
-    #Remove remote system certificates on the local system
+    # Remove remote system certificates on the local system
     success, msg = ansible_remove_certificates(system_ip=local_ip,
                                                system_id_to_remove=system_id)
     if not success:
@@ -554,7 +552,7 @@ def sync_database_from_child(system_id):
         error_msg = "[Apimethod sync_database_from_child] " + \
                     "Error retrieving the system ip" + \
                     "%s" % (str(e))
-        return success, error_msg
+        return False, error_msg
 
     success, local_ip = get_system_ip_from_local()
     if not success:
@@ -607,7 +605,7 @@ def sync_database_from_child(system_id):
     md5_calc, err = p.communicate()
     if err:
         return False, "[Apimethod sync_database_from_child] %s" % err
-    if not str(md5_read.rstrip('\n')) in str(md5_calc):
+    if str(md5_read.rstrip('\n')) not in str(md5_calc):
         error_msg = "[Apimethod sync_database_from_child] " + \
                     "Corrupt or incomplete SQL file (bad md5sum)"
         return False, error_msg
@@ -748,7 +746,7 @@ def apimethod_get_remote_software_update(system_id, no_cache=False):
     else:  # Otherwise we only load in the list the system given.
         systems.append(system_id)
 
-    #For each system, getting the update info
+    # For each system, getting the update info
     for sys_id in systems:
         success, data = apimethod_get_update_info(sys_id, no_cache=no_cache)
         if not success:
@@ -919,8 +917,6 @@ def apimethod_check_task_status(system_id, tasks):
                              job_status for each task
 
     """
-    task_status = {}
-
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
         error_msg = "[apimethod_check_task_status] " + \
@@ -1034,8 +1030,8 @@ def get_last_log_lines(system_id, log_file, lines):
         return False, "%s is not a valid key for a log file" % log_file
 
     if lines not in [50, 100, 1000, 5000]:
-        error_msg = "%s is not a valid number of lines." % str(lines) + \
-                    "The number of lines be in [50, 100, 1000, 5000]"
+        error_msg = "%s is not a valid number of lines. " % str(lines) + \
+                    "The number of lines should be in [50, 100, 1000, 5000]"
         return False, error_msg
 
     (success, msg) = ansible_get_log_lines(system_ip,
@@ -1105,10 +1101,9 @@ def sync_asec_plugins(plugin=None, enable=True):
         return False, "No plugin to sync"
 
     try:
-        plugin_path = "/var/lib/asec/plugins/" + plugin + ".cfg"
+        plugin_path = "/var/lib/asec/plugins/%s.cfg" % plugin
         sql_path = plugin_path + ".sql"
 
-        sensors = []
         (success, sensors) = get_systems(system_type='sensor')
         if not success:
             return False, "Unable to get sensors list: %s" % sensors
@@ -1116,66 +1111,57 @@ def sync_asec_plugins(plugin=None, enable=True):
         # Bug in ansible copy module prevents us from copying the files from
         # /var/lib/asec/plugins as it has permissions 0 for "other"
         # Workaround: make a local copy using ansible command module
-        plugin_tmp_path = "/tmp/" + plugin + ".cfg"
+        plugin_tmp_path = "/tmp/%s.cfg" % plugin
         sql_tmp_path = plugin_tmp_path + ".sql"
         success, local_ip = get_system_ip_from_local()
         if not success:
-            error_msg = "[ansible_install_plugin] " + \
-                        "Failed to make get local IP: %s" % local_ip
+            error_msg = "[ansible_install_plugin] Failed to make get local IP: %s" % local_ip
             return False, error_msg
-        (success, msg) = local_copy_file(local_ip,
-                                         plugin_path,
-                                         plugin_tmp_path)
+
+        (success, msg) = local_copy_file(local_ip, plugin_path, plugin_tmp_path)
         if not success:
-            error_msg = "[ansible_install_plugin] " + \
-                        "Failed to make temp copy of plugin file: %s" % msg
+            error_msg = "[ansible_install_plugin] Failed to make temp copy of plugin file: %s" % msg
             return False, error_msg
         (success, msg) = local_copy_file(local_ip, sql_path, sql_tmp_path)
         if not success:
-            error_msg = "[ansible_install_plugin] " + \
-                        "Failed to make temp copy of sql file: %s" % msg
+            error_msg = "[ansible_install_plugin] Failed to make temp copy of sql file: %s" % msg
             return False, error_msg
 
         all_ok = True
         for (sensor_id, sensor_ip) in sensors:
-            (success, msg) = ansible_install_plugin(sensor_ip,
-                                                    plugin_tmp_path,
-                                                    sql_tmp_path)
-            if success and enable:
+            (success, msg) = ansible_install_plugin(sensor_ip, plugin_tmp_path, sql_tmp_path)
+
+            if not success:
+                api_log.error("[sync_asec_plugins] Error installing plugin %s "
+                              "in sensor %s: %s" % (plugin, sensor_ip, msg))
+                all_ok = False
+
+            # if success and enable=True -> activate plugin
+            elif enable:
                 # Get list of active plugins and add the new one.
                 # Then send the list back to the sensor?
                 (success, data) = get_sensor_detectors(sensor_ip)
                 if success:
                     data['sensor_detectors'].append(plugin)
                     sensor_det = ','.join(data['sensor_detectors'])
-                    (success, msg) = set_sensor_detectors(sensor_ip,
-                                                          sensor_det)
+                    (success, data) = set_sensor_detectors(sensor_ip, sensor_det)
                 if not success:
-                    error_msg = "[sync_asec_plugins] " + \
-                                "Error enabling plugin %s " % plugin + \
-                                "for sensor %s: %s" % (sensor_ip, msg)
-                    api_log.error(error_msg)
+                    api_log.error("[sync_asec_plugins] Error enabling plugin %s for sensor %s: "
+                                  "%s" % (plugin, sensor_ip, data))
                     all_ok = False
                 else:
                     # Now launch reconfig task
-                    job = alienvault_reconfigure.delay(sensor_ip)
-            else:
-                error_msg = "[sync_asec_plugins] " + \
-                            "Error installing plugin %s " % plugin + \
-                            "in sensor %s: %s" % (sensor_ip, msg)
-                api_log.error(error_msg)
-                all_ok = False
+                    alienvault_reconfigure.delay(sensor_ip)
 
         # Delete temporal copies of the files
         remove_file([local_ip], plugin_tmp_path)
         remove_file([local_ip], sql_tmp_path)
 
         if not all_ok:
-            error_msg = "Plugin %s installation failed " % plugin + \
-                        "for some sensors"
+            error_msg = "Plugin %s installation failed for some sensors" % plugin
             return False, error_msg
 
-        info_msg = "Plugin %s installed. Enabled = %s" % (plugin, str(enable))
+        info_msg = "Plugin %s installed. Enabled = %s" % (plugin, enable)
         return True, info_msg
 
     except Exception as e:
@@ -1328,12 +1314,12 @@ def get_license_devices():
         1000000 if 'devices' is not specified in the ossim.lic file
     """
     rc, pro = system_is_professional()
-    devices = 0
+
     if rc and pro:
         if os.path.isfile("/etc/ossim/ossim.lic"):
             try:
                 config = RawConfigParser()
-                license_file = config.read('/etc/ossim/ossim.lic')
+                config.read('/etc/ossim/ossim.lic')
                 devices = config.getint('appliance', 'devices')
             except NoOptionError:
                 devices = 1000000
@@ -1367,7 +1353,7 @@ def set_system_certificate(system_id, crt, pem, ca):
         error_msg = "Error retrieving the system ip for the system id %s -> %s" % (system_ip, str(system_ip))
         return False, error_msg
 
-    #If empty
+    # If empty
     if not crt or not pem:
         success, error_msg = ansible_remove_system_certificate(system_ip)
     else:

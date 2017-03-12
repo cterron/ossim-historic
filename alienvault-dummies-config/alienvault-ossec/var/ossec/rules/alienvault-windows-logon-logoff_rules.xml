@@ -1,0 +1,12 @@
+<group name="windows,">
+    <rule id="102002" level="4">
+      <if_sid>18149</if_sid>
+      <regex>User Name:\s+\S+\$\s+|Account Name:\s+\S+\$\s+\.*Logon Type:\s+3\s+|Logon Type:\s+3\.*Account Name:\s+\S+\$\s+|Account Name:\s+DWM-\d+\s+|Account Name:\s+SYSTEM\s+</regex>
+      <description>Windows Machine Logoff</description>
+    </rule>
+    <rule id="102003" level="4">
+      <if_sid>18107</if_sid>
+      <regex>User Name:\s+\S+\$\s+|Account Name:\s+\S+\$\s+\.*Logon Type:\s+3\s+|Logon Type:\s+3\.*Account Name:\s+\S+\$\s+|Account Name:\s+DWM-\d+\s+|Account Name:\s+SYSTEM\s+</regex>
+      <description>Windows Machine Logon</description>
+    </rule>
+</group>

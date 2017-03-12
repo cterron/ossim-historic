@@ -75,7 +75,7 @@ if($tab == '#tab1')
     ?>
 
     <div id='c_agent_table'>
-
+	<div class="agent-hids-message"><?php echo _("Automatic HIDS deployment is only available for assets with a Windows OS defined in the asset details pages. If you are unable to deploy a HIDS agent to a Windows machine, you may need to update the OS field on the asset details.") ?></div>
         <div class='body_al' id='body_al_2'>
 
             <div class="c_action_buttons">

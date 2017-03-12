@@ -97,26 +97,32 @@ function AVplugin_select()
      * @param  container   HTML Table object where the selectors will fit
      * @param  o           Options to initialize the plugins selected 
      */
-    this.create = function(container, o)
+    this.create = function(container, o, counter)
     {
+        var text = ' <?php echo _('Plugin limit reached. You cannot add more than 10 plugins to an asset.') ?>';
+        var is_limit = false;
+        if (100-counter < __max_rows) {
+            __max_rows = 100-counter;
+            text = ' <?php echo _('Plugin limit reached. You cannot add more than 100 plugins to an sensor.') ?>';
+        }
         o = $.extend(
-        [{
+       	    [{
             model        : '',
-            vendor       : '',
+       	    vendor       : '',
             version      : '',
-            model_list   : {},
+       	    model_list   : {},
             version_list : {},
-            
-            
-        }], o || {});
-        
-        
-        $.each(o, function(key, val)
-        {
-            _create_selectors_row(container, val);
-        });
-        
-        _new_add_button(container);
+            }], o || {});
+
+        if (__max_rows > 0 || o.length > 1 || o[0].model != ":") {
+            $.each(o, function(key, val)
+            {
+                _create_selectors_row(container, val);
+            });
+        } else {
+            is_limit = true;
+        }
+        _new_add_button(container,text,is_limit);
         
         _refresh_buttons_status(container);
     }
@@ -162,7 +168,6 @@ function AVplugin_select()
     function _new_select(row, list, selected, name)
     {
         var td = $('<td>', {}).appendTo(row);
-        
         var select = $('<select>', 
         {
             "class"     : "select_plugin " + name,
@@ -337,11 +342,10 @@ function AVplugin_select()
      *
      * @param  container         HTML TABLE Object
      */
-    function _new_add_button(container)
+    function _new_add_button(container, text, is_error)
     {
         var _tr = $('<tr>', {'id': 'add_button_row'}).appendTo(container);
         var _td = $('<td>', {'class': 'left', 'colspan': 3}).appendTo(_tr);
-        
         $('<input>',
         {
             "class"     : "small av_b_secondary select2-add-button",
@@ -362,19 +366,22 @@ function AVplugin_select()
                 }
                 
                 _create_selectors_row(container, _options);
-                _new_add_button(container);
+                _new_add_button(container,text,false);
                 _refresh_buttons_status(container);
             }
         }
         ).appendTo(_td);
-        
-        $('<span>',
+        var span = $('<span>',
         {
             id  : 'add_button_msg',
-            text: ' <?php echo _('Plugin limit reached. You cannot add more than 10 plugins to an asset.') ?>',
+            text: text,
             class: 'italic'
         }
-        ).appendTo(_td);
+        );
+	span.appendTo(_td);
+	if (is_error) {
+		span.show();
+	}
     }
     
     

@@ -131,3 +131,11 @@ triggers:
   - name: The OTX key is the same in every system
     when: $MONITOR_FEDERATED_OTX_KEY.same_otx_key == False
     trigger_message_id: $MESSAGE_FEDERATED_OTX_KEY
+- trigger: Warning about enabled plugins limit.
+  conditions:
+  - name: The number of enabled plugins is approaching to its limit
+    when: $MONITOR_ENABLED_PLUGINS_LIMIT.warning_reached == True
+    trigger_message_id: $MESSAGE_PLUGINS_LIMIT_APPROACHING
+  - name: The number of enabled plugins is reached over its limit
+    when: $MONITOR_ENABLED_PLUGINS_LIMIT.limit_reached == True
+    trigger_message_id: $MESSAGE_PLUGINS_LIMIT_REACHED

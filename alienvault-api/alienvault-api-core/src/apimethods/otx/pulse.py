@@ -26,6 +26,7 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 
+from ansiblemethods.system.about import get_alienvault_version
 from apimethods.system.proxy import AVProxy
 from db.methods.system import db_set_config
 from db.redis.redisdb import RedisDBKeyNotFound
@@ -66,6 +67,7 @@ class OTXv2(object):
 
         self.date_types = {"events": "latest_events_call_date",
                            "subscribed": "latest_subscribed_call_date"}
+        self.otx_user_version = self.get_otx_user_version()
 
     def update_latest_request(self, d_type, d_update=None):
         """Update the latest otx request timestamp
@@ -121,9 +123,12 @@ class OTXv2(object):
         try:
             request = urllib2.Request(url)
             request.add_header('X-OTX-API-KEY', self.key)
+            if self.otx_user_version:
+                # Information about system that is using OTX
+                request.add_header('User-Agent', self.otx_user_version)
             response = proxy.open(request, timeout=20, retries=3)
             response_data = json.loads(response.read(), encoding="utf-8")
-        except urllib2.URLError as err:
+        except urllib2.HTTPError as err:
             if err.code == 403:
                 raise InvalidAPIKey("Invalid API Key")
             elif err.code == 400:
@@ -260,9 +265,9 @@ class OTXv2(object):
         subscribed_timestamp = self.get_latest_request('subscribed')
         events_timestamp = self.get_latest_request('events')
 
-        #If it is the first time we download the pulses we don't execute this call.
+        # If it is the first time we download the pulses we don't execute this call.
         if subscribed_timestamp is not None:
-            #Getting event time or subscribed time in case event time is null by any reason.
+            # Getting event time or subscribed time in case event time is null by any reason.
             events_timestamp = subscribed_timestamp if events_timestamp is None else events_timestamp
             next_request = "%s/pulses/events?limit=20&since=%s" % (self.url_base, events_timestamp)
         else:
@@ -272,21 +277,21 @@ class OTXv2(object):
         while next_request:
             try:
                 json_data = self.make_request(next_request)
-                #We need to apply the action in each iteration to keep the order of each modification.
+                # We need to apply the action in each iteration to keep the order of each modification.
                 for event in json_data.get('results'):
                     e_type = event.get('object_type')
                     e_action = event.get('action')
                     e_id = event.get('object_id')
-                    #Authors to delete
+                    # Authors to delete
                     if e_type == 'user' and e_action in ['unsubscribe', 'delete']:
                         total_del += self.remove_pulses_from_authors([e_id])
-                    #Authors to subscribe
+                    # Authors to subscribe
                     elif e_type == 'user' and e_action == 'subscribe':
                         total_add += self.add_pulses_from_authors([e_id])
-                    #Pulses to delete
+                    # Pulses to delete
                     elif e_type == 'pulse' and e_action in ['unsubscribe', 'delete']:
                         total_del += self.remove_pulses([e_id])
-                    #Pulses to add
+                    # Pulses to add
                     elif e_type == 'pulse' and e_action == 'subscribe':
                         total_add += self.add_pulses_from_list([e_id])
 
@@ -318,7 +323,7 @@ class OTXv2(object):
         else:
             next_request = "%s/pulses/subscribed?limit=20" % self.url_base
 
-        #This var will store the date of the newest pulse that will be used to query the next time.
+        # This var will store the date of the newest pulse that will be used to query the next time.
         update_timestamp = None
         while next_request:
             try:
@@ -328,10 +333,10 @@ class OTXv2(object):
                 self.remove_pulses([p.get('id', '') for p in p_data])
                 # Save pulse data on redis
                 pulse_downloaded += self.save_pulses(p_data)
-                #Save the newest pulse date
+                # Save the newest pulse date
                 if update_timestamp is None:
                     try:
-                        #We save the first pulse modified date.
+                        # We save the first pulse modified date.
                         update_timestamp = p_data[0]['modified']
                     except:
                         pass
@@ -341,10 +346,10 @@ class OTXv2(object):
                 api_log.warning("Cannot download new pulses: %s" % str(error))
                 raise
 
-        #Saving the request date
+        # Saving the request date
         if update_timestamp is not None:
             self.update_latest_request('subscribed', update_timestamp)
-        #If it is the first time we download the pulses, we update the event request time to the current UTC timestamp.
+        # If it is the first time we download the pulses, we update the event request time to the current UTC timestamp.
         if subscribed_timestamp is None:
             self.update_latest_request('events')
 
@@ -367,3 +372,21 @@ class OTXv2(object):
         db_set_config("open_threat_exchange_latest_update", datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
         return {'new_pulses': p_new, 'updated_pulses': p_update, 'deleted_pulses': p_delete}
+
+    @staticmethod
+    def get_otx_user_version():
+        """ Returns string like 'OTX USM/5.2.4' if able to get system version or '' otherwise
+        """
+        otx_user_version = ''
+        try:
+            data_retrieved, version_data = get_alienvault_version()
+            if data_retrieved:
+                # we need only product name and version number, so get first 2
+                version_data = version_data.replace('ALIENVAULT', 'USM').split()[:2]
+                otx_user_version = 'OTX {}'.format('/'.join(version_data))
+            else:
+                api_log.warning('Bad result returned for alienvault version: %s' % version_data)
+        except Exception as err:
+            api_log.warning('Failed to get alienvault version. Reason: {}'.format(str(err)))
+
+        return otx_user_version

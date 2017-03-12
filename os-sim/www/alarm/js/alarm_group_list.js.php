@@ -704,6 +704,8 @@ function toggle_group()
                 'no_resolv'    : $('#no_resolv').prop('checked') ? 1 : 0,
                 'num_events'   : $('#num_events').val(),
                 'num_events_op': $('#num_events_op').val(),
+                'risk_level'   : $('#risk_level').val(),
+                'risk_level_op': $('#risk_level_op').val(),
                 'directive_id' : $('#directive_id').val()    
             }
 

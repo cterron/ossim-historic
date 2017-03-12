@@ -323,6 +323,7 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
 						if($ref == 'Alarm')
 						{
 							$incident_id = Incident::insert_alarm($conn, $title, $type, $submitter, $priority, $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end, $backlog_id, $event_id, $alarm_group_id, $transferred_user, $transferred_entity);
+							Incident_ticket::insert($conn, $incident_id, "Open", $priority, $transferred_user, "<a target=\"_blank\" href=\"/ossim/#analysis/alarms/alarms-$backlog_id\">Link to Alarm</a>");
 						}
 						else
 						{

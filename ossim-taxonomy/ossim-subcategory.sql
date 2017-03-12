@@ -252,3 +252,4 @@ INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (250, 21, 'Policy');
 INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (251, 21, 'Scada');
 INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (252, 21, 'Scan');
 INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (253, 3, 'Privileged_Operation_Failed');
+INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (254, 1, 'Shell_Banner');

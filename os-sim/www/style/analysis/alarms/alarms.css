@@ -188,13 +188,13 @@ if (!headers_sent())
     width: 100% !important;
 }
 
-#num_events
+.alarms_op_value
 {
     width: 63% !important;
     margin: 0 !important;
 }
 
-#num_events_op
+.alarms_op
 {
     width: 15% !important;
     margin: 0 !important;

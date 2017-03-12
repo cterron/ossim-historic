@@ -338,11 +338,11 @@ def apimethod_get_otx_pulse_stats_summary(user):
         pulse_db = PulseDB()
         pulses = pulse_db.get_range(0, -1)
         del pulse_db
-        #Getting the number of pulses
+        # Getting the number of pulses
         stats['pulses'] = len(pulses)
-        #Counting the number of indicators for each pulse.
+        # Counting the number of indicators for each pulse.
         for p in pulses:
-            stats['iocs'] += len(p.get('indicators'))
+            stats['iocs'] += len(p.get('indicators', {}))
 
         stats['alarms'] = db_get_otx_alarms(user)
         stats['events'] = db_get_otx_events(user)

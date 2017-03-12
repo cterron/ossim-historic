@@ -35,8 +35,7 @@ require_once 'av_init.php';
 $directive_id = GET('directive_id');
 
 ossim_valid($directive_id, OSS_DIGIT, 'illegal:' . _('Directive ID'));
-
-if (ossim_error() === TRUE)
+if (ossim_error())
 {
     die(ossim_error());
 }

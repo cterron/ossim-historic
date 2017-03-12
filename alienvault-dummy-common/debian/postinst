@@ -187,6 +187,16 @@ configure_remove_unused(){
     sed -i "/snmp_comunity.*/d" "$OSSIM_SETUP_CONF" 2> /dev/null
 }
 
+configure_remove_unused_users(){
+    # Remove unused users for security reasons
+    USERS_TO_REMOVE="list irc gnats uucp news lp"
+    for username in ${USERS_TO_REMOVE}; do
+        id ${username} &>/dev/null && userdel ${username}
+    done;
+
+    return 0;
+}
+
 case "$1" in
     configure)
         configure_network_interfaces
@@ -194,6 +204,7 @@ case "$1" in
         configure_etc_hosts_file
         configure_apt_flags
         configure_remove_unused
+        configure_remove_unused_users
     ;;
 
     triggered)

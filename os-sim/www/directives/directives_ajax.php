@@ -44,7 +44,7 @@ $action = POST('action');
 $data   = POST('data');
 
 ossim_valid($action,	OSS_DIGIT,	'illegal:' . _('Action'));
-if (ossim_error() === TRUE)
+if (ossim_error())
 {
     die(ossim_error());
 }

@@ -28,20 +28,18 @@
 #
 
 from __future__ import print_function
-import uuid
-import yaml
+
 import json
 import re
-from datetime import datetime
+
 import celery.utils.log
-from apimethods.utils import get_uuid_string_from_bytes
-from api.lib.monitors.monitor import Monitor, MonitorTypes
+import yaml
 from api.lib.monitors.messages import MessageReader
+from api.lib.monitors.monitor import Monitor, MonitorTypes
+from apimethods.utils import get_uuid_string_from_bytes
 from db.methods.api import (save_current_status_message,
                             purge_current_status_message,
-                            add_current_status_messages,
                             get_all_monitor_data)
-from db.models.alienvault_api import Current_Status
 
 logger = celery.utils.log.get_logger("celery")
 
@@ -51,25 +49,26 @@ TRIGGERS_FILE = "/etc/alienvault/api/triggers.yml"
 class TriggerCondition(object):
     """Trigger Condition Class"""
     __AVAILABLE_MONITORS = {
-        "MONITOR_DROPPED_PACKAGES": 1,
-        "MONITOR_CPU_LOAD": 2,
-        "MONITOR_DISK_SPACE": 3,
-        "MONITOR_ASSET_EVENTS": 4,
-        "MONITOR_DNS": 8,
-        "MONITOR_REMOTE_CERTIFICATES": 9,
-        "MONITOR_PENDING_UPDATES": 11,
-        "MONITOR_PLUGINS_VERSION": 12,
-        "MONITOR_PLUGINS_CHECK_INTEGRITY": 13,
-        "MONITOR_PLATFORM_TELEMETRY_DATA": 14,
-        "MONITOR_PLATFORM_MESSAGE_CENTER_DATA": 15,
-        "MONITOR_SYSTEM_CHECK_DB": 16,
-        "MONITOR_WEBUI_DATA": 18,
-        "MONITOR_SYSTEM_REBOOT_NEEDED": 20,
-        "MONITOR_DOWNLOAD_PULSES": 21,
-        "MONITOR_UPDATE_HOST_PLUGINS": 22,
-        "MONITOR_INSECURE_VPN": 23,
-        "MONITOR_FEDERATED_OTX_KEY": 24,
-        "CHECK_TRIGGERS": 1500,
+        "MONITOR_DROPPED_PACKAGES": MonitorTypes.MONITOR_DROPPED_PACKAGES,
+        "MONITOR_CPU_LOAD": MonitorTypes.MONITOR_CPU_LOAD,
+        "MONITOR_DISK_SPACE": MonitorTypes.MONITOR_DISK_SPACE,
+        "MONITOR_ASSET_EVENTS": MonitorTypes.MONITOR_ASSET_LOG_ACTIVITY,
+        "MONITOR_DNS": MonitorTypes.MONITOR_SYSTEM_DNS,
+        "MONITOR_REMOTE_CERTIFICATES": MonitorTypes.MONITOR_REMOTE_CERTIFICATES,
+        "MONITOR_PENDING_UPDATES": MonitorTypes.MONITOR_PENDING_UPDATES,
+        "MONITOR_PLUGINS_VERSION": MonitorTypes.MONITOR_PLUGINS_VERSION,
+        "MONITOR_PLUGINS_CHECK_INTEGRITY": MonitorTypes.MONITOR_PLUGINS_CHECK_INTEGRITY,
+        "MONITOR_PLATFORM_TELEMETRY_DATA": MonitorTypes.MONITOR_PLATFORM_TELEMETRY_DATA,
+        "MONITOR_PLATFORM_MESSAGE_CENTER_DATA": MonitorTypes.MONITOR_PLATFORM_MESSAGE_CENTER_DATA,
+        "MONITOR_SYSTEM_CHECK_DB": MonitorTypes.MONITOR_SYSTEM_CHECK_DB,
+        "MONITOR_WEBUI_DATA": MonitorTypes.MONITOR_WEBUI_DATA,
+        "MONITOR_SYSTEM_REBOOT_NEEDED": MonitorTypes.MONITOR_SYSTEM_REBOOT_NEEDED,
+        "MONITOR_DOWNLOAD_PULSES": MonitorTypes.MONITOR_DOWNLOAD_PULSES,
+        "MONITOR_UPDATE_HOST_PLUGINS": MonitorTypes.MONITOR_UPDATE_HOST_PLUGINS,
+        "MONITOR_INSECURE_VPN": MonitorTypes.MONITOR_INSECURE_VPN,
+        "MONITOR_FEDERATED_OTX_KEY": MonitorTypes.MONITOR_FEDERATED_OTX_KEY,
+        "MONITOR_ENABLED_PLUGINS_LIMIT": MonitorTypes.MONITOR_ENABLED_PLUGINS_LIMIT,
+        "CHECK_TRIGGERS": MonitorTypes.CHECK_TRIGGERS,
     }
 
     def __init__(self):
@@ -105,7 +104,8 @@ class TriggerCondition(object):
         self.__name = value
 
     def __repr__(self):
-        return "<condition msg_id=%s><name>%s</name><when>%s</when></condition>" % (self.message_id, self.name, self.when)
+        return "<condition msg_id=%s><name>%s</name><when>%s</when></condition>" % (
+        self.message_id, self.name, self.when)
 
     def trigger_message(self, component_id, component_type, message_code, data=""):
         """
@@ -245,7 +245,7 @@ class TriggerCondition(object):
                             "monitor_data": monitor_data,
                             "monitor_component_type": monitor_component_type}
             component_monitors[component_id].append(monitor_hash)
-        #print (json.dumps(component_monitors))
+        # print (json.dumps(component_monitors))
         for component, component_monitors in component_monitors.iteritems():
             replacements = {}
             for monitor_info in component_monitors:
@@ -256,12 +256,12 @@ class TriggerCondition(object):
                 parameters_to_be_evaluated = monitor_parameters[monitor_id]['parameters']
                 for parameter in parameters_to_be_evaluated:
                     # print ("Para %s" % parameter)
-                    #print (monitor_data)
+                    # print (monitor_data)
                     if parameter in monitor_data:
                         # logger.info("*****\n%s\n%s\n*****\n" % (parameter, monitor_data))
                         if not isinstance(monitor_data[parameter], dict):
                             replace_string = "$%s.%s" % (monitor_name, parameter)
-                        #print (replace_string)
+                            # print (replace_string)
                             replace_value = monitor_data[parameter]
                             replacements[replace_string] = replace_value
                         else:
@@ -271,18 +271,19 @@ class TriggerCondition(object):
                                     replace_value = monitor_data[parameter][subparameter]
                                     replacements[replace_string] = replace_value
 
-            #print ("Total %s " % total_parameters_in_condition)
-            #print ("R: %s" % replacements)
+            # print ("Total %s " % total_parameters_in_condition)
+            # print ("R: %s" % replacements)
             if total_parameters_in_condition == len(replacements.keys()):  # We can evaluate the condition
                 condition = self.when
                 for replacement, new_value in replacements.iteritems():
                     if isinstance(new_value, unicode) or isinstance(new_value, str):
                         new_value = '\"' + new_value + '\"'
                     condition = condition.replace(replacement, str(new_value))
-                #print (condition)
+                # print (condition)
                 if eval(condition):
                     self.__trigger_messages.append(component)
-                    if not self.trigger_message(component, monitor_component_type, self.message_id, json.dumps(monitor_data)):
+                    if not self.trigger_message(component, monitor_component_type, self.message_id,
+                                                json.dumps(monitor_data)):
                         logger.error("Cannot insert the new notification")
                         print("Cannot insert the new notification")
 
@@ -399,7 +400,6 @@ class TriggerReader(object):
             if "triggers" in data:
                 trigger_id = 0
                 for trigger in data['triggers']:
-
                     self.__triggers.append(self.get_trigger_from_ymldata(trigger, trigger_id))
                     trigger_id += 1
             else:
@@ -417,6 +417,7 @@ class TriggerReader(object):
 
 class CheckTriggers(Monitor):
     """Class that reads the monitor data and triggers the appropiate messages"""
+
     def __init__(self):
         Monitor.__init__(self, MonitorTypes.CHECK_TRIGGERS)
         self.message = 'Sensor Dropped Packages monitor started'

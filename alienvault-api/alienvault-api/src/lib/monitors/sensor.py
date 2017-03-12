@@ -27,24 +27,24 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
+from itertools import chain
+
+import celery.utils.log
 from ansiblemethods.system.about import get_is_professional
+from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
+from apiexceptions import APIException
 from apimethods.sensor.network import get_network_stats
 from apimethods.sensor.plugin import (get_plugin_package_info_from_sensor_id,
                                       get_plugin_package_info_local,
                                       check_plugin_integrity,
+                                      get_sensor_plugins,
                                       get_sensor_plugins_enabled_by_asset)
 from apimethods.utils import compare_dpkg_version
-
+from db.methods.host import update_host_plugins
 from db.methods.system import (get_systems,
                                get_sensor_id_from_system_id,
                                get_system_ip_from_local)
 
-from db.methods.host import update_host_plugins
-
-from apiexceptions import APIException
-
-import celery.utils.log
 logger = celery.utils.log.get_logger("celery")
 
 
@@ -392,12 +392,10 @@ class MonitorUpdateHostPlugins(Monitor):
                 continue
 
             try:
-                sensor_plugins = get_sensor_plugins_enabled_by_asset(sensor_id=sensor_id,
-                                                                     no_cache=True)
+                sensor_plugins = get_sensor_plugins_enabled_by_asset(sensor_id=sensor_id, no_cache=True)
             except APIException as e:
                 logger.error("[MonitorUpdateHostPlugins] "
-                             "Can't obtain plugin information from system {0}: {1}".format(
-                                 system_id, str(e)))
+                             "Can't obtain plugin information from system {0}: {1}".format(system_id, str(e)))
                 continue
 
             # Add asset plugin sids to assets list
@@ -415,5 +413,61 @@ class MonitorUpdateHostPlugins(Monitor):
             logger.error("[MonitorUpdateHostPlugins] "
                          "Can't update host plugin information: {0}".format(msg))
             return False
+
+        return True
+
+
+class MonitorEnabledPluginsLimit(Monitor):
+    """
+        Check number of enabled plugins per sensor and
+    """
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_ENABLED_PLUGINS_LIMIT)
+        self.message = 'Enabled Plugins Limit Monitor started'
+
+    def start(self):
+        """ Starts the monitor activity """
+        # Remove the previous monitor data.
+        self.remove_monitor_data()
+
+        # Iterate over the sensors.
+        success, systems = get_systems(system_type="Sensor")
+
+        if not success:
+            logger.error("[MonitorEnabledPluginsLimit] Can't retrieve the system info: {0}".format(str(systems)))
+            return False
+
+        for (system_id, system_ip) in systems:
+            success, sensor_id = get_sensor_id_from_system_id(system_id)
+            if not success:
+                logger.error("[MonitorEnabledPluginsLimit] "
+                             "Can't resolve sensor_id of system {0}: {1}".format(system_id, sensor_id))
+                continue
+
+            try:
+                sensor_plugins = get_sensor_plugins(sensor_id=sensor_id, no_cache=True)
+                enabled_plugins = sensor_plugins.get('enabled', {})
+                enabled_global_count = len(enabled_plugins.get('detectors', []))
+                enabled_per_asset_count = len(list(chain.from_iterable(enabled_plugins.get('devices', {}).values())))
+                enabled_total = enabled_global_count + enabled_per_asset_count
+
+                # Temporal, should read it from from agent config (ansible method needed)
+                warning_threshold = 85
+                max_limit_threshold = 100
+
+                monitor_data = {
+                    'system_id': system_id,
+                    'system_ip': system_ip,
+                    'plugins_enabled_total': enabled_total,
+                    'plugins_allowed_to_add': max_limit_threshold - enabled_total,
+                    'limit_reached': enabled_total >= max_limit_threshold,
+                    'warning_reached': (warning_threshold <= enabled_total) and (enabled_total < max_limit_threshold)
+                }
+                if not self.save_data(sensor_id, ComponentTypes.SENSOR, self.get_json_message(monitor_data)):
+                    logger.error("[MonitorEnabledPluginsLimit] Cannot save monitor info")
+            except APIException as e:
+                logger.error("[MonitorEnabledPluginsLimit] "
+                             "Can't obtain plugin information from system {0}: {1}".format(system_id, str(e)))
+                continue
 
         return True

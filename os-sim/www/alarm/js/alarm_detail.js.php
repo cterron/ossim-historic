@@ -289,21 +289,25 @@ function alarm_detail(alarm, perms)
                 "show": true,
                 "action": self.create_ticket
             },
+            <?php if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") ) { ?>
             {
                 "name": "<?php echo Util::js_entities(_('Close Alarm')) ?>",
                 "show": (self.status == 'open'),
                 "action": self.close_alarm
             },
+            <?php } ?>
             {
                 "name": "<?php echo Util::js_entities(_('Open Alarm')) ?>",
                 "show": (self.status == 'closed'),
                 "action": self.open_alarm
             },
+            <?php if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") ) { ?>
             {
                 "name": "<?php echo Util::js_entities(_('Delete Alarm')) ?>",
                 "show": (self.status != 'correlating'),
                 "action": self.delete_alarm
             },
+            <?php } ?>
             {
                 "name": "<?php echo Util::js_entities(_('Add Label')) ?>",
                 "show": false,

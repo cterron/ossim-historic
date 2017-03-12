@@ -1240,4 +1240,3 @@ def ansible_resend_alarms(system_ip, alarms):
                 return False, err_msg
 
     return True, ''
-

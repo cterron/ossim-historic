@@ -284,6 +284,15 @@
     period: "hours"
   enabled: True
 
+"monitor_enabled_plugins_limit":
+  task: "celerymethods.tasks.monitor_tasks.monitor_enabled_plugins_limit"
+  args: []
+  kwargs: {}
+  interval:
+    every: 1
+    period: "hours"
+  enabled: True
+
 "insecured_vpn":
   task: "celerymethods.tasks.monitor_tasks.monitor_insecured_vpn"
   args: []

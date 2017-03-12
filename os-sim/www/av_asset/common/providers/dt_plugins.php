@@ -147,6 +147,23 @@ catch(Exception $e)
 $data = array();
 $i    = 0;
 
+$sensors = $asset_object->get_sensors($conn);
+if (!is_array($sensors)) {
+	$sensors = $sensors->get_sensors();
+}
+$counter = 0;
+foreach ($sensors as $key => $sensor) {
+	$asset_plugins = Plugin::get_plugins_by_assets($key);
+	$cnt = 0;
+	foreach ($asset_plugins as $ap) {
+		$cnt += count ($ap);
+	}
+	if ($cnt > $counter) {
+		$counter = $cnt;
+	}
+}
+
+
 try
 {
     if ($edit_mode)
@@ -298,7 +315,7 @@ catch(Exception $e)
     Util::response_bad_request($e->getMessage());
 }
 
-
+$response['total_counter']        = $counter;
 $response['sEcho']                = $sec;
 $response['iTotalRecords']        = $total;
 $response['iTotalDisplayRecords'] = $total_filtered;

@@ -767,7 +767,12 @@ if ($login != '')
         
             
 		$(document).ready(function(){
-						
+			$('[name="is_admin"]').change(function() {
+				var prop = $(this).val() == 1;
+                                $("#assets").prop( "disabled", prop );
+                                $("#sensors").prop( "disabled", prop );
+			});
+			 $('[name="is_admin"]:checked').change();
 			bind_perms_dependencies();
 			
 			Token.add_to_forms();

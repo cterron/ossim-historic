@@ -89,6 +89,9 @@ $sensor_query    = GET('sensor_query');
 $tag             = GET('tag');
 $num_events      = GET('num_events');
 $num_events_op   = GET('num_events_op');
+$risk_level      = GET('risk_level');
+$risk_level_op   = GET('risk_level_op');
+
 $date_from       = GET('date_from');
 $date_to         = GET('date_to');
 $ds_id           = GET('ds_id');
@@ -118,6 +121,8 @@ ossim_valid($sensor_query,    OSS_HEX, OSS_NULLABLE,                            
 ossim_valid($tag,             OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Tag"));
 ossim_valid($num_events,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Num_events"));
 ossim_valid($num_events_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Num_events_op"));
+ossim_valid($risk_level,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Risk_level"));
+ossim_valid($risk_level_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Risk_level_op"));
 ossim_valid($ds_id,           OSS_DIGIT, "-", OSS_NULLABLE,                                 'illegal:' . _("Datasource"));
 ossim_valid($beep,            OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Beep"));
 ossim_valid($host_id,         OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Host ID"));
@@ -172,6 +177,8 @@ $parameters['sensor_query']           = "sensor_query="   .$sensor_query;
 $parameters['tag']                    = "tag="            .$tag;
 $parameters['num_events']             = "num_events="     .$num_events;
 $parameters['num_events_op']          = "num_events_op="  .$num_events_op;
+$parameters['risk_level']             = "risk_level="     .$risk_level;
+$parameters['risk_level_op']          = "risk_level_op="  .$risk_level_op;
 $parameters['ds_id']                  = "ds_id="          .$ds_id;
 $parameters['ds_name']                = "ds_name="        .urlencode($ds_name);
 //$parameters['bypassexpirationupdate'] = "bypassexpirationupdate=1";
@@ -275,6 +282,8 @@ $criteria = array(
     "tag"           => $tag,
     "num_events"    => $num_events,
     "num_events_op" => $num_events_op,
+    "risk_level"    => $risk_level,
+    "risk_level_op" => $risk_level_op,
     "plugin_id"     => $plugin_id,
     "plugin_sid"    => $plugin_sid,
     "ctx"           => "",

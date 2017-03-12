@@ -9,25 +9,18 @@ import string
 import difflib
 from shutil import copyfile
 
-
-
 from avconfig.ossimsetupconfig import AVOssimSetupConfigHandler
 from ansiblemethods.system.network import set_interfaces_roles, get_iface_list
+
 ossim_setup = AVOssimSetupConfigHandler("/etc/ossim/ossim_setup.conf")
 admin_ip = ossim_setup.get_general_admin_ip()
 
+NET_IPS = {'eth1': "172.17.2.50", 'eth2': "172.17.2.51", 'eth3': "172.17.2.52", 'eth4': "172.17.2.53",
+           'eth5': "172.17.2.54"}
 
-NET_IPS = {'eth1':"172.17.2.50", 'eth2':"172.17.2.51", 'eth3':"172.17.2.52", 'eth4':"172.17.2.53", 'eth5':"172.17.2.54"}
+
 class TestNetworkSetInterfaces(unittest.TestCase):
     """Class to test the set_interface_roles function"""
-
-    def setUp(self):
-        #print ("TestNetworkSetInterfaces:setup() before each test method")
-        pass
-
-    def tearDown(self):
-        #print ("TestNetworkSetInterfaces:teardown() after each test method")
-        pass
 
     @classmethod
     def setUpClass(cls):
@@ -38,7 +31,7 @@ class TestNetworkSetInterfaces(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        #print ("TestNetworkSetInterfaces::tearDownClass() after any methods in this class")
+        # print ("TestNetworkSetInterfaces::tearDownClass() after any methods in this class")
         request_dic = {}
         if not isinstance(cls.net_current_status, dict):
             print("Can't tear down the interfaces... net_current_status invalid")
@@ -57,7 +50,7 @@ class TestNetworkSetInterfaces(unittest.TestCase):
                     ipv4 = eth_data['ipv4']['address']
                 if 'netmask' in eth_data['ipv4']:
                     netmask = eth_data['ipv4']['netmask']
-            request_dic[eth] = {'role':role, 'ipaddress':ipv4, 'netmask':netmask}
+            request_dic[eth] = {'role': role, 'ipaddress': ipv4, 'netmask': netmask}
         rc, data = set_interfaces_roles(admin_ip, request_dic)
         if not rc:
             print("Something wrong happen while restoring your net configuration %s" % data)
@@ -157,82 +150,81 @@ class TestNetworkSetInterfaces(unittest.TestCase):
 
     def test_0003(self):
         """Test 0003: Set Admin interface"""
-        print ('TestNetworkSetInterfaces:: test_set_admin_iface()')
+        print('TestNetworkSetInterfaces:: test_set_admin_iface()')
         system_ip = admin_ip
         # Try to set the admin interface (It's not allowed)
-        roles = {'eth0':{'role':'admin', 'ipaddress':'172.17.2.6', 'netmask':'255.255.255.0'}}
+        roles = {'eth0': {'role': 'admin', 'ipaddress': '172.17.2.6', 'netmask': '255.255.255.0'}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertFalse(rc)
 
     def test_0004(self):
         """Test 0004: set more than one admin iface"""
-        print ('TestNetworkSetInterfaces:: test_more_than_one_admin_iface()')
+        print('TestNetworkSetInterfaces:: test_more_than_one_admin_iface()')
         system_ip = admin_ip
         # Try to set more than one admin interface
-        roles = {'eth1':{'role':'admin', 'ipaddress':'172.17.2.6', 'netmask':'255.255.255.0'}}
+        roles = {'eth1': {'role': 'admin', 'ipaddress': '172.17.2.6', 'netmask': '255.255.255.0'}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertFalse(rc)
 
-
     def test_0005(self):
         """Test 0005: what happens when a  non existing interface is given to the method"""
-        print ('TestNetworkSetInterfaces:: test_non_existing_iface()')
+        print('TestNetworkSetInterfaces:: test_non_existing_iface()')
         system_ip = admin_ip
-        roles = {'ethxx1111':{'role':'monitoring'}}
+        roles = {'ethxx1111': {'role': 'monitoring'}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertFalse(rc)
 
     def test_0006(self):
         """Test 0006: Invalid Role"""
-        print ('TestNetworkSetInterfaces:: test_invalid_role()')
+        print('TestNetworkSetInterfaces:: test_invalid_role()')
         system_ip = admin_ip
-        roles = {'eth1':{'role':'invalid_role'}}
+        roles = {'eth1': {'role': 'invalid_role'}}
         rc, data = set_interfaces_roles(system_ip, roles)
-        print (data)
+        print(data)
         self.assertFalse(rc)
 
     def test_0007(self):
         """Test 0007: admin interface"""
-        print ('TestNetworkSetInterfaces:: test_disable_admin_interface()')
+        print('TestNetworkSetInterfaces:: test_disable_admin_interface()')
         system_ip = admin_ip
-        roles = {'eth0':{'role':'disabled', 'ipaddress':'192.168.2.2'}}
+        roles = {'eth0': {'role': 'disabled', 'ipaddress': '192.168.2.2'}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertFalse(rc)
 
     def test_0008(self):
         """Test 0008: disable eth1"""
-        print ('TestNetworkSetInterfaces:: test_disable_interface()')
+        print('TestNetworkSetInterfaces:: test_disable_interface()')
         system_ip = admin_ip
-        roles = {'eth1':{'role':'disabled', 'ipaddress':'192.168.2.2'}}
+        roles = {'eth1': {'role': 'disabled', 'ipaddress': '192.168.2.2'}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertTrue(rc)
 
     def test_0009(self):
         """Test 0009: disable all nics except the management one"""
-        print ('TestNetworkSetInterfaces:: test_disable_all_nics()')
+        print('TestNetworkSetInterfaces:: test_disable_all_nics()')
         system_ip = admin_ip
         roles = {
-                    'eth1':{'role':'disabled'},
-                    'eth2':{'role':'disabled'},
-                    'eth3':{'role':'disabled'},
-                    'eth4':{'role':'disabled'},
-                    'eth5':{'role':'disabled'},
-                 }
+            'eth1': {'role': 'disabled'},
+            'eth2': {'role': 'disabled'},
+            'eth3': {'role': 'disabled'},
+            'eth4': {'role': 'disabled'},
+            'eth5': {'role': 'disabled'},
+        }
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertTrue(rc)
 
     def test_0010(self):
         """Test 0010: set log management"""
-        print ('TestNetworkSetInterfaces:: test_set_log_management_without_ip_and_netmask()')
+        print('TestNetworkSetInterfaces:: test_set_log_management_without_ip_and_netmask()')
         system_ip = admin_ip
-        roles = {'eth1': {'role': 'log_management', 'ipaddress':None}}
+        roles = {'eth1': {'role': 'log_management', 'ipaddress': None}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertTrue(rc)
         self.assertTrue('eth1' in data)
         eth_rc, msg = data['eth1']
         self.assertFalse(eth_rc)
 
-        roles = {'eth1': {'role': 'log_management', 'ipaddress':"172.17.2.9", "netmaks":None}}
+        roles = {'eth1': {'role': 'log_management', 'ipaddress': "172.17.2.9", "netmaks": None}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertTrue(rc)
         self.assertTrue('eth1' in data)
@@ -241,22 +233,22 @@ class TestNetworkSetInterfaces(unittest.TestCase):
 
     def test_0011(self):
         """Test 0011: more than one interface with the same """
-        print ('TestNetworkSetInterfaces:: test_more_than_one_interface_with_the_same_ip()')
+        print('TestNetworkSetInterfaces:: test_more_than_one_interface_with_the_same_ip()')
         system_ip = admin_ip
-        roles = {'eth1':{'role':'log_management', 'ipaddress':admin_ip, 'netmask':'255.255.255.0'},
-                 'eth2':{'role':'log_management', 'ipaddress':admin_ip, 'netmask':'255.255.255.0'}}
+        roles = {'eth1': {'role': 'log_management', 'ipaddress': admin_ip, 'netmask': '255.255.255.0'},
+                 'eth2': {'role': 'log_management', 'ipaddress': admin_ip, 'netmask': '255.255.255.0'}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertFalse(rc)
 
     def test_0012(self):
         """Test 0012: valid configuration """
-        print ('TestNetworkSetInterfaces:: test_valid_config()')
+        print('TestNetworkSetInterfaces:: test_valid_config()')
         system_ip = admin_ip
-        roles = {'eth1':{'role':'log_management', 'ipaddress':NET_IPS['eth1'], 'netmask':'255.255.255.0'},
-                 'eth2':{'role':'log_management', 'ipaddress':NET_IPS['eth2'], 'netmask':'255.255.255.0'},
-                 'eth3':{'role':'monitoring', 'ipaddress':NET_IPS['eth3'], 'netmask':'255.255.255.0'},
-                 'eth4':{'role':'monitoring', 'ipaddress':NET_IPS['eth4'], 'netmask':'255.255.255.0'},
-                 'eth5':{'role':'monitoring', 'ipaddress':NET_IPS['eth5'], 'netmask':'255.255.255.0'}}
+        roles = {'eth1': {'role': 'log_management', 'ipaddress': NET_IPS['eth1'], 'netmask': '255.255.255.0'},
+                 'eth2': {'role': 'log_management', 'ipaddress': NET_IPS['eth2'], 'netmask': '255.255.255.0'},
+                 'eth3': {'role': 'monitoring', 'ipaddress': NET_IPS['eth3'], 'netmask': '255.255.255.0'},
+                 'eth4': {'role': 'monitoring', 'ipaddress': NET_IPS['eth4'], 'netmask': '255.255.255.0'},
+                 'eth5': {'role': 'monitoring', 'ipaddress': NET_IPS['eth5'], 'netmask': '255.255.255.0'}}
         rc, data = set_interfaces_roles(system_ip, roles)
         self.assertTrue(rc)
         rc, data = get_iface_list(admin_ip)

@@ -180,13 +180,13 @@ tr.g_alarm_list > td, tr.a_event_list > td
     width: 100% !important;
 }
 
-#num_events
+.alarms_op_value
 {
     width: 64% !important;
     margin: 0 !important;
 }
 
-#num_events_op
+.alarms_op
 {
     width: 15% !important;
     margin: 0 !important;

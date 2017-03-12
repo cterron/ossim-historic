@@ -27,35 +27,30 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-from apimethods.utils import get_bytes_from_uuid
+import os.path
 
+from apimethods.utils import get_bytes_from_uuid
 from db.methods.data import (get_current_status_messages,
                              set_current_status_message_as_viewed,
                              set_current_status_message_as_suppressed,
                              get_current_status_message_from_id,
                              get_current_status_messages_stats)
-
 from db.methods.data import (load_mcserver_messages,
                              delete_messages,
                              db_insert_current_status_message,
                              load_messages_to_db)
-
 from db.methods.system import get_system_id_from_local, db_get_hostname
 
-from time import time
-
-import os.path
-
-from datetime import datetime
 
 def _format_handle_n_assets(message, additional_info):
     """
         message is pased by ref. I can modify it on fly
     """
-    assets = additional_info['00000000000000000000000000010024'] 
+    assets = additional_info['00000000000000000000000000010024']
     nassets = assets.get('over_assets', None)
     if nassets is not None:
-        message['message_title'] = message['message_title'].replace('NUM_ASSETS', str(assets.get('exceeding_assets', 0)))
+        message['message_title'] = message['message_title'].replace('NUM_ASSETS',
+                                                                    str(assets.get('exceeding_assets', 0)))
 
 
 def _format_plugins_changed(message, additional_info):
@@ -65,7 +60,8 @@ def _format_plugins_changed(message, additional_info):
     """
     plugin_names = [os.path.basename(base) for base in additional_info['plugins_changed']]
     message['message_title'] = message['message_title'].replace('PLUGINS_CHANGED', ", ".join(plugin_names))
-    message['message_description'] = message['message_description'].replace('PATH_PLUGINS_CHANGED', ", ".join(additional_info['plugins_changed']))
+    message['message_description'] = message['message_description'].replace('PATH_PLUGINS_CHANGED', ", ".join(
+        additional_info['plugins_changed']))
     message['message_description'] = message['message_description'].replace('PLUGINS_CHANGED', ", ".join(plugin_names))
 
 
@@ -75,7 +71,8 @@ def _format_plugins_removed(message, additional_info):
     """
     plugin_names = [os.path.basename(base) for base in additional_info['plugins_removed']]
     message['message_title'] = message['message_title'].replace('PLUGINS_REMOVED', ", ".join(plugin_names))
-    message['message_description'] = message['message_description'].replace('PATH_PLUGINS_REMOVED', ", ".join(additional_info['plugins_removed']))
+    message['message_description'] = message['message_description'].replace('PATH_PLUGINS_REMOVED', ", ".join(
+        additional_info['plugins_removed']))
     message['message_description'] = message['message_description'].replace('PLUGINS_REMOVED', ", ".join(plugin_names))
 
 
@@ -85,8 +82,10 @@ def _format_rsyslog_files_removed(message, additional_info):
     """
     rsyslog_names = [os.path.basename(base) for base in additional_info['rsyslog_files_removed']]
     message['message_title'] = message['message_title'].replace('RSYSLOG_FILES_REMOVED', ", ".join(rsyslog_names))
-    message['message_description'] = message['message_description'].replace('PATH_RSYSLOG_FILES_REMOVED', ", ".join(additional_info['rsyslog_files_removed']))
-    message['message_description'] = message['message_description'].replace('RSYSLOG_FILES_REMOVED', ", ".join(rsyslog_names))
+    message['message_description'] = message['message_description'].replace('PATH_RSYSLOG_FILES_REMOVED', ", ".join(
+        additional_info['rsyslog_files_removed']))
+    message['message_description'] = message['message_description'].replace('RSYSLOG_FILES_REMOVED',
+                                                                            ", ".join(rsyslog_names))
 
 
 def _format_rsyslog_files_changed(message, additional_info):
@@ -95,21 +94,39 @@ def _format_rsyslog_files_changed(message, additional_info):
     """
     rsyslog_names = [os.path.basename(base) for base in additional_info['rsyslog_files_changed']]
     message['message_title'] = message['message_title'].replace('RSYSLOG_FILES_CHANGED', ", ".join(rsyslog_names))
-    message['message_description'] = message['message_description'].replace('PATH_RSYSLOG_FILES_CHANGED', ", ".join(additional_info['rsyslog_files_changed']))
-    message['message_description'] = message['message_description'].replace('RSYSLOG_FILES_CHANGED', ", ".join(rsyslog_names))
+    message['message_description'] = message['message_description'].replace('PATH_RSYSLOG_FILES_CHANGED', ", ".join(
+        additional_info['rsyslog_files_changed']))
+    message['message_description'] = message['message_description'].replace('RSYSLOG_FILES_CHANGED',
+                                                                            ", ".join(rsyslog_names))
+
+
+def _format_enabled_plugins_limit(message, additional_info):
+    """
+        Format message for enabled plugins limit.
+    """
+    message['message_description'] = message['message_description'].replace('SYSTEM_IP',
+                                                                            additional_info.get('system_ip',
+                                                                                                '127.0.0.1'))
+    message['message_description'] = message['message_description'].replace(
+        'PLG_ENABLED',
+        str(additional_info.get('plugins_enabled_total', 85))
+    )
+    plugins_allowed = additional_info.get('plugins_allowed_to_add', 15)
+    # If we reached the limit -> get an absolute number of exceeded plugins
+    disable_plg_count = str(abs(plugins_allowed)) if plugins_allowed < 0 else 'any'
+    message['message_description'] = message['message_description'].replace('PLG_CAN_ADD', str(plugins_allowed))
+    message['message_actions'] = message['message_actions'].replace('PLG_DISABLE', disable_plg_count)
 
 
 def _format_system_name(message, additional_info):
     """
         Format system name
     """
-    success, name = db_get_hostname(additional_info['system_id'])
-    if not success:
-        system_name = "Unknown"
-    else:
-        system_name = name
+    name_success, name = db_get_hostname(additional_info['system_id'])
+
+    message['message_title'] = message['message_title'].replace('SYSTEM_NAME', 'Unknown' if not name_success else name)
     message['message_description'] = message['message_description'].replace('SYSTEM_NAME',
-                                                                            system_name)
+                                                                            'Unknown' if not name_success else name)
 
 
 def format_messages(messages):
@@ -123,6 +140,7 @@ def format_messages(messages):
         '00000000000000000000000000010024': _format_handle_n_assets,
         'plugins_changed': _format_plugins_changed,
         'plugins_removed': _format_plugins_removed,
+        'plugins_enabled_total': _format_enabled_plugins_limit,
         'rsyslog_files_removed': _format_rsyslog_files_removed,
         'rsyslog_files_changed': _format_rsyslog_files_changed,
         'system_id': _format_system_name
@@ -134,7 +152,9 @@ def format_messages(messages):
             for key in [x for x in additional_info.keys() if x in cases.keys()]:
                 cases[key](message=message, additional_info=additional_info)
         # The message_creation is a datetime.datetime object
-        message['message_description'] = message['message_description'].replace('TIMESTAMP', message['creation_time'].strftime("%Y-%m-%d %H:%M:%S") + " UTC")
+        message['message_description'] = message['message_description'].replace('TIMESTAMP',
+                                                                                message['creation_time'].strftime(
+                                                                                    "%Y-%m-%d %H:%M:%S") + " UTC")
 
 
 def get_status_messages(component_id=None,
@@ -247,8 +267,9 @@ def insert_current_status_message(message_id, component_id, component_type, addi
     return db_insert_current_status_message(message_id, component_id, component_type, additional_info, replace)
 
 
-def insert_custom_message(message, component_id, component_type, additional_info, replace, created = None):
+def insert_custom_message(message, component_id, component_type, additional_info, replace, created=None):
     success, data = load_messages_to_db([message])
     if success:
-        return db_insert_current_status_message(message.id,component_id, component_type, additional_info, replace, created)
+        return db_insert_current_status_message(message.id, component_id, component_type, additional_info, replace,
+                                                created)
     return (False, "error")

@@ -60,11 +60,12 @@ $intent 	   = intval(POST('intent'));
 $directive_id  = POST('directive_id');
 $num_events    = POST('num_events');
 $num_events_op = POST('num_events_op');
+$risk_level   = POST('risk_level');
+$risk_level_op   = POST('risk_level_op');
 $tag           = POST('tag');
 $show_options  = POST('show_options');
 $no_resolv 	   = intval(POST('no_resolv'));
 $hide_closed   = intval(POST('hide_closed'));
-
 
 ossim_valid($group_type,      OSS_ALPHA,                                               'illegal:' . _("Group Type"));
 ossim_valid($sensor_query,    OSS_HEX, OSS_NULLABLE,                                   'illegal:' . _("Sensor"));
@@ -78,6 +79,8 @@ ossim_valid($intent,          OSS_DIGIT, OSS_NULLABLE, 							       'illegal:' 
 ossim_valid($directive_id,    OSS_DIGIT, OSS_NULLABLE, 							       'illegal:' . _("Directive ID"));
 ossim_valid($num_events,      OSS_DIGIT, OSS_NULLABLE, 								   'illegal:' . _("Num Events"));
 ossim_valid($num_events_op,   OSS_ALPHA, OSS_NULLABLE, 							       'illegal:' . _("Num Events Operator"));
+ossim_valid($risk_level,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Risk_level"));
+ossim_valid($risk_level_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Risk_level_op"));
 ossim_valid($tag,             OSS_HEX, OSS_NULLABLE, 								   'illegal:' . _("Tag"));
 ossim_valid($no_resolv,       OSS_DIGIT, OSS_NULLABLE, 								   'illegal:' . _("No Resolv"));
 ossim_valid($hide_closed,     OSS_DIGIT, OSS_NULLABLE, 					               'illegal:' . _("Hide Closed"));
@@ -126,6 +129,8 @@ $criteria = array(
     'intent'        => $intent,
     'num_events'    => $num_events,
     'num_events_op' => $num_events_op,
+    'risk_level'    => $risk_level,
+    'risk_level_op' => $risk_level_op,
     'tag'           => $tag,
     'limit'         => "LIMIT $offset, $limit"
 );

@@ -701,7 +701,6 @@ class Ossec_agent
 
             $db->close();
         }
-
         $actions = array(
             'restart' => array(
                 'perms' => (!$is_local_agent),
@@ -747,7 +746,7 @@ class Ossec_agent
             ),
             'deployment' => array(
                 'perms' => (!$is_local_agent && $is_windows_os),
-                'title' => _('Automatic deployment for Windows OS'),
+                'title' => $is_windows_os ? _('Automatic HIDS deployment for Windows') : _("Unable to deploy HIDS. Asset must have a Windows OS defined. Please update the asset details and try again."),
                 'img'   => "w_installer.png",
                 'id'    => "_w_deployment_##_".base64_encode($agent_id.'###'.$asset_id)
             ),
@@ -771,11 +770,11 @@ class Ossec_agent
         {
             if ($a_data['perms'] == TRUE)
             {
-                $action_buttons .= "<a id='".$a_data['id']."'><img class='action_icon w16' src='$path/".$a_data['img']."' alt='".$a_data['title']."' data-title='".$a_data['title']."'/></a>";
+                $action_buttons .= "<a id='".$a_data['id']."'><img class='action_icon w16' src='$path/".$a_data['img']."' alt=\"{$a_data['title']}\" data-title=\"{$a_data['title']}\"/></a>";
             }
             else
             {
-                $action_buttons .= "<span class='unbind'><img class='action_icon w16' src='$path/".$a_data['img']."' alt='".$a_data['title']."' data-title='".$a_data['title']."'/></span>";
+                $action_buttons .= "<span class='unbind'><img class='action_icon w16' src='$path/".$a_data['img']."' alt=\"{$a_data['title']}\" data-title=\"{$a_data['title']}\"/></span>";
             }
         }
 

@@ -208,11 +208,19 @@ $db->close();
                 <input type="search" id="num_alarms_page" name="num_alarms_page" value="">-->
 
                 <label for='num_events_op'><?php echo _('Number of events in alarm') ?></label>
-                <select id='num_events_op' class='ag_param' name='num_events_op'>
+                <select id='num_events_op' class='ag_param alarms_op' name='num_events_op'>
                     <option value="less"><=</option>
                     <option value="more">>=</option>
                 </select>
-                <input type='search' class='ag_param' id='num_events' name='num_events' value=''>
+                <input type='search' class='ag_param alarms_op_value' id='num_events' name='num_events' value=''>
+
+                <label for="risk_level"><?php echo _('Risk level in alarms')?></label>
+                <select name="risk_level_op" id='risk_level_op' class="alarms_op ag_param">
+                    <option value="less" <?php if ($risk_level_op == "less") echo "selected='selected'"?>>&lt;=</option>
+                    <option value="more" <?php if ($risk_level_op == "more") echo "selected='selected'"?>>&gt;=</option>
+                </select>
+                &nbsp;<input type="text" name="risk_level" id="risk_level" size='3' value="<?php echo $risk_level ?>" class="alarms_op_value ag_param"/>
+
 
                 <label for='tag'><?php echo _('Label') ?></label>
                 <select id='tag' class='ag_param' name='tag'>

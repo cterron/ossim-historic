@@ -1291,6 +1291,8 @@ class Alarm
         $tag                = $params['tag'];
         $num_events         = $params['num_events'];
         $num_events_op      = $params['num_events_op'];
+        $risk_level         = $params['risk_level'];
+        $risk_level_op      = $params['risk_level_op'];
         $plugin_id          = $params['plugin_id'];
         $plugin_sid         = $params['plugin_sid'];
         $ctx                = $params['ctx'];
@@ -1299,7 +1301,6 @@ class Alarm
         $host_group         = $params['host_group'];
         $pulse_id           = $params['pulse_id'];
         $otx_activity       = $params['otx_activity'];
-
         $_SESSION["_alarm_perms_where"]  = "";
         $_SESSION["_alarm_perms_from"]   = "";
         $_SESSION["_alarm_sensor_where"] = "";
@@ -1316,7 +1317,12 @@ class Alarm
         //Permissions
         //
         list($ctx_join, $perms_where) = self::make_perms_where($ctx, $host, Asset_net::get_subnets($conn,$net));
-        
+        if (!Session::am_i_admin()) {
+            if (!$sensor) {
+                list($asset_sensors) = Av_sensor::get_list($conn, array(), FALSE, TRUE);
+                $sensor = implode("','",array_keys($asset_sensors));
+            }
+        }
         if (!empty($perms_where))
         {
             $where[] = $perms_where;
@@ -1436,7 +1442,8 @@ class Alarm
                 $ctx_join = " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm $ctx_join";
             }
         }
-                
+            
+
         /* number of events per page */
         $limit = "";
         if ($sup !== NULL && $inf !== NULL)
@@ -1492,10 +1499,9 @@ class Alarm
             $join['event'] = 'event e';
             $join['backlog_event'] = 'backlog_event be';
 
-            $where[] = "be.event_id=e.id AND be.backlog_id=a.backlog_id AND e.sensor_id=unhex('$sensor')";
-            $_SESSION["_alarm_sensor_where"] = " AND event.sensor_id=unhex('$sensor') ";
+            $where[] = "be.event_id=e.id AND be.backlog_id=a.backlog_id AND hex(e.sensor_id) IN ('$sensor')";
+            $_SESSION["_alarm_sensor_where"] = " AND hex(event.sensor_id) IN ('$sensor') ";
         }
-
         /* Tag filter */
         if ($tag != "") 
         {
@@ -1540,6 +1546,12 @@ class Alarm
             
             $where[] = " (a.backlog_id in (select backlog_id from (SELECT count(*) as total_events,backlog_event.backlog_id FROM backlog_event, event WHERE event.id = backlog_event.event_id AND event.plugin_id<>1505 GROUP BY backlog_id having total_events $num_events_op $num_events) as bk) $zero)";
         }
+        /* Number of events threshold filter */
+        if ($risk_level != '' && $risk_level_op != '')
+        {
+            $risk_level_op = $risk_level_op == "less" ? '<=' : ( $risk_level_op == "more" ? '>=' :  '=');
+            $where[] = "a.risk $risk_level_op $risk_level";
+        }
         
         
         // taxonomy left join
@@ -1551,7 +1563,6 @@ class Alarm
         
         $sql = "SELECT ".($cache ? "" : "SQL_CALC_FOUND_ROWS ")."DISTINCT a.*, a.plugin_id as plid, a.plugin_sid as plsid, count(distinct a.similar) as csimilar, ki.id as kid, ki.name as kingdom, ca.name as category, ta.subcategory FROM alarm a $tax_left_join $ctx_join $sql_join $sql_where GROUP BY a.similar $order $limit";
         $sql_count = "SELECT COUNT(*) FROM (SELECT DISTINCT a.* FROM alarm a $tax_left_join $ctx_join $sql_join $sql_where GROUP BY a.similar) as tmp";
-
         $_SESSION["_alarm_perms_from"]  = "FROM alarm a $tax_left_join $ctx_join $sql_join";
         $_SESSION["_alarm_perms_where"] = "$sql_where";
         
@@ -1559,9 +1570,7 @@ class Alarm
         {
             file_put_contents("/tmp/alarms", "ALARM:$sql\n", FILE_APPEND);
         }
-
         $num_rows = 0;
-        
         if ($cache)
         { // Cache query and do not use SQL_CALC_FOUND_ROWS
             $rs = $conn->CacheExecute($sql);
@@ -1633,7 +1642,6 @@ class Alarm
 
             $rs->MoveNext();
         }
-
         return array(
             $list,
             $num_rows
@@ -1693,6 +1701,7 @@ class Alarm
         $net_arr  = ($net_id  != "") ? explode(',',$net_id)  : array();
         $hosts    = Session::get_host_where_intersect($host_arr);
         $nets     = Session::get_net_where_intersect($net_arr);
+
         if ($hosts != "" && !Session::only_ff_host())
         {
             $w = "";
@@ -3425,6 +3434,7 @@ class Alarm
 
             $rs->MoveNext();
         }
+        
         return $pulse_list;
     }
     
@@ -3513,12 +3523,13 @@ class Alarm
         
         list($p_join, $p_where) = self::make_perms_where();
         $p_where = ($p_where) ? ' AND ' . $p_where : '';
+        
         $params  = array($backlog_id);
-
-        $sql = "SELECT DISTINCT INET6_NTOA(e.src_ip) AS src_ip, e.rep_prio_src, e.rep_rel_src, e.rep_act_src, INET6_NTOA(e.dst_ip) AS dst_ip, e.rep_prio_dst, e.rep_rel_dst, e.rep_act_dst  
-            FROM alarm a 
-            JOIN backlog_event be ON a.backlog_id=be.backlog_id 
-            JOIN event e ON be.event_id = e.id 
+        
+        $sql = "SELECT DISTINCT INET6_NTOA(e.src_ip) AS src_ip, e.rep_prio_src, e.rep_rel_src, e.rep_act_src, INET6_NTOA(e.dst_ip) AS dst_ip, e.rep_prio_dst, e.rep_rel_dst, e.rep_act_dst
+            FROM alarm a
+            JOIN backlog_event be ON a.backlog_id=be.backlog_id
+            JOIN event e ON be.event_id = e.id
             $p_join
             WHERE a.backlog_id=UNHEX(?) AND (e.rep_prio_src > 0 OR e.rep_prio_dst > 0)
             $p_where;";

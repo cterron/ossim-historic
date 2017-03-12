@@ -352,6 +352,8 @@ class Alarm_groups
         $intent        = intval($params['intent']);
         $num_events    = $params['num_events'];
         $num_events_op = $params['num_events_op'];
+        $risk_level    = $params['risk_level'];
+        $risk_level_op = $params['risk_level_op'];
         $tag           = $params['tag'];
         $limit         = isset($params['limit']) ? $params['limit'] : 'LIMIT 0,10';
     
@@ -481,6 +483,14 @@ class Alarm_groups
             else $num_events_op = "=";
             $ev_where = " AND a.backlog_id in (select backlog_id from (SELECT count(*) as total_events,backlog_event.backlog_id FROM backlog_event, event WHERE event.id = backlog_event.event_id AND event.plugin_id<>1505 GROUP BY backlog_id having total_events $num_events_op $num_events) as bk)";
         }
+	//risk level
+	$having = "";
+        if ($risk_level != "" && $risk_level_op != "")
+        {
+            $risk_level_op = $risk_level_op == "less" ? "<=" :($risk_level_op == "more" ? ">=" : "=");
+            $having = " HAVING max_risk $risk_level_op $risk_level ";
+        }
+
         // Tags
         if ($tag != "")
         {           
@@ -560,6 +570,7 @@ class Alarm_groups
                         $directive_where
                         $groups_where 
                         GROUP BY a.similar 
+                        $having
                         ORDER BY a.timestamp DESC
                         $limit";
 
@@ -589,6 +600,7 @@ class Alarm_groups
             $tag_where)
             ) as alarm_event
             GROUP BY name
+            $having
             ORDER BY howmany DESC $limit";
 
         // Group by name, date
@@ -618,6 +630,7 @@ class Alarm_groups
                 $tag_where)
                 ) as alarm_event
                 GROUP BY name, day
+                $having
                 ORDER BY alarm_event.timestamp DESC $limit";
 
         // Group by name, ips, date (all)
@@ -650,6 +663,7 @@ class Alarm_groups
                 $tag_where)
                 ) as alarm_event
                 GROUP BY name, src_ip, dst_ip, day
+                $having
                 ORDER BY alarm_event.timestamp DESC $limit";
         }
         

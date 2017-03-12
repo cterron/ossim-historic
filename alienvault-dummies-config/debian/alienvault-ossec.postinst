@@ -41,6 +41,9 @@ case "$1" in
         OSSEC_RULES_FILE="/var/ossec/rules/ossec_rules.xml"
         SYSLOG_RULES_FILE="/var/ossec/rules/syslog_rules.xml"
         AV_DS_RULES_FILE="/var/ossec/rules/alienvault-directory-service_rules.xml"
+        AV_WINDOWS_FIM_RULES_FILE="/var/ossec/rules/alienvault-windows-FIM_rules.xml"
+        AV_WINDOWS_LOGON_LOGOFF_RULES_FILE="/var/ossec/rules/alienvault-windows-logon-logoff_rules.xml"
+        AV_WINDOWS_USB_RULES_FILE="/var/ossec/rules/alienvault-windows-USB_rules.xml"
 	MSAUTH_RULES_FILE="/var/ossec/rules/msauth_rules.xml"
 
         configure_ossec_tzone
@@ -74,6 +77,12 @@ case "$1" in
                 -e "s#</rules>#  <include>ms_dhcp_rules.xml<\/include>\n  </rules>#" \
                 -e "/<include>alienvault-directory-service_rules.xml<\/include>/d" \
                 -e "s#</rules>#  <include>alienvault-directory-service_rules.xml<\/include>\n  </rules>#" \
+                -e "/<include>alienvault-windows-FIM_rules.xml<\/include>/d" \
+                -e "s#</rules>#  <include>alienvault-windows-FIM_rules.xml<\/include>\n  </rules>#" \
+                -e "/<include>alienvault-windows-logon-logoff_rules.xml<\/include>/d" \
+                -e "s#</rules>#  <include>alienvault-windows-logon-logoff_rules.xml<\/include>\n  </rules>#" \
+                -e "/<include>alienvault-windows-USB_rules.xml<\/include>/d" \
+                -e "s#</rules>#  <include>alienvault-windows-USB_rules.xml<\/include>\n  </rules>#" \
 
             # Decoder changes. We need to deal with the user changes, so we only replace the dhcp line decoder.
             # Do not overwrite the files. 
@@ -122,6 +131,21 @@ case "$1" in
         if [ -f "$AV_DS_RULES_FILE" ]; then
             chmod 554 $AV_DS_RULES_FILE
             chown root:ossec $AV_DS_RULES_FILE
+        fi
+
+        if [ -f "$AV_WINDOWS_FIM_RULES_FILE" ]; then
+            chmod 554 $AV_WINDOWS_FIM_RULES_FILE
+            chown root:ossec $AV_WINDOWS_FIM_RULES_FILE
+        fi
+
+        if [ -f "$AV_WINDOWS_LOGON_LOGOFF_RULES_FILE" ]; then
+            chmod 554 $AV_WINDOWS_LOGON_LOGOFF_RULES_FILE
+            chown root:ossec $AV_WINDOWS_LOGON_LOGOFF_RULES_FILE
+        fi
+
+        if [ -f "$AV_WINDOWS_USB_RULES_FILE" ]; then
+            chmod 554 $AV_WINDOWS_USB_RULES_FILE
+            chown root:ossec $AV_WINDOWS_USB_RULES_FILE
         fi
 
         MD5_POS=`md5sum $OSSEC_CONF|awk '{print $1}'`

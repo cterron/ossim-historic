@@ -356,3 +356,7 @@ textarea
 {
     margin-bottom: 0px !important;
 }
+.agent-hids-message {
+    text-align: left;
+    width: 50%;
+}

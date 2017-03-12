@@ -29,6 +29,10 @@ Session::logcheck("analysis-menu", "EventsForensics");
 $db = NewBASEDBConnection($DBlib_path, $DBtype);
 $db->baseDBConnect($db_connect_method, $alert_dbname, $alert_host, $alert_port, $alert_user, $alert_password);
 
+$categories = GetPluginCategories($db);
+$subcategories = GetPluginSubCategories($db,$categories);
+$subcategories_json = json_encode($subcategories);
+
 $cs = new CriteriaState("base_qry_main.php", "&amp;new=1&amp;submit=" . gettext("Query+DB"));
 $cs->ReadState();
 
@@ -141,10 +145,29 @@ else
         $('#mode').val(submit_value);
     }
 
+
+    var categories = <?php echo $subcategories_json; ?>;
     $(document).ready(function()
     {
         $('.av_toggle').av_toggle();
+        $("#category-select").change(function() {
+            var val = $(this).val();
+            var tr = $("#subcategory-tr");
+            var select = $("#subcategory-select");
+            select.html("<option value=\"\"></option>");
+            if (!val || !categories[$(this).val()]) {
+                tr.addClass("hidden");
+                return;
+            }
+            var subcats = categories[val];
+            for (var subcat in subcats) {
+                select.append("<option value=\""+subcat+"\">"+subcats[subcat]+"</option>");
+            }
+            tr.removeClass("hidden");
+        });
     });
+</script>
+
 
 </script>
 
@@ -350,6 +373,7 @@ echo '
       <TD class="left">
         <select name="sourcetype"><option value=""></option>';
         $srctypes = GetSourceTypes($db);
+
         foreach ($srctypes as $srctype_id => $srctype_name) echo "<option value=\"$srctype_id\"".(($_SESSION["sourcetype"]==$srctype_id) ? " selected" : "").">" ._($srctype_name) ."</option>\n";
 echo '
         </select>
@@ -359,34 +383,29 @@ echo '
   <TR>
       <TD class="left uppercase" style="padding-left:20px"><B>'._("Event Category").':</B></TD>
       <TD class="left">
-        <select name="category[0]"><option value=""></option>';
-        $categories = GetPluginCategories($db);
+        <select id="category-select" name="category[0]"><option value=""></option>';
         foreach ($categories as $idcat => $category) echo "<option value=\"$idcat\"".(($_SESSION["category"][0]!=0 && $_SESSION["category"][0]==$idcat) ? " selected" : "").">" . _($category) . "</option>\n";
 echo '
         </select>
       </TD>
   </TR>';
-if ($_SESSION["category"][0] > 0)
-{
+$is_active = $_SESSION["category"][0] > 0;
 echo '
-  <TR>
+  <TR id="subcategory-tr" class="'.($is_active ?: "hidden").'">
       <TD class="left uppercase" style="padding-left:20px"><B>'._("Event Sub Category").':</B></TD>
       <TD class="left">
-        <select name="category[1]"><option value=""></option>';
-        $subcategories = GetPluginSubCategories($db,$categories);
-        if (is_array($subcategories[$_SESSION["category"][0]]))
+        <select id="subcategory-select" name="category[1]"><option value=""></option>';
+        if ($is_active && is_array($subcategories[$_SESSION["category"][0]]))
         {
             foreach ($subcategories[$_SESSION["category"][0]] as $idscat => $subcategory)
             {
-               echo "<option value=\"$idscat\"".(($_SESSION["category"][1]!=0 && $_SESSION["category"][1]==$idscat) ? " selected" : "").">$subcategory</option>\n";
+                echo "<option value=\"$idscat\"".(($_SESSION["category"][1]!=0 && $_SESSION["category"][1]==$idscat) ? " selected" : "").">$subcategory</option>\n";
             }
         }
 echo '
         </select>
       </TD>
   </TR>';
-}
-
 echo '
 </TABLE>
 

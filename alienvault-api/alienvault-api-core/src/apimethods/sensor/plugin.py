@@ -29,39 +29,34 @@
 """
     Apimetods to deal with the plugin information from API
 """
-from tempfile import NamedTemporaryFile
+import json
 import os
 import os.path
 import shutil
 import uuid
-import json
+from tempfile import NamedTemporaryFile
 
 import api_log
-
+from ansiblemethods.sensor.detector import set_sensor_detectors_from_yaml
 from ansiblemethods.sensor.plugin import (get_plugin_package_info,
                                           ansible_check_plugin_integrity,
                                           ansible_get_sensor_plugins)
-from ansiblemethods.sensor.detector import set_sensor_detectors_from_yaml
-from ansiblemethods.system.util import fetch_if_changed
+from ansiblemethods.system.about import get_is_professional
 from ansiblemethods.system.system import install_debian_package
-from apimethods.system.system import check_update_and_reconfig_status
-from apimethods.system.cache import use_cache
+from ansiblemethods.system.util import fetch_if_changed
+from apiexceptions.common import APIInvalidInputFormat
+from apiexceptions.plugin import APICannotSetSensorPlugins
+from apiexceptions.sensor import APICannotResolveSensorID
 from apimethods.system.cache import flush_cache
-
-from db.methods.sensor import get_sensor_ip_from_sensor_id
+from apimethods.system.cache import use_cache
+from apimethods.system.system import check_update_and_reconfig_status
+from celery_once import AlreadyQueued
+from celerymethods.jobs.alienvault_agent_restart import restart_alienvault_agent
+from db.methods.data import get_asset_ip_from_id
+from db.methods.sensor import get_newest_plugin_system, get_sensor_ip_from_sensor_id
 from db.methods.system import (get_system_id_from_local,
                                get_system_ip_from_local,
                                get_system_ip_from_system_id)
-from ansiblemethods.system.about import get_is_professional
-from db.methods.sensor import get_newest_plugin_system
-from db.methods.data import get_asset_ip_from_id
-
-from celerymethods.jobs.alienvault_agent_restart import restart_alienvault_agent
-from celery_once import AlreadyQueued
-
-from apiexceptions.sensor import APICannotResolveSensorID
-from apiexceptions.plugin import APICannotSetSensorPlugins
-from apiexceptions.common import APIInvalidInputFormat
 
 
 def get_plugin_package_info_from_sensor_id(sensor_id):
@@ -326,12 +321,15 @@ def set_sensor_plugins_enabled_by_asset(sensor_id, assets_info):
     # Flush sensor plugin cache and Update host plugin info
     flush_cache("sensor_plugins")
     # Import here to avoid circular imports
-    from celerymethods.tasks.monitor_tasks import monitor_update_host_plugins
+    from celerymethods.tasks.monitor_tasks import (monitor_update_host_plugins, monitor_enabled_plugins_limit)
     try:
         monitor_update_host_plugins.delay()
     except AlreadyQueued:
-        api_log.info("[set_sensor_plugins_enabled_by_asset] "
-                     "monitor update host plugins already queued")
+        api_log.info("[set_sensor_plugins_enabled_by_asset] monitor update host plugins already queued")
+    try:
+        monitor_enabled_plugins_limit.delay()
+    except AlreadyQueued:
+        api_log.info("[set_sensor_plugins_enabled_by_asset] monitor for enabled plugins already queued")
 
     # Restart the alienvault agent
     job = restart_alienvault_agent.delay(sensor_ip=sensor_ip)

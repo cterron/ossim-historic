@@ -463,6 +463,7 @@ def db_remove_system(system_id):
     except Exception as err:
         db.session.rollback()
         return False, "Something wrong happened while removing the system from the database: %s" % str(err)
+
     return True, ""
 
 
@@ -482,7 +483,6 @@ def db_add_system(system_id, name, admin_ip, vpn_ip=None, profile='', server_id=
         api_log.error(str(e))
         db.session.rollback()
         return False, 'Something wrong happened while adding the system into the database'
-
     return True, ''
 
 

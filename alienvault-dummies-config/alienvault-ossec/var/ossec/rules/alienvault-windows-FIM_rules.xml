@@ -1,0 +1,26 @@
+<group name="file,audit,">
+    <rule id="12009" level="10">
+      <if_sid>18104</if_sid>
+      <status>^AUDIT_SUCCESS|^success</status>
+      <match>Access Mask: 0x10000$</match>
+      <description>Windows file deleted.</description>
+    </rule>
+    <rule id="12010" level="10">
+      <if_sid>18104</if_sid>
+      <status>^AUDIT_SUCCESS|^success</status>
+      <match>Access Mask: 0x2$</match>
+      <description>Windows file added.</description>
+    </rule>
+    <rule id="12011" level="10">
+      <if_sid>18104</if_sid>
+      <status>^AUDIT_SUCCESS|^success</status>
+      <match>Access Mask: 0x6$</match>
+      <description>Windows file appended.</description>
+    </rule>
+    <rule id="12012" level="10">
+      <if_sid>18104</if_sid>
+      <status>^AUDIT_SUCCESS|^success</status>
+      <match>Access Check: 0x120080</match>
+      <description>Windows file opened.</description>
+    </rule>
+</group>

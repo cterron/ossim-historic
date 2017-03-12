@@ -699,7 +699,8 @@ class Menu
                         "security_events" => array(
                             "name"    => _("SIEM"),
                             "enabled" => $perm_sec_events,
-                            "url"     => $url_se
+                            "url"     => $url_se,
+                            "b_param" => "/forensics/base_qry_alert.php?noheader=true&submit=%230-"
                         ),
                         "real_time" => array(
                             "name"    => _("Real-time"),

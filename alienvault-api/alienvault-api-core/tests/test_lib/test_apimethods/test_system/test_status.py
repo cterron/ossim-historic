@@ -17,24 +17,21 @@ class TestSystemAllInfo(unittest.TestCase):
         Test the apimethods.system.status.system_all_info
     """
     def setUp(self):
-        pass
-    
-    def tearDown(self):
-        pass
-   
-    @patch('apimethods.system.status.ans_system_all_info') 
+        self.system_ip = "192.168.1.1"
+        self.system_id = str(uuid.uuid1())
+
+    @patch('apimethods.system.status.ans_system_all_info')
     @patch('apimethods.system.status.get_system_ip_from_system_id')
     def test0001(self, mock_get_sysid, mock_ans_all_info):
         """
             Test a correct execution of system_all_info
         """
-        mock_get_sysid.return_value = (True, "192.168.1.1")
-        utest = str(uuid.uuid1())
+        mock_get_sysid.return_value = (True, self.system_ip)
         mock_ans_all_info.return_value = (True, "{'called':'ok'}")
-        res = system_all_info(utest, no_cache=False) # We need to bypass the cache.
+        res = system_all_info(self.system_id, no_cache=False)  # We need to bypass the cache.
         self.assertTrue(res[0] == True)
-        self.assertTrue(call("192.168.1.1") == mock_ans_all_info.call_args_list[0])
-        self.assertTrue(call(utest) == mock_get_sysid.call_args_list[0])
+        mock_ans_all_info.assert_called_once_with(self.system_ip)
+        mock_get_sysid.assert_called_once_with(self.system_id)
 
     @patch('apimethods.system.status.ans_system_all_info') 
     @patch('apimethods.system.status.get_system_ip_from_system_id')
@@ -44,12 +41,10 @@ class TestSystemAllInfo(unittest.TestCase):
         """
         mock_get_sysid.return_value = (False, "ERROR get_system_ip_from_system_id")
         mock_ans_all_info.return_value = (True, "{'called':'ok'}")
-        utest = str(uuid.uuid1())
-        res = system_all_info(utest, no_cache=False) # We need to bypass the cache.
+        res = system_all_info(self.system_id, no_cache=False)  # We need to bypass the cache.
         self.assertTrue(res[0] == False)
-        self.assertTrue(call(utest) == mock_get_sysid.call_args_list[0])
-        self.assertTrue(mock_get_sysid.called)
-        self.assertFalse(mock_ans_all_info.called)
+        mock_get_sysid.assert_called_once_with(self.system_id)
+        mock_ans_all_info.assert_not_called()
        
     @patch('apimethods.system.status.ans_system_all_info') 
     @patch('apimethods.system.status.get_system_ip_from_system_id')
@@ -57,13 +52,11 @@ class TestSystemAllInfo(unittest.TestCase):
         """
             Fails at ans_system_all_info
         """
-        mock_get_sysid.return_value = (True, "192.168.1.1")
+        mock_get_sysid.return_value = (True, self.system_ip)
         mock_ans_all_info.return_value = (False, "ERROR ans_system_all_info")
-        utest = str(uuid.uuid1())
-        res = system_all_info(utest, no_cache=False) # We need to bypass the cache.
+        res = system_all_info(self.system_id, no_cache=False)  # We need to bypass the cache.
         self.assertTrue(res[0] == False)
-        self.assertTrue(call(utest) == mock_get_sysid.call_args_list[0])
-        self.assertTrue(mock_get_sysid.called)
+        mock_get_sysid.assert_called_once_with(self.system_id)
         self.assertTrue(mock_ans_all_info.called)
 
 
@@ -85,24 +78,21 @@ class TestAlienvaultStatus(unittest.TestCase):
     """
     
     def setUp(self):
-        pass
+        self.system_ip = "192.168.1.1"
+        self.system_id = str(uuid.uuid1())
 
-    def tearDown(self):
-        pass
-
-    @patch('apimethods.system.status.ans_alienvault_status') 
+    @patch('apimethods.system.status.ans_alienvault_status')
     @patch('apimethods.system.status.get_system_ip_from_system_id')
     def test0001(self, mock_get_sysid, mock_alienvault_status):
         """
             Test a correct execution of system_all_info
         """
-        mock_get_sysid.return_value = (True, "192.168.1.1")
-        utest = str(uuid.uuid1())
+        mock_get_sysid.return_value = (True, self.system_ip)
         mock_alienvault_status.return_value = (True, "{'called':'ok'}")
-        res = alienvault_status(utest, no_cache=False) # We need to bypass the cache.
+        res = alienvault_status(self.system_id, no_cache=False)  # We need to bypass the cache.
         self.assertTrue(res[0] == True)
-        self.assertTrue(call("192.168.1.1") == mock_alienvault_status.call_args_list[0])
-        self.assertTrue(call(utest) == mock_get_sysid.call_args_list[0])
+        mock_alienvault_status.assert_called_once_with(self.system_ip)
+        mock_get_sysid.assert_called_once_with(self.system_id)
 
     @patch('apimethods.system.status.ans_alienvault_status') 
     @patch('apimethods.system.status.get_system_ip_from_system_id')
@@ -112,12 +102,10 @@ class TestAlienvaultStatus(unittest.TestCase):
         """
         mock_get_sysid.return_value = (False, "ERROR get_system_ip_from_system_id")
         mock_alienvault_status.return_value = (True, "{'called':'ok'}")
-        utest = str(uuid.uuid1())
-        res = alienvault_status(utest, no_cache=False) # We need to bypass the cache.
+        res = alienvault_status(self.system_id, no_cache=False)  # We need to bypass the cache.
         self.assertTrue(res[0] == False)
-        self.assertTrue(call(utest) == mock_get_sysid.call_args_list[0])
-        self.assertTrue(mock_get_sysid.called)
-        self.assertFalse(mock_alienvault_status.called)
+        mock_get_sysid.assert_called_once_with(self.system_id)
+        mock_alienvault_status.assert_not_called()
        
     @patch('apimethods.system.status.ans_alienvault_status') 
     @patch('apimethods.system.status.get_system_ip_from_system_id')
@@ -125,12 +113,10 @@ class TestAlienvaultStatus(unittest.TestCase):
         """
             Fails at ans_system_all_info
         """
-        mock_get_sysid.return_value = (True, "192.168.1.1")
+        mock_get_sysid.return_value = (True, self.system_ip)
         mock_alienvault_status.return_value = (False, "ERROR ans_system_all_info")
-        utest = str(uuid.uuid1())
-        res = alienvault_status(utest, no_cache=False) # We need to bypass the cache.
+        res = alienvault_status(self.system_id, no_cache=False)  # We need to bypass the cache.
         self.assertTrue(res[0] == False)
-        self.assertTrue(call(utest) == mock_get_sysid.call_args_list[0])
-        self.assertTrue(mock_get_sysid.called)
+        mock_get_sysid.assert_called_once_with(self.system_id)
         self.assertTrue(mock_alienvault_status.called)
 

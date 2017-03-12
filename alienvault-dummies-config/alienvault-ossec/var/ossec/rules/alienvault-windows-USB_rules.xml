@@ -1,0 +1,9 @@
+<group name="USB Detection,">
+    <rule id="100051" level="7">
+        <if_sid>530</if_sid>
+        <match>ossec: output: wmic logicaldisk where drivetype=2 get deviceid,
+            description, FileSystem, Size, VolumeSerialNumber</match>
+        <check_diff />
+        <description>New USB Device Found.</description>
+    </rule>
+</group>

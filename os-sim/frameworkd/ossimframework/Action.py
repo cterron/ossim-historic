@@ -459,6 +459,34 @@ class Action(threading.Thread):
                 if data != []:
                     newid = data[0]['id']
 
+                risk = int(self.__request.get('risk', ''))
+                #Tickets from vulnerabilities come from a trigger, so we should only deal with events/alarms here
+                if risk > 0:
+                    #This is an alarm
+                    #Make a link to the alarm
+                    #https://192.168.200.90/ossim/#analysis/alarms/alarms-29482C89A8D011E5A951000C5947980C
+                    #The backlog id posted is not always accurate so lets query
+                    alarm_check_query = "select hex(backlog_id) as id from alarm where (backlog_id = unhex('%s') or event_id = unhex('%s')) LIMIT 1" % (self.__request.get('backlog_id', '').replace('-',''), self.__request.get('event_id', '').replace('-',''))
+                    data = self.__db.exec_query(alarm_check_query)
+                    if data != []:
+                        alarm_id = data[0]['id']
+                        logger.debug('Found new alarm ID in DB')
+                    else:
+                        #Format alarm id for url
+                        logger.debug('Alarm lookup failed, using passed ID')
+                        alarm_id = self.__request.get('backlog_id', '').upper().replace('-','')
+
+                    alarm_url = "<a target=\"_blank\" href=\"https://%s/ossim/#analysis/alarms/alarms-%s\">Link to Alarm</a>" % (ossim_setup['framework_ip'], alarm_id)
+                    descr = descr + "<br>" + alarm_url
+                elif risk == 0:
+                    pass
+                    # #This is an event
+                    # #There appears to be no easy way to link to an event so this is shelved
+                    # #https://192.168.200.90/ossim/forensics/base_qry_alert.php?noheader=true&pag=&submit=#0-29482C89670511E59BF8000CD1ADBA0E&m_opt=analysis&sm_opt=security_events&h_opt=security_events
+                    # event_id = self.__request.get('event_id', '').upper().replace('-','')
+                    # event_url = "<a target=\"_blank\" href=\"https://%s/ossim/forensics/base_qry_alert.php?noheader=true&pag=&submit=#0-%s&m_opt=analysis&sm_opt=security_events&h_opt=security_events\">Link to Event</a>" % (ossim_setup['framework_ip'], event_id)
+                    # descr = descr + "<br>" + event_url
+
                 insert_ticket_query = """ insert into incident_ticket(id,incident_id,date,status,priority,description,in_charge,users) values ('%s','%s',utc_timestamp(),'Open','%s','%s','%s','admin');""" % (newid, last_id, priority, descr, in_charge)
                 self.__db.exec_query(insert_ticket_query)
 

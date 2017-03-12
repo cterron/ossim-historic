@@ -1907,13 +1907,8 @@ if (($action == 'save_scan' && empty($validation_errors)) || $action == 'delete_
         </table>
         
         <br/>
-        
-        <?php
-            
-        $button_text = ($action == 'edit_sched') ? _('UPDATE JOB') : _('NEW JOB');?>
-        
         <div style="margin:0px auto;text-align: center">
-            <input type='button' id='mjob' value='<?php echo $button_text ?>' disabled='disabled' />
+            <input type='button' id='mjob' value='<?php echo _("Save") ?>' disabled='disabled' />
             <span id="loading" style="display:none;margin:0px 0px 0px 10px;" ><?php echo _("Checking Job...") ?></span>
         
             <div id='sresult'></div>

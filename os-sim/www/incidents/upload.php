@@ -58,17 +58,23 @@ $ticket_id = $conn->GetOne('SELECT max(id)+1 FROM incident_ticket');
 
 if(isset($_FILES['inline_upload_file']) && !empty($_FILES['inline_upload_file']['name']))
 {
-	$image_val = getimagesize($_FILES['inline_upload_file']['tmp_name']);
-	
-	if(!empty($image_val))
+	$filename = $_FILES['inline_upload_file']['tmp_name'];
+	$image_val = getimagesize($filename);
+	if(!empty($image_val) && in_array($image_val['mime'], array("image/jpeg", "image/gif", "image/png")))
 	{
-		if(filesize($_FILES['inline_upload_file']['tmp_name']) < 512000)
+		if(filesize($filename) < 512000)
 		{
-			$name        = time();
-			$name        = "Incident-$id-$ticket_id-$name" . str_replace("image/", ".", $image_val['mime']);
-			$upload_path = "../uploads/$name";
-										
-			if (move_uploaded_file($_FILES['inline_upload_file']['tmp_name'], $upload_path))
+			$name        = "Incident-$id-$ticket_id-". time() . str_replace("image/", ".", $image_val['mime']);
+			$validate_image_content = function() use ($filename,$name,$image_val) {
+        	                $upload_path = "../uploads/$name";
+	                        switch($image_val['mime']) {
+	                                case "image/jpeg"	: return imagejpeg(imagecreatefromjpeg($filename),$upload_path);
+        	                        case "image/gif"	: return imagegif(imagecreatefromgif($filename),$upload_path);
+                	                case "image/png"	: return imagepng(imagecreatefrompng($filename),$upload_path);
+        	                }
+				return false;
+			};
+			if ($validate_image_content())
 			{
                 $response['status'] = 'success';
                 $response['src'] = "/ossim/uploads/$name";
@@ -76,7 +82,7 @@ if(isset($_FILES['inline_upload_file']) && !empty($_FILES['inline_upload_file'][
 			else
 			{
                 $response['status'] = 'error';
-                $response['msg'] = $_FILES['inline_upload_file']['error'];
+                $response['msg'] = _("Invalid image");
 			}
 
 		} 

@@ -36,7 +36,8 @@ from api.lib.monitors.sensor import (MonitorSensorLocation,
                                      MonitorSensorDroppedPackages,
                                      MonitorPluginsVersion,
                                      MonitorPluginIntegrity,
-                                     MonitorUpdateHostPlugins)
+                                     MonitorUpdateHostPlugins,
+                                     MonitorEnabledPluginsLimit)
 
 from api.lib.monitors.assets import MonitorSensorAssetLogActivity
 
@@ -64,12 +65,9 @@ from api.lib.monitors.doctor import MonitorPlatformTelemetryData
 from apimethods.otx.otx import apimethod_is_otx_enabled
 from apimethods.system.status import system_status
 
-
 from db.methods.system import get_system_id_from_local
 
-
 from apiexceptions.system import APICannotRetrieveSystems
-
 
 logger = get_logger("celery")
 
@@ -392,6 +390,7 @@ def monitor_support_tunnels():
     logger.info("Monitor MonitorSupportTunnel stopped")
     return rt
 
+
 @celery_instance.task
 def monitor_system_reboot_needed():
     """Monitor to check if a system reboot is needed.
@@ -407,6 +406,7 @@ def monitor_system_reboot_needed():
         rt = True
     logger.info("Monitor MonitorSystemRebootNeeded stopped")
     return rt
+
 
 @celery_instance.task
 def monitor_download_pulses():
@@ -472,6 +472,23 @@ def monitor_update_host_plugins():
         rt = True
 
     logger.info("Monitor MonitorUpdateHostPlugins stopped")
+
+    return rt
+
+
+@celery_instance.task
+def monitor_enabled_plugins_limit():
+    """Monitor to check enabled plugins limit and send notification in MC.
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorEnabledPlugins started")
+    monitor = MonitorEnabledPluginsLimit()
+    rt = False
+
+    if monitor.start():
+        rt = True
+
+    logger.info("Monitor MonitorEnabledPlugins stopped")
 
     return rt
 

@@ -317,7 +317,7 @@ switch($type)
 		$limit                = ($chart_info['top'] != '')? $chart_info['top'] : 5;
 		//Sql Query
 		//TO DO: Use parameters in the query.
-		$sqlgraph = "select count(*) as num_events,p.name from alienvault.plugin_sid p, alienvault.alarm a $ajoin WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid $awhere group by p.name order by num_events desc limit $limit";
+		$sqlgraph = "select count(*) as num_events,p.name from alienvault.plugin_sid p, alienvault.alarm a $ajoin WHERE a.status = 'open' AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid $awhere group by p.name order by num_events desc limit $limit";
 		
 		$rg = $conn->CacheExecute($sqlgraph);
 		

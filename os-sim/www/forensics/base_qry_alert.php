@@ -172,6 +172,7 @@ $submit = ImportHTTPVar("submit", VAR_DIGIT | VAR_PUNC | VAR_LETTER, array(
     _("Delete ALL on Screen"),
     _ENTIREQUERY
 ));
+
 //if(preg_match("/^#0(-\(\d+-\d+\))$/", $submit, $matches)){
 //$submit = "#1" . $matches[1];
 //}
@@ -202,6 +203,7 @@ $qs->SetActionSQL($sort_sql[0] . $from . $where);
 $et->Mark("Initialization");
 $qs->RunAction($submit, PAGE_ALERT_DISPLAY, $db);
 $et->Mark("Alert Action");
+
 /* If get a valid (sid,cid) store it in $caller.
 * But if $submit is returning from an alert action
 * get the (sid,cid) back from $caller
@@ -713,7 +715,6 @@ for ($k = 1; $k <= 9; $k++)
 }
 
 $signature = TranslateSignature($htmlTriggeredSignature[1], $myrow2);
-
 // VIEW
 $back = "<a href=\"base_qry_main.php?num_result_rows=-1&submit=Query+DB&caller=&pag=$pag&current_view=$pag\">"._('Security Events')."</a>";
 if (!array_key_exists("minimal_view", $_GET))
@@ -766,6 +767,7 @@ else
         <div class="siem_title"><?php echo $signature ?></div>
     </div><?php
 }
+
 $txtzone = "<a href=\"javascript:;\" class=\"tzoneimg\" txt=\"<img src='../pixmaps/timezones/".rawurlencode(Util::timezone($tz)).".png' width='400' height='205' border=0>\">".Util::timezone($tz)."</a>";
 
 // Taxonomy
@@ -1315,8 +1317,7 @@ if (array_key_exists("minimal_view", $_GET))
    echo "</FORM>\n\n";
 ?>
     </div><br/><div class="center">
-        <button class="button" id="view_more" data-url="<?php echo Menu::get_menu_url(AV_MAIN_PATH . "/forensics/base_qry_alert.php?noheader=true&pag=$pag&submit=" . rawurlencode($submit), 'analysis', 'security_events', 'security_events') ?>"><?php echo _('View More') ?></button>
-    </div><br/>
+        <button class="button" id="view_more" data-url="<?php echo Menu::get_menu_url(AV_MAIN_PATH . "/forensics/base_qry_alert.php?noheader=true&pag=$pag&submit=" . rawurlencode($submit), 'analysis', 'security_events', 'security_events') ?>"><?php echo _('View More') ?></button>    </div><br/>
 <?php
 }
 ?>
@@ -1328,7 +1329,10 @@ if (array_key_exists("minimal_view", $_GET))
 
     <script>
     $(document).ready(function(){
-
+        <?php if (preg_match("/^#[0-9]+-([A-F0-9]+)/",$submit,$matches)) { ?>
+            var id = '<?php echo $matches[1]; ?>';
+            top.av_menu.set_bookmark_params(id);
+        <?php } ?>
         $('.scriptinfoimg').tipTip({
             defaultPosition: "right",
             content: function (e) {

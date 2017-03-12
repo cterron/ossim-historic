@@ -245,7 +245,6 @@ switch($type){
 		break;
 	
 	case 'siemlogger':
-	
 		//Amount of hours to show in the widget.
 		//$max   = ($chart_info['range'] == '')? 16 : $chart_info['range'];
 		$max = 16; //By now it will be always 24 hours
@@ -260,7 +259,6 @@ switch($type){
 		{
     		$trend1 = SIEM_trends($max, $assets_filters, $fdate);
 		}
-		
 		//Empty logger if any user perms over ctx, host, net
 		$trend2 = array();
 		$logger_last_date = gmdate("YmdHis", $timetz);
@@ -270,7 +268,7 @@ switch($type){
 			list($trend2, $logger_last_date) = Logger_trends();
 		}
 
-		for ($i=$max-1; $i>=0; $i--) 
+		for ($i=$max; $i>=0; $i--) 
 		{
 		    $tref     = $timetz-(3600*$i);
 		

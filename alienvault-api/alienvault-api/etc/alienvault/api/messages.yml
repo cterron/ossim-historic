@@ -34,7 +34,9 @@ message_ids: {
     $MESSAGE_HIDS_AGENTS_DEPLOYED: "00000000-0000-0000-0000-000000010033",
     $MESSAGE_INSECURED_VPN: "00000000-0000-0000-0000-000000010034",
     $MESSAGE_FEDERATED_OTX_KEY: "00000000-0000-0000-0000-000000010035",
-    $MESSAGE_OLD_OTX_KEY: "00000000-0000-0000-0000-000000010036"
+    $MESSAGE_OLD_OTX_KEY: "00000000-0000-0000-0000-000000010036",
+    $MESSAGE_PLUGINS_LIMIT_APPROACHING: "00000000-0000-0000-0000-000000010037",
+    $MESSAGE_PLUGINS_LIMIT_REACHED: "00000000-0000-0000-0000-000000010038"
 }
 
 message_sources:
@@ -487,6 +489,30 @@ messages: [
      description: "We've updated OTX with new functionality that will make collaborative defense easier and more effective! However, it appears that your OTX account has not been upgraded and you may be missing out on the new features we've added. To take advantage of the new OTX, please re-authenticate your account by [https://otx.alienvault.com/accounts/usm/?exists=true signing up for an upgraded OTX account] using the same email address used for your original OTX account. Once your account is created and verified, you will automatically get access to the latest features in OTX.",
      actions: "If you cannot remember or do not have access to that email address, please follow the instructions below:\n* [https://otx.alienvault.com/accounts/usm/?exists=true Create an upgraded OTX account] using a new email address\n* Once you have verified your email address, go to your new OTX account and copy the OTX key\n* Open up your AlienVault installation and navigate to Configuration > Open Threat Exchange\n* Remove existing OTX key and paste your new OTX key in the space provided and click 'Connect OTX Account'\n* You will now get access to the latest features in OTX and get real-time insight into emerging threats in your environment",
      alternative_actions: "",
+     source: "monitor"
+   },
+   {
+     id: "$MESSAGE_PLUGINS_LIMIT_APPROACHING",
+     level: Warning,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: 'Data source plugin limit approaching on SYSTEM_NAME',
+     description: 'SYSTEM_NAME (SYSTEM_IP) has PLG_ENABLED plugins enabled and is approaching the maximum allowance for data source plugins. The maximum allowance is 100 plugins. Exceeding this limit will result in unexpected behavior and reduced performance. You can still enable up to PLG_CAN_ADD plugins without any negative impact.',
+     actions: 'Each plugin enabled in the asset view in the USM web interface is saved in /etc/ossim/agent/config.yml, as opposed to /etc/ossim/agent/config.cfg, which holds information about globally enabled plugins. Every plugin enabled per asset counts towards the total active plugins count, the max of which is 100. Enabling a plugin globally also counts towards the total active plugin count. But if multiple assets are sending logs via syslog and those logs are being normalized by a globally enabled plugin, it will still only count as one towards the total active plugins count. Please disable any unneeded plugins to prevent unexpected issues.',
+     alternative_actions: "You will be notified again via the Message Center once the data source plugin limit has been reached. Please contact AlienVault Support for additional information.",
+     source: "monitor"
+   },
+   {
+     id: "$MESSAGE_PLUGINS_LIMIT_REACHED",
+     level: Warning,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Data source plugin limit reached on SYSTEM_NAME",
+     description: 'SYSTEM_NAME (SYSTEM_IP) has reached the maximum allowance for data source plugins. Additional plugins should not be enabled for the assets being monitored by this sensor at this time. Exceeding this limit will result in unexpected behavior and reduced performance.',
+     actions: 'Each plugin enabled in the asset view in the USM web interface is saved in /etc/ossim/agent/config.yml, as opposed to /etc/ossim/agent/config.cfg, which holds information about globally enabled plugins. Every plugin enabled per asset counts towards the total active plugins count, the max of which is 100. Enabling a plugin globally also counts towards the total active plugin count. But if multiple assets are sending logs via syslog and those logs are being normalized by a globally enabled plugin, it will still only count as one towards the total active plugins count. Please disable PLG_DISABLE unneeded plugins to prevent unexpected issues.',
+     alternative_actions: "Please contact AlienVault Support for additional information.",
      source: "monitor"
    }
 ]

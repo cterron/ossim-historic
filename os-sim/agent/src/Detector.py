@@ -58,7 +58,7 @@ import socket
 logger = Logger.logger
 
 
-DEFAULT_PLUGIN_SID=20000123456
+DEFAULT_PLUGIN_SID=20000000
 class Detector(threading.Thread):
 
     def __init__(self, conf, plugin, conn):
