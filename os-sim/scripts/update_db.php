@@ -53,7 +53,11 @@ function execute_sql($path_file_log, $sql_file, $upgrade)
     
     try
     {
-        Util::execute_command($cmd, array($sql_file, $path_file_log), 'array'); // Array mode to catch errors
+        $return_var = 0;
+        Util::execute_command($cmd, array($sql_file, $path_file_log), 'array', TRUE, $return_var); // Array mode to catch errors
+        if ($return_var > 0) {
+            Util::execute_command("touch ?.sql_deploy_lock", $sql_file);
+        }
 
         $php_file = str_replace("_mysql.sql", ".php", $sql_file);
         $php_file = preg_replace("/\.gz$/", "", $php_file); // Clean .gz

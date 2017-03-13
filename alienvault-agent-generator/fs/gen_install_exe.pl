@@ -28,19 +28,15 @@ if(! -d "/var/ossec/"){
   exit;
 }
 
-
 $line = `grep $agent_id /var/ossec/etc/client.keys`;
 $line =~ /^(\d+)\s(\S+)\s(\S+)\s(\S+)$/;
 my $agent_ip = $3;
-print "Agent ip: $agent_ip Agent_id:$agent_id\n";
-my $iface = `ip route get $agent_ip |head -1 |grep -oP 'dev\\s(.*?)\\s'| sed -e 's/dev //g'`;
-chomp($iface);
-#print "Iface: $iface length: ".length($iface)."\n";
-#my $server_ip=`ip addr show $iface | sed -e '/inet/h; \$\!d; x' -e 's/.*inet\\s(.*)\/.*/\\1/'`;
-my $server_ip=`ip addr show $iface | grep inet|tail -1`;
-$server_ip =~ /^\s+inet\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\/\d+.*$/;
-$server_ip = $1;
-print "\nServer ip:$server_ip Agent ip: $agent_ip\n";
+print "Agent ip: $agent_ip\nAgent_id: $agent_id\n";
+my $route_get = qx(ip route get $agent_ip | head -1| tr -s " ");
+my @parts = split " ", $route_get;
+my $server_ip = pop @parts;
+print "Server ip: $server_ip\nAgent ip: $agent_ip\n";
+
 # Write server ip to config file
 # open(INFILE,"<installer/default-ossec.conf");
 # open(OUTFILE,">installer/ossec.conf");

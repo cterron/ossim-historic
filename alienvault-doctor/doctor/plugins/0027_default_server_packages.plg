@@ -40,7 +40,7 @@ affects_strike_zone=True
 # Non AV packages version compliance
 [00270003]
 severity=Error
-pattern=^ii\s+((?:percona-|(?:lib)?openvas|ossec|apache2|(?:lib)?augeas)\S+\s+\S+)
+pattern=^ii\s+((?:percona-|(?:lib)?openvas|ossec|apache2|(?:lib)?augeas)\S*\s+\S+)
 conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/0027_default_server_packages_compliance.list
 formatted_output=There is a mismatch between expected version and installed version for certain critical packages: @set_list@
 description=Checks if the version of certain critical packages matches with the expected version

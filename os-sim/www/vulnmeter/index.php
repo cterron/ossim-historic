@@ -840,12 +840,9 @@ function list_results ( $type, $value, $ctx_filter, $sortby, $sortdir ) {
 
     $queryw="";
     $queryl="";
-    $querys = "SELECT distinct t1.hostIP, HEX(t1.ctx) as ctx, t1.scantime, t1.username, t1.scantype, t1.report_key, t1.report_type as report_type, t1.sid, t3.name as profile
-    FROM vuln_nessus_latest_reports AS t1 LEFT JOIN vuln_nessus_settings AS t3 ON t1.sid = t3.id, vuln_nessus_latest_results AS t5
-    WHERE
-    t1.hostIP      = t5.hostIP
-    AND t1.ctx     = t5.ctx
-    AND t1.deleted = '0' ";
+    $querys = "SELECT distinct t1.hostIP, HEX(t1.ctx) as ctx, t1.scantime, t1.username, t1.scantype, t1.report_key, t1.report_type as report_type, t1.sid, t3.name as profile ";
+    $querysj = " FROM vuln_nessus_latest_reports AS t1 LEFT JOIN vuln_nessus_settings AS t3 ON t1.sid = t3.id, vuln_nessus_latest_results AS t5 ";
+    $querysw = " WHERE t1.hostIP = t5.hostIP AND t1.ctx = t5.ctx AND t1.deleted = '0' ";
 
      // set up the SQL query based on the search form input (if any)
     if($type=="scantime" && $value!="") {
@@ -937,7 +934,7 @@ function list_results ( $type, $value, $ctx_filter, $sortby, $sortdir ) {
    // set up the pager and search fields if viewing all hosts
    $reportCount = 0;
    if(!$filteredView) {
-      $dbconn->Execute(str_replace("SELECT distinct", "SELECT SQL_CALC_FOUND_ROWS distinct", $querys).$queryw);
+      $dbconn->Execute(str_replace("SELECT distinct", "SELECT SQL_CALC_FOUND_ROWS distinct", $querys.$querysj.$querysw).$queryw);
       $reportCount = $dbconn->GetOne("SELECT FOUND_ROWS() as total");
 
       $previous = $offset - $pageSize;
@@ -995,10 +992,24 @@ EOT;
    echo "</p>";
    echo "</div></td></tr></table>";
 
-   $result = array();
+   $perms_where  = Asset_host::get_perms_where('host.', TRUE);
+   $from_count = "";
+   $where_count = "";
+   if (!empty($perms_where)) {
+       $from_count = ", host, host_ip hi ";
+       $where_count = " AND host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where";
+       $querysj .= $from_count;
+       $querysw .= " AND host.id=hi.host_id AND inet6_ntoa(hi.ip)=t1.hostIP $perms_where";
+   }
 
+   $queryt = sprintf("SELECT count(lr.result_id) AS total, lr.risk, lr.hostIP
+                        FROM vuln_nessus_latest_results lr, vuln_nessus_latest_reports t1 %s
+                        WHERE lr.hostIP = t1.hostIP AND falsepositive='N' AND t1.deleted = '0' %s
+                        GROUP BY lr.hostIP,risk",$from_count,$where_count);
+
+   $result = array();
    // get the hosts to display
-   $result=$dbconn->GetArray($querys.$queryw.$queryl);
+   $result=$dbconn->GetArray($querys.$querysj.$querysw.$queryw.$queryl);
 
    // main query
    //echo $querys.$queryw.$queryl;
@@ -1017,100 +1028,36 @@ EOT;
       $error++;
       dispSQLError($errMsg,$error);
    } else {
-       $data['vInfo'] = 0;
-       $data['vLow'] = 0;
-       $data['vMed'] = 0;
-       $data['vHigh'] = 0;
-       $data['vSerious'] = 0;
-       
-       $perms_where  = Asset_host::get_perms_where('host.', TRUE);
-       if (!empty($perms_where))
-       {
-           $queryt = "SELECT count(lr.result_id) AS total, lr.risk, lr.hostIP, HEX(lr.ctx) AS ctx
-                        FROM vuln_nessus_latest_results lr, host, host_ip hi
-                        WHERE host.id=hi.host_id AND inet6_ntoa(hi.ip)=lr.hostIP $perms_where AND falsepositive='N'
-                        GROUP BY risk, hostIP, ctx";
-       }
-       else 
-       {
-           $queryt = "SELECT count(lr.result_id) AS total, risk, lr.hostIP, HEX(lr.ctx) AS ctx
-                        FROM vuln_nessus_latest_results lr
-                        WHERE falsepositive='N'
-                        GROUP BY risk, hostIP, ctx";
-       }
-       
-       //echo "$queryt<br>";
-       
+       $analogs = array(1=>'vSerious',2=>'vHigh',3=>'vMed',6=>'vLow',7=>'vInfo');
+       $data = array_flip($analogs);
+       $data_template = array_fill_keys(array_keys($data), 0);
+       $data = $data_template;
        $resultt = $dbconn->Execute($queryt);
-         while(!$resultt->EOF) {  
-             
-            $riskcount = $resultt->fields['total'];
-            $risk      = $resultt->fields['risk'];
-            
-            if($risk==7)
-                $data['vInfo']+= $riskcount;
-            else if($risk==6)
-                $data['vLow']+=$riskcount;
-            else if($risk==3)
-                $data['vMed']+=$riskcount;
-            else if($risk==2)
-                $data['vHigh']+=$riskcount;
-            else if($risk==1)
-                $data['vSerious']+=$riskcount;
-
+       $data_by_host = array();
+       while(!$resultt->EOF) {
+            $analog = $analogs[$resultt->fields['risk']];
+            $data_by_host[$resultt->fields['hostIP']][$analog] = $resultt->fields['total'];
+            $data[$analog] += $resultt->fields['total'];
             $resultt->MoveNext();
       }
-
-      if($data['vInfo']==0 && $data['vLow']==0 && $data['vMed']==0 && $data['vHigh']==0 && $data['vSerious']==0 )
-            $tdata [] = array("report_id" =>"All","host_name" => "", "scantime" => "", "username" => "",
-                            "scantype" => "", "report_key" => "", "report_type" => "", "sid" => "", "profile" => "",
+      $tdata[0] = array("report_id" =>"All","host_name" => "", "scantime" => "", "username" => "",
+                        "scantype" => "", "report_key" => "", "report_type" => "", "sid" => "", "profile" => "",
                         "hlink" =>"", "plink" => "", "xlink" =>"",
                         "vSerious" => $data['vSerious'], "vHigh" => $data['vHigh'], "vMed" => $data['vMed'],
                         "vLow" => $data['vLow'], "vInfo" => $data['vInfo']);
-
-      else
-
-            $tdata [] = array("report_id" =>"All","host_name" => "", "scantime" => "", "username" => "",
-                            "scantype" => "", "report_key" => "", "report_type" => "", "sid" => "", "profile" => "",
+      if($data['vInfo']!=0 || $data['vLow']!=0 || $data['vMed']!=0 || $data['vHigh']!=0 || $data['vSerious']!=0 ) {
+            $tdata[0] += array(
                         "hlink" => "lr_reshtml.php?ipl=all&disp=html&output=full&scantype=M",
                         "plink" => "lr_respdf.php?ipl=all&scantype=M",
                         "xlink" => "lr_rescsv.php?ipl=all&scantype=M",
-                        "dlink" =>"",
-                        "vSerious" => $data['vSerious'], "vHigh" => $data['vHigh'], "vMed" => $data['vMed'],
-                        "vLow" => $data['vLow'], "vInfo" => $data['vInfo']);
-
+                        "dlink" =>"");
+      }
       foreach($result as $data) {
-        if(!Session::hostAllowed_by_ip_ctx($dbconn, $data["hostIP"], $data["ctx"])) continue;
-
-        $host_id = key(Asset_host::get_id_by_ips($dbconn, $data["hostIP"], $data["ctx"]));
-            
-        if(valid_hex32($host_id)) {
-            $data['host_name'] = Asset_host::get_name_by_id($dbconn, $host_id);
-        }
-
-        $data['vSerious'] = 0;
-        $data['vHigh'] = 0;
-        $data['vMed'] = 0;
-        $data['vLow'] = 0;
-        $data['vInfo'] = 0;
-         // query for reports for each IP
-         $query_risk = "SELECT distinct risk, port, protocol, app, scriptid, msg, hostIP FROM vuln_nessus_latest_results WHERE hostIP = '".$data['hostIP'];
-         $query_risk.= "' AND username = '".$data['username']."' AND sid =".$data['sid']." AND ctx = UNHEX('".$data['ctx']."') AND falsepositive='N'";
-
-         $result_risk = $dbconn->Execute($query_risk);
-         while(!$result_risk->EOF) {
-            if($result_risk->fields["risk"]==7)
-                $data['vInfo']++;
-            else if($result_risk->fields["risk"]==6)
-                $data['vLow']++;
-            else if($result_risk->fields["risk"]==3)
-                $data['vMed']++;
-            else if($result_risk->fields["risk"]==2)
-                $data['vHigh']++;
-            else if($result_risk->fields["risk"]==1)
-                $data['vSerious']++;
-            $result_risk->MoveNext();
+         $host_id = key(Asset_host::get_id_by_ips($dbconn, $data["hostIP"], $data["ctx"]));
+         if(valid_hex32($host_id)) {
+             $data['host_name'] = Asset_host::get_name_by_id($dbconn, $host_id);
          }
+         $data+=array_merge($data_template,$data_by_host[$data["hostIP"]]);
          $data['plink'] = "lr_respdf.php?treport=latest&ipl=" . urlencode($data['hostIP']) . "&ctx=".$data['ctx'] . "&scantype=" . $data['scantype'];
          $data['hlink'] = "lr_reshtml.php?treport=latest&ipl=" . urlencode($data['hostIP']) . "&ctx=".$data['ctx'] . "&scantype=" . $data['scantype'];
          $data['xlink'] = "lr_rescsv.php?treport=latest&ipl=" . urlencode($data['hostIP']) . "&ctx=".$data['ctx'] . "&scantype=" . $data['scantype'];

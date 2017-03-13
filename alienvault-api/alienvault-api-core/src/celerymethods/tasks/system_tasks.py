@@ -147,6 +147,7 @@ def sync_databases():
 
     return rt, ""
 
+
 @celery_instance.task
 def update_ctx_stats():
     """
@@ -159,7 +160,17 @@ def update_ctx_stats():
         return True, ''
 
 
-@celery_instance.task(base=QueueOnce)
+class ExcQueueOnce(QueueOnce):
+
+    def apply_async(self, args=None, kwargs=None, **options):
+        try:
+            return super(ExcQueueOnce, self).apply_async(args=None, kwargs=None, **options)
+        except self.AlreadyQueued:
+            logger.warning('Task already exist')
+            return type('obj', (object,), {'id': None})
+
+
+@celery_instance.task(base=ExcQueueOnce)
 def forward_check():
     """
         Check the forward events for consistence issues

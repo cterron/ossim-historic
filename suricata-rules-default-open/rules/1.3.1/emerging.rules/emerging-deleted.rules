@@ -1076,11 +1076,11 @@
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED F5 BIG-IP 3DNS TCP Probe 3"; id: 3; dsize: 24; flags: S,12; content:"|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00|"; window: 2048; reference:url,www.f5.com/f5products/v9intro/index.html; reference:url,doc.emergingthreats.net/2001611; classtype:misc-activity; sid:2001611; rev:13;)
 
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DELETED Halberd Load Balanced Webserver Detection Scan"; flow:to_server,established; content:"Pragma|3a| no-cache"; content:"Firefox/1.0.3"; offset:40; distance:40; threshold: type threshold, track by_src, count 40, seconds 15; reference:url,www.halberd.superadditive.com; reference:url,doc.emergingthreats.net/2008536; classtype:attempted-recon; sid:2008536; rev:6;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DELETED Halberd Load Balanced Webserver Detection Scan"; flow:to_server,established; content:"Pragma|3a| no-cache"; http_header; content:"Firefox/1.0.3"; http_header; fast_pattern; offset:40; depth:40; threshold: type threshold, track by_src, count 40, seconds 15; reference:url,www.halberd.superadditive.com; reference:url,doc.emergingthreats.net/2008536; classtype:attempted-recon; sid:2008536; rev:7;)
 
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DELETED OWASP Joomla Vulnerability Scanner Detected"; flow:established,to_server; content:"HEAD "; depth:5; content:"/joomla/"; content:"|0d 0a|User-Agent|3a| Mozilla/5.0 (Windows\; U\; Windows NT 5.2\; en-US\; rv|3a|1.9.0.3) Gecko/2008092417 Firefox/3.0.3"; pcre:"/(/joomla/admin|/joomla/administrator|/joomla/manage|/joomla/administration)/U"; threshold: type threshold, track by_dst, count 4, seconds 15; reference:url,www.owasp.org/index.php/Category%3aOWASP_Joomla_Vulnerability_Scanner_Project; reference:url,doc.emergingthreats.net/2009837; classtype:attempted-recon; sid:2009837; rev:7;)
 
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DELETED SQLCheck Database Scan Detected"; flow:to_server,established; content:"%20FROM%20customers"; content:"|0d 0a|User-Agent|3a| Lynx/2.8.6rel.4 libwww-FM/2.14"; offset:40; distance:70; threshold: type threshold, track by_dst, count 10, seconds 20; reference:url,wiki.remote-exploit.org/backtrack/wiki/SQLcheck; reference:url,doc.emergingthreats.net/2009478; classtype:attempted-recon; sid:2009478; rev:4;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET DELETED SQLCheck Database Scan Detected"; flow:to_server,established; content:"%20FROM%20customers"; fast_pattern:only; content:"User-Agent|3a| Lynx/2.8.6rel.4 libwww-FM/2.14"; http_header; threshold: type threshold, track by_dst, count 10, seconds 20; reference:url,wiki.remote-exploit.org/backtrack/wiki/SQLcheck; reference:url,doc.emergingthreats.net/2009478; classtype:attempted-recon; sid:2009478; rev:5;)
 
 #alert ssh $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED LibSSH Based SSH Connection - Often used as a BruteForce Tool"; flow:established,to_server; ssh.softwareversion:"libssh-"; threshold: type limit, track by_src, count 1, seconds 30;  reference:url,doc.emergingthreats.net/2006435; classtype:misc-activity; sid:2006435; rev:10;)
 
@@ -1132,7 +1132,7 @@
 
 #alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Suspicious User Agent WebUpdate"; flow:established,to_server; content:"|0d 0a|User-Agent|3a| WebUpdate|0d 0a|"; reference:url,doc.emergingthreats.net/2010600; classtype:trojan-activity; sid:2010600; rev:3;)
 
-#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Zango-Hotbar User-Agent (zb-hb)"; flow:to_server,established; content:"zb-hb-"; fast_pattern:only; http_header; http_header; pcre:"/User-Agent\:[^\n]+zb-hb-/Hi"; reference:url,doc.emergingthreats.net/2003223; classtype:trojan-activity; sid:2003223; rev:10;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Zango-Hotbar User-Agent (zb-hb)"; flow:to_server,established; content:"zb-hb-"; fast_pattern:only; http_header; pcre:"/User-Agent\:[^\n]+zb-hb-/Hi"; reference:url,doc.emergingthreats.net/2003223; classtype:trojan-activity; sid:2003223; rev:11;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Zango-Hotbar User-Agent (zbu-hb-)"; flow:to_server,established; content:"zbu-hb-"; http_header; fast_pattern:only; pcre:"/User-Agent\:[^\n]+zbu-hb-/Hi"; reference:url,doc.emergingthreats.net/2003305; classtype:trojan-activity; sid:2003305; rev:10;)
 
@@ -1234,7 +1234,7 @@
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Zhelatin Variant Checkin"; flow:established,to_server; content:"/adload.php?a1="; nocase; http_uri; content:"a3="; nocase; http_uri; content:"&a4="; nocase; http_uri; content:"&a5="; nocase; http_uri; content:!"User-Agent|3a|"; http_header; content:"Host|3a|"; http_header; reference:url,doc.emergingthreats.net/2003408; classtype:trojan-activity; sid:2003408; rev:7;)
 
-#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Trojan-Downloader.Win32.Small.hkp Checkin via HTTP"; flow:established,to_server; dsize:96; content:"GET /"; depth:5; pcre:"/\/[0-9a-f]{78}\sHTTP/Ui"; reference:url,doc.emergingthreats.net/2007755; classtype:trojan-activity; sid:2007755; rev:5;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Trojan-Downloader.Win32.Small.hkp Checkin via HTTP"; flow:established,to_server; dsize:96; content:"GET /"; depth:5; pcre:"/^[^\r\n]*\/[0-9a-f]{78}\sHTTP/Ri"; reference:url,doc.emergingthreats.net/2007755; classtype:trojan-activity; sid:2007755; rev:7;)
 
 #alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DELETED Browser HiJacker/Infostealer Stat file"; flow:established,to_server; content:"|5B00|u|00|p|00|d|00|a|00|t|00|e|005D|"; nocase; content:"v|00|e|00|r|00|="; nocase; reference:url,doc.emergingthreats.net/2007777; classtype:trojan-activity; sid:2007777; rev:4;)
 
@@ -2518,7 +2518,7 @@
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Blackhole Java Exploit request to /Cal.jar"; flow:established,to_server; content:"/Cal.jar"; http_uri; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2014724; rev:3;)
 
-#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Outdated Mac Flash Version"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,268|0d 0a|"; distance:0; within:12; http_header;  content:!"20,0,0,235|0d 0a|"; distance:0; within:12; http_header; content:"Macintosh"; http_user_agent; threshold: type limit, count 1, seconds 60, track by_src; classtype:policy-violation; sid:2014727; rev:59;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Outdated Mac Flash Version"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,366|0d 0a|"; distance:0; within:12; http_header;  content:!"22,0,0,209|0d 0a|"; distance:0; within:12; http_header; content:"Macintosh"; http_user_agent; threshold: type limit, count 1, seconds 60, track by_src; classtype:policy-violation; sid:2014727; rev:60;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Potential FAKEAV Download a-f0-9 x16 download"; flow:to_server,established;  content:"/pr2/"; http_uri; fast_pattern:only; pcre:"/\/[a-f0-9]{16}\/.+?\.(exe|zip)$/U"; classtype:bad-unknown; sid:2014730; rev:8;)
 
@@ -2539,6 +2539,8 @@
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DELETED Blackhole Landing Page getElementByID Qwe - May 22nd 2012"; flow:established,to_client; content:"getElementById']('qwe')"; reference:url,blog.spiderlabs.com/2012/05/catch-me-if-you-can-trojan-banker-zeus-strikes-again-part-2-of-5-1.html; classtype:trojan-activity; sid:2014800; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Redkit Java Exploit request to b.class"; flow:established,to_server; urilen:10; content:"/b.class"; http_uri; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2014824; rev:3;)
+
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Redkit Java Exploit request to .class file"; flow:established,to_server; content:".class"; http_uri; pcre:"/\/\w{1,2}\/\w{1,2}\.class$/U"; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2014830; rev:3;)
 
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET DELETED Blackhole Loading Gif Inline Image"; flow:established,from_server; content:"background|3a|url(data|3a|image/gif|3b|base64,R0lGODlhEAAQAAAAACH/C05FVFNDQVBFMi4wAwH//"; classtype:trojan-activity; sid:2014842; rev:3;)
 
@@ -3794,8 +3796,6 @@
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED PE EXE or DLL Windows file download disguised as ASCII - SET"; flow:established; content:"|34 44 35 41|"; byte_jump:8,116,relative,multiplier 2,little,string; isdataat:1,relative; flowbits:set,ET.http.binary.ASCII; flowbits:noalert; classtype:trojan-activity; sid:2017961; rev:5;)
 
-#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Downloader.NSIS.OutBrowse.b Checkin"; flow:established,to_server; content:"GET"; http_method; content:"/Installer/Flow?pubid="; nocase; depth:22; http_uri; fast_pattern; content:"&distid="; distance:0; http_uri; content:"&productid="; distance:0; http_uri; content:"&subpubid="; distance:0; http_uri; content:"&campaignid="; distance:0; http_uri; content:"&networkid="; distance:0; http_uri; content:"&dfb="; distance:0; http_uri; content:"&os="; distance:0; http_uri; content:"&version="; distance:0; http_uri; content:"Chrome/18.0.1025.142 Safari/535.19|0d 0a|Host|3a|"; http_header; reference:md5,38eeed96ade6037dc299812eeadee164; reference:url,sophos.com/en-us/threat-center/threat-analyses/adware-and-puas/OutBrowse%20Revenyou/detailed-analysis.aspx; classtype:trojan-activity; sid:2018617; rev:5;)
-
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible AnglerEK Java Exploit/Payload Structure Jan 16 2014"; flow:established,to_server; urilen:49; content:" Java/1."; http_header; pcre:"/^\/[a-z0-9_\-]{48}$/Ui"; classtype:trojan-activity; sid:2017976; rev:10;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Browlock Hostname Format US"; flow:established,to_server; content:"Host|3a 20|fbi.gov."; http_header; fast_pattern:only; classtype:trojan-activity; sid:2018006; rev:3;)
@@ -3826,29 +3826,151 @@
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED food.com compromise hostile JavaScript gate"; flow:established,to_server; content:".html?0."; http_uri; fast_pattern:only; pcre:"/\/[a-z]{1,6}\.html\?0\.[0-9]+[a-z]?$/U"; classtype:trojan-activity; sid:2018505; rev:6;)
 
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|55 04 06|"; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; fast_pattern; distance:1; within:20; tls.fingerprint:"47:46:41:98:fc:47:5a:2e:a1:76:18:38:b1:f8:0d:ea:e7:99:d0:5f"; classtype:trojan-activity; sid:2018736; rev:8;)
+
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible ASPROX Download URI Struct June 19 2014"; flow:established, to_server; content:"GET"; http_method; content:".php?"; http_uri; fast_pattern:only; content:!"=aHR0cD"; http_uri; content:"User-Agent|3a|"; http_header; content:!"|0d 0a|Referer|3a|"; http_header; pcre:"/\/[a-z]{2,9}\.php\?(?:[a-z0-9]{2,4}|[cktw])=[a-zA-Z0-9\x2b\x2f\x5c]{43,56}=?$/U"; classtype:trojan-activity; sid:2018589; rev:6;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Dyreza RAT Checkin Response 2"; flow:established,to_client; dsize:3; content:"/1/"; reference:url,phishme.com/project-dyre-new-rat-slurps-bank-credentials-bypasses-ssl/; classtype:trojan-activity; sid:2018597; rev:4;)
+
+#alert tls $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|04|svr2"; distance:1; within:5; tls.fingerprint:"0e:03:44:08:34:6e:2c:66:fa:ec:a8:f8:97:24:ea:1f:f6:c7:5a:5e"; reference:md5,87223f535afd8b11dd79c6f39fc059d9; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018600; rev:12;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Enfal.F Checkin via HTTP Post 7"; flow:established,to_server; content:"POST"; http_method; content:"/cgi-bin/Owpp4.cgi"; http_uri; fast_pattern:only; content:!"User-Agent|3a|"; content:!"Referer|3a 20|"; pcre:"/^[^\r\n]{15}\x5f[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}\x2d[^\r\n]{2}/m"; reference:url,blog.cassidiancybersecurity.com/post/2014/07/The-Eye-of-the-Tiger2; classtype:trojan-activity; sid:2018665; rev:4;)
 
 #alert ssh $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED LibSSH2 Based SSH Connection - Often used as a BruteForce Tool"; flow:established,to_server; ssh.softwareversion:"libssh2_"; threshold: type limit, track by_src, count 1, seconds 30;  classtype:misc-activity; sid:2018689; rev:3;)
 
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (CryptoWall C2)"; flow:established,from_server; content:"|20|kpai7ycr7jxqkilp.torexplorer.com"; tls.fingerprint:"0e:dd:72:24:52:c1:2c:68:6f:16:a7:ee:7b:e7:4b:56:e8:9a:6d:b5"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018693; rev:4;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|1b|corporati-sdfs222222you.com"; fast_pattern:8,20; tls.fingerprint:"19:56:b7:ff:84:f6:f8:41:f5:b5:8d:63:76:88:59:b6:d5:f0:3d:3c"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018694; rev:4;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|11|evergreen.kiev.ua"; fast_pattern:only; tls.fingerprint:"1a:3f:a8:f8:56:d4:da:64:83:f0:7b:29:40:41:cf:84:2e:b4:e9:b5"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018695; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|0e|kilomenter.com"; tls.fingerprint:"25:c3:39:6d:47:d5:df:12:fa:af:dd:06:68:7e:7e:69:f8:fc:6f:e8"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018697; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|21|worldwidetrading-compaanny2you.su"; fast_pattern:9,20; tls.fingerprint:"28:49:e8:47:e0:d5:ba:85:bf:59:18:2a:92:e5:35:41:d5:5f:a8:dc"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018698; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|17|delfi-fro-youindigo.net"; fast_pattern:only; tls.fingerprint:"34:8e:8f:a3:05:d8:b1:e5:fe:d5:3c:07:1e:dd:58:e7:a0:c9:d9:d4"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018699; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Malware C2)"; flow:established,from_server; content:"|0e|jpyjcy0qmd.gov"; fast_pattern:only; tls.fingerprint:"36:ae:19:7c:21:ca:c2:56:0f:6d:6e:dc:a5:0c:46:3e:a0:49:f1:52"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018700; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|0d|riffpedia.net"; fast_pattern:only; tls.fingerprint:"46:de:ba:70:b2:f5:e1:7b:a8:54:cf:02:26:ec:5b:df:8f:b0:06:7b"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018701; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|0f|slksecurity.com"; fast_pattern:only; tls.fingerprint:"4b:1d:64:c1:63:7a:ae:42:7a:a0:7d:6c:75:6c:13:b9:77:71:56:03"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018702; rev:3;)
+
 #alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|11|googleforking.com"; distance:1; within:18; tls.fingerprint:"4c:1c:1a:aa:58:80:31:74:58:79:8a:04:db:76:42:8e:ce:55:f1:40"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018703; rev:5;)
 
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|12|billing-service.ru"; fast_pattern:only; tls.fingerprint:"4e:ac:f7:ce:46:3d:ff:ae:b2:40:cb:d9:7a:09:f0:dd:42:08:e7:48"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018704; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|0e|ckytiqfles.com"; fast_pattern:only; tls.fingerprint:"4f:b4:c8:1e:f5:c1:bf:0e:2e:53:3d:8c:46:63:40:67:a1:5f:25:fe"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018705; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|0e|web-names1.com"; fast_pattern:only; tls.fingerprint:"59:c1:d3:55:1c:d5:43:55:39:10:72:03:0d:21:57:7a:c6:5a:49:83"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018706; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|09|server265"; fast_pattern:only; tls.fingerprint:"65:a7:7d:36:d1:b5:36:65:f6:0d:19:71:89:24:50:4f:7d:3f:95:08"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018707; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|13|statistic4he2om.com"; fast_pattern:only; tls.fingerprint:"69:c6:78:70:7b:fd:48:36:29:15:71:fb:ae:40:04:59:c9:0b:9e:ed"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018708; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|17|delfi-fro-youindigo.com"; tls.fingerprint:"72:ce:ed:55:39:c6:0f:e7:ef:db:c8:7e:77:7f:73:1c:75:d3:ff:ea"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018711; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|10|secureonesee.com"; fast_pattern:only; tls.fingerprint:"74:06:45:7d:94:2e:bc:79:e4:91:45:4c:d5:7d:fc:f9:bc:c8:95:af"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018712; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|0f|bitcoin-send.ru"; fast_pattern:only; tls.fingerprint:"78:0e:3b:97:7f:c1:19:e7:a0:e1:cd:51:92:90:9b:a0:ba:95:c8:c7"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018714; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (ZeuS C2)"; flow:established,from_server; content:"|06|lzx.su"; fast_pattern:only; tls.fingerprint:"79:67:bb:dd:e9:c1:17:46:8d:26:cd:de:db:20:e2:1c:46:63:bd:d7"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018715; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|07|server8"; fast_pattern:only; tls.fingerprint:"9d:5f:4b:bd:00:81:77:0e:67:43:31:e9:a0:db:e7:45:c9:85:e8:50"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018716; rev:4;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (CryptoWall C2)"; flow:established,from_server; content:"|1c|kpai7ycr7jxqkilp.tor2www.com"; tls.fingerprint:"a7:da:82:eb:15:e9:87:09:ba:62:5c:84:3d:bb:e7:ad:d3:24:6a:c9"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018717; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|1a|root@localhost.localdomain"; tls.fingerprint:"a8:c7:79:04:f3:e6:1e:6d:18:2d:7a:69:15:25:c4:09:ff:12:ef:86"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018718; rev:5;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Shylock C2)"; flow:established,from_server; content:"|10|Internet Banking"; fast_pattern:only; tls.fingerprint:"b0:03:44:3e:f1:2b:5f:f4:4b:5a:00:a2:68:d2:09:5b:43:d2:a8:6f"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018720; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|15|futuredynamicteam.com"; tls.fingerprint:"b6:02:85:17:c1:0f:e9:e3:10:48:f0:2e:58:53:e5:c1:74:1f:ef:b8"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018721; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak C2)"; flow:established,from_server; content:"|0f|security256.com"; fast_pattern:only; tls.fingerprint:"ba:e6:e4:56:b7:23:9d:2e:01:cd:2a:bb:6a:10:13:9d:96:3c:73:14"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018722; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|0f|sec-picture.net"; fast_pattern:only; tls.fingerprint:"c8:7e:eb:70:75:75:e5:23:8d:77:73:10:2d:f1:73:07:2a:bb:bf:0b"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018723; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|1d|planet2wideg2yandex-corti.com"; tls.fingerprint:"c9:b0:97:d6:2d:6f:7b:36:5f:88:fc:ec:1d:a9:4d:ed:5e:d9:32:1f"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018724; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|0c|kin.pgsox.cc"; fast_pattern:only; tls.fingerprint:"cb:f6:8e:89:9c:14:cd:be:d2:5b:20:d3:98:ce:67:24:d6:0d:e0:a6"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018725; rev:4;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|10|bitcoin-beta.com"; fast_pattern:only; tls.fingerprint:"d4:fa:65:54:b5:f6:24:3a:50:eb:14:53:e4:40:bb:a5:8d:a5:6f:61"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018726; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|10|invoice-maker.ru"; fast_pattern:only; tls.fingerprint:"d7:b1:19:96:6c:5b:41:dd:99:b2:e1:e1:c8:74:5f:cb:65:f8:09:de"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018727; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|12|poppperdropper.com"; fast_pattern:only; tls.fingerprint:"dd:bd:80:27:40:3b:bd:f2:17:e6:34:53:0b:ee:72:40:ce:d6:8a:8e"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018728; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|10|www.total4me.org"; fast_pattern:only; tls.fingerprint:"df:4b:2f:32:9f:19:f8:a5:02:33:e4:f5:1e:e1:61:6e:b8:0d:c7:f1"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018729; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|06|0bg.ru"; fast_pattern:only; tls.fingerprint:"df:9c:32:dd:ba:0b:e9:6f:08:52:bc:59:3d:a3:d7:82:12:b1:d5:45"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018730; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|10|greengarden1.com"; fast_pattern:only; tls.fingerprint:"e8:52:a3:e8:cd:0b:eb:2d:28:df:62:2e:2c:a4:d5:4d:f4:3c:cc:9f"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018731; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|07|server9"; fast_pattern:only; tls.fingerprint:"f5:e2:b6:7a:1e:92:49:ab:ac:d0:4f:68:36:9b:2a:0d:fb:0b:4f:d7"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018732; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|0e|fileprofes.com"; fast_pattern:only; tls.fingerprint:"f9:86:e8:fa:b5:55:bb:db:96:9f:f2:4c:48:8c:d9:66:09:43:5e:ec"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018733; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|0b|gorms4tu.be"; fast_pattern:only; tls.fingerprint:"ff:15:52:d1:df:5c:d0:0e:c5:69:00:31:9e:9f:24:80:4a:e6:0c:63"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018734; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|0b|pistofon.ru"; distance:1; within:12; content:"|13|someone@pistofon.ru"; fast_pattern:only; tls.fingerprint:"43:cb:f3:ff:69:9b:3d:dc:58:29:17:bd:ff:41:ed:59:13:c7:39:8a"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018746; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|0e|trustasia.asia"; distance:1; within:15; tls.fingerprint:"09:f0:c1:86:37:73:63:98:2c:19:7a:ed:2a:ca:60:2d:ce:4f:cf:16"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018747; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|12|do.tntcentral.mobi"; fast_pattern:only; tls.fingerprint:"75:02:e5:5d:eb:4d:19:b9:6e:a9:61:26:34:82:4b:2f:b6:ad:96:6d";  reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018760; rev:4;)
+
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Possible CryptoWall encrypted download"; flow:to_client,established; file_data; byte_test:1,<,12,0; content:"|00 00 00|"; distance:1; within:3; byte_test:1,<,127,0,relative; byte_test:1,>,48,0,relative; byte_jump:1,0,from_beginning,post_offset 5; byte_test:1,=,0,0,relative; pcre:"/^[\x00-\x0c]\x00\x00\x00[a-z0-9]{6,12}\x00/s"; classtype:trojan-activity; sid:2018788; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (ZeuS MITM)"; flow:established,from_server; content:"|55 04 03|"; content:"|15|daznukhurebkolsek.net"; distance:1; within:22; tls.fingerprint:"b6:d7:85:2a:e1:ca:32:5f:77:28:d4:64:12:44:8b:01:41:94:0b:c9";  reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018807; rev:4;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED DYNAMIC_DNS HTTP Request to *.passinggas.net Domain (Sitelutions)"; flow:established,to_server; content:".passinggas.net"; nocase; http_header; fast_pattern:only; pcre:"/^Host\x3a[^\r\n]+\.passinggas\.net(?:\x3a\d{1,5})?\r?$/Hmi"; classtype:bad-unknown; sid:2018847; rev:2;)
 
 #alert udp $HOME_NET any -> any 53 (msg:"ET DELETED DYNAMIC_DNS Query to *.passinggas.net Domain (Sitelutions)"; content:"|01 00 00 01 00 00 00 00 00 00|"; offset:2; depth:10; content:"|0a|passinggas|03|net|00|"; nocase; fast_pattern:only; classtype:bad-unknown; sid:2018848; rev:1;)
 
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|0c|nagchampa.in"; distance:1; within:13; tls.fingerprint:"cd:bc:8b:c2:e9:63:ee:6c:e5:18:e0:6a:92:42:a5:4a:28:19:eb:7f"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018851; rev:4;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|55 04 06|"; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; fast_pattern; distance:1; within:20; tls.fingerprint:"1e:0f:3d:14:42:f9:52:2b:24:25:15:cb:69:68:a1:0b:08:f4:85:7c"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018858; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|00 ac 31 2f c6 b3 12 c1 f9|"; distance:0; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; tls.fingerprint:"be:1a:58:4a:85:c8:79:f8:55:5d:98:4f:c3:6b:ef:69:db:6d:8a:d5"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018859; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|00 dd 04 88 42 80 63 7d af|"; distance:0; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; tls.fingerprint:"80:ac:8f:7c:a8:c6:dd:1b:5b:23:17:63:e9:09:50:52:40:a9:d1:a6"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018860; rev:4;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|55 04 06|"; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; fast_pattern; distance:1; within:20; tls.fingerprint:"4d:0f:1f:0f:96:85:ef:f1:24:e5:6a:31:19:2a:2b:ea:e7:88:d8:8b"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018861; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|55 04 06|"; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; fast_pattern; distance:1; within:20; tls.fingerprint:"ab:92:db:cc:12:05:45:36:1d:3a:cc:c5:50:d4:e5:79:67:d4:85:71"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018862; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|55 04 06|"; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; fast_pattern; distance:1; within:20; tls.fingerprint:"f7:41:76:2e:a8:09:4a:8d:95:ad:84:ba:ea:0d:42:e8:0c:e5:84:d0"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018863; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|00 ab 62 ca a2 20 83 75 2d|"; distance:0; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; tls.fingerprint:"bc:08:3e:da:9c:3a:84:fa:bf:6d:39:23:7e:bb:7a:d8:65:54:0b:56"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018864; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|00 f6 57 75 bc c6 71 7c 74|"; distance:0; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; tls.fingerprint:"0b:b0:85:d5:61:df:07:c8:89:e5:ba:d5:1c:84:63:71:d4:fc:fd:61"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018865; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|00 cf 22 8c cf e7 2c 1b 1f|"; distance:0; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; tls.fingerprint:"a9:24:0e:12:4a:b9:4f:16:74:4d:54:c2:50:f2:df:46:1d:dc:39:2b"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018866; rev:4;)
+
 #alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Dyre SSL Self-Signed Cert Aug 06 2014"; flow:established,from_server; content:"|55 04 03|"; content:"|0c|94.23.236.54"; distance:1; within:13; reference:md5,384a3c3a250341aa7f7c6aba11467afb; classtype:trojan-activity; sid:2018903; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|55 04 03|"; content:"|0c|msvsprot.com"; distance:1; within:13; tls.fingerprint:"ea:ab:3c:a3:76:94:c8:9d:57:b9:21:b4:f3:93:0b:af:de:02:2d:e0"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018910; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 03|"; content:"|0c|local.domain"; distance:1; within:13; tls.fingerprint:"8f:37:76:15:40:99:b6:c2:dc:34:b8:c3:7f:f5:21:17:21:44:a9:a4"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018911; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Vawtrak MITM)"; flow:established,from_server; content:"|55 04 03|"; content:"|14|expert-256bitssl.com"; distance:1; within:21; tls.fingerprint:"ca:2e:43:5b:b8:83:60:81:ff:a6:1c:90:2d:b0:5a:4e:0e:11:c7:8f";  reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018913; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 08 13 0a|Some-State"; content:"|13 18|Internet Widgits Pty"; within:35; tls.fingerprint:"e5:0e:e9:90:a3:12:b9:e2:e6:8c:46:d1:89:e1:e9:23:81:74:1b:f9"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018915; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|55 04 08 13 0a|Some-State"; content:"|13 18|Internet Widgits Pty"; within:35; tls.fingerprint:"e6:d3:0c:d0:41:d1:9d:3a:3e:9c:82:e0:b9:e3:e1:67:ad:0f:ee:9f"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018916; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Fingerprint Blacklist Malicious SSL certificate detected (KINS C2)"; flow:established,from_server; content:"|2a 86 48 86 f7 0d 01 09 01|"; content:"|19|siefrra1967ga@outlook.com"; distance:1; within:26; tls.fingerprint:"b5:ff:48:e0:d2:15:2e:04:83:f1:8d:50:60:41:46:7a:55:d1:fb:a8";  reference:url,sslbl.abuse.ch; reference:md5,7832ac3ad8275695b8051ab70432e161; classtype:trojan-activity; sid:2018917; rev:3;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Trojan-Spy.Win32.HavexSysinfo Response"; flow:from_server,established; file_data; content:"<!--havexhavex-->"; fast_pattern:only; reference:url,securelist.com/blog/research/65240/energetic-bear-more-like-a-crouching-yeti/; reference:md5,bdd1d473a56607ec366bb2e3af5aedea; reference:url,802bba9d078a09530189e95e459adcdf; classtype:trojan-activity; sid:2018921; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED DRIVEBY Archie.EK IE Exploit URI Struct"; flow:to_server,established; content:"/ie7.html"; http_uri; classtype:trojan-activity; sid:2018932; rev:4;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED DRIVEBY Archie.EK IE CVE-2013-2551 Payload Struct"; flow:to_server,established; urilen:3; content:"/dd"; http_uri; fast_pattern:only; content:!"Referer|3a|"; http_header; content:" MSIE "; http_header; classtype:trojan-activity; sid:2018934; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (KINS C2)"; flow:from_server,established; content:"|16|"; content:"|0b|"; within:8; content:"|00 ff 7f 8a 27 bf 5c f4 53|"; distance:0; fast_pattern; content:"|55 04 06|"; distance:0; content:"|02|XX"; distance:1; within:3; content:"|55 04 07|"; distance:0; content:"|0c|Default City"; distance:1; within:13; content:"|55 04 0a|"; distance:0; content:"|13|Default Company Ltd"; distance:1; within:20; tls.fingerprint:"35:66:21:93:91:b9:56:61:88:b4:c8:02:1e:a3:eb:c6:1c:97:35:c3"; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018937; rev:3;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dyre C2)"; flow:established,from_server; content:"|55 04 07|"; content:"|05|miami"; distance:1; within:6; content:"|55 04 03|"; distance:0; content:"|0c|94.23.236.54"; distance:1; within:13; tls.fingerprint:"b2:ca:f5:a1:82:79:c1:cb:10:da:17:4c:58:1a:71:38:ff:8b:0c:f2";  reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2018940; rev:3;)
+
+#alert tls $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET DELETED Possible Upatre SSL Cert venturesonsite.com"; flow:established,from_server; content:"|55 04 03|"; content:"|12|venturesonsite.com"; distance:1; within:19; reference:md5,ef88df67a0bcb872143543ebad0ba91d; classtype:trojan-activity; sid:2019077; rev:5;)
 
 #alert tcp any any -> any any (msg:"ET DELETED njrat ver 0.7d Malware CnC Callback"; flow:from_client,established; content:"|00|ll|7C 27 7C 27 7C|"; fast_pattern; content:"0.7d"; reference:md5,bbc68c34bb2dac3ae382ecf785bdb441; classtype:trojan-activity; sid:2019223; rev:1;)
 
@@ -3867,6 +3989,8 @@
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Win32/Spy.KeyLogger.ODN Exfiltrating Data"; flow:established,to_server; content:"POST"; http_method; content:".php"; http_uri; content:"pcname="; depth:7; http_client_body; content:"&note="; distance:0; http_client_body; content:"&country="; distance:0; http_client_body; content:"&user="; distance:0; http_client_body; content:"&log="; distance:0; http_client_body; content:!"Referer|3a|"; http_header; reference:md5,4e83c405f35efd128ab8c324c12dbde9; classtype:trojan-activity; sid:2019468; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED APT.Fexel Checkin"; flow:established,to_server; content:"agtid="; http_header; content:"08x"; http_client_body; reference:md5,70e87b2898333e11344b16a72183f8e9; reference:url,www.fireeye.com/blog/technical/cyber-exploits/2013/09/operation-deputydog-zero-day-cve-2013-3893-attack-against-japanese-targets.html; classtype:trojan-activity; sid:2019469; rev:6;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Potential Sofacy Phishing Redirect"; flow:established,to_client; file_data; content:"// stop for sometime if needed"; reference:url,pwc.blogs.com/cyber_security_updates/2014/10/phresh-phishing-against-government-defence-and-energy.html; classtype:trojan-activity; sid:2019541; rev:3;)
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED PoisonIvy Keepalive to CnC (Operation SMN Variant)"; flow:established,to_server; dsize:48; content:"|52 13 34 da 18 3d 2f 45 a2 09 93 52 01 23 51 e3|"; offset:16; depth:16; reference:md5,ca22207c5441a100437b75d7ce0d3fe2; classtype:trojan-activity; sid:2019591; rev:1;)
 
@@ -3908,11 +4032,29 @@
 
 #alert tcp any [21,25,110,143,443,465,587,636,989:995,5061,5222] -> $HOME_NET any (msg:"ET DELETED FREAK Weak Export Suite From Server (CVE-2015-0204)"; flow:established,from_server; content:"|16 03|"; depth:2; byte_test:1,<,4,0,relative; content:"|02|"; distance:3; within:1; byte_jump:1,37,relative; content:"|00 0B|"; within:2; fast_pattern; threshold:type limit,track by_dst,count 1,seconds 1200; reference:url,blog.cryptographyengineering.com/2015/03/attack-of-week-freak-or-factoring-nsa.html; reference:cve,2015-0204; reference:cve,2015-1637; classtype:bad-unknown; sid:2020658; rev:3;)
 
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M0"; flow:established,to_server; urilen:40<>65; content:"0"; http_uri; offset:40; depth:15; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])0(?:(?P=sep)|\d)*?$/Ui"; classtype:trojan-activity; sid:2020995; rev:5;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M1"; flow:established,to_server; urilen:40<>65; content:"1"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])1(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2020996; rev:5;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M2"; flow:established,to_server; urilen:40<>65; content:"2"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])2(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2020997; rev:5;)
+
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M3"; flow:established,to_server; urilen:40<>65; content:"3"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])3(?:(?P=sep)|\d)*?$/U"; content:!"computerwoche.de|0d 0a|"; http_header; classtype:trojan-activity; sid:2020998; rev:5;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M4"; flow:established,to_server; urilen:40<>65; content:"4"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])4(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2020999; rev:4;)
 
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M5"; flow:established,to_server; urilen:40<>65; content:"5"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])5(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2021000; rev:5;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M6"; flow:established,to_server; urilen:40<>65; content:"6"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])6(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2021001; rev:5;)
+
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M7"; flow:established,to_server; urilen:40<>65; content:"7"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])7(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2021002; rev:4;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M8"; flow:established,to_server; urilen:40<>65; content:"8"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])8(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2021003; rev:5;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Fiesta Payload/Exploit URI Struct M9"; flow:established,to_server; urilen:40<>65; content:"9"; http_uri; offset:40; depth:10; pcre:"/^\/[a-z0-9_-]+\/[A-Za-z0-9_-]{36}(?P<sep>[\x2c\x3b])9(?:(?P=sep)|\d)*?$/U"; classtype:trojan-activity; sid:2021004; rev:5;)
+
 #alert udp any 53 -> $HOME_NET any (msg:"ET DELETED Team Cymru Sinkhole DNS Reply"; content:"|00 01 00 01|"; content:"|00 04 26 E5 46 04|"; distance:4; within:6; classtype:trojan-activity; sid:2021020; rev:1;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Nuclear EK Landing URI Struct T1"; flow:to_server,established; urilen:>14; content:"GET /"; byte_test:1,>,64,0,relative; byte_test:1,<,91,0,relative; content:".html"; http_uri; fast_pattern; offset:11; pcre:"/^\/[A-Z](?=[a-z0-9]*?[A-Z][a-z0-9]*?[A-Z])(?=[A-Z0-9]*?[a-z][A-Z0-9]*?[a-z])[A-Za-z0-9]{9,}\.html$/U"; pcre:"/Host\x3a\x20(?=[0-9]{0,22}[a-z])(?=[a-z]*?[0-9][a-z]{0,22}[0-9])[a-z0-9]{23}\x2e[^\x2e\r\n]+\x2e[^\x2e\r\n]/H"; classtype:trojan-activity; sid:2021040; rev:5;)
 
 #alert udp $HOME_NET any -> any 53 (msg:"ET DELETED Cryptolocker .onion Proxy Domain (24u4jf7s4regu6hn)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|24u4jf7s4regu6hn"; fast_pattern; distance:0; nocase; reference:md5,36095572717aee2399b6bdacef936e22; classtype:trojan-activity; sid:2021085; rev:1;)
 
@@ -3928,6 +4070,12 @@
 
 #alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET DELETED Cryptolocker C2 SSL cert serial"; flow:established,to_client; content:"|b3 b2 82 08 58 32 5e 8e|"; fast_pattern:only; reference:url,www.hybrid-analysis.com/sample/3ebc6999da89eaf44d94195b588cb869d894ca754a248b074893d11f6dd19188?environmentId=4; reference:md5,2c339dbb40b3b19ee275e4c7c1c17a18; classtype:trojan-activity; sid:2021253; rev:2;)
 
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Angler EK Landing URI Struct June 13 M1"; flow:established,to_server; urilen:27<>114; content:"/index.php?"; depth:11; http_uri; pcre:"/^\/index\.php\?[a-z]{8,80}=(?:\d{10,13}|\d{15,20})$/U"; pcre:"/Referer\x3a\x20http\x3a\x2f+(?P<refhost>[^\x3a\x2f\r\n]+).*?\r\nHost\x3a\x20(?!(?P=refhost))/Hsi"; classtype:trojan-activity; sid:2021263; rev:3;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Angler EK Landing URI Struct June 13 M2"; flow:established,to_server; urilen:27<>114; content:"/index.php?"; depth:11; http_uri; pcre:"/^\/index\.php\?[a-z]{8,80}=(?:\d{10,13}|\d{15,20})$/U"; pcre:"/Host\x3a\x20(?P<refhost>[^\x3a\r\n]+).*?\r\nReferer\x3a\x20https?\x3a\x2f\x2f(?!(?P=refhost))/Hsi"; classtype:trojan-activity; sid:2021264; rev:3;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Angler EK Landing URI Struct June 13 M3"; flow:established,to_server; urilen:27<>114; content:"/index.php?"; depth:11; http_uri; pcre:"/^\/index\.php\?[a-z]{8,80}=(?:\d{10,13}|\d{15,20})$/U"; content:!"Referer|3a|"; http_header; classtype:trojan-activity; sid:2021265; rev:3;)
+
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Fake AV Phone Scam Landing June 16 2015 M3"; flow:established,to_client; file_data; content:"<title>Virus Firewall Alert!</title>"; nocase; fast_pattern:16,20; content:"myFunction|28 29|"; distance:0; content:"popup-mac-warning.png"; nocase; distance:0; classtype:trojan-activity; sid:2021287; rev:2;)
 
 #alert tls $EXTERNAL_NET [443,4443] -> $HOME_NET any (msg:"ET DELETED Possible Upatre or Dyre SSL Cert June 29 2015"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|02 09 00|"; distance:17; within:3; content:"|06 03 55 04 06 13 02|"; distance:0; pcre:"/^[A-Z]{2}[01]/R"; content:"|30 09 06 03 55 04 08 0c 02|"; distance:1; within:9; fast_pattern; pcre:"/^[A-Z]{2}[01]/R"; content:"|06 03 55 04 07 0c|"; within:9; byte_test:1,>,8,0,relative; byte_test:1,<,121,0,relative; pcre:"/^.{1}(?=[a-zA-Z]{0,119}[0-9])[a-zA-Z0-9]{9,120}[01]/R"; content:"|06 03 55 04 0a 0c|"; within:9; byte_extract:1,0,orglen,relative; content:!"|20|"; within:orglen; pcre:"/^(?=[a-zA-Z]{0,119}[0-9])[a-zA-Z0-9]{9,120}[01]/R"; content:"|06 03 55 04 03 0c|"; within:9; byte_extract:1,0,cnlen,relative; content:!"|2e|"; within:cnlen; content:!"|2a|"; within:cnlen; pcre:"/^(?=[a-zA-Z]{0,119}[0-9])(?P<var>[a-zA-Z0-9]{9,120}[01]).+?\x55\x04\x03.{2}(?P=var)/Rs"; classtype:trojan-activity; sid:2021369; rev:3;)
@@ -3939,6 +4087,8 @@
 #alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (HTTPBrowser CnC)"; flow:established,from_server; content:"|16|"; content:"|0b|"; within:8; content:"|09 00 97 d3 99 b4 6f 4e 77 43|"; within:35; content:"|55 04 0A|"; distance:0; content:"|18|Internet Widgits Pty Ltd"; distance:1; within:25; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021428; rev:3;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Fake AV Phone Scam Landing July 20 2015 M3"; flow:to_client,established; file_data; content:"html class=|22|js js sessionstorage|22|"; fast_pattern:13,20; content:"getURLParameter"; distance:0; content:"Toll Free"; nocase; distance:0; content:"myFunction|28 29|"; nocase; distance:0; classtype:trojan-activity; sid:2021448; rev:2;)
+
+#alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Dyre CnC)"; flow:established,from_server; content:"|55 04 03|"; content:"|12|brutus.neuronio.pt"; distance:1; within:19; content:"|0c|sampo@iki.fi"; distance:0; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021521; rev:3;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Fake AV Phone Scam Landing July 23 2015"; flow:to_client,established; file_data; content:"navigator.sayswho"; content:"alertforSecuity"; fast_pattern; distance:0; content:"Firefox"; distance:0; content:"Chrome"; distance:0; content:"Netscape"; distance:0; classtype:trojan-activity; sid:2021522; rev:2;)
 
@@ -3961,6 +4111,8 @@
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM)"; flow:established,from_server; content:"|55 04 03|"; content:"|13|makaronypolskie.com"; distance:1; within:20; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021933; rev:2;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM)"; flow:established,from_server; content:"|55 04 03|"; content:"|0b|crenuva.net"; distance:1; within:12; reference:url,sslbl.abuse.ch; classtype:trojan-activity; sid:2021934; rev:2;)
+
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Possible Nuclear EK Landing URI Struct Oct 26 2015"; flow:to_server,established; content:".php?option=com_"; http_uri; content:"&itemid="; http_uri; content:"&id="; http_uri; pcre:"/&id=\d+(?:\x3a(?:[a-z0-9]*?[A-Z])(?:[A-Z0-9]*?[a-z])[A-Za-z0-9]{10,}\.{0,2})?&catid=\d+&itemid=\d+$/U"; classtype:trojan-activity; sid:2021999; rev:4;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Likely Evil EXE download from MSXMLHTTP non-exe extension M1"; flow:established,to_client; content:"MZ"; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; flowbits:isset,et.MS.XMLHTTP.no.exe.request; classtype:trojan-activity; sid:2022052; rev:2;)
 
@@ -3989,6 +4141,8 @@
 #alert udp $HOME_NET any -> any 53 (msg:"ET DELETED Ransomware Locky .onion Payment Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|32kl2rwsjvqjeui7"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2022659; rev:2;)
 
 #alert udp $HOME_NET any -> any 53 (msg:"ET DELETED ABUSE.CH Ransomware Domain Detected (TorrentLocker C2)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|velodrivve|03|biz|00|"; fast_pattern; distance:0; content:"|00 01 00 01|"; distance:0; within:4; pcre:"/[a-z]{4,10}\x08velodrivve\x03biz\x00/"; reference:url,ransomwaretracker.abuse.ch; classtype:trojan-activity; sid:2022703; rev:2;)
+
+#alert udp $HOME_NET any -> any 53 (msg:"ET DELETED Ransomware Bart .onion Payment Domain (khh5cmzh5q7yp7th)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|khh5cmzh5q7yp7th"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2022958; rev:2;)
 
 #alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL DELETED TFN client command LE"; icmp_id:51201; icmp_seq:0; itype:0; reference:arachnids,183; classtype:attempted-dos; sid:2100251; rev:6;)
 
@@ -4107,6 +4261,8 @@
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 389 (msg:"GPL DELETED MISC Lotus Domino LDAP attack"; flow:established; content:"|30 0c 02 01 01 60 07 02 00 03 04 00 80 00|"; reference:bugtraq,16523; reference:cve,2006-0580; reference:url,lists.immunitysec.com/pipermail/dailydave/2006-February/002896.html; classtype:misc-attack; sid:100000229; rev:3;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 4080 (msg:"GPL DELETED iChat directory traversal attempt"; flow:to_server,established; content:"/../../"; reference:cve,1999-0897; classtype:web-application-activity; sid:2101604; rev:7;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 42 (msg:"GPL DELETED WINS overflow attempt"; flow:to_server,established; byte_test:1,&,64,6; byte_test:1,&,32,6; byte_test:1,&,16,6; byte_test:1,&,8,6; pcre:!"/^.{8}(\x05\x37(\x1E[\x90-\xFF]|[\x1F-\x2F].|\x30[\x00-\x70])|\x00\x00\x00[\x00-\x65]|\x02\x68\x05\xC0)/s"; reference:bugtraq,11763; reference:cve,2004-1080; reference:url,www.immunitysec.com/downloads/instantanea.pdf; reference:url,www.microsoft.com/technet/security/bulletin/MS04-045.mspx; classtype:misc-attack; sid:2103017; rev:8;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 457 (msg:"GPL DELETED Netscape Unixware overflow"; flow:to_server,established; content:"|EB|_|9A FF FF FF FF 07 FF C3|^1|C0 89|F|9D|"; reference:arachnids,180; reference:bugtraq,908; reference:cve,1999-0744; classtype:attempted-recon; sid:2101132; rev:9;)
 
@@ -4290,7 +4446,7 @@
 
 #alert tcp $HOME_NET 22 -> $EXTERNAL_NET any (msg:"GPL DELETED successful gobbles ssh exploit uname"; flow:from_server,established; content:"uname"; reference:bugtraq,5093; reference:cve,2002-0390; reference:cve,2002-0639; classtype:misc-attack; sid:2101811; rev:9;)
 
-#alert tcp $HOME_NET any -> $EXTERNAL_NET 6666:7000 (msg:"GPL DELETED IRC nick change"; flow:to_server,established; content:"NICK "; depth:5; fast_pattern:only; classtype:policy-violation; sid:2100542; rev:13;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 6666:7000 (msg:"GPL DELETED IRC nick change"; flow:to_server,established; content:"NICK "; depth:5; fast_pattern; classtype:policy-violation; sid:2100542; rev:14;)
 
 #alert http any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL DELETED Linksys apply.cgi overflow attempt"; flow:to_server,established; content:"/apply.cgi"; http_uri; fast_pattern:only; content:"Content-Length|3A|";  isdataat:1000,relative; content:!"|0a|"; within:1000; reference:bugtraq,14822; reference:cve,2005-2799; reference:nessus,20096; reference:url,www.osvdb.org/displayvuln.php?osvdb_id=19389; classtype:web-application-attack; sid:100000177; rev:7;)
 

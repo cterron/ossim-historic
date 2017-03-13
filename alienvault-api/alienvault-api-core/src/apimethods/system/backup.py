@@ -68,15 +68,15 @@ def get_backup_list(system_id='local',
 
 def restore_backup(system_id='local',
                    backup_type='configuration',
-                   backup_name=''):
+                   backup_name='',
+                   backup_pass=''):
     """
     Restore backup in the system
     """
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
         api_log.error(str(system_ip))
-        error_msg = "Error retrieving the system ip for the system id "
-        error_msg = error_msg + "%s -> %s" % (system_id, str(system_ip))
+        error_msg = "Error retrieving the system ip for the system id %s -> %s" % (system_id, str(system_ip))
         return False, error_msg
 
     backup_name = os.path.basename(backup_name)
@@ -88,17 +88,16 @@ def restore_backup(system_id='local',
     try:
         success, msg = run_restore(target=system_ip,
                                    backup_type=backup_type,
-                                   backup_file=backup_path)
+                                   backup_file=backup_path,
+                                   backup_pass=backup_pass)
         if not success:
             api_log.error("restore_backup: %s" % msg)
-            error_msg = "Error trying to restore the backup "
-            error_msg = error_msg + "'%s': %s" % (backup_name, msg)
+            error_msg = "Error trying to restore the backup '%s': %s" % (backup_name, msg)
             return False, error_msg
 
     except Exception as e:
         api_log.info("restore_backup Error: %s" % str(e))
-        error_msg = "Error trying to restore the backup "
-        error_msg = error_msg + "'%s': %s" % (backup_name, str(e))
+        error_msg = "Error trying to restore the backup '%s': %s" % (backup_name, str(e))
         return False, error_msg
 
     return success, msg
@@ -106,14 +105,15 @@ def restore_backup(system_id='local',
 
 def delete_backups(system_id='local',
                    backup_type='configuration',
-                   backup_list=[]):
+                   backup_list=None):
     """ Delete backups from the system
     """
+    if backup_list is None:
+        backup_list = []
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
         api_log.error(str(system_ip))
-        error_msg = "Error retrieving the system ip for the system id "
-        error_msg = error_msg + "%s -> %s" % (system_id, str(system_ip))
+        error_msg = "Error retrieving the system ip for the system id %s -> %s" % (system_id, str(system_ip))
         return False, error_msg
 
     success, files = get_files_in_path(system_ip=system_ip, path=BACKUP_PATH)
@@ -122,6 +122,7 @@ def delete_backups(system_id='local',
 
     # Report warnings for non-existing backup files
     existing_backup_list = []
+    backup_name = ''
     for backup_name in backup_list:
         backup_name = os.path.basename(backup_name)
         success, backup_path = secure_path_join(BACKUP_PATH, backup_name)
@@ -139,14 +140,12 @@ def delete_backups(system_id='local',
                                        file_name=backup_path)
             if not success:
                 api_log.error(str(msg))
-                error_msg = "Error removing %s " % backup_path
-                error_msg = error_msg + "from system %s" % system_ip
+                error_msg = "Error removing %s from system %s " % (backup_path, system_ip)
                 return False, error_msg
 
         except Exception as e:
             api_log.error("delete_backups Error: %s" % str(e))
-            error_msg = "Error trying to delete the backup '%s'" % backup_name
-            error_msg = ": %s" % str(e)
+            error_msg = "Error trying to delete the backup '%s': %s" % (backup_name, str(e))
             return False, error_msg
 
     try:
@@ -154,8 +153,7 @@ def delete_backups(system_id='local',
                         backup_type=backup_type,
                         no_cache=True)
     except Exception as e:
-        error_msg = "Error when trying to flush the cache " \
-                    "after deleting backups: %s" % str(e)
+        error_msg = "Error when trying to flush the cache after deleting backups: %s" % str(e)
         api_log.error(error_msg)
 
     return success, ''

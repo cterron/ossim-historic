@@ -479,6 +479,8 @@ libssh-4:amd64
 libssh2-1:amd64
 libssl1.0.0:amd64
 libstatgrab9
+libtime-parsedate-perl
+libswitch-perl
 libstdc++-4.9-dev:amd64
 libstdc++6:amd64
 libstonith1
@@ -665,7 +667,8 @@ python-geoip
 python-ipy
 python-jinja2
 python-ldap
-python-libpcap
+python-pypcap
+python-dpkt
 python-lockfile
 python-m2crypto
 python-markupsafe

@@ -241,7 +241,7 @@ $CONFIG{'DBK'} = "UWjiGNlEE0y5BxGk3dJAR7INx8IAf00MS3/3kR1QUVMazTXl4hqNPds/";
 $CONFIG{'MAXPORTSCANS'} = 8;
 $CONFIG{'ROOTDIR'} = $nessus_vars{'nessus_rpt_path'};
 
-$CONFIG{'MAX_HOSTS'} = 4095;
+$CONFIG{'MAX_HOSTS'} = 3500;
 
 #GLOBAL VARIABLES
 my $debug                    = 0;
@@ -5112,15 +5112,73 @@ sub scan_discover {
     return $result;
 }
 
-sub get_target_id {
-    my $input = $_[0];
-    my (%credentials) = %{$_[1]};
-    my $job_id = $_[2];
-    
-    my @sorted_hosts = ();
-    my ($xml);
+sub DottedQuadToLong {
+   return unpack('N', (pack 'C4', split(/\./, shift)));
+}
 
-    @sorted_hosts = sort(split(/\n/, $input));
+sub LongToDottedQuad {
+   return join('.', unpack('C4', pack('N', shift)));
+}
+
+
+sub get_target_id {
+     my $input = $_[0];
+     my (%credentials) = %{$_[1]};
+     my $job_id = $_[2];
+     my @sorted_hosts = ();
+     my ($xml);
+
+
+    my @value = sort(split(/\n/, $input));
+    my @chunk = (0,0);
+    my $val;
+    my $long;
+    my $x;
+    my $y;
+    foreach $val (@value) {
+       if ($val =~ m/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i) {
+               $long =  DottedQuadToLong($val);
+               if (@chunk[0] == 0) {
+                       @chunk[0] = $long;
+                       next;
+               }
+#                      //original expr
+#                      //if ((!$chunk["last"] && $long == $chunk["first"]+1) || ($chunk["last"] && $long == $chunk["last"]+1)) {
+#                      //but since $chunk["first"] and $chunk["last"] are always '0' or set
+#                      //we can avoid using them
+               if ($long == @chunk[0]+1 || $long == @chunk[1]+1) {
+                       @chunk[1] = $long;
+                       next;
+               }
+               if (@chunk[0] != 0) {
+                       $x = LongToDottedQuad(@chunk[0]);
+                       if (@chunk[1] != 0) {
+                               $y = LongToDottedQuad(@chunk[1]);
+                                push(@sorted_hosts,"$x-$y");
+                       } else {
+                               push(@sorted_hosts,"$x");
+                       }
+                       @chunk[0] = $long;
+                       @chunk[1] = 0;
+               }
+       } else {
+               push(@sorted_hosts,$val);
+       }
+    }
+#only god knows how to work with references in perl, so just copy/paste
+#from few rows above
+#I'm sorry
+     if (@chunk[0] != 0) {
+       $x = LongToDottedQuad(@chunk[0]);
+       if (@chunk[1] != 0) {
+               $y = LongToDottedQuad(@chunk[1]);
+               push(@sorted_hosts,"$x-$y");
+       } else {
+               push(@sorted_hosts,"$x");
+       }
+       @chunk[0] = $long;
+       @chunk[1] = 0;
+    }
     
     my $ls_credentials = "";
     

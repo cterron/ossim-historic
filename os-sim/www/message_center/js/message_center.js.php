@@ -35,7 +35,7 @@ header('Content-type: text/javascript');
  */
 
 require_once 'av_init.php';
-
+$todelete = $av_menu->check_perm("message_center-menu", "MessageCenterDelete");
 ?>
 
 
@@ -387,11 +387,13 @@ $(document).ready(function ()
         'bJQueryUI'      : true,
         'aaSorting'      : [[0, 'desc']],
         'aoColumns'      : [
+            <?php if ($todelete) { ?>
+            {'bSortable': false, sWidth: '6%'},
+            <?php } ?>
             {'bSortable': true, sWidth: '15%'},
             {'bSortable': true, sWidth: '55%'},
-            {'bSortable': true, sWidth: '10%'},
-            {'bSortable': true, sWidth: '10%'},
-            {'bSortable': false, sWidth: '10%'}
+            {'bSortable': true, sWidth: '12%'},
+            {'bSortable': true, sWidth: '12%'},
         ],
         'oLanguage'      : {
             'sProcessing'    : '<?php echo _('Loading') ?>...',
@@ -472,36 +474,54 @@ $(document).ready(function ()
             {
                 $notification_details.hide();
             }
+            $('#chk-all-rows').click(function() {
+                if ($(this).is(':checked')) {
+                    $(".dataTable :checkbox").prop('checked', true);
+                } else {
+                    $(".dataTable :checkbox").prop('checked', false);
+                }
+            });
+            var container = $("#notifications_list");
+            var selector = "[name='status_message_id[]']:checkbox";
+            var selector_checked = selector+":checked";
+            container.on("change",":checkbox",function() {
+                if (container.find(selector_checked).length) {
+                    $("#button_action").prop('disabled', false).removeClass('disabled av_b_disabled');
+                } else {
+                    $("#button_action").prop('disabled', true).addClass('disabled av_b_disabled');
+                }
+            });
+            container.find(selector).change();
+            $('#delete').off('click').on('click', function ()
+            {
+                var data = {
+                    'status_message_id[]': container.find(selector_checked).map(function(){
+                        return $(this).val();
+                     }).get(),
+                    'action'             : 'set_suppressed'
+               };
+               var remove_row = function ()
+               {
+                   table_data.fnDraw();
+               };
+               var msg_confirm = '<?php echo _('Are you sure you would like to delete this message(s)?') ?>';
+               var keys        = {
+                   yes: "<?php echo _('Yes') ?>",
+                   no: "<?php echo _('No') ?>"
+               };
+
+               av_confirm(msg_confirm, keys).done(function () {
+                   do_action(data, $av_info, [remove_row]);
+               });
+            });
         },
         fnRowCallback    : function (nRow, aData)
         {
             var $row = $(nRow);
             var message_id = aData.DT_RowId;
-
-            $('td:eq(4)', nRow).html('<img class="delete" src="/ossim/pixmaps/delete.png" border="0" height="15px" alt="" />');
-            $('td:eq(4)', nRow).find('.delete').off('click').on('click', function ()
-            {
-                var data = {
-                    'status_message_id': aData.DT_RowId,
-                    'action'           : 'set_suppressed'
-                };
-
-                var remove_row = function ()
-                {
-                    table_data.fnDraw()
-                };
-
-                var msg_confirm = '<?php echo _('Are you sure you would like to delete this message?') ?>';
-                var keys        = {
-                    yes: "<?php echo _('Yes') ?>",
-                    no: "<?php echo _('No') ?>"
-                };
-
-                av_confirm(msg_confirm, keys).done(function () {
-                    do_action(data, $av_info, [remove_row])
-                });
-            });
-
+            <?php if ($todelete) { ?>
+            $('td:eq(0)', nRow).html("<input type='checkbox' name='status_message_id[]' value='"+message_id+"'/>");
+            <?php } ?>
             if (false == aData.viewed)
             {
                 $row.addClass('unread');

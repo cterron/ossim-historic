@@ -1198,6 +1198,10 @@ ServerSignature Off
 # Disable TRACE method
 TraceEnable Off
 
+# Fix clickjacking vulnerablility
+<IfModule mod_headers.c>
+   Header always append X-Frame-Options SAMEORIGIN
+</IfModule>
 
 EOF
     close(APACHESECURITYDEFAULTPFILE);

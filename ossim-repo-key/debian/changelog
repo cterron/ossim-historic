@@ -1,8 +1,20 @@
-ossim-repo-key (5.2.4-0) stable; urgency=low
+ossim-repo-key (5.3.0-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 25 Apr 2016 05:11:02 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 27 Jun 2016 04:39:02 -0400
+
+ossim-repo-key (5.3-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 23 May 2016 05:16:07 -0400
+
+ossim-repo-key (5.2.5-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 25 Apr 2016 05:11:50 -0400
 
 ossim-repo-key (5.2.4-0) unstable; urgency=low
 

@@ -89,8 +89,8 @@ abstract class Filter_list
     /*****    CONSTANT DEFINITIONS    *****/
 
 
-    const MAX_NMAP_ITEMS  = 4096;
-    const MAX_VULNS_ITEMS = 4096;
+    const MAX_NMAP_ITEMS  = 3500;
+    const MAX_VULNS_ITEMS = 3500;
 
 
     /**

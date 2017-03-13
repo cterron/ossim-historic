@@ -48,11 +48,6 @@ change_rsyslog_conf() {
     sed -i "s/^#\$ModLoad imtcp/\$ModLoad imtcp/" "$RSYSLOG_CONF_FILE"
     sed -i "s/^#\$InputTCPServerRun/\$InputTCPServerRun/" "$RSYSLOG_CONF_FILE"
 
-    # Bluecoat-specific settings to prevent merging of log messages
-    BLUCOAT_TCP_SETTING="\$EscapeControlCharactersOnReceive off\n\$InputTCPServerAddtlFrameDelimiter 13\n\$InputTCPServerAddtlFrameDelimiter 10"
-
-    grep -q "^\$EscapeControlCharactersOnReceive" "$RSYSLOG_CONF_FILE" || sed -i "/^\$InputTCPServerRun/a $BLUCOAT_TCP_SETTING" "$RSYSLOG_CONF_FILE"
-
     zasec_found=$(grep "zasec\.conf" "$RSYSLOG_CONF_FILE" || echo "No")
     if [ "$zasec_found" = "No" ]; then
         echo "" >> "$RSYSLOG_CONF_FILE"

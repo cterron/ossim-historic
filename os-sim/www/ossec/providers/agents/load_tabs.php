@@ -380,7 +380,7 @@ else if ($tab == '#tab2')
                                     </td>
                                 </tr>
 
-                                <tr>
+                                <tr class="hidden">
                                     <th><?php echo _('Alert new files')?></th>
                                     <td>
                                         <select id='alert_new_files' name='alert_new_files'>
@@ -408,7 +408,7 @@ else if ($tab == '#tab2')
                                     </td>
                                 </tr>
 
-                                <tr>
+                                <tr class="hidden">
                                     <th><?php echo _('Auto ignore')?></th>
                                     <td>
                                         <select id='auto_ignore' name='auto_ignore'>

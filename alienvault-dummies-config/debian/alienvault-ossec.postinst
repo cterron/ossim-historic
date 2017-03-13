@@ -43,8 +43,9 @@ case "$1" in
         AV_DS_RULES_FILE="/var/ossec/rules/alienvault-directory-service_rules.xml"
         AV_WINDOWS_FIM_RULES_FILE="/var/ossec/rules/alienvault-windows-FIM_rules.xml"
         AV_WINDOWS_LOGON_LOGOFF_RULES_FILE="/var/ossec/rules/alienvault-windows-logon-logoff_rules.xml"
+        AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE="/var/ossec/rules/alienvault-windows-workstation-logon-logoff_rules.xml"
         AV_WINDOWS_USB_RULES_FILE="/var/ossec/rules/alienvault-windows-USB_rules.xml"
-	MSAUTH_RULES_FILE="/var/ossec/rules/msauth_rules.xml"
+	    MSAUTH_RULES_FILE="/var/ossec/rules/msauth_rules.xml"
 
         configure_ossec_tzone
         remove_old_ossec_files
@@ -66,13 +67,16 @@ case "$1" in
 
         if [ -f "$OSSEC_CONF" ]; then
             # Common configuration for Ossec
+            cp /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
             CUSTOM_ALERT='<custom_alert_output>AV - Alert - "$TIMESTAMP" --> RID: "$RULEID"; RL: "$RULELEVEL"; RG: "$RULEGROUP"; RC: "$RULECOMMENT"; USER: "$DSTUSER"; SRCIP: "$SRCIP"; HOSTNAME: "$HOSTNAME"; LOCATION: "$LOCATION"; EVENT: "[INIT]$FULLLOG[END]"; </custom_alert_output>'
             CUSTOM_ALERT=$(printf "%q" "$CUSTOM_ALERT")
 
+            # local_rules.xml should be added to the end of the list
             sed -i "$OSSEC_CONF" \
                 -e "/<custom_alert_output>.*<\/custom_alert_output>/d" \
                 -e "s#</global>#  $CUSTOM_ALERT\n  </global>#" \
                 -e '/<local_ip>.*<\/local_ip>/d' \
+                -e '/local_rules/d' \
                 -e "/<include>ms_dhcp_rules.xml<\/include>/d" \
                 -e "s#</rules>#  <include>ms_dhcp_rules.xml<\/include>\n  </rules>#" \
                 -e "/<include>alienvault-directory-service_rules.xml<\/include>/d" \
@@ -81,8 +85,11 @@ case "$1" in
                 -e "s#</rules>#  <include>alienvault-windows-FIM_rules.xml<\/include>\n  </rules>#" \
                 -e "/<include>alienvault-windows-logon-logoff_rules.xml<\/include>/d" \
                 -e "s#</rules>#  <include>alienvault-windows-logon-logoff_rules.xml<\/include>\n  </rules>#" \
+                -e "/<include>alienvault-windows-workstation-logon-logoff_rules.xml<\/include>/d" \
+                -e "s#</rules>#  <include>alienvault-windows-workstation-logon-logoff_rules.xml<\/include>\n  </rules>#" \
                 -e "/<include>alienvault-windows-USB_rules.xml<\/include>/d" \
                 -e "s#</rules>#  <include>alienvault-windows-USB_rules.xml<\/include>\n  </rules>#" \
+                -e "s#</rules>#  <include>local_rules.xml<\/include>\n  </rules>#"
 
             # Decoder changes. We need to deal with the user changes, so we only replace the dhcp line decoder.
             # Do not overwrite the files. 
@@ -141,6 +148,11 @@ case "$1" in
         if [ -f "$AV_WINDOWS_LOGON_LOGOFF_RULES_FILE" ]; then
             chmod 554 $AV_WINDOWS_LOGON_LOGOFF_RULES_FILE
             chown root:ossec $AV_WINDOWS_LOGON_LOGOFF_RULES_FILE
+        fi
+
+        if [ -f "$AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE" ]; then
+            chmod 554 $AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE
+            chown root:ossec $AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE
         fi
 
         if [ -f "$AV_WINDOWS_USB_RULES_FILE" ]; then

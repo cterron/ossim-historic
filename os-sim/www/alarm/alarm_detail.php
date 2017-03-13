@@ -59,22 +59,27 @@ function notify_and_die($msg, $db)
 }
 
 
-//Getting parameters
-$backlog_id = GET('backlog');
+/* connect to db */
+$db   = new ossim_db(TRUE);
+$conn = $db->connect();
+
+if (isset($_GET["event"]) && !isset($_GET["backlog"])) {
+    $alarm = Alarm::get_alarm_detail_by_event($conn,GET('event'));
+    header("Location: /ossim/#analysis/alarms/alarms-".$alarm->get_backlog_id());
+    die;
+}
+
+$backlog_id =  GET('backlog');
+list($alarm, $event) = Alarm::get_alarm_detail($conn, GET('backlog'));
 
 ossim_valid($backlog_id,    OSS_HEX,    'illegal:' . _("Backlog ID"));
-
 if ( ossim_error() )
 {
     die(ossim_error());
 }
 
-/* connect to db */
-$db   = new ossim_db(TRUE);
-$conn = $db->connect();
 
 
-list ($alarm, $event) = Alarm::get_alarm_detail($conn, $backlog_id);
 if(!is_object($alarm))
 {
     $msg = _('Unable to retrieve the alarm information.');
@@ -143,7 +148,8 @@ else
     $status = $alarm->get_status();
 }
 
-
+$risk = $alarm->get_risk();
+$risk_text = Util::get_risk_rext($risk);
 //Alarm JSON Info
 $alarm = array(
     'backlog_id'     => $backlog_id,
@@ -154,7 +160,7 @@ $alarm = array(
     'agent_ctx'      => $event_info["agent_ctx"],
     'sid_name'       => $alarm_name['name'],
     'status'         => $status,
-    'risk'           => $alarm->get_risk(),
+    'risk'           => "<span class='risk-bar $risk_text'>"._($risk_text)."</span>",
     'attack_pattern' => $attack_pattern,
     'created'        => $alarm_life,
     'duration'       => $alarm_time,
@@ -303,7 +309,11 @@ $perms = array(
             <div class='ad_header center'><?php echo _('# Events') ?></div>
             <div data-alarm='events' class='ad_content'></div>
         </div>
-        
+        <div id='ad_id' class='item'>
+            <div class='ad_header center'><?php echo _('Alarm ID') ?></div>
+            <div class='ad_content'><?php echo $alarm["backlog_id"]?></div>
+        </div>
+
         <div id='ad_otx' class='item'>
             <div class='ad_header center'>
                 <img data-alarm="otx-icon" class="otx_icon" style="display:none;"></img>

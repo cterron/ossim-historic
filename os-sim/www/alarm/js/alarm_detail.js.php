@@ -206,8 +206,7 @@ function alarm_detail(alarm, perms)
         {
             $('[data-alarm="status"]').html("<?php echo _('Open') ?>");
         }
-        
-        $('[data-alarm="risk"]').text(self.risk);
+        $('[data-alarm="risk"]').html(self.risk);
         $('[data-alarm="attack_pattern"]').text(self.attack_pattern);
         $('[data-alarm="created"]').html(self.created);
         $('[data-alarm="duration"]').html(self.duration);

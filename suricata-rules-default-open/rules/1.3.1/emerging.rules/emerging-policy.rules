@@ -578,7 +578,7 @@ alert tcp $EXTERNAL_NET 5938 -> $HOME_NET any (msg:"ET POLICY TeamViewer Keep-al
 
 #alert tcp !$SMTP_SERVERS any -> !$HOME_NET 587 (msg:"ET POLICY Outbound SMTP on port 587"; flow:established; content:"mail from|3a|"; nocase; threshold: type limit, track by_src, count 1, seconds 60; reference:url,doc.emergingthreats.net/2003864; classtype:misc-activity; sid:2003864; rev:6;)
 
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET POLICY Wget User Agent"; flow:established,to_server; content:"User-Agent|3A| "; nocase; http_header; content:"Wget"; nocase; http_header; reference:url,www.gnu.org/software/wget; reference:url,doc.emergingthreats.net/2002822; classtype:attempted-recon; sid:2002822; rev:9;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET POLICY Wget User Agent"; flow:established,to_server; content:"User-Agent|3A| "; nocase; http_header; content:"Wget"; nocase; http_header; reference:url,www.gnu.org/software/wget; reference:url,doc.emergingthreats.net/2002822; classtype:attempted-recon; sid:2002822; rev:9;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY POSSIBLE Web Crawl using Wget"; flow:established,to_server; content:"Wget"; nocase; http_user_agent; threshold: type both, track by_src, count 10, seconds 60; reference:url,www.gnu.org/software/wget/; reference:url,doc.emergingthreats.net/2002823; classtype:attempted-recon; sid:2002823; rev:11;)
 
@@ -624,7 +624,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Java Url Lib User 
 
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Windows 3.1 User-Agent Detected - Possible Malware or Non-Updated System"; flow:established,to_server; content:"Windows 3.1"; fast_pattern; http_user_agent; content:!"Cisco AnyConnect VPN Agent"; http_user_agent; pcre:"/User-Agent\x3a[^\n]+Windows 3.1/Hi"; reference:url,doc.emergingthreats.net/2011694; classtype:policy-violation; sid:2011694; rev:9;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Windows 98 User-Agent Detected - Possible Malware or Non-Updated System"; flow:established,to_server; content:"Windows 98"; http_user_agent; reference:url,doc.emergingthreats.net/bin/view/Main/Windows98UA; classtype:policy-violation; sid:2007695; rev:19;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Windows 98 User-Agent Detected - Possible Malware or Non-Updated System"; flow:established,to_server; content:"Windows 98"; http_user_agent; content:!"X-Trend-ActiveUpdate"; http_header; reference:url,doc.emergingthreats.net/bin/view/Main/Windows98UA; classtype:policy-violation; sid:2007695; rev:20;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Windows 98 User-Agent Detected - Possible Malware or Non-Updated System (Win98)"; flow:established,to_server; content:"User-Agent|3a| "; http_header; content:"Win98"; http_header; fast_pattern; pcre:"/User-Agent\x3a[^\n]+?Win98/Hi"; reference:url,doc.emergingthreats.net/bin/view/Main/Windows98UA; classtype:policy-violation; sid:2008070; rev:8;)
 
@@ -670,7 +670,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Suspicious User-Ag
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY trymedia.com User-Agent (Macrovision_DM)"; flow:established,to_server; content:"Macrovision_DM"; http_user_agent; content:"trymedia.com|0d 0a|"; http_header; pcre:"/Host\x3a.+trymedia\.com\r$/Hm"; reference:url,doc.emergingthreats.net/2009445; classtype:trojan-activity; sid:2009446; rev:8;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Win32/Sogou User-Agent (SOGOU_UPDATER)"; flow:established,to_server; content:"User-Agent|3a| SOGOU_UPDATER|0d 0a|"; nocase; http_header; reference:url,doc.emergingthreats.net/2011719; reference:url,microsoft.com/security/portal/threat/encyclopedia/entry.aspx?Name=Program%3aWin32%2fSogou; classtype:trojan-activity; sid:2011719; rev:7;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Win32/Sogou User-Agent (SOGOU_UPDATER)"; flow:established,to_server; content:"User-Agent|3a| SOGOU_UPDATER|0d 0a|"; nocase; http_header; reference:url,doc.emergingthreats.net/2011719; reference:url,microsoft.com/security/portal/threat/encyclopedia/entry.aspx?Name=Program%3aWin32%2fSogou; classtype:trojan-activity; sid:2011719; rev:7;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Suspicious User Agent (AskInstallChecker)"; flow:to_server,established; content:"GET"; http_method; content:"User-Agent|3a| AskInstall"; http_header; nocase; reference:url,doc.emergingthreats.net/2011225; classtype:policy-violation; sid:2011225; rev:6;)
 
@@ -696,7 +696,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Ve
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.5.x Detected"; flow:established,to_server; content:" Java/1.5."; nocase; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2011581; rev:9;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.6.x Detected"; flow:established,to_server; content:"Java/1.6.0_"; http_user_agent; content:!"113"; within:3; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,www.oracle.com/technetwork/java/javase/2col/6u85-bugfixes-2298235.html; classtype:bad-unknown; sid:2011582; rev:43;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.6.x Detected"; flow:established,to_server; content:"Java/1.6.0_"; http_user_agent; content:!"121"; within:3; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,www.oracle.com/technetwork/java/javase/2col/6u85-bugfixes-2298235.html; classtype:bad-unknown; sid:2011582; rev:44;)
 
 #alert tcp any 443 -> any any (msg:"ET POLICY OpenSSL Demo CA - Internet Widgits Pty (CN)"; flow:established,to_client; content:"|16|"; content:"|0b|"; within:8; content:"|55 04 03|"; content:"PCA"; within:50; classtype:not-suspicious; sid:2011539; rev:3;)
 
@@ -778,7 +778,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ET POLICY MS Remote Desktop 
 
 alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ET POLICY MS Remote Desktop POS User Login Request"; flow:to_server,established; content:"|03 00 00|"; depth:3; content:"|e0 00 00 00 00 00|"; distance:2; within:6; content:"Cookie|3a| mstshash=pos|0d 0a|"; nocase; reference:cve,2001-0540; classtype:protocol-command-decode; sid:2012711; rev:1;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Babylon User-Agent (Translation App Observed in PPI MALWARE)"; flow:to_server,established; content:"User-Agent|3a| Babylon"; http_header; fast_pattern:12,7; reference:md5,54e482d6c0344935115d04b411afdb27; reference:md5,54dfd618401a573996b2b32bdd21b2d4; reference:md5,546888f8a18ed849058a5325015c29ef; reference:url,www.babylon.com; classtype:policy-violation; sid:2012735; rev:7;)
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Babylon User-Agent (Translation App Observed in PPI MALWARE)"; flow:to_server,established; content:"User-Agent|3a| Babylon"; http_header; fast_pattern:12,7; reference:md5,54e482d6c0344935115d04b411afdb27; reference:md5,54dfd618401a573996b2b32bdd21b2d4; reference:md5,546888f8a18ed849058a5325015c29ef; reference:url,www.babylon.com; classtype:policy-violation; sid:2012735; rev:7;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY HTTP Request to a *.cw.cm domain"; flow:established,to_server; content:".cw.cm|0d 0a|"; http_header; classtype:bad-unknown; sid:2012737; rev:4;)
 
@@ -1038,7 +1038,7 @@ alert tcp $HOME_NET 1024: -> any 6784 (msg:"ET POLICY Splashtop Remote Control S
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup"; flow:established,to_server; content:"/getip.php?action=getip&ip_url="; http_uri; classtype:policy-violation; sid:2014292; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.7.x Detected"; flow:established,to_server; content:"Java/1.7.0_"; http_user_agent; content:!"99"; within:2; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,java.com/en/download/manual_java7.jsp; classtype:bad-unknown; sid:2014297; rev:41;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.7.x Detected"; flow:established,to_server; content:"Java/1.7.0_"; http_user_agent; content:!"111"; within:3; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,java.com/en/download/manual_java7.jsp; classtype:bad-unknown; sid:2014297; rev:43;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup Attempt To Wipmania"; flow:established,to_server; content:"Host|3A 20|api.wipmania.com|0d 0a|"; http_header; reference:md5,b318988249cd8e8629b4ef8a52760b65; classtype:policy-violation; sid:2014304; rev:3;)
 
@@ -1070,7 +1070,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY CNET TechTracker U
 
 #alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Cisco IOS Self Signed Certificate Served to External Host"; flow:established,to_client; content:"IOS-Self-Signed-Certificate-"; classtype:misc-activity; sid:2014617; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,352|0d 0a|"; distance:0; within:12; http_header; content:!"21,0,0,242|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?MSIE\s/Hm"; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:81;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,366|0d 0a|"; distance:0; within:12; http_header; content:!"22,0,0,209|0d 0a|"; distance:0; within:12; http_header;  content:!"22,0,0,210|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?MSIE\s/Hm"; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:84;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Internal Host Getting External IP Address - ip2city.asp"; flow:established,to_server; content:"/ip2city.asp"; http_uri; classtype:misc-activity; sid:2014761; rev:2;)
 
@@ -1094,7 +1094,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Pandora Usage"; fl
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Geo Location IP info online service (geoiptool.com)"; flow:established,to_server; content:"GET"; http_method; urilen:1; content:"/"; http_uri; content:"Host|3A| "; http_header; content:"geoiptool.com|0d 0a|"; within:20; http_header; reference:md5,04f02d7fea812ef78d2340015c5d768e; classtype:policy-violation; sid:2015500; rev:3;)
 
-alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor2web)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor2web"; fast_pattern; nocase; distance:0; reference:url,tor2web.org; classtype:bad-unknown; sid:2015576; rev:6;)
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor2web)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor2web"; fast_pattern; nocase; distance:0; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2015576; rev:7;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Suspicious Windows Executable WriteProcessMemory"; flow:established,to_client; content:"|0d 0a 0d 0a|MZ"; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; content:"WriteProcessMemory"; nocase; reference:url,sans.org/reading_room/whitepapers/malicious/rss/_33649; reference:url,jessekornblum.livejournal.com/284641.html; reference:url,msdn.microsoft.com/en-us/library/windows/desktop/ms681674%28v=vs.85%29.aspx; classtype:misc-activity; sid:2015588; rev:5;)
 
@@ -1136,11 +1136,11 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY poclbm BitCoin min
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Unsupported/Fake FireFox Version 1."; flow:to_server,established; content:" Firefox/1."; http_user_agent; nocase; threshold: type limit,track by_src,count 2,seconds 60; classtype:policy-violation; sid:2016876; rev:4;)
 
-#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Unsupported/Fake FireFox Version 2."; flow:to_server,established; content:" Firefox/2."; http_user_agent; nocase; threshold: type limit,track by_src,count 2,seconds 60; classtype:policy-violation; sid:2016877; rev:4;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Unsupported/Fake FireFox Version 2."; flow:to_server,established; content:" Firefox/2."; http_user_agent; nocase; threshold: type limit,track by_src,count 2,seconds 60; classtype:policy-violation; sid:2016877; rev:4;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Unsupported/Fake Windows NT Version 4."; flow:to_server,established; content:" Windows NT 4."; http_user_agent; nocase; threshold: type limit,track by_src,count 2,seconds 60; classtype:policy-violation; sid:2016878; rev:4;)
 
-#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Unsupported/Fake Windows NT Version 5.0"; flow:to_server,established; content:" Windows NT 5.0"; http_user_agent; nocase; threshold: type limit,track by_src,count 2,seconds 60; classtype:policy-violation; sid:2016879; rev:4;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Unsupported/Fake Windows NT Version 5.0"; flow:to_server,established; content:" Windows NT 5.0"; http_user_agent; nocase; threshold: type limit,track by_src,count 2,seconds 60; classtype:policy-violation; sid:2016879; rev:4;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY HTTP connection to net78.net Free Web Hosting (Used by Various Trojans)"; flow:established,to_server; content:".net78.net|0d 0a|"; http_header; fast_pattern:only; nocase; reference:url,www.net78.net; classtype:bad-unknown; sid:2016944; rev:2;)
 
@@ -1216,7 +1216,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET POLICY Executable 
 
 #alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY SSL Certificate IRC GEEKS Likely Encrypted IRC or CnC"; flow:established,from_server; content:"|16 03 00|"; content:"|0b|"; within:7; content:"|13 09|IRC geeks"; distance:0; classtype:misc-activity; sid:2019387; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.8.x Detected"; flow:established,to_server; content:" Java/1.8.0_"; http_header; content:!"91"; within:2; http_header; content:!"92"; within:2; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2019401; rev:12;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.8.x Detected"; flow:established,to_server; content:" Java/1.8.0_"; http_header; content:!"101"; within:3; http_header; content:!"102"; within:3; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2019401; rev:14;)
 
 alert tcp $HOME_NET [443,465,993,995,25] -> any any (msg:"ET POLICY SSLv3 inbound connection to server vulnerable to POODLE attack"; flow:established,to_client; ssl_version:sslv3; ssl_state:server_hello; content:"|16 03 00|"; depth:3; threshold: type limit, track by_src, seconds 300, count 1; reference:cve,2014-3566; reference:url,blog.fox-it.com/2014/10/15/poodle/; reference:url,www.openssl.org/~bodo/ssl-poodle.pdf; reference:cve,2014-3566; reference:url,askubuntu.com/questions/537196/how-do-i-patch-workaround-sslv3-poodle-vulnerability-cve-2014-3566; reference:url,www.imperialviolet.org/2014/10/14/poodle.html; classtype:policy-violation; sid:2019415; rev:3;)
 
@@ -1252,11 +1252,11 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY HTTP Request to We
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible IP Check myexternalip.com"; flow:established,to_server; content:"GET"; http_method; content:"Host|3a 20|myexternalip.com|0d 0a|"; http_header; classtype:policy-violation; sid:2019980; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpovider.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torpovider|03|org"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2019981; rev:4;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpovider.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torpovider|03|org"; fast_pattern; nocase; distance:0; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2019981; rev:5;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (way2tor)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|way2tor"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2019982; rev:3;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (way2tor)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|way2tor"; fast_pattern; nocase; distance:0; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2019982; rev:4;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torgateway.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torgateway|03|org|00|"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2019983; rev:3;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torgateway.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torgateway|03|org|00|"; fast_pattern; nocase; distance:0; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2019983; rev:4;)
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for Invisible Internet Project Domain (I2P)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|03|i2p|00|"; distance:0; fast_pattern; reference:url,geti2p.net; classtype:policy-violation; sid:2019988; rev:2;)
 
@@ -1264,95 +1264,95 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for Invisible Intern
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible IP Check curlmyip.com"; flow:established,to_server; content:"GET"; http_method; content:"curlmyip.com|0d 0a|"; http_header; pcre:"/^Host\x3a[^\r\n]+?curlmyip\.com(?:\x3a\d{1,5})?\r?$/Hmi"; reference:url,blogs.cisco.com/security/talos/cryptowall-2; classtype:trojan-activity; sid:2020106; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bladetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|bladetor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020107; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bladetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|bladetor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020107; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bonytor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|bonytor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020108; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bonytor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|bonytor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020108; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bortor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|bortor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020109; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bortor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|bortor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020109; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (browsetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|browsetor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020110; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (browsetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|browsetor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020110; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (door2tor.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|door2tor|03|org|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020111; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (door2tor.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|door2tor|03|org|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020111; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (enter2tor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|enter2tor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020112; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (enter2tor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|enter2tor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020112; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (jamator.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|jamator|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020113; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (jamator.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|jamator|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020113; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion2web.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|onion2web|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020114; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion2web.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|onion2web|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020114; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.lt)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|lt|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020115; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.lt)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|lt|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020115; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.to)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|to|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020116; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.to)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|to|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020116; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (pay2tor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|pay2tor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020117; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (pay2tor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|pay2tor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020117; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (pay4tor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|pay4tor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020118; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (pay4tor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|pay4tor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020118; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (payrobotor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|payrobotor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020119; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (payrobotor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|payrobotor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020119; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (poltornik.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|poltornik|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020120; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (poltornik.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|poltornik|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020120; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (slavetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|slavetor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020121; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (slavetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|slavetor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020121; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tanktor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tanktor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020122; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tanktor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tanktor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020122; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor2pay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor2pay|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020123; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor2pay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor2pay|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020123; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor2www.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor2www|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020124; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor2www.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor2www|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020124; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4life.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|tor4life|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020125; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4life.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|tor4life|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020125; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4pay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor4pay|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020126; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4pay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor4pay|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020126; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (toralpacho.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|toralpacho|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020127; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (toralpacho.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|toralpacho|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020127; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torbama.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torbama|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020128; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torbama.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torbama|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020128; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torchek.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torchek|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020129; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torchek.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torchek|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020129; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torexplorer.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|torexplorer|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020130; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torexplorer.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|torexplorer|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020130; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torforlove.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torforlove|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020131; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torforlove.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torforlove|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020131; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torjam.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|torjam|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020132; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torjam.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|torjam|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020132; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torminater.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torminater|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020133; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torminater.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torminater|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020133; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpacho.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torpacho|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020134; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpacho.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torpacho|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020134; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpaycash.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torpaycash|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020135; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpaycash.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torpaycash|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020135; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpaycnf.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torpaycnf|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020136; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpaycnf.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torpaycnf|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020136; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpayeur.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torpayeur|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020137; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpayeur.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torpayeur|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020137; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpayusd.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torpayusd|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020138; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpayusd.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torpayusd|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020138; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torprivatebrowsing.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|12|torprivatebrowsing|03|org|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020139; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torprivatebrowsing.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|12|torprivatebrowsing|03|org|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020139; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torsanctions.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|torsanctions|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020140; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torsanctions.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|torsanctions|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020140; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torsona.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torsona|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020141; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torsona.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torsona|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020141; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torvsusd.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torvsusd|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020142; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torvsusd.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torvsusd|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020142; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwild.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torwild|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020143; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwild.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torwild|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020143; rev:3;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwinner.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torwinner|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020144; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwinner.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torwinner|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020144; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (totortoweb.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|totortoweb|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020145; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (totortoweb.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|totortoweb|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020145; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (vtorchike.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|vtorchike|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020146; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (vtorchike.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|vtorchike|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020146; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (walterwtor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|walterwtor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020147; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (walterwtor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|walterwtor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020147; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torforall.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torforall|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,malware.dontneedcoffee.com/2015/01/guess-whos-back-again-cryptowall-30.html; classtype:trojan-activity; sid:2020183; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torforall.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|torforall|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2020183; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torman2.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torman2|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,malware.dontneedcoffee.com/2015/01/guess-whos-back-again-cryptowall-30.html; classtype:trojan-activity; sid:2020184; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torman2.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torman2|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2020184; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwoman.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torwoman|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,malware.dontneedcoffee.com/2015/01/guess-whos-back-again-cryptowall-30.html; classtype:trojan-activity; sid:2020185; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwoman.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torwoman|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2020185; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torroadsters.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|torroadsters|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,malware.dontneedcoffee.com/2015/01/guess-whos-back-again-cryptowall-30.html; classtype:trojan-activity; sid:2020186; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torroadsters.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|torroadsters|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2020186; rev:2;)
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY I2P Reseed Domain Lookup (i2p-netdb.innovatio.no)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|i2p-netdb|09|innovatio|02|no|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020189; rev:1;)
 
@@ -1370,37 +1370,37 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY I2P Reseed Domain Lookup (us.r
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Terse Named Filename EXE Download - Possibly Hostile"; flow:established,to_client; content:"filename="; http_header; content:".exe"; http_header; within:8; fast_pattern; pcre:"/filename\x3d[\x27\x22][a-z0-9]{1,3}\x2Eexe/Hi"; classtype:trojan-activity; sid:2020202; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.gq)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|gq|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020211; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.gq)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|gq|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020211; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Onion2Web Tor Proxy Cookie"; flow:established,to_server; content:"onion2web_confirmed="; fast_pattern:only; content:"onion2web_confirmed="; http_cookie; reference:md5,a46e609662eb94a726fcb4471b7057d4; reference:md5,2b62cdb6bcec4bff47eff437e4fc46d3; reference:url,github.com/starius/onion2web; classtype:policy-violation; sid:2020324; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpaysolutions.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|torpaysolutions|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020374; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpaysolutions.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|torpaysolutions|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020374; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpayoptions.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0d|torpayoptions|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020375; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpayoptions.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0d|torpayoptions|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020375; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torinvestment2.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0e|torinvestment2|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020376; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torinvestment2.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0e|torinvestment2|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020376; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwillsmith.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|torwillsmith|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020377; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torwillsmith.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|torwillsmith|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020377; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY SUSPICIOUS *.rar.exe in HTTP URL"; flow:to_server,established; content:".rar.exe"; fast_pattern:only; http_uri; nocase; pcre:"/\.rar\.exe$/Ui"; classtype:bad-unknown; sid:2020386; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (optionstorpay22.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|optionstorpay22|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020390; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (optionstorpay22.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|optionstorpay22|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020390; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bananator.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|bananator|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020391; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bananator.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|bananator|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020391; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (monsterbbc.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|monsterbbc|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020395; rev:3;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (monsterbbc.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|monsterbbc|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020395; rev:4;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tostotor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|tostotor|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020400; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tostotor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|tostotor|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020400; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (trusteetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|trusteetor|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020401; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (trusteetor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|trusteetor|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020401; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (solutionstopaytor33.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|13|solutionstopaytor33|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020402; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (solutionstopaytor33.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|13|solutionstopaytor33|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020402; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.am)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|am|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020404; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.am)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|am|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020404; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (batmantor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|batmantor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020405; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (batmantor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|batmantor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020405; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (dogotor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|dogotor|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020406; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (dogotor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|dogotor|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020406; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY I2P Seeds File Request"; flow:established,to_server; content:"/i2pseeds.su3"; http_uri; fast_pattern:only; reference:url,phishme.com/dyre-attackers-shift-tactics/; classtype:policy-violation; sid:2020415; rev:2;)
 
@@ -1408,15 +1408,15 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 #alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Middle Earth Illegal Marketplace Tor Hidden Service DNS Query"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|mango7u3rivtwxy7"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020417; rev:1;)
 
-#alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.city)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|city|00|"; nocase; distance:0; fast_pattern; classtype:trojan-activity; sid:2020430; rev:1;)
+#alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.city)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|city|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2020430; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Metasploit Framework Checking For Update"; flow:established,to_server; content:"POST"; http_method; urilen:13; content:"/updateserver"; http_uri; fast_pattern:only; content:"MSFX/"; depth:5; http_user_agent; content:!"Referer|3a 20|"; http_header; classtype:misc-activity; sid:2020475; rev:3;)
 
 #alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Dropbox DNS Lookup - Possible Offsite File Backup in Use"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|client-lb|07|dropbox|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,dropbox.com; classtype:policy-violation; sid:2020565; rev:1;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.direct)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|06|direct|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020577; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.direct)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|06|direct|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020577; rev:3;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.glass)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|05|glass|00|"; nocase; distance:0; fast_pattern; classtype:bad-unknown; sid:2020574; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.glass)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|05|glass|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020574; rev:2;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Privdog Activation"; flow:established,to_server; content:"User-Agent|3a 20|ActivationRequestSendingSession|0d 0a|"; http_header; fast_pattern:10,20; content:"activation_api.php?"; http_uri; reference:url,blog.hboeck.de/archives/866-PrivDog-wants-to-protect-your-privacy-by-sending-data-home-in-clear-text.html; reference:url,blog.lumension.com/9848/whats-worse-than-superfish-meet-privdog-leaving-users-wide-open-to-attacks/; classtype:policy-violation; sid:2020578; rev:2;)
 
@@ -1424,13 +1424,13 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Privdog Checkin"; 
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Privdog Update check"; flow:established,to_server; content:"X-TA-ClientVer|3a 20|"; http_header; fast_pattern:only; content:"X-TA-ClientOS|3a 20|"; http_header; content:"/update.inf"; http_uri; reference:url,blog.hboeck.de/archives/866-PrivDog-wants-to-protect-your-privacy-by-sending-data-home-in-clear-text.html; reference:url,blog.lumension.com/9848/whats-worse-than-superfish-meet-privdog-leaving-users-wide-open-to-attacks/; classtype:policy-violation; sid:2020580; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion Proxy Domain (connect2tor.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|connect2tor|03|org|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020617; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion Proxy Domain (connect2tor.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|connect2tor|03|org|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020617; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torstorm.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torstorm|03|org|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020618; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torstorm.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torstorm|03|org|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020618; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bolistatapay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|bolistatapay|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020619; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (bolistatapay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|bolistatapay|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020619; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (sshowmethemoney.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|sshowmethemoney|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020620; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (sshowmethemoney.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|sshowmethemoney|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020620; rev:2;)
 
 #alert tcp $HOME_NET any -> any [21,25,110,143,443,465,587,636,989:995,5061,5222] (msg:"ET POLICY FREAK Weak Export Suite From Client (CVE-2015-0204)"; flow:established,to_server; content:"|16 03|"; depth:2; byte_test:1,<,4,0,relative; content:"|01|"; distance:3; within:1; byte_jump:1,37,relative; byte_extract:2,0,SuiteLength,relative; content:"|00 03|"; within:SuiteLength; fast_pattern; threshold:type limit,track by_src,count 1,seconds 1200; reference:url,blog.cryptographyengineering.com/2015/03/attack-of-week-freak-or-factoring-nsa.html; reference:cve,2015-0204; reference:cve,2015-1637; classtype:bad-unknown; sid:2020634; rev:4;)
 
@@ -1440,13 +1440,13 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 #alert tcp $HOME_NET any -> any [21,25,110,143,443,465,587,636,989:995,5061,5222] (msg:"ET POLICY FREAK Weak Export Suite From Client (CVE-2015-0204)"; flow:established,to_server; content:"|16 03|"; depth:2; byte_test:1,<,4,0,relative; content:"|01|"; distance:3; within:1; byte_jump:1,37,relative; byte_extract:2,0,SuiteLength,relative; content:"|00 0E|"; within:SuiteLength; fast_pattern; threshold:type limit,track by_src,count 1,seconds 1200; reference:url,blog.cryptographyengineering.com/2015/03/attack-of-week-freak-or-factoring-nsa.html; reference:cve,2015-0204; reference:cve,2015-1637; classtype:bad-unknown; sid:2020637; rev:4;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (optionstopaytos.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|optionstopaytos|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020639; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (optionstopaytos.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|optionstopaytos|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020639; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (cheetosnotburitos.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|11|cheetosnotburitos|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020640; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (cheetosnotburitos.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|11|cheetosnotburitos|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020640; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (optionsketchupay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|optionsketchupay|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020641; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (optionsketchupay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|optionsketchupay|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020641; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (solutionsaccountor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|12|solutionsaccountor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020642; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (solutionsaccountor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|12|solutionsaccountor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020642; rev:2;)
 
 #alert tcp $HOME_NET any -> any [21,25,110,143,443,465,587,636,989:995,5061,5222] (msg:"ET POLICY FREAK Weak Export Suite From Client (CVE-2015-0204)"; flow:established,to_server; content:"|16 03|"; depth:2; byte_test:1,<,4,0,relative; content:"|01|"; distance:3; within:1; byte_jump:1,37,relative; byte_extract:2,0,SuiteLength,relative; content:"|00 0B|"; within:SuiteLength; fast_pattern; threshold:type limit,track by_src,count 1,seconds 1200; reference:url,blog.cryptographyengineering.com/2015/03/attack-of-week-freak-or-factoring-nsa.html; reference:cve,2015-0204; reference:cve,2015-1637; classtype:bad-unknown; sid:2020672; rev:5;)
 
@@ -1470,11 +1470,11 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 #alert tcp $HOME_NET any -> any [21,25,110,143,443,465,587,636,989:995,5061,5222] (msg:"ET POLICY FREAK Weak Export Suite From Client (CVE-2015-0204)"; flow:established,to_server; content:"|16 03|"; depth:2; byte_test:1,<,4,0,relative; content:"|01|"; distance:3; within:1; byte_jump:1,37,relative; byte_extract:2,0,SuiteLength,relative; content:"|00 2B|"; within:SuiteLength; fast_pattern; threshold:type limit,track by_src,count 1,seconds 1200; reference:url,blog.cryptographyengineering.com/2015/03/attack-of-week-freak-or-factoring-nsa.html; reference:cve,2015-0204; reference:cve,2015-1637; classtype:bad-unknown; sid:2020682; rev:4;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4free.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|tor4free|03|org|00|"; fast_pattern; distance:0; nocase; reference:url,www.herdprotect.com/decryption_software.exe-f59193ecef33e321fce4972ef5df8a1182bb0c97.aspx; classtype:policy-violation; sid:2020686; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4free.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|tor4free|03|org|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020686; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tordomain.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|tordomain|03|org"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020703; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tordomain.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|tordomain|03|org"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020703; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (welcome2tor.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|welcome2tor|03|org"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020704; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (welcome2tor.org)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|welcome2tor|03|org"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020704; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible External IP Lookup ipinfo.io"; flow:established,to_server; content:"Host|3a 20|ipinfo.io|0d 0a|"; http_header; fast_pattern:only; content:!"Referer|3a|"; http_header;  classtype:policy-violation; sid:2020716; rev:3;)
 
@@ -1486,11 +1486,11 @@ alert tls $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET POLICY Remote Access - RVi
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup - ip-whois"; flow:established,to_server; content:"Host|3A 20|ip-whois.net|0d 0a|"; http_header; classtype:policy-violation; sid:2020831; rev:3;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (63ghdye17.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|63ghdye17|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,www.malware-traffic-analysis.net/2015/04/03/index.html; classtype:policy-violation; sid:2020839; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (63ghdye17.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|63ghdye17|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020839; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (7hwr34n18.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|7hwr34n18|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020844; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (7hwr34n18.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|7hwr34n18|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020844; rev:3;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (wh47f2as19.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|wh47f2as19|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2020869; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (wh47f2as19.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|wh47f2as19|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2020869; rev:2;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Exe32Pack Packed Executable Download"; flow:established,to_client; file_data; content:"Packed by exe32pack"; content:"SteelBytes All rights reserved"; distance:0; reference:md5,93be88ad3816c19d74155f8cd3aae1d2; classtype:policy-violation; sid:2020914; rev:2;)
 
@@ -1500,9 +1500,9 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Petite Packed Bina
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup - ip2location.com"; flow:established,to_server; content:"GET"; http_method; content:!"Referer|3a|"; http_header; pcre:"/^Host\x3a[^\r\n]+ip2location\.com\r?/Hmi"; content:"ip2location.com|0d 0a|"; http_header; fast_pattern:only; classtype:policy-violation; sid:2021162; rev:3;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (clusterpaytor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0d|clusterpaytor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2021190; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (clusterpaytor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0d|clusterpaytor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2021190; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (statepaytor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|statepaytor|03|com|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2021191; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (statepaytor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0b|statepaytor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2021191; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible External IP Lookup whoer.net"; flow:established,to_server; content:"Host|3a 20|whoer.net|0d 0a|"; http_header; fast_pattern:only; content:!"Referer|3a|"; http_header; classtype:trojan-activity; sid:2021195; rev:2;)
 
@@ -1530,17 +1530,17 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible ethereum 
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup api.ipify.org"; flow:established,to_server; urilen:1; content:"GET"; http_method; content:"Host|3a 20|api.ipify.org"; http_header; fast_pattern:only; reference:md5,79809fd3e05a852581b897cc4b06aa32; classtype:policy-violation; sid:2021997; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (paypartnerstodo.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|paypartnerstodo|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022041; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (paypartnerstodo.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0f|paypartnerstodo|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022041; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (allepohelpto.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|allepohelpto|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022042; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (allepohelpto.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0c|allepohelpto|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022042; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (marketcryptopartners.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|14|marketcryptopartners|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022043; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (marketcryptopartners.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|14|marketcryptopartners|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022043; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (partnersinvestpayto.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|13|partnersinvestpayto|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022044; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (partnersinvestpayto.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|13|partnersinvestpayto|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022044; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (forkinvestpay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0d|forkinvestpay|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022045; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (forkinvestpay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0d|forkinvestpay|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022045; rev:3;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (effectwaytopay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0e|effectwaytopay|03|com|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022046; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (effectwaytopay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0e|effectwaytopay|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022046; rev:3;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup ip-api.com"; flow:established,to_server; content:"Host|3a 20|ip-api.com|0d 0a|"; http_header; fast_pattern:only; classtype:policy-violation; sid:2022082; rev:2;)
 
@@ -1560,7 +1560,7 @@ alert tcp $HOME_NET 22 -> $EXTERNAL_NET any (msg:"ET POLICY FOX-SRT - Juniper Sc
 
 #alert tcp any !$SSH_PORTS -> any any (msg:"ET POLICY SSHv2 Server KEX Detected within Banner on Unusual Port"; flow: from_server,established; flowbits:noalert; content:"SSH-"; offset:0; depth:4; byte_test:1,>,48,0,relative; byte_test:1,<,51,0,relative; byte_test:1,=,46,1,relative; content:"|0d 0a|"; offset: 4; depth: 255; byte_test:1,=,20,5,relative; flowbits: set,is_ssh_server_banner; flowbits: set,is_ssh_server_kex; reference:url,www.proftpd.org/docs/contrib/mod_sftp.html; classtype:misc-activity; sid:2022326; rev:1;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.link)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|link|00|"; nocase; classtype:trojan-activity; sid:2022332; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.link)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|link|00|"; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2022332; rev:3;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY HotSpotShield Activity"; flow:established,to_server; content:"POST"; http_method; content:"Content-Type|3a 20|multipart/form-data|3b 20|boundary=AfPr0xY|0d 0a|"; http_header; fast_pattern:35,18; content:"|2d 2d 41 66 50 72 30 78 59|"; depth:9; http_client_body; content:"|2d 2d 41 66 50 72 30 78 59 2d 2d|"; distance:0; http_client_body; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; reference:md5,45f4e1bb4efd12f0e8b949174a198bf3; classtype:policy-violation; sid:2022342; rev:3;)
 
@@ -1594,11 +1594,11 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to a *.ngrok domain 
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to a *.neokred domain - Likely Hostile"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|neokred|03|org|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022643; rev:1;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torgate.es)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torgate|02|es|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022644; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torgate.es)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torgate|02|es|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022644; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tormaster.fr)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|tormaster|02|fr|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022645; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tormaster.fr)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|tormaster|02|fr|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022645; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torgateway.li)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torgateway|02|li|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022646; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torgateway.li)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torgateway|02|li|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022646; rev:2;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible Psiphon Proxy Tool traffic"; flow:established,to_server; urilen:1; content:"POST"; http_method; content:"Content-Length|3a|"; http_header; content:"Content-Type|3a 20|application/octet-stream|0d 0a|"; fast_pattern:20,20; http_header; nocase; content:"Accept-Encoding|3a| gzip"; http_header; content:!"User-Agent|3a 20|"; http_header; content:!"Referer|3a|"; content:!"Connection"; http_header; content:!"Cache-Control"; http_header; content:!"Accept|3a 20|"; http_header; content:"Cookie|3a 20|"; pcre:"/^[A-Z]=(?:[A-Za-z0-9+/])+=?=?\r\n/R"; threshold:type threshold, track by_src, count 20, seconds 120; reference:md5,a050a1e9fa0fe0e01cfbf14ead388c4e; classtype:policy-violation; sid:2022679; rev:4;)
 
@@ -1606,13 +1606,21 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Addres
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Windows Quicktime User-Agent EOL With Known Bugs"; flow:established,to_server; content:"QuickTime"; http_user_agent; content:"os=Windows NT"; http_user_agent; threshold: type limit, count 1, seconds 600, track by_src; reference:url,www.us-cert.gov/ncas/alerts/TA16-105A; classtype:policy-violation; sid:2022738; rev:3;)
 
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible SQLi Attempt in User Agent (Outbound)"; flow:established,from_client; content:"User-Agent|3a 20|"; http_header; content:"select"; nocase; distance:0; fast_pattern; http_header; content:"from"; nocase; http_header; within:20; pcre:"/User-Agent\x3a\x20[^\r\n]+select[^\r\n]+from/Hi"; reference:url,blog.cloudflare.com/the-sleepy-user-agent/; classtype:trojan-activity; sid:2022815; rev:2;)
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY BitCoinMiner Cpuminer Login"; flow: to_server,established; content:"|7b 22|method|22 3a 20 22|login|22 2c 20 22|params|22 3a 20 7b 22|login"; nocase; depth:37; fast_pattern:17,20; content:"agent|22 3a 20 22|cpuminer-multi"; nocase; distance:0; reference:md5,d1082e445f932938366a449631b82946; reference:md5,33d7a82fe13c9737a103bcc4a21f9425; classtype:trojan-activity; sid:2022886; rev:1;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup ip-score.com"; flow:established,to_server; content:"Host|3a 20|ip-score.com|0d 0a|"; fast_pattern:only; http_header; content:!"Referer|3a|"; http_header; classtype:policy-violation; sid:2022892; rev:2;)
+
+alert udp any 68 -> any 67 (msg:"ET POLICY Possible Kali Linux hostname in DHCP Request Packet"; content:"|63 82 53 63 35 01 03|"; content:"|0c 04|kali"; distance:0; nocase; reference:url,www.kali.org; classtype:policy-violation; sid:2022973; rev:1;)
+
 #alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY TRAFFIC Non-Standard IP protocol"; ip_proto:!1; ip_proto:!2; ip_proto:!47; ip_proto:!50; ip_proto:!51; ip_proto:!6; ip_proto:!89; ip_proto:!17; classtype:non-standard-protocol; sid:2101620; rev:7;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY Windows Media Video download"; flow:from_server,established; content:"Content-type|3A| video/x-ms-asf"; nocase; classtype:policy-violation; sid:2101438; rev:14;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY Windows Media download"; flow:from_server,established; content:"Content-Type|3A|"; nocase; http_header; pcre:"/^Content-Type\x3a\s*(?=[av])(video\/x\-ms\-(w[vm]x|asf)|a(udio\/x\-ms\-w(m[av]|ax)|pplication\/x\-ms\-wm[zd]))/Hi"; classtype:policy-violation; sid:2101437; rev:13;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 1080 (msg:"GPL POLICY SOCKS Proxy attempt"; flags:S,12; flow:stateless; reference:url,help.undernet.org/proxyscan/; classtype:attempted-recon; sid:2100615; rev:10;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 1080 (msg:"GPL POLICY SOCKS Proxy attempt"; flags:S,12; flow:to_server; reference:url,help.undernet.org/proxyscan/; classtype:attempted-recon; sid:2100615; rev:11;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 1723 (msg:"GPL POLICY PPTP Start Control Request attempt"; flow:to_server,established,no_stream; content:"|00 01|"; depth:2; offset:2; content:"|00 01|"; depth:2; offset:8; classtype:attempted-admin; sid:2102044; rev:6;)
 

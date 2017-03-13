@@ -1442,6 +1442,15 @@ class Menu(object):
     def get_allowed_values_for_vpn_files(self):
         return [os.path.basename(f)[:-7] for f in glob.glob("/etc/alienvault/network/*.tar.gz")]
 
+    def is_max_retries_changed(self):
+        # Get the current modified list
+        modvalues = self.__setup_config.get_modified_values()
+        if modvalues.get('GENERAL', None) is None:
+            return Menu.DIALOG_OK, ''
+        if modvalues['GENERAL'].get('max_retries', None) is None:
+            return Menu.DIALOG_OK, ''
+        return Menu.DIALOG_ERROR, 'max_retries modified'
+
     def is_hostname_changed(self):
         # Get the current modified list
         modvalues = self.__setup_config.get_modified_values()

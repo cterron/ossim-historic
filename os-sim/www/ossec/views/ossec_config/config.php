@@ -68,7 +68,8 @@ if (!is_array($s_data['sensors']) || empty($s_data['sensors']))
 	<meta http-equiv="Pragma" content="no-cache"/>
 	
 	<link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-		
+        <link rel="stylesheet" type="text/css" href="/ossim/style/tipTip.css"/>
+
 	<script type="text/javascript" src="/ossim/js/token.js"></script>	
 	<script type="text/javascript" src="/ossim/js/jquery.min.js"></script>
 	<script type='text/javascript' src="/ossim/js/codemirror/codemirror.js"></script>
@@ -90,7 +91,7 @@ if (!is_array($s_data['sensors']) || empty($s_data['sensors']))
 	<script type="text/javascript" src="/ossim/ossec/js/config.js"></script>
 	<script type='text/javascript' src="/ossim/js/utils.js"></script>
 	<script type="text/javascript" src="/ossim/js/greybox.js"></script>
-	
+        <script type="text/javascript" src="/ossim/js/jquery.tipTip.js"></script>
 	
 	<script type='text/javascript'>
 		var editor = null;

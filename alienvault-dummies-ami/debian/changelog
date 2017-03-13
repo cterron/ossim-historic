@@ -1,8 +1,20 @@
-alienvault-dummies-ami (5.2.4) stable; urgency=low
+alienvault-dummies-ami (5.3.0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 25 Apr 2016 05:10:54 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 27 Jun 2016 04:38:53 -0400
+
+alienvault-dummies-ami (5.3) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 23 May 2016 05:15:59 -0400
+
+alienvault-dummies-ami (5.2.5) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 25 Apr 2016 05:11:43 -0400
 
 alienvault-dummies-ami (5.2.4) unstable; urgency=low
 

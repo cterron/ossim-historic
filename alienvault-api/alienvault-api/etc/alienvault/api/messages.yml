@@ -36,7 +36,8 @@ message_ids: {
     $MESSAGE_FEDERATED_OTX_KEY: "00000000-0000-0000-0000-000000010035",
     $MESSAGE_OLD_OTX_KEY: "00000000-0000-0000-0000-000000010036",
     $MESSAGE_PLUGINS_LIMIT_APPROACHING: "00000000-0000-0000-0000-000000010037",
-    $MESSAGE_PLUGINS_LIMIT_REACHED: "00000000-0000-0000-0000-000000010038"
+    $MESSAGE_PLUGINS_LIMIT_REACHED: "00000000-0000-0000-0000-000000010038",
+    $MESSAGE_CONFIGURATION_BACKUP_WITHOUT_PASS_DISABLED: "00000000-0000-0000-0000-000000010039"
 }
 
 message_sources:
@@ -273,6 +274,18 @@ messages: [
      description: "The backup for SYSTEM_NAME could not be completed. Please make sure that there is at least 20% of disk space available on the system and that it is connected and reachable. Backups cannot be created during platform updates and reconfigurations.",
      actions: "*If you are still unable to complete your backup, please contact AlienVault Support",
      alternative_actions: "",
+     source: "ad-hoc"
+   },
+   {
+     id: "$MESSAGE_CONFIGURATION_BACKUP_WITHOUT_PASS_DISABLED",
+     level: Warning,
+     type: Deployment,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Automatic backups are not being executed",
+     description: "Please specify a new password to generate backups and download them encrypted.",
+     actions: "To do that follow the instructions below:\n\n* Go to the [AV_PATH#configuration/administration/main Configuration page]\n\n* Then choose \"Backup\" section and set \"Password to encrypt backup files\".",
+     alternative_actions: "If you are still unable to complete your backup, please contact AlienVault Support",
      source: "ad-hoc"
    },
    {

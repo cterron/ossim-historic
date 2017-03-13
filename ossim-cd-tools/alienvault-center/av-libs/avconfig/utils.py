@@ -13,12 +13,10 @@ import hashlib
 import re
 import commands
 import os
-import subprocess
-from scp import SCPClient
 from functools import partial
 import fcntl
 import struct
-import tarfile
+
 DEFAULT_FPROBE_CONFIGURATION_FILE = "/etc/default/fprobe"
 DEFAULT_NETFLOW_REMOTE_PORT = 555
 SIOCGIFNETMASK = 0x891b
@@ -26,6 +24,8 @@ MSERVER_REGEX = re.compile("(?P<server_ip>(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{
 FPROBE_PORT_REGEX = re.compile("FLOW_COLLECTOR=\"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:(?P<port>\d+)\"")
 EMAIL_REGEX = re.compile("^[-!#$%&'*+/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+/0-9=?A-Z^_a-z{|}~])*@[a-zA-Z](-?[a-zA-Z0-9])*(\.[a-zA-Z](-?[a-zA-Z0-9])*)+$")
 VPN_NET_REGEX = re.compile("^(?P<vpnnet>\d{1,3}\.\d{1,3}\.\d{1,3})$")
+
+
 def is_ipv6(string_ip):
     """Check whether the given string is an valid ip v6
     """
@@ -359,6 +359,22 @@ def get_current_domain():
     except:
         pass
     return current_domain
+
+
+def get_current_max_retries():
+    """Returns the current max_retries"""
+    status, output = -1, 9
+    try:
+        status, output = commands.getstatusoutput("redis-cli get max_retries")
+    except Exception, e:
+        print "error: %s" % str(e)
+
+    if status == 0 and output:
+        try:
+            output = int(output)
+        except ValueError, e:
+            print "Verror: %s" % str(e)
+    return output
 
 
 def get_current_hostname():

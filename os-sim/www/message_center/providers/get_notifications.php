@@ -33,7 +33,7 @@
  */
 
 require_once 'av_init.php';
-
+$todelete = $av_menu->check_perm("message_center-menu", "MessageCenterDelete");
 
 /********************************
  ****** CHECK USER SESSION ******
@@ -193,11 +193,13 @@ try
         $res['description']          = $wiki->parse($message['message_description']);
         $res['actions']              = $wiki->parse($message['message_actions']);
         $res['alternative_actions']  = $wiki->parse($message['message_alternative_actions']);
+        if ($todelete) {
+            $res[]                       = '';   // Empty because this is for column actions that is managed in fnRowCallback
+        }
         $res[]                       = $message['creation_time'];
         $res[]                       = $message['message_title'].($message['component_ip'] ? ' ('.$message['component_ip'].')' : '');
         $res[]                       = $message['message_level'];
         $res[]                       = $message['message_type'];
-        $res[]                       = '';   // Empty because this is for column actions that is managed in fnRowCallback
         $data[]                      = $res;
     }
 }

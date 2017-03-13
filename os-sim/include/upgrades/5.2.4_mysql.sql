@@ -1,7 +1,7 @@
 USE alienvault;
 
 REPLACE INTO config (conf, value) VALUES ('latest_asset_change', utc_timestamp());
-REPLACE INTO config (conf, value) VALUES ('last_update', '2016-05-19');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2016-05-11');
 REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.2.4');
 
 UPDATE dashboard_custom_type SET name = 'SIEM vs Logger Events' WHERE id = 1001;

@@ -10,7 +10,10 @@ tools/alienvault-aptget                        /usr/bin/
 tools/alienvault-update                        /usr/bin/
 tools/alienvault-rebuild_db                    /usr/share/ossim/cd-tools/
 tools/alienvault-restore_db                    /usr/share/ossim/cd-tools/
+tools/alienvault-restore_db                    /usr/share/ossim/cd-tools/
 tools/edit_serialized_ips_panels_conf.php      /usr/share/ossim/cd-tools/
+tools/reset_avapi_key                          /usr/share/ossim/cd-tools/
+tools/sync_keys.py                             /usr/share/ossim/cd-tools/
 tools/ossim-reconfig                           /usr/bin/
 tools/ossim-repair-tables                      /usr/bin/
 tools/ossim-reset-passwd                       /usr/bin/

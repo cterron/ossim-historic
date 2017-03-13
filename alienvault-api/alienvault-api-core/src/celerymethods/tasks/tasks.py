@@ -274,23 +274,20 @@ class Scheduler(object):
         """ Constructor
         """
         # Load celery configuration
-        self._default_tasks_file = getattr(celeryconfig,
-                                           'CELERY_REDIS_SCHEDULER_DEFAULT_TASKS_FILE',
-                                           None)
+        default_tasks_file_param = 'CELERY_REDIS_SCHEDULER_DEFAULT_TASKS_FILE'
+        self._default_tasks_file = getattr(celeryconfig, default_tasks_file_param, None)
         if self._default_tasks_file is None:
-            raise APICeleryConfigurationError(param='CELERY_REDIS_SCHEDULER_DEFAULT_TASKS_FILE')
+            raise APICeleryConfigurationError(param=default_tasks_file_param)
 
-        self._custom_tasks_file = getattr(celeryconfig,
-                                          'CELERY_REDIS_SCHEDULER_CUSTOM_TASKS_FILE',
-                                          None)
-        if self._default_tasks_file is None:
-            raise APICeleryConfigurationError(param='CELERY_REDIS_SCHEDULER_CUSTOM_TASKS_FILE')
+        custom_tasks_file_param = 'CELERY_REDIS_SCHEDULER_CUSTOM_TASKS_FILE'
+        self._custom_tasks_file = getattr(celeryconfig, custom_tasks_file_param, None)
+        if self._custom_tasks_file is None:
+            raise APICeleryConfigurationError(param=custom_tasks_file_param)
 
-        self._redis_scheduler_url = getattr(celeryconfig,
-                                            'CELERY_REDIS_SCHEDULER_URL',
-                                            None)
-        if self._default_tasks_file is None:
-            raise APICeleryConfigurationError(param='CELERY_REDIS_SCHEDULER_URL')
+        redis_scheduler_url_param = 'CELERY_REDIS_SCHEDULER_URL'
+        self._redis_scheduler_url = getattr(celeryconfig, redis_scheduler_url_param, None)
+        if self._redis_scheduler_url is None:
+            raise APICeleryConfigurationError(param=redis_scheduler_url_param)
 
         # Load task
         self.load_tasks()

@@ -76,9 +76,7 @@ $conn = $db->connect();
 $validate = array(
     'status_message_id' => array('validation' => 'OSS_UUID', 'e_message' => 'illegal:'._('Status Message UUID'))
 );
-
-$validation_errors = validate_form_fields('POST', $validate);
-
+$validation_errors = validate_form_fields_new('POST', $validate);
 // Validate form token
 if (is_array($validation_errors) && empty($validation_errors))
 {
@@ -100,52 +98,35 @@ else
 {
     // Get form params
     $status_message_id = POST('status_message_id');
-
+    $string = "s";
+    if (!is_array($status_message_id)) {
+        $status_message_id = array($status_message_id);
+        $string = "";
+    }
     try
     {
-        /**********************
-         ****** API Call ******
-         **********************/
-
-        $status = new System_notifications();
-
+        $params = array();
         switch ($action)
         {
-            /************************
-             ****** Set viewed ******
-             ************************/
-
             case 'set_viewed':
-
-                $status->set_status_message($status_message_id, array('viewed' => 'true'));
-
-                $data['data'] = _('Notification marked as viewed');
-
+                $params = array('viewed' => 'true');
+                $data['data'] = _('Notification%s marked as viewed');
                 break;
-
-
-            /***************************
-             ****** Set suppressed *****
-             ***************************/
-
             case 'set_suppressed':
-
-                $status->set_status_message($status_message_id, array('suppressed' => 'true'));
-
-                $data['data'] = _('Notification marked as suppressed');
-
+                if (!$av_menu->check_perm("message_center-menu", "MessageCenterDelete")) {
+                    Av_exception::throw_error(Av_exception::USER_ERROR, _("You don't have permission to delete this entity"));
+                }
+                $params = array('suppressed' => 'true');
+                $data['data'] = _('Notification%s marked as suppressed');
                 break;
-
-
-            /*******************************
-             ****** Not allowed action *****
-             *******************************/
-
             default:
-
                 Av_exception::throw_error(Av_exception::USER_ERROR, _('This action could not be completed. Please try again.'));
         }
-
+        $data['data'] = sprintf($data['data'],$string);
+        $status = new System_notifications();
+        foreach ($status_message_id as $smi) {
+            $status->set_status_message($smi,$params);
+        }
         $data['status'] = 'OK';
     }
     catch (\Exception $e)

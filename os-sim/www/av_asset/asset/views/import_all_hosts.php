@@ -263,7 +263,7 @@ function print_form($import_type)
                                 <li>
                                     <span><?php echo _('Valid Operating System values')?>:</span>
                                     <div style='padding-left: 10px; font-style: italic;'>
-                                        Windows, Linux, FreeBSD, NetBSD, OpenBSD, MacOS, Solaris, Cisco, AIX,HP-UX, Tru64, IRIX, BSD/OS, SunOS, Plan9 <?php echo _('or')?> IPhone
+                                        Windows, Linux, FreeBSD, NetBSD, OpenBSD, MacOS, Solaris, Cisco, AIX,HP-UX, Tru64, IRIX, BSD/OS, SunOS, Plan9 <?php echo _('or')?> iOS
                                     </div>
                                 </li>
                                 <?php

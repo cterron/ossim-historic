@@ -454,11 +454,11 @@ function load_alarm_group_dt()
         "bServerSide"     : true,
         "bDeferRender"    : true,
         "sAjaxSource"     : "providers/alarm_group_console_ajax.php",
-        "iDisplayLength"  : 10,
+        "iDisplayLength"  : 50,
         "bLengthChange"   : true,
         "sPaginationType" : "full_numbers",
         "bFilter"         : false,
-        "aLengthMenu"     : [10, 20, 50],
+        "aLengthMenu"     : [10, 20, 50, 100, 250, 500],
         "bJQueryUI"       : true,
         "aoColumns"       : 
         [
@@ -704,8 +704,8 @@ function toggle_group()
                 'no_resolv'    : $('#no_resolv').prop('checked') ? 1 : 0,
                 'num_events'   : $('#num_events').val(),
                 'num_events_op': $('#num_events_op').val(),
-                'risk_level'   : $('#risk_level').val(),
-                'risk_level_op': $('#risk_level_op').val(),
+                'vmax_risk'     : $('#arangeB').val() ? $('#arangeB').val() : 2,
+                'min_risk'     : $('#arangeA').val() ? $('#arangeA').val() : 0,
                 'directive_id' : $('#directive_id').val()    
             }
 

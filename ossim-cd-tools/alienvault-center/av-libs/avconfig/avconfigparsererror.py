@@ -68,6 +68,7 @@ class AVConfigParserErrors():
     VPN_SETTINGS_CANT_BE_CHANGED_PROFILE_NOT_SERVER = 1049
     INVALID_SERVER_IP_NOT_IN_LOCAL_IPS = 1050
     INVALID_FRAMEWORK_IP_NOT_IN_LOCAL_IPS = 1051
+    CANT_SET_MAX_RETRIES_INVALID_VALUE = 1052
     FILE_CANT_BE_LOADED_CANNOT_STAT = 2000
     FILE_CANT_BE_LOADED = 2001
     FILE_NOT_LOADED = 2002
@@ -145,7 +146,8 @@ class AVConfigParserErrors():
                       1048: "Error. Please enter a valid vpn port",
                       1049: "Error. VPN settings can not be changed when running an Non Server profile",
                       1050: "Error. Invalid Server IP value. The given IP is not a valid local IP",
-                      1051: "Error. Invalid Framework IP value. The given IP is not a valid local IP",                     
+                      1051: "Error. Invalid Framework IP value. The given IP is not a valid local IP",
+                      1052: "Error. Invalid number of retries. The given value is not a valid integer",
                       2000: "Cannot stat over the file.",
                       2001: "File can not be loaded",
                       2002: "File not loaded!",

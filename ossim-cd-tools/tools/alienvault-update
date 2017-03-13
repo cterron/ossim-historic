@@ -65,6 +65,7 @@ my $ERROR_UNAVAILABLE_SIGNATURE4 = 56;
 my $ERROR_INVALID_SIGNATURE_FEED = 57;
 my $ERROR_UNAVAILABLE_SIGNATURE_FEED = 58;
 my $ERROR_HA_RUNNING = 59;
+my $ERROR_CANT_DOWNLOAD_FEED_UPDATE = 63;
 my $ERROR_NO_FREE_SPACE_ON_DISK = 70;
 
 # function
@@ -90,7 +91,7 @@ sub main() {
         exit $ERROR_INSTANCE_RUNNING;
     }
 
-    my $ha_not_running = system("cl_status rscstatus > /dev/null 2>&1") >>8;
+    my $ha_not_running = system("cl_status rscstatus > /dev/null 2>&1") >> 8;
     if ( $ha_not_running == 0 ) {
         console_log("System running in HA mode. If you want to update your system, please stop the HA system by running alienvault-ha-assistant --stop, and then update.");
         exit $ERROR_HA_RUNNING;
@@ -120,9 +121,8 @@ sub main() {
     system("mkdir $tmppath") if (! -d "$tmppath");
 
     if ( $feed == 1 ) {
-        feed_update();
-        console_log("Finished");
-        exit 0;
+        my $status = feed_update();
+        exit $status;
     }
 
     ## update
@@ -393,7 +393,10 @@ sub feed_update() {
     }
 
     verbose_log("Download $tmppath/$script_name");
-    system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/alienvault5/RELEASES/$script_name");
+    my $status = system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/alienvault5/RELEASES/$script_name") >> 8;
+    if ($status != 0){
+        return $ERROR_CANT_DOWNLOAD_FEED_UPDATE;
+    }
 
     if ( -s "$tmppath/$script_name" ) {
         system("wget -U $wget_useragent -O $tmppath/$script_name.sig $dataserver/alienvault5/RELEASES/$script_name.sig");
@@ -401,16 +404,22 @@ sub feed_update() {
             my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$script_name.sig");
         if ($valid_sig != 0) {
             say("Invalid signature for upgrade file $script_name");
-            exit $ERROR_INVALID_SIGNATURE_FEED;
+            return $ERROR_INVALID_SIGNATURE_FEED;
         }
 
             verbose_log("Exec: $tmppath/$script_name");
-            system("/bin/bash $tmppath/$script_name");
+            my $feed_status = system("/bin/bash $tmppath/$script_name") >> 8;
+            if ($feed_status != 0){
+                console_log("There was an error during feed updates");
+                return $feed_status;
+            }
+
     } else {
             say("Signature not available for upgrade file $script_name");
-            exit $ERROR_UNAVAILABLE_SIGNATURE_FEED;
+            return $ERROR_UNAVAILABLE_SIGNATURE_FEED;
         }
     }
-
     console_log("Done.");
+    console_log("Finished");
+    return 0;
 }

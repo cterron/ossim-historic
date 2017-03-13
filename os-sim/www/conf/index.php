@@ -413,6 +413,13 @@ $CONFIG = array(
                 'style' => ($conf->get_conf('logger_storage_days_lifetime') > 0) ? '' : 'color:gray' ,
                 'advanced' => 0,
                 'disabled' => (Session::is_pro()) ? 0 : 1
+            ),
+            'backup_conf_pass' => array(
+                'type' => 'password',
+                'id'   => 'backup_encryption',
+                'help' => _('Password length must be between').' '.$conf->get_conf('pass_length_min')._(' and ').$conf->get_conf('pass_length_max').' '._('characters'),
+                'desc' => _('Password to encrypt backup files'),
+                'advanced' => 0
             )
         )
     ),
@@ -888,7 +895,8 @@ if (POST('update'))
         'login_ldap_valid_pass',
         'snort_pass',
         'solera_pass',
-        'nessus_pass'
+        'nessus_pass',
+        'backup_conf_pass'
     );
 
 
@@ -978,6 +986,31 @@ if (POST('update'))
         if(in_array(POST("conf_$i"), $passwords))
         {
             ossim_valid(POST("value_$i"), OSS_NULLABLE, OSS_PASSWORD, 'illegal:' . POST("conf_$i"));
+            if (POST("conf_$i") == "backup_conf_pass" && POST("value_$i")) {
+                $len = strlen(POST("value_$i"));
+                $min = 7;
+                $max = 32;
+                foreach ($_POST as $key => $value) {
+                    if ($key == "pass_length_min") {
+                        $key = str_replace("conf_","value_");
+                        $min = POST($key);
+                        continue;
+                    }
+                    if ($key == "pass_length_max") {
+                        $key = str_replace("conf_","value_");
+                        $max = POST($key);
+                        continue;
+                    }
+                }
+                if ($len < $min) {
+                    $error_string .= ' '._('Password is not long enough').' ['._('Minimum password size is').' '.$min.']';
+                    $flag_status = 2;
+                }
+                if ($len > $max) {
+                    $error_string .= ' '._('Password is too long').' ['._('Maximum password size is').' '.$max.']';
+                    $flag_status = 2;
+                }
+            }
         }
         else
         {
@@ -1660,7 +1693,6 @@ $default_open = REQUEST('open');
                         {
                             if ($advanced || ($section == '' && !$advanced && $type['advanced'] == 0) || ($section != "" && preg_match("/$section/",$type['section'])))
                             {
-
                                 $conf_value = $ossim_conf->get_conf($conf);
                                 $var        = ($type['desc'] != '') ? $type['desc'] : $conf;
 

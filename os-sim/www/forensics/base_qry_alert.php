@@ -371,7 +371,6 @@ if ($plugin_id == "" || $plugin_sid == "")
     $userdata8 = Util::htmlentities($myrow2["userdata8"]); if ($userdata8=="") $userdata8=$empty;
     $userdata9 = Util::htmlentities($myrow2["userdata9"]); if ($userdata9=="") $userdata9=$empty;
     list($payload, $binary) = GetPayloadFromAV($db, $eid, $is_snort);
-
     $context = 0;
     $idm_data['src_hostname'] = Util::htmlentities($myrow2['src_hostname']);
     $idm_data['src_mac']      = formatMAC($myrow2['src_mac']);
@@ -878,7 +877,7 @@ echo '                </TD>
             </div>
         </div>
 ';
-
+$risk_text = Util::get_risk_rext($ossim_risk);
 /* Summary Bar */
 echo '<TABLE class="siem_table">
       <TR>
@@ -890,7 +889,7 @@ echo '<TABLE class="siem_table">
       <TR>
            <TD class="center">' . $ossim_priority . '</TD>
            <TD class="center">' . $ossim_reliability . '</TD>
-           <TD class="center">' . $ossim_risk . '</TD>
+           <TD class="center"><span class="risk-bar '.$risk_text.'">' . _($risk_text) . '</span></TD>
            <TD class="center">'.($otxiocs ? str_replace('__CLASS__','',str_replace('__VALUE__', $otxiocs, $otx_link)) : $otxiocs).'</TD>
       </TR>
      </TABLE>';

@@ -30,3 +30,4 @@ INSERT IGNORE INTO product_type (id, name) VALUES (28, 'Vulnerability Scanner');
 INSERT IGNORE INTO product_type (id, name) VALUES (29, 'Web Server');
 INSERT IGNORE INTO product_type (id, name) VALUES (30, 'Wireless Security/Management');
 INSERT IGNORE INTO product_type (id, name) VALUES (31, 'Load Balancer');
+INSERT IGNORE INTO product_type (id, name) VALUES (32, 'AlienVault Devices');

@@ -234,6 +234,50 @@ class Pdf_report
     }
 
 
+
+
+    public function getHTML() {
+        if($this->html_exists()) {
+            header('Content-type: text/html');
+            echo $this->formathtml();
+            exit();
+        } else {
+            Av_exception::throw_error(Av_exception::USER_ERROR, _('No data available'));
+        }
+    }
+
+    private function getBackgroundUrl($html) {
+        preg_match('|backimg="([^"]*)"|',$html,$match);
+        return $match[1];
+    }
+
+    public function formathtml() {
+            $html = file_get_contents($this->pathHtml);
+            $url = $this->getBackgroundUrl($html);            
+            $html = "<style>
+                body{
+                    margin: 0 auto;
+                    width:900px;
+                }
+                .w100:nth-child(3) {
+                    text-align: center;
+                    background-image: url({$url});
+                    background-repeat: no-repeat;
+                    background-position: center top;
+                }
+            </style>".$html;
+            return str_replace(
+                array(
+                    "Page [[page_cu]] / [[page_nb]]",
+                    "[[date_y]]-[[date_m]]-[[date_d]] [[date_h]]:[[date_i]]:[[date_s]]",
+                ),
+                array(
+                    "",
+                    date("Y-m-d H:i:s"),
+                ),$html);
+    }
+
+
     public function getPdf($output='navigator')
     {
         if($this->html_exists())
@@ -270,8 +314,42 @@ class Pdf_report
         }
     }
 
+   public function sendPdfEmail($title, $email, $pdfName = NULL, $dirUser = NULL, $body = '') {
+       $path = '/usr/share/ossim/www/tmp/scheduler/'.$dirUser.'/'.$pdfName.'.pdf';
+       $filename = $this->getNamePdf();
+       return $this->pdfEmail($title, $email, $pdfName, $dirUser, $body, $path, $filename);
+   }
 
-    public function sendPdfEmail($title, $email, $pdfName = NULL, $dirUser = NULL, $body = '')
+   public function sendHTMLEmail($title, $email, $pdfName = NULL, $dirUser = NULL, $body = '') {
+       $arr = explode("/",$this->pathHtml);
+       $filename = array_pop($arr);
+       $new = str_replace(".html",".html__",$this->pathHtml);
+       $html = $this->formathtml();
+       $url = $this->getBackgroundUrl($html);
+       $url = 'data:image/png;base64,' . base64_encode(file_get_contents($url));
+       preg_match_all("|src=['\"]([\.][^\"']+)['\"]|",$html,$images);
+       $images = array_unique($images[1]);
+       $encoded = array();
+       foreach ($images as $value) {
+           $ext = preg_match("/\.[a-zA-Z]+$/",$value,$res);
+           $encoded[] = 'data:image/'.$ext.';base64,' . base64_encode(file_get_contents($value));
+       }
+       $html = str_replace($images,$encoded,$html);
+       $html = "
+           <style>
+               .left.w50 {
+                   display: none;
+               }
+           </style>
+           <table style='margin: 0 auto; width:900px;text-align: center;background-image: url({$url});background-repeat: no-repeat;background-position: center top;'><tr><td>
+               {$html}
+           </td></tr></table>";
+       file_put_contents($new,$html);
+       return $this->pdfEmail($title, $email, true, $dirUser, $body, $new, $filename);
+       unlink($new);
+   }
+
+    public function pdfEmail($title, $email, $pdfName, $dirUser, $body, $path, $file_name)
     {
         if($title == '')
         {
@@ -294,7 +372,6 @@ class Pdf_report
         }
 
         $attachments = array();
-        $file_name   = $this->getNamePdf();
 
         if($pdfName == NULL)
         {
@@ -315,7 +392,7 @@ class Pdf_report
         {
             //It exists
             $attachments[] = array(
-                "path" => '/usr/share/ossim/www/tmp/scheduler/'.$dirUser.'/'.$pdfName.'.pdf',
+                "path" => $path,
                 "name" => $file_name
            );
         }
@@ -331,22 +408,69 @@ class Pdf_report
     }
 
 
-    public function getLinkPdf($extra_data = FALSE)
+    public function getLinkPdf($extra_data = FALSE, $overhead = false)
     {
         $current_url = $_SERVER[SCRIPT_NAME].'?pdf=true&extra_data=true&'.$_SERVER[QUERY_STRING];
-
+	$format = "email";
+        $download_pdf = "";
+        if ($overhead) {
+            $format = "emailhtml";
+            $download_pdf = "&html=true";
+            $overhead_fn = '
+		var loading = $("#loading_overhead");
+                if (!loading.length) {
+			$(\'<div id="loading_overhead">
+                            <div class="overhead_content">
+               	                <div class="overhead_header">'._("The PDF generation process for this report may take some time, regarding the number of assets selected. Please, choose one of the following options:").'</div>
+                                    <div>
+                                        <ul>
+                                            <li><input type="radio" value="1" id="overhead1" checked="checked" name="overhead" /><label for="overhead1">'._('Continue report with HTML output only').'</label></li>
+                                            <li><input type="radio" value="2" id="overhead2" name="overhead" /><label for="overhead2">'._('Select smaller number of assets and try again').'</label></li>
+                                            <li><input type="radio" value="3" id="overhead3" name="overhead" /><label for="overhead3">'._('Schedule report to run later today (Viewable in Report history)').'</label></li>
+                                        </ul>
+                                   </div>
+                                <div class="overhead_footer"><input id="overhead-continue" type="button" value="Continue"/> <input type="button" name="" value="Quit" onclick="overhead_quit();"/></div>
+                            </div>
+	                 </div>\').insertAfter("#loading");
+                } else {
+			loading.show();
+                }
+                $("body").off("click","#overhead-continue").on("click","#overhead-continue",function() {callback(); overhead_quit();});
+	    ';
+            $overhead_fn = str_replace("\n","",$overhead_fn);
+        } else {
+            $overhead_fn = 'callback(); return true;';
+	}
         $html='
             <script language="javascript">
+		function prelaunch(callback) {
+                    '.$overhead_fn.'
+		}
+		function overhead_next(callback) {
+			var val = $("#loading_overhead [name=overhead]:checked").val();
+			if (val == 1) {
+				callback();
+			} else if (val == 2) {
+				overhead_quit();
+				$("[name=wr_options]").find("a:nth-child(2)").click();
+			} else if (val == 3) {
+				top.location.href = "/ossim#reports/usm_reports/scheduler";
+			}
+		}
+
+		function overhead_quit() {
+			$("#loading_overhead").hide();
+		}
 
                 function emailValidate(id)
                 {
                     if(/([\w+\.-]*@[\w+\.-]*[\.\w{2,3}])+/.test($("#email").val()))
                     {
-                        var id_form="#email_form";
-
-                        $(id_form).attr("action","wizard_email.php?extra_data='.$extra_data.'&name='.base64_encode($this->getName()).'&format=email");
-
-                        GB_show_post("'.Util::js_entities(("Send PDF by e-mail")).'", id_form, "350", "600");
+			prelaunch(function() {
+	                        var id_form="#email_form";
+                                $(id_form).attr("action","wizard_email.php?extra_data='.$extra_data.'&name='.base64_encode($this->getName()).'&format='.$format.'");
+                                GB_show_post("'.Util::js_entities(("Send PDF by e-mail")).'", id_form, "350", "600");
+			});
                     }
                     else
                     {
@@ -365,9 +489,10 @@ class Pdf_report
                <table width="100%" class="transparent" align="center" cellspacing="0" cellpadding="0">
                     <tr>
                         <td width="50%" class="nobborder" style="text-align:right;" nowrap>
-                        <a class="sbutton" href="'.$current_url.'" target="_blank" title="'._("Generate PDF").'">
+                        <a class="sbutton" href="#" onclick="if (!prelaunch(function() {window.open(\''.$current_url.$download_pdf.'\');})) return false;" target="_blank" title="'._("Generate PDF").'">
                             <img src="../pixmaps/pdf_button.png" align="absmiddle"> '._("Download PDF").'
                         </a>
+
                         </td>
                         <td  width="50%" class="nobborder" style="text-align:left;padding-left:10px;" nowrap>
                         <a class="sbutton" href="javascript:;" onclick="toggleDivEmail();" title="'._("Send PDF by e-mail").'"><img src="../pixmaps/emailButton.png" align="absmiddle"> '._("Send by e-mail").'</a>

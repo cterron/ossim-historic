@@ -776,3 +776,19 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO PhishMe.com Phishing
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO Flowbit set for POST to Quicken Updater"; flow:established,to_server; content:"POST"; http_method; content:"quicken.com|0d 0a|"; http_header; content:"User-Agent|3a 20|InetClntApp"; fast_pattern; content:"Date|3a|"; http_header; flowbits:set,ET.QuickenUpdater; flowbits:noalert; classtype:misc-activity; sid:2022803; rev:2;)
 
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Windows Executable Sent When Remote Host Claims to Send a RAR Archive"; flow:established,from_server; content:"Content-Type|3a 20|application/rar|0d 0a|"; nocase; fast_pattern:11,20; http_header; file_data; content:"MZ"; depth:2; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; classtype:trojan-activity; sid:2022874; rev:2;)
+
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to a Suspicious dynapoint.pw Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|dynapoint|02|pw|00|"; distance:0; fast_pattern; classtype:bad-unknown; sid:2022876; rev:1;)
+
+alert http any any -> any any (msg:"ET INFO WinHttp AutoProxy Request wpad.dat Possible BadTunnel"; flow:established,to_server; content:"GET"; http_method; content:"/wpad.dat"; http_uri; fast_pattern; pcre:"/\/wpad\.dat$/U"; reference:url,tools.ietf.org/html/draft-ietf-wrec-wpad-01; reference:url,ietf.org/rfc/rfc1002.txt; classtype:protocol-command-decode; sid:2022913; rev:2;)
+
+alert udp any any -> $HOME_NET 137 (msg:"ET INFO NBNS Name Query Response Possible WPAD Spoof BadTunnel"; byte_test:1,&,0x80,2; byte_test:1,!&,0x40,2; byte_test:1,!&,0x20,2; byte_test:1,!&,0x10,2; byte_test:1,=,0x00,3; content:"|00 00|"; offset:4; depth:2; content:"|46 48 46 41 45 42 45|"; fast_pattern:only; reference:url,tools.ietf.org/html/draft-ietf-wrec-wpad-01; reference:url,ietf.org/rfc/rfc1002.txt; classtype:protocol-command-decode; sid:2022914; rev:1;)
+
+alert udp any 67 -> any 68 (msg:"ET INFO Web Proxy Auto Discovery Protocol WPAD DHCP 252 option Possible BadTunnel"; content:"|02|"; depth:1; content:"|fc|"; byte_jump:1,0,relative,post_offset -9; content:"/wpad.dat"; within:9; fast_pattern; classtype:protocol-command-decode; sid:2022915; rev:1;)
+
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to *.duckdns. Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|duckdns|03|"; fast_pattern; distance:0; nocase; classtype:misc-activity; sid:2022918; rev:1;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO SUSPICIOUS Excel Add-in Download M1"; flow:to_server,established; content:".xla"; nocase; http_uri; pcre:"/\.xla$/Ui"; reference:url,blogs.mcafee.com/mcafee-labs/patch-now-simple-office-protected-view-bypass-could-have-big-impact/; classtype:bad-unknown; sid:2022965; rev:2;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO SUSPICIOUS Excel Add-in Download M2"; flow:to_server,established; content:".xla"; nocase; http_header; pcre:"/Content-Disposition\x3a[^\r\n]*?\.xla[\s\x22\x27]/Hi"; reference:url,blogs.mcafee.com/mcafee-labs/patch-now-simple-office-protected-view-bypass-could-have-big-impact/; classtype:bad-unknown; sid:2022966; rev:2;)
+

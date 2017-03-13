@@ -48,9 +48,9 @@ import yaml
 import shutil
 import sys
 import socket
+
 sys.path.append("/usr/share/alienvault-center/av-libs/")
 from avconfig import ossimsetupconfig
-
 
 backup_path = "/var/alienvault/backup/"
 backup_config_path = "/etc/ansible/backup/"
@@ -130,7 +130,6 @@ def get_hostname():
     Returns:
         hostname(str)
     """
-    hostname = ""
     try:
         hostname = socket.gethostname()
     except:
@@ -154,12 +153,11 @@ def get_system_id():
 
 def get_admin_ip():
     """Returns the admin_ip"""
-    admin_ip = ""
     try:
         config = ossimsetupconfig.AVOssimSetupConfigHandler()
         admin_ip = config.get_general_admin_ip()
     except:
-        return ""
+        admin_ip = ""
     return admin_ip
 
 
@@ -227,10 +225,11 @@ def copy_system_info(backup_folder, backup_type, profile, date_str, method):
 def backup_files(backup_folder, files):
     """ Backup the files in $files
     """
-    if not os.path.exists(os.path.join(backup_folder,'files')):
-        os.makedirs(os.path.join(backup_folder,'files'))
+    if not os.path.exists(os.path.join(backup_folder, 'files')):
+        os.makedirs(os.path.join(backup_folder, 'files'))
     for f in files:
-        return_code, output, error = _run_command("tar pcf - %s  | tar pxf - -C %s" % (f,os.path.join(backup_folder,'files')))
+        return_code, output, error = _run_command(
+            "tar pcf - %s  | tar pxf - -C %s" % (f, os.path.join(backup_folder, 'files')))
         if return_code != 0:
             print error
             print output
@@ -283,7 +282,7 @@ def backup_full_database(backup_folder, databases, db_info):
         > %s" % (database, db_info['ip'], db_info['user'], db_info['password'], database_file)
         return_code, output, error = _run_command(cmd)
         if return_code != 0:
-            return False,output
+            return False, output
 
     return True, ''
 
@@ -300,8 +299,25 @@ def create_backup_folder(backup_type, date_str):
     return True, backup_folder
 
 
-def compress_backup(backup_folder):
+def encrypt_backup(backup_file, backup_pass=''):
+    success = True
+    encrypted_backup = '%s.enc' % backup_file
 
+    cmd = "gpg --symmetric --batch --yes --passphrase %s --cipher-algo AES256 --output %s %s" % (backup_pass,
+                                                                                                 encrypted_backup,
+                                                                                                 backup_file)
+    return_code, output, error = _run_command(cmd)
+
+    if return_code != 0:
+        success = False
+        encrypted_backup = "Error encrypting backup: %s" % error
+
+    os.remove(backup_file)
+
+    return success, encrypted_backup
+
+
+def compress_backup(backup_folder):
     success = True
     backup_file = "%s.tar.gz" % backup_folder
     compress_program = get_compress_program()
@@ -327,13 +343,14 @@ def load_template(backup_type):
 
     return True, template
 
+
 def is_alienvault_command_running():
     """Check if there is a alienvault command (reconfig/update) unning
 
     :return: False if there isn't av process running, True otherwise
     """
     try:
-        cmd = "ps aux | grep 'alienvault-reconfig\|ossim-reconfig\|alienvault-update' | grep -v grep | grep -v tail | wc -l"
+        cmd = "ps aux | grep 'alienvault-reconfig\|ossim-reconfig\|alienvault-update' | grep -v 'grep\|tail' | wc -l"
         return_code, output, error = _run_command(cmd)
         if return_code != 0 or int(output) > 0:
             return True
@@ -341,7 +358,8 @@ def is_alienvault_command_running():
         return True
     return False
 
-def run_backup(backup_type='configuration', method='auto'):
+
+def run_backup(backup_type='configuration', method='auto', backup_pass=""):
     """
     Run backup
     """
@@ -352,10 +370,13 @@ def run_backup(backup_type='configuration', method='auto'):
     if is_alienvault_command_running():
         return False, "There is a reconfiguration/upgrade process running. Aborting"
 
-    date_str = int(time.time())#datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+    date_str = int(time.time())  # datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
     success, backup_folder = create_backup_folder(backup_type, date_str)
     if not success:
         return False, backup_folder
+
+    # Put all backups into separate folder, which will be archived and encrypted.
+    backup_data_folder = os.path.join(backup_folder, 'data')
 
     success, msg = copy_system_info(backup_folder, backup_type, profile, date_str, method)
     if not success:
@@ -367,22 +388,29 @@ def run_backup(backup_type='configuration', method='auto'):
         return False, template
 
     # Files backup
-    backup_files(backup_folder, template['files'])
+    backup_files(backup_data_folder, template['files'])
 
     # Database backup
     if 'framework' in profile:
         success, db_info = get_db_info()
         for database in template['databases']:
             if database not in template['fulldatabases']:
-                success, error = backup_database(backup_folder, database, template['databases'][database], db_info)
+                success, error = backup_database(backup_data_folder, database, template['databases'][database], db_info)
                 if not success:
                     return success, error
 
-        success, error = backup_full_database(backup_folder, template['fulldatabases'], db_info)
+        success, error = backup_full_database(backup_data_folder, template['fulldatabases'], db_info)
         if not success:
             return success, error
 
-    success, backup_filename = compress_backup(backup_folder)
+    # Compress data folder
+    success, backup_data_filename = compress_backup(backup_data_folder)
+    if success:
+        success, backup_filename = encrypt_backup(backup_data_filename, backup_pass=backup_pass)
+
+    if success:
+        # Compress main container with backup data and info
+        success, backup_filename = compress_backup(backup_folder)
 
     return success, backup_filename
 
@@ -390,16 +418,18 @@ def run_backup(backup_type='configuration', method='auto'):
 def main():
     """ main backup
     """
-    module = AnsibleModule(argument_spec=dict(
-                                                backup_type=dict(default='configuration', choices=['configuration', 'data']),
-                                                method=dict(default='auto', choices=['auto', 'manual'])
-                                             )
-        )
+    module = AnsibleModule(
+        argument_spec=dict(backup_type=dict(default='configuration', choices=['configuration', 'data']),
+                           method=dict(default='auto', choices=['auto', 'manual']),
+                           backup_pass=dict(default="")),
+        no_log=True
+    )
 
     backup_type = module.params.get('backup_type')
     method = module.params.get('method')
+    backup_password = module.params.get('backup_pass')
 
-    success, data = run_backup(backup_type, method)
+    success, data = run_backup(backup_type, method, backup_password)
     if not success:
         module.fail_json(msg=data)
 

@@ -1789,7 +1789,6 @@ class Util
                 );
                 $body = preg_replace($pattern, $new_path, $body);
             }
-
             $mail->MsgHTML($body);
 
             if (is_array($attachments) && count($attachments) > 0)
@@ -3084,6 +3083,11 @@ class Util
         return true;
     }
 
+    public static function get_risk_rext($risk) {
+        if ($risk==0) return "low";
+        if ($risk==1) return "medium";
+        return "high";
+    }
 }
 
 /* End of file Util.inc */

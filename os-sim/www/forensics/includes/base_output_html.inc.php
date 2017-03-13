@@ -58,7 +58,9 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
 
             <!-- Manual Styles -->
             <style type="text/css">
-
+                #tiptip_content {
+                    border-radius: 5px;
+                }
                 #adv_search_button
                 {
                     margin:5px 0px 0px 0px;
@@ -1032,6 +1034,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                      });
                     $('.riskinfo').tipTip({
                         defaultPosition: "left",
+                        maxWidth: "265px",
                         content: function (e) {
                             return $(this).attr('txt')
                         }

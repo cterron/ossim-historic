@@ -350,6 +350,22 @@ class Asset_host extends Asset
         return $agents;
     }
 
+    //returns total number of assets
+    public static function get_assets_count($conn) {
+        Ossim_db::check_connection($conn);
+        $query = "SELECT COUNT(*) as counter FROM alienvault.host";
+        $rs = $conn->Execute($query);
+        if (!$rs)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        else
+        {
+            $count = $rs->fields['counter'];
+        }
+        return $count;
+    }
+
 
     /**
      * Function get_vulnerability_number

@@ -923,7 +923,64 @@ function ossim_error($error_msg = NULL, $error_type = AV_ERROR, $styles = 'width
 	return $ossim_eclass->get_formatted_message($styles);
 }
 
+/*
+ * small and elegant recursive function
+ * to replace ugly and copy pasted validation
+ */
+function utfize($val, $validate_rules) {
+	if (!isset($validate[$k])) {
+		return $val;
+	}
+	if (is_array($val)) {
+		foreach ($val as $k => $v) {
+			$val[$k] = utfize($v);
+		}
+	} elseif (mb_detect_encoding($val." ",'UTF-8,ISO-8859-1') == 'UTF-8') {
+		$val = Util::utf8entities($val);
+	}
+	return trim($val);
+}
 
+function validate_form_fields_new($type, $validate_rules)
+{
+	$validation_errors = array();
+	if ($type != 'POST' && $type != 'GET') {
+		$validation_errors['invalid_sm'] = _('Invalid send method');
+		return $validation_errors;
+	}
+	//little php magic for array preparation below
+	//select input array
+	$data = $type == 'POST' ? $_POST : $_GET;
+	//remove array keys that are not port of the validation
+	$data = array_intersect_key($data,$validate_rules);
+	//predefine validation array as array on null's
+	$temp = array_map(function () {return null;},$validate_rules);
+	//populate input array with null's for missing data
+	$data = array_merge($temp,$data);
+	$values = utfize($data,$validate_rules);
+	// do validate
+	foreach ($values as $k => $v) {
+		ossim_valid($v, constant($validate_rules[$k]['validation']), $validate_rules[$k]['e_message']);
+		check_last_ossim_error($validation_errors);
+	}
+	return $validation_errors;
+}
+
+function check_last_ossim_error(&$validation_errors) {
+	if ($GLOBALS['ossim_last_error'] !== FALSE)
+	{
+		$last_error = $GLOBALS['ossim_last_error'];
+		if (mb_detect_encoding($last_error.' ','UTF-8,ISO-8859-1') == 'ISO-8859-1')
+		{
+			$last_error = mb_convert_encoding($last_error, 'UTF-8', 'ISO-8859-1');
+		}
+		$validation_errors[$k] = $last_error;
+		ossim_clean_error();
+	}
+}
+
+//deprecated old and ugly validation function
+//for backward compatibility
 function validate_form_fields($type, $validate)
 {
 	$validation_errors = array();
@@ -1002,19 +1059,7 @@ function validate_form_fields($type, $validate)
 
 		eval("ossim_valid(\$value, ".$validate_rules[$k]['validation'].", \"".$validate_rules[$k]['e_message']."\");");
 
-		if ($GLOBALS['ossim_last_error'] !== FALSE)
-		{
-			$last_error = $GLOBALS['ossim_last_error'];
-
-			if (mb_detect_encoding($last_error.' ','UTF-8,ISO-8859-1') == 'ISO-8859-1')
-			{
-    			$last_error = mb_convert_encoding($last_error, 'UTF-8', 'ISO-8859-1');
-			}
-
-			$validation_errors[$k] = $last_error;
-
-			ossim_clean_error();
-		}
+		check_last_ossim_error($validation_errors);
 	}
 
 	return $validation_errors;

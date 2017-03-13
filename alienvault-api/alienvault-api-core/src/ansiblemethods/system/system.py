@@ -111,7 +111,7 @@ def get_system_load(system_ip):
             return (False, error_msg)
         else:
             uptimeout = response['contacted'][system_ip]['stdout']
-            #Capture
+            # Capture
             m = reuptime.match(uptimeout)
             if m != None:
                 loadcpu = float(m.group(3))
@@ -195,7 +195,7 @@ def get_system_setup_data(system_ip):
                     "%s" % response['dark'][system_ip]
         return (False, error_msg)
 
-    return(True, response['contacted'][system_ip]['ansible_facts'])
+    return (True, response['contacted'][system_ip]['ansible_facts'])
 
 
 def get_root_disk_usage(system_ip):
@@ -338,7 +338,7 @@ def set_av_config(system_ip, path_dict):
     path_str = ' '.join(['%s=%s' % (key, value) for (key, value) in path_dict.items()])
     #
     #
-    #flush_cache(namespace="system")
+    # flush_cache(namespace="system")
 
     response = ansible.run_module(host_list=[system_ip],
                                   module="av_config",
@@ -389,7 +389,7 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
                                     use_sudo=True)
 
     if response[remote_system_ip]['unreachable'] == 0 and \
-       response[remote_system_ip]['failures'] == 0:
+                    response[remote_system_ip]['failures'] == 0:
         result = True
         response = "System with IP %s added correctly" % (remote_system_ip)
     else:
@@ -420,7 +420,7 @@ def ansible_ping_system(system_ip):
         return False, "System unreachable"
 
     if 'contacted' in response and system_ip in response['contacted'] and \
-       'pong' in response['contacted'][system_ip].get('ping', {}):
+                    'pong' in response['contacted'][system_ip].get('ping', {}):
         return True, "OK"
     return False, ""
 
@@ -585,7 +585,8 @@ def ansible_run_async_reconfig(system_ip, log_file="/var/log/alienvault/update/s
     return success, log_file
 
 
-def ansible_run_async_update(system_ip, log_file="/var/log/alienvault/update/system_update.log", only_feed=False, update_key=""):
+def ansible_run_async_update(system_ip, log_file="/var/log/alienvault/update/system_update.log", only_feed=False,
+                             update_key=""):
     """Runs an asynchronous update on the given system
 
     Args:
@@ -729,8 +730,8 @@ def ansible_get_process_pid(system_ip, ps_filter):
     """
     try:
         cmd = ('ps aux | grep \"%s\" | grep -v grep | '
-              'grep -v tail | tr -s \" \" | cut -d \" \" -f 2 | '
-              'head -n 1' % str(re.escape(ps_filter)))
+               'grep -v tail | tr -s \" \" | cut -d \" \" -f 2 | '
+               'head -n 1' % str(re.escape(ps_filter)))
         response = ansible.run_module(host_list=[system_ip],
                                       module="shell",
                                       use_sudo="True",
@@ -797,7 +798,7 @@ def ansible_check_asynchronous_command_return_code(system_ip, rc_file):
     except Exception as err:
         error_msg = "An error occurred while retrieving the return code " + \
                     "file <%s>" % str(err)
-        return False,  error_msg
+        return False, error_msg
     return True, ""
 
 
@@ -1000,7 +1001,6 @@ def ansible_remove_key_from_known_host_file(system_ip, system_ip_to_remove):
 
 
 def ansible_install_plugin(system_ip, plugin_path, sql_path):
-
     if not (system_ip or plugin_path or sql_path):
         return False, "[ansible_install_plugin]: Missing arguments"
 
@@ -1093,19 +1093,19 @@ def ansible_restart_frameworkd(system_ip):
     return (rc, response)
 
 
-def ansible_get_otx_key(system_ip):
+def ansible_get_decrypted_field_from_config(system_ip, conf_name):
     """
-    Get the OTX Key of a given system.
+    Get the config_name from config of a given system.
 
     Args:
-        system_ip (str): ip of the host where we will get the OTX key
-
+        system_ip (str): ip of the host where we will get the config.
+        conf_name (str): name of field in config which value we want to retrieve.
     Returns:
-        key (str): OTX key or empty string
+        key (str): AES decrypted config value or empty string
     """
     query = """SELECT AES_DECRYPT(value, (SELECT value FROM config WHERE conf='encryption_key')) AS "token"
                FROM config
-               WHERE conf = 'open_threat_exchange_key';"""
+               WHERE conf = '%s';""" % conf_name
 
     command = """echo "%s" | ossim-db
               """ % query
@@ -1124,26 +1124,58 @@ def ansible_get_otx_key(system_ip):
         raise APIAnsibleBadResponse(str(msg))
 
 
+def ansible_get_otx_key(system_ip):
+    """
+    Get the OTX Key of a given system.
+
+    Args:
+        system_ip (str): ip of the host where we will get the OTX key
+
+    Returns:
+        key (str): OTX key or empty string
+    """
+    return ansible_get_decrypted_field_from_config(system_ip, 'open_threat_exchange_key')
+
+
+def ansible_get_backup_config_pass(system_ip):
+    """
+    Get the backup configuration pass of a given system.
+
+    Args:
+        system_ip (str): ip of the host where we will get the backup pass
+
+    Returns:
+        key (str): pass or empty string
+    """
+    return ansible_get_decrypted_field_from_config(system_ip, 'backup_conf_pass')
+
+
 def ansible_set_system_certificate(local_ip, cert, priv, ca):
     """ Set content of a given file name
     :returns True if the file is properly created, False elsewhere
     """
     # Copy content to file
     try:
-        command_args = "content=\"{0}\" dest={1} owner=root group=alienvault mode=\"u+rw,g-wx,o-rwx\"".format(cert,'/etc/ssl/private/custom_ui_certificate.crt')
+        command_args = "content=\"{0}\" dest={1} owner=root group=alienvault mode=\"u+rw,g-wx,o-rwx\"".format(
+            cert, '/etc/ssl/private/custom_ui_certificate.crt'
+        )
         response = ansible.run_module(host_list=[local_ip], module='copy', args=command_args, use_sudo=True)
     except Exception, exc:
         return False, "Ansible Error: An error occurred while generating certificate file(s): %s" % str(exc)
 
     try:
-        command_args = "content=\"{0}\" dest={1} owner=root group=alienvault mode=\"u+rw,g-wx,o-rwx\"".format(priv,'/etc/ssl/private/custom_ui_private.key')
+        command_args = "content=\"{0}\" dest={1} owner=root group=alienvault mode=\"u+rw,g-wx,o-rwx\"".format(
+            priv, '/etc/ssl/private/custom_ui_private.key'
+        )
         response = ansible.run_module(host_list=[local_ip], module='copy', args=command_args, use_sudo=True)
     except Exception, exc:
         return False, "Ansible Error: An error occurred while generating private key file(s): %s" % str(exc)
 
     try:
         if ca:
-            command_args = "content=\"{0}\" dest={1} owner=root group=alienvault mode=\"u+rw,g-wx,o-rwx\"".format(ca,'/etc/ssl/private/custom_ui_ca_certificate.crt')
+            command_args = "content=\"{0}\" dest={1} owner=root group=alienvault mode=\"u+rw,g-wx,o-rwx\"".format(
+                ca, '/etc/ssl/private/custom_ui_ca_certificate.crt'
+            )
             response = ansible.run_module(host_list=[local_ip], module='copy', args=command_args, use_sudo=True)
     except Exception, exc:
         return False, "Ansible Error: An error occurred while generating CA certificate file(s): %s" % str(exc)
@@ -1224,7 +1256,7 @@ def ansible_resend_alarms(system_ip, alarms):
     """
     if alarms:
         chunk_size = 10  # alarm_chunks are 10 alarms
-        for alarm_chunk in [alarms[x:x+chunk_size] for x in xrange(0, len(alarms), chunk_size)]:
+        for alarm_chunk in [alarms[x:x + chunk_size] for x in xrange(0, len(alarms), chunk_size)]:
             # event_id = str(uuid.UUID(alarm))
             events = "\n".join(map(lambda x: str(uuid.UUID(x)), alarm_chunk))
             api_log.info("[ansible_resend_alarms] Resending event '%s' to server '%s'" % (str(events), system_ip))

@@ -59,5 +59,5 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy):
 @event.listens_for(Pool,"connect")
 def set_connect_timeout (dbapi_connection,connection_record):
     cursor = dbapi_connection.cursor()
-    cursor.execute("SET SESSION wait_timeout = 28800;")
+    cursor.execute("SET SESSION wait_timeout = 57600;")
     cursor.close()

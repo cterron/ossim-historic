@@ -121,7 +121,6 @@ def get_data_status_messages_stats():
 
 @blueprint.route('/<status_message_id>', methods=['PUT'])
 @document_using('static/apidcos/status.html')
-@admin_permission.require(http_exception=403)
 @accepted_url({'status_message_id': {'type': UUID, 'optional': False},
                'viewed': {'type': str, 'optional': True, 'values': ['true', 'false']},
                'suppressed': {'type': str, 'optional': True, 'values': ['true', 'false']}})

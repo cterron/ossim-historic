@@ -130,7 +130,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"ET DOS Microsoft Remote Desk
 
 #alert icmp any any -> any any (msg:"ET DOS Microsoft Windows 7 ICMPv6 Router Advertisement Flood"; itype:134; icode:0; byte_test:1,&,0x08,2; content:"|03|"; offset:20; depth:1; byte_test:1,&,0x40,2,relative; byte_test:1,&,0x80,2,relative; threshold:type threshold, track by_src, count 10, seconds 1; reference:url,www.samsclass.info/ipv6/proj/proj8x-124-flood-router.htm; classtype:attempted-dos; sid:2014996; rev:3;)
 
-#alert udp any any -> $HOME_NET 53 (msg:"ET DOS DNS Amplification Attack Inbound"; content:"|01 00 00 01 00 00 00 00 00 01|"; depth:10; offset:2; pcre:"/^[^\x00]+?\x00/R"; content:"|00 ff 00 01 00 00 29|"; within:7; fast_pattern; byte_test:2,>,4095,0,relative; threshold: type both, track by_dst, seconds 60, count 5; classtype:bad-unknown; sid:2016016; rev:8;)
+alert udp any any -> $HOME_NET 53 (msg:"ET DOS DNS Amplification Attack Inbound"; content:"|01 00 00 01 00 00 00 00 00 01|"; depth:10; offset:2; pcre:"/^[^\x00]+?\x00/R"; content:"|00 ff 00 01 00 00 29|"; within:7; fast_pattern; byte_test:2,>,4095,0,relative; threshold: type both, track by_dst, seconds 60, count 5; classtype:bad-unknown; sid:2016016; rev:8;)
 
 #alert udp $HOME_NET 53 -> any any (msg:"ET DOS DNS Amplification Attack Outbound"; content:"|01 00 00 01 00 00 00 00 00 01|"; depth:10; offset:2; pcre:"/^[^\x00]+?\x00/R"; content:"|00 ff 00 01 00 00 29|"; within:7; fast_pattern; byte_test:2,>,4095,0,relative; threshold: type limit, track by_src, seconds 60, count 1; classtype:bad-unknown; sid:2016017; rev:7;)
 

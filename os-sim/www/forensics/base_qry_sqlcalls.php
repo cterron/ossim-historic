@@ -814,13 +814,6 @@ if ($qs->num_result_rows > 0)
 
         $current_orisk = ($current_dip != "255.255.255.255") ? $current_oriska : $current_oriskc;
 
-       /*if ($current_dip != "255.255.255.255") {
-            qroPrintEntry("<img src=\"bar.php?value=" . $current_oasset_d . "&max=5\" border='0' align='absmiddle'>&nbsp;");
-            $current_orisk = $current_oriska;
-        } else {
-            qroPrintEntry("<img src=\"bar.php?value=" . $current_oasset_s . "&max=5\" border='0' align='absmiddle'>&nbsp;");
-            $current_orisk = $current_oriskc;
-        }*/
 
         // 8- Priority
         //qroPrintEntry("<img src=\"bar2.php?value=" . $current_oprio . "&max=5\" border='0' align='absmiddle' title='$current_oprio'>&nbsp;");
@@ -846,8 +839,17 @@ if ($qs->num_result_rows > 0)
         //qroPrintEntry("<img src=\"bar2.php?value=" . $current_oriskc . "&value2=" . $current_oriska . "&max=9&range=1\" border='0' align='absmiddle' title='$current_oriskc -> $current_oriska'>&nbsp;");
 
         $current_maxrisk = ($current_oriska > $current_oriskc) ? $current_oriska : $current_oriskc;
-        $risk_detail = "<div style='text-align:right'>Asset S->D: <img src='bar2.php?value=" . $current_oasset_s . "&value2=" . $current_oasset_d . "&max=5' border='0' align='absmiddle' style='width:14mm'><br>Priority: <img src='bar2.php?value=" . $current_oprio . "&max=5' border='0' align='absmiddle' style='width:14mm'><br>Reliability: <img src='bar2.php?value=" . $current_oreli . "&max=9' border='0' align='absmiddle' style='width:14mm'><br>Risk: <img src='bar2.php?value=" . $current_maxrisk . "&max=9&range=1' border='0' align='absmiddle' style='width:14mm'></div>";
-        $cell_data['RISK'] = "<a href='javascript:;' class='riskinfo' style='text-decoration:none' txt='".Util::htmlentities($risk_detail,ENT_QUOTES)."'><img src=\"bar2.php?value=" . $current_maxrisk . "&max=9&range=1\" border='0' align='absmiddle'></a>";
+        $risk_text = Util::get_risk_rext($current_maxrisk);
+        $risk_bar = "<span class='risk-bar $risk_text'>"._($risk_text)."</span>";
+        $risk_detail = "<div class='risk-popup' style='text-align:right'>
+            <table CELLPADDING='0' CELLSPACING='0'>
+                <tr><th class='risk-popup-top'>"._("Risk").":</th><td class='risk-popup-top'>$risk_bar</td></tr>
+                <tr><th>"._("Asset Value")." "._("Source").":</th><td>$current_oasset_s</td></tr>
+                <tr><th>"._("Asset Value")." "._("Destination").":</th><td>$current_oasset_d</td></tr>
+                <tr><th>"._("Priority").":</th><td>$current_oprio</td></tr>
+                <tr><th>"._("Reliability").":</th><td>$current_oreli</td></tr>
+            </table>";
+        $cell_data['RISK'] = "<a href='javascript:;' class='riskinfo' style='text-decoration:none' txt='".Util::htmlentities($risk_detail,ENT_QUOTES)."'>$risk_bar</a>";
         $cell_pdfdata['RISK'] = "<img src='".$current_url."/forensics/bar2.php?value=" . $current_maxrisk . "&max=9&range=1' border='0' align='absmiddle' style='width:10mm'>";
 
         //$cell_data['RISK'] = "<img src=\"bar2.php?value=" . $current_oriskc . "&value2=" . $current_oriska . "&max=9&range=1\" border='0' align='absmiddle' title='$current_oriskc -> $current_oriska'>";

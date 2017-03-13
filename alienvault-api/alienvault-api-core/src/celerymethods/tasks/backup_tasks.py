@@ -35,7 +35,8 @@ from celerymethods.tasks import celery_instance
 from celery_once.tasks import QueueOnce
 from db.methods.system import (get_systems,
                                get_system_ip_from_system_id,
-                               get_system_id_from_local)
+                               get_system_id_from_local,
+                               is_local)
 from retrying import retry
 import logging
 import math
@@ -47,6 +48,7 @@ MAX_TRIES = 3  # Maximun number of tries before launch an alarm
 TIME_BETWEEN_TRIES = 60000  # Time between tries in miliseconds (1 minute)
 
 from ansiblemethods.system.backup import run_backup
+from ansiblemethods.system.system import ansible_get_backup_config_pass, get_av_config
 from ansiblemethods.helper import remove_file
 from apimethods.system.backup import get_backup_list
 from apimethods.data.status import insert_current_status_message
@@ -67,35 +69,39 @@ notifier.addHandler(fh)
 
 # touch the file and change its permissions
 if not os.path.isfile("/var/log/alienvault/api/backup-notifications.log"):
-    open("/var/log/alienvault/api/backup-notifications.log","a").close()
+    open("/var/log/alienvault/api/backup-notifications.log", "a").close()
 if oct(os.stat("/var/log/alienvault/api/backup-notifications.log").st_mode & 0777) != '0644':
     os.chmod("/var/log/alienvault/api/backup-notifications.log", 0644)
 
 
-def make_system_backup_by_system_ip(system_ip, backup_type, method="auto"):
+def make_system_backup_by_system_ip(system_ip, backup_type, method="auto", backup_pass=""):
     """
     Run backup_type for system_ip
     :param system_ip
     :param backup_type
+    :param backup_pass
+    :param method
     """
-    success, msg = run_backup(target=system_ip, backup_type=backup_type, method=method)
+    success, msg = run_backup(target=system_ip, backup_type=backup_type, method=method, backup_pass=backup_pass)
     if not success:
-        raise(Exception("Error %s" % (msg)))
+        raise (Exception("Error %s" % msg))
 
 
 @retry(stop_max_attempt_number=MAX_TRIES, wait_fixed=TIME_BETWEEN_TRIES)
-def make_system_backup_by_system_ip_with_retry(system_ip, backup_type, method="auto"):
+def make_system_backup_by_system_ip_with_retry(system_ip, backup_type, method="auto", backup_pass=""):
     """
      Run backup_type for system_ip
     :param system_ip
     :param backup_type
+    :param backup_pass
+    :param method
     This routine has a retry / timeout
 
     """
-    return make_system_backup_by_system_ip(system_ip, backup_type)
+    return make_system_backup_by_system_ip(system_ip, backup_type, backup_pass=backup_pass)
 
 
-def make_system_backup(system_id, backup_type, rotate=True, retry=True, method="auto"):
+def make_system_backup(system_id, backup_type, rotate=True, retry=True, method="auto", backup_pass=""):
     """
     Run backup_type for system_id
     :param system_id
@@ -103,40 +109,47 @@ def make_system_backup(system_id, backup_type, rotate=True, retry=True, method="
     """
     success, system_ip = get_system_ip_from_system_id(system_id)
     if not success:
-        return False
+        return False, system_ip  # here system_ip contains an error msg
+
+    additional_info = json.dumps({'system_id': system_id,
+                                  'system_ip': system_ip})
+
+    if not backup_pass or backup_pass == 'NULL':
+        error_msg = 'Password for configuration backups was not set. Backups will be disabled...'
+        notifier.error(error_msg)
+        insert_current_status_message("00000000-0000-0000-0000-000000010039",
+                                      system_id,
+                                      "system",
+                                      additional_info=additional_info)
+        return False, error_msg
 
     try:
         notifier.info("Running Backup [%s - %s]" % (system_ip, backup_type))
         if retry:
-            make_system_backup_by_system_ip_with_retry(system_ip, backup_type)  # This kind of backup is always auto.
+            # This kind of backup is always auto.
+            make_system_backup_by_system_ip_with_retry(system_ip, backup_type, backup_pass=backup_pass)
         else:
-            make_system_backup_by_system_ip(system_ip, backup_type, method=method)
+            make_system_backup_by_system_ip(system_ip, backup_type, method=method, backup_pass=backup_pass)
     except Exception as e:
-        notifier.warning("Backup fails " +
-                         "[%s - %s]: %s" % (system_ip, backup_type, str(e)))
+        notifier.warning("Backup fails [%s - %s]: %s" % (system_ip, backup_type, str(e)))
         # To do: Launch a Notification message
-        additional_info = {'system_id': system_id,
-                           'system_ip': system_ip}
-        additional_info = json.dumps(additional_info)
         success, result = insert_current_status_message("00000000-0000-0000-0000-000000010018",
                                                         system_id,
                                                         "system",
-                                                        additional_info)
+                                                        additional_info=additional_info)
         if not success:
             return False, str(result) + " " + str(e)
         else:
             return False, str(e)
 
-    notifier.info("Backup successfully made " +
-                  "[%s - %s]" % (system_ip, backup_type))
+    notifier.info("Backup successfully made [%s - %s]" % (system_ip, backup_type))
     # To do: Launch a Notification message
 
     # Rotate
     if rotate:
         success, result = rotate_backups(system_id, backup_type, 10)
         if not success:
-            notifier.warning("Error Rotating %s " % backup_type +
-                             "backups in %s" % (system_id))
+            notifier.warning("Error Rotating %s backups in %s" % (backup_type, system_id))
         else:
             notifier.info("Backups rotated successfully")
 
@@ -146,8 +159,7 @@ def make_system_backup(system_id, backup_type, rotate=True, retry=True, method="
                         backup_type=backup_type,
                         no_cache=True)
     except Exception as e:
-        error_msg = "Error when trying to flush the cache " \
-                    "after deleting backups: %s" % str(e)
+        error_msg = "Error when trying to flush the cache after deleting backups: %s" % str(e)
         notifier.warning(error_msg)
 
     return True, None
@@ -162,24 +174,30 @@ def make_backup_in_all_systems(backup_type):
     """
     result, systems = get_systems(system_type='Sensor', directly_connected=True)
     if not result:
-        notifier.error("An error occurred while making the Backup " +
-                       "[%s]. Cant' retrieve the systems " % backup_type)
+        notifier.error("An error occurred while making the Backup [%s]. Cant' retrieve the systems " % backup_type)
         return False
 
     result, local_system_id = get_system_id_from_local()
     if not result:
-        notifier.error("An error occurred while making the Backup " +
-                       "[%s]. Cant' retrieve the systems " % backup_type)
+        notifier.error("An error occurred while making the Backup [%s]. Cant' retrieve the system ID" % backup_type)
         return False
+
     system_ids = [x[0] for x in systems]
     if local_system_id not in system_ids:
         system_ids.append(local_system_id)
 
+    # Get server ip in case of distributed deployment (Because only server has the UI / possibility to set backup_pass)
+    success, server_ip = get_system_ip_from_system_id(local_system_id)
+    if not success:
+        return False
+
     all_backups_ok = True
+    backup_config_pass = ansible_get_backup_config_pass(server_ip)
     for system_id in system_ids:
         success, msg = make_system_backup(system_id=system_id,
                                           backup_type=backup_type,
-                                          rotate=True)
+                                          rotate=True,
+                                          backup_pass=backup_config_pass)
         if not success:
             all_backups_ok = False
 
@@ -194,6 +212,7 @@ def expfit(backups, tnow):
 
     def exp_deviation(backup, backupnr):
         return abs(tnow - backup - backupnr ** exponent)
+
     return sum(exp_deviation(b['index'], bnr)
                for bnr, b in enumerate(reversed(backups)))
 
@@ -284,15 +303,23 @@ def backup_configuration_all_systems():
 
 @celery_instance.task(base=QueueOnce)
 def backup_configuration_for_system_id(system_id='local', method="auto"):
-    """ Task to run configuration backup for system
-    """
+    """ Task to run configuration backup for system """
     result, system_ip = get_system_ip_from_system_id(system_id)
     if not result:
         return False
+
+    # If system_id is remote sensor - we need to get server IP to fetch correct backup password.
+    server_ip = system_ip
+    if not is_local(system_id):
+        conf_key = 'server_server_ip'
+        _, data = get_av_config(system_ip, {conf_key: True})
+        server_ip = data.get(conf_key, system_ip)
+
     success, msg = make_system_backup(system_id=system_id,
                                       backup_type='configuration',
                                       rotate=False,
                                       retry=False,
-                                      method=method)
+                                      method=method,
+                                      backup_pass=ansible_get_backup_config_pass(server_ip))
 
     return success, msg

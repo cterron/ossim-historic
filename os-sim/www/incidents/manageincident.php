@@ -757,16 +757,29 @@ elseif ($action == 'newticket') /* Create a new ticket */
 		//Cleaning the description and action fields
 		$description = POST('description');
 		$action      = POST('action_txt');
-		
         
 		$_POST['description'] = $description;
 		$_POST['action_txt']  = $action;
 		
 		$description = (empty($description)) ? '' : '<!--wiki-->' . $description;
 		$action      = (empty($action)) ? '' : '<!--wiki-->' . $action;
-		
 		$validation_errors = validate_form_fields('POST', $validate);
-				
+
+		$filter_url = function($text,$fieldtxt,$fieldname) use (&$validation_errors) {
+			$text = preg_replace(array("/\[\s*([^hw])\s*/","/\s*javascript:\s*/"),array("[http://$1"," "),$text);
+			if (preg_match_all("|\[(http://[^\s]+)|",$text,$url)) {
+				foreach ($url[1] as $item) {
+					if (!filter_var($item, FILTER_VALIDATE_URL)) {
+						$validation_errors[$fieldname] = 'illegal:' . $fieldtxt;
+						return false;
+					}
+				}
+			}
+			return $text;
+		};
+		$action = $filter_url($action,_('Action'),"action_txt");
+                $description = $filter_url($description,_('Description'),"description");
+
 		if (is_array($validation_errors) && empty($validation_errors))
 		{
 			$transferred = ($transferred_user != '') ? $transferred_user : $transferred_entity;

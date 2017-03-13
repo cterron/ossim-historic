@@ -71,7 +71,8 @@ $db->close();
             array('src' => 'tipTip.css',                    'def_path' => TRUE),
             array('src' => 'jquery.dataTables.css',         'def_path' => TRUE),
             array('src' => '/alarm/console.css',            'def_path' => TRUE),
-            array('src' => 'av_tags.css',                   'def_path' => TRUE)
+            array('src' => 'av_tags.css',                   'def_path' => TRUE),
+            array('src' => 'ui.slider.extras.css',          'def_path' => TRUE),
         );
 
         Util::print_include_files($_files, 'css');
@@ -89,7 +90,8 @@ $db->close();
             array('src' => 'jquery.dataTables.plugins.js',          'def_path' => TRUE),
             array('src' => 'jquery.autocomplete.pack.js',           'def_path' => TRUE),
             array('src' => 'jquery.placeholder.js',                 'def_path' => TRUE),
-            array('src' => '/alarm/js/alarm_group_list.js.php',     'def_path' => FALSE)
+            array('src' => '/alarm/js/alarm_group_list.js.php',     'def_path' => FALSE),
+            array('src' => 'selectToUISlider.jQuery.js',            'def_path' => TRUE)
         );
 
         Util::print_include_files($_files, 'js');
@@ -102,6 +104,15 @@ $db->close();
 
         $(document).ready(function()
         {
+            $('#arangeA, #arangeB').selectToUISlider({
+                tooltip: false,
+                labelSrc: 'text',
+                sliderOptions: {
+                    stop: function(event, ui) {
+                        reload_alarm_groups();
+                    }
+                }
+            });
 
             load_alarm_list();
         });
@@ -213,13 +224,24 @@ $db->close();
                     <option value="more">>=</option>
                 </select>
                 <input type='search' class='ag_param alarms_op_value' id='num_events' name='num_events' value=''>
-
-                <label for="risk_level"><?php echo _('Risk level in alarms')?></label>
-                <select name="risk_level_op" id='risk_level_op' class="alarms_op ag_param">
-                    <option value="less" <?php if ($risk_level_op == "less") echo "selected='selected'"?>>&lt;=</option>
-                    <option value="more" <?php if ($risk_level_op == "more") echo "selected='selected'"?>>&gt;=</option>
+                <label><?php echo _('Risk level in alarms')?></label>
+                <div id="asset_value_slider" class="filter_left_slider">
+                <?php
+                $risks = array(
+                    _("Low"),_("Medium"),_("High")
+                );
+                $risk_selected = function($risk,$key,$risk_selected) {
+                    $selected = $key == $risk_selected ? "selected='selected'" : "";
+                    echo "<option value='$key' $selected>"._($risk)."</option>";
+                };
+                ?>
+                <select class="filter_range hidden" id="arangeA" name="min_risk">
+                    <?php array_walk($risks,$risk_selected,0);?>
                 </select>
-                &nbsp;<input type="text" name="risk_level" id="risk_level" size='3' value="<?php echo $risk_level ?>" class="alarms_op_value ag_param"/>
+                <select class="filter_range hidden" id="arangeB" name="vmax_risk">
+                    <?php array_walk($risks,$risk_selected,2);?>
+                </select>
+                </div>
 
 
                 <label for='tag'><?php echo _('Label') ?></label>

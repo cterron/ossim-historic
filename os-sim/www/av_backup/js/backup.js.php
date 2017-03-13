@@ -389,6 +389,11 @@ function download_backup(backup_file, job_id)
 */
 function backup_status(job_id)
 {
+    <?php if (!$conf->get_conf('backup_conf_pass')) { ?>
+        $('#action_info_launch_backup').html('<?php echo _("Please specify a new password to generate backups and being able to download them later encrypted.<br/> To generate a password to encrypt backups:<br/> 1) Go to the <a href=\"/ossim/#configuration/administration/main\" target=\"_top\">Configuration page</a>.<br/> 2) Then choose \"Backup\" section and set \"Password to encrypt backup files\".")?>');
+        return false;
+    <?php } ?>
+
     if (typeof(job_id) == 'undefined')
     {
         job_id = '';

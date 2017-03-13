@@ -32,21 +32,22 @@ from ansiblemethods.ansiblemanager import Ansible
 
 ansible = Ansible()
 
-def delete_raw_logs (system_ip, start = None, end = None,path="/var/ossim/logs"):
+
+def delete_raw_logs(system_ip, start=None, end=None, path="/var/ossim/logs"):
     rc = True
     params = ""
     if start is not None:
-        params = params +  "start=%s " % start
+        params += "start={} ".format(start)
     if end is not None:
-        params = params + "end=%s " % end
+        params += "end={} ".format(end)
     if path is not None:
-        params = params + "path=%s " % path
-    response = ansible.run_module (host_list=[system_ip], module = "av_logger",args=params)
-    if system_ip in response['dark'] or response['contacted'][system_ip].get('failed',False) == True:
+        params += "path={} ".format(path)
+    response = ansible.run_module(host_list=[system_ip], module="av_logger", args=params)
+    if system_ip in response['dark'] or response['contacted'][system_ip].get('failed', False) == True:
         # We depend of the error
         if response['dark'].get(system_ip) is not None:
-            return (False,response['dark'][system_ip]['msg'])
+            return False, response['dark'][system_ip]['msg']
         else:
-            return (False,response['contacted'][system_ip]['msg'])
+            return False, response['contacted'][system_ip]['msg']
     else:
-        return (True,response['contacted'][system_ip])
+        return True, response['contacted'][system_ip]

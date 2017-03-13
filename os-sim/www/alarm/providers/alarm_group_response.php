@@ -299,26 +299,8 @@ foreach ($list as $s_alarm)
 
     $event_ocurrences = Alarm::get_total_events($conn, $s_backlog_id);
 
-
-    /* Risk field */
-    if ($s_risk > 7)
-    {
-        $color = "red";
-    }
-    elseif ($s_risk > 4)
-    {
-        $color = "orange";
-    }
-    elseif ($s_risk > 2)
-    {
-        $color = "green";
-    }
-    else
-    {
-        $color = "black";
-    }
-
-    $risk_field = "<td><span class='risk_circle $color'>$s_risk</span></td>";
+    $risk_text = Util::get_risk_rext($s_risk);
+    $risk_field = '<td><span class="risk-bar '.$risk_text.'">' . _($risk_text) . '</span></td>';
 
 
     //OTX

@@ -394,26 +394,27 @@ avr_log_flush_buffer (AvrLog * log)
 
   lines_written = avr_log_get_lines_written (log);
 
-  if (((++ log->_priv->buffer_flushed) >= AVR_TYPES) &&
-      (g_hash_table_size (log->_priv->buffer_htable) > 0))
+  if ((++ log->_priv->buffer_flushed) >= AVR_TYPES)
   {
     g_message ("Input log file rotated, flushing pending events...");
-
-    buffer_keys_head = buffer_keys_list = g_hash_table_get_keys (log->_priv->buffer_htable);
-    do
+    if (g_hash_table_size (log->_priv->buffer_htable) > 0)
     {
-      key = GPOINTER_TO_INT (buffer_keys_list->data);
-      if (key > lines_written)
+      buffer_keys_head = buffer_keys_list = g_hash_table_get_keys (log->_priv->buffer_htable);
+      do
       {
-        buffer = (gchar **)g_hash_table_lookup (log->_priv->buffer_htable, GINT_TO_POINTER(key));
-        _avr_log_compose_and_write (log, buffer);
+        key = GPOINTER_TO_INT (buffer_keys_list->data);
+        if (key > lines_written)
+        {
+          buffer = (gchar **)g_hash_table_lookup (log->_priv->buffer_htable, GINT_TO_POINTER(key));
+          _avr_log_compose_and_write (log, buffer);
 
-        (void)g_hash_table_remove (log->_priv->buffer_htable, GINT_TO_POINTER(key));
+          (void)g_hash_table_remove (log->_priv->buffer_htable, GINT_TO_POINTER(key));
+        }
       }
+      while ((buffer_keys_list = g_list_next (buffer_keys_list)));
+      g_list_free (buffer_keys_head);
     }
-    while ((buffer_keys_list = g_list_next (buffer_keys_list)));
 
-    g_list_free (buffer_keys_head);
     log->_priv->buffer_flushed = 0;
     avr_log_set_lines_written (log, 0);
   }

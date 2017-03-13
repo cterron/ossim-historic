@@ -31,9 +31,9 @@
 *
 */
 ini_set('include_path', '/usr/share/ossim/include');
-
+ini_set('max_execution_time', 300);
 require_once 'av_init.php';
-
+$test_ok = TRUE;
 $conf        = $GLOBALS['CONF'];
 
 $sched_id = intval($argv[1]);
@@ -96,7 +96,6 @@ $assets_groups   = array();
 $targets         = array();
 $selected_ids    = array(); // This array will content all the selected sensor IDs
 $local_sensor_id = NULL;
-
 foreach ($id_targets as $id_target)
 {
     if (trim($id_target) != '')
@@ -816,23 +815,22 @@ if ($scan_type != 'adhoc' && count($ctest) > 0)
     <tr>
         <td style="padding-top:12px" colspan="8" id="sconnection">
             <?php
-            if($total_host > 255 && $hosts_alive === 1)
+            if($total_host > 255)
             {
                 ?>
                 <div id="total_hosts">
                 <?php
-
-                    $time_per_host = 0.34770202636719; // seconds
-
-                    $total_minutes = ceil(($total_host*$time_per_host)/60);
-
-                    $nmap_message  = _('You are about to scan a big number of hosts (<span id="thosts">#HOSTS#</span> hosts).<br /> This scan could take a long time depending on your network and the number of assets <br /> that are up.');
-
-                    $nmap_message  =  str_replace("#HOSTS#", $total_host, $nmap_message);
-
-                    //$nmap_message  =  str_replace("#MINUTES#", $total_minutes, $nmap_message);
-
-                    echo $nmap_message;
+                    if (Filter_list::MAX_VULNS_ITEMS < $total_host) {
+                        ?><span><?php
+                        echo sprintf(_('You are about to scan a big number of hosts (<span id="thosts">%s</span> hosts).<br /> Vulnerability scans can only be performed on %s assets at a time. If you choose to proceed - the scan job will be parted.'),$total_host,Filter_list::MAX_VULNS_ITEMS);
+                        ?></span><?php
+                    } elseif ($hosts_alive === 1) {
+                        $time_per_host = 0.34770202636719; // seconds
+                        $total_minutes = ceil(($total_host*$time_per_host)/60);
+                        $nmap_message  = _('You are about to scan a big number of hosts (<span id="thosts">#HOSTS#</span> hosts).<br /> This scan could take a long time depending on your network and the number of assets <br /> that are up.');
+                        $nmap_message  =  str_replace("#HOSTS#", $total_host, $nmap_message);
+                        echo $nmap_message;
+                    }
                 ?>
              </div>
              <?php
@@ -893,24 +891,15 @@ if ($scan_type != 'adhoc' && count($ctest) > 0)
 </table>
 <?php
 }
-
-$test_ok = TRUE;
-
-foreach ($ttargets as $target_data)
-{
-    // Check if all targets can be scanned
-    if($target_data['perm'] && $target_data['sperm'] && $target_data['vs'] && $target_data['snmap'])
+if ($test_ok) {
+    foreach ($ttargets as $target_data)
     {
-        $test_ok = TRUE;
-    }
-    else
-    {
-        $test_ok = FALSE;
-    }
-
-    if(!$test_ok)
-    {
-        break;
+        // Check if all targets can be scanned
+        if(!$target_data['perm'] || !$target_data['sperm'] || !$target_data['vs'] || !$target_data['snmap'])
+        {
+            $test_ok = FALSE;
+            break;
+        }
     }
 }
 ?>

@@ -45,7 +45,7 @@ Session::useractive();
 // Actual supported messages level and types
 $message_levels = array('Info', 'Warning', 'Error');
 $message_types  = array('Update', 'Deployment', 'Information', 'AlienVault'/*, 'Ticket', 'Alarm', 'Security'*/);
-
+$todelete = $av_menu->check_perm("message_center-menu", "MessageCenterDelete");
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -63,6 +63,8 @@ $message_types  = array('Update', 'Deployment', 'Information', 'AlienVault'/*, '
     $_files[] = array('src' => 'av_common.css',                                  'def_path' => TRUE);
     $_files[] = array('src' => 'jquery-ui.css',                                  'def_path' => TRUE);
     $_files[] = array('src' => 'jquery.dataTables.css',                          'def_path' => TRUE);
+    $_files[] = array('src' => 'jquery.dropdown.css',                          'def_path' => TRUE);
+
 
     Util::print_include_files($_files, 'css');
 
@@ -73,6 +75,7 @@ $message_types  = array('Update', 'Deployment', 'Information', 'AlienVault'/*, '
     $_files[] = array('src' => 'jquery-ui.min.js',                               'def_path' => TRUE);
     $_files[] = array('src' => 'jquery.tipTip.js',                               'def_path' => TRUE);
     $_files[] = array('src' => 'jquery.dataTables.js',                           'def_path' => TRUE);
+    $_files[] = array('src' => 'jquery.dropdown.js',                           'def_path' => TRUE);
     $_files[] = array('src' => 'utils.js',                                       'def_path' => TRUE);
     $_files[] = array('src' => 'messages.php',                                   'def_path' => TRUE);
     $_files[] = array('src' => 'token.js',                                       'def_path' => TRUE);
@@ -90,7 +93,6 @@ $message_types  = array('Update', 'Deployment', 'Information', 'AlienVault'/*, '
 <body>
 
 <div id="notifications_container">
-
     <div id="av_info"></div>
 
     <!-- Notifications filters -->
@@ -156,24 +158,34 @@ $message_types  = array('Update', 'Deployment', 'Information', 'AlienVault'/*, '
     </div>
 
     <div class="notifications_right">
-
+        <?php if ($todelete) { ?>
+        <div class="av_table_actions">
+            <button id="button_action" class="button avt_action small disabled av_b_disabled" disabled="disabled" href="javascript:;" data-dropdown="#dropdown-actions" data-selection="avt_action"><?php echo _("Actions")?>  ▾ </button>
+            <div id="dropdown-actions" data-bind="dropdown-actions" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
+                <ul class="dropdown-menu center">
+                    <li><a href="#" id="delete"><?php echo _("Delete")?></a></li>
+                </ul>
+            </div>
+        </div>
+        <?php } ?>
         <!-- Notifications list -->
         <div id="notifications_list">
             <table class="table_data">
                 <thead>
                 <tr>
+                    <?php if ($todelete) { ?>
+                    <th><input type='checkbox' id='chk-all-rows'/></th>
+                    <?php } ?>
                     <th><?php echo _('Date'); ?></th>
                     <th><?php echo _('Subject'); ?></th>
                     <th><?php echo _('Priority'); ?></th>
                     <th><?php echo _('Type'); ?></th>
-                    <th><?php echo _('Actions') ?></th>
                 </tr>
                 </thead>
                 <tbody>
                 </tbody>
             </table>
         </div>
-
         <!-- Notifications details -->
         <div id="notification_details"></div>
 

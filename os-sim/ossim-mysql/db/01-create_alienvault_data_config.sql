@@ -237,7 +237,8 @@ INSERT IGNORE INTO `acl_perm` (`id`, `type`, `name`, `value`, `description`, `gr
 (83, 'MENU', 'environment-menu', 'TrafficCapture', 'Environment -> Traffic Capture', 1, 0, 1, '03.12'),
 (84, 'MENU', 'dashboard-menu', 'IPReputation', 'Dashboard -> Open Threat Exchange, Configuration -> Open Threat Exchange', 0, 0, 1, '01.06'),
 (85, 'MENU', 'environment-menu', 'AlienVaultInventory', 'Environment -> Assets & Groups -> Schedule Scan', 0, 0, 1, '03.03'),
-(86, 'MENU', 'configuration-menu', 'AlienVaultInventory', 'Configuration -> Deployment -> Scheduler', 0, 0, 1, '05.04');
+(86, 'MENU', 'configuration-menu', 'AlienVaultInventory', 'Configuration -> Deployment -> Scheduler', 0, 0, 1, '05.04'),
+(87, 'MENU', 'message_center-menu', 'MessageCenterDelete', 'MessageCenter',0,0,1,'13.01');
 
 INSERT IGNORE INTO credential_type(name) VALUES ("SSH");
 INSERT IGNORE INTO credential_type(name) VALUES ("Windows");
@@ -315,6 +316,7 @@ INSERT IGNORE INTO config (conf, value) VALUES ('backup_day', '5');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_events', '4000000');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_hour', '01:00');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_netflow', '45');
+INSERT IGNORE INTO config (conf, value) VALUES ('backup_conf_pass', '');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_user', 'ossim');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_pass', 'ossim');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_admin_user', 'ovas-super-admin');
@@ -489,5 +491,5 @@ INSERT IGNORE INTO config (conf, value) VALUES ('internet_connection', 1);
 
 INSERT IGNORE INTO config (conf, value) VALUES ('track_usage_information', '');
 
-REPLACE INTO config (conf, value) VALUES ('last_update', '2016-05-19');
-REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.2.4');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2016-08-02');
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.3.0');

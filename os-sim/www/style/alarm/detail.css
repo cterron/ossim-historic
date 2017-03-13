@@ -123,19 +123,15 @@ header("Content-type: text/css");
 #ad_summary .item
 {
     float: left;    
+    width: 9%;
 }
 
-#ad_status, #ad_risk, #ad_events
+#ad_created.item, #ad_duration.item
 {
-    width: 10%;
+    width: 12%;
 }
 
-#ad_created, #ad_duration
-{
-    width: 15%;
-}
-
-#ad_attack_pattern, #ad_otx
+#ad_attack_pattern.item, #ad_id.item
 {
     width: 20%;
 }

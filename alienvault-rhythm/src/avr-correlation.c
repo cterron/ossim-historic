@@ -385,7 +385,7 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
       {
         if (file_stat.st_size < (off_t)file_len)
         {
-          // Flush pending buffers.
+          // Increment "flush buffer" counter (and perform actual flush when last thread notices the truncation)
           avr_log_flush_buffer (correlation->_priv->event_log);
 
           // Set cursor at the start of the new file.
@@ -404,7 +404,7 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
           }
 
           file_len = 0;
-          correlation->_priv->lines_parsed = 0;
+          g_atomic_int_set (&correlation->_priv->lines_parsed, 0);
           g_message ("Thread: %s File has been truncated.",
                      avr_type_names[correlation->_priv->type]);
         }
@@ -452,6 +452,13 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
     // Parse a line, match a line.
     parsed_array = _avr_correlation_parse_line (correlation, line_str, utf8_line_len);
 
+    // A failure parsing a line is still considered as a parsed line.
+    // Two or more threads will be concurrently reading the same file,
+    // so to avoid mixing lines that cannot be parsed by one thread
+    // with the same line parsed successfully in another, just take this
+    // for granted.
+    g_atomic_int_inc (&correlation->_priv->lines_parsed);
+
     // No need to trigger an awful error message here, just return.
     if (parsed_array != NULL)
     {
@@ -476,7 +483,8 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
         // Get the event header info.
         header_str = (gchar *)g_ptr_array_index (parsed_array, 0);
 
-        // Send buffer to be written.
+        // Insert given thread's correlation result into log buffer htable (key = line index);
+        // buffer is dumped when all threads have provided their results for given line index
         avr_log_write_buffer (correlation->_priv->event_log, header_str, result_str, g_atomic_int_get (&correlation->_priv->lines_parsed));
 
         if (result_str != NULL)
@@ -511,13 +519,6 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
 static GPtrArray *
 _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_str, gsize line_len)
 {
-  // A failure parsing a line is still considered as a parsed line.
-  // Two or more threads will be concurrently reading the same file,
-  // so to avoid mixing lines that cannot be parsed by one thread
-  // with the same line parsed successfully in another, just take this
-  // for granted.
-  g_atomic_int_inc (&correlation->_priv->lines_parsed);
-
   g_return_val_if_fail (AVR_IS_CORRELATION(correlation), NULL);
   g_return_val_if_fail (line_str, NULL);
   g_return_val_if_fail (line_len > 10, NULL);

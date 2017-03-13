@@ -487,6 +487,21 @@ def db_add_system(system_id, name, admin_ip, vpn_ip=None, profile='', server_id=
 
 
 @require_db
+def db_get_systems():
+    try:
+        sp_call = sqltext('select inet_ntoa(conv(hex(admin_ip), 16, 10)) from system;')
+        result = db.session.connection(mapper=System).execute(sp_call)
+        data = result.fetchall()
+    except Exception as e:
+        api_log.error(str(e))
+        db.session.rollback()
+        return False, 'Something wrong happened while retrieving system IPs from the database'
+    if len(data) <= 0:
+        return False, data
+    return True, [j for i in data for j in i if j is not None]
+
+
+@require_db
 def db_system_update_admin_ip(system_id, admin_ip):
 
     if not is_valid_ipv4(admin_ip):

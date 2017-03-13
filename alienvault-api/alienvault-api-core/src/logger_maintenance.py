@@ -28,7 +28,7 @@
 #
 import os
 import logging
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 from celery.utils.log import get_logger
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -38,17 +38,17 @@ from db.methods.system import get_logger_storage_days_life_time, get_server_addr
 from ansiblemethods.server.logger import delete_raw_logs
 
 logger = get_logger("celery")
-MAX_TRIES = 3 # Maximun number of tries before launch an alarm
-TIME_BETWEEN_TRIES  = 60 # Time between tries in seconds
+MAX_TRIES = 3  # Maximun number of tries before launch an alarm
+TIME_BETWEEN_TRIES = 60  # Time between tries in seconds
 
 notifier = logging.getLogger("loggertask_notifier")
 notifier.setLevel(logging.DEBUG)
 
-#add file handler
+# add file handler
 fh = logging.FileHandler("/var/log/alienvault/api/logger-notifications.log")
 fh.setLevel(logging.DEBUG)
 
-#formatter
+# formatter
 frmt = logging.Formatter('%(asctime)s [FRAMEWORKD] -- %(levelname)s -- %(message)s', "%Y-%m-%d %H:%M:%S.000000")
 fh.setFormatter(frmt)
 
@@ -57,9 +57,10 @@ notifier.addHandler(fh)
 
 # touch the file and change its permissions
 if not os.path.isfile("/var/log/alienvault/api/logger-notifications.log"):
-    open("/var/log/alienvault/api/logger-notifications.log","a").close()
+    open("/var/log/alienvault/api/logger-notifications.log", "a").close()
 if oct(os.stat("/var/log/alienvault/api/logger-notifications.log").st_mode & 0777) != '0644':
     os.chmod("/var/log/alienvault/api/logger-notifications.log", 0644)
+
 
 def clean_logger():
     # First obtain the logger conf from
@@ -68,16 +69,16 @@ def clean_logger():
         conf = get_logger_storage_days_life_time()
         if conf > 0:
             d = datetime.utcnow().date() + timedelta(days=-conf)
-            args = "end=%s" % datetime.strftime(d,"%Y/%m/%d")
+            args = "end=%s" % datetime.strftime(d, "%Y/%m/%d")
             # Call ansible
             # I need to obtain the IP from the Alienvault_Config
             try:
                 server_ip = get_server_address_from_config()
                 if server_ip is not None:
                     # Verify the ip
-                    (result, msg) = delete_raw_logs(server_ip, end=datetime.strftime(d,"%Y/%m/%d"))
+                    (result, msg) = delete_raw_logs(server_ip, end=datetime.strftime(d, "%Y/%m/%d"))
                     return_value = result
-                    if result == False:
+                    if not result:
                         notifier.error("Can't delete all logs in %s msg: %s" % (server_ip, str(msg)))
                     else:
                         notifier.debug("Result from delete_raw_logs" + str(msg))
@@ -98,5 +99,3 @@ def clean_logger():
         notifier.error("Multiple entris in Alienvault_Config with key  logger_storage_days_lifetime")
 
     return return_value
-
-

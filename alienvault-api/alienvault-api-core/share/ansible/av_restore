@@ -42,16 +42,17 @@ options:
 EXAMPLES = """
 """
 
-import subprocess as sub
-import os
-import yaml
-import shutil
-import sys
-import os.path
 import logging
+import os
+import os.path
+import shutil
+import subprocess as sub
+import sys
+
+import yaml
+
 sys.path.append("/usr/share/alienvault-center/av-libs/")
 from avconfig import ossimsetupconfig
-
 
 backup_path = "/var/alienvault/backup/"
 backup_config_path = "/etc/ansible/backup/"
@@ -126,12 +127,12 @@ def disk_space_available(percentage=80):
 
 
 def is_alienvault_command_running():
-    """Check if there is a alienvault command (reconfig/update) unning
+    """Check if there is a alienvault command (reconfig/update) running
 
     :return: False if there isn't av process running, True otherwise
     """
     try:
-        cmd = "ps aux | grep 'alienvault-reconfig\|ossim-reconfig\|alienvault-update' | grep -v grep | grep -v tail | wc -l"
+        cmd = "ps aux | grep 'alienvault-reconfig\|ossim-reconfig\|alienvault-update' | grep -v 'grep\|tail' | wc -l"
         return_code, output, error = _run_command(cmd)
         if return_code != 0 or int(output) > 0:
             return True
@@ -149,11 +150,6 @@ def get_version_info():
            number
            system
     """
-    version = {}
-    version['usm'] = ''
-    version['number'] = ''
-    version['system'] = ''
-
     try:
         return_code, output, error = _run_command("alienvault-api about | grep 'Version:'")
         if return_code != 0:
@@ -162,7 +158,7 @@ def get_version_info():
         return False, str(e)
 
     version_str = output.split("Version: ")[1].split(' ')
-    version = {}
+    version = dict()
     version['usm'] = version_str[0]
     if len(version_str) > 1:
         version['number'] = version_str[1].rstrip('\n')
@@ -234,8 +230,7 @@ def match_backup_profile(backup_type, backup_file, profile):
     if backup_info['profile'] != system_info['profile']:
         return False, "Backup profile doesn't match system profile"
 
-    if (backup_info['version'] != system_info['version'] and
-            backup_info['version'] == 'ALIENVAULT'):
+    if backup_info['version'] != system_info['version'] and backup_info['version'] == 'ALIENVAULT':
         return False, "Backup cannot be restored on this system"
 
     if backup_info['version_number'] != system_info['version_number']:
@@ -287,6 +282,24 @@ def create_backup_folder():
     return True, backup_folder
 
 
+def decrypt_backup(backup_file, backup_pass=''):
+    success = True
+    decrypted_backup = os.path.splitext(backup_file)[0]
+    cmd = "gpg --decrypt --batch --yes --passphrase %s --output %s %s" % (backup_pass,
+                                                                          decrypted_backup,
+                                                                          backup_file)
+    return_code, output, error = _run_command(cmd)
+
+    if return_code != 0:
+        success = False
+        if 'decryption failed: bad key' in error:
+            error = ('Password incorrect. Please provide a valid password for the given backup '
+                     'to complete restoration process.')
+        decrypted_backup = "Error decrypting backup: %s" % error
+
+    return success, decrypted_backup
+
+
 def decompress_backup(backup_file, backup_folder):
     try:
         compress_program = get_compress_program()
@@ -294,6 +307,7 @@ def decompress_backup(backup_file, backup_folder):
                                                                       backup_file,
                                                                       backup_folder)
         return_code, output, error = _run_command(cmd)
+
         if return_code != 0:
             return False, error
     except Exception as e:
@@ -349,7 +363,7 @@ def restore_full_database(backup_folder, database_info, database):
                                                       filename)
             return_code, output, error = _run_command(cmd)
             if return_code != 0:
-                return False,  error
+                return False, error
     except Exception as e:
         return False, "restore_full_database: %s" % str(e)
     return True, None
@@ -387,9 +401,7 @@ def run_db_update():
     return True, None
 
 
-def run_restore(backup_type='configuration',
-                backup_file=None,
-                reboot=True):
+def run_restore(backup_type='configuration', backup_file=None, backup_pass="", reboot=True):
     """ Restore a backup
     """
     log_path = "/var/log/alienvault/backup/"
@@ -461,10 +473,25 @@ def run_restore(backup_type='configuration',
         return False, backup_folder
     restore_log.debug("Temporal backup folder created")
 
+    # Decompress main container.
     success, msg = decompress_backup(backup_file, backup_folder)
     if not success:
         restore_log.error("Error decompressing backup file: %s" % msg)
         return False, msg
+
+    # Decrypt backup data with the given password.
+    backup_data_file = os.path.join(backup_folder, 'data.tar.gz.enc')
+    success, backup_file = decrypt_backup(backup_data_file, backup_pass)
+    if not success:
+        restore_log.error("Error decrypting backup file: %s" % backup_file)
+        return False, backup_file
+    else:
+
+        success, msg = decompress_backup(backup_file, backup_folder)
+        if not success:
+            restore_log.error("Error decompressing backup data file: %s" % msg)
+            return False, msg
+
     restore_log.info("Backup %s decompressed" % backup_file)
 
     try:
@@ -502,7 +529,7 @@ def run_restore(backup_type='configuration',
             # Running db update script
             success, msg = run_db_update()
             if not success:
-                msg = "Error running db update:" % msg
+                msg = "Error running db update: %s" % msg
                 raise Exception(msg)
 
         # Restore Files
@@ -545,20 +572,25 @@ def run_restore(backup_type='configuration',
 def main():
     """ main backup
     """
-    module = AnsibleModule(argument_spec=dict(
-        backup_type=dict(default='configuration', choices=['configuration', 'data']),
-        backup_file=dict(required=True),
-        reboot=dict(default=True, choices=BOOLEANS, type='bool')))
+    module = AnsibleModule(
+        argument_spec=dict(
+            backup_type=dict(default='configuration', choices=['configuration', 'data']),
+            backup_file=dict(required=True),
+            backup_pass=dict(default=''),
+            reboot=dict(default=True, choices=BOOLEANS, type='bool')),
+        no_log=True)
 
     backup_type = module.params.get('backup_type')
     backup_file = module.params.get('backup_file')
+    backup_pass = module.params.get('backup_pass')
     reboot = module.params.get('reboot')
 
-    success, data = run_restore(backup_type, backup_file, reboot)
+    success, data = run_restore(backup_type, backup_file, backup_pass=backup_pass, reboot=reboot)
     if not success:
         module.fail_json(msg=data)
 
     module.exit_json(changed=True, data=data)
+
 
 # this is magic, see lib/ansible/module_common.py
 #<<INCLUDE_ANSIBLE_MODULE_COMMON>>

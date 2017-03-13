@@ -56,6 +56,7 @@ class AVOssimSetupConfigHandler():
     NO_SECTION_NAME_ADMIN_NETMASK = "admin_netmask"
     NO_SECTION_NAME_DOMAIN = "domain"
     NO_SECTION_NAME_EMAIN_NOTIFY = "email_notify"
+    NO_SECTION_NAME_MAX_RETRIES = "max_retries"
     NO_SECTION_NAME_HOSTNAME = "hostname"
     NO_SECTION_NAME_INTERFACE = "interface"
     NO_SECTION_NAME_MAILSERVER_RELAY = "mailserver_relay"
@@ -534,6 +535,14 @@ class AVOssimSetupConfigHandler():
         """Returns the 'email_notify' field
         """
         return self.__get_variable_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_EMAIN_NOTIFY)
+
+    @refresh
+    def get_max_retries(self):
+        result = subprocess.check_output("redis-cli get max_retries", shell=True)
+        try:
+            return int(result) or '0\n'
+        except ValueError:
+            return 10
 
     @refresh
     def get_general_hostname(self):
@@ -1317,6 +1326,19 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_EMAIN_NOTIFY, result)
         return result
 
+    def check_max_retries(self, value):
+        """ Check whether the max_retries is valid
+            value should be int
+        """
+        try:
+            int(value)
+        except ValueError:
+            logger.warning("Invalid max_retries ... %s" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_MAX_RETRIES_INVALID_VALUE, value)
+            self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAX_RETRIES, result)
+        else:
+            result = AVConfigParserErrors.ALL_OK
+        return result
 
     def check_general_hostname(self, value):
         """Check whether the hostname is valid
@@ -2043,6 +2065,23 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_EMAIN_NOTIFY, value)
         return result
 
+    def set_max_retries(self, value):
+        """ Sets max retries
+        """
+        if not self.__avconfig_loaded_ok:
+            logger.error("set_general_hostname -> File not loaded!")
+            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
+
+        if value == "":
+            value = get_current_max_retries()
+        result = self.check_max_retries(value)
+        if result == AVConfigParserErrors.ALL_OK:
+            value, min_v, max_v = int(value), 0, 20
+            value = min_v if value < min_v else value
+            value = max_v if value > max_v else value
+            subprocess.call("redis-cli set max_retries %s" % value, shell=True)
+            self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAX_RETRIES, value)
+        return result
 
     def set_general_hostname(self, value):
         """Sets the hostname value
@@ -2059,7 +2098,6 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_HOSTNAME, value)
         return result
-
 
     def set_general_interface(self, value):
         """Sets the interface value
@@ -2955,6 +2993,10 @@ class AVOssimSetupConfigHandler():
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_EMAIN_NOTIFY, value)
 
+    def is_default_max_retries(self, value):
+        """Returns whether the value is a default value
+        """
+        return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAX_RETRIES, value)
 
     def is_default_general_hostname(self, value):
         """Returns whether the value is a default value

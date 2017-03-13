@@ -352,8 +352,8 @@ class Alarm_groups
         $intent        = intval($params['intent']);
         $num_events    = $params['num_events'];
         $num_events_op = $params['num_events_op'];
-        $risk_level    = $params['risk_level'];
-        $risk_level_op = $params['risk_level_op'];
+        $min_risk      = $params['min_risk'];
+        $vmax_risk     = $params['vmax_risk'];
         $tag           = $params['tag'];
         $limit         = isset($params['limit']) ? $params['limit'] : 'LIMIT 0,10';
     
@@ -485,12 +485,16 @@ class Alarm_groups
         }
 	//risk level
 	$having = "";
-        if ($risk_level != "" && $risk_level_op != "")
-        {
-            $risk_level_op = $risk_level_op == "less" ? "<=" :($risk_level_op == "more" ? ">=" : "=");
-            $having = " HAVING max_risk $risk_level_op $risk_level ";
+        $having_params = array();
+        if ($min_risk) {
+            $having_params[] = " max_risk >= $min_risk ";
         }
-
+        if ($vmax_risk != "" && $vmax_risk !=2) {
+            $having_params[] = " max_risk <= $vmax_risk ";
+        }
+        if ($having_params) {
+            $having = " HAVING ".implode(" AND ",$having_params);
+        }
         // Tags
         if ($tag != "")
         {           
@@ -608,7 +612,7 @@ class Alarm_groups
         elseif ($group_type == "namedate") 
         {
             $query = "SELECT SQL_CALC_FOUND_ROWS count( * ) AS howmany,
-                CONCAT( sha1( alarm_event.name ) , DATE( alarm_event.timestamp ) ) AS group_id,
+                sha1( alarm_event.name ) AS group_id,
                 alarm_event.name AS name,       
                 max(alarm_event.risk) as max_risk,
                 DATE( alarm_event.timestamp ) AS day
@@ -638,8 +642,7 @@ class Alarm_groups
         else 
         {
             $query = "SELECT SQL_CALC_FOUND_ROWS count( * ) AS howmany,
-                CONCAT( sha1( alarm_event.name ) , 
-                CONCAT( 'S', hex(alarm_event.src_ip), 'D', hex(alarm_event.dst_ip), DATE( alarm_event.timestamp ) ) ) AS group_id,
+                sha1( alarm_event.name) AS group_id,
                 alarm_event.name,
                 inet6_ntoa( alarm_event.src_ip ) AS src_ip,
                 inet6_ntoa( alarm_event.dst_ip ) AS dst_ip,

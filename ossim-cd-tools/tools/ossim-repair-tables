@@ -4,7 +4,7 @@
 # Call with a database name in order to repair only one
 
 #
-# Cleannig orphans siem tables
+# Cleaning orphans siem tables
 #
 
 if [ "$1" == '--orphans' ]; then
@@ -34,7 +34,7 @@ if [ "$1" == '--orphans' ]; then
             if [ $is_pro -eq 1 ]; then
                 echo "DROP TRIGGER IF EXISTS count_acid_event;" | ossim-db alienvault_siem
             fi
-            if [ "ENGINE" == "TokuDB" ]; then
+            if [ "$ENGINE" == "TokuDB" ]; then
                 echo "alter table acid_event engine=tokudb;" | ossim-db alienvault_siem
                 echo "alter table extra_data engine=tokudb;" | ossim-db alienvault_siem
                 echo "alter table idm_data engine=tokudb;" | ossim-db alienvault_siem

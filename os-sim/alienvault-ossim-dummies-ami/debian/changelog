@@ -1,8 +1,20 @@
-alienvault-ossim-dummies-ami (5.2.4) stable; urgency=low
+alienvault-ossim-dummies-ami (5.3.0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 25 Apr 2016 05:10:50 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 27 Jun 2016 04:38:50 -0400
+
+alienvault-ossim-dummies-ami (5.3) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 23 May 2016 05:15:56 -0400
+
+alienvault-ossim-dummies-ami (5.2.5) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 25 Apr 2016 05:11:40 -0400
 
 alienvault-ossim-dummies-ami (5.2.4) unstable; urgency=low
 

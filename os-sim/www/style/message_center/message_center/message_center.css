@@ -108,10 +108,24 @@ table.dataTable tbody tr td
     text-align: left;
 }
 
-table.dataTable tbody tr td:nth-child(5)
+.dataTable tbody tr td:nth-child(1)
 {
     text-align: center;
     cursor: default;
+}
+
+
+.dataTable .sorting_disabled .DataTables_sort_icon  {
+    display: none;
+}
+
+.dataTable .sorting_disabled .DataTables_sort_wrapper {
+    padding: 0;
+}
+
+.av_table_actions {
+    float: right;
+    margin-bottom: 5px;
 }
 
 table.dataTable tbody tr.selected td

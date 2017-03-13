@@ -60,8 +60,8 @@ $intent 	   = intval(POST('intent'));
 $directive_id  = POST('directive_id');
 $num_events    = POST('num_events');
 $num_events_op = POST('num_events_op');
-$risk_level   = POST('risk_level');
-$risk_level_op   = POST('risk_level_op');
+$min_risk   = POST('min_risk') != "" ? POST('min_risk') : 0;
+$vmax_risk   = POST('vmax_risk') != "" ? POST('vmax_risk') : 2;
 $tag           = POST('tag');
 $show_options  = POST('show_options');
 $no_resolv 	   = intval(POST('no_resolv'));
@@ -79,8 +79,8 @@ ossim_valid($intent,          OSS_DIGIT, OSS_NULLABLE, 							       'illegal:' 
 ossim_valid($directive_id,    OSS_DIGIT, OSS_NULLABLE, 							       'illegal:' . _("Directive ID"));
 ossim_valid($num_events,      OSS_DIGIT, OSS_NULLABLE, 								   'illegal:' . _("Num Events"));
 ossim_valid($num_events_op,   OSS_ALPHA, OSS_NULLABLE, 							       'illegal:' . _("Num Events Operator"));
-ossim_valid($risk_level,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Risk_level"));
-ossim_valid($risk_level_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Risk_level_op"));
+ossim_valid($vmax_risk,        OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Max_risk"));
+ossim_valid($min_risk,        OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Min_risk"));
 ossim_valid($tag,             OSS_HEX, OSS_NULLABLE, 								   'illegal:' . _("Tag"));
 ossim_valid($no_resolv,       OSS_DIGIT, OSS_NULLABLE, 								   'illegal:' . _("No Resolv"));
 ossim_valid($hide_closed,     OSS_DIGIT, OSS_NULLABLE, 					               'illegal:' . _("Hide Closed"));
@@ -129,8 +129,8 @@ $criteria = array(
     'intent'        => $intent,
     'num_events'    => $num_events,
     'num_events_op' => $num_events_op,
-    'risk_level'    => $risk_level,
-    'risk_level_op' => $risk_level_op,
+    'vmax_risk'      => $vmax_risk,
+    'min_risk'      => $min_risk,
     'tag'           => $tag,
     'limit'         => "LIMIT $offset, $limit"
 );
@@ -307,25 +307,8 @@ foreach($alarm_group as $group)
     $res[] = $date;
 
 	$res[] = $owner;
-	
-	if ($max_risk > 7)
-	{
-        $risk_class = 'red';
-	}
-	elseif ($max_risk > 4)
-	{
-        $risk_class = 'orange';
-	}
-	elseif ($max_risk > 2)
-	{
-		$risk_class = 'green';
-	}
-	else
-	{
-	     $risk_class = 'black';
-	}
-	
-	$res[] = "<span class='risk_circle $risk_class'>$max_risk</span>";
+	$risk_text = Util::get_risk_rext($max_risk);
+	$res[] = '<span class="risk-bar '.$risk_text.'">' . _($risk_text) . '</span>';
 
 	
 	$desc = "<input type='text' class='ag_descr' title='$descr' $av_description size='30' style='height: 16px;' value='$descr'>";

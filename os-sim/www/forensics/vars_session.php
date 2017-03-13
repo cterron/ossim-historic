@@ -158,22 +158,23 @@ if (preg_match("/^\!?[A-F0-9]{32}$/i",$_GET["sensor"]))
      * Resolve Sensor ID -> Device ID
      * When multiple device_id1,device_id2,device_id3 GetSensorName will resolve the first one
      */
-    $sids = $conn_aux->GetOne("SELECT GROUP_CONCAT(device.id ORDER BY device.id ASC) as id
+    $sids = array();
+    $result = $conn_aux->Execute("SELECT device.id as id
                                FROM alienvault_siem.device, alienvault.sensor
                                WHERE device.sensor_id=sensor.id AND device.sensor_id=UNHEX(?)
-                               GROUP BY sensor_id", array(str_replace('!','',$_GET["sensor"])));
-
-    // GROUP_CONCAT() function returns a final comma character sometimes
-    $sids = preg_replace('/,$/', '', $sids);
-    
-    if (empty($sids))
-    {
+                               ORDER BY device.id ASC", array(str_replace('!','',$_GET["sensor"])));
+    if ($result) {
+        $sids = array();
+        while (!$result->EOF) {
+            $sids[] = $result->fields["id"];
+            $result->MoveNext();
+        }
+    }
+    if (empty($sids)) {
         $_GET["ctx"]    = $_GET["sensor"];
         $_GET["sensor"] = '';
-    }
-    else
-    {
-        $_GET["sensor"] = $nop . $sids;
+    } else {
+        $_GET["sensor"] = $nop . implode(",",$sids);
         $_GET["ctx"]    = '';
     }
 }

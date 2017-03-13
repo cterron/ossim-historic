@@ -72,9 +72,9 @@ $intent          = intval(GET('intent'));
 $sensor_query    = GET('sensor_query');
 $tag             = GET('tag');
 $num_events      = GET('num_events');
-$risk_level      = GET('risk_level');
+$max_risk        = GET('max_risk') != "" ? GET('max_risk') : 2;
 $num_events_op   = GET('num_events_op');
-$risk_level_op   = GET('risk_level_op');
+$min_risk        = GET('min_risk') != "" ? GET('min_risk') : 0;
 $date_from       = GET('date_from');
 $date_to         = GET('date_to');
 $ds_id           = GET('ds_id');
@@ -118,8 +118,8 @@ ossim_valid($sensor_query,    OSS_HEX, OSS_NULLABLE,                            
 ossim_valid($tag,             OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Tag"));
 ossim_valid($num_events,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Num_events"));
 ossim_valid($num_events_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Num_events_op"));
-ossim_valid($risk_level,      OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Risk_level"));
-ossim_valid($risk_level_op,   OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Risk_level_op"));
+ossim_valid($max_risk,        OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Max_risk"));
+ossim_valid($min_risk,        OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Min_risk"));
 ossim_valid($ds_id,           OSS_DIGIT, "-", OSS_NULLABLE,                                 'illegal:' . _("Datasource"));
 ossim_valid($beep,            OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Beep"));
 ossim_valid($host_id,         OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Host ID"));
@@ -153,8 +153,8 @@ $parameters['tag']                    = "tag="            .$tag;
 $parameters['num_alarms_page']        = "num_alarms_page=".$num_alarms_page;
 $parameters['num_events']             = "num_events="     .$num_events;
 $parameters['num_events_op']          = "num_events_op="  .$num_events_op;
-$parameters['risk_level']             = "risk_level="     .$risk_level;
-$parameters['risk_level_op']          = "risk_level_op="  .$risk_level_op;
+$parameters['max_risk']               = "max_risk="       .$max_risk;
+$parameters['min_risk']               = "min_risk="       .$min_risk;
 $parameters['ds_id']                  = "ds_id="          .$ds_id;
 $parameters['ds_name']                = "ds_name="        .urlencode($ds_name);
 $parameters['beep']                   = "beep="           .$beep;
@@ -215,7 +215,8 @@ $alarm_url = Alarm::get_alarm_path();
             array('src' => 'jquery.switch.css',             'def_path' => TRUE),
             array('src' => '/alarm/console.css',            'def_path' => TRUE),
             array('src' => 'av_dropdown_tag.css',           'def_path' => TRUE),
-            array('src' => 'av_tags.css',                   'def_path' => TRUE)
+            array('src' => 'av_tags.css',                   'def_path' => TRUE),
+            array('src' => 'ui.slider.extras.css',          'def_path' => TRUE)
         );
         
         Util::print_include_files($_files, 'css');
@@ -238,7 +239,8 @@ $alarm_url = Alarm::get_alarm_path();
             array('src' => 'jquery.hotkeys.js',                 'def_path' => TRUE),
             array('src' => 'av_tags.js.php',                    'def_path' => TRUE),
             array('src' => 'av_dropdown_tag.js',                'def_path' => TRUE),
-            array('src' => '/alarm/js/alarm_console.js.php',    'def_path' => FALSE)
+            array('src' => '/alarm/js/alarm_console.js.php',    'def_path' => FALSE),
+            array('src' => 'selectToUISlider.jQuery.js',         'def_path' => TRUE)
         );
         
         Util::print_include_files($_files, 'js');
@@ -1215,6 +1217,11 @@ $alarm_url = Alarm::get_alarm_path();
         
         $(document).ready(function()
         {
+            $('#arangeA, #arangeB').selectToUISlider({
+                tooltip: false,
+                labelSrc: 'text'
+            });
+
             var i_am_admin = <?php echo (Session::am_i_admin()) ? 'true' : 'false' ?>;
 
             var o = 
@@ -1831,14 +1838,25 @@ if (!isset($_GET["hide_search"]))
                     <option value="more" <?php if ($num_events_op == "more") echo "selected='selected'"?>>&gt;=</option>
                 </select>
                 &nbsp;<input type="text" name="num_events" id='num_events' size='3' value="<?php echo $num_events ?>" class="alarms_op_value"/>
+                <label><?php echo _('Risk level in alarms')?></label>
 
-                <label for="risk_level"><?php echo _('Risk level in alarms')?></label>
-                <select name="risk_level_op" id='risk_level_op' class="alarms_op">
-                    <option value="less" <?php if ($risk_level_op == "less") echo "selected='selected'"?>>&lt;=</option>
-                    <option value="more" <?php if ($risk_level_op == "more") echo "selected='selected'"?>>&gt;=</option>
+                <div id="asset_value_slider" class="filter_left_slider">
+                <?php
+                $risks = array(
+                    _("Low"),_("Medium"),_("High")
+                );
+                $risk_selected = function($risk,$key,$risk_selected) {
+                    $selected = $key == $risk_selected ? "selected='selected'" : "";
+                    echo "<option value='$key' $selected>"._($risk)."</option>";
+                };
+                ?>
+                <select class="filter_range hidden" id="arangeA" name="min_risk">
+                    <?php array_walk($risks,$risk_selected,$min_risk);?>
                 </select>
-                &nbsp;<input type="text" name="risk_level" id="risk_level" size='3' value="<?php echo $risk_level ?>" class="alarms_op_value"/>
-
+                <select class="filter_range hidden" id="arangeB" name="max_risk">
+                    <?php array_walk($risks,$risk_selected,$max_risk);?>
+                </select>
+                </div>
             </div>
             <div class='p_column'>
                 

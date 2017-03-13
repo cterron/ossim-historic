@@ -1224,24 +1224,18 @@ class Alarm
         $net_arr  = ($net  != "") ? explode(',',$net)  : array();
         $hosts    = Session::get_host_where_intersect($host_arr);
         $nets     = Session::get_net_where_intersect($net_arr);
-        if ($hosts != "" && !Session::only_ff_host())
-        {
-            if ($nets != "" && !Session::only_ff_net())
-            {
-                $where    .= " (ah.id_host in ($hosts) OR an.id_net in ($nets))";
-                $ctx_join .= " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm LEFT JOIN alarm_nets an ON a.backlog_id=an.id_alarm";
-            }
-            else
-            {
-                $where    .= " ah.id_host in ($hosts)";
-                $ctx_join .= " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm";
-            }
-        }
-        elseif ($nets != "" && !Session::only_ff_net())
-        {
-            $where    .= " an.id_net in ($nets)";
-            $ctx_join .= " LEFT JOIN alarm_nets an ON a.backlog_id=an.id_alarm";
-        }
+	if ($hosts || $nets) {
+		$hwhere = $nwhere = "FALSE";
+		if ($hosts) {
+			$hwhere = " ah.id_host in ($hosts) ";
+			$ctx_join .= " LEFT JOIN alarm_hosts ah ON a.backlog_id=ah.id_alarm ";
+		}
+		if ($nets) {
+			$nwhere = " an.id_net in ($nets) ";
+			$ctx_join .= " LEFT JOIN alarm_nets an ON a.backlog_id=an.id_alarm ";
+		}
+		$where .= " ($hwhere OR $nwhere) ";
+	}
         // CTX's filter
         $ctxs = Session::get_ctx_where();
         if ($ctxs != "")
@@ -1291,8 +1285,8 @@ class Alarm
         $tag                = $params['tag'];
         $num_events         = $params['num_events'];
         $num_events_op      = $params['num_events_op'];
-        $risk_level         = $params['risk_level'];
-        $risk_level_op      = $params['risk_level_op'];
+        $max_risk           = $params['max_risk'];
+        $min_risk           = $params['min_risk'];
         $plugin_id          = $params['plugin_id'];
         $plugin_sid         = $params['plugin_sid'];
         $ctx                = $params['ctx'];
@@ -1458,9 +1452,8 @@ class Alarm
             $join['plugin_sid'] = 'alienvault.plugin_sid p';
 
             $query       = escape_sql($query,$conn);
-            $where[]     = ' a.plugin_id=p.plugin_id AND a.plugin_sid=p.sid AND (p.name LIKE "%'.$query.'%" or ki.name LIKE "%'.$query.'%" or ca.name LIKE "%'.$query.'%" or ta.subcategory LIKE "%'.$query.'%")';
+            $where[]     = ' a.plugin_id=p.plugin_id AND a.plugin_sid=p.sid AND (p.name LIKE "%'.$query.'%" or ki.name LIKE "%'.$query.'%" or ca.name LIKE "%'.$query.'%" or ta.subcategory LIKE "%'.$query.'%" or a.backlog_id=unhex("'.$query.'"))';
         }
-
         /* Do not show logical deleted alarms */
         $join['backlog'] = 'backlog b';
         $where[]         = "a.backlog_id=b.id AND b.timestamp<>'1970-01-01 00:00:00'";
@@ -1547,13 +1540,12 @@ class Alarm
             $where[] = " (a.backlog_id in (select backlog_id from (SELECT count(*) as total_events,backlog_event.backlog_id FROM backlog_event, event WHERE event.id = backlog_event.event_id AND event.plugin_id<>1505 GROUP BY backlog_id having total_events $num_events_op $num_events) as bk) $zero)";
         }
         /* Number of events threshold filter */
-        if ($risk_level != '' && $risk_level_op != '')
-        {
-            $risk_level_op = $risk_level_op == "less" ? '<=' : ( $risk_level_op == "more" ? '>=' :  '=');
-            $where[] = "a.risk $risk_level_op $risk_level";
+        if ($min_risk) {
+            $where[] = " a.risk >= $min_risk ";
         }
-        
-        
+        if ($max_risk != "" && $max_risk != 2) {
+            $where[] = " a.risk <= $max_risk ";
+        }
         // taxonomy left join
         $tax_left_join = "LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON a.plugin_sid=ta.sid AND a.corr_engine_ctx=ta.engine_id";
 
@@ -1562,7 +1554,7 @@ class Alarm
         
         
         $sql = "SELECT ".($cache ? "" : "SQL_CALC_FOUND_ROWS ")."DISTINCT a.*, a.plugin_id as plid, a.plugin_sid as plsid, count(distinct a.similar) as csimilar, ki.id as kid, ki.name as kingdom, ca.name as category, ta.subcategory FROM alarm a $tax_left_join $ctx_join $sql_join $sql_where GROUP BY a.similar $order $limit";
-        $sql_count = "SELECT COUNT(*) FROM (SELECT DISTINCT a.* FROM alarm a $tax_left_join $ctx_join $sql_join $sql_where GROUP BY a.similar) as tmp";
+        $sql_count = "SELECT COUNT(*) as cnt FROM (SELECT DISTINCT a.* FROM alarm a $tax_left_join $ctx_join $sql_join $sql_where GROUP BY a.similar) as tmp";
         $_SESSION["_alarm_perms_from"]  = "FROM alarm a $tax_left_join $ctx_join $sql_join";
         $_SESSION["_alarm_perms_where"] = "$sql_where";
         
@@ -1582,7 +1574,7 @@ class Alarm
             if (!$inf) // First page calc count
             {
                 $total = $conn->Execute($sql_count);
-                if (!$total->EOF) $_SESSION["_alarm_count"] = $num_rows = $total->fields[0];
+                if (!$total->EOF) $_SESSION["_alarm_count"] = $num_rows = $total->fields["cnt"];
             }
             else
             {
@@ -2871,6 +2863,18 @@ class Alarm
     }
 
 
+    public static function get_alarm_detail_by_event($conn, $event_id) {
+        return self::get_alarm_event_detail($conn, " event_id = unhex(?) ", array($event_id));
+    }
+
+    public static function get_alarm_detail($conn, $backlog_id) {
+        $alarm = self::get_alarm_event_detail($conn, " backlog_id = unhex(?) ", array($backlog_id));
+        $event = self::get_event_alarm($conn,$alarm);
+        return array($alarm,$event);
+    }
+
+
+
     /**
     * This function return array with event detail and stats info of an alarm
     *
@@ -2881,7 +2885,7 @@ class Alarm
     *
     * @return array
     */
-    public static function get_alarm_detail($conn, $backlog_id)
+    private static function get_alarm_event_detail($conn, $where, $params)
     {
         Ossim_db::check_connection($conn);
 
@@ -2889,12 +2893,12 @@ class Alarm
         $ctxs = Session::get_ctx_where();
         if ($ctxs != "")
         {
-            $where = " AND corr_engine_ctx in ($ctxs)";
+            $where .= " AND corr_engine_ctx in ($ctxs)";
         }
 
-        $query  = "SELECT *, HEX(event_id) as event_id, HEX(corr_engine_ctx) as corr_engine_ctx, ki.id as kid, ki.name as kingdom, ca.name as category, ta.subcategory from alarm LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON alarm.plugin_sid=ta.sid AND alarm.corr_engine_ctx=ta.engine_id WHERE 1=1 $where AND backlog_id=unhex(?)";
-        $params = array($backlog_id);
-        
+        $query  = "SELECT *, HEX(event_id) as event_id, HEX(backlog_id) as backlog_id, HEX(corr_engine_ctx) as corr_engine_ctx, ki.id as kid, ki.name as kingdom, ca.name as category, ta.subcategory from alarm 
+             LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON alarm.plugin_sid=ta.sid AND alarm.corr_engine_ctx=ta.engine_id 
+             WHERE $where";
         $rs = $conn->Execute($query, $params);
 
         if (!$rs)
@@ -2905,7 +2909,7 @@ class Alarm
         {
             $new = array (
                 "event_id"     => $rs->fields["event_id"],
-                "backlog_id"   => $backlog_id,
+                "backlog_id"   => $rs->fields["backlog_id"],
                 "ctx"          => $rs->fields["corr_engine_ctx"],
                 "timestamp"    => $rs->fields["timestamp"],
                 "status"       => $rs->fields["status"],
@@ -2935,7 +2939,10 @@ class Alarm
             $alarm = new Alarm($conn, TRUE, $new);
 
         }
+        return $alarm;
+    }
 
+    public static function get_event_alarm($conn,$alarm) { 
         $event  = array();
         $ev_id  = (is_object($alarm)) ? $alarm->get_event_id() : '';
         $query  = "SELECT *, HEX(agent_ctx) as ctx, HEX(src_host) AS src_host, HEX(dst_host)
@@ -2987,7 +2994,7 @@ class Alarm
             $event['_DST_NET']           = $rs->fields['dst_net'];
         }
 
-        return array($alarm, $event);
+        return $event;
 
     }
 

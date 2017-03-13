@@ -96,19 +96,25 @@ function GetSensorName($sid, $db, $withip=true) {
 }
 function GetSensorSids($db) {
     $sensors = array();
-    $temp_sql = "SELECT GROUP_CONCAT(d.id ORDER BY d.id ASC) as id,INET6_NTOA(s.ip) as sensor_ip,hex(s.id) as sensor_id
+    $temp_sql = "SELECT d.id,INET6_NTOA(s.ip) as sensor_ip,hex(s.id) as sensor_id
                  FROM alienvault_siem.device d, alienvault.sensor s
-                 WHERE d.sensor_id=s.id GROUP BY sensor_id";
+                 WHERE d.sensor_id=s.id ORDER BY d.id ASC";
     //echo $temp_sql;
     $tmp_result = $db->baseExecute($temp_sql);
     while ($myrow = $tmp_result->baseFetchRow())
     {
-        // GROUP_CONCAT() function returns a final comma character sometimes
-        $myrow["id"] = preg_replace('/,$/', '', $myrow["id"]);
-        
-        $sensors[$myrow["sensor_ip"]] = $myrow["id"];
-        $sensors[$myrow["sensor_id"]] = $myrow["id"];
+        if (!isset($sensors[$myrow["sensor_ip"]])) {
+            $sensors[$myrow["sensor_ip"]] = array();
+        }
+        if (!isset($sensors[$myrow["sensor_id"]])) {
+            $sensors[$myrow["sensor_id"]] = array();
+        }
+        $sensors[$myrow["sensor_ip"]][] = $myrow["id"];
+        $sensors[$myrow["sensor_id"]][] = $myrow["id"];
     }
+    array_walk($sensors,function(&$item) {
+        $item = implode(",",$item);
+    });
     $tmp_result->baseFreeRows();
     return $sensors;
 }

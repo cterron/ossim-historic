@@ -818,7 +818,7 @@ else return '{
         $response = $this->conn->do_request($this->common_url . '/update/feed', array(), 'PUT');
 
         return $response;
-    } 
+    }
 
 
     /**

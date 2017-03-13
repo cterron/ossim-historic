@@ -361,7 +361,8 @@ sub config_profile_sensor() {
     }
 
     foreach my $var ( split( /,\s*/, $config{'sensor_monitors'} ) ) {
-        $Config_plugins->{plugins}->{$var} = $Config_plugins_orig->{plugins}->{$var};
+        $Config_plugins->{plugins}->{$var} = $Config_plugins_orig->{plugins}->{$var}
+            // "$plugins_cfg_basedir/$var.cfg";
     }
 
     $config{database}{pass} = $db_pass;

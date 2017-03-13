@@ -35,13 +35,13 @@ from ansiblemethods.helper import ansible_is_valid_response
 ansible = Ansible()
 
 
-def run_backup(target=None, backup_type="configuration", method="auto"):
+def run_backup(target=None, backup_type="configuration", method="auto", backup_pass=""):
 
     success, msg = sync_backup_templates(target)
     if not success:
         return False, msg
 
-    args = {"backup_type": "%s" % backup_type, "method": method}
+    args = {"backup_type": "%s" % backup_type, "method": method, 'backup_pass': backup_pass}
 
     response = ansible.run_module([target], "av_backup", args)
     success, msg = ansible_is_valid_response(target, response)
@@ -54,14 +54,15 @@ def run_backup(target=None, backup_type="configuration", method="auto"):
     return success, msg
 
 
-def run_restore(target=None, backup_type="configuration", backup_file=""):
+def run_restore(target=None, backup_type="configuration", backup_file="", backup_pass=""):
 
     success, msg = sync_backup_templates(target)
     if not success:
         return False, msg
 
     args = {"backup_type": "%s" % backup_type,
-            "backup_file": "%s" % backup_file}
+            "backup_file": "%s" % backup_file,
+            'backup_pass': backup_pass}
 
     response = ansible.run_module([target], "av_restore", args)
     success, msg = ansible_is_valid_response(target, response)

@@ -62,9 +62,9 @@
 
 #alert tcp $EXTERNAL_NET 119 -> $HOME_NET any (msg:"GPL MISC return code buffer overflow attempt"; flow:to_client,established,no_stream; content:"200"; isdataat:64,relative; pcre:"/^200\s[^\n]{64}/smi"; reference:bugtraq,4900; reference:cve,2002-0909; classtype:protocol-command-decode; sid:2101792; rev:10;)
 
-#alert tcp $EXTERNAL_NET 20 -> $HOME_NET :1023 (msg:"GPL MISC Source Port 20 to <1024"; flow:stateless; flags:S,12; reference:arachnids,06; classtype:bad-unknown; sid:2100503; rev:8;)
+#alert tcp $EXTERNAL_NET 20 -> $HOME_NET :1023 (msg:"GPL MISC Source Port 20 to <1024"; flow:to_server; flags:S,12; reference:arachnids,06; classtype:bad-unknown; sid:2100503; rev:9;)
 
-#alert tcp $EXTERNAL_NET 53 -> $HOME_NET :1023 (msg:"GPL MISC source port 53 to <1024"; flow:stateless; flags:S,12; reference:arachnids,07; classtype:bad-unknown; sid:2100504; rev:8;)
+#alert tcp $EXTERNAL_NET 53 -> $HOME_NET :1023 (msg:"GPL MISC source port 53 to <1024"; flow:to_server; flags:S,12; reference:arachnids,07; classtype:bad-unknown; sid:2100504; rev:9;)
 
 #alert tcp $EXTERNAL_NET 80 -> $HOME_NET any (msg:"GPL MISC Connection Closed MSG from Port 80"; flow:from_server,established; content:"Connection closed by foreign host"; nocase; classtype:unknown; sid:2100488; rev:5;)
 

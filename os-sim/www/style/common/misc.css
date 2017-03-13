@@ -1267,3 +1267,46 @@ p.ticket_body
     word-break: break-all;
     white-space: normal;
 }
+
+.risk-bar {
+    line-height: 14px;
+    display: inline-block;
+    width: 57px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.risk-bar.low {
+    background-color: #92d100;
+}
+.risk-bar.medium {
+    background-color: #ff8a00;
+}
+.risk-bar.high {
+    background-color: #fd0000;
+}
+
+.ad_content .risk-bar {
+    margin-top: 12px;
+}
+
+
+#tiptip_holder {
+    opacity: 0.9;
+}
+.risk-popup-top {
+    border-bottom: 1px solid gray;
+}
+.risk-popup {
+}
+
+.risk-popup table {
+    border: 0;
+    color: #FFF;
+}
+
+.risk-popup table th{
+    text-align: left;
+    color: #FFF;
+    background-color: #2a2a2a;
+}

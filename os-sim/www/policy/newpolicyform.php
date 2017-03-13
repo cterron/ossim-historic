@@ -1770,25 +1770,43 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 			var act_id  = trim($('#rep_act').val());
 			var act_txt = $('#rep_act option:selected').text();
 			var sev_id  = trim($('#rep_sev').val());
-			var sev_txt = $('#rep_sev option:selected').text();
 			var rel_id  = trim($('#rep_rel').val());
-			var rel_txt = $('#rep_rel option:selected').text();
 			var dir_id  = trim($("input:radio[name='rep_dir']:checked").val());
 			var dir_txt = (dir_id == 1) ? '<?php echo _("Dest")?>.' : '<?php echo _("Src")?>.';
 
-			var filter_id  = act_id + '@' + sev_id + '@' + rel_id + '@' + dir_id;
-			var filter_txt = act_txt + ' | ' + sev_txt + ' | ' + rel_txt + ' | ' + dir_txt;
-			addto('reputation_filters',filter_txt,filter_id, true);
-
-			$('#rep_act').val(0);
-			$('#rep_sev').val(0);
-			$('#rep_rel').val(0);
+			var rep_sev_lem = $('#rep_sev_lem').val();
+                        var rep_rel_lem = $('#rep_rel_lem').val();
+			sev_counter = more_less_switcher(sev_id,rep_sev_lem);
+			rel_counter = more_less_switcher(rel_id,rep_rel_lem);
+			for (var i = sev_counter[0]; i<=sev_counter[1]; i++) {
+				for (var j = rel_counter[0]; j<=rel_counter[1]; j++) {
+		                        var filter_id  = act_id + '@' + i + '@' + j + '@' + dir_id;
+        				var filter_txt = act_txt + ' | ' + i + ' | ' + j + ' | ' + dir_txt;
+					addto('reputation_filters',filter_txt,filter_id, true);
+				}
+			}
+			$('#rep_act,#rep_sev,#rep_rel').val(0);
+			$('#rep_sev_lem,#rep_rel_lem').val("equal");
 			$("input:radio[name='rep_dir']").filter('[value=0]').attr('checked', true);
 			
 			drawpolicy();
 			
 			return false;
 			
+		}
+
+		function more_less_switcher(id,flag,max,min) {
+			if (!max) max = 10;
+                        if (!min) min = 1;
+			var start = end = id;
+                        if (flag == "less") {
+                                start = min;
+                                end--;
+                        } else if (flag == "more") {
+                                end = max;
+                                start++;
+                        }
+			return [start,end];
 		}
 		
 		function add_event_filter(){
@@ -1797,18 +1815,21 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 			var sev_id  = trim($('#ev_sev').val());
 			var rel_id  = trim($('#ev_rel').val());
 
-
-			var filter_id  = sev_id + '@' + rel_id;
-			var filter_txt = 'Prio: ' + sev_id + ' | Rel: ' + rel_id;
-			addto('event_filters',filter_txt,filter_id, true);
-
-			$('#ev_sev').val(0);
-			$('#ev_rel').val(0);
-			
+                        var sev_lem = $('#ev_sev_lem').val();
+                        var rel_lem = $('#ev_rel_lem').val();
+                        sev_counter = more_less_switcher(sev_id,sev_lem,5);
+                        rel_counter = more_less_switcher(rel_id,rel_lem);
+                        for (var i = sev_counter[0]; i<=sev_counter[1]; i++) {
+                                for (var j = rel_counter[0]; j<=rel_counter[1]; j++) {
+                                        var filter_id  = i + '@' + j;
+                                        var filter_txt = 'Prio: ' + i + ' | Rel: ' + j;
+		                        addto('event_filters',filter_txt,filter_id, true);
+                                }
+                        }
+			$('#ev_sev,#ev_rel').val(0);
+			$('#ev_sev_lem,#ev_rel_lem').val("equal");
 			drawpolicy();
-			
 			return false;
-			
 		}
 		
 		function check_exist(selector, sid){
@@ -2966,6 +2987,11 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 										<div style='text-align: left; padding:0 0 15px 10px; clear: both;'>
 											<div style='float: left; width:90px;'><?php echo _("Priority")?>:</div>
 											<div style='float: left;'>
+                                                                                                <select id="rep_sev_lem" name="rep_sev_lem">
+                                                                                                       <option value="less"><</option>
+                                                                                                       <option value="equal" selected="selected">=</option>
+                                                                                                       <option value="more">></option>
+                                                                                                </select>
 												<select id="rep_sev" name="rep_sev">
 												<?php
 													for ($i=1; $i <= 10; $i++) 
@@ -2983,6 +3009,11 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 										<div style='text-align: left; padding:0 0 15px 10px; clear: both;'>
 											<div style='float: left; width:90px;'><?php echo _("Reliability")?>:</div>
 											<div style='float: left;'>
+                                                                                                <select id="rep_rel_lem" name="rep_rel_lem">
+                                                                                                       <option value="less"><</option>
+                                                                                                       <option value="equal" selected="selected">=</option>
+                                                                                                       <option value="more">></option>
+                                                                                                </select>
 												<select id="rep_rel" name="rep_rel" >
 													<?php
 													for ($i=1; $i <= 10; $i++) 
@@ -3080,6 +3111,11 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 										<div style='text-align: left; padding:0 0 15px 10px; clear: both;'>
 											<div style='float: left; width:90px;'><?php echo _("Priority")?>:</div>
 											<div style='float: left;'>
+												<select id="ev_sev_lem" name="ev_sev_lem">
+                                                                                                       <option value="less"><</option>
+                                                                                                       <option value="equal" selected="selected">=</option>
+                                                                                                       <option value="more">></option>
+												</select>
 												<select id="ev_sev" name="ev_sev">
 												<?php
 													for ($i=1; $i <= 5; $i++) 
@@ -3097,6 +3133,12 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 										<div style='text-align: left; padding:0 0 15px 10px; clear: both;'>
 											<div style='float: left; width:90px;'><?php echo _("Reliability")?>:</div>
 											<div style='float: left;'>
+                                                                                                <select id="ev_rel_lem" name="ev_rel_lem">
+                                                                                                       <option value="less"><</option>
+                                                                                                       <option value="equal" selected="selected">=</option>
+                                                                                                       <option value="more">></option>
+                                                                                                </select>
+
 												<select id="ev_rel" name="ev_rel" >
 												<?php
 													for ($i=1; $i <= 10; $i++) 

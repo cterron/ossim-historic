@@ -220,8 +220,12 @@ else if ($tab == '#tab2')
         );
 
         echo '1###';
-
         ?>
+	<script>
+	$(document).ready(function() {
+		$('.info').tipTip();
+	});
+	</script>
         <form name='form_syscheck' id='form_syscheck'>
 
             <div class='cont_sys'>
@@ -253,7 +257,10 @@ else if ($tab == '#tab2')
                                 </tr>
 
                                 <tr>
-                                    <th><?php echo _('Alert new files')?></th>
+                                    <th>
+                                        <?php echo _('Alert new files')?>
+                                        <img class="info" src="/ossim/ossec/images/information.png" title="<?php echo _("Please be aware that these settings will be applied to all agents")?>">
+                                    </th>
                                     <td>
                                         <select id='alert_new_files' name='alert_new_files'>
                                             <?php
@@ -281,7 +288,10 @@ else if ($tab == '#tab2')
                                 </tr>
 
                                 <tr>
-                                    <th><?php echo _('Auto ignore')?></th>
+                                    <th>
+                                        <?php echo _('Auto ignore')?>
+                                        <img class="info" src="/ossim/ossec/images/information.png" title="<?php echo _("Please be aware that these settings will be applied to all agents")?>">
+                                    </th>
                                     <td>
                                         <select id='auto_ignore' name='auto_ignore'>
                                             <?php

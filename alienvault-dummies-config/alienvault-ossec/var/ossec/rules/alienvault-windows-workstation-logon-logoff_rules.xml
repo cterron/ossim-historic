@@ -1,0 +1,36 @@
+<group name="windows,">
+    <rule id="700001" level="5">
+        <if_sid>18119</if_sid>
+        <match>Logon Type: 2</match>
+        <description>Windows Console Logon</description>
+    </rule>
+
+    <rule id="700002" level="5">
+        <if_sid>18104</if_sid>
+        <id>^528$|^540$|^672$|^673$|^4624$|^4769$</id>
+        <match>Logon Type: 2</match>
+        <description>Windows Console Logon</description>
+    </rule>
+
+    <rule id="700003" level="5">
+        <if_sid>18104</if_sid>
+        <id>^528$|^540$|^672$|^673$|^4624$|^4769$</id>
+        <match>Logon Type: 3</match>
+        <description>Windows Network Logon</description>
+    </rule>
+
+    <rule id="700004" level="5">
+        <if_sid>18104</if_sid>
+        <id>^528$|^540$|^672$|^673$|^4624$|^4769$</id>
+        <match>Logon Type: 7</match>
+        <description>Windows Workstation Lock</description>
+    </rule>
+
+    <rule id="700005" level="5">
+        <if_sid>18104</if_sid>
+        <id>^528$|^540$|^672$|^673$|^4624$|^4769$</id>
+        <match>Logon Type: 10</match>
+        <description>Windows RDP-TS Logon</description>
+    </rule>
+
+</group>

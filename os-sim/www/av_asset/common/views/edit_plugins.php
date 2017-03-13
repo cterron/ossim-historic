@@ -339,8 +339,7 @@ if ($not_allowed)
     <div id='plugin_notif'></div>
         
     <div id='plugin_container'>
-        
-        <!-- <div class='plugin_title'></div> -->
+        <div><?php echo _("Please select your device from the list below. </br>Note: Some plugins do not require you to select a version.")?></div>
 
         <div class='related_sensor' style='<?php echo (count($related_sensors)<=1) ? 'display:none' : '' ?>'>
         <form>

@@ -14,11 +14,11 @@ libnet-netmask-perl                          1.9021-1
 # OSSEC
 ossec-hids                                   2.8.2-3~bpo80+1
 # Apache
-apache2                                      2.4.10-10+deb8u3
+apache2                                      2.4.10-10+deb8u5
 apache2-mpm-prefork                          2.4.10-10+deb8u1
-apache2-utils                                2.4.10-10+deb8u4
-apache2-bin                                  2.4.10-10+deb8u4
-apache2-data                                 2.4.10-10+deb8u4
+apache2-utils                                2.4.10-10+deb8u5
+apache2-bin                                  2.4.10-10+deb8u5
+apache2-data                                 2.4.10-10+deb8u5
 apache2.2-bin                                2.4.10-10+deb8u1
 apache2.2-common                             2.4.10-10+deb8u1
 # Augeas

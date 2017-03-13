@@ -238,7 +238,7 @@ def ansible_check_plugin_integrity(system_ip):
 
     try:
 
-        #alienvault-doctor -l agent_rsyslog_conf_integrity.plg,agent_plugins_integrity.plg --output-type=ansible
+        # alienvault-doctor -l agent_rsyslog_conf_integrity.plg,agent_plugins_integrity.plg --output-type=ansible
         doctor_args = {}
         doctor_args['plugin_list'] = '0008_agent_rsyslog_conf_integrity.plg,0006_agent_plugins_integrity.plg'
         doctor_args['output_type'] = 'ansible'
@@ -254,8 +254,8 @@ def ansible_check_plugin_integrity(system_ip):
         if data['rc'] != 0:
             return False, data['stderr']
 
-        #Parse ouptut
-        pattern = re.compile('failed for \"(?P<plugin_name>[^\s]+)\"')
+        # Parse ouptut
+        pattern = re.compile("failed for \'(?P<plugin_name>[^\s]+)\'")
 
         output = {
             'command': data['cmd'],
@@ -275,25 +275,25 @@ def ansible_check_plugin_integrity(system_ip):
         agent_plugins_dict = json.loads(data['data'].strip())['0006 Agent plugins integrity']
         if agent_rsyslog_dict['checks']['00080001']['result'] == 'failed':
             output['rsyslog_integrity_check_passed'] = False
-            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['00080001']['detail'])
+            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['00080001'].get('debug_detail', ''))
             for rsyslog_file in rsyslog_files:
                 output['rsyslog_files_changed'].append(os.path.normpath(RSYSLOG_FILES_PATH + rsyslog_file))
 
         if agent_rsyslog_dict['checks']['00080002']['result'] == 'failed':
             output['all_rsyslog_files_installed'] = False
-            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['00080002']['detail'])
+            rsyslog_files = pattern.findall(agent_rsyslog_dict['checks']['00080002'].get('debug_detail', ''))
             for rsyslog_file in rsyslog_files:
                 output['rsyslog_files_removed'].append(os.path.normpath(RSYSLOG_FILES_PATH + rsyslog_file))
 
         if agent_plugins_dict['checks']['00060001']['result'] == 'failed':
             output['plugins_integrity_check_passed'] = False
-            plugins_changed = pattern.findall(agent_plugins_dict['checks']['00060001']['detail'])
+            plugins_changed = pattern.findall(agent_plugins_dict['checks']['00060001'].get('debug_detail', ''))
             for plugin in plugins_changed:
                 output['plugins_changed'].append(os.path.normpath("/" + plugin))
 
         if agent_plugins_dict['checks']['00060002']['result'] == 'failed':
             output['all_plugins_installed'] = False
-            plugins_removed = pattern.findall(agent_plugins_dict['checks']['00060002']['detail'])
+            plugins_removed = pattern.findall(agent_plugins_dict['checks']['00060002'].get('debug_detail', ''))
             for plugin in plugins_removed:
                 if AGENT_PLUGINS_PATH in plugin:
                     output['plugins_removed'].append(os.path.normpath(plugin))

@@ -36,7 +36,6 @@ require_once 'av_init.php';
 
 $what = GET('what');
 $back = GET('back');
-
 ossim_valid($what, OSS_ALPHA, OSS_NULLABLE, 'illegal:' . _('What'));
 ossim_valid($back, OSS_TEXT, OSS_PUNC_EXT,  'illegal:' . _('Back'));
 
@@ -50,6 +49,11 @@ if (empty($what))
 {
     $what = 'all';
 }
+if(!preg_match('#^\.{0,2}(/?[a-zA-Z0-9]+)+(\.[a-zA-Z]{1,4}|/|\?([a-zA-Z0-9\[\]_-]+=[a-zA-Z0-9_-]*\&?)+)*$#',$back)) {
+    die(ossim_error("Error in the '"._("Back")."' field ('$back' not allowed)."));
+}
+
+$back = htmlspecialchars(urldecode($back));
 
 if ($what == 'policies')
 {
