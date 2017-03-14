@@ -215,6 +215,7 @@ fulldatabases: ['ISO27001An','PCI','PCI3','datawarehouse']
 
 files: [
 '/etc/alienvault/system-id',
+'/etc/alienvault/shadow',
 '/etc/ansible/hosts',
 '/etc/curlrc',
 '/etc/hostname',
@@ -241,8 +242,8 @@ files: [
 '/usr/share/python/alienvault-api/secret.py',
 '/usr/share/ossim/uploads/',
 '/var/ossec/etc',
-'/var/ossec/rules/local_rules.xml',
-'/var/ossec/rules/rules_config.xml',
+'/var/ossec/alienvault/rules/local_rules.xml',
+'/var/ossec/alienvault/rules/rules_config.xml',
 '/var/tmp/wizard_status',
 '/home/avapi/.ssh/',
 '/etc/ossim/ossim.lic',

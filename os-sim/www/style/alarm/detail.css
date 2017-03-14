@@ -36,13 +36,13 @@ header("Content-type: text/css");
 
 /*   Main Wrapper  */
 
-#ad_wrapper
+#alarm_wrapper
 {
     position: relative;
     margin: 10px auto;
 }
 
-#ad_wrapper.with_lb
+#alarm_wrapper.with_lb
 {
     margin: 10px 20px;
 }
@@ -54,14 +54,14 @@ header("Content-type: text/css");
     right: 0;
 }
 
-.ad_section
+.alarm_section
 {
     clear:both;
     margin: 30px auto;
 }
 
 
-#ad_box_template
+#alarm_box_template
 {
     display: none;    
 }
@@ -110,7 +110,7 @@ header("Content-type: text/css");
 
 /*   Alarm Summary Info  */
 
-#ad_summary
+#alarm_summary
 {
     position: relative;
     width: 100%;  
@@ -120,30 +120,30 @@ header("Content-type: text/css");
     box-sizing: border-box;
 }
 
-#ad_summary .item
+#alarm_summary .item
 {
     float: left;    
     width: 9%;
 }
 
-#ad_created.item, #ad_duration.item
+#alarm_created.item, #alarm_duration.item
 {
     width: 12%;
 }
 
-#ad_attack_pattern.item, #ad_id.item
+#alarm_attack_pattern.item, #alarm_id.item
 {
     width: 20%;
 }
 
-#ad_summary .ad_content
+#alarm_summary .alarm_content
 {
     line-height: 40px;
     height: 40px;
     text-align: center;
 }
 
-#ad_summary .ad_content.c_img
+#alarm_summary .alarm_content.c_img
 {
     display: list-item;
     list-style: none;
@@ -160,24 +160,24 @@ header("Content-type: text/css");
     vertical-align: bottom;
 }
 
-.ad_header.center
+.alarm_header.center
 {
     text-align: center !important;
 }
 
 /*   Alarm Boxes - Source/Destination  */
 
-#ad_boxes
+#alarm_boxes
 {
     white-space: nowrap;
 }
 
-#ad_boxes hr
+#alarm_boxes hr
 {
     margin: 0 10px;
 }
 
-#ad_boxes .box
+#alarm_boxes .box
 {
     width: 49.5%;
     box-sizing: border-box;
@@ -189,7 +189,7 @@ header("Content-type: text/css");
     border: 1px solid rgb(223, 223, 223);
 }
 
-.ad_box_title
+.alarm_box_title
 {
     font-weight: bold;
     margin-bottom: 6px;
@@ -202,7 +202,7 @@ header("Content-type: text/css");
     margin-bottom: 5px;
 }
 
-.ad_header
+.alarm_header
 {
     clear: both;
     padding: 0 10px;
@@ -219,7 +219,7 @@ header("Content-type: text/css");
     right: 10px;
 }
 
-.ad_header .select2-container
+.alarm_header .select2-container
 {
     width: 135px;
     margin-top: 5px !important;
@@ -261,24 +261,24 @@ header("Content-type: text/css");
     margin: 0;
 }
 
-.ad_box_name
+.alarm_box_name
 {
     clear: both;
     margin-bottom: 20px;
 }
 
-.ad_box_sec
+.alarm_box_sec
 {
     clear: both;
     margin-top: 15px;
 }
 
-.ad_flag
+.alarm_flag
 {
     margin-right: 5px;
 }
 
-.ad_asset_name
+.alarm_asset_name
 {
     font-size: 16px;
     float: left;
@@ -287,7 +287,7 @@ header("Content-type: text/css");
     text-overflow: ellipsis;
 }
 
-.ad_asset_loc
+.alarm_asset_loc
 {
     float: right;
     width: 40%;
@@ -296,7 +296,7 @@ header("Content-type: text/css");
     text-align: right;
 }
 
-.ad_box_group, ad_box_net
+.alarm_box_group, alarm_box_net
 {
     margin-right: 8px;
 }
@@ -320,4 +320,4 @@ header("Content-type: text/css");
 
 /*   Alarm Tabs  */
 
-#ad_tabs {}
+#alarm_tabs {}

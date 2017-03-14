@@ -140,7 +140,7 @@ Description: Configuration package for OpenVAS
 
 Package: alienvault-ossec
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, alienvault-ossec-rules
 Pre-Depends: ossec-hids
 Description: Configuration package for Ossec
 Replaces: ossec-hids

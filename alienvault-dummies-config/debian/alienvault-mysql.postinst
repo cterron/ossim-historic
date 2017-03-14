@@ -365,7 +365,6 @@ update_frameworkip_iptables(){
     fi
 
 }
-
 case "$1" in
     configure)
         configure_firewall

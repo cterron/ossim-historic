@@ -79,8 +79,8 @@ def ansible_run_nmap_scan(sensor_ip, target, scan_type, rdns, scan_timing, autod
 def ansible_nmap_get_scan_progress(sensor_ip, task_id):
     """Retrieves the scan progress
     Args:
-        sensor_id: the sensor ip where the scan is running
-        task_id_: The task id to identify the scan progress.
+        sensor_ip: the sensor ip where the scan is running
+        task_id: The task id to identify the scan progress.
     Returns:
         success (boolean): True or False
         data(dict) {"scanned_hosts":-1, "target_number":-1}

@@ -1161,7 +1161,10 @@ EOT;
 echo "<input type=\"button\" id=\"AllPlugins\" name=\"AllPlugins\" value=\""._("Enable All")."\" class=\"av_b_secondary small updateplugins\">&nbsp;&nbsp;&nbsp;";
 echo "<input type=\"button\" id=\"NonDOS\" name=\"NonDOS\" value=\""._("Enable Non DOS")."\" class=\"av_b_secondary small updateplugins\">&nbsp;&nbsp;&nbsp;";
 echo "<input type=\"button\" id=\"DisableAll\" name=\"DisableAll\" value=\""._("Disable All")."\" class=\"av_b_secondary small updateplugins\">&nbsp;&nbsp;&nbsp;";
-echo "<br><br>";
+echo "<br><br><img src='/ossim/pixmaps/warning_icon.png' class='warning-ico'>";
+echo _("You may notice that additional plugins have been activated without being selected. Certain plugins may rely on additional plugins to perform the required function(s) and return accurate results.");
+echo "<br>";
+
 echo <<<EOT
 </form>
 </center>

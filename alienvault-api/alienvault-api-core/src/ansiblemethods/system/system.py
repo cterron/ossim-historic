@@ -36,6 +36,7 @@ import api_log
 import uuid
 from base64 import b64decode
 from os.path import basename
+from db.methods.system import get_system_ip_from_system_id
 from apiexceptions.ansible import APIAnsibleError, APIAnsibleBadResponse
 from ansiblemethods.ansiblemanager import Ansible, PLAYBOOKS
 from ansiblemethods.helper import (
@@ -79,18 +80,18 @@ def get_system_id(system_ip):
             if system_ip in response['dark']:
                 error_msg = "[get_system_id]: "
                 error_msg = error_msg + response['dark'][system_ip]['msg']
-                return (False, error_msg)
+                return False, error_msg
             else:
                 if system_ip in response['contacted']:
                     system_id = response['contacted'][system_ip]['ansible_facts']['ansible_product_uuid'].lower()
                 else:
-                    return (False, "[get_system_id]: Error getting system ID")
+                    return False, "[get_system_id]: Error getting system ID"
 
     # Check the system_id is valid
     if not system_id or not uuid_regex.match(system_id):
-        return (False, "[get_system_id]: Error getting system ID")
+        return False, "[get_system_id]: Error getting system ID"
 
-    return (True, system_id)
+    return True, system_id
 
 
 def get_system_load(system_ip):
@@ -108,27 +109,27 @@ def get_system_load(system_ip):
         if system_ip in response['dark']:
             error_msg = "get_system_load "
             error_msg = error_msg + response['dark'][system_ip]['msg']
-            return (False, error_msg)
+            return False, error_msg
         else:
             uptimeout = response['contacted'][system_ip]['stdout']
             # Capture
             m = reuptime.match(uptimeout)
             if m != None:
                 loadcpu = float(m.group(3))
-                return (True, loadcpu)
+                return True, loadcpu
             else:
                 error_msg = " ".join(
                     ["get_system_load",
                      "Can't match the uptime output '%s'" % uptimeout])
-                return (False, error_msg)
+                return False, error_msg
 
     except ValueError:
-        return (False, "get_system_load " + "Can't get load output from")
+        return False, "get_system_load " + "Can't get load output from"
 
     except Exception as e:
         error_msg = "Ansible error: " + str(e) + "\n"
         error_msg = error_msg + traceback.format_exc()
-        return (False, error_msg)
+        return False, error_msg
 
 
 def get_profile(system_ip="127.0.0.1"):
@@ -182,9 +183,8 @@ echo $PROFILES
         error_msg = "get_plugin_list_by_location: " + \
                     "Error Retrieving the plugin list by location. %s" % e
         api_log.error(error_msg)
-        return (False, '')
-
-    return (True, profile_list)
+        return False, ''
+    return True, profile_list
 
 
 def get_system_setup_data(system_ip):
@@ -193,9 +193,8 @@ def get_system_setup_data(system_ip):
     if system_ip in response['dark']:
         error_msg = "Error getting system data : " + \
                     "%s" % response['dark'][system_ip]
-        return (False, error_msg)
-
-    return (True, response['contacted'][system_ip]['ansible_facts'])
+        return False, error_msg
+    return True, response['contacted'][system_ip]['ansible_facts']
 
 
 def get_root_disk_usage(system_ip):
@@ -213,7 +212,7 @@ def get_root_disk_usage(system_ip):
         percentage = float(output)
     except Exception as e:
         rt = False
-    return (rt, percentage)
+    return rt, percentage
 
 
 def get_service_status(system_ip, service):
@@ -261,16 +260,16 @@ def get_service_status(system_ip, service):
 
 
 def get_doctor_data(host_list=[], args={}):
-    """
-    Run AlienVault Doctor in the target machine(s) and return the results.
+    """Run AlienVault Doctor in the target machine(s) and return the results.
     """
     return ansible.run_module(host_list, 'av_doctor', args)
 
 
-def install_debian_package(host_list=[], debian_package=None):
+def install_debian_package(host_list=None, debian_package=None):
+    """Install a Debian package in one or more remote systems.
     """
-    Install a Debian package in one or more remote systems.
-    """
+    if host_list is None:
+        host_list = []
     dpkg_command = '/usr/bin/dpkg -i --force-confnew %s' % debian_package
     response = ansible.run_module(host_list,
                                   'command',
@@ -279,8 +278,8 @@ def install_debian_package(host_list=[], debian_package=None):
         if host in response['dark']:
             error_msg = "install_debian_package : " + \
                         response['dark'][host]['msg']
-            return (False, error_msg)
-    return (True, '')
+            return False, error_msg
+    return True, ''
 
 
 def reconfigure(system_ip):
@@ -359,8 +358,7 @@ def ansible_add_ip_to_inventory(system_ip):
 
 
 def ansible_add_system(local_system_id, remote_system_ip, password):
-    """
-    Add a new system.
+    """Add a new system.
     Create and set the crypto files and update the ansible inventory manager
     """
     from ansiblemethods.ansibleinventory import AnsibleInventoryManager
@@ -370,7 +368,7 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
     # sanity check
     if not os.path.isfile('/var/ossim/ssl/local/ssh_capubkey.pem'):
         response = "Cannot access public key file"
-        return (result, response)
+        return result, response
 
     success, message = ansible_remove_key_from_known_host_file(
         "127.0.0.1",
@@ -391,11 +389,11 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
     if response[remote_system_ip]['unreachable'] == 0 and \
                     response[remote_system_ip]['failures'] == 0:
         result = True
-        response = "System with IP %s added correctly" % (remote_system_ip)
+        response = "System with IP %s added correctly" % remote_system_ip
     else:
         result = False
         api_log.error(str(response))
-        response = "Cannot add system with IP %s. " % (remote_system_ip) + \
+        response = "Cannot add system with IP %s. " % remote_system_ip + \
                    "Please verify that the system is reachable " + \
                    "and the password is correct."
 
@@ -404,7 +402,69 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
     aim.add_host(remote_system_ip)
     aim.save_inventory()
 
-    return (result, response)
+    # Squid access configuration
+    # ----------------------------------------------------------------------
+    (result, local_system_ip) = get_system_ip_from_system_id(local_system_id)
+    if result is False:
+        api_log.error(
+            "Cannot retrieve the system ip from the given sensor id <%s>" % local_system_id
+        )
+
+    acl = "acl {0} src {0}".format(remote_system_ip)
+    http_access = "http_access allow {}".format(remote_system_ip)
+    conf = "/etc/squid3/squid.conf"
+
+    # Whole command:
+    # if [ `grep -q "192.168.1.1" /etc/squid3/squid.conf;echo $?` -gt 0 ]
+    # then /bin/sed -i -e "/acl.*CONNECT/a acl 192.168.1.1 src 192.168.1.1"
+    # -e "/^http_access.*nent$/a http_access allow 192.168.1.1" /etc/squid3/squid.conf; fi
+    if_exists = """if [ `grep -q "{0}" {1};echo $?` -gt 0 ]; then""".format(remote_system_ip, conf)
+    command = """{0} /bin/sed -i -e "/acl.*CONNECT/a {1}" -e "/^http_access.*nent$/a {2}" {3}; fi""".format(
+        if_exists, acl, http_access, conf
+    )
+    api_log.info("Adding squid acl for {}".format(remote_system_ip))
+    try:
+        response = ansible.run_module(host_list=[local_system_ip],
+                                      module="shell",
+                                      args=command)
+    except Exception, err:
+        trace = traceback.format_exc()
+        error_msg = "Ansible Error: An error occurred while configuring squid: {0}, trace: {1}".format(
+            err, trace
+        )
+        api_log.error(error_msg)
+    api_log.info("The following ACLs have been added : {}, {}".format(acl, http_access))
+    return result, response
+
+
+def ansible_clean_squid_config(remote_system_ip):
+    """If a server is removed from USM deployment and the corresponding ACL is not removed from squid.conf,
+    then any arbitrary machine in the environment (adjacent broadcast domain)
+    can use this IP to bypass firewall restrictions and access the Internet via USM proxy;
+    this in essence constitutes a security policy violation.
+    """
+    conf = "/etc/squid3/squid.conf"
+    correct_regexp_ip = remote_system_ip.replace(".", "\.")
+    # Whole command:
+    # if [ `grep -q "allow 192.168.1.1" /etc/squid3/squid.conf;echo $?` -eq 0 ]
+    # then sed -e "/http_acc.*192\.168\.1\.1/d" -e "/acl.*192\.168\.1\.1$/d" /etc/squid3/squid.conf; fi
+    if_exists = """if [ `grep -q "allow {0}" {1};echo $?` -eq 0 ]; then""".format(remote_system_ip, conf)
+    command = """{0} /bin/sed -i -e "/http_acc.*{1}/d" -e "/acl.*{1}$/d" {2}; fi""".format(
+        if_exists, correct_regexp_ip, conf
+    )
+    api_log.info("Trying to remove acl for {}".format(remote_system_ip))
+    try:
+        response = ansible.run_module(host_list=['127.0.0.1'],
+                                      module="shell",
+                                      args=command)
+    except Exception, err:
+        trace = traceback.format_exc()
+        error_msg = "Ansible Error: An error occurred while configuring squid: {0}, trace: {1}".format(
+            err, trace
+        )
+        api_log.error(error_msg)
+        return False, response
+    return True, response
 
 
 def ansible_ping_system(system_ip):
@@ -438,9 +498,9 @@ def ansible_remove_certificates(system_ip, system_id_to_remove):
                                       use_sudo=True)
         success, msg = ansible_is_valid_response(system_ip, response)
         if not success:
-            error_msg = "Something wrong happened while removing " + \
-                        "the ssl folder: "
-            error_msg = error_msg + "%s" % str(msg)
+            error_msg = "Something wrong happened while removing the ssl folder: {}".format(
+                msg
+            )
             return False, error_msg
         return_code = int(response['contacted'][system_ip]['rc'])
         output_error = response['contacted'][system_ip]['stderr']
@@ -450,7 +510,7 @@ def ansible_remove_certificates(system_ip, system_id_to_remove):
             return False, error_msg
     except Exception as err:
         error_msg = "Something wrong happened while removing the ssl folder: "
-        error_msg = error_msg + "%s" % str(err)
+        error_msg += "%s" % str(err)
         return False, error_msg
     return True, ""
 
@@ -463,10 +523,10 @@ def ansible_get_hostname(system_ip):
                                   "av_setup",
                                   "filter=ansible_hostname")
     if not ansible_is_valid_response(system_ip, response):
-        return (False, "Something wrong happend getting the system hostname")
+        return False, "Something wrong happend getting the system hostname"
 
     hostname = response['contacted'][system_ip]['ansible_facts']['ansible_hostname']
-    return (True, hostname)
+    return True, hostname
 
 
 def ansible_get_system_info(system_ip):
@@ -484,9 +544,9 @@ def ansible_get_system_info(system_ip):
     success, msg = ansible_is_valid_response(system_ip, response)
     if not success:
         api_log.error(msg)
-        return (False, "Something wrong happend getting the system data")
+        return False, "Something wrong happend getting the system data"
 
-    return (True, response['contacted'][system_ip]['data'])
+    return True, response['contacted'][system_ip]['data']
 
 
 def restart_mysql(system_ip):
@@ -503,7 +563,7 @@ def restart_mysql(system_ip):
     except Exception, e:
         response = "Error restarting the MySQL database: %s" % str(e)
         rc = False
-    return (rc, str(response['contacted'][system_ip]['state']))
+    return rc, str(response['contacted'][system_ip]['state'])
 
 
 def restart_ossim_server(system_ip):
@@ -520,7 +580,7 @@ def restart_ossim_server(system_ip):
     except Exception, e:
         response = "Error restarting ossim server: %s" % str(e)
         rc = False
-    return (rc, str(response['contacted'][system_ip]['state']))
+    return rc, str(response['contacted'][system_ip]['state'])
 
 
 def generate_sync_sql(system_ip, restart=False):
@@ -585,7 +645,9 @@ def ansible_run_async_reconfig(system_ip, log_file="/var/log/alienvault/update/s
     return success, log_file
 
 
-def ansible_run_async_update(system_ip, log_file="/var/log/alienvault/update/system_update.log", only_feed=False,
+def ansible_run_async_update(system_ip,
+                             log_file="/var/log/alienvault/update/system_update.log",
+                             only_feed=False,
                              update_key=""):
     """Runs an asynchronous update on the given system
 
@@ -929,7 +991,7 @@ def ansible_get_log_lines(system_ip, logfile, lines):
 
         Args:
             system_ip (str): String with system ip.
-            log_file (str): String with the name of the log file.
+            logfile (str): String with the name of the log file.
             lines (integer): Integer with the number of lines to display.
     """
 
@@ -1006,8 +1068,9 @@ def ansible_install_plugin(system_ip, plugin_path, sql_path):
 
     # Copy plugin file to plugins dir
     remote_plugin_path = "/etc/ossim/agent/plugins/" + basename(plugin_path)
-    cmd_args = "src=%s dest=%s force=yes owner=root " + \
-               "group=alienvault mode=644" % (plugin_path, remote_plugin_path)
+    cmd_args = "src={} dest={} force=yes owner=root group=alienvault mode=644".format(
+        plugin_path, remote_plugin_path
+    )
     (success, msg) = copy_file([system_ip], cmd_args)
     if not success:
         error_msg = "[ansible_install_plugin] Failed to copy " + \
@@ -1090,7 +1153,7 @@ def ansible_restart_frameworkd(system_ip):
     except Exception, e:
         response = "Error restarting frameworkd: %s" % str(e)
         rc = False
-    return (rc, response)
+    return rc, response
 
 
 def ansible_get_decrypted_field_from_config(system_ip, conf_name):
@@ -1210,8 +1273,7 @@ def ansible_remove_system_certificate(local_ip):
 
 
 def ansible_get_child_alarms(system_ip, delay=1, delta=3):
-    """
-        Get the alarms from remote system
+    """Get the alarms from remote system
     """
     cmd = "echo \"select hex(event_id), timestamp, hex(backlog_id) FROM alarm WHERE status='closed' AND timestamp between DATE_SUB(utc_timestamp(), " \
           "interval %u hour) AND DATE_SUB(utc_timestamp(), interval %u hour) UNION select hex(event_id), timestamp, hex(backlog_id) " \

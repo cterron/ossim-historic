@@ -236,7 +236,7 @@ if (!empty($submit))
 
             if ($scan_type == "fast")
             {
-                $nmap_options[] = "-sS -F";
+                $nmap_options[] = "-sL -sn -PE";
             }
             elseif ($scan_type == "custom")
             {
@@ -302,7 +302,7 @@ if (!empty($submit))
 
                 if(is_array($nmap_options) && count($nmap_options) > 0)
                 {
-                    $task_params = $task_params.'#'.implode(' ', $nmap_options);
+                    $task_params = Util::nmap_with_excludes(explode(" ",$task_params),$nmap_options);
                 }
             // ELSE: Text
             }
@@ -349,7 +349,7 @@ if (!empty($submit))
     {
         if(is_array($nmap_options) && count($nmap_options) > 0)
         {
-            $task_params = $task_params.'#'.implode(' ', $nmap_options);
+            $task_params = Utill::nmap_with_excludes(explode(" ",$task_params),$nmap_options);
         }
 
         // Clean $task_params for OCS tasks
@@ -1373,9 +1373,8 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                                                     <?php
                                                     if ($task['task_type'] == 5)
                                                     {
-                                                        $tmp                 = explode("#", $task['task_params']);
-                                                        $task['task_params'] = str_replace(" ", ", ", $tmp[0]);
-                                                        $nmap_params         = $tmp[1];
+                                                        list($tp,$nmap_params) = Util::nmap_without_excludes($task['task_params']);
+                                                        $task['task_params'] = implode(", ",$tp);
                                                     }
                                                     elseif ($task['task_type'] == 4)
                                                     {

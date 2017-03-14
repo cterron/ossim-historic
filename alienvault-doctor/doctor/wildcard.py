@@ -36,7 +36,6 @@ from sysinfo import Sysinfo
 
 
 class Wildcard:
-
     # Wildcards about alienvault configuration files. Values only.
     #   * '@dbhost@'
     #   * '@dbuser@'
@@ -64,14 +63,14 @@ class Wildcard:
 
                 new_string = new_string.replace(delim_key, new_key)
         except Exception, e:
-            return (string)
+            return string
 
         if len(keys) > 1 and encapsulate_str:
             new_string = new_string[:new_string.find('"') + 1] + \
                          new_string[new_string.find('"') + 1:new_string.rfind('"') - 1].replace('"', '') + \
                          new_string[new_string.rfind('"') - 1:]
 
-        return (new_string)
+        return new_string
 
     # Wildcards about hardware configuration, from a semicolon-separated list:
     #   * '@is_vm@'
@@ -90,9 +89,9 @@ class Wildcard:
             hardware_config = sysinfo.get_hardware_config()
             new_string = str(hardware_config[match[0]]) + match[1]
         except:
-            return (None, None)
+            return None, None
 
-        return (translate[match[0]], new_string)
+        return translate[match[0]], new_string
 
     # Wildcards for '@set@' operations, in the form of 'a' op 'b', from a semicolon-separated list:
     #   * '@issubset@' returns actually the subset of all the elements in 'a' that are not in 'b'
@@ -113,16 +112,17 @@ class Wildcard:
             op = ops[match[0]][0]
             new_string += '.' + ops[match[0]][1] + '(' + match[1] + ')'
         except:
-            return (None, None)
+            return None, None
 
-        return (op, new_string)
+        return op, new_string
 
     # Wildcards for ipaddr operations.
     @staticmethod
     def ipaddr_operation(string):
         ops = {'@in@': ('Is in', ' in '),
                '@notin@': ('Is not in', ' not in ')}
-        pattern = r'(%s)((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:[0-9]{1,2}))?)' % '|'.join(ops.iterkeys())
+        pattern = r'(%s)((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:[0-9]{1,2}))?)' % '|'.join(
+            ops.iterkeys())
         new_string = string
 
         try:
@@ -131,9 +131,9 @@ class Wildcard:
                 new_string = re.sub(match[0], ops[match[0]][1], new_string)
                 new_string = re.sub(match[1], repr(IPNetwork(match[1])), new_string)
         except:
-            return (new_string)
+            return new_string
 
-        return (new_string)
+        return new_string
 
     @staticmethod
     def appliance_exec(string):
@@ -161,8 +161,22 @@ class Wildcard:
                     'hw_usm_database_profiles': ['alienvault-hw-usm-database'],
                     'hw_aio_extended_profiles': ['alienvault-hw-aio-extended'],
                     'hw_all_profiles': [],
-                    'ami_aio_profiles': ['alienvault-ami-aio-6x1gb'],
+                    'ami_aio_profiles': ['alienvault-ami-aio-6x1gb',
+                                         'alienvault-ami-aio-6x1gb-lite'],
+                    'ami_sensor_profiles': ['alienvault-ami-sensor-standard-6x1gb',
+                                            'alienvault-ami-sensor-remote',
+                                            'alienvault-ami-sensor-remote-lite'],
+                    'ami_usm_standard_profiles': ['alienvault-ami-usm-standard'],
+                    'ami_logger_profiles': ['alienvault-ami-logger-standard'],
                     'ami_all_profiles': [],
+                    'hyperv_aio_profiles': ['alienvault-hyperv-aio-6x1gb',
+                                            'alienvault-hyperv-aio-6x1gb-lite'],
+                    'hyperv_sensor_profiles': ['alienvault-hyperv-sensor-standard-6x1gb',
+                                               'alienvault-hyperv-sensor-remote',
+                                               'alienvault-hyperv-sensor-remote-lite'],
+                    'hyperv_usm_standard_profiles': ['alienvault-hyperv-usm-standard'],
+                    'hyperv_logger_profiles': ['alienvault-hyperv-logger-standard'],
+                    'hyperv_all_profiles': [],
                     'all_profiles': []
                     }
 
@@ -174,7 +188,7 @@ class Wildcard:
                    'usm_enterprise',
                    'aio_extended']
 
-        for platform in ['hw', 'vmware', 'ami']:
+        for platform in ['hw', 'vmware', 'ami', 'hyperv']:
             for subkey in subkeys:
                 profiles.setdefault('all_%s_profiles' % subkey, [])
                 if "%s_%s_profiles" % (platform, subkey) in profiles.keys():
@@ -190,4 +204,3 @@ class Wildcard:
             return [new_string]
 
         return new_string
-

@@ -52,7 +52,8 @@ if ($_SESSION["_alarm_keep_pagination"])
 }
 else
 {
-    $_num    = POST('iDisplayLength');
+    $_SESSION["per_page"] = $_num = POST('iDisplayLength')
+        ? POST('iDisplayLength') : (isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 20);
     $_inf    = POST('iDisplayStart');
     $_order  = POST('iSortCol_0');
     $_torder = POST('sSortDir_0');

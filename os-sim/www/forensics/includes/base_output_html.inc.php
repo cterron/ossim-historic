@@ -771,7 +771,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                 {
                     $('#group_hostname_select').css('display', 'inline');
                 }
-                if (val.match("^username"))
+                if (val.match("^idmusername"))
                 {
                     $('#group_username_select').css('display', 'inline');
                 }
@@ -790,26 +790,11 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                 }
 
                 // Show Group Button (All options are ready to go)
-                if (val == "signature"
-                || val == "sensor"
-                || val == "ptypes"
-                || val == "otx"
-                || val == "plugins"
-                || val == "country"
-                || val == "categories"
-
-                || (val.match("^ip")
-                        && $('#groupby_ip').find(":selected").val() != "ipempty")
-
-                || (val.match("^hostname")
-                        && $('#groupby_hostname').find(":selected").val() != "hostnameempty")
-
-                || (val.match("^username")
-                        && $('#groupby_username').find(":selected").val() != "usernameempty")
-
-                || (val.match("^port")
-                        && $('#group_port_select').find(":selected").val() != "portempty"
-                        && $('#group_proto_select').find(":selected").val() != "portprotoempty"))
+                if (
+                !(val.match("^ip") && $('#groupby_ip').find(":selected").val() == "ipempty")
+                && !(val.match("^hostname") && $('#groupby_hostname').find(":selected").val() == "hostnameempty")
+                && !(val.match("^idmusername") && $('#groupby_username').find(":selected").val() == "usernameempty")
+                && !(val.match("^port") && $('#group_port_select').find(":selected").val() == "portempty" && $('#group_proto_select').find(":selected").val() == "portprotoempty"))
                 {
                     $('#group_button').show();
                 }
@@ -818,120 +803,52 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             // Group by go
             function go_stats()
             {
-                if ($('#groupby_1').val() == "ip")
-                {
-                    if ($('#groupby_ip').val() == "iplink")
-                    {
-                        load_link("base_stat_iplink.php?sort_order=events_d&fqdn=no");
-                    }
-                    else if ($('#groupby_ip').val() == "iplink_fqdn")
-                    {
-                        load_link("base_stat_iplink.php?sort_order=events_d&fqdn=yes");
-                    }
-                    else if ($('#groupby_ip').val() == "ipsrc")
-                    {
-                        load_link("base_stat_uaddr.php?addr_type=1&sort_order=occur_d");
-                    }
-                    else if ($('#groupby_ip').val() == "ipdst")
-                    {
-                        load_link("base_stat_uaddr.php?addr_type=2&sort_order=occur_d");
-                    }
-                    else if ($('#groupby_ip').val() == "ipboth")
-                    {
-                        load_link("base_stat_uaddress.php?sort_order=occur_d");
-                    }
-                }
-                else if ($('#groupby_1').val() == "hostname")
-                {
-                    if ($('#groupby_hostname').val() == "hostnamesrc")
-                    {
-                        load_link("base_stat_uidmsel.php?addr_type=src_hostname&sort_order=occur_d");
-                    }
-                    else if ($('#groupby_hostname').val() == "hostnamedst")
-                    {
-                        load_link("base_stat_uidmsel.php?addr_type=dst_hostname&sort_order=occur_d");
-                    }
-                    else
-                    {
-                        load_link("base_stat_uidm.php?addr_type=hostname&sort_order=occur_d");
-                    }
-                }
-                else if ($('#groupby_1').val() == "username")
-                {
-                    if ($('#groupby_username').val() == "usernamesrc")
-                    {
-                        load_link("base_stat_uidmsel.php?addr_type=src_userdomain&sort_order=occur_d");
-                    }
-                    else if ($('#groupby_username').val() == "usernamedst")
-                    {
-                        load_link("base_stat_uidmsel.php?addr_type=dst_userdomain&sort_order=occur_d");
-                    }
-                    else
-                    {
-                        load_link("base_stat_uidm.php?addr_type=userdomain&sort_order=occur_d");
-                    }
-                }
-                else if ($('#groupby_1').val() == "signature")
-                {
-                    load_link("base_stat_alerts.php?sort_order=occur_d");
-                }
-                else if ($('#groupby_1').val() == "port")
-                {
-                    if ($('#groupby_port').val() == "portsrc")
-                    {
-                        if ($('#groupby_proto').val() == "portprototcp")
-                        {
-                            load_link("base_stat_ports.php?sort_order=occur_d&port_type=1&proto=6");
-                        }
-                        else if ($('#groupby_proto').val() == "portprotoudp")
-                        {
-                            load_link("base_stat_ports.php?sort_order=occur_d&port_type=1&proto=17");
-                        }
-                        else if ($('#groupby_proto').val() == "portprotoany")
-                        {
-                            load_link("base_stat_ports.php?sort_order=occur_d&port_type=1&proto=-1");
-                        }
-                    }
-                    else if ($('#groupby_port').val() == "portdst")
-                    {
-                        if ($('#groupby_proto').val() == "portprototcp")
-                        {
-                            load_link("base_stat_ports.php?sort_order=occur_d&port_type=2&proto=6");
-                        }
-                        else if ($('#groupby_proto').val() == "portprotoudp")
-                        {
-                            load_link("base_stat_ports.php?sort_order=occur_d&port_type=2&proto=17");
-                        }
-                        else if ($('#groupby_proto').val() == "portprotoany")
-                        {
-                            load_link("base_stat_ports.php?sort_order=occur_d&port_type=2&proto=-1");
-                        }
-                    }
-                }
-                else if ($('#groupby_1').val() == "sensor")
-                {
-                    load_link("base_stat_sensor.php?sort_order=occur_d");
-                }
-                else if ($('#groupby_1').val() == "otx")
-                {
-                    load_link("base_stat_otx.php?sort_order=occur_d");
-                }
-                else if ($('#groupby_1').val() == "ptypes")
-                {
-                    load_link("base_stat_ptypes.php?sort_order=occur_d");
-                }
-                else if ($('#groupby_1').val() == "plugins")
-                {
-                    load_link("base_stat_plugins.php?sort_order=occur_d");
-                }
-                else if ($('#groupby_1').val() == "country")
-                {
-                    load_link("base_stat_country.php");
-                }
-                else if ($('#groupby_1').val() == "categories")
-                {
-                    load_link("base_stat_categories.php?sort_order=occur_d");
-                }
+				var val1 = $('#groupby_1').val();
+				switch (val1) {
+					case "ip": 
+						var val2 = $('#groupby_ip').val();
+						switch (val2) {
+							case "iplink": load_link("base_stat_iplink.php?sort_order=events_d&fqdn=no"); break;
+							case "iplink_fqdn": load_link("base_stat_iplink.php?sort_order=events_d&fqdn=yes"); break;
+							case "ipsrc": load_link("base_stat_uaddr.php?addr_type=1&sort_order=occur_d"); break;
+							case "ipdst": load_link("base_stat_uaddr.php?addr_type=2&sort_order=occur_d"); break;
+							case "ipboth": load_link("base_stat_uaddress.php?sort_order=occur_d"); break;
+						}
+						break;
+					case "hostname": 
+						var val2 = $('#groupby_hostname').val();
+						switch (val2) {
+							case "hostnamesrc": load_link("base_stat_uidmsel.php?addr_type=src_hostname&sort_order=occur_d"); break;
+							case "hostnamedst": load_link("base_stat_uidmsel.php?addr_type=dst_hostname&sort_order=occur_d"); break;
+							default : load_link("base_stat_uidm.php?addr_type=hostname&sort_order=occur_d"); break;
+						}
+						break;
+					case "idmusername": 
+						var val2 = $('#groupby_username').val();
+						switch (val2) {
+							case "usernamesrc": load_link("base_stat_uidmsel.php?addr_type=src_userdomain&sort_order=occur_d"); break;
+							case "usernamedst": load_link("base_stat_uidmsel.php?addr_type=dst_userdomain&sort_order=occur_d"); break;
+							default : load_link("base_stat_uidm.php?addr_type=userdomain&sort_order=occur_d"); break;
+						}
+						break;
+					case "signature": load_link("base_stat_alerts.php?sort_order=occur_d"); break;
+					case "port": 
+						var port = $('#groupby_port').val() == "portsrc" ? 1 : 2;
+						var val2 = $('#groupby_proto').val();
+						switch (val2) {
+							case "portprototcp": load_link("base_stat_ports.php?sort_order=occur_d&port_type="+port+"&proto=6"); break;
+							case "portprotoudp": load_link("base_stat_ports.php?sort_order=occur_d&port_type="+port+"&proto=17"); break;
+							case "portprotoany" : load_link("base_stat_ports.php?sort_order=occur_d&port_type="+port+"&proto=-1"); break;
+						}
+						break;
+					case "sensor": load_link("base_stat_sensor.php?sort_order=occur_d"); break;
+					case "otx": load_link("base_stat_otx.php?sort_order=occur_d"); break;
+					case "ptypes": load_link("base_stat_ptypes.php?sort_order=occur_d"); break;
+					case "plugins": load_link("base_stat_plugins.php?sort_order=occur_d"); break;
+					case "country": load_link("base_stat_country.php?sort_order=occur_d"); break;
+					case "categories": load_link("base_stat_categories.php?sort_order=occur_d"); break;
+					default: load_link("base_stat_extra.php?sort_order=occur_d&addr_type="+val1); break;
+				}
             }
 
             // Postload action (call from host_report_menu.php)

@@ -28,6 +28,8 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 ##
 
+from kombu import Queue, Exchange
+
 CELERY_REDIS_SCHEDULER_URL = "redis://localhost:6379/1"
 CELERY_REDIS_SCHEDULER_KEY_PREFIX = 'av:api:task'
 CELERY_REDIS_SCHEDULER_DEFAULT_TASKS_FILE = '/etc/alienvault/api/default_tasks.yml'
@@ -46,6 +48,28 @@ CELERY_IMPORTS = ("celerymethods.tasks.monitor_tasks",
                   "celerymethods.tasks.maintenance",
                   "celerymethods.tasks.hids",
                   "celerymethods.tasks.start_up")
+
+CELERY_QUEUES = (
+    Queue('default', Exchange('default'), routing_key='default'),
+    Queue('sys-maint', Exchange('sys-maint'), routing_key='sys-maint'),
+    Queue('scans', Exchange('scans'), routing_key='scans'),
+)
+
+CELERY_DEFAULT_QUEUE = 'default'
+CELERY_DEFAULT_EXCHANGE = 'default'
+CELERY_DEFAULT_ROUTING_KEY = 'default'
+
+CELERY_ROUTES = {
+    # -- SCANS QUEUE -- #
+    'celerymethods.jobs.nmap.run_nmap_scan': {'queue': 'scans'},
+    'celerymethods.jobs.nmap.monitor_nmap_scan': {'queue': 'scans'},
+    # -- SYSTEM MAINTENANCE QUEUE -- #
+    'celerymethods.tasks.backup_tasks.backup_configuration_all_systems': {'queue': 'sys-maint'},
+    'celerymethods.tasks.maintenance.clean_old_loggger_entries': {'queue': 'sys-maint'},
+    'celerymethods.tasks.celery_tasks.cleanup_db_celery_jobs': {'queue': 'sys-maint'},
+    'celerymethods.tasks.maintenance.remove_old_database_files': {'queue': 'sys-maint'}
+}
+
 CELERYBEAT_LOG_LEVEL = "DEBUG"
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

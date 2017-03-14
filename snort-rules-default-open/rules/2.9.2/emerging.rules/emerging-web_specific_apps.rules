@@ -9100,7 +9100,13 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS 
 
 #alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS z1exchange edit.php site parameter SQL injection"; flow:established,to_server; content:"GET "; depth:4; uricontent:"/edit.php?"; nocase; uricontent:"site="; nocase; uricontent:"UNION"; nocase; uricontent:"SELECT"; nocase; pcre:"/UNION.+SELECT/Ui"; reference:bugtraq,32556; reference:url,milw0rm.com/exploits/7311; reference:url,doc.emergingthreats.net/2008928; classtype:web-application-attack; sid:2008928; rev:3;)
 
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS PHPNuke Forum viewtopic SQL insertion attempt"; flow:to_server,established; uricontent:"/modules.php"; nocase; content:"name=Forums"; content:"file=viewtopic"; pcre:"/forum=.*'/"; reference:bugtraq,7193; classtype:web-application-attack; sid:2102654; rev:4;)
+
 #alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS BASE base_stat_common.php remote file include"; flow:to_server,established; content:"/base_stat_common.php"; nocase; http_uri; content:"BASE_path="; http_uri; nocase; pcre:"/BASE_path=(?:(?:ht|f)tps?|data|php)/Ui"; reference:url,secunia.com/advisories/20300/; classtype:web-application-attack; sid:2019524; rev:5;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS NetScreen SA 5000 delhomepage.cgi access"; flow:to_server,established; content:"/delhomepage.cgi"; http_uri; fast_pattern:only; reference:bugtraq,9791; classtype:web-application-activity; sid:2103062; rev:5;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS oracle web arbitrary command execution attempt"; flow:to_server,established; content:"/ows-bin/"; nocase; http_uri; content:"?&"; http_uri; reference:bugtraq,1053; reference:cve,2000-0169; reference:nessus,10348; classtype:web-application-attack; sid:2101193; rev:12;)
 
 #alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS Euchia CMS catalogo.php id_livello Parameter Cross Site Scripting Attempt"; flow:established,to_server; uricontent:"/catalogo.php?"; nocase; uricontent:"id_livello="; nocase; pcre:"/id_livello\x3d.+(script|onmouse[a-z]+|onkey[a-z]+|onload|onunload|ondragdrop|onblur|onfocus|onclick|ondblclick|onsubmit|onreset|onselect|onchange|style\x3D)/Ui"; reference:url,inj3ct0r.com/exploits/13028; classtype:web-application-attack; sid:2011571; rev:1;)
 
@@ -10908,9 +10914,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_A
 
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS Magento Shoplift Exploit Inbound"; flow:to_server,established; content:"POST"; http_method; content:"/admin/Cms_Wysiwyg/directive/index/"; http_uri; content:"filter=cG9wdWxhcml0eVtmcm9tXT0wJnBvcHVsYXJpdHlbdG9dPTMmcG9wdWxhcml0eVtmaWVsZF9leHByXT0w"; http_client_body; fast_pattern; depth:100; reference:url,blog.sucuri.net/2015/04/magento-shoplift-supee-5344-exploits-in-the-wild.html; reference:url,packetstormsecurity.com/files/133327/Magento-Add-Administrator-Account.html; classtype:web-application-attack; sid:2022776; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS PHPNuke Forum viewtopic SQL insertion attempt"; flow:to_server,established; uricontent:"/modules.php"; nocase; content:"name=Forums"; content:"file=viewtopic"; pcre:"/forum=.*'/"; reference:bugtraq,7193; classtype:web-application-attack; sid:2102654; rev:4;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS User Agent (SQLi Injection / Scanning)"; flow:established,to_server; content:"User-Agent|3a 20|testitest"; http_header; fast_pattern; reference:url,en.wikipedia.org/wiki/SQL_injection; classtype:web-application-attack; sid:2023351; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS NetScreen SA 5000 delhomepage.cgi access"; flow:to_server,established; content:"/delhomepage.cgi"; http_uri; fast_pattern:only; reference:bugtraq,9791; classtype:web-application-activity; sid:2103062; rev:5;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS oracle web arbitrary command execution attempt"; flow:to_server,established; content:"/ows-bin/"; nocase; http_uri; content:"?&"; http_uri; reference:bugtraq,1053; reference:cve,2000-0169; reference:nessus,10348; classtype:web-application-attack; sid:2101193; rev:12;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS Joomla GoogleMaps Plugin Open Proxy Access"; flow:established,to_server; content:"/plugins/system/plugin_googlemap2_proxy.php?url="; http_uri; fast_pattern:28,20; content:!"Referer|3a 20|"; http_header; reference:url,bnshosting.net/googlemap-proxy-vulnerability; classtype:web-application-attack; sid:2023574; rev:1;)
 

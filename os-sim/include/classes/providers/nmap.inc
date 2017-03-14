@@ -87,9 +87,9 @@ class Nmap_provider extends Provider
             'scan_timing' => $scan_options['scan_timing'],
             'rdns'        => $scan_options['reverse_dns'],
             'autodetect'  => $scan_options['autodetect_os'],
-            'idm'         => $scan_options['idm']
+            'idm'         => $scan_options['idm'],
+            'excludes'    => $scan_options['excludes']
         );
-
         $response = $this->conn->do_request($this->common_url . '/', $params, 'POST');
 
         return $response;

@@ -2,10 +2,12 @@
 
 alienvault-ami-aio-6x1gb:1057724416
 alienvault-ami-aio-6x1gb:1056964608
-alienvault-ami-usm-standard:1231788032
-alienvault-ami-sensor-remote:1057724416
-alienvault-ami-sensor-standard-6x1gb:1242274816
-alienvault-ami-logger-standard:1871420416
+alienvault-ami-aio-6x1gb-lite:507510784
+alienvault-ami-usm-standard:1056964608
+alienvault-ami-sensor-remote:1056964608
+alienvault-ami-sensor-standard-6x1gb:1056964608
+alienvault-ami-logger-standard:1056964608
+alienvault-ami-sensor-remote-lite:251496448
 
 alienvault-vmware-aio-6x1gb:1056964608
 alienvault-vmware-aio-6x1gb:1057724416

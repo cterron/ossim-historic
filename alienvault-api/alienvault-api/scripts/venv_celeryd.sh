@@ -6,6 +6,8 @@ RUNDIR="/var/run"
 PIDDIR="$RUNDIR/alienvault"
 PIDFILE="$PIDDIR/celeryd.pid"
 
+. /lib/lsb/init-functions
+
 do_start ()
 {
     # Check if /var/run is a symbolic link to determine the Debian configuration
@@ -68,12 +70,12 @@ do_force_stop ()
 {
 	do_stop
 	RET1=$?
-	ps auxwww | grep 'celery.bin.celeryd' | grep python| awk '{print $2}' | while read p;
+	ps -C python -o pid=,cmd= | awk '/celery.bin.celeryd/'{'print $1'} | while read p;
 	do
 		kill -TERM $p
 	done
 	sleep 10
-    ps auxwww | grep 'celery.bin.celeryd' | grep python| awk '{print $2}' | while read p;
+    ps -C python -o pid=,cmd= | awk '/celery.bin.celeryd/'{'print $1'} | while read p;
 	do
 		kill -9 $p
 	done

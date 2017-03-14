@@ -120,7 +120,6 @@ class Tree
         /* Connect to db */
         $db             = new ossim_db(TRUE);
         $this->conn     = $db->connect();
-
         $this->keys          = explode("|", $keys);
         $this->section       = $section;
         $this->page          = $page;
@@ -178,7 +177,6 @@ class Tree
         $filter = $this->filter;
         echo "[";
         $flag = false;
-
         foreach ($this->keys as $key)
         {
             $entity_id = (preg_match("/^u?e_([^_]+)/", $key, $found)) ? $found[1] : '';
@@ -1936,7 +1934,7 @@ class Tree
         $aux_children[] = '{ "key" : "'.$uoe.'host", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host.png", "title" : "'._("Assets").'"}';
         $aux_children[] = '{ "key" : "'.$uoe.'hostgroup", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host_group.png", "title" :"'._("Asset Groups").'"}';
         $aux_children[] = '{ "key" : "'.$uoe.'net", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/net.png", "title" : "'._("Networks").'"}';
-
+        $aux_children[] = '{ "key" : "'.$uoe.'netgroup", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/net_group.png", "title" : "'._("Network Groups").'"}';
         $buffer .= implode(',', $aux_children) . ']}';
 
         echo $buffer;

@@ -1541,9 +1541,11 @@ class Alarm
         }
         /* Number of events threshold filter */
         if ($min_risk) {
+            $min_risk++;
             $where[] = " a.risk >= $min_risk ";
         }
         if ($max_risk != "" && $max_risk != 2) {
+            $max_risk++;
             $where[] = " a.risk <= $max_risk ";
         }
         // taxonomy left join
@@ -2317,7 +2319,7 @@ class Alarm
     {
         Ossim_db::check_connection($conn);
 
-        $sql = "UPDATE alarm SET status = 'open', timestamp = timestamp WHERE backlog_id = unhex(?)";
+        $sql = "UPDATE alarm SET status = 'open', timestamp = CURRENT_TIMESTAMP() WHERE backlog_id = unhex(?)";
         $params = array(
             $backlog_id
         );
@@ -2349,7 +2351,7 @@ class Alarm
     {
         Ossim_db::check_connection($conn);
 
-        $sql = "UPDATE alarm SET status = 'closed', timestamp = timestamp WHERE backlog_id = unhex(?)";
+        $sql = "UPDATE alarm SET status = 'closed', timestamp = CURRENT_TIMESTAMP() WHERE backlog_id = unhex(?)";
         $params = array(
             $backlog_id
         );
@@ -2372,39 +2374,32 @@ class Alarm
     *
     * @return string
     */
-    public static function close_all()
+    public static function close_all($conn)
     {
-        if (Session::is_pro())
+        Ossim_db::check_connection($conn);
+
+        $sql = "UPDATE alarm SET status = 'closed', timestamp = CURRENT_TIMESTAMP() WHERE status = 'open' AND removable = 1";
+
+        if ($conn->Execute($sql) === FALSE)
         {
-            $query        = Alarm_delete::close_all();
-        }
-        else
-        {
-            $from_alarm   = $_SESSION["_alarm_perms_from"];
-            $where_alarm  = $_SESSION["_alarm_perms_where"] . ' AND a.removable=1 ';
-    
-            list($backlog_ids,$sql_tmp) = Util::create_sql_tmp_table("id binary(16) NOT NULL, PRIMARY KEY ( id )");
-    
-            // backlog Table only select
-            $query   = $sql_tmp . "; \n";
-            $query  .= "REPLACE INTO $backlog_ids SELECT a.backlog_id as id $from_alarm $where_alarm; \n";
-    
-            $query  .= "UPDATE alarm SET status = 'closed' where backlog_id IN (SELECT id FROM $backlog_ids); \n";
-    
-            $query  .= "DROP TABLE $backlog_ids ; \n";
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
-        $dir     = "/tmp";
-        $prefix  = "close_alarm_" . Session::get_session_user() . "_";
+        Util::memcacheFlush(FALSE);
 
-        $file    = Util::generate_tmp_file($dir, $prefix, $query);
+    }
+    public static function open_all($conn)
+    {
+        Ossim_db::check_connection($conn);
 
-        $infolog = array(
-            "closed"
-        );
-        Log_action::log(13, $infolog);
+       $sql = "UPDATE alarm SET status = 'open' , timestamp = CURRENT_TIMESTAMP() WHERE status = 'closed' ";
 
-        return $file;
+        if ($conn->Execute($sql) === FALSE)
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        Util::memcacheFlush(FALSE);
 
     }
 

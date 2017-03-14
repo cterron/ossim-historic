@@ -264,7 +264,7 @@ class Ossec
             $data['data'] = $new_conf;
         }
 
-        if (@file_put_contents($conf_file, $new_conf, LOCK_EX) === FALSE)
+        if (file_put_contents($conf_file, $new_conf, LOCK_EX) === FALSE)
         {
             $exp_msg = _('Error! Failed to set HIDS configuration file. You do not have enough access privileges');
 
@@ -378,7 +378,7 @@ class Ossec
             'zeus_rules.xml'             => 54,
             'mcafee_av_rules.xml'        => 55,
             'attack_rules.xml'           => 56,
-            'local_rules.xml'            => 57
+            'local_rules.xml'            => -1
        );
 
         if (@file_exists($conf_file) !== FALSE)

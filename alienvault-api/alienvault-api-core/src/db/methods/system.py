@@ -36,6 +36,7 @@ from sqlalchemy import or_, and_
 
 import re
 import db
+
 from db.models.alienvault import (
     Server,
     Sensor,

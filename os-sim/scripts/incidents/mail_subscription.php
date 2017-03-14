@@ -37,12 +37,6 @@ require_once 'av_init.php';
 $conf      = $GLOBALS["CONF"];
 
 $mdays     = $conf->get_conf("tickets_max_days");
-$send_mail = strtolower($conf->get_conf("tickets_send_mail"));
-
-if ($send_mail == "no")
-{
-    exit();
-}
 
 $db   = new ossim_db();
 $conn = $db->connect();
@@ -62,8 +56,8 @@ if ($result = $conn->execute("SELECT * FROM incident_tmp_email"))
     {
         $incident_id = $result->fields["incident_id"];
         $ticket_id   = $result->fields["ticket_id"];
-
-        Incident_ticket::mail_notification($conn, $incident_id, $ticket_id);
+        $type        = $result->fields["type"];
+        Incident_ticket::mail_notification($conn, $incident_id, $ticket_id, $type);
 
         if (ossim_error())
         {

@@ -27,26 +27,23 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
-from flask import Blueprint, request, current_app
-from api.lib.utils import accepted_url
 from uuid import UUID
+
+import api_log
+from api.lib.auth import admin_permission
 from api.lib.common import (make_ok,
                             make_bad_request,
                             make_error,
                             document_using)
-from api.lib.auth import admin_permission
-import api_log
+from api.lib.utils import accepted_url
 from apimethods.system import system
-from apimethods.system.system import sync_asec_plugins as api_sync_asec
-from apimethods.system.system import apimethod_get_pending_packges
-from apimethods.system.system import apimethod_get_remote_software_update
-from apimethods.system.system import asynchronous_update
-from apimethods.system.system import check_update_and_reconfig_status
-from apimethods.system.system import set_system_certificate
-from apimethods.system.system import check_if_process_is_running
-from apimethods.utils import is_valid_ipv4
-from apimethods.utils import is_json_boolean, is_json_true
+from apimethods.system.system import (asynchronous_update,
+                                      check_update_and_reconfig_status,
+                                      set_system_certificate)
 from apimethods.system.system import get_jobs_running
+from apimethods.system.system import sync_asec_plugins as api_sync_asec
+from apimethods.utils import is_valid_ipv4, is_json_true
+from flask import Blueprint, request, current_app
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -57,8 +54,7 @@ blueprint = Blueprint(__name__, __name__)
 def get_systems():
     (success, system_data) = system.get_all()
     if not success:
-        current_app.logger.error("system: get_systems error: " +
-                                 str(system_data))
+        current_app.logger.error("system: get_systems error: " + str(system_data))
         return make_error("Cannot retrieve systems info", 500)
 
     return make_ok(systems=system_data)
@@ -69,8 +65,7 @@ def get_systems():
 def get_local_info():
     success, system_data = system.get_local_info()
     if not success:
-        current_app.logger.error("system: get_local_info error: " +
-                                 str(system_data))
+        current_app.logger.error("system: get_local_info error: " + str(system_data))
         return make_error("Cannot retrieve local system info", 500)
 
     return make_ok(**system_data)
@@ -94,7 +89,6 @@ def get_system(system_id):
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_ip': str, 'password': str})
 def add_system():
-
     if not is_valid_ipv4(request.form['system_ip']):
         return make_bad_request("Bad system_ip: %s" % request.form['system_ip'])
 
@@ -112,12 +106,10 @@ def add_system():
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
 def delete_system(system_id):
-    (success, msg) = system.apimethod_delete_system(system_id)
+    success, msg = system.apimethod_delete_system(system_id)
     if not success:
-        error_msg = "An error occurred while deleting the system <%s>" % system_id
-        error_msg = error_msg + ": %s" % msg
+        error_msg = "An error occurred while deleting the system <%s>: %s" % (system_id, msg)
         return make_error(error_msg, 500)
-
     return make_ok(message=msg)
 
 
@@ -127,72 +119,16 @@ def delete_system(system_id):
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
                'password': {'type': str, 'optional': False}})
 def put_system_authenticate(system_id):
-
     password = request.args.get("password")
 
     success, msg = system.add_system(system_id, password)
     if not success:
         api_log.error(str(msg))
-        error_msg = "Cannot add system %s" % system_id
-        error_msg = error_msg + ". Please verify that the system is reachable "
-        error_msg = error_msg + " and the password is correct."
+        error_msg = "Cannot add system %s. " \
+                    "Please verify that the system is reachable and the password is correct." % system_id
         return make_error(error_msg, 500)
 
     return make_ok(**msg)
-
-
-@blueprint.route('/<system_id>/status/pending_packages', methods=['GET'])
-@document_using('static/apidocs/system.html')
-@admin_permission.require(http_exception=403)
-@accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-               'no_cache': {'type': str, 'optional': False}})
-def get_pending_packages(system_id):
-    """Get pending update packages from a given AlienVault system
-
-    The blueprint handle the following url:
-    GET /av/api/1.0/system/<system_id>/status/pending_packages
-
-    Args:
-        system_id (str): String with system id (uuid) or local
-
-    """
-    no_cache = request.args.get('no_cache')
-    if not is_json_boolean(no_cache):
-        return make_error("Invalid value for the no_cache parameter", 500)
-    no_cache = is_json_true(no_cache)
-    success, result = apimethod_get_pending_packges(system_id, no_cache)
-    if not success:
-        api_log.error("Error: " + str(result))
-        return make_error("Cannot retrieve packages status " + str(result), 500)
-    return make_ok(available_updates=result)
-
-
-@blueprint.route('/<system_id>/status/software', methods=['GET'])
-@document_using('static/apidocs/system.html')
-@admin_permission.require(http_exception=403)
-@accepted_url({'system_id': {'type': UUID, 'values': ['local', 'all']},
-               'no_cache': {'type': str, 'optional': False}})
-def get_remote_software_status(system_id):
-    """Get the software status from a given AlienVault system or all systems
-
-    The blueprint handle the following url:
-    GET /av/api/1.0/system/<system_id>/status/software
-
-    Args:
-        system_id (str): String with system id (uuid) local or all
-
-    """
-    no_cache = request.args.get('no_cache')
-    if not is_json_boolean(no_cache):
-        return make_error("Invalid value for the no_cache parameter", 500)
-    no_cache = is_json_true(no_cache)
-
-    success, result = apimethod_get_remote_software_update(system_id, no_cache)
-    if not success:
-        api_log.error("Error: " + str(result))
-        return make_error("Cannot retrieve packages status " + str(result), 500)
-
-    return make_ok(**result)
 
 
 @blueprint.route('/<system_id>/update', methods=['PUT'])
@@ -216,7 +152,8 @@ def put_system_update(system_id):
             }
             error example:
             {
-              "message": "Cannot update system 564D9762-9196-99CD-46E6-3D941F32AA6. Please verify that the system is reachable.",
+              "message": "Cannot update system 564D9762-9196-99CD-46E6-3D941F32AA6.
+                          Please verify that the system is reachable.",
               "status": "error",
               "status_code": 500,
               "status_long_message": "Server got itself in trouble",
@@ -255,7 +192,8 @@ def put_system_update_feed(system_id):
             }
             error example:
             {
-              "message": "Cannot update system 564D9762-9196-99CD-46E6-3D941F32AA6. Please verify that the system is reachable.",
+              "message": "Cannot update system 564D9762-9196-99CD-46E6-3D941F32AA6.
+                          Please verify that the system is reachable.",
               "status": "error",
               "status_code": 500,
               "status_long_message": "Server got itself in trouble",
@@ -267,7 +205,7 @@ def put_system_update_feed(system_id):
     if not success:
         error_msg = "Cannot update system %s" % system_id
         api_log.error(error_msg + ": %s" % job_id)
-        error_msg = error_msg + ". Please verify that the system is reachable."
+        error_msg += ". Please verify that the system is reachable."
         return make_error(error_msg, 500)
 
     return make_ok(job_id=job_id)
@@ -298,7 +236,8 @@ def get_tasks(system_id):
             }
             error example:
             {
-              "message": "Cannot retrieve tasks for system 564D9762-9196-99CD-46E6-3D941F32AA6. Please verify that the system is reachable.",
+              "message": "Cannot retrieve tasks for system 564D9762-9196-99CD-46E6-3D941F32AA6.
+                          Please verify that the system is reachable.",
               "status": "error",
               "status_code": 500,
               "status_long_message": "Server got itself in trouble",
@@ -308,8 +247,7 @@ def get_tasks(system_id):
     """
     success, tasks = check_update_and_reconfig_status(system_id)
     if not success:
-        error_msg = "Cannot retrieve task status for system %s. " % system_id
-        error_msg = error_msg + "Please verify that the system is reachable."
+        error_msg = "Cannot retrieve task status for system %s. Please verify that the system is reachable." % system_id
         return make_error(error_msg, 500)
 
     return make_ok(tasks=tasks)
@@ -369,8 +307,7 @@ def sync_asec_plugins():
             api_log.debug("Sync OK for plugin %s" % plugin)
 
     if not all_ok:
-        error_msg = "ASEC plugins sync failed for plugins: "
-        error_msg = error_msg + "%s" % ','.join(failed_plugins)
+        error_msg = "ASEC plugins sync failed for plugins: %s" % ','.join(failed_plugins)
         return make_error(error_msg, 500)
 
     return make_ok(msg="ASEC plugins sync OK")
@@ -406,8 +343,7 @@ def get_jobs(system_id):
 
     success, jobs = get_jobs_running(system_id)
     if not success:
-        error_msg = "Cannot retrieve jobs running for system %s. " % system_id
-        error_msg = error_msg + "Please verify that the system is reachable."
+        error_msg = "Can't retrieve jobs running for system %s. Please verify that the system is reachable." % system_id
         return make_error(error_msg, 500)
 
     return make_ok(jobs=jobs)
@@ -421,7 +357,6 @@ def get_jobs(system_id):
                'pem': {'type': str},
                'ca': {'type': str}})
 def set_certificate(system_id):
-
     crt = request.form.get('crt', '')
     pem = request.form.get('pem', '')
     ca = request.form.get('ca', '')
@@ -432,27 +367,3 @@ def set_certificate(system_id):
         return make_error(str(job_id), 500)
 
     return make_ok(job_id=job_id)
-
-
-@blueprint.route('/<system_id>/status/ready_for_update', methods=['GET'])
-@document_using('static/apidocs/system.html')
-@admin_permission.require(http_exception=403)
-@accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
-def is_system_ready_for_update(system_id):
-    """ Find out if a system is ready for update.
-        Determine whether openvas is still rebuilding (ENG-100405).
-
-    The blueprint handle the following url:
-    GET /av/api/1.0/system/<system_id>/status/ready_for_update
-
-    Args:
-        system_id (str): String with system id (uuid) or local
-
-    """
-    is_ready = True
-    ps_filters = ['openvasmd --update', 'openvasmd --rebuild', 'openvasmd: Updating', 'openvasmd: Reloading']
-    for ps_filter in ps_filters:
-        if check_if_process_is_running(system_id, ps_filter)[1]:
-            is_ready = False
-            break
-    return make_ok(is_ready=is_ready)

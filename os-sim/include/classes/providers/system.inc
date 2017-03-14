@@ -143,6 +143,20 @@ class System_provider extends Provider
         return $response;
     }
 
+    /**
+     * This method gets FQDNS
+     *
+     * @return object
+     */
+    public function get_fqdns($system_id, $host_ip)
+    {
+        $params = array('host_ip' => $host_ip, 'system_id' => $system_id);
+
+        $response = $this->conn->do_request($this->common_url.'/network/fqdn', $params, 'POST');
+
+        return $response;
+    }
+
 
     /*****************************************************************
      *************************** LICENSE *****************************

@@ -107,7 +107,7 @@ def get_ossec_rule_filenames(sensor_ip):
         Get the ossec rule filenames
     """
     try:
-        command = "/usr/bin/find /var/ossec/rules/*.xml -type f -printf \"%f\n\""
+        command = "/usr/bin/find /var/ossec/alienvault/rules/*.xml -type f -printf \"%f\n\""
         response = _ansible.run_module(host_list=[sensor_ip], module="shell", args=command)
         if sensor_ip in response['dark'] or 'unreachable' in response:
             return False, "[get_ossec_rule_filenames] Something wrong happened while running ansible command %s" % str(response)
@@ -551,7 +551,7 @@ def ossec_get_configuration_rule(system_ip, rule_filename, destination_path=""):
     if not re.match(r'[A-Za-z0-9_\-]+\.xml', rule_filename):
         return False, "Invalid rule filename <%s> " % str(rule_filename)
     try:
-        ossec_rule_path = "/var/ossec/rules/%s" % rule_filename
+        ossec_rule_path = "/var/ossec/alienvault/rules/%s" % rule_filename
         if not os.path.exists(destination_path):
             return False, "Destination folder doesn't exists"
         # From ansible doc: Recursive fetching may be supported in a later release.
@@ -571,7 +571,7 @@ def ossec_get_configuration_rule(system_ip, rule_filename, destination_path=""):
 
 def ossec_put_configuration_rule_file(system_ip, local_rule_filename, remote_rule_name):
     try:
-        ossec_rule_path = "/var/ossec/rules/%s" % remote_rule_name
+        ossec_rule_path = "/var/ossec/alienvault/rules/%s" % remote_rule_name
         cmd_args = "src=%s dest=%s force=yes owner=root group=ossec mode=644" % (local_rule_filename, ossec_rule_path)
         response = _ansible.run_module(host_list=[system_ip], module="copy", args=cmd_args, use_sudo=True)
         result, msg = ansible_is_valid_response(system_ip, response)

@@ -129,7 +129,7 @@ def get_timestamp_last_event_for_each_device():
     """Get the last event for each device"""
     host_last_event = {}
     query = """
-    SELECT hex(h.host_id), max(a.day)
+    SELECT hex(h.host_id), max(a.timestamp)
     FROM alienvault_siem.device d, alienvault_siem.ac_acid_event a, alienvault.host_ip h
     WHERE a.device_id = d.id AND d.device_ip = h.ip GROUP BY h.host_id;
     """
@@ -190,12 +190,12 @@ def get_asset_id_from_ip(asset_ip, sensor_ip, output='str'):
         if output == 'bin':
             asset_id = get_bytes_from_uuid(asset_id)
     except Exception, msg:
-        return (False, "Unknown error obtaining host id for ip address '%s': %s" % (str(asset_ip), str(msg)))
+        return False, "Unknown error obtaining host id for ip address '%s': %s" % (str(asset_ip), str(msg))
 
     if asset_id is None:
-        return (False, "No asset with asset ip '%s'" % asset_ip)
+        return False, "No asset with asset ip '%s'" % asset_ip
 
-    return (True, asset_id)
+    return True, asset_id
 
 
 @require_db

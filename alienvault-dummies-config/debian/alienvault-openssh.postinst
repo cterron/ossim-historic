@@ -136,7 +136,7 @@ PasswordAuthentication yes
 # FCS_SSH_EXT.1.6
 Ciphers aes256-ctr,aes128-ctr
 # FCS_SSH_EXT.1.8
-MACs hmac-sha1,hmac-sha1-96,hmac-md5,hmac-md5-96
+MACs hmac-sha1,hmac-sha2-256,hmac-sha2-512
 EOF
 )
 

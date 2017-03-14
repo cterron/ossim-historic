@@ -33,7 +33,7 @@ from api.lib.common import (make_ok, make_error, make_bad_request, document_usin
 from api.lib.utils import accepted_url
 from apimethods.utils import is_json_boolean, is_json_true
 from apimethods.system.network import dns_resolution, get_interfaces, get_interface, set_interfaces_roles, \
-    get_interface_traffic, get_traffic_stats, put_interface
+    get_interface_traffic, get_traffic_stats, put_interface, get_fqdn_api
 from uuid import UUID
 from json import loads
 from api.lib.auth import admin_permission, logged_permission
@@ -148,3 +148,11 @@ def get_system_network_resolve(system_id):
         return make_error(data, 500)
 
     return make_ok(dns_resolution=data)
+
+
+@blueprint.route('/<system_id>/network/fqdn', methods=['POST'])
+@document_using('static/apidocs/system/network.html')
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']}, 'host_ip': str})
+def get_host_fqdn(system_id):
+    host_ip = request.form.get('host_ip')
+    return make_ok(fqdn=get_fqdn_api(system_id, host_ip))

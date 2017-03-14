@@ -476,7 +476,10 @@ function get_otx_user ($data)
     {
         $otx = new Otx();
         $otx->register_token($token);
-        
+        $file = "/usr/share/ossim/uploads/otx-debug.tar.gz";
+        if (file_exists($file) && filesize($file) == 0) {
+            unlink($file);
+        }
         $response['error'] = FALSE;
         $response['msg']   = $otx->get_username();
     }

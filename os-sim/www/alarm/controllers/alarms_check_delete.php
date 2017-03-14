@@ -43,9 +43,13 @@ if (ossim_error())
 // check required permissions
 if (!$only_close && !Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete"))
 {
-	die(ossim_error("You don't have required permissions to delete Alarms"));
+    die(ossim_error("You don't have required permissions to delete Alarms"));
 }
 
+if ($only_close && !Session::menu_perms("analysis-menu", "ControlPanelAlarmsClose"))
+{
+    die(ossim_error("You don't have required permissions to close Alarms"));
+}
 /* connect to db */
 $db   = new ossim_db();
 $conn = $db->connect();

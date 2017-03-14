@@ -91,12 +91,14 @@ if (ossim_error())
     );
 
     Util::print_include_files($_files, 'js');
+
+    $action = $tag_type == "incident" ? "/ossim/incidents/incidenttag.php" : "../controllers/tag_actions.php";
     ?>
 
 </head>
 <body>
 
-<form method="POST" name="tag_form" id="tag_form" action="../controllers/tag_actions.php" enctype="multipart/form-data">
+<form method="POST" name="tag_form" id="tag_form" action="<?=$action?>" enctype="multipart/form-data">
 
     <div id="tag_manager">
 
@@ -119,8 +121,13 @@ if (ossim_error())
         <div id="tag_form_container">
             <fieldset>
                 <legend><?php echo _('Name') ?></legend>
-                <input type="text" id="tag_name" name="tag_name" class="vfield" maxlength="30"/>
+                <input type="text" id="tag_name" name="tag_name" class="tag_field vfield" maxlength="30"/>
+		<? if ($tag_type == "incident") { ?>
+                <legend><?php echo _('Description') ?></legend>
+                <textarea id="tag_description" name="tag_description" class="tag_field vfield"></textarea>
+		<? } ?>
             </fieldset>
+
 
             <fieldset>
                 <legend><?php echo _('Style') ?></legend>

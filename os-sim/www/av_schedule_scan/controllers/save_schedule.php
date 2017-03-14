@@ -61,16 +61,18 @@ $validate = array (
 
 if ($s_type == 'nmap')
 {
+    $task_params = [];
     if (GET('task_params') != '')
     {
-        $_GET['task_params'] = str_replace(' ', '', GET('task_params'));
+        $task_params = str_replace(' ', '', GET('task_params'));
+        $_GET['task_params'] = preg_replace(array("/^!/","/,!/"),array("",","),$task_params);
     }
 
     if (POST('task_params') != '')
     {
-        $_POST['task_params'] = str_replace(' ', '', POST('task_params'));
+        $task_params = str_replace(' ', '', POST('task_params'));
+        $_POST['task_params'] = preg_replace(array("/^!/","/,!/"),array("",","),$task_params);
     }
-
     $validate['task_params']     = array('validation' => 'OSS_IP_CIDR',                                        'e_message' => 'illegal:' . _('Targets to scan'));
     $validate['scan_type']       = array('validation' => 'OSS_ALPHA, OSS_SCORE',                               'e_message' => 'illegal:' . _('Scan type'));
     $validate['timing_template'] = array('validation' => 'OSS_TIMING_TEMPLATE',                                'e_message' => 'illegal:' . _('Timing_template'));
@@ -320,7 +322,7 @@ else
         switch ($s_type)
         {
             case 'nmap':
-                $targets = str_replace(' ', '', $params);
+                $targets = str_replace(' ', '', $task_params);
                 $targets = str_replace("\n", ' ', $targets);
                 $targets = str_replace(',', ' ', $targets);
 
@@ -344,22 +346,21 @@ else
                 {
                     $nmap_options[] = '-n';
                 }
-
                 if ($scan_type == 'fast')
                 {
-                    $nmap_options[] = '-sS -F';
+                    $nmap_options[] = '-sV -p21,22,23,25,53,80,113,115,135,139,161,389,443,445,554,1194,1241,1433,3000,3306,3389,8080,9390,27017';
                 }
                 elseif ($scan_type == 'custom')
                 {
-                    $nmap_options[] = "-sS -p $custom_ports";
+                    $nmap_options[] = "-sS -sV -p $custom_ports";
                 }
                 elseif ($scan_type == 'normal')
                 {
-                    $nmap_options[] = '-sS';
+                    $nmap_options[] = '-sS -sV';
                 }
                 elseif ($scan_type == 'full')
                 {
-                    $nmap_options[] = '-sS -p 1-65535';
+                    $nmap_options[] = '-sV -sS -p1-65535';
                 }
                 else
                 {
@@ -388,7 +389,6 @@ else
 
         $db   = new ossim_db();
         $conn = $db->connect();
-
         try
         {
             if ($task_id != '')

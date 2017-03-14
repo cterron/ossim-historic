@@ -591,7 +591,6 @@ function load_asset_form_handlers(form_options)
             }
 
             $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
-                mapkey: av_map.get_map_key(),
                 selectFirst: true,
                 minChars: 3,
                 cacheLength: 50,

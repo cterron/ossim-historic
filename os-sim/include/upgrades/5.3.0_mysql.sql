@@ -1,7 +1,7 @@
 USE alienvault;
 
 REPLACE INTO config (conf, value) VALUES ('latest_asset_change', utc_timestamp());
-REPLACE INTO config (conf, value) VALUES ('last_update', '2016-08-02');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2016-06-17');
 REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.3.0');
 
 INSERT INTO `plugin_sid` VALUES ('\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',7006,700001,NULL,5,1,'ossec: Windows Console Logon',0.0000,24,2),

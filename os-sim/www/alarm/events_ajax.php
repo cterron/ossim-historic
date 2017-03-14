@@ -403,7 +403,7 @@ if (GET('box') == "1")
     			$src_port = ($src_port != 0) ? ":".Port::port2service($conn, $src_port) : "";
     			$dst_port = ($dst_port != 0) ? ":".Port::port2service($conn, $dst_port) : "";
 
-                        $risk_text = Util::get_risk_rext($risk);
+                        $risk_text = Util::get_risk_rext($risk,0);
                         echo '<td>';
                         if ($view && $href_sim) echo "<a href='$href_sim'>";
                         echo '<span class="risk-bar '.$risk_text.'">' . _($risk_text) . '</span>';

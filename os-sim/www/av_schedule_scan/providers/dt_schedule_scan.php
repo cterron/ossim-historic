@@ -100,7 +100,8 @@ try
         }
         elseif ($s_type == 'nmap')
         {
-            $task['task_params'] = str_replace(' ', ', ', preg_replace("/#.*/", "", $task['task_params']));
+            list($tp) = Util::nmap_without_excludes($task['task_params']);
+            $task['task_params'] = implode(", ",$tp);
         }
 
         $s_data = array(

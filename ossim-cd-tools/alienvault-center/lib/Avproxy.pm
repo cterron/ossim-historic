@@ -68,7 +68,7 @@ sub config_system_proxy() {
         system("rm -f $curl_config_file") if ( -f "$curl_config_file" );
     }
 
-    if ( $config{'update_proxy'} eq "alienvault-center" ) {
+    if ( $config{'update_proxy'} eq "alienvault-proxy" ) {
 
         $proxy_port = "3128";
 

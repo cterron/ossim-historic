@@ -48,10 +48,10 @@ $tag_type = GET('tag_type');
 function do_action(data, $msg_box, callbacks)
 {
     data['token'] = Token.get_token('tag_form');
-
+    var url = data.tag_type == "incident" ? "/ossim/incidents/incidenttag.php" : '../controllers/tag_actions.php';
     $.ajax({
         type: 'POST',
-        url: '../controllers/tag_actions.php',
+        url: url,
         data: data,
         dataType: 'json',
         beforeSend: function (xhr)
@@ -113,7 +113,7 @@ $(document).ready(function ()
     var $tag_name = $('#tag_name');
     var $tag_class = $('#tag_class');
     var $tag_type = $('#tag_type');
-
+    var $tag_description = $('#tag_description');
     // Preview tag
     var $tag_preview = $('#tag_preview');
     var default_preview_class = 'av_tag_1';
@@ -166,12 +166,13 @@ $(document).ready(function ()
         $tag_class.val(tag_class);
     }
 
-    // Fill form fields
-    function fill_form_fields(tag_id, tag_name, tag_class)
+   // Fill form fields
+    function fill_form_fields(tag_id, tag_name, tag_class, tag_description)
     {
         $tag_id.val(tag_id);
         $tag_name.val(tag_name);
         $tag_class.val(tag_class);
+        $tag_description.val(tag_description);
         manage_preview(tag_name, tag_class);
     }
 
@@ -215,11 +216,11 @@ $(document).ready(function ()
     /****************************************************
      *************** DataTable Configuration ************
      ****************************************************/
-
+    var sAjaxSource = $tag_type.val() == "incident" ? "/ossim/incidents/incidenttag.php" : '../providers/get_tags.php?tag_type='+$tag_type.val();
     var tag_table = $('#tag_table').dataTable({
         'bProcessing': true,
         'bServerSide': true,
-        'sAjaxSource': '../providers/get_tags.php?tag_type='+$tag_type.val(),
+        'sAjaxSource': sAjaxSource,
         'iDisplayLength': 5,
         'bPaginate': true,
         'bLengthChange': false,
@@ -256,14 +257,16 @@ $(document).ready(function ()
             var tag_id = $row.attr('id');
             var data = {};
             var remove_row = '';
-
-            $('td:eq(0)', nRow).html('<span class="av_tag ' + aData[0] + '" title="' + aData[1] + '">' + aData[1] + '</span>');
+            $('td:eq(0)', nRow).html(
+		'<span class="av_tag ' + aData[0] + '" title="' + aData[1] + '">' + aData[1] + '</span>'+
+                '<input type="hidden" value="'+aData[2]+'"/>'
+	    );
             $('td:eq(0)', nRow).find('span').tipTip({defaultPosition: 'right'});
             $('td:eq(0)', nRow).find('span').on('click', function ()
             {
                 var tag_name = $(this).text();
                 var tag_class = $(this).attr('class').split(' ').pop();
-
+                var tag_description = $(this).next().val();
                 if ($row.hasClass('selected'))
                 {
                     $row.removeClass('selected');
@@ -273,7 +276,7 @@ $(document).ready(function ()
                 {
                     tag_table.$('tr.selected').removeClass('selected');
                     $row.addClass('selected');
-                    fill_form_fields(tag_id, tag_name, tag_class);
+                    fill_form_fields(tag_id, tag_name, tag_class, tag_description);
                 }
             });
 
@@ -281,6 +284,7 @@ $(document).ready(function ()
             $('td:eq(1)', nRow).find('.delete').on('click', function ()
             {
                 data = {
+                    'tag_type': $tag_type.val(),
                     'tag_id': tag_id,
                     'action': 'delete_tag'
                 };

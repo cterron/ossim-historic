@@ -88,7 +88,7 @@ $buffer .= "
 		<table width='100%' class='table_list ajaxgreen'>
 			<tr>
 				<th>#</th>
-				<th>". _("Alarm") ."</th>
+				<th>". _("Event") ."</th>
 				<th>". _("Risk") ."</th>
 				<th>". _("Date") ."</th>
 				<th>". _("Source") ."</th>

@@ -840,7 +840,6 @@ class Av_sensor extends Av_component
         if (count($data) > 4 && count($data) < 7)
         {
             $vs_prev_credentials = $this->get_vs_credentials($conn);
-            $conf = $this->get_ossim_conf();
 
             $new_user = $data['user'];
             $raw_password = $data['password'];

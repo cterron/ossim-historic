@@ -740,8 +740,6 @@ rule-files:
  - emerging-telnet.rules              
  - emerging-exploit.rules
  - emerging-tftp.rules  
- - http-events.rules
- - smtp-events.rules
 
 #useful but often high load rules. Look here for performance tuning
  - emerging-web_client.rules 
@@ -752,12 +750,6 @@ rule-files:
 # - emerging-games.rules
  - emerging-p2p.rules
  - emerging-chat.rules
-# - decoder-events.rules
-# - stream-events.rules
- - dns-events.rules
-# - app-layer-events.rules
-# - modbus-events.rules 
-# - tls-events.rules
 
 #informational, not recommended for high speed nets
 # - emerging-icmp_info.rules
@@ -769,6 +761,7 @@ rule-files:
 
 #ip based rules
  - botcc.rules
+# - botcc.portgrouped.rules
  - ciarmy.rules
  - compromised.rules
  - drop.rules
@@ -778,7 +771,6 @@ rule-files:
 #only use the scada_special if you have the scada extensions compiled int
 # - emerging-scada_special.rules
 # - emerging-scada.rules
-
 
 classification-file: /etc/suricata/classification.config
 reference-config-file: /etc/suricata/reference.config

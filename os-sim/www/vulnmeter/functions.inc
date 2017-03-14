@@ -1367,10 +1367,10 @@ function all_jobs($offset, $pageSize, $status=""){
             elseif($nstatus=="F")
                 $colorscan = "#EFE1E0";
             
-            $status_detail = preg_replace('/Scan Server Selected:\s+\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\s*<br \/>/', '', nl2br(trim($meth_Wcheck)));
+            $status_detail = preg_replace(array('/Scan Server Selected:\s+\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\s*<br \/>/','/Nmap/'), array('',_('Scanner')), nl2br(trim($meth_Wcheck)));
             
             $sInfo .= "<tr bgcolor=\"$colorscan\">";
-            $sInfo .= "<td class='job_detail'><div class='job_status'>" . $image . " ". $statuses[$nstatus]."</div><div class='job_messages'>" . $status_detail . "</div></td>";
+            $sInfo .= "<td class='job_detail'><div class='job_status'>" . $image . " ". $statuses[$nstatus]."</div><div class='job_messages'>" . $status_detail ."\r\n". "</div></td>";
             
             $meth_Wcheck = preg_replace('/Scan Server/', 'Scan Sensor', $meth_Wcheck); 
 

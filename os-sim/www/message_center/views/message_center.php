@@ -158,6 +158,11 @@ $todelete = $av_menu->check_perm("message_center-menu", "MessageCenterDelete");
     </div>
 
     <div class="notifications_right">
+        <div class="msg" id="selectall" style=" display: inline-block; margin: 0 26%; visibility: hidden">
+            <?=sprintf(_("You have selected %s messages."),'<span></span>')?>
+            <a href="#" ><?=sprintf(_("Select all %s messages."),'<span></span>')?></a>
+        </div>
+
         <?php if ($todelete) { ?>
         <div class="av_table_actions">
             <button id="button_action" class="button avt_action small disabled av_b_disabled" disabled="disabled" href="javascript:;" data-dropdown="#dropdown-actions" data-selection="avt_action"><?php echo _("Actions")?>  ▾ </button>

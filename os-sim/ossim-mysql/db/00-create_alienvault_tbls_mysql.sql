@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS `action_email` (
   `_to` VARCHAR(255) NOT NULL,
   `subject` TEXT NULL DEFAULT NULL,
   `message` TEXT NULL DEFAULT NULL,
+  `message_suffix` tinyint unsigned NOT NULL default 1,
   PRIMARY KEY (`action_id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -1177,6 +1178,7 @@ CREATE TABLE IF NOT EXISTS `incident_tag_descr` (
   `id` INT NOT NULL,
   `name` VARCHAR(64) NULL DEFAULT NULL,
   `descr` TEXT NULL DEFAULT NULL,
+  `class` text NOT NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -1403,6 +1405,7 @@ CREATE TABLE IF NOT EXISTS `pass_history` (
   `user` VARCHAR(64) NOT NULL,
   `hist_number` INT(11) NULL DEFAULT NULL,
   `pass` VARCHAR(64) NOT NULL,
+  `salt` text NOT NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -2138,6 +2141,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `uuid` BINARY(16) NOT NULL DEFAULT 0x0,
   `expires` DATETIME NOT NULL DEFAULT '2200-01-01 00:00:00',
   `login_method` VARCHAR(4) NOT NULL,
+  `salt` text NOT NULL,
   PRIMARY KEY (`login`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -2227,6 +2231,7 @@ CREATE TABLE IF NOT EXISTS `vuln_job_schedule` (
   `IP_ctx` TEXT NULL DEFAULT NULL,
   `credentials` VARCHAR(128) NOT NULL,
   `begin` VARCHAR(8) NULL DEFAULT '',
+  `exclude_ports` TEXT NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `name` (`name` ASC))
 ENGINE = InnoDB
@@ -2296,6 +2301,7 @@ CREATE TABLE IF NOT EXISTS `vuln_jobs` (
   `author_uname` TEXT NULL DEFAULT NULL,
   `resolve_names` TINYINT(1) NOT NULL DEFAULT '1',
   `credentials` VARCHAR(128) NOT NULL,
+  `exclude_ports` TEXT NOT NULL,
   PRIMARY KEY (`id`, `name`),
   INDEX `name` (`name` ASC),
   INDEX `scan_END` (`scan_END` ASC),
@@ -3475,6 +3481,7 @@ DEFAULT CHARACTER SET = utf8;
 CREATE TABLE IF NOT EXISTS `incident_tmp_email` (
   `incident_id` INT NOT NULL,
   `ticket_id` INT NOT NULL,
+  `type` TEXT,
   PRIMARY KEY (`incident_id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -3523,7 +3530,7 @@ CHAR(50)),"\nNumber of different sources: ", CAST(cnt_src AS CHAR), "\nNumber of
     CLOSE cur1;
 
     IF EXISTS (SELECT value FROM config where conf = "tickets_send_mail" and value = "yes") THEN
-        REPLACE INTO incident_tmp_email VALUES (p_incident_id,@ticket_id);
+        REPLACE INTO incident_tmp_email VALUES (p_incident_id,@ticket_id,"CREATE_INCIDENT");
     END IF; END$$
 DELIMITER ;
 
@@ -5351,28 +5358,26 @@ DELIMITER ;
 
 DELIMITER $$
 CREATE PROCEDURE user_add (
-    IN login VARCHAR(64),
-    IN passwd VARCHAR(128),
-    IN is_admin INT
+    IN _login VARCHAR(64),
+    IN _passwd VARCHAR(128),
+	IN _salt VARCHAR(8),
+    IN _is_admin INT
 ) 
 BEGIN
-    SET @user = login;
     
-    IF EXISTS (SELECT 1 FROM users WHERE users.login=@user)
+    IF EXISTS (SELECT 1 FROM users WHERE users.login=_login)
     THEN
-        SELECT CONCAT(@user,' already exist') as status;
+        SELECT CONCAT(_login,' already exist') as status;
     ELSE
-        SET @pass = MD5(passwd);
-        SET @uuid = SUBSTRING(SHA1(CONCAT(login,'#',passwd)),1,32);
-        SET @admin = IF(is_admin=0,0,1);
+        SET @uuid = SUBSTRING(SHA1(CONCAT(_login,'#',_passwd)),1,32);
         SELECT HEX(id) FROM acl_templates LIMIT 1 INTO @template_id;
-        INSERT INTO users (login, login_method, name, pass, email, company, department, template_id, language, first_login, timezone, is_admin, uuid, last_logon_try) VALUES (@user, 'pass', @user, @pass, '', '', '', UNHEX(@template_id), 'en_GB', 0, 'US/Eastern', @admin, UNHEX(@uuid), now());
-        INSERT INTO acl_entities_users (login, entity_id) VALUES (@user, (SELECT UNHEX(REPLACE (value, '-', '')) FROM config WHERE conf = 'default_context_id'));
-        INSERT INTO dashboard_tab_options (`id`, `user`, `visible`, `tab_order`) VALUES (1, @user, 1, 11), (2, @user, 1, 10), (3, @user, 1, 9), (4, @user, 1, 8), (5, @user, 0, 7), (6, @user, 1, 6), (8, @user, 0, 5), (9, @user, 0, 4), (10, @user, 0, 3), (11, @user, 0, 2), (12, @user, 0, 1);
-        IF @admin=0 THEN
-            CALL acl_user_permissions(@user);
+        INSERT INTO users (login, login_method, name, pass, email, company, department, template_id, language, first_login, timezone, is_admin, uuid, last_logon_try, salt) VALUES (_login, 'pass', _login, _passwd, '', '', '', UNHEX(@template_id), 'en_GB', 0, 'US/Eastern', _is_admin, UNHEX(@uuid), now(), _salt);
+        INSERT INTO acl_entities_users (login, entity_id) VALUES (_login, (SELECT UNHEX(REPLACE (value, '-', '')) FROM config WHERE conf = 'default_context_id'));
+        INSERT INTO dashboard_tab_options (`id`, `user`, `visible`, `tab_order`) VALUES (1, _login, 1, 11), (2, _login, 1, 10), (3, _login, 1, 9), (4, _login, 1, 8), (5, _login, 0, 7), (6, _login, 1, 6), (8, _login, 0, 5), (9, _login, 0, 4), (10, _login, 0, 3), (11, _login, 0, 2), (12, _login, 0, 1);
+        IF _is_admin=0 THEN
+            CALL acl_user_permissions(_login);
         END IF;
-        SELECT CONCAT(@user,' has been successfully created') as status;
+        SELECT CONCAT(_login,' has been successfully created') as status;
     END IF;
     
 END$$

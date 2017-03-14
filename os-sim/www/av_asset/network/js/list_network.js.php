@@ -71,7 +71,7 @@ function av_network_list(perms)
         __self.table = $("[data-bind='av_table_networks']").AV_table(
         {
             "selectable": true,
-            "num_rows"  : 20,
+            "num_rows"  : <?=(isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 10)?>,
             "with_tray" : true,
             "language"  : "networks",
             "ajax_url"  : __self.cfg.network.providers + "load_nets_result.php",

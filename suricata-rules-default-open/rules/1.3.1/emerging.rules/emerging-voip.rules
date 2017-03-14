@@ -58,6 +58,14 @@ alert tcp $HOME_NET 5060 -> $EXTERNAL_NET any (msg:"ET VOIP Multiple Unauthorize
 
 #alert udp $HOME_NET 5060 -> $EXTERNAL_NET any (msg:"ET VOIP Multiple Unauthorized SIP Responses UDP"; content:"SIP/2.0 401 Unauthorized"; depth:24; threshold: type both, track by_src, count 5, seconds 360; reference:url,doc.emergingthreats.net/2009700; classtype:attempted-dos; sid:2009700; rev:1;)
 
+#alert ip any 5060 -> any any (msg:"GPL VOIP SIP 401 Unauthorized Flood"; content:"SIP/2.0 401 Unauthorized"; depth:24; threshold: type both, track by_dst, count 100, seconds 60; classtype:attempted-dos; sid:2100162; rev:5;)
+
+#alert ip any any -> any 5060 (msg:"GPL VOIP SIP 407 Proxy Authentication Required Flood"; content:"SIP/2.0 407 Proxy Authentication Required"; depth:42; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:2100163; rev:4;)
+
+#alert ip any any -> any 5060 (msg:"GPL VOIP SIP INVITE message flooding"; content:"INVITE"; depth:6; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:2100158; rev:4;)
+
+#alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"GPL VOIP EXPLOIT SIP UDP Softphone overflow attempt"; content:"|3B|branch|3D|"; content:"a|3D|"; pcre:"/^a\x3D[^\n]{1000,}/smi"; reference:bugtraq,16213; reference:cve,2006-0189; classtype:misc-attack; sid:2100223; rev:2;)
+
 alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP Possible Modified Sipvicious OPTIONS Scan"; content:"OPTIONS "; depth:8; content:"ccxllrlflgig|22|<sip|3A|100"; nocase; distance:0; reference:url,code.google.com/p/sipvicious/; reference:url,blog.sipvicious.org/; classtype:attempted-recon; sid:2011422; rev:2;)
 
 alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP Modified Sipvicious Asterisk PBX User-Agent"; content:"|0d 0a|User-Agent|3A| Asterisk PBX"; nocase; threshold: type limit, count 1, seconds 60, track by_src; reference:url,blog.sipvicious.org/2010/11/distributed-sip-scanning-during.html; classtype:attempted-recon; sid:2012296; rev:2;)
@@ -71,12 +79,4 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP Possible Misuse Call
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP Q.931 Call Setup - Inbound"; flow:to_server,established; content:"|08|"; offset:4; depth:1; content:"|05 04|"; distance:3; within:2; classtype:misc-activity; sid:2022023; rev:1;)
 
 alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"ET VOIP H.323 in Q.931 Call Setup - Inbound"; flow:to_server,established; content:"|08|"; offset:4; depth:1; byte_jump:1,0,relative; content:"|05 04|"; within:2; byte_jump:1,0,relative; content:"|70|"; byte_jump:1,0,relative; content:"|7E|"; within:1; byte_test:1,!&,0x0F,3,relative; isdataat:31; classtype:misc-activity; sid:2022024; rev:1;)
-
-#alert ip any 5060 -> any any (msg:"GPL VOIP SIP 401 Unauthorized Flood"; content:"SIP/2.0 401 Unauthorized"; depth:24; threshold: type both, track by_dst, count 100, seconds 60; classtype:attempted-dos; sid:2100162; rev:5;)
-
-#alert ip any any -> any 5060 (msg:"GPL VOIP SIP 407 Proxy Authentication Required Flood"; content:"SIP/2.0 407 Proxy Authentication Required"; depth:42; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:2100163; rev:4;)
-
-#alert ip any any -> any 5060 (msg:"GPL VOIP SIP INVITE message flooding"; content:"INVITE"; depth:6; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:2100158; rev:4;)
-
-#alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"GPL VOIP EXPLOIT SIP UDP Softphone overflow attempt"; content:"|3B|branch|3D|"; content:"a|3D|"; pcre:"/^a\x3D[^\n]{1000,}/smi"; reference:bugtraq,16213; reference:cve,2006-0189; classtype:misc-attack; sid:2100223; rev:2;)
 

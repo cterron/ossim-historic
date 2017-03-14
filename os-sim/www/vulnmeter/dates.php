@@ -31,9 +31,9 @@ class dates {
 		return self::getTimeArray(60,15);
 	}
 
-	public static function getYears() {
+	public static function getYears($ystart) {
 		$current_year = date("Y");
-		return self::getTimeArray($current_year+1,1,$current_year);
+		return self::getTimeArray($current_year+1,1,min($ystart,$current_year));
 	}
 
 	public static function getMonths() {

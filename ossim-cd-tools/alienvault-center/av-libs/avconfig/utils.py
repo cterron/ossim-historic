@@ -20,9 +20,11 @@ import struct
 DEFAULT_FPROBE_CONFIGURATION_FILE = "/etc/default/fprobe"
 DEFAULT_NETFLOW_REMOTE_PORT = 555
 SIOCGIFNETMASK = 0x891b
-MSERVER_REGEX = re.compile("(?P<server_ip>(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})),(?P<server_port>[0-9]{1,5}),(?P<send_events>True|False|Yes|No),(?P<allow_frmk_data>True|False|Yes|No),(?P<server_priority>[0-5]),(?P<frmk_ip>(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})),(?P<frmk_port>[0-9]{1,5})")
+MSERVER_REGEX = re.compile(
+    "(?P<server_ip>(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})),(?P<server_port>[0-9]{1,5}),(?P<send_events>True|False|Yes|No),(?P<allow_frmk_data>True|False|Yes|No),(?P<server_priority>[0-5]),(?P<frmk_ip>(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})),(?P<frmk_port>[0-9]{1,5})")
 FPROBE_PORT_REGEX = re.compile("FLOW_COLLECTOR=\"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:(?P<port>\d+)\"")
-EMAIL_REGEX = re.compile("^[-!#$%&'*+/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+/0-9=?A-Z^_a-z{|}~])*@[a-zA-Z](-?[a-zA-Z0-9])*(\.[a-zA-Z](-?[a-zA-Z0-9])*)+$")
+EMAIL_REGEX = re.compile(
+    "^[-!#$%&'*+/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+/0-9=?A-Z^_a-z{|}~])*@[a-zA-Z](-?[a-zA-Z0-9])*(\.[a-zA-Z](-?[a-zA-Z0-9])*)+$")
 VPN_NET_REGEX = re.compile("^(?P<vpnnet>\d{1,3}\.\d{1,3}\.\d{1,3})$")
 
 
@@ -46,6 +48,7 @@ def is_ipv4(string_ip):
     except:
         ipv4 = False
     return ipv4
+
 
 def is_valid_ip_address(value):
     """Check whether an internet address is valid
@@ -136,6 +139,7 @@ def is_valid_domain(value):
         return True
     return False
 
+
 def is_valid_email(email):
     """Validate an email. 
     http://en.wikipedia.org/wiki/Email_address
@@ -170,10 +174,9 @@ def is_valid_hostname_rfc1123(hostname):
         return False
     if len(hostname) > 63:
         return False
-    #allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    allowed = re.compile(r'^[a-zA-Z0-9](([a-zA-Z0-9\-]*[a-zA-Z0-9]+)*)$',re.IGNORECASE)
+    # allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    allowed = re.compile(r'^[a-zA-Z0-9](([a-zA-Z0-9\-]*[a-zA-Z0-9]+)*)$', re.IGNORECASE)
     return allowed.match(hostname) is not None
-
 
 
 def is_valid_dns_hostname(hostname):
@@ -194,8 +197,8 @@ def is_valid_dns_hostname(hostname):
         return False
     if hostname[-1:] == ".":
         hostname = hostname[:-1]  # strip exactly one dot from the right, if present
-    #allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    allowed = re.compile(r'^[a-zA-Z0-9](([a-zA-Z0-9\-]*[a-zA-Z0-9]+)*)$',re.IGNORECASE)
+    # allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    allowed = re.compile(r'^[a-zA-Z0-9](([a-zA-Z0-9\-]*[a-zA-Z0-9]+)*)$', re.IGNORECASE)
     return all(allowed.match(x) for x in hostname.split("."))
 
 
@@ -225,6 +228,7 @@ def is_valid_vpn_net(value):
             return True
     return False
 
+
 def is_ascii_characters(value):
     """Checks whether a string is compound only by ascii characters 
     """
@@ -250,6 +254,7 @@ def is_allowed_password(value, minsize=8, maxsize=16):
     if is_ascii_characters(value) and size in range(minsize, maxsize + 1):
         return True
     return False
+
 
 def is_allowed_username(user, minsize=4, maxsize=16):
     """Checks whether the given user, it's a valid
@@ -290,11 +295,12 @@ def is_snmp_community_allowed(value, minsize=4, maxsize=16):
         return True
     return False
 
+
 def is_boolean(s):
     """Checks whether the given string is a valid boolean 
     value
     """
-    if not  isinstance(s, basestring):
+    if not isinstance(s, basestring):
         s = "%s" % s
     if not s:
         return False
@@ -304,12 +310,13 @@ def is_boolean(s):
         return True
     return False
 
+
 def get_current_nameserver():
     """Returns the current nameserver"""
     current_nameserver = ""
     try:
         resolv_config = open("/etc/resolv.conf", "r")
-        for line in  resolv_config.readlines():
+        for line in resolv_config.readlines():
             data = re.match('nameserver\s+(?P<nameserver_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*', line)
             if data:
                 try:
@@ -393,13 +400,13 @@ def get_current_plugins_by_type(plugin_type):
     cmd = "rgrep  \"type=%s\"  /etc/ossim/agent/plugins/*.cfg  | cut -d: -f1 |awk {'print $1'}" % plugin_type
     plugin_list = []
     try:
-        #print cmd
+        # print cmd
         status, output = commands.getstatusoutput(cmd)
         if status == 0:
             for line in output.split('\n'):
                 basename = os.path.basename(line)
                 if re.match("([0-9\w\-]+\.cfg)", basename):
-                    pname = os.path.splitext(basename)[0]  
+                    pname = os.path.splitext(basename)[0]
                     plugin_list.append(pname)
 
         if plugin_list:
@@ -411,7 +418,6 @@ def get_current_plugins_by_type(plugin_type):
     except Exception, e:
         print "error: %s" % str(e)
 
-
     return plugin_list
 
 
@@ -420,7 +426,7 @@ def get_current_detector_plugin_list():
     the plugin folder
     """
     plist = get_current_plugins_by_type("detector")
-    final_plist =[]
+    final_plist = []
     for pname in plist:
         pname = re.sub("_eth\d+", "", pname)
         if pname not in final_plist:
@@ -441,13 +447,14 @@ def get_current_monitor_plugin_list():
     the plugin folder
     """
     plist = get_current_plugins_by_type("monitor")
-    final_plist =[]
+    final_plist = []
     for pname in plist:
         pname = re.sub("-monitor", "", pname)
         if pname not in final_plist:
             final_plist.append(pname)
     return final_plist
-        
+
+
 def check_mserver_string(value):
     """
     SERVER_IP;PORT;SEND_EVENTS(True/False);ALLOW_FRMK_DATA(True/False);PRIORITY (0-5);FRMK_IP;FRMK_PORT
@@ -464,7 +471,7 @@ def get_default_netflow_remote_port():
     default_port = DEFAULT_NETFLOW_REMOTE_PORT
     if os.path.isfile(DEFAULT_FPROBE_CONFIGURATION_FILE):
         frobe_config = open(DEFAULT_FPROBE_CONFIGURATION_FILE, 'r')
-        for line in  frobe_config.readlines():
+        for line in frobe_config.readlines():
             data = FPROBE_PORT_REGEX.match(line)
             if data:
                 default_port = data.groupdict()['port']
@@ -474,19 +481,20 @@ def get_default_netflow_remote_port():
 def get_is_professional():
     """Check if the current version is pro
     """
-    #cmd = "export PERL5LIB=/usr/share/alienvault-center/lib ; perl -M\"Avrepository 'get_current_repository_info'\" -e 'my %sysconf=Avrepository::get_current_repository_info() ; print $sysconf{'distro'}'"
+    # cmd = "export PERL5LIB=/usr/share/alienvault-center/lib ; perl -M\"Avrepository 'get_current_repository_info'\" -e 'my %sysconf=Avrepository::get_current_repository_info() ; print $sysconf{'distro'}'"
     cmd = "dpkg -l alienvault-professional | grep \"^ii\""
     rtvalue = False
     try:
         status, output = commands.getstatusoutput(cmd)
         if status == 0:
             rtvalue = True
-#        if output:
-#            if re.match("([\S]+\-pro)", output):
-#                rtvalue = True
+        #        if output:
+        #            if re.match("([\S]+\-pro)", output):
+        #                rtvalue = True
     except Exception, e:
         print "error: %s" % str(e)
     return rtvalue
+
 
 def get_systems_without_vpn():
     """Get the list with the systems without vpn ip addresss
@@ -505,7 +513,6 @@ def get_systems_without_vpn():
 
     return systems
 
-
-#if __name__ == "__main__":
-    #configure_vpn("192.168.2.22", 22, "root", "alien4ever", "192.168.2.25")
-    #get_remote_file_using_ssh("192.168.2.22", "22", "root", "alien4ever", "/etc/openvpn/nodes/192.168.2.23.tar.gz", "/tmp/")
+# if __name__ == "__main__":
+# configure_vpn("192.168.2.22", 22, "root", "alien4ever", "192.168.2.25")
+# get_remote_file_using_ssh("192.168.2.22", "22", "root", "alien4ever", "/etc/openvpn/nodes/192.168.2.23.tar.gz", "/tmp/")

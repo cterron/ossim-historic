@@ -13,14 +13,3 @@
         create 640 ossec www-data
         su root www-data
 }
-
-/var/ossec/logs/alerts/alerts.log
-{
-        rotate 0
-        weekly
-        missingok
-        notifempty
-        copytruncate
-        create 640 ossec www-data
-        su root www-data
-}

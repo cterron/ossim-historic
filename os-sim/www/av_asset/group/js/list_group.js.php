@@ -66,7 +66,7 @@ function av_group_list(perms)
         __self.table = $("[data-bind='av_table_groups']").AV_table(
         {
             "selectable": true,
-            "num_rows"  : 20,
+            "num_rows"  : <?=isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 20?>,
             "with_tray" : true,
             "language"  : "groups",
             "ajax_url"  : __self.cfg.group.providers + "load_groups_result.php",

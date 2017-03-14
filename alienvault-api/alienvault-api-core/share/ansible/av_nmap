@@ -149,169 +149,15 @@ Licence : GPL v3 or any later version
 """
 
 ### START NMAP MODULE ###
-class PortScannerHostDict(dict):
-    """
-    Special dictionnary class for storing and accessing host scan result
-    """
-    def hostname(self):
-        """
-        returns hostname
-        """
-        return self['hostname']
-
-
-    def state(self):
-        """
-        returns host state
-        """
-        return self['status']['state']
-
-
-    def all_protocols(self):
-        """
-        returns a list of all scanned protocols
-        """
-        lp = list(self.keys())
-        lp.remove('status')
-        lp.remove('hostname')
-        lp.sort()
-        return lp
-
-
-    def all_tcp(self):
-        """
-        returns list of tcp ports
-        """
-        if 'tcp' in list(self.keys()):
-            ltcp = list(self['tcp'].keys())
-            ltcp.sort()
-            return ltcp
-        return []
-
-
-    def has_tcp(self, port):
-        """
-        returns True if tcp port has info, False otherwise
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-
-        if ('tcp' in list(self.keys())
-            and port in list(self['tcp'].keys())):
-            return True
-        return False
-
-
-    def tcp(self, port):
-        """
-        returns info for tpc port
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-        return self['tcp'][port]
-
-
-    def all_udp(self):
-        """
-        returns list of udp ports
-        """
-        if 'udp' in list(self.keys()):
-            ludp = list(self['udp'].keys())
-            ludp.sort()
-            return ludp
-        return []
-
-
-    def has_udp(self, port):
-        """
-        returns True if udp port has info, False otherwise
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-
-        if ('udp' in list(self.keys())
-            and 'port' in list(self['udp'].keys())):
-            return True
-        return False
-
-
-    def udp(self, port):
-        """
-        returns info for udp port
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-
-        return self['udp'][port]
-
-
-    def all_ip(self):
-        """
-        returns list of ip ports
-        """
-        if 'ip' in list(self.keys()):
-            lip = list(self['ip'].keys())
-            lip.sort()
-            return lip
-        return []
-
-
-    def has_ip(self, port):
-        """
-        returns True if ip port has info, False otherwise
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-
-        if ('ip' in list(self.keys())
-            and port in list(self['ip'].keys())):
-            return True
-        return False
-
-
-    def ip(self, port):
-        """
-        returns info for ip port
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-
-        return self['ip'][port]
-
-
-    def all_sctp(self):
-        """
-        returns list of sctp ports
-        """
-        if 'sctp' in list(self.keys()):
-            lsctp = list(self['sctp'].keys())
-            lsctp.sort()
-            return lsctp
-        return []
-
-
-    def has_sctp(self, port):
-        """
-        returns True if sctp port has info, False otherwise
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-
-        if ('sctp' in list(self.keys())
-            and port in list(self['sctp'].keys())):
-            return True
-        return False
-
-
-    def sctp(self, port):
-        """
-        returns info for sctp port
-        """
-        assert type(port) is int, 'Wrong type for [port], should be an int [was {0}]'.format(type(port))
-
-        return self['sctp'][port]
 
 
 class PortScannerError(Exception):
     """
     Exception error class for PortScanner class
     """
+
     def __init__(self, value):
         self.value = value
-
 
     def __str__(self):
         return repr(self.value)
@@ -341,8 +187,8 @@ class PortScanner(object):
         self.__process = None
 
         # regex used to detect nmap
-        regex = re.compile('Nmap version [0-9]*\.[0-9]*[^ ]* \( http://nmap\.org \)')
-        # launch 'nmap -V', we wait after 'Nmap version 5.0 ( http://nmap.org )'
+        regex = re.compile('Nmap version [0-9]*\.[0-9]*[^ ]* \( http(|s)://.* \)')
+        # launch 'nmap -V', we wait after 'Nmap version 5.0 ( https://nmap.org )'
         # This is for Mac OSX. When idle3 is launched from the finder, PATH is not set so nmap was not found
         for nmap_path in nmap_search_path:
             try:
@@ -350,14 +196,12 @@ class PortScanner(object):
             except OSError:
                 pass
             else:
-                self._nmap_path = nmap_path # save path
+                self._nmap_path = nmap_path  # save path
                 break
         else:
             raise PortScannerError('nmap program was not found in path. PATH is : {0}'.format(os.getenv('PATH')))
 
-
-
-        self._nmap_last_output = bytes.decode(p.communicate()[0]) # store stdout
+        self._nmap_last_output = bytes.decode(p.communicate()[0])  # store stdout
         for line in self._nmap_last_output.split('\n'):
             if regex.match(line) is not None:
                 is_nmap_found = True
@@ -374,11 +218,10 @@ class PortScanner(object):
                     self._nmap_subversion_number = int(line[rsv.start()+1:rsv.end()])
                 break
 
-        if is_nmap_found == False:
+        if is_nmap_found is False:
             raise PortScannerError('nmap program was not found in path')
 
         return
-
 
     def get_nmap_last_output(self):
         """
@@ -387,14 +230,12 @@ class PortScanner(object):
         """
         return self._nmap_last_output
 
-
     def nmap_version(self):
         """
         returns nmap version if detected (int version, int subversion)
         or (0, 0) if unknown
         """
-        return (self._nmap_version_number, self._nmap_subversion_number)
-
+        return self._nmap_version_number, self._nmap_subversion_number
 
     def listscan(self, hosts='127.0.0.1', timing='T3'):
         """
@@ -402,12 +243,17 @@ class PortScanner(object):
         """
         assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
 
-        args='-sL -sn -PE -n'
+        excludes = ','.join([host.lstrip('!') for host in hosts.split(' ') if host.startswith('!')])
+        # Remove already excluded hosts from original hosts string
+        hosts = ' '.join([host for host in hosts.split(' ') if not host.startswith('!')])
+
+        args = '-sL -sn -PE -n'
+        if excludes:
+            args += ' --exclude={}'.format(excludes)
         if timing:
-            args='{0} -{1}'.format(args,timing)
+            args = '{0} -{1}'.format(args, timing)
         self.scan(hosts, arguments=args)
         return self.all_hosts()
-
 
     def scan(self, hosts='127.0.0.1', ports=None, arguments='-sV'):
         """
@@ -419,7 +265,7 @@ class PortScanner(object):
         ports = string for ports as nmap use it '22,53,110,143-4564'
         arguments = string of arguments for nmap '-sU -sX -sC'
         """
-        if sys.version_info[0]==2:
+        if sys.version_info[0] == 2:
             assert type(hosts) in (str, unicode), 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
         else:
             assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
@@ -430,7 +276,7 @@ class PortScanner(object):
         f_args = shlex.split(arguments)
 
         # Launch scan
-        args = [self._nmap_path, '-oX', '-'] + h_args + ['-p', ports]*(ports!=None) + f_args
+        args = [self._nmap_path, '-oX', '-'] + h_args + ['-p', ports]*(ports is not None) + f_args
 
         p = subprocess.Popen(args, bufsize=100000, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -472,10 +318,7 @@ class PortScanner(object):
         #  <times srtt="-1" rttvar="-1" to="1000000" />
         #  </host>
 
-
-
         scan_result = {}
-
 
         dom = xml.dom.minidom.parseString(self._nmap_last_output)
 
@@ -483,12 +326,13 @@ class PortScanner(object):
         scan_result['nmap'] = {
             'command_line': dom.getElementsByTagName('nmaprun')[0].getAttributeNode('args').value,
             'scaninfo': {},
-            'scanstats':{'timestr':dom.getElementsByTagName("finished")[0].getAttributeNode('timestr').value,
-                         'elapsed':dom.getElementsByTagName("finished")[0].getAttributeNode('elapsed').value,
-                         'uphosts':dom.getElementsByTagName("hosts")[0].getAttributeNode('up').value,
-                         'downhosts':dom.getElementsByTagName("hosts")[0].getAttributeNode('down').value,
-                         'totalhosts':dom.getElementsByTagName("hosts")[0].getAttributeNode('total').value}
+            'scanstats': {'timestr': dom.getElementsByTagName("finished")[0].getAttributeNode('timestr').value,
+                          'elapsed': dom.getElementsByTagName("finished")[0].getAttributeNode('elapsed').value,
+                          'uphosts': dom.getElementsByTagName("hosts")[0].getAttributeNode('up').value,
+                          'downhosts': dom.getElementsByTagName("hosts")[0].getAttributeNode('down').value,
+                          'totalhosts': dom.getElementsByTagName("hosts")[0].getAttributeNode('total').value}
             }
+
         # info about scan
         for dsci in dom.getElementsByTagName('scaninfo'):
             scan_result['nmap']['scaninfo'][dsci.getAttributeNode('protocol').value] = {
@@ -496,10 +340,9 @@ class PortScanner(object):
                 'services': dsci.getAttributeNode('services').value
                 }
 
-
         scan_result['scan'] = {}
 
-        for dhost in  dom.getElementsByTagName('host'):
+        for dhost in dom.getElementsByTagName('host'):
             # host ip
             host = None
             host_ipv6 = ""
@@ -521,14 +364,14 @@ class PortScanner(object):
             hostname = ''
             for dhostname in dhost.getElementsByTagName('hostname'):
                 hostname = dhostname.getAttributeNode('name').value
-            scan_result['scan'][host] = PortScannerHostDict({'hostname': hostname})
+            scan_result['scan'][host] = {'hostname': hostname}
             scan_result['scan'][host]['host_ipv6'] = host_ipv6
             scan_result['scan'][host]['host_mac'] = host_mac
             scan_result['scan'][host]['host_mac_vendor'] = host_mac_vendor
             for dstatus in dhost.getElementsByTagName('status'):
                 # status : up...
                 scan_result['scan'][host]['status'] = {'state': dstatus.getAttributeNode('state').value,
-                                               'reason': dstatus.getAttributeNode('reason').value}
+                                                       'reason': dstatus.getAttributeNode('reason').value}
             for dport in dhost.getElementsByTagName('port'):
                 # protocol
                 proto = dport.getAttributeNode('protocol').value
@@ -561,7 +404,7 @@ class PortScanner(object):
                         pass
                     try:
                         tunnel = dname.getAttributeNode('tunnel').value
-                        if tunnel=='ssl' and name=='http':
+                        if tunnel == 'ssl' and name == 'http':
                             name = 'https'
                     except AttributeError:
                         pass
@@ -569,23 +412,23 @@ class PortScanner(object):
                         cpe.append(cpes.childNodes[0].data)
 
                 # store everything
-                if not proto in list(scan_result['scan'][host].keys()):
+                if proto not in scan_result['scan'][host]:
                     scan_result['scan'][host][proto] = {}
                 scan_result['scan'][host][proto][port] = {'state': state,
-                                                  'reason': reason,
-                                                  'name': name,
-                                                  'product': product,
-                                                  'version': version,
-                                                  'extrainfo': extrainfo,
-                                                  'tunnel': tunnel,
-                                                  'cpe': cpe}
+                                                          'reason': reason,
+                                                          'name': name,
+                                                          'product': product,
+                                                          'version': version,
+                                                          'extrainfo': extrainfo,
+                                                          'tunnel': tunnel,
+                                                          'cpe': cpe}
                 script_id = ''
                 script_out = ''
                 # get script output if any
                 for dscript in dport.getElementsByTagName('script'):
                     script_id = dscript.getAttributeNode('id').value
                     script_out = dscript.getAttributeNode('output').value
-                    if not 'script' in list(scan_result['scan'][host][proto][port].keys()):
+                    if 'script' not in scan_result['scan'][host][proto][port]:
                         scan_result['scan'][host][proto][port]['script'] = {}
 
                     scan_result['scan'][host][proto][port]['script'][script_id] = script_out
@@ -618,13 +461,13 @@ class PortScanner(object):
                     accuracy = dport.getAttributeNode('accuracy').value
                 except AttributeError:
                     pass
-                if not 'osclass' in list(scan_result['scan'][host].keys()):
+                if 'osclass' not in scan_result['scan'][host]:
                     scan_result['scan'][host]['osclass'] = []
 
                 for cpes in dport.getElementsByTagName('cpe'):
                     cpe.append(cpes.childNodes[0].data)
 
-                if not osfamily in ['embedded']:
+                if osfamily not in ['embedded']:
                     scan_result['scan'][host]['osclass'].append(
                         {
                             'type': ostype,
@@ -653,7 +496,7 @@ class PortScanner(object):
                     line = dport.getAttributeNode('line').value
                 except AttributeError:
                     pass
-                if not 'osmatch' in list(scan_result['scan'][host].keys()):
+                if 'osmatch' not in scan_result['scan'][host]:
                     scan_result['scan'][host]['osmatch'] = []
 
                 scan_result['scan'][host]['osmatch'].append(
@@ -674,21 +517,18 @@ class PortScanner(object):
 
                 scan_result['scan'][host]['fingerprint'] = fingerprint
 
-
-        self._scan_result = scan_result # store for later use
+        self._scan_result = scan_result  # store for later use
         return scan_result
-
 
     def __getitem__(self, host):
         """
         returns a host detail
         """
-        if sys.version_info[0]==2:
+        if sys.version_info[0] == 2:
             assert type(host) in (str, unicode), 'Wrong type for [host], should be a string [was {0}]'.format(type(host))
         else:
             assert type(host) is str, 'Wrong type for [host], should be a string [was {0}]'.format(type(host))
         return self._scan_result['scan'][host]
-
 
     def list_modulus(self, hosts, x):
         """
@@ -696,24 +536,22 @@ class PortScanner(object):
         """
         global SCAN_THREADS
         listh = []
-        i=1
+        i = 1
         for host in hosts:
             if i % SCAN_THREADS == x:
                 listh.append(host)
-            i=i+1
+            i += 1
         return listh
-
 
     def all_hosts(self):
         """
         returns a sorted list of all hosts
         """
-        if not 'scan' in list(self._scan_result.keys()):
+        if 'scan' not in self._scan_result:
             return []
-        listh = list(self._scan_result['scan'].keys())
+        listh = self._scan_result['scan'].keys()
         listh.sort()
         return listh
-
 
     def command_line(self):
         """
@@ -725,7 +563,6 @@ class PortScanner(object):
         assert 'command_line' in self._scan_result['nmap'], 'Do a scan before trying to get result !'
 
         return self._scan_result['nmap']['command_line']
-
 
     def scaninfo(self):
         """
@@ -739,7 +576,6 @@ class PortScanner(object):
 
         return self._scan_result['nmap']['scaninfo']
 
-
     def scanstats(self):
         """
         returns scanstats structure
@@ -752,7 +588,6 @@ class PortScanner(object):
 
         return self._scan_result['nmap']['scanstats']
 
-
     def has_host(self, host):
         """
         returns True if host has result, False otherwise
@@ -760,7 +595,7 @@ class PortScanner(object):
         assert type(host) is str, 'Wrong type for [host], should be a string [was {0}]'.format(type(host))
         assert 'scan' in self._scan_result, 'Do a scan before trying to get result !'
 
-        if host in list(self._scan_result['scan'].keys()):
+        if host in self._scan_result['scan']:
             return True
 
         return False
@@ -782,7 +617,6 @@ class PortScannerAsync(object):
         self._nm = PortScanner()
         return
 
-
     def __del__(self):
         """
         Cleanup when deleted
@@ -791,7 +625,6 @@ class PortScannerAsync(object):
             if p is not None and p.is_alive():
                 p.terminate()
         return
-
 
     def scan(self, hosts='127.0.0.1', ports=None, arguments='-sV', timing='T3', callback=None):
         """
@@ -811,6 +644,7 @@ class PortScannerAsync(object):
         assert type(callback) in (types.FunctionType, type(None)), 'Wrong type for [callback], should be a function or None [was {0}]'.format(type(callback))
 
         def scan_progressive(self, host_list, ports, arguments, callback, x):
+            scan_data = {}
             for host in self._nm.list_modulus(host_list, x):
                 try:
                     scan_data = self._nm.scan(host, ports, arguments)
@@ -838,7 +672,6 @@ class PortScannerAsync(object):
             p.start()
         return
 
-
     def stop(self):
         """
         Stop the current scan process
@@ -847,7 +680,6 @@ class PortScannerAsync(object):
             if p is not None:
                 p.terminate()
         return
-
 
     def wait(self, timeout=None):
         """
@@ -860,7 +692,6 @@ class PortScannerAsync(object):
             if p is not None and p.is_alive():
                 p.join(timeout)
         return
-
 
     def still_scanning(self):
         """
@@ -904,6 +735,7 @@ def callback_result(host, scan_result):
 
 def run_nmap(target, scan_type, rdns, timing, autodetect, scan_ports):
     """Run the nmap command"""
+    global G_OUTPUT_FILE
     try:
         args = get_scan_filter(scan_type, rdns, timing, autodetect, scan_ports)
         if scan_type != 'ping':
@@ -915,13 +747,11 @@ def run_nmap(target, scan_type, rdns, timing, autodetect, scan_ports):
         else:
             nmap_worker = PortScanner()
             scan_result = nmap_worker.scan(hosts=target, arguments=args)
-            global G_OUTPUT_FILE
             with open(G_OUTPUT_FILE, "a") as r:
                 r.write(json.dumps(scan_result["scan"])+"\n")
 
         results = {}
         try:
-            global G_OUTPUT_FILE
             if os.path.isfile(G_OUTPUT_FILE):
                 if scan_type != 'ping':
                     with open(G_OUTPUT_FILE, "r") as f:

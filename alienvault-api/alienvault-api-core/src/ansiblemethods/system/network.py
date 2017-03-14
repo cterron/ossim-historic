@@ -400,6 +400,17 @@ def resolve_dns_name(system_ip, dns_name):
     return (True, data)
 
 
+def get_fqdn(system_ip, host_ip):
+    response = ansible.run_module(host_list=[system_ip],
+                                  module="shell",
+                                  args='executable=/bin/bash nslookup %s' % host_ip)
+    data = response['contacted'][system_ip]['stdout']
+    if "name =" not in data:
+        return ''
+    data = data.split('=')[-1].strip('. \t\n\r')
+    return data
+
+
 def show_vpn_offline_instructions(node_configuration_path, remote_system_ip):
     offline_info = """
     Currently there is no connectivity with  the remote AlienVault appliance. The steps to deploy the VPN client manually are the following:
@@ -552,7 +563,7 @@ def make_tunnel(system_ip, local_server_id, password=""):
 
             # UPDATE REMOTE SERVER TABLE
             print "Remote profile server found... configuring it"
-            print "Set VPN server ip oin remote db..."
+            print "Set VPN server ip in remote db..."
             cmd = """echo \"update alienvault.server set ip=inet6_aton('%s') where id=unhex('%s');\" | ossim-db""" % (
             server_vpn_ip, local_server_id.upper())
             response = ansible.run_module(host_list=[system_ip], module="shell", args=cmd, ans_remote_pass=password,

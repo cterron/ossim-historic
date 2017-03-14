@@ -584,7 +584,7 @@ function rules_postload(dir_id, file, reset) {
 						<div class="fbutton" onclick="GB_show('User Contributed Directives', '/ossim/directives/editxml.php?engine_id=<?php echo $engine_id ?>', 600, '90%');"><div><span class="xml" style="padding-left:20px;font-size:12px"><b><?php echo _("Edit XML") ?></b></span></div></div>
 						<div class="btnseparator"></div>
 						<?php } ?>
-						<div class="fbutton" onclick="restart_directives();"><div><span class="apply <?php echo (Web_indicator::is_on("Reload_directives")) ? "reload_red" : "" ?>" style="padding-left:20px;font-size:12px"><b><?php echo _("Restart Server") ?></b></span></div></div>
+						<div class="fbutton" onclick="restart_directives();"><div><span class="apply <?php echo (Web_indicator::is_on("Reload_directives")) ? "reload_red" : "" ?>" style="padding-left:20px;font-size:12px"><b><?php echo _("Reload Directives") ?></b></span></div></div>
 						<div class="btnseparator"></div>
     						
     						<form method="post">

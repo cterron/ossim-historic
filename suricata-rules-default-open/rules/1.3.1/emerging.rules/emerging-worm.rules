@@ -56,6 +56,10 @@ alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM Win32.Socks.
 
 #alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WORM Shell Bot Code Download"; flow:to_client,established; content:"##################### IRC #######################"; nocase; reference:url,doc.emergingthreats.net/2002684; classtype:trojan-activity; sid:2002684; rev:5;)
 
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 3127:3198 (msg:"GPL WORM mydoom.a backdoor upload/execute attempt"; flow:to_server,established; content:"|85 13|<|9E A2|"; depth:5; classtype:trojan-activity; sid:2103272; rev:3;)
+
+alert udp $HOME_NET any -> $EXTERNAL_NET 1434 (msg:"GPL WORM Slammer Worm propagation attempt OUTBOUND"; content:"|04|"; depth:1; content:"|81 F1 03 01 04 9B 81 F1|"; content:"sock"; content:"send"; reference:bugtraq,5310; reference:bugtraq,5311; reference:cve,2002-0649; reference:nessus,11214; reference:url,vil.nai.com/vil/content/v_99992.htm; classtype:misc-attack; sid:2102004; rev:8;)
+
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WORM Possible Worm Sohanad.Z or Other Infection Request for setting.nql"; flow:established,to_server; content:"/setting.nql"; nocase; http_uri; reference:url,www.threatexpert.com/report.aspx?md5=a70aad8f27957702febfa162556dc5b5; classtype:trojan-activity; sid:2012201; rev:3;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WORM Rimecud Worm checkin"; flow:established,to_server; content:"GET"; http_method; content:"User-Agent|3a| Mozilla/3.0 (compatible|3b| Indy Library)"; http_header; content:"/taskx.txt"; http_uri; fast_pattern; reference:url,www.threatexpert.com/report.aspx?md5=9623efa133415d19c941ef92a4f921fc; classtype:trojan-activity; sid:2012739; rev:2;)
@@ -71,8 +75,4 @@ alert http any any -> $HOME_NET 8080 (msg:"ET WORM TheMoon.linksys.router 1"; fl
 alert http any any -> $HOME_NET 8080 (msg:"ET WORM TheMoon.linksys.router 2"; flow:to_server,established; content:"POST"; http_method; content:"/tmUnblock.cgi"; http_uri; reference:url,isc.sans.edu/forums/diary/Linksys+Worm+Captured/17630; reference:url,devttys0.com/2014/02/wrt120n-fprintf-stack-overflow/; classtype:trojan-activity; sid:2018132; rev:4;)
 
 alert http any any -> $HOME_NET 8080 (msg:"ET WORM TheMoon.linksys.router 3"; flow:to_server,established; content:"POST"; http_method; content:"/hndUnblock.cgi"; http_uri; reference:url,isc.sans.edu/forums/diary/Linksys+Worm+Captured/17630; reference:url,exploit-db.com/exploits/31683/; reference:url,devttys0.com/2014/02/wrt120n-fprintf-stack-overflow/; classtype:trojan-activity; sid:2018155; rev:4;)
-
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 3127:3198 (msg:"GPL WORM mydoom.a backdoor upload/execute attempt"; flow:to_server,established; content:"|85 13|<|9E A2|"; depth:5; classtype:trojan-activity; sid:2103272; rev:3;)
-
-alert udp $HOME_NET any -> $EXTERNAL_NET 1434 (msg:"GPL WORM Slammer Worm propagation attempt OUTBOUND"; content:"|04|"; depth:1; content:"|81 F1 03 01 04 9B 81 F1|"; content:"sock"; content:"send"; reference:bugtraq,5310; reference:bugtraq,5311; reference:cve,2002-0649; reference:nessus,11214; reference:url,vil.nai.com/vil/content/v_99992.htm; classtype:misc-attack; sid:2102004; rev:8;)
 

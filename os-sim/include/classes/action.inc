@@ -313,11 +313,11 @@ class Action
     }
 
 
-    public static function insertEmail($conn, $ctx, $name, $action_type, $cond, $on_risk, $descr, $from, $to, $subject, $message)
+    public static function insertEmail($conn, $ctx, $name, $action_type, $cond, $on_risk, $descr, $from, $to, $subject, $message, $message_suffix)
     {
         $id = self::insert($conn, $ctx, $name, $action_type, $cond, $on_risk, $descr);
 
-        Action_email::insert($conn, $id, $from, $to, $subject, $message);
+        Action_email::insert($conn, $id, $from, $to, $subject, $message, $message_suffix);
     }
 
 
@@ -380,11 +380,11 @@ class Action
     }
 
 
-    public static function updateEmail($conn, $id, $ctx, $name, $action_type, $cond, $on_risk, $descr, $from, $to, $subject, $message)
+    public static function updateEmail($conn, $id, $ctx, $name, $action_type, $cond, $on_risk, $descr, $from, $to, $subject, $message, $message_suffix)
     {
         self::update($conn, $id, $ctx, $name, $action_type, $cond, $on_risk, $descr);
 
-        Action_email::update($conn, $id, $from, $to, $subject, $message);
+        Action_email::update($conn, $id, $from, $to, $subject, $message, $message_suffix);
     }
 
 

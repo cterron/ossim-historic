@@ -297,19 +297,9 @@ if (empty($validation_errors['c_pass']) && empty($validation_errors['pass2']) &&
     //Checking current password
     $admin_login_method = $myself->get_login_method();
 
-    if ($admin_login_method != 'ldap')
+    if (($admin_login_method != 'ldap' && !$myself->is_password_correct($c_pass)) && !Session::login_ldap($myself->get_login(), $c_pass))
     {
-        if ($myself->get_pass() != md5($c_pass) && $myself->get_pass() != hash('sha256', $c_pass))
-        {
-            $validation_errors['c_pass'] = _('Authentication failure').'. '._("Current password is not correct");
-        }
-    }
-    else
-    {
-        if (!Session::login_ldap($myself->get_login(), $c_pass))
-        {
-            $validation_errors['c_pass'] = _('Authentication failure').'. '._('Current password is not correct');
-        }
+        $validation_errors['c_pass'] = _('Authentication failure').'. '._("Current password is not correct");
     }
 
     if (empty($validation_errors['pass']))
@@ -347,14 +337,11 @@ if (empty($validation_errors['c_pass']) && empty($validation_errors['pass2']) &&
             }
             elseif ($mode == 'update')
             {
-                $recent_pass = Log_action::get_last_pass($conn, $login);
-
                 if ($pass_expire_min > 0 && Util::date_diff_min($last_pass_change, gmdate('Y-m-d H:i:s')) < $pass_expire_min && !Session::am_i_admin())
                 {
                     $validation_errors['pass1'] = _('Password lifetime is too short to allow change. Wait a few minutes...');
                 }
-                elseif (count($recent_pass) > 0 && (in_array(md5($pass1),$recent_pass) || in_array(hash('sha256', $pass1),$recent_pass)))
-                {
+                elseif (Log_action::recent_pass_exists($conn, $login, $pass1)) {
                     $validation_errors['pass1'] = _('This password is recently used. Try another');
                 }
             }
@@ -489,7 +476,7 @@ if (POST('ajax_validation_all') == TRUE)
 
                 Util::memcacheFlush();
 
-                Session::log_pass_history($login, hash('sha256', $pass1));
+                Session::log_pass_history($login);
             }
             else
             {
@@ -549,7 +536,7 @@ if (POST('ajax_validation_all') == TRUE)
                     //Set new pass
                     Session::change_pass($conn, $login, $pass1, NULL);
 
-                    Session::log_pass_history($login, hash('sha256', $pass1));
+                    Session::log_pass_history($login);
 
                     // Note: session_start will show an alert here. Calling to expire when back to users.php
                     if (method_exists('Session_activity', 'expire_my_others_sessions'))

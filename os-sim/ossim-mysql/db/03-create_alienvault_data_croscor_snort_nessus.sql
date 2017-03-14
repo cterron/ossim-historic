@@ -1739,7 +1739,7 @@ REPLACE INTO `policy_group` (`id`, `ctx`, `name`, `descr`, `order`, `permissions
 
 -- AV Policy
 SET @newpolicy = REPLACE(UUID(),'-','');
-REPLACE INTO `policy` (`id`, `ctx`, `priority`, `active`, `group`, `order`, `descr`, `permissions`) VALUES (@newpolicy, @default_ctx, -1, 0, @newpg, 1, 'AVAPI filter', 0x0000000000000000);
+REPLACE INTO `policy` (`id`, `ctx`, `priority`, `active`, `group`, `order`, `descr`, `permissions`) VALUES (@newpolicy, @default_ctx, -1, 1, @newpg, 1, 'AVAPI filter', 0x0000000000000000);
 REPLACE INTO `policy_host_reference` (`policy_id`, `host_id`, `direction`) VALUES (@newpolicy, 0x00000000000000000000000000000000,'source'),(@newpolicy, 0x00000000000000000000000000000000,'dest');
 REPLACE INTO `policy_plugin_group_reference` (`policy_id`, `plugin_group_id`) VALUES (@newpolicy, @newuuid);
 REPLACE INTO `policy_port_reference` (`policy_id`, `port_group_id`, `direction`) VALUES (@newpolicy,0,'source'), (@newpolicy,0,'dest');

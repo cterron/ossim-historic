@@ -138,7 +138,7 @@ if augeas:
                                                      r(label_start), r(label_end),
                                                      r(value_start), r(value_end),
                                                      r(span_start), r(span_end))
-                    if (ret < 0):
+                    if ret < 0:
                         raise ValueError("Error during span procedure")
 
                     return (filename.value, label_start.value, label_end.value,
@@ -155,7 +155,7 @@ class CommandsParseError(Exception):
         super(CommandsParseError, self).__init__(msg)
 
     def format_commands(self, commands):
-        return '\n'.join('%s %s' % (c, ' '.join(a if a else "''" for a in args.values())) for c,args in commands)
+        return '\n'.join('%s %s' % (c, ' '.join(a if a else "''" for a in args.values())) for c, args in commands)
 
 
 class MissingArgument(CommandsParseError):
@@ -330,6 +330,7 @@ def validate_path(augeas_instance, path):
             raise PathParseError(augeas_instance, path, correct_subpath)
         correct_subpath = subpath
 
+
 def get_file_for_path(augeas_instance, path):
     subpath = ''
     filename = None
@@ -343,6 +344,7 @@ def get_file_for_path(augeas_instance, path):
                 except ValueError:
                     pass
     return filename
+
 
 def execute(augeas_instance, commands, validate_filepath=True):
     # validate paths
@@ -386,6 +388,7 @@ def execute(augeas_instance, commands, validate_filepath=True):
     except IOError:
         raise SaveError(augeas_instance)
     return results, changed
+
 
 def main():
     module = AnsibleModule(

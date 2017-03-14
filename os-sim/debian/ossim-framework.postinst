@@ -422,4 +422,10 @@ echo Updating DB schema
 date -R >> /var/log/ossim/update_db.log
 php /usr/share/ossim/scripts/update_db.php >> /var/log/ossim/update_db.log 2>&1
 
+
+# Prepare an empty tar archive for OTX debug info (ENG-104792)
+OTX_DEBUG_ARCHIVE="/usr/share/ossim/uploads/otx-debug.tar.gz"
+touch "$OTX_DEBUG_ARCHIVE"
+chmod 644 "$OTX_DEBUG_ARCHIVE"
+
 exit 0

@@ -1046,11 +1046,11 @@ EOT;
                         "vSerious" => $data['vSerious'], "vHigh" => $data['vHigh'], "vMed" => $data['vMed'],
                         "vLow" => $data['vLow'], "vInfo" => $data['vInfo']);
       if($data['vInfo']!=0 || $data['vLow']!=0 || $data['vMed']!=0 || $data['vHigh']!=0 || $data['vSerious']!=0 ) {
-            $tdata[0] += array(
+            $tdata[0] = array_merge($tdata[0],array(
                         "hlink" => "lr_reshtml.php?ipl=all&disp=html&output=full&scantype=M",
                         "plink" => "lr_respdf.php?ipl=all&scantype=M",
                         "xlink" => "lr_rescsv.php?ipl=all&scantype=M",
-                        "dlink" =>"");
+                        "dlink" =>""));
       }
       foreach($result as $data) {
          $host_id = key(Asset_host::get_id_by_ips($dbconn, $data["hostIP"], $data["ctx"]));

@@ -2,7 +2,7 @@
 
 show_methods()
 {
-    METHODS="about add_system external_dns get_backup get_network \
+    METHODS="about add_system external_dns get_backup get_connected_sensors get_network \
 get_registered_systems internet_connectivity make_tunnel_with_vpn \
 rawlogscleaner register_appliance restore_backup set_network_interface \
 support_tool support_tunnel synchronise_sensor_detectors system_id systems"

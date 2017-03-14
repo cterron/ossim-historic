@@ -822,8 +822,14 @@ switch($action)
                 list($s_list, ) = $asset_host->get_services($conn, $filters);
             }
         }
-
-
+        if (Asset_host_scan::is_plugin_in_host($conn,$asset_id,2007)) {
+            Asset_host_scan::bulk_disable_monitoring($conn);
+            //Oh gods of programming I was forced to use this ugly method, 
+            //because on lovel levels of socket creationg there is no possibility to wait until socket responce.
+            //and to change this behavior I would have to rewrite half of the framework
+            sleep(2);
+            Asset_host_scan::bulk_enable_monitoring($conn);
+        }
         $data['status'] = 'success';
         $data['data']   = _('Your changes have been saved');
 
@@ -880,7 +886,6 @@ switch($action)
 
 
                         $p_function = 'Asset_host_services::toggle_nagios';
-
                         //Validate service values
                         foreach($validate as $v_key => $v_data)
                         {
@@ -906,7 +911,6 @@ switch($action)
 
                         //Adding BD connection
                         array_unshift($parameters, $conn);
-
                         call_user_func_array($p_function, $parameters);
                     }
                     catch(Exception $e)

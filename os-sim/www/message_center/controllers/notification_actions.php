@@ -53,6 +53,7 @@ $data = array();
 
 // Get action type
 $action = POST('action');
+$delete_all = POST('delete_all');
 
 // Validate action type
 ossim_valid($action, OSS_LETTER, '_', 'illegal:'._('Action'));
@@ -73,7 +74,8 @@ $conn = $db->connect();
  **************************************/
 
 // Validate form params
-$validate = array(
+
+$validate =  ($delete_all) ? '' : array(
     'status_message_id' => array('validation' => 'OSS_UUID', 'e_message' => 'illegal:'._('Status Message UUID'))
 );
 $validation_errors = validate_form_fields_new('POST', $validate);
@@ -99,6 +101,7 @@ else
     // Get form params
     $status_message_id = POST('status_message_id');
     $string = "s";
+
     if (!is_array($status_message_id)) {
         $status_message_id = array($status_message_id);
         $string = "";
@@ -124,6 +127,17 @@ else
         }
         $data['data'] = sprintf($data['data'],$string);
         $status = new System_notifications();
+
+        if($delete_all) {
+            $status_message_id = '';
+            list($message_list, $total_messages) = $status->get_status_messages();
+            foreach ($message_list as $message)
+            {
+                $status_message_id [] = $message['id'];
+            }
+
+        }
+
         foreach ($status_message_id as $smi) {
             $status->set_status_message($smi,$params);
         }

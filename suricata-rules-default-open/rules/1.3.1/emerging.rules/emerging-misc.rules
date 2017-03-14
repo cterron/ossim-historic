@@ -40,8 +40,6 @@
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 8000 (msg:"ET MISC HP Web JetAdmin ExecuteFile admin access"; flow: to_server,established; content:"/plugins/framework/script/content.hts"; nocase; content:"ExecuteFile"; nocase; reference:bugtraq,10224; reference:url,doc.emergingthreats.net/2001055; classtype:attempted-admin; sid:2001055; rev:6;)
 
-#alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET MISC RuggedCom factory account backdoor"; flow:to_client,established;flowbits:isset,ET.RUGGED.BANNER; content:"Enter User Name|3A|"; pcre:"/Enter User Name\x3a(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*\s*(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*f(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*a(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*c(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*t(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*o(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*r(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*y(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*[\r\n]/"; reference:url,www.exploit-db.com/exploits/18779/; reference:url,arstechnica.com/business/news/2012/04/backdoor-in-mission-critical-hardware-threatens-power-traffic-control-systems.ars; classtype:attempted-admin; sid:2014646; rev:4;)
-
 #alert icmp $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL MISC Time-To-Live Exceeded in Transit"; icode:0; itype:11; classtype:misc-activity; sid:2100449; rev:7;)
 
 #alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL MISC 0 ttl"; ttl:0; reference:url,support.microsoft.com/default.aspx?scid=kb#-#-EN-US#-#-q138268; reference:url,www.isi.edu/in-notes/rfc1122.txt; classtype:misc-activity; sid:2101321; rev:9;)
@@ -163,4 +161,6 @@
 #alert udp $EXTERNAL_NET any -> $HOME_NET 9 (msg:"GPL MISC Ascend Route"; content:"NAMENAME"; depth:50; offset:25; reference:bugtraq,714; reference:cve,1999-0060; classtype:attempted-dos; sid:2100281; rev:6;)
 
 #alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL MISC Teardrop attack"; fragbits:M; id:242; reference:bugtraq,124; reference:cve,1999-0015; reference:nessus,10279; reference:url,www.cert.org/advisories/CA-1997-28.html; classtype:attempted-dos; sid:2100270; rev:7;)
+
+#alert tcp $HOME_NET 23 -> $EXTERNAL_NET any (msg:"ET MISC RuggedCom factory account backdoor"; flow:to_client,established;flowbits:isset,ET.RUGGED.BANNER; content:"Enter User Name|3A|"; pcre:"/Enter User Name\x3a(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*\s*(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*f(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*a(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*c(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*t(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*o(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*r(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*y(\xff[\xf0-\xff](\xff|[\x00-\x22]))*\x00*\x7f*\x08*[\r\n]/"; reference:url,www.exploit-db.com/exploits/18779/; reference:url,arstechnica.com/business/news/2012/04/backdoor-in-mission-critical-hardware-threatens-power-traffic-control-systems.ars; classtype:attempted-admin; sid:2014646; rev:4;)
 

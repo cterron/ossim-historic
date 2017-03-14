@@ -196,7 +196,7 @@ foreach ($p_list as $p_id => $prop_data)
                 $p_value['description'],
                 $p_value['value'],
                 $p_value['date'],
-                $p_value['source']['name'],
+                _(ucfirst(strtolower(($p_value['source']['name'])))),
                 ""
             );
 

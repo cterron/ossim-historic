@@ -26,7 +26,7 @@ affects_strike_zone=True
 # Checks if AlienVault packages version matches with the expected version
 [00270002]
 severity=Error
-pattern=^ii\s{2}((?:ossim|alienvault)-(?!crosscorrelation|directives|openvas|taxonomy|license|mysql-ext|plugin-sid|plugin|cpe|libpcre3|reporting)\S+)\s+(?:1\:|10\:)?([\d\.?]+)
+pattern=^ii\s{2}((?:ossim|alienvault)-(?!crosscorrelation|directives|openvas|taxonomy|license|mysql-ext|plugin-sid|plugin|cpe|libpcre3|reporting|ossec)\S+)\s+(?:1\:|10\:)?([\d\.?]+)
 conditions=@info@;@string@:==@version@
 formatted_output=Package @info@ has version @string@ (expected @version@)
 description=Checks if AlienVault packages version matches with the expected version

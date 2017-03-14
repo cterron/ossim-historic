@@ -15,7 +15,7 @@ import shutil
 import glob
 import time
 from lockfile import FileLock, AlreadyLocked, LockFailed
-from netinterfaces import get_network_interfaces,get_local_ip_addresses_list
+from netinterfaces import get_network_interfaces, get_local_ip_addresses_list
 from logger import Logger
 from utils import *
 import os, stat, grp
@@ -26,14 +26,16 @@ from uuid import UUID
 
 logger = Logger.logger
 
-BACKUP_FOLDER="/var/lib/ossim/backup/"
-#BACKUP_FOLDER="/tmp/backup/"
+BACKUP_FOLDER = "/var/lib/ossim/backup/"
+# BACKUP_FOLDER="/tmp/backup/"
 MAX_BACKUP_FILES = 5
-LOG_FILE="/var/log/alienvault/av_config/av_configlib.log"
+LOG_FILE = "/var/log/alienvault/av_config/av_configlib.log"
+
+
 class AVOssimSetupConfigHandler():
     """Class to manage the ossim-setup.conf 
     """
-    #SECTION NAMES
+    # SECTION NAMES
     NO_SECTION_NAME = "GENERAL"
     FILE_SECTION = "FILE_ERRORS"
     FILE_SECTION_OPTION = "file"
@@ -48,7 +50,6 @@ class AVOssimSetupConfigHandler():
     UPDATE_SECTION_NAME = "update"
     HA_SECTION_NAME = "ha"
 
-
     # NO SECTION OPTIONS
     NO_SECTION_NAME_ADMIN_DNS = "admin_dns"
     NO_SECTION_NAME_ADMIN_GATEWAY = "admin_gateway"
@@ -60,32 +61,27 @@ class AVOssimSetupConfigHandler():
     NO_SECTION_NAME_HOSTNAME = "hostname"
     NO_SECTION_NAME_INTERFACE = "interface"
     NO_SECTION_NAME_MAILSERVER_RELAY = "mailserver_relay"
-    NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD = "mailserver_relay_passwd" 
+    NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD = "mailserver_relay_passwd"
     NO_SECTION_NAME_MAILSERVER_RELAY_PORT = "mailserver_relay_port"
     NO_SECTION_NAME_MAILSERVER_RELAY_USER = "mailserver_relay_user"
     NO_SECTION_NAME_NTP_SERVER = "ntp_server"
     NO_SECTION_NAME_PROFILE = "profile"
-
 
     # DATABASE SECTION OPTIONS
     SECTION_DATABASE_IP = "db_ip"
     SECTION_DATABASE_PASSWORD = "pass"
     SECTION_DATABASE_USER = "user"
 
-
     # PROFILE SECTION OPTIONS
     SECTION_EXPERT_PROFILE = "profile"
 
-
     # FIREWALL SECTION OPTIONS
     SECTION_FIREWALL_ACTIVE = "active"
-
 
     # FRAMWEORK SECTION OPTIONS
     SECTION_FRAMEWORK_HTTPS_CERT = "framework_https_cert"
     SECTION_FRAMEWORK_HTTPS_KEY = "framework_https_key"
     SECTION_FRAMEWORK_IP = "framework_ip"
-
 
     # SENSOR SECTION OPTIONS
     SECTION_SENSOR_DETECTORS = "detectors"
@@ -103,20 +99,17 @@ class AVOssimSetupConfigHandler():
     SECTION_SENSOR_ASEC = "asec"
     SECTION_SENSOR_CTX = "sensor_ctx"
 
-
     # SERVER SECTION OPTIONS
     SECTION_SERVER_ALIENVAULT_IP_REPUTATION = "alienvault_ip_reputation"
     SECTION_SERVER_IP = "server_ip"
     SECTION_SERVER_PLUGINS = "server_plugins"
     SECTION_SERVER_PRO = "server_pro"
 
-
     # SNMP SECTION OPTIONS
     SECTION_SNMP_COMMUNITY = "community"
     SECTION_SNMP_SNMP_COMMUNITY = "snmp_comunity"
     SECTION_SNMP_SNMPD = "snmpd"
     SECTION_SNMP_SNMPTRAP = "snmptrap"
-
 
     # UPDATE SECTION OPTIONS
     SECTION_UPDATE_PROXY = "update_proxy"
@@ -125,8 +118,7 @@ class AVOssimSetupConfigHandler():
     SECTION_UPDATE_PROXY_PORT = "update_proxy_port"
     SECTION_UPDATE_PROXY_USER = "update_proxy_user"
 
-
-    #HA SECTION OPTIONS
+    # HA SECTION OPTIONS
     """
     ha_autofailback=no
     ha_deadtime=10
@@ -142,7 +134,7 @@ class AVOssimSetupConfigHandler():
     ha_ping_node=default
     ha_role=master
     ha_virtual_ip=unconfigured"""
-    #We only need ha_role and ha_virtual_ip
+    # We only need ha_role and ha_virtual_ip
     SECTION_HA_HA_AUTOFAILBACK = "ha_autofailback"
     SECTION_HA_HA_DEADTIME = "ha_deadtime"
     SECTION_HA_HA_DEVICE = "ha_device"
@@ -164,31 +156,31 @@ class AVOssimSetupConfigHandler():
     INTERFACES_FILE_NETMASK = 'netmask'
 
     # DEFAULT VALUES
-    DEFAULT_VALUES = {NO_SECTION_NAME:{NO_SECTION_NAME_MAILSERVER_RELAY :"no",
-                                       NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD:"unconfigured",
-                                       NO_SECTION_NAME_MAILSERVER_RELAY_PORT:"25",
-                                       NO_SECTION_NAME_MAILSERVER_RELAY_USER:"unconfigured",
-                                       NO_SECTION_NAME_NTP_SERVER:"no"},
-                      FIREWALL_SECTION_NAME:{SECTION_FIREWALL_ACTIVE:"yes"},
-                      FRAMEWORK_SECTION_NAME: {SECTION_FRAMEWORK_HTTPS_CERT:"default",
-                                               SECTION_FRAMEWORK_HTTPS_KEY:"default"},
-                      SENSOR_SECTION_NAME: {SECTION_SENSOR_IDS_RULES_FLOW_CONTROL:"yes",
-                                            SECTION_SENSOR_MSERVER:"no",
-                                            SECTION_SENSOR_NETFLOW:"yes",
-                                            SECTION_SENSOR_NETWORKS:"192.168.0.0/16,172.16.0.0/12,10.0.0.0/8",
-                                            SECTION_SENSOR_ASEC:"no"},
-                      SERVER_SECTION_NAME: {SECTION_SERVER_ALIENVAULT_IP_REPUTATION:"enabled"},
-                      SNMP_SECTION_NAME: {SECTION_SNMP_COMMUNITY:"public",
-                                          SECTION_SNMP_SNMPD:"yes",
-                                          SECTION_SNMP_SNMPTRAP:"yes", },
-                      UPDATE_SECTION_NAME:{SECTION_UPDATE_PROXY:"disabled",
-                                           SECTION_UPDATE_PROXY_DNS:"my.proxy.com",
-                                           SECTION_UPDATE_PROXY_PASSWORD:"disabled",
-                                           SECTION_UPDATE_PROXY_PORT:"disabled",
-                                           SECTION_UPDATE_PROXY_USER:"disabled"},
-                      HA_SECTION_NAME:{
-                                        SECTION_HA_HA_VIRTUAL_IP:"unconfigured",
-                                        }
+    DEFAULT_VALUES = {NO_SECTION_NAME: {NO_SECTION_NAME_MAILSERVER_RELAY: "no",
+                                        NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD: "unconfigured",
+                                        NO_SECTION_NAME_MAILSERVER_RELAY_PORT: "25",
+                                        NO_SECTION_NAME_MAILSERVER_RELAY_USER: "unconfigured",
+                                        NO_SECTION_NAME_NTP_SERVER: "no"},
+                      FIREWALL_SECTION_NAME: {SECTION_FIREWALL_ACTIVE: "yes"},
+                      FRAMEWORK_SECTION_NAME: {SECTION_FRAMEWORK_HTTPS_CERT: "default",
+                                               SECTION_FRAMEWORK_HTTPS_KEY: "default"},
+                      SENSOR_SECTION_NAME: {SECTION_SENSOR_IDS_RULES_FLOW_CONTROL: "yes",
+                                            SECTION_SENSOR_MSERVER: "no",
+                                            SECTION_SENSOR_NETFLOW: "yes",
+                                            SECTION_SENSOR_NETWORKS: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8",
+                                            SECTION_SENSOR_ASEC: "no"},
+                      SERVER_SECTION_NAME: {SECTION_SERVER_ALIENVAULT_IP_REPUTATION: "enabled"},
+                      SNMP_SECTION_NAME: {SECTION_SNMP_COMMUNITY: "public",
+                                          SECTION_SNMP_SNMPD: "yes",
+                                          SECTION_SNMP_SNMPTRAP: "yes", },
+                      UPDATE_SECTION_NAME: {SECTION_UPDATE_PROXY: "disabled",
+                                            SECTION_UPDATE_PROXY_DNS: "my.proxy.com",
+                                            SECTION_UPDATE_PROXY_PASSWORD: "disabled",
+                                            SECTION_UPDATE_PROXY_PORT: "disabled",
+                                            SECTION_UPDATE_PROXY_USER: "disabled"},
+                      HA_SECTION_NAME: {
+                          SECTION_HA_HA_VIRTUAL_IP: "unconfigured",
+                      }
                       }
     PROFILE_NAME_DATABASE = "Database"
     PROFILE_NAME_SENSOR = "Sensor"
@@ -199,17 +191,16 @@ class AVOssimSetupConfigHandler():
     ENABLE_DISABLE_CHOICES = ["enabled", "disabled"]
     PROXY_VALUES = ["disabled", "manual", "alienvault-proxy"]
     PROXY_VALUES_NO_PRO = ["disabled", "manual"]
-    ALLOWED_HA_ROLES = ["master","slave"]
+    ALLOWED_HA_ROLES = ["master", "slave"]
 
-
-    def __init__(self, filename="/etc/ossim/ossim_setup.conf",logfile=LOG_FILE):
+    def __init__(self, filename="/etc/ossim/ossim_setup.conf", logfile=LOG_FILE):
         """Constructor
         """
         self.__ossim_setup_file = filename
         self.__ossim_setup_stat = None
         self.__avconfig_setup = None
         self.__lockFile = FileLock(filename)
-        self.__ossim_setup_md5 = None 
+        self.__ossim_setup_md5 = None
         self.__interfaces = []
         self.__registered_systems = []
 
@@ -226,9 +217,9 @@ class AVOssimSetupConfigHandler():
         self.__load_config()
 
         # Non ossim-setup.conf related.
-        self.__sysconfig = AVSysConfig ()
+        self.__sysconfig = AVSysConfig()
 
-    def __init_logger( self,logfile ):
+    def __init_logger(self, logfile):
         """Initiate the logger. """
 
         # open file handlers (main and error logs)
@@ -242,37 +233,33 @@ class AVOssimSetupConfigHandler():
             os.chmod(logfile, currMode | stat.S_IWGRP)
 
 
-###############################################################################
-#           PRIVATE API
-###############################################################################
+            ###############################################################################
+            #           PRIVATE API
+            ###############################################################################
 
     def get_default_value(self, section, option):
         """Returns the default value for the given section, option.
         whether the default value doesn't exists it returns None
         """
-        if self.DEFAULT_VALUES.has_key(section):
-            if self.DEFAULT_VALUES[section].has_key(option):
+        if section in self.DEFAULT_VALUES:
+            if option in self.DEFAULT_VALUES[section]:
                 return self.DEFAULT_VALUES[section][option]
         return None
-
 
     def __set_default_value_if_needed(self, section, option, value):
         """Check whether the given value needs to be set to default"""
         default_value = self.get_default_value(section, option)
-        if value == None or  value == "" and default_value:
+        if value is None or value == "" and default_value:
             value = default_value
         return value
-
 
     def __is_default(self, section, option, value):
         """Checks whether a value it's a default value
         """
-        if self.DEFAULT_VALUES.has_key(section):
-            if self.DEFAULT_VALUES[section].has_key(option):
-                if value == self.DEFAULT_VALUES[section][option]:
-                    return True
+        if section in self.DEFAULT_VALUES and option in self.DEFAULT_VALUES[section]:
+            if value == self.DEFAULT_VALUES[section][option]:
+                return True
         return False
-
 
     def __set_option(self, section, option, value):
         """Establishes the value for an option 
@@ -280,14 +267,13 @@ class AVOssimSetupConfigHandler():
         Remove errors. 
         """
         self.__remove_error(section, option)
-        old_value = self.__avconfig_setup.get_option(section,option)
+        old_value = self.__avconfig_setup.get_option(section, option)
         if old_value == value:
             return
         self.__avconfig_setup.set(section, option, value)
         self.__add_dirty_option(section, option, value)
         if section == "":
             section = self.NO_SECTION_NAME
-
 
     def __add_error(self, section, option, tuple_error):
         """Add an error to the hash
@@ -296,29 +282,25 @@ class AVOssimSetupConfigHandler():
         No section -> GENERAL
         
         """
-        logger.error("add_error: [%s]->%s %s" %(section,option,str(tuple_error)))
-        if not self.__errors.has_key(section):
+        logger.error("add_error: [%s]->%s %s" % (section, option, str(tuple_error)))
+        if section not in self.__errors:
             self.__errors[section] = {}
         self.__errors[section][option] = tuple_error
-
 
     def __remove_error(self, section, option):
         """Remove the option errors.
         """
-        if self.__errors.has_key(section):
-            if self.__errors[section].has_key(option):
+        if section in self.__errors and option in self.__errors[section]:
                 del self.__errors[section][option]
-
 
     def __add_dirty_option(self, section, option, value):
         """Set the file as dirty and add the option to the 
         modified value list 
         """
         self.__file_dirty = True
-        if not self.__modified_values.has_key(section):
+        if section not in self.__modified_values:
             self.__modified_values[section] = {}
         self.__modified_values[section][option] = value
-
 
     def __load_net_interface_names(self):
         """Load a list of system network interfaces.
@@ -330,7 +312,6 @@ class AVOssimSetupConfigHandler():
                 continue
             self.__interfaces.append(interface.name)
 
-
     def __check_file_stat(self):
         """Get the file stat
         """
@@ -341,7 +322,6 @@ class AVOssimSetupConfigHandler():
         except Exception:
             result = False
         return result
-
 
     def __load_config(self):
         """Loads the configuration file.
@@ -368,7 +348,8 @@ class AVOssimSetupConfigHandler():
                 result = False
                 # FILE_CANT_BE_LOADED_CANNOT_STAT
                 logger.error("ossim-setup cannot stat")
-                error = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_CANT_BE_LOADED_CANNOT_STAT, "File can't be readed")
+                error = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_CANT_BE_LOADED_CANNOT_STAT,
+                                                           "File can't be readed")
                 self.__add_error(self.FILE_SECTION, self.FILE_SECTION_OPTION, error)
         except Exception, e:
             logger.error("Exception loading ossim-setup: %s" % str(e))
@@ -381,12 +362,11 @@ class AVOssimSetupConfigHandler():
         """Checks whether the md5sum of the file has changed
         Returns true on success (md5sum hasn't changed), otherwise false
         """
-        
+
         tmpsum = md5sum(self.__ossim_setup_file)
         if tmpsum != self.__ossim_setup_md5:
             return False
         return True
-
 
     def __get_variable_value(self, section, option):
         """Returns the variable value.
@@ -395,7 +375,7 @@ class AVOssimSetupConfigHandler():
         """
         if not self.__avconfig_setup:
             self.__load_config()
-        if self. __avconfig_loaded_ok:
+        if self.__avconfig_loaded_ok:
             return self.__avconfig_setup.get_option(section, option)
         return None
 
@@ -441,7 +421,6 @@ class AVOssimSetupConfigHandler():
         """
         return True
 
-
     def __is_profile_only_sensor(self):
         """Check whether the framework section should be validated.
          - Whether my profile it's Sensor -> validate Sensor, Framework, Server
@@ -450,10 +429,10 @@ class AVOssimSetupConfigHandler():
          - Whether my profile it's Database -> validate Database, Framework, Server
         """
         profiles = self.get_general_profile_list()
-        if len(profiles)==1 and self.PROFILE_NAME_SENSOR in profiles:
+        if len(profiles) == 1 and self.PROFILE_NAME_SENSOR in profiles:
             return True
         return False
-    
+
     def __is_profile_all_in_one(self):
         """Check whether the framework section should be validated.
          - Whether my profile it's Sensor -> validate Sensor, Framework, Server
@@ -462,34 +441,36 @@ class AVOssimSetupConfigHandler():
          - Whether my profile it's Database -> validate Database, Framework, Server
         """
         profiles = self.get_general_profile_list()
-        if  self.PROFILE_NAME_SENSOR in profiles and self.PROFILE_NAME_DATABASE in profiles \
-        and self.PROFILE_NAME_FRAMEWORK in profiles and self.PROFILE_NAME_SERVER:
+        if self.PROFILE_NAME_SENSOR in profiles and self.PROFILE_NAME_DATABASE in profiles \
+                and self.PROFILE_NAME_FRAMEWORK in profiles and self.PROFILE_NAME_SERVER:
             return True
         return False
 
-    def __get_list_value(self,value):
+    @staticmethod
+    def __get_list_value(value):
         """Returns the list value in the correct format.
         @param value: list of comma separated values.
         @return a string of comman separated values (using whitespaces after each comma)
         """
-        value = value.replace(' ','')
+        value = value.replace(' ', '')
         data = value.split(',')
         return_string = ', '.join(data)
         return return_string
 
-###############################################################################
-#           ACCESSORS
-# Nomenclature used for both get and set methods:
-# get_<section>_<variable>
-# set_<section>_<variable>
-# When section is None -> use section=general
-###############################################################################
+    ###############################################################################
+    #           ACCESSORS
+    # Nomenclature used for both get and set methods:
+    # get_<section>_<variable>
+    # set_<section>_<variable>
+    # When section is None -> use section=general
+    ###############################################################################
 
     def refresh(func):
         """ Decorator for get methods
         Force refresh the configuration from file if the parameter refresh=True
         and the file has changed in the filesystem.
         """
+
         def refresh_wrapper(self, *args, **kwargs):
             if 'refresh' in kwargs:
                 if kwargs['refresh'] is True:
@@ -805,7 +786,7 @@ class AVOssimSetupConfigHandler():
         """
         data = self.__get_variable_value(self.SERVER_SECTION_NAME, self.SECTION_SERVER_PLUGINS)
         if data:
-            data= data.replace(' ','')
+            data = data.replace(' ', '')
             data = data.split(',')
         return data
 
@@ -941,12 +922,10 @@ class AVOssimSetupConfigHandler():
         """Returns the '[ha]->ha_virtual_ip' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_VIRTUAL_IP)
 
-
     def get_dirty(self):
         """Returns whehter the configuration has pending changes.
         """
         return self.__file_dirty
-
 
     def get_dirty_tuple(self):
         """Returns whehter the configuration has pending changes.
@@ -954,7 +933,6 @@ class AVOssimSetupConfigHandler():
         if self.__file_dirty:
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_IS_DIRTY, "")
         return AVConfigParserErrors.ALL_OK
-
 
     def get_modified_values(self):
         """Returns a list of modified values
@@ -964,34 +942,33 @@ class AVOssimSetupConfigHandler():
     def get_modified_values_string(self):
         """Returns a humman readable string for the modified values.
         """
-        st =""
-        for section,options in self.__modified_values.iteritems():
-            st +="[%s]\n" % section
+        st = ""
+        for section, options in self.__modified_values.iteritems():
+            st += "[%s]\n" % section
             for optionname, optionvalue in options.iteritems():
-                st +="%s\n" % optionname
+                st += "%s\n" % optionname
 
         # Add the non ossim_setup.conf related values.
         st += self.__sysconfig.get_pending_str()
         return st
 
-    def get_modified_values_string_full (self):
+    def get_modified_values_string_full(self):
+        """Return both modified fields and their values
         """
-        Return both modified fields and their values
-        """
-        st =""
-        for section,options in self.__modified_values.iteritems():
-            st +="[%s]\n" % section
+        st = ""
+        for section, options in self.__modified_values.iteritems():
+            st += "[%s]\n" % section
             for optionname, optionvalue in options.iteritems():
-                st +="%s: %s\n" % (optionname, optionvalue)
+                st += "%s: %s\n" % (optionname, optionvalue)
         return st
-
 
     def get_error_list(self):
         """Returns the list of errors
         """
         return self.__errors
 
-    def get_disabled_labels(self):
+    @staticmethod
+    def get_disabled_labels():
         """Returns a list with the negatie boolean values
         """
         boolean_negatives = ["on", "0", "false", "off", "no", "disabled", "unconfigured"]
@@ -1003,19 +980,19 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/network/interfaces configuration
 
-    def get_net_iface_config_all (self):
+    def get_net_iface_config_all(self):
         """
         Return a dict with all network interface configurations, in the form {'iface name': 'configuration parameters'}
         """
-        return self.__sysconfig.get_net_iface_config_all ()
+        return self.__sysconfig.get_net_iface_config_all()
 
-    def get_net_iface_config (self, iface):
+    def get_net_iface_config(self, iface):
         """
         Return a dict with the network interface name 'iface' as key, and its configuration attributes as values.
         """
-        return self.__sysconfig.get_net_iface_config (iface)
+        return self.__sysconfig.get_net_iface_config(iface)
 
-    def get_net_iface_name (self):
+    def get_net_iface_name(self):
         """
         Return a random default value for an interface name :)
         """
@@ -1050,32 +1027,32 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/hosts configuration
 
-    def get_hosts_config_all (self):
+    def get_hosts_config_all(self):
         """
         Return a dict with all entries in /etc/hosts, in the form {'entry': 'configuration parameters'}
 
         """
-        return self.__sysconfig.get_hosts_config_all ()
+        return self.__sysconfig.get_hosts_config_all()
 
-    def get_hosts_config (self, entry):
+    def get_hosts_config(self, entry):
         """
         Return a dict with entry 'entry' in /etc/hosts, in the form {'entry': 'configuration parameters'}
         """
-        return self.__sysconfig.get_hosts_config (entry)
+        return self.__sysconfig.get_hosts_config(entry)
 
-    def get_hosts_config_ipaddr (self, entry):
+    def get_hosts_config_ipaddr(self, entry):
         """
         Return the ip address for host entry 'entry'
         """
         return self.__sysconfig.get_hosts_config().keys()[0]
 
-    def get_hosts_config_canonical (self, entry):
+    def get_hosts_config_canonical(self, entry):
         """
         Return the canonical name for host entry 'entry'
         """
         return self.__sysconfig.get_hosts_config().keys()[1]
 
-    def get_hosts_config_aliases (self, entry):
+    def get_hosts_config_aliases(self, entry):
         """
         Return the aliases for host entry 'entry'
         """
@@ -1083,11 +1060,13 @@ class AVOssimSetupConfigHandler():
 
     ### Registered systems configuration
 
-    def get_registered_system (self):
+    def get_registered_system(self):
         """
         Return the first registered system in our database.
         """
-        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            ['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
@@ -1096,7 +1075,9 @@ class AVOssimSetupConfigHandler():
 
     def get_registered_systems_without_vpn(self):
         """Returns the list of systems without vpn"""
-        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems','-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            ['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems', '-n'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
@@ -1105,83 +1086,81 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/alienvault/network/vpn.conf
 
-    def get_avvpn_config_all (self):
+    def get_avvpn_config_all(self):
         """
         Return a dict with all VPN configurations, in the form {'iface name': 'configuration parameters'}
         """
-        return self.__sysconfig.get_avvpn_config_all ()
+        return self.__sysconfig.get_avvpn_config_all()
 
-    def get_avvpn_config (self, iface):
+    def get_avvpn_config(self, iface):
         """
         Return a dict with the VPN network interface name 'iface' as key, and its configuration attributes as values.
         """
-        return self.__sysconfig.get_avvpn_config (iface = iface)
+        return self.__sysconfig.get_avvpn_config(iface=iface)
 
-    def get_avvpn_config_role (self, modifier='tun0'):
+    def get_avvpn_config_role(self, modifier='tun0'):
         """
         Return the role in a VPN configuration (either 'client' or 'server')
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('role', '')
 
-    def get_avvpn_config_config_file (self, modifier='tun0'):
+    def get_avvpn_config_config_file(self, modifier='tun0'):
         """
         Return the configuration file path for a VPN.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('config_file', '')
 
-    def get_avvpn_config_network (self, modifier='tun0'):
+    def get_avvpn_config_network(self, modifier='tun0'):
         """
         Return the network of a VPN.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('network', '')
 
-    def get_avvpn_config_netmask (self, modifier='tun0'):
+    def get_avvpn_config_netmask(self, modifier='tun0'):
         """
         Return the netmask in a VPN configuration.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('netmask', '')
 
-    def get_avvpn_config_port (self, modifier='tun0'):
+    def get_avvpn_config_port(self, modifier='tun0'):
         """
         Return the port of a VPN configuration.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('port', '')
 
-    def get_avvpn_config_ca (self, modifier='tun0'):
+    def get_avvpn_config_ca(self, modifier='tun0'):
         """
         Return the CA file path of a VPN.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('ca', '')
 
-    def get_avvpn_config_cert (self, modifier='tun0'):
+    def get_avvpn_config_cert(self, modifier='tun0'):
         """
         Return the certificate file path of a VPN.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('cert', '')
 
-    def get_avvpn_config_key (self, modifier='tun0'):
+    def get_avvpn_config_key(self, modifier='tun0'):
         """
         Return the key file path of a VPN.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('key', '')
 
-    def get_avvpn_config_dh (self, modifier='tun0'):
+    def get_avvpn_config_dh(self, modifier='tun0'):
         """
         Return the DH file path of a VPN.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('dh', '')
 
-    def get_avvpn_config_enabled (self, modifier='tun0'):
+    def get_avvpn_config_enabled(self, modifier='tun0'):
         """
         Return if the VPN is enabled or not.
         """
         return self.__sysconfig.get_avvpn_config(modifier).get(modifier).get('enabled', 'no')
 
-
-
-###############################################################################
-#           MUTATORS
-###############################################################################
+    ###############################################################################
+    #           MUTATORS
+    ###############################################################################
 
     def validate_config_file(self):
         """Check if all the file fields are correct!
@@ -1196,7 +1175,7 @@ class AVOssimSetupConfigHandler():
             self.check_general_hostname(self.get_general_hostname())
             self.check_general_interface(self.get_general_interface())
             self.check_general_mailserver_relay(self.get_general_mailserver_relay())
-            self.check_general_mailserver_relay_passwd(self.get_general_mailserver_relay_passwd()) 
+            self.check_general_mailserver_relay_passwd(self.get_general_mailserver_relay_passwd())
             self.check_general_mailserver_relay_port(self.get_general_mailserver_relay_port())
             self.check_general_mailserver_relay_user(self.get_general_mailserver_relay_user())
             self.check_general_ntp_server(self.get_general_ntp_server())
@@ -1205,9 +1184,9 @@ class AVOssimSetupConfigHandler():
                 self.check_database_db_ip(self.get_database_db_ip())
                 self.check_database_pass(self.get_database_pass())
                 self.check_database_user(self.get_database_user())
-            
+
             self.check_firewall_active(self.get_firewall_active())
-            
+
             if self.__should_validate_framework_section():
                 self.check_framework_https_cert(self.get_framework_framework_https_cert())
                 self.check_framework_https_key(self.get_framework_framework_https_key())
@@ -1248,13 +1227,12 @@ class AVOssimSetupConfigHandler():
             traceback.print_exc()
             print str(e)
 
-
     def check_general_admin_dns(self, value):
         """Check whether the admin dns is valid
         """
         result = AVConfigParserErrors.ALL_OK
         if value == '':
-            return result 
+            return result
         if value is not None:
             for ip in value.split(','):
                 if not is_ipv4(ip):
@@ -1268,7 +1246,6 @@ class AVOssimSetupConfigHandler():
 
         return result
 
-
     def check_general_admin_gateway(self, value):
         """Check whether the admin gateway is valid
         """
@@ -1278,7 +1255,6 @@ class AVOssimSetupConfigHandler():
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.VALUE_NOT_VALID_IP, value)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_GATEWAY, result)
         return result
-
 
     def check_general_admin_ip(self, value):
         """Check whether the admin ip is valid
@@ -1290,7 +1266,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_IP, result)
         return result
 
-
     def check_general_admin_netmask(self, value):
         """Check whether the admin ip is valid
         """
@@ -1300,7 +1275,6 @@ class AVOssimSetupConfigHandler():
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_NETMASK, value)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_NETMASK, result)
         return result
-
 
     def check_general_domain(self, value):
         """Check whether the domain is valid
@@ -1313,7 +1287,6 @@ class AVOssimSetupConfigHandler():
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_DOMAIN_INVALID_VALUE, value)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_DOMAIN, result)
         return result
-
 
     def check_general_email_notify(self, value):
         """Check whether the email_notify is valid
@@ -1351,7 +1324,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_HOSTNAME, result)
         return result
 
-
     def check_general_interface(self, value):
         """Check whether the interface is valid
         It should be a valid system network interface except the lo
@@ -1360,10 +1332,10 @@ class AVOssimSetupConfigHandler():
         if value not in self.__interfaces:
             logger.warning("Invalid interface ... %s" % value)
             allowed = ','.join(self.__interfaces)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_ADMIN_INTERFACE, " %s, allowed[%s]" % (value, allowed))
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_ADMIN_INTERFACE,
+                                                        " %s, allowed[%s]" % (value, allowed))
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_INTERFACE, result)
         return result
-
 
     def check_general_mailserver_relay(self, value):
         """Check whether the mailserver_relay is valid
@@ -1371,36 +1343,36 @@ class AVOssimSetupConfigHandler():
         """
         result = AVConfigParserErrors.ALL_OK
         is_default = self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY, value)
-        if not is_default and not is_valid_ip_address(value) and not is_valid_domain(value) and not is_valid_dns_hostname(value):
+        if not is_default and not is_valid_ip_address(value) and not is_valid_domain(
+                value) and not is_valid_dns_hostname(value):
             logger.warning("Invalid mailserver_relay ... %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_EMAIL_RELAY,)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_EMAIL_RELAY, )
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY, result)
         return result
-
 
     def check_general_mailserver_relay_passwd(self, value):
         """Check whether the mailserver_relay is valid
         """
         result = AVConfigParserErrors.ALL_OK
         is_default = self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD, value)
-        if not is_default and  not is_allowed_password(value, minsize=1, maxsize=999):
+        if not is_default and not is_allowed_password(value, minsize=1, maxsize=999):
             logger.warning("Invalid mailserver_relay_passwd ... ")
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_EMAIL_RELAY_PASS, "Allowed values ASCII characters ")
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_EMAIL_RELAY_PASS,
+                                                        "Allowed values ASCII characters ")
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD, result)
         return result
-
 
     def check_general_mailserver_relay_port(self, value):
         """Check whether the mailserver_relay_port is valid
         """
         result = AVConfigParserErrors.ALL_OK
         is_default = self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT, value)
-        if not is_default and  not is_valid_port(value):
+        if not is_default and not is_valid_port(value):
             logger.warning("Invalid mailserver_relay_port ... %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_MAILSERVERRELAY_PORT_INVALID_VALUE, value)
+            result = AVConfigParserErrors.get_error_msg(
+                AVConfigParserErrors.CANT_SET_MAILSERVERRELAY_PORT_INVALID_VALUE, value)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT, result)
         return result
-
 
     def check_general_mailserver_relay_user(self, value):
         """Check whether the mailserver_relay_user is valid
@@ -1409,10 +1381,10 @@ class AVOssimSetupConfigHandler():
         is_default = self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER, value)
         if not is_default and not is_allowed_username(value, 4, 255):
             logger.warning("Invalid mailserver_relay_user ... %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_EMAIL_RELAY_USER, "%s Allowed values ASCII characters {4,255}" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_EMAIL_RELAY_USER,
+                                                        "%s Allowed values ASCII characters {4,255}" % value)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER, result)
         return result
-
 
     def check_general_ntp_server(self, value):
         """Check whether the ntp_server is valid
@@ -1425,7 +1397,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.NO_SECTION_NAME, 'ntp_server', result)
         return result
 
-
     def check_database_db_ip(self, value):
         """Check whether the db_ip is valid
         """
@@ -1436,17 +1407,16 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.DATABASE_SECTION_NAME, 'db_ip', result)
         return result
 
-
     def check_database_pass(self, value):
         """Check whether the pass is valid
         """
         result = AVConfigParserErrors.ALL_OK
         if not is_allowed_password(value):
             logger.warning("Invalid db_pass ...")
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_DATABASE_PASSWORD, " Allowed values ASCII characters {8,16}")
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_DATABASE_PASSWORD,
+                                                        " Allowed values ASCII characters {8,16}")
             self.__add_error(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_PASSWORD, result)
         return result
-
 
     def check_database_user(self, value):
         """Check whether the user is valid
@@ -1454,10 +1424,10 @@ class AVOssimSetupConfigHandler():
         result = AVConfigParserErrors.ALL_OK
         if not is_allowed_username(value):
             logger.warning("Invalid db_user ... %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_DATABASE_USER, "%s Allowed values ASCII characters {4,16}" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_DATABASE_USER,
+                                                        "%s Allowed values ASCII characters {4,16}" % value)
             self.__add_error(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_USER, result)
         return result
-
 
     def check_firewall_active(self, value):
         """Check whether the active is valid
@@ -1468,14 +1438,13 @@ class AVOssimSetupConfigHandler():
             value = value.lower()
             if value not in self.YES_NO_CHOICES:
                 error = True
-        except AttributeError:#not a string
+        except AttributeError:  # not a string
             error = True
         if error:
             logger.warning("Invalid firewall active ... %s" % value)
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_BOOLEAN_VALUE, value)
             self.__add_error(self.FIREWALL_SECTION_NAME, self.SECTION_FIREWALL_ACTIVE, result)
         return result
-
 
     def check_framework_https_cert(self, value):
         """Check whether the framework_https_cert
@@ -1489,7 +1458,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_CERT, result)
         return result
 
-
     def check_framework_https_key(self, value):
         """Check whether the framework_https_key
         this value could be 'default' or a valid certificate file
@@ -1502,7 +1470,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_KEY, result)
         return result
 
-
     def check_framework_ip(self, value):
         """Check whether the framework_ip is valid
         """
@@ -1512,7 +1479,6 @@ class AVOssimSetupConfigHandler():
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_DATABASE_IP_INVALID_VALUE, value)
             self.__add_error(self.FRAMEWORK_SECTION_NAME, 'framework_ip', result)
         return result
-
 
     def check_sensor_detectors(self, value):
         """Check whether the [sensor]-> detectors is valid
@@ -1527,11 +1493,12 @@ class AVOssimSetupConfigHandler():
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.ALMOST_ONE_DETECTOR_PLUGIN_IS_NEEDED)
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_DETECTORS, result)
         elif not isinstance(value, basestring):
-            logger.warning("Sensor detectors invalid type: %s -> %s"%(type(value),value))
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.DETECTOR_LIST_SHOULD_BE_A_COMMA_SEPARATED_STRING)
+            logger.warning("Sensor detectors invalid type: %s -> %s" % (type(value), value))
+            result = AVConfigParserErrors.get_error_msg(
+                AVConfigParserErrors.DETECTOR_LIST_SHOULD_BE_A_COMMA_SEPARATED_STRING)
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_DETECTORS, result)
         else:
-            
+
             value = value.split(',')
             for plugin in value:
                 plugin = plugin.strip()
@@ -1541,7 +1508,6 @@ class AVOssimSetupConfigHandler():
                     self.__add_error(self.SENSOR_SECTION_NAME, 'detectors', result)
                     break
         return result
-
 
     def check_sensor_ids_rules_flow_control(self, value):
         """Check whether the [sensor]->ids_rules_flow_control is valid
@@ -1557,7 +1523,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IDS_RULES_FLOW_CONTROL, result)
         return result
 
-
     def check_sensor_interfaces(self, value):
         """Check whether the [sensor]->interfaces is valid
         @param value: a list of interfaces.
@@ -1568,11 +1533,11 @@ class AVOssimSetupConfigHandler():
         if self.PROFILE_NAME_SENSOR not in self.get_general_profile_list():
             logger.warning("Sensor profile not present. Cannot set sensor ids_rules_flow_control ... %s" % value)
             return result
-        if not value or value == "": 
+        if not value or value == "":
             logger.warning("Sensor interfaces can't be empty")
             error = True
         else:
-            value = value.replace(' ','')#remove whitespaces
+            value = value.replace(' ', '')  # remove whitespaces
             value = value.split(',')
             for iface in value:
                 if iface.strip() not in self.__interfaces:
@@ -1580,10 +1545,10 @@ class AVOssimSetupConfigHandler():
                     error = True
                     break
         if error:
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SENSOR_INTERFACES_INVALID_VALUE, "%s, allowed[%s]" % (value, allowed))
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SENSOR_INTERFACES_INVALID_VALUE,
+                                                        "%s, allowed[%s]" % (value, allowed))
             self.__add_error(self.SENSOR_SECTION_NAME, 'interfaces', result)
         return result
-
 
     def check_sensor_ip(self, value):
         """Check whether the sensor_ip is valid
@@ -1599,7 +1564,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IP, result)
         return result
 
-
     def check_sensor_monitors(self, value):
         """Check whether the [sensor]-> detectors is valid
         @param value: A list of monitors.
@@ -1608,11 +1572,12 @@ class AVOssimSetupConfigHandler():
         if self.PROFILE_NAME_SENSOR not in self.get_general_profile_list():
             logger.warning("Sensor profile not present. Cannot set sensor ids_rules_flow_control ... %s" % value)
             return result
-        if value =="":
+        if value == "":
             return result
         elif not isinstance(value, basestring):
-            logger.warning("Sensor monitors invalid type: %s -> %s"%(type(value),value))
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.MONITOR_LIST_SHOULD_BE_A_COMMA_SEPARATED_STRING)
+            logger.warning("Sensor monitors invalid type: %s -> %s" % (type(value), value))
+            result = AVConfigParserErrors.get_error_msg(
+                AVConfigParserErrors.MONITOR_LIST_SHOULD_BE_A_COMMA_SEPARATED_STRING)
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_DETECTORS, result)
         else:
             monitors = get_current_monitor_plugin_list_clean()
@@ -1626,7 +1591,6 @@ class AVOssimSetupConfigHandler():
                     break
         return result
 
-
     def check_sensor_mserver(self, value):
         """Check whether the [sensor]->mservers  is valid
         @param value: A list of mservers.
@@ -1637,7 +1601,7 @@ class AVOssimSetupConfigHandler():
         if self.PROFILE_NAME_SENSOR not in self.get_general_profile_list():
             logger.warning("Sensor profile not present. Cannot set sensor ids_rules_flow_control ... %s" % value)
             return result
-        
+
         if self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MSERVER, value):
             return result
         error = False
@@ -1647,15 +1611,17 @@ class AVOssimSetupConfigHandler():
         else:
             server_list = value.split(';')
             for server in server_list:
-                if not check_mserver_string(server) and not self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MSERVER, value):
+                if not check_mserver_string(server) and not self.__is_default(self.SENSOR_SECTION_NAME,
+                                                                              self.SECTION_SENSOR_MSERVER, value):
                     logger.info("Invalid sensor mserver string %s" % value)
                     error = True
                     break
         if error:
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_MSERVER_TUPLE, " %s (SERVER_IPPORT,SEND_EVENTS(True/False),ALLOW_FRMK_DATA(True/False),PRIORITY (0-5),FRMK_IP,FRMK_PORT)" % (value))
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_MSERVER_TUPLE,
+                                                        " %s (SERVER_IPPORT,SEND_EVENTS(True/False),ALLOW_FRMK_DATA(True/False),PRIORITY (0-5),FRMK_IP,FRMK_PORT)" % (
+                                                            value))
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MSERVER, result)
         return result
-
 
     def check_sensor_name(self, value):
         """Check whether the user is valid
@@ -1666,12 +1632,12 @@ class AVOssimSetupConfigHandler():
             logger.warning("Sensor profile not present. Cannot set sensor ids_rules_flow_control ... %s" % value)
             return result
         result = AVConfigParserErrors.ALL_OK
-        if is_valid_ip_address(value) or  not is_sensor_allowed_name(value):
+        if is_valid_ip_address(value) or not is_sensor_allowed_name(value):
             logger.error("Invalid sensor name")
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_SENSOR_NAME, "%s Allowed values ASCII characters {4,16}" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_SENSOR_NAME,
+                                                        "%s Allowed values ASCII characters {4,16}" % value)
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NAME, result)
         return result
-
 
     def check_sensor_netflow(self, value):
         """Check whether the [sensor]->netflow is valid
@@ -1680,12 +1646,11 @@ class AVOssimSetupConfigHandler():
         if self.PROFILE_NAME_SENSOR not in self.get_general_profile_list():
             logger.warning("Sensor profile not present. Cannot set sensor ids_rules_flow_control ... %s" % value)
             return result
-        if value not  in self.YES_NO_CHOICES:
+        if value not in self.YES_NO_CHOICES:
             logger.warning("Invalid sensor netflow %s" % value)
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_BOOLEAN_VALUE, value)
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW, result)
         return result
-
 
     def check_sensor_netflow_remote_collector_port(self, value):
         """Check whether the [sensor]->netflow_remote_collector_port is valid"""
@@ -1695,10 +1660,10 @@ class AVOssimSetupConfigHandler():
             return result
         if not is_valid_port(value):
             logger.warning("Invaid sensor netflow_remote_collector_port %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_NETFLOW_REMOTE_COLLECTOR_PORT_INVALID_VALUE, value)
+            result = AVConfigParserErrors.get_error_msg(
+                AVConfigParserErrors.CANT_SET_NETFLOW_REMOTE_COLLECTOR_PORT_INVALID_VALUE, value)
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW_REMOTE_COLLECTOR_PORT, result)
         return result
-
 
     def check_sensor_networks(self, value):
         """Check whether the sensor networks are a valid value"""
@@ -1711,13 +1676,12 @@ class AVOssimSetupConfigHandler():
             return result
         value = value.split(',')
         for net in value:
-            if not  is_valid_CIDR(net):
+            if not is_valid_CIDR(net):
                 logger.warning("Invalid CIDR: %s" % net)
                 result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_NET, net)
                 self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETWORKS, result)
                 break
         return result
-
 
     def check_sensor_pci_express(self, value):
         """Check whether the [sensor]->pci_express is valid
@@ -1726,7 +1690,6 @@ class AVOssimSetupConfigHandler():
         """
         result = AVConfigParserErrors.ALL_OK
         return result
-
 
     def check_sensor_tzone(self, value):
         """Check whether the [sensor]->tzone is valid
@@ -1743,7 +1706,7 @@ class AVOssimSetupConfigHandler():
         if self.PROFILE_NAME_SENSOR not in self.get_general_profile_list():
             logger.warning("Sensor profile not present. Cannot set sensor ctx ... %s" % value)
             return result
-        #11464 Allow empty values on sensor_ctx
+        # 11464 Allow empty values on sensor_ctx
         if value == "" or value is None:
             return result
         try:
@@ -1761,12 +1724,11 @@ class AVOssimSetupConfigHandler():
         if self.PROFILE_NAME_SENSOR not in self.get_general_profile_list():
             logger.warning("Sensor profile not present. Cannot set sensor asec ... %s" % value)
             return result
-        if value not  in self.YES_NO_CHOICES:
+        if value not in self.YES_NO_CHOICES:
             logger.warning("Invalid sensor asec %s" % value)
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_BOOLEAN_VALUE, value)
             self.__add_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_ASEC, result)
         return result
-
 
     def check_server_alienvault_ip_reputation(self, value):
         """Check whether the alienvault ip reputation is valid
@@ -1777,10 +1739,10 @@ class AVOssimSetupConfigHandler():
             return result
         if value not in self.ENABLE_DISABLE_CHOICES:
             logger.warning("Server alienvault ip reputation invalid value :%s " % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_ALIENVAULT_REPUTATION_IP_VALUE, "%s allowed values are (enabled/disabled)" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_ALIENVAULT_REPUTATION_IP_VALUE,
+                                                        "%s allowed values are (enabled/disabled)" % value)
             self.__add_error(self.SERVER_SECTION_NAME, self.SECTION_SERVER_ALIENVAULT_IP_REPUTATION, result)
         return result
-
 
     def check_server_ip(self, value):
         """Check whether the server_ip is valid
@@ -1795,7 +1757,6 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP, result)
         return result
 
-
     def check_server_server_plugins(self, value):
         """Check whether the [sensor]->server_server_plugins is valid
         TODO: How to validate this value?
@@ -1803,7 +1764,6 @@ class AVOssimSetupConfigHandler():
         """
         result = AVConfigParserErrors.ALL_OK
         return result
-
 
     def check_server_pro(self, value):
         """Check whether the [sensor]->server_pro is valid
@@ -1813,19 +1773,18 @@ class AVOssimSetupConfigHandler():
         result = AVConfigParserErrors.ALL_OK
         return result
 
-
     def check_snmp_community(self, value):
         """Check whether the [sensor]->server_pro is valid
         server_pro is a read-only value
         """
-        #default_value = self.get_default_value(self.SNMP_SECTION_NAME, self.SECTION_SNMP_COMMUNITY)
+        # default_value = self.get_default_value(self.SNMP_SECTION_NAME, self.SECTION_SNMP_COMMUNITY)
         result = AVConfigParserErrors.ALL_OK
         if not is_snmp_community_allowed(value):
             logger.warning("Invalid snmp community %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SNMP_COMMUNITY_VALUE_INVALID, "%s Allowed characters: ASCII excpet '@'" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SNMP_COMMUNITY_VALUE_INVALID,
+                                                        "%s Allowed characters: ASCII excpet '@'" % value)
             self.__add_error(self.SNMP_SECTION_NAME, self.SECTION_SNMP_COMMUNITY, result)
         return result
-
 
     def check_snmp_snmp_community(self, value):
         """Check whether the [snmp]->snmp_comunity is valid
@@ -1835,17 +1794,16 @@ class AVOssimSetupConfigHandler():
         result = AVConfigParserErrors.ALL_OK
         return result
 
-
     def check_snmp_snmpd(self, value):
         """Check whether the [snmp]->snmpd is valid
         """
         result = AVConfigParserErrors.ALL_OK
         if value not in self.YES_NO_CHOICES:
             logger.warning("Invalid snmp snmpd %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SNMPD_INVALID_VALUE, "%s allowed [yes,no]" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SNMPD_INVALID_VALUE,
+                                                        "%s allowed [yes,no]" % value)
             self.__add_error(self.SERVER_SECTION_NAME, self.SECTION_SNMP_SNMPD, result)
         return result
-
 
     def check_snmp_snmptrap(self, value):
         """Check whether the [snmp]->snmptrap is valid
@@ -1853,10 +1811,10 @@ class AVOssimSetupConfigHandler():
         result = AVConfigParserErrors.ALL_OK
         if value not in ["no", "yes"]:
             logger.warning("Invalid snmp snmptrap %s" % value)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SNMPDTRAP_INVALID_VALUE, "%s allowed [yes,no]" % value)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SNMPDTRAP_INVALID_VALUE,
+                                                        "%s allowed [yes,no]" % value)
             self.__add_error(self.SERVER_SECTION_NAME, self.SECTION_SNMP_SNMPTRAP, result)
         return result
-
 
     def check_update_update_proxy(self, value):
         """Check whether [update]->update_proxy is valid
@@ -1869,47 +1827,43 @@ class AVOssimSetupConfigHandler():
             self.__add_error(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY, result)
         return result
 
-
     def check_update_update_proxy_dns(self, value):
         """Check whether [update]->update_proxy_dns is valid
         allowed_ values: [disabled, valid ip v4 or valid hostname]
         """
         result = AVConfigParserErrors.ALL_OK
-        if (not is_ipv4(value) and not 
-            is_valid_dns_hostname(value) and not 
-            self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_DNS, value)):
+        if (not is_ipv4(value) and not
+        is_valid_dns_hostname(value) and not
+        self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_DNS, value)):
             logger.warning("Invalid update update_proxy_dns %s" % value)
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.UPDATE_PROXY_DNS_NOT_VALID, value)
             self.__add_error(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_DNS, result)
         return result
-
 
     def check_update_update_proxy_pass(self, value):
         """Check whether [update]->update_proxy_pass is valid
          allowed values: [disabled, ascii characters {8,16}]
         """
         result = AVConfigParserErrors.ALL_OK
-        #Ticket #7833  
-        if not is_allowed_password(value,minsize=1,maxsize=999):
+        # Ticket #7833
+        if not is_allowed_password(value, minsize=1, maxsize=999):
             logger.warning("Invalid update update_proxy_pass")
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.UPDATE_PROXY_PASS_NOT_VALID, value)
             self.__add_error(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PASSWORD, result)
         return result
-
 
     def check_update_update_proxy_port(self, value):
         """Check whether [update]->update_proxy_port is valid
          valid TPC/IP port (0, 65535)
         """
         result = AVConfigParserErrors.ALL_OK
-        
+
         if (not self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PORT, value)
             and not is_valid_port(value)):
             logger.warning("Invalid update update_proxy_port %s" % value)
             result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.UPDATE_PROXY_PORT_NOT_VALID, value)
             self.__add_error(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PORT, result)
         return result
-
 
     def check_update_update_proxy_user(self, value):
         """Check whether [update]->update_proxy_port is valid
@@ -1961,7 +1915,6 @@ class AVOssimSetupConfigHandler():
 
         return result
 
-
     def set_general_admin_gateway(self, value):
         """Sets the value for 'admin_gateway'
         Requirements:
@@ -1986,10 +1939,10 @@ class AVOssimSetupConfigHandler():
 
 
         else:
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_ADMIN_GATEWAY_INVALID_ADMIN_INTERFACE, iface)
+            result = AVConfigParserErrors.get_error_msg(
+                AVConfigParserErrors.CANT_SET_ADMIN_GATEWAY_INVALID_ADMIN_INTERFACE, iface)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_GATEWAY, result)
         return result
-
 
     def set_general_admin_ip(self, value):
         """Sets the value for 'admin_ip'
@@ -2028,10 +1981,10 @@ class AVOssimSetupConfigHandler():
                                                       netmask=value)
 
         else:
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SET_ADMIN_NETMASK_INVALID_ADMIN_INTERFACE, iface)
+            result = AVConfigParserErrors.get_error_msg(
+                AVConfigParserErrors.CANT_SET_ADMIN_NETMASK_INVALID_ADMIN_INTERFACE, iface)
             self.__add_error(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_NETMASK, result)
         return result
-
 
     def set_general_domain(self, value):
         """Sets the value for 'domain'
@@ -2049,7 +2002,6 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_DOMAIN, value)
         return result
-
 
     def set_general_email_notify(self, value):
         """Sets the email_notify value
@@ -2109,14 +2061,17 @@ class AVOssimSetupConfigHandler():
         result = self.check_general_interface(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_INTERFACE, value)
-            result = self.set_net_iface_config (value, is_administration = 'yes')
+            result = self.set_net_iface_config(value, is_administration='yes')
 
         return result
 
     def set_default_values_for_mail_relay(self):
-        self.set_general_mailserver_relay_passwd(self.get_default_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD))
-        self.set_general_mailserver_relay_port(self.get_default_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT))
-        self.set_general_mailserver_relay_user(self.get_default_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER))
+        self.set_general_mailserver_relay_passwd(
+            self.get_default_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD))
+        self.set_general_mailserver_relay_port(
+            self.get_default_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT))
+        self.set_general_mailserver_relay_user(
+            self.get_default_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER))
 
     def set_general_mailserver_relay(self, value):
         """Sets the mailserver_relay value
@@ -2126,13 +2081,12 @@ class AVOssimSetupConfigHandler():
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
         if value == "":
             value = self.get_default_value(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY)
-        result = self.check_general_mailserver_relay(value) 
+        result = self.check_general_mailserver_relay(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY, value)
             if self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY, value):
                 self.set_default_values_for_mail_relay()
         return result
-
 
     def set_general_mailserver_relay_passwd(self, value):
         """Sets the mailserver_relay_passwd value
@@ -2140,12 +2094,12 @@ class AVOssimSetupConfigHandler():
         if not self.__avconfig_loaded_ok:
             logger.error("set_general_mailserver_relay_passwd -> File not loaded!")
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        value = self.__set_default_value_if_needed(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD, value)
-        result = self.check_general_mailserver_relay_passwd(value) 
+        value = self.__set_default_value_if_needed(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD,
+                                                   value)
+        result = self.check_general_mailserver_relay_passwd(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD, value)
         return result
-
 
     def set_general_mailserver_relay_port(self, value):
         """Sets the mailserver_relay_port value
@@ -2153,12 +2107,12 @@ class AVOssimSetupConfigHandler():
         if not self.__avconfig_loaded_ok:
             logger.error("set_general_mailserver_relay_port -> File not loaded!")
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        value = self.__set_default_value_if_needed(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT, value)
-        result = self.check_general_mailserver_relay_port(value) 
+        value = self.__set_default_value_if_needed(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT,
+                                                   value)
+        result = self.check_general_mailserver_relay_port(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT, value)
         return result
-
 
     def set_general_mailserver_relay_user(self, value):
         """Sets the mailserver_relay_user value
@@ -2166,12 +2120,12 @@ class AVOssimSetupConfigHandler():
         if not self.__avconfig_loaded_ok:
             logger.error("set_general_mailserver_relay_user -> File not loaded!")
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        value = self.__set_default_value_if_needed(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER, value)
-        result = self.check_general_mailserver_relay_user(value) 
+        value = self.__set_default_value_if_needed(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER,
+                                                   value)
+        result = self.check_general_mailserver_relay_user(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER, value)
         return result
-
 
     def set_general_ntp_server(self, value):
         """Sets the ntp_server value
@@ -2185,11 +2139,9 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.NO_SECTION_NAME, self.NO_SECTION_NAME_NTP_SERVER, value)
         return result
 
-
     def set_general_profile(self, value):
         """profile is a read-only value"""
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.READ_ONLY)
-
 
     def set_database_db_ip(self, value):
         """Sets the  [database] -> db_ip value
@@ -2202,12 +2154,12 @@ class AVOssimSetupConfigHandler():
         result = self.check_database_db_ip(value)
         if result == AVConfigParserErrors.ALL_OK:
             if self.PROFILE_NAME_DATABASE in self.get_general_profile_list():
-                result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.DATABASE_IP_CANT_BE_CHANGED_PROFILE_IS_DATABASE, value)
+                result = AVConfigParserErrors.get_error_msg(
+                    AVConfigParserErrors.DATABASE_IP_CANT_BE_CHANGED_PROFILE_IS_DATABASE, value)
                 self.__remove_error(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_IP)
             else:
                 self.__set_option(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_IP, value)
         return result
-
 
     def set_database_pass(self, value):
         """Sets the [database] - > pass value
@@ -2221,7 +2173,6 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_PASSWORD, value)
         return result
-
 
     def set_database_user(self, value):
         """Sets the [database]->user value
@@ -2248,12 +2199,10 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_USER, value)
         return result
 
-
     def set_expert_profile(self, value):
         """Sets the [expert]->profile
         """
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.READ_ONLY)
-
 
     def set_firewall_active(self, value):
         """Sets the [firewall] active value
@@ -2267,7 +2216,6 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.FIREWALL_SECTION_NAME, self.SECTION_FIREWALL_ACTIVE, value)
         return result
 
-
     def set_framework_framework_https_cert(self, value):
         """Sets the framework_https_cert value
         """
@@ -2277,12 +2225,12 @@ class AVOssimSetupConfigHandler():
         result = AVConfigParserErrors.ALL_OK
         if not self.__should_validate_framework_section():
             return result
-        value = self.__set_default_value_if_needed(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_CERT, value)
+        value = self.__set_default_value_if_needed(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_CERT,
+                                                   value)
         result = self.check_framework_https_cert(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_CERT, value)
         return result
-
 
     def set_framework_framework_https_key(self, value):
         """Sets the framework_https_key value
@@ -2298,7 +2246,6 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_KEY, value)
         return result
-
 
     def set_framework_framework_ip(self, value):
         """Sets the framework_ip value
@@ -2325,14 +2272,13 @@ class AVOssimSetupConfigHandler():
                 if value in local_ips:
                     self.__set_option(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_IP, value)
                 else:
-                    result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_FRAMEWORK_IP_NOT_IN_LOCAL_IPS, str(local_ips))
+                    result = AVConfigParserErrors.get_error_msg(
+                        AVConfigParserErrors.INVALID_FRAMEWORK_IP_NOT_IN_LOCAL_IPS, str(local_ips))
                     self.__remove_error(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_IP)
-                #result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FRAMEWORK_IP_CANT_BE_CHANGED_PROFILE_IS_FRAMEWORK, value)
+                    # result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FRAMEWORK_IP_CANT_BE_CHANGED_PROFILE_IS_FRAMEWORK, value)
             else:
                 self.__set_option(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_IP, value)
         return result
-
-
 
     def set_sensor_detectors(self, value):
         """Sets the [sensor]-> detectors value
@@ -2348,7 +2294,6 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_DETECTORS, self.__get_list_value(value))
         return result
 
-
     def set_sensor_ids_rules_flow_control(self, value):
         """Sets the [sensor]->ids_rules_flow_control value
         """
@@ -2358,12 +2303,12 @@ class AVOssimSetupConfigHandler():
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
         if not self.__should_validate_sensor_section():
             return result
-        value = self.__set_default_value_if_needed(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IDS_RULES_FLOW_CONTROL, value)
+        value = self.__set_default_value_if_needed(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IDS_RULES_FLOW_CONTROL,
+                                                   value)
         result = self.check_sensor_ids_rules_flow_control(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IDS_RULES_FLOW_CONTROL, value)
         return result
-
 
     def set_sensor_interfaces(self, value):
         """Sets the [sensor]->interfaces value
@@ -2399,7 +2344,6 @@ class AVOssimSetupConfigHandler():
                     result = r
         return result
 
-
     def set_sensor_ip(self, value):
         """Sets the [sensor]->ip value
         """
@@ -2409,15 +2353,15 @@ class AVOssimSetupConfigHandler():
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
         if not self.__should_validate_sensor_section():
             return result
-        result = self.check_sensor_ip(value) 
+        result = self.check_sensor_ip(value)
         if result == AVConfigParserErrors.ALL_OK:
             if self.__is_profile_all_in_one() or self.__is_profile_only_sensor():
-                result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SENSOR_IP_CANT_BE_CHANGED_PROFILE_IS_SENSOR)
+                result = AVConfigParserErrors.get_error_msg(
+                    AVConfigParserErrors.SENSOR_IP_CANT_BE_CHANGED_PROFILE_IS_SENSOR)
                 self.__remove_error(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IP)
             else:
                 self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IP, value)
         return result
-
 
     def set_sensor_monitors(self, value):
         """Sets the [sensor]->monitors value
@@ -2430,12 +2374,11 @@ class AVOssimSetupConfigHandler():
             return result
         if not value:
             value = ""
-            
+
         result = self.check_sensor_monitors(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MONITORS, self.__get_list_value(value))
         return result
-
 
     def set_sensor_mservers(self, value):
         """Sets the [sensor]->mservers value
@@ -2447,11 +2390,10 @@ class AVOssimSetupConfigHandler():
         if not self.__should_validate_sensor_section():
             return result
         value = self.__set_default_value_if_needed(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MSERVER, value)
-        result = self.check_sensor_mserver(value) 
+        result = self.check_sensor_mserver(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MSERVER, value)
         return result
-
 
     def set_sensor_name(self, value):
         """Sets the [sensor]->name value
@@ -2466,7 +2408,6 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NAME, value)
         return result
-
 
     def set_sensor_netflow(self, value):
         """Sets the [sensor]->netflow value
@@ -2483,7 +2424,6 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW, value)
         return result
 
-
     def set_sensor_netflow_remote_collector_port(self, value):
         """Sets the [sensor]->netflow_remote_collector_port value
         """
@@ -2493,12 +2433,12 @@ class AVOssimSetupConfigHandler():
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
         if not self.__should_validate_sensor_section():
             return result
-        value = self.__set_default_value_if_needed(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW_REMOTE_COLLECTOR_PORT, value)
-        result = self.check_sensor_netflow_remote_collector_port(value) 
+        value = self.__set_default_value_if_needed(self.SENSOR_SECTION_NAME,
+                                                   self.SECTION_SENSOR_NETFLOW_REMOTE_COLLECTOR_PORT, value)
+        result = self.check_sensor_netflow_remote_collector_port(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW_REMOTE_COLLECTOR_PORT, value)
         return result
-
 
     def set_sensor_networks(self, value):
         """Sets the [sensor]->networks value
@@ -2510,17 +2450,15 @@ class AVOssimSetupConfigHandler():
         if not self.__should_validate_sensor_section():
             return result
         value = self.__set_default_value_if_needed(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETWORKS, value)
-        #data = value.split(',')
+        # data = value.split(',')
         result = self.check_sensor_networks(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETWORKS, value)
         return result
 
-
     def set_sensor_pci_express(self, value):
         """pci_express is a read-only value"""
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.READ_ONLY)
-
 
     def set_sensor_tzone(self, value):
         """tzone is a read-only value"""
@@ -2563,7 +2501,6 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_ASEC, value)
         return result
 
-
     def set_server_alienvault_ip_reputation(self, value):
         """Sets the [server]->alienvault_ip_reputation value
         """
@@ -2573,12 +2510,12 @@ class AVOssimSetupConfigHandler():
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
         if not self.__should_validate_server_section():
             return result
-        value = self.__set_default_value_if_needed(self.SERVER_SECTION_NAME, self.SECTION_SERVER_ALIENVAULT_IP_REPUTATION, value)
+        value = self.__set_default_value_if_needed(self.SERVER_SECTION_NAME,
+                                                   self.SECTION_SERVER_ALIENVAULT_IP_REPUTATION, value)
         result = self.check_server_alienvault_ip_reputation(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SERVER_SECTION_NAME, self.SECTION_SERVER_ALIENVAULT_IP_REPUTATION, value)
         return result
-
 
     def set_server_server_ip(self, value):
         """Sets the [server]->server_ip value
@@ -2604,26 +2541,24 @@ class AVOssimSetupConfigHandler():
                 if value in local_ips:
                     self.__set_option(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP, value)
                 else:
-                    result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_SERVER_IP_NOT_IN_LOCAL_IPS, str(local_ips))
+                    result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_SERVER_IP_NOT_IN_LOCAL_IPS,
+                                                                str(local_ips))
                     self.__remove_error(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP)
-                #result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SERVER_IP_CANT_BE_CHAGED_PROFILE_IS_SERVER)
-                #self.__remove_error(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP)
+                    # result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SERVER_IP_CANT_BE_CHAGED_PROFILE_IS_SERVER)
+                    # self.__remove_error(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP)
             else:
                 self.__set_option(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP, value)
         return result
-
 
     def set_server_server_plugins(self, value):
         """Sets the [server]->server_plugins value
         """
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.READ_ONLY)
 
-
     def set_server_pro(self, value):
         """Sets the [server]->server_pro value
         """
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.READ_ONLY)
-
 
     def set_snmp_comunity(self, value):
         """Sets the [snmp]->community value
@@ -2640,10 +2575,9 @@ class AVOssimSetupConfigHandler():
 
         value = self.__set_default_value_if_needed(self.SNMP_SECTION_NAME, self.SECTION_SNMP_COMMUNITY, value)
         result = self.check_snmp_community(value)
-        if result == AVConfigParserErrors.ALL_OK: 
+        if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SNMP_SECTION_NAME, self.SECTION_SNMP_COMMUNITY, value)
         return result
-
 
     def set_snmp_snmp_comunity(self, value):
         """Sets the [snmp]->snmp_comunity value
@@ -2651,7 +2585,6 @@ class AVOssimSetupConfigHandler():
         There's a typo on the option name. 
         """
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.READ_ONLY)
-
 
     def set_snmp_snmpd(self, value):
         """Sets the [snmp]->snmpd value
@@ -2664,7 +2597,6 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.SNMP_SECTION_NAME, self.SECTION_SNMP_SNMPD, value)
         return result
-
 
     def set_snmp_snmptrap(self, value):
         """Sets the [snmp]->snmptrap value
@@ -2681,10 +2613,14 @@ class AVOssimSetupConfigHandler():
     def set_default_values_for_update_proxy(self):
         """Sets the default values for proxy section
         """
-        self.set_update_update_proxy_dns(self.get_default_value(self.UPDATE_SECTION_NAME,self.SECTION_UPDATE_PROXY_DNS))
-        self.set_update_update_proxy_pass(self.get_default_value(self.UPDATE_SECTION_NAME,self.SECTION_UPDATE_PROXY_PASSWORD))
-        self.set_update_update_proxy_port(self.get_default_value(self.UPDATE_SECTION_NAME,self.SECTION_UPDATE_PROXY_PORT))
-        self.set_update_update_proxy_user(self.get_default_value(self.UPDATE_SECTION_NAME,self.SECTION_UPDATE_PROXY_USER))
+        self.set_update_update_proxy_dns(
+            self.get_default_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_DNS))
+        self.set_update_update_proxy_pass(
+            self.get_default_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PASSWORD))
+        self.set_update_update_proxy_port(
+            self.get_default_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PORT))
+        self.set_update_update_proxy_user(
+            self.get_default_value(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_USER))
 
     def set_update_update_proxy(self, value):
         """Sets the [update]->update_proxy value
@@ -2695,18 +2631,18 @@ class AVOssimSetupConfigHandler():
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
         value = self.__set_default_value_if_needed(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY, value)
         result = self.check_update_update_proxy(value)
-        if result == AVConfigParserErrors.ALL_OK: 
+        if result == AVConfigParserErrors.ALL_OK:
+
             self.__set_option(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY, value)
-            if self.__is_default(self.UPDATE_SECTION_NAME,self.SECTION_UPDATE_PROXY,value):
+            if self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY, value):
                 self.set_default_values_for_update_proxy()
         return result
-
 
     def set_update_update_proxy_dns(self, value):
         """Sets the [update]->update_proxy_dns value
         allowed_ values: [disabled, valid ip v4 or valid hostname]
         """
-        
+
         if not self.__avconfig_loaded_ok:
             logger.error("set_update_update_proxy_dns -> File not loaded!")
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
@@ -2716,7 +2652,6 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_DNS, value)
         return result
 
-
     def set_update_update_proxy_pass(self, value):
         """Sets the [update]->update_proxy_pass value
         allowed values: [disabled, ascii characters {8,16}]
@@ -2724,13 +2659,11 @@ class AVOssimSetupConfigHandler():
         if not self.__avconfig_loaded_ok:
             logger.error("set_update_update_proxy_pass -> File not loaded!")
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_LOADED, value)
-        value = self.__set_default_value_if_needed(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PASSWORD,value)
+        value = self.__set_default_value_if_needed(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PASSWORD, value)
         result = self.check_update_update_proxy_pass(value)
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PASSWORD, value)
         return result
-    
-
 
     def set_update_update_proxy_port(self, value):
         """Sets the [update]->update_proxy_port value
@@ -2745,7 +2678,6 @@ class AVOssimSetupConfigHandler():
             self.__set_option(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PORT, value)
         return result
 
-
     def set_update_update_proxy_user(self, value):
         """Sets the [update]->update_proxy_user value
         allowed values: [disabled, ascii characters {8,16}]
@@ -2758,8 +2690,6 @@ class AVOssimSetupConfigHandler():
         if result == AVConfigParserErrors.ALL_OK:
             self.__set_option(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_USER, value)
         return result
-
-
 
     ####################################
     # Non ossim_setup.conf related stuff
@@ -2784,7 +2714,8 @@ class AVOssimSetupConfigHandler():
         # Take into account that this may be the admin interface...
         # And, very important here, do not change any network option if the admin interface is being set as a monitor interface.
         if self.get_general_interface() == iface and is_monitor is None:
-            apply_on = [(x, y) for (x, y) in locals().items() if x in ['address', 'netmask', 'gateway', 'dns_search', 'dns_nameservers'] and y is not None]
+            apply_on = [(x, y) for (x, y) in locals().items() if
+                        x in ['address', 'netmask', 'gateway', 'dns_search', 'dns_nameservers'] and y is not None]
             ops = {'address': (self.set_general_admin_ip, self.get_general_admin_ip()),
                    'netmask': (self.set_general_admin_netmask, self.get_general_admin_netmask()),
                    'gateway': (self.set_general_admin_gateway, self.get_general_admin_gateway()),
@@ -2800,12 +2731,13 @@ class AVOssimSetupConfigHandler():
                     return result
 
         self.__file_dirty = True
-        return self.__sysconfig.set_net_iface_config (iface, address, netmask, gateway, dns_search, dns_nameservers, broadcast, network,
-                                                      is_administration, is_log_management, is_monitor)
+        return self.__sysconfig.set_net_iface_config(iface, address, netmask, gateway, dns_search, dns_nameservers,
+                                                     broadcast, network,
+                                                     is_administration, is_log_management, is_monitor)
 
     # Dumb methods to interact with ossimsetup.
     # All methods set the is_log_management flag to 'yes', since this is used to set this interface type.
-    def set_net_iface_name (self, whatever):
+    def set_net_iface_name(self, whatever):
         return AVConfigParserErrors.ALL_OK
 
     def disable_log_management_interface(self, interface):
@@ -2822,7 +2754,7 @@ class AVOssimSetupConfigHandler():
 
     def set_net_iface_netmask(self, value, modifier='eth0'):
         if (value == "" and self.get_general_interface() != modifier) or \
-           not self.__sysconfig.is_net_iface_address_set(modifier):
+                not self.__sysconfig.is_net_iface_address_set(modifier):
             return self.disable_log_management_interface(modifier)
 
         check_result = self.check_interface_netmask(value)
@@ -2835,27 +2767,27 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/hosts configuration
 
-    def set_hosts_config (self, entry, ipaddr = None, canonical = None, aliases = []):
+    def set_hosts_config(self, entry, ipaddr=None, canonical=None, aliases=[]):
         """
         Set the configuration values for host entry 'entry'
         """
-        result = self.__sysconfig.set_hosts_config (entry, ipaddr, canonical, aliases)
+        result = self.__sysconfig.set_hosts_config(entry, ipaddr, canonical, aliases)
         if result == AVConfigParserErrors.ALL_OK:
             self.__file_dirty = True
         return result
 
-    def set_hosts_ipaddr (self, value, modifier='2'):
-        return self.set_hosts_config (modifier, ipaddr = value)
+    def set_hosts_ipaddr(self, value, modifier='2'):
+        return self.set_hosts_config(modifier, ipaddr=value)
 
-    def set_hosts_canonical (self, value, modifier='2'):
-        return self.set_hosts_config (modifier, canonical = value)
+    def set_hosts_canonical(self, value, modifier='2'):
+        return self.set_hosts_config(modifier, canonical=value)
 
-    def set_hosts_aliases (self, value, modifier='2'):
-        return self.set_hosts_config (modifier, aliases = value)
+    def set_hosts_aliases(self, value, modifier='2'):
+        return self.set_hosts_config(modifier, aliases=value)
 
     ### Registered systems configuration
 
-    def set_registered_system (self, value):
+    def set_registered_system(self, value):
         """
         Dumb method.
         """
@@ -2869,58 +2801,57 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/alienvault/network/vpn.conf configuration
 
-    def set_avvpn_config (self, iface,
-                          role = None, config_file = None,
-                          network = None, netmask = None, port = None,
-                          ca = None, cert = None, key = None, dh = None,
-                          enabled = None):
+    def set_avvpn_config(self, iface,
+                         role=None, config_file=None,
+                         network=None, netmask=None, port=None,
+                         ca=None, cert=None, key=None, dh=None,
+                         enabled=None):
         """
         Set the VPN configuration for the interface 'iface'.
         """
-        result = self.__sysconfig.set_avvpn_config (iface, role = role, config_file = config_file,
-                                                    network = network, netmask = netmask, port = port,
-                                                    ca = ca, cert = cert, key = key, dh = dh,
-                                                    enabled = enabled)
+        result = self.__sysconfig.set_avvpn_config(iface, role=role, config_file=config_file,
+                                                   network=network, netmask=netmask, port=port,
+                                                   ca=ca, cert=cert, key=key, dh=dh,
+                                                   enabled=enabled)
         if result == AVConfigParserErrors.ALL_OK:
             self.__file_dirty = True
         return result
 
-    def set_avvpn_config_role (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, role = value)
+    def set_avvpn_config_role(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, role=value)
 
-    def set_avvpn_config_config_file (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, config_file = value)
+    def set_avvpn_config_config_file(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, config_file=value)
 
-    def set_avvpn_config_network (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, network = value)
+    def set_avvpn_config_network(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, network=value)
 
-    def set_avvpn_config_netmask (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, netmask = value)
+    def set_avvpn_config_netmask(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, netmask=value)
 
-    def set_avvpn_config_port (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, port = value)
+    def set_avvpn_config_port(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, port=value)
 
-    def set_avvpn_config_ca (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, ca = value)
+    def set_avvpn_config_ca(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, ca=value)
 
-    def set_avvpn_config_cert (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, cert = value)
+    def set_avvpn_config_cert(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, cert=value)
 
-    def set_avvpn_config_key (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, key = value)
+    def set_avvpn_config_key(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, key=value)
 
-    def set_avvpn_config_dh (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, dh = value)
+    def set_avvpn_config_dh(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, dh=value)
 
-    def set_avvpn_config_enabled (self, value, modifier='tun0'):
-        return self.set_avvpn_config(modifier, enabled = value)
+    def set_avvpn_config_enabled(self, value, modifier='tun0'):
+        return self.set_avvpn_config(modifier, enabled=value)
 
+    ###############################################################################
+    #           PUBLIC API
+    ###############################################################################
 
-###############################################################################
-#           PUBLIC API
-###############################################################################
-
-    def save_ossim_setup_file(self, filename="", abort_on_errors=False,makebackup=True):
+    def save_ossim_setup_file(self, filename="", abort_on_errors=False, makebackup=True):
         """Save the ossim_setup file.
         @param filename The file name where you want to save the contents.
         @param abort_on_errors boolean abort the saving proccess on errors
@@ -2930,15 +2861,15 @@ class AVOssimSetupConfigHandler():
             filename = self.__ossim_setup_file
         result = AVConfigParserErrors.ALL_OK
         if abort_on_errors and self.has_errors():
-             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SAVE_DUE_TO_ERRORS)
+            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANT_SAVE_DUE_TO_ERRORS)
         if self.__avconfig_setup:
             try:
                 if self.__check_md5():
                     if makebackup:
-                      result = self.make_backup()
-                      if result[0] != 0:
-                        #Error, retun result
-                        return result
+                        result = self.make_backup()
+                        if result[0] != 0:
+                            # Error, retun result
+                            return result
                     self.__lockFile.acquire(timeout=2)
                     result = self.__avconfig_setup.write(filename)
                     self.__modified_values.clear()
@@ -2957,36 +2888,30 @@ class AVOssimSetupConfigHandler():
 
         return result
 
-
     def is_default_general_admin_dns(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_DNS, value)
-
 
     def is_default_general_admin_gateway(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_GATEWAY, value)
 
-
     def is_default_general_admin_ip(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_IP, value)
-
 
     def is_default_general_admin_netmask(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_ADMIN_NETMASK, value)
 
-
     def is_default_general_domain(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_DOMAIN, value)
-
 
     def is_default_general_email_notify(self, value):
         """Returns whether the value is a default value
@@ -3003,126 +2928,105 @@ class AVOssimSetupConfigHandler():
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_HOSTNAME, value)
 
-
     def is_default_general_interface(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_INTERFACE, value)
-
 
     def is_default_general_mailserver_relay(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY, value)
 
-
     def is_default_general_mailserver_relay_passwd(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PASSWD, value)
 
-
     def is_default_general_mailserver_relay_port(self, value):
         """Returns whether the value is a default value
         """
-        return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT, value)    
-
+        return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_PORT, value)
 
     def is_default_general_mailserver_relay_user(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_MAILSERVER_RELAY_USER, value)
 
-
     def is_default_general_ntp_server(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_NTP_SERVER, value)
-
 
     def is_default_general_profile(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.NO_SECTION_NAME, self.NO_SECTION_NAME_PROFILE, value)
 
-
     def is_default_database_db_ip(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_IP, value)
-
 
     def is_default_database_pass(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_PASSWORD, value)
 
-
     def is_default_database_user(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.DATABASE_SECTION_NAME, self.SECTION_DATABASE_USER, value)
-
 
     def is_default_expert_profile(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.EXPERT_SECTION_NAME, self.SECTION_EXPERT_PROFILE, value)
 
-
     def is_default_firewall_active(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.EXPERT_SECTION_NAME, self.SECTION_EXPERT_PROFILE, value)
-
 
     def is_default_framework_framework_https_cert(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_CERT, value)
 
-
     def is_default_framework_framework_https_key(self, value):
         """Returns whether the value is a default value
         """
-        return self.__is_default(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_KEY, value)    
-
+        return self.__is_default(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_HTTPS_KEY, value)
 
     def is_default_framework_framework_ip(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_IP, value)
 
-
     def is_default_sensor_detectors(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_DETECTORS, value)
-
 
     def is_default_sensor_ids_rules_flow_control(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IDS_RULES_FLOW_CONTROL, value)
 
-
     def is_default_sensor_interfaces(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_INTERFACES, value)
-
 
     def is_default_sensor_ip(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_IP, value)
 
-
     def is_default_sensor_monitors(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_MONITORS, value)
-
 
     def is_default_sensor_mservers(self, value):
         """Returns whether the value is a default value
@@ -3134,30 +3038,25 @@ class AVOssimSetupConfigHandler():
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NAME, value)
 
-
     def is_default_sensor_netflow(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW, value)
-
 
     def is_default_sensor_netflow_remote_collector_port(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETFLOW_REMOTE_COLLECTOR_PORT, value)
 
-
     def is_default_sensor_networks(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_NETWORKS, value)
 
-
     def is_default_sensor_pci_express(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_PCI_EXPRESS, value)
-
 
     def is_default_sensor_tzone(self, value):
         """Returns whether the value is a default value
@@ -3174,78 +3073,65 @@ class AVOssimSetupConfigHandler():
         """
         return self.__is_default(self.SENSOR_SECTION_NAME, self.SECTION_SENSOR_ASEC, value)
 
-
     def is_default_server_alienvault_ip_reputation(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SERVER_SECTION_NAME, self.SECTION_SERVER_ALIENVAULT_IP_REPUTATION, value)
-
 
     def is_default_server_server_ip(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP, value)
 
-
     def is_default_server_server_plugins(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SERVER_SECTION_NAME, self.SECTION_SERVER_PLUGINS, value)
-
 
     def is_default_server_server_pro(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SERVER_SECTION_NAME, self.SECTION_SERVER_PRO, value)
 
-
     def is_default_smmp_community(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SNMP_SECTION_NAME, self.SECTION_SNMP_COMMUNITY, value)
-
 
     def is_default_smmp_snmp_comunity(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SNMP_SECTION_NAME, self.SECTION_SNMP_SNMP_COMMUNITY, value)
 
-
     def is_default_smmp_snmpd(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SNMP_SECTION_NAME, self.SECTION_SNMP_SNMPD, value)
-
 
     def is_default_smmp_snmptrap(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.SNMP_SECTION_NAME, self.SECTION_SNMP_SNMPTRAP, value)
 
-
     def is_default_update_update_proxy(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY, value)
-
 
     def is_default_update_update_proxy_dns(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_DNS, value)
 
-
     def is_default_update_update_proxy_pass(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PASSWORD, value)
 
-
     def is_default_update_update_proxy_port(self, value):
         """Returns whether the value is a default value
         """
         return self.__is_default(self.UPDATE_SECTION_NAME, self.SECTION_UPDATE_PROXY_PORT, value)
-
 
     def is_default_update_update_proxy_user(self, value):
         """Returns whether the value is a default value
@@ -3259,34 +3145,34 @@ class AVOssimSetupConfigHandler():
 
     ### /etc/network/interfaces configuration
 
-    def is_default_net_iface_ip (self, value):
+    def is_default_net_iface_ip(self, value):
         return
 
-    def is_default_net_iface_netmask (self, value):
+    def is_default_net_iface_netmask(self, value):
         return
 
-    def is_default_net_iface_gateway (self, value):
+    def is_default_net_iface_gateway(self, value):
         return
 
     ### /etc/alienvault/network/vpn.conf
 
-    def is_default_avvpn_config_network (self, value):
+    def is_default_avvpn_config_network(self, value):
         return
 
-    def is_default_avvpn_config_netmask (self, value):
+    def is_default_avvpn_config_netmask(self, value):
         return
 
-    def is_default_avvpn_config_port (self, value):
+    def is_default_avvpn_config_port(self, value):
         return
 
-    def is_default_avvpn_config_enabled (self, value):
+    def is_default_avvpn_config_enabled(self, value):
         return
 
     def has_errors(self):
         """Returns if the current config has errors
         """
-        nerrors=0
-        for section,option in self.__errors.iteritems():
+        nerrors = 0
+        for section, option in self.__errors.iteritems():
             nerrors += len(option)
         if nerrors > 0:
             return True
@@ -3306,7 +3192,6 @@ class AVOssimSetupConfigHandler():
             return True
         return False
 
-
     def is_profile_framework(self):
         """Check whether this machine is a framework profile
         """
@@ -3314,48 +3199,42 @@ class AVOssimSetupConfigHandler():
             return True
         return False
 
-
     def is_profile_database(self):
         """Check whether this machine is a database profile
         """
         if "Database" in self.get_general_profile():
             return True
         return False
+
     def get_allowed_values_for_general_interface(self):
         """Returns the allowed values for the admin interface
         """
         return self.__interfaces
-
 
     def get_allowed_values_for_general_profile(self):
         """Returns the allowed values for the admin profile
         """
         return self.ALLOWED_PROFILES
 
-
     def get_allowed_values_for_firewall_active(self):
         """Returns the allowed values for the firewall active
         """
         return self.YES_NO_CHOICES
-
 
     def get_allowed_values_for_sensor_ids_rules_flow_control(self):
         """Returns the allowed values for the sensor ids_rules_flow_control
         """
         return self.YES_NO_CHOICES
 
-
     def get_allowed_values_for_sensor_interfaces(self):
         """Returns the allowed values for the sensor interfaces
         """
         return self.__interfaces
 
-
     def get_allowed_values_for_sensor_monitors(self):
         """Returns the allowed values for the sensor monitors
         """
         return get_current_monitor_plugin_list_clean()
-
 
     def get_allowed_values_for_sensor_detectors(self):
         """Returns the allowed values for the sensor detectors
@@ -3367,24 +3246,20 @@ class AVOssimSetupConfigHandler():
         """
         return self.YES_NO_CHOICES
 
-
     def get_allowed_values_for_sensor_asec(self):
         """Returns the allowed values for the sensor asec
         """
         return self.YES_NO_CHOICES
-
 
     def get_allowed_values_for_snmp_snmpd(self):
         """Returns the allowed values for the sensor snmpd
         """
         return self.YES_NO_CHOICES
 
-
     def get_allowed_values_for_snmp_snmptrap(self):
         """Returns the allowed values for the sensor snmptrap
         """
         return self.YES_NO_CHOICES
-
 
     def get_allowed_values_for_update_update_proxy(self):
         """Returns the allowed values for the proxy values
@@ -3396,7 +3271,6 @@ class AVOssimSetupConfigHandler():
             print "No profesional"
             return self.PROXY_VALUES_NO_PRO
 
-
     ####################################
     # Non ossim_setup.conf related stuff
     ####################################
@@ -3405,11 +3279,13 @@ class AVOssimSetupConfigHandler():
         """
         return self.__sysconfig.get_net_iface_config_all().keys()
 
-    def get_allowed_values_for_registered_system (self):
+    def get_allowed_values_for_registered_system(self):
         """
         Returns all the systems registered in our database.
         """
-        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            ['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
@@ -3417,7 +3293,9 @@ class AVOssimSetupConfigHandler():
         return registered_systems
 
     def get_allowed_values_for_registered_systems_without_vpn(self):
-        proc = subprocess.Popen(['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems','-n'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            ['/usr/share/python/alienvault-api-core/bin/alienvault/virtual_env_run', 'get_registered_systems', '-n'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         data = json.loads(out)
         registered_systems = [(str(data[uuid]['admin_ip']), str(data[uuid]['hostname'])) for uuid in data]
@@ -3429,33 +3307,28 @@ class AVOssimSetupConfigHandler():
         """
         return self.YES_NO_CHOICES
 
-
-
-
-
-
-
-
     def make_backup(self):
         """Makes a backup.
         """
         result = AVConfigParserErrors.ALL_OK
         try:
-            backup_filename = "%s%s.%s" %(BACKUP_FOLDER,os.path.basename(self.__ossim_setup_file),int(time.time()))
+            backup_filename = "%s%s.%s" % (BACKUP_FOLDER, os.path.basename(self.__ossim_setup_file), int(time.time()))
             shutil.copy(self.__ossim_setup_file, backup_filename)
-            backup_filter = "%s%s*"% (BACKUP_FOLDER,os.path.basename(self.__ossim_setup_file))
-            backup_files = sorted(glob.glob(backup_filter),key=os.path.getctime,reverse=True)
-            #remove the old files.
+            backup_filter = "%s%s*" % (BACKUP_FOLDER, os.path.basename(self.__ossim_setup_file))
+            backup_files = sorted(glob.glob(backup_filter), key=os.path.getctime, reverse=True)
+            # remove the old files.
             if len(backup_files) > MAX_BACKUP_FILES:
                 files_to_remove = backup_files[MAX_BACKUP_FILES:]
                 for f in files_to_remove:
                     os.remove(f)
 
 
-        except Exception,e:
-            #print "%s" % str(e)
-            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.EXCEPTION,str(e))
+        except Exception, e:
+            # print "%s" % str(e)
+            result = AVConfigParserErrors.get_error_msg(AVConfigParserErrors.EXCEPTION, str(e))
         return result
-if __name__=="__main__":
+
+
+if __name__ == "__main__":
     config = AVOssimSetupConfigHandler("./tests/test_data/ossim_setup1.conf")
     print config.get_sensor_detectors()

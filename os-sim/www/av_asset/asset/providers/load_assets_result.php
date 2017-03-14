@@ -32,6 +32,8 @@
 */
 require_once 'av_init.php';
 
+$_SESSION["per_page"] = $to = (POST('iDisplayLength') != '')
+        ? POST('iDisplayLength') : (isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 10);
 session_write_close();
 
 Session::logcheck('environment-menu', 'PolicyHosts');
@@ -40,9 +42,7 @@ Session::logcheck('environment-menu', 'PolicyHosts');
 /* connect to db */
 $db   = new ossim_db(TRUE);
 $conn = $db->connect();
-
 //DataTables Pagination and search Params
-$maxrows    = (POST('iDisplayLength') != '') ? POST('iDisplayLength') : 10;
 $from       = (POST('iDisplayStart') != '')  ? POST('iDisplayStart') : 0;
 $order      = (POST('iSortCol_0') != '')     ? POST('iSortCol_0') : '';
 $torder     = POST('sSortDir_0');
@@ -51,7 +51,7 @@ $sec        = POST('sEcho');
 
 $torder = (!strcasecmp($torder, 'asc')) ? 0 : 1;
 
-ossim_valid($maxrows,  OSS_DIGIT, 'illegal: iDisplayLength');
+ossim_valid($to,  OSS_DIGIT, 'illegal: iDisplayLength');
 ossim_valid($from,     OSS_DIGIT, 'illegal: iDisplayStart');
 ossim_valid($order,    OSS_ALPHA, 'illegal: iSortCol_0');
 ossim_valid($torder,   OSS_DIGIT, 'illegal: sSortDir_0');
@@ -116,9 +116,7 @@ switch($order)
 		$order = 'host.hostname';
 }
 
-$maxrows  = ($maxrows > 50) ? 50 : $maxrows;
 $torder   = ($torder == 1) ? 'ASC' : 'DESC';
-$to       = $maxrows;
 $session  = session_id();
 
 //Get list params

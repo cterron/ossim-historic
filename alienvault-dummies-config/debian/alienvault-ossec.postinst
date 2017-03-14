@@ -17,6 +17,68 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+insert_lsb_header() {
+    OSSEC_INIT_FILE="/etc/init.d/ossec"
+    cat > $OSSEC_INIT_FILE << 'EOF'
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          ossec
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: OSSEC init script
+# Description:       OSSEC init script
+### END INIT INFO
+
+# OSSEC         Controls OSSEC HIDS
+# Author:       Daniel B. Cid <dcid@ossec.net>
+# Modified for slackware by Jack S. Lai
+# AVMod1
+chown www-data:ossec /var/ossec/logs/ /var/ossec/logs/alerts/ /var/ossec/logs/alerts/alerts.log
+chmod g+w /var/ossec/logs/ /var/ossec/logs/alerts/ /var/ossec/logs/alerts/alerts.log
+chmod u+x /var/ossec/logs/alerts/alerts.log
+
+. /etc/ossec-init.conf
+if [ "X${DIRECTORY}" = "X" ]; then
+    DIRECTORY="/var/ossec"
+fi
+
+start() {
+        ${DIRECTORY}/bin/ossec-control start
+}
+stop() {
+        ${DIRECTORY}/bin/ossec-control stop
+}
+status() {
+        ${DIRECTORY}/bin/ossec-control status
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        stop
+        start
+        ;;
+  status)
+    status
+        ;;
+  *)
+        echo "*** Usage: $0 {start|stop|restart|status}"
+        exit 1
+esac
+
+exit 0
+EOF
+
+}
 configure_ossec_tzone() {
     if ! cmp -s /etc/localtime /var/ossec/etc/localtime
     then
@@ -36,19 +98,13 @@ remove_old_ossec_files() {
 case "$1" in
     configure)
         OSSEC_CONF="/var/ossec/etc/ossec.conf"
-        OSSEC_DECODERS_FILE="/var/ossec/etc/decoder.xml"
         OSSIM_SETUP_CONF="/etc/ossim/ossim_setup.conf"
         OSSEC_RULES_FILE="/var/ossec/rules/ossec_rules.xml"
         SYSLOG_RULES_FILE="/var/ossec/rules/syslog_rules.xml"
-        AV_DS_RULES_FILE="/var/ossec/rules/alienvault-directory-service_rules.xml"
-        AV_WINDOWS_FIM_RULES_FILE="/var/ossec/rules/alienvault-windows-FIM_rules.xml"
-        AV_WINDOWS_LOGON_LOGOFF_RULES_FILE="/var/ossec/rules/alienvault-windows-logon-logoff_rules.xml"
-        AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE="/var/ossec/rules/alienvault-windows-workstation-logon-logoff_rules.xml"
-        AV_WINDOWS_USB_RULES_FILE="/var/ossec/rules/alienvault-windows-USB_rules.xml"
-	    MSAUTH_RULES_FILE="/var/ossec/rules/msauth_rules.xml"
 
         configure_ossec_tzone
         remove_old_ossec_files
+        insert_lsb_header
 
         # Update process value for ossim-agent watchdog into its ossec plugin config
         if [ -x "/usr/share/ossim/scripts/ossec_set_plugin_config.sh" ]; then
@@ -63,101 +119,6 @@ case "$1" in
                 chown ossec:ossec /var/ossec/.ssh/config
                 chmod 600 /var/ossec/.ssh/config
             fi
-        fi
-
-        if [ -f "$OSSEC_CONF" ]; then
-            # Common configuration for Ossec
-            cp /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
-            CUSTOM_ALERT='<custom_alert_output>AV - Alert - "$TIMESTAMP" --> RID: "$RULEID"; RL: "$RULELEVEL"; RG: "$RULEGROUP"; RC: "$RULECOMMENT"; USER: "$DSTUSER"; SRCIP: "$SRCIP"; HOSTNAME: "$HOSTNAME"; LOCATION: "$LOCATION"; EVENT: "[INIT]$FULLLOG[END]"; </custom_alert_output>'
-            CUSTOM_ALERT=$(printf "%q" "$CUSTOM_ALERT")
-
-            # local_rules.xml should be added to the end of the list
-            sed -i "$OSSEC_CONF" \
-                -e "/<custom_alert_output>.*<\/custom_alert_output>/d" \
-                -e "s#</global>#  $CUSTOM_ALERT\n  </global>#" \
-                -e '/<local_ip>.*<\/local_ip>/d' \
-                -e '/local_rules/d' \
-                -e "/<include>ms_dhcp_rules.xml<\/include>/d" \
-                -e "s#</rules>#  <include>ms_dhcp_rules.xml<\/include>\n  </rules>#" \
-                -e "/<include>alienvault-directory-service_rules.xml<\/include>/d" \
-                -e "s#</rules>#  <include>alienvault-directory-service_rules.xml<\/include>\n  </rules>#" \
-                -e "/<include>alienvault-windows-FIM_rules.xml<\/include>/d" \
-                -e "s#</rules>#  <include>alienvault-windows-FIM_rules.xml<\/include>\n  </rules>#" \
-                -e "/<include>alienvault-windows-logon-logoff_rules.xml<\/include>/d" \
-                -e "s#</rules>#  <include>alienvault-windows-logon-logoff_rules.xml<\/include>\n  </rules>#" \
-                -e "/<include>alienvault-windows-workstation-logon-logoff_rules.xml<\/include>/d" \
-                -e "s#</rules>#  <include>alienvault-windows-workstation-logon-logoff_rules.xml<\/include>\n  </rules>#" \
-                -e "/<include>alienvault-windows-USB_rules.xml<\/include>/d" \
-                -e "s#</rules>#  <include>alienvault-windows-USB_rules.xml<\/include>\n  </rules>#" \
-                -e "s#</rules>#  <include>local_rules.xml<\/include>\n  </rules>#"
-
-            # Decoder changes. We need to deal with the user changes, so we only replace the dhcp line decoder.
-            # Do not overwrite the files. 
-            # If the ossec.conf file doesn't exist,it not makes sense to do the below replacement. So we make it within this code-block
-            sed -i "$OSSEC_DECODERS_FILE" \
-                -e "/<decoder name=\"ms-dhcp-ipv4\">/,/<\/decoder>/{ s/<regex>.*/<regex>^(\\\d\\\d),\\\d+\/\\\d+\/\\\d\\\d\\\d\*,\\\d+:\\\d+:\\\d+,(\\\.+),(\\\d+.\\\d+.\\\d+.\\\d+)<\/regex>/g;}"
-
-            # HA configuration
-            if [ -f "$OSSIM_SETUP_CONF" ]; then
-                HA_HEARTBEAT_START=$(awk -F '=' '/\<ha_heartbeat_start\>/ {print $2}' "$OSSIM_SETUP_CONF")
-                if [ "$HA_HEARTBEAT_START" = "yes" ]; then
-                    HA_VIRTUAL_IP=$(awk -F '=' '/\<ha_virtual_ip\>/ {print $2}' "$OSSIM_SETUP_CONF")
-                    sed -i "$OSSEC_CONF" \
-                        -e "s:</remote>:  <local_ip>$HA_VIRTUAL_IP</local_ip>\\n  </remote>:"
-                fi
-            fi
-
-            # Alert if new files are created. Add line only if it's not present
-            alert="<alert_new_files>yes</alert_new_files>"
-            test=`grep "$alert" $OSSEC_CONF 2>/dev/null || echo "no"`
-            if [ "$test" = "no" ]; then
-                sed -i "$OSSEC_CONF" \
-                    -e "s#<syscheck>#&\n    <alert_new_files>yes</alert_new_files>#"
-            fi
-        fi
-
-	# Msauth changes
-        if [ -f "$MSAUTH_RULES_FILE" ]; then
-                sed -i "$MSAUTH_RULES_FILE" \
-                        -e "s/<id>\^539$|\^4625$<\/id>/<id>\^539$<\/id>/" \
-                        -e "s/<id>\^529$<\/id>/<id>\^529$\|\^4625$<\/id>/"
-        fi
-
-        # Change alert level for new files
-        if [ -f "$OSSEC_RULES_FILE" ]; then
-            sed -i "$OSSEC_RULES_FILE" \
-                -e 's/<rule id="554" level="0">/<rule id="554" level="7">/' 
-        fi
-
-        # Fix syslog restart rule
-        if [ -f "$SYSLOG_RULES_FILE" ]; then
-            sed -i "$SYSLOG_RULES_FILE" \
-                -e 's/<match>\^exiting on signal/<match>exiting on signal/' 
-        fi
-
-        if [ -f "$AV_DS_RULES_FILE" ]; then
-            chmod 554 $AV_DS_RULES_FILE
-            chown root:ossec $AV_DS_RULES_FILE
-        fi
-
-        if [ -f "$AV_WINDOWS_FIM_RULES_FILE" ]; then
-            chmod 554 $AV_WINDOWS_FIM_RULES_FILE
-            chown root:ossec $AV_WINDOWS_FIM_RULES_FILE
-        fi
-
-        if [ -f "$AV_WINDOWS_LOGON_LOGOFF_RULES_FILE" ]; then
-            chmod 554 $AV_WINDOWS_LOGON_LOGOFF_RULES_FILE
-            chown root:ossec $AV_WINDOWS_LOGON_LOGOFF_RULES_FILE
-        fi
-
-        if [ -f "$AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE" ]; then
-            chmod 554 $AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE
-            chown root:ossec $AV_WINDOWS_WORKSTATION_LOGON_LOGOFF_RULES_FILE
-        fi
-
-        if [ -f "$AV_WINDOWS_USB_RULES_FILE" ]; then
-            chmod 554 $AV_WINDOWS_USB_RULES_FILE
-            chown root:ossec $AV_WINDOWS_USB_RULES_FILE
         fi
 
         MD5_POS=`md5sum $OSSEC_CONF|awk '{print $1}'`

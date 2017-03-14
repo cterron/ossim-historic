@@ -407,7 +407,7 @@ class Log_action
     	    
         $list         = array();
         $pass_history = ($conf->get_conf("pass_history")) ? $conf->get_conf("pass_history") : 0;
-        $query        = "SELECT DISTINCT pass FROM pass_history WHERE user='$user' ORDER BY hist_number DESC LIMIT $pass_history";
+        $query        = "SELECT DISTINCT pass,salt FROM pass_history WHERE user='$user' ORDER BY hist_number DESC LIMIT $pass_history";
         
         $rs = $conn->Execute($query);
         
@@ -418,11 +418,23 @@ class Log_action
         
         while (!$rs->EOF) 
 		{
-            $list[] = $rs->fields["pass"];
+            $list[] = $rs->fields;
             $rs->MoveNext();
         }
 		
         return $list;
+    }
+
+    public static function recent_pass_exists($conn, $login, $pass1) {
+        $recent_pass = Log_action::get_last_pass($conn, $login);
+        if (count($recent_pass) > 0) {
+            foreach ($recent_pass as $pass) {
+                if (($pass["pass"] === Session::hash_the_pass(Session::salt_the_pass($pass["salt"],$pass1))) || ($pass["pass"] === md5($pass1))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 

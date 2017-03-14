@@ -40,8 +40,9 @@ import augeas
 from avconfigparsererror import AVConfigParserErrors
 from avsysconfigtriggerlaunch import AVSysConfigTriggerLaunch
 
-class AVSysConfig (object):
-    def __init__ (self, system_ip = None, system_id = None, system_type = None):
+
+class AVSysConfig(object):
+    def __init__(self, system_ip=None, system_id=None, system_type=None):
         """
         Initialize this object with non system related data, like the OSSIM administration IP address.
         """
@@ -49,7 +50,7 @@ class AVSysConfig (object):
         self.__system_id = system_id
         self.__system_type = system_type
 
-        #augeas = imp.load_source('augeas', '/usr/share/alienvault/api_core/lib/python2.6/site-packages/augeas.py')
+        # augeas = imp.load_source('augeas', '/usr/share/alienvault/api_core/lib/python2.6/site-packages/augeas.py')
         self.__augeas_iface = augeas.Augeas(flags=augeas.Augeas.SAVE_BACKUP)
         self.__augeas_host = augeas.Augeas(flags=augeas.Augeas.SAVE_BACKUP)
         self.__augeas_vpn = augeas.Augeas(flags=augeas.Augeas.SAVE_BACKUP)
@@ -92,35 +93,31 @@ class AVSysConfig (object):
         self.__avvpn_entries = {}
 
         # Initialize pure system data.
-        self.__reload_config__ ()
+        self.__reload_config__()
 
     #
     # Public methods
     #
-    def is_pending (self):
+    def is_pending(self):
+        """Are there pending changes?
         """
-        Are there pending changes?
-        """
-        return self.__pending != {}
+        return bool(self.__pending)
 
-    def get_pending (self):
-        """
-        Get which changes are pending
+    def get_pending(self):
+        """Get which changes are pending
         """
         return self.__pending
 
-    def get_pending_str (self):
-        """
-        Like get_pending(), but in human format (no need for paths)
+    def get_pending_str(self):
+        """Like get_pending(), but in human format (no need for paths)
         """
         data = ''
         for key, (path, desc) in self.__pending.iteritems():
             data += '\n[%s]\n%s' % (key, desc if desc != 'TBD' else 'not set')
         return data
 
-    def apply_changes (self):
-        """
-        Apply pending changes and reload configuration.
+    def apply_changes(self):
+        """Apply pending changes and reload configuration.
         """
         if not self.is_pending():
             return AVConfigParserErrors.ALL_OK
@@ -139,14 +136,15 @@ class AVSysConfig (object):
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.CANNOT_LAUNCH_TRIGGERS, str(message))
 
         self.__pending = {}
-        self.__reload_config__ ()
+        self.__reload_config__()
         return AVConfigParserErrors.ALL_OK
 
-    ### Related to /etc/network/alienvault/interfaces.conf
+    # Related to /etc/network/alienvault/interfaces.conf
 
-    def get_net_iface_config_all (self, include_unconfigured = True, include_lo = False):
+    def get_net_iface_config_all(self, include_unconfigured=True, include_lo=False):
         """
-        Return a dict with all network interface configurations, in the form {'iface name': 'configuration parameters'}
+        Return a dict with all network interface configurations,
+        in the form {'iface name': 'configuration parameters'}
         """
         net_ifaces = self.__net_ifaces
 
@@ -157,30 +155,30 @@ class AVSysConfig (object):
 
         return net_ifaces
 
-    def get_net_iface_config (self, iface):
+    def get_net_iface_config(self, iface):
         """
         Return a dict with the network interface name 'iface' as key, and its configuration attributes as values.
         """
         return {str(iface): self.__net_ifaces.get(str(iface)) or {}}
 
-    def set_net_iface_config (self, iface, address = None,
-                              netmask = None, gateway = None,
-                              dns_search= None, dns_nameservers = None,
-                              broadcast = None, network = None,
-                              is_administration = None, is_log_management = None, is_monitor = None):
+    def set_net_iface_config(self, iface, address=None,
+                             netmask=None, gateway=None,
+                             dns_search=None, dns_nameservers=None,
+                             broadcast=None, network=None,
+                             is_administration=None, is_log_management=None, is_monitor=None):
+        """Set the network configuration for the interface 'iface'.
         """
-        Set the network configuration for the interface 'iface'.
-        """
-        iface_path = "/files/etc/alienvault/network/interfaces.conf/%s" % iface
+        iface_path = "/files/etc/alienvault/network/interfaces.conf/{}".format(iface)
         is_new = self.__augeas_iface.match(iface_path) == []
 
         # Bare minimum to set up an interface (only for log_management interfaces).
         if is_log_management == 'yes':
             minimum = ['address', 'netmask']
             args = locals()
-            bad_args = filter(lambda x: args[x] == None and x in minimum, args)
-            if is_new and bad_args != []:
-                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INCOMPLETE_NETWORK_ENTRY, additional_message=', '.join(bad_args))
+            bad_args = filter(lambda x: args[x] is None and x in minimum, args)
+            if is_new and bad_args:
+                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INCOMPLETE_NETWORK_ENTRY,
+                                                          additional_message=', '.join(bad_args))
 
         # Set the interface role, regarding the following constraints:
         #   * Only one interface can be the administration interface.
@@ -192,10 +190,13 @@ class AVSysConfig (object):
             self.__augeas_iface.set(iface_path + '/network', self.__augeas_iface.get(admin_iface_path + '/network'))
             self.__augeas_iface.set(iface_path + '/broadcast', self.__augeas_iface.get(admin_iface_path + '/broadcast'))
             self.__augeas_iface.set(iface_path + '/gateway', self.__augeas_iface.get(admin_iface_path + '/gateway'))
-            self.__augeas_iface.set(iface_path + '/dns-nameservers', self.__augeas_iface.get(admin_iface_path + '/dns-nameservers'))
-            self.__augeas_iface.set(iface_path + '/dns-search', self.__augeas_iface.get(admin_iface_path + '/dns-search'))
+            self.__augeas_iface.set(iface_path + '/dns-nameservers',
+                                    self.__augeas_iface.get(admin_iface_path + '/dns-nameservers'))
+            self.__augeas_iface.set(iface_path + '/dns-search',
+                                    self.__augeas_iface.get(admin_iface_path + '/dns-search'))
             self.__augeas_iface.set(iface_path + '/administration', 'yes')
-            self.__augeas_iface.set(iface_path + '/log_management', self.__augeas_iface.get(admin_iface_path + '/log_management'))
+            self.__augeas_iface.set(iface_path + '/log_management',
+                                    self.__augeas_iface.get(admin_iface_path + '/log_management'))
             self.__augeas_iface.set(iface_path + '/monitor', self.__augeas_iface.get(admin_iface_path + '/monitor'))
             self.__augeas_iface.set(iface_path + '/enabled', 'yes')
 
@@ -281,8 +282,8 @@ class AVSysConfig (object):
 
         # Lastly, for now, all interfaces are enabled by default if they have a role.
         if self.__augeas_iface.get(iface_path + '/administration') in [None, 'TBD', 'no'] and \
-           self.__augeas_iface.get(iface_path + '/log_management') in [None, 'TBD', 'no'] and \
-           self.__augeas_iface.get(iface_path + '/monitor') in [None, 'TBD', 'no']:
+                        self.__augeas_iface.get(iface_path + '/log_management') in [None, 'TBD', 'no'] and \
+                        self.__augeas_iface.get(iface_path + '/monitor') in [None, 'TBD', 'no']:
             enabled = 'no'
         else:
             enabled = 'yes'
@@ -294,40 +295,43 @@ class AVSysConfig (object):
 
     ### Related to /etc/hosts
 
-    def get_hosts_config_all (self):
+    def get_hosts_config_all(self):
         """
         Return a dict with all entries in /etc/hosts, in the form {'entry': 'configuration parameters'}
         """
         return self.__hosts_entries
 
-    def get_hosts_config (self, entry):
+    def get_hosts_config(self, entry):
         """
         Return a dict with the /etc/hosts entry 'entry' as key, and its configuration attributes as values.
         """
         return {str(entry): self.__hosts_entries.get(str(entry)) or {}}
 
-    def set_hosts_config (self, entry = "2",
-                          ipaddr = None, canonical = None, aliases = []):
+    def set_hosts_config(self, entry="2",
+                         ipaddr=None, canonical=None, aliases=None):
         """
-        Set the configuracion for a /etc/hosts entry.
+        Set the configuration for a /etc/hosts entry.
         ToDo: be able to set new values.
         """
+        if aliases is None:
+            aliases = []
         hosts_entry_path = "/files/etc/hosts/%s" % entry
         hosts_entry_list = self.__augeas_host.match(hosts_entry_path)
 
-        if hosts_entry_list == []:
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.HOSTS_ENTRY_NOT_FOUND, additional_message=str(entry))
+        if not hosts_entry_list:
+            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.HOSTS_ENTRY_NOT_FOUND,
+                                                      additional_message=str(entry))
 
-        if ipaddr != None:
+        if ipaddr is not None:
             ipaddr_path = hosts_entry_path + '/ipaddr'
             self.__augeas_host.set(ipaddr_path, ipaddr)
             self.__pending['Host %s address' % entry] = (ipaddr_path, ipaddr)
-        if canonical != None:
+        if canonical is not None:
             canonical_path = hosts_entry_path + '/canonical'
             self.__augeas_host.set(canonical_path, canonical)
             self.__pending['Host %s canonical name' % entry] = (canonical_path, canonical)
         if aliases != []:
-            for counter, alias in enumerate(aliases, start = 1):
+            for counter, alias in enumerate(aliases, start=1):
                 alias_path = hosts_entry_path + '/alias[%d]' % counter
                 self.__augeas_host.set(alias_path, alias)
                 self.__pending['Host %s alias[%d]' % (entry, counter)] = (alias_path, alias)
@@ -336,23 +340,23 @@ class AVSysConfig (object):
 
     ### Related to /etc/alienvault/network/vpn.conf
 
-    def get_avvpn_config_all (self):
+    def get_avvpn_config_all(self):
         """
         Return a dict with all entries in /etc/alienvault/network/vpn.conf, in the form {iface: configuration parameters}
         """
         return self.__avvpn_entries
 
-    def get_avvpn_config (self, iface = 'tun0'):
+    def get_avvpn_config(self, iface='tun0'):
         """
         Return a dict with the /etc/alienvault/network/vpn.conf entry 'iface' as key, and its configuration attributes as values.
         """
         return {str(iface): self.__avvpn_entries.get(str(iface)) or {}}
 
-    def set_avvpn_config (self, iface,
-                          role = None, config_file = None,
-                          network = None, netmask = None, port = None,
-                          ca = None, cert = None, key = None, dh = None,
-                          enabled = None):
+    def set_avvpn_config(self, iface,
+                         role=None, config_file=None,
+                         network=None, netmask=None, port=None,
+                         ca=None, cert=None, key=None, dh=None,
+                         enabled=None):
         """
         Set the AlienVault VPN configuration under /etc/alienvault/network/vpn.conf
         """
@@ -363,84 +367,92 @@ class AVSysConfig (object):
         is_new = self.__augeas_vpn.match(entry_path) == []
 
         args = locals()
-        bad_args = filter(lambda x: args[x] == None, args)
+        bad_args = filter(lambda x: args[x] is None, args)
         if is_new and bad_args != []:
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INCOMPLETE_AVVPN_ENTRY, additional_message=', '.join(bad_args))
+            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INCOMPLETE_AVVPN_ENTRY,
+                                                      additional_message=', '.join(bad_args))
 
         # If we are setting a path, just check it.
         paths = [config_file, ca, cert, key, dh]
-        bad_paths = filter(lambda x: not(x is None or os.path.isfile(x)), paths)
-        if bad_paths != []:
-            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD, additional_message=', '.join(bad_paths))
+        bad_paths = filter(lambda x: not (x is None or os.path.isfile(x)), paths)
+        if bad_paths:
+            return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD,
+                                                      additional_message=', '.join(bad_paths))
 
-        if role != None:
+        if role is not None:
             if role not in ['server', 'client']:
-                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD, additional_message=str(role))
+                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD,
+                                                          additional_message=str(role))
 
             role_path = entry_path + '/role'
             self.__augeas_vpn.set(role_path, role)
             self.__pending['VPN interface %s role' % iface] = (role_path, role)
 
-        if config_file != None:
+        if config_file is not None:
             config_file_path = entry_path + '/config_file'
             self.__augeas_vpn.set(config_file_path, config_file)
             self.__pending['VPN interface %s config_file' % iface] = (config_file_path, config_file)
 
-        if network != None:
+        if network is not None:
             try:
                 network_check = IP(network)
             except:
-                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD, additional_message=str(network))
+                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD,
+                                                          additional_message=str(network))
 
             network_path = entry_path + '/network'
             self.__augeas_vpn.set(network_path, network)
             self.__pending['VPN interface %s network' % iface] = (network_path, network)
 
-        if netmask != None:
+        if netmask is not None:
             try:
                 netmask_check = IP(netmask)
             except:
-                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD, additional_message=str(netmask))
+                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD,
+                                                          additional_message=str(netmask))
 
             netmask_path = entry_path + '/netmask'
             self.__augeas_vpn.set(netmask_path, netmask)
             self.__pending['VPN interface %s netmask' % iface] = (netmask_path, netmask)
 
-        if port != None:
+        if port is not None:
             try:
                 port_int = int(port)
                 if port_int < 1 or port_int > 65535:
-                    return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD, additional_message=str(port))
+                    return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD,
+                                                              additional_message=str(port))
             except:
-                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD, additional_message=str(port))
+                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD,
+                                                          additional_message=str(port))
 
             port_path = entry_path + '/port'
             self.__augeas_vpn.set(port_path, port)
             self.__pending['VPN interface %s port' % iface] = (port_path, port)
 
-        if ca != None:
+        if ca is not None:
             ca_path = entry_path + '/ca'
             self.__augeas_vpn.set(ca_path, ca)
             self.__pending['VPN interface %s ca' % iface] = (ca_path, ca)
 
-        if cert != None:
+        if cert is not None:
             cert_path = entry_path + '/cert'
             self.__augeas_vpn.set(cert_path, cert)
             self.__pending['VPN interface %s cert' % iface] = (cert_path, cert)
 
-        if key != None:
+        if key is not None:
             key_path = entry_path + '/key'
             self.__augeas_vpn.set(key_path, key)
             self.__pending['VPN interface %s key' % iface] = (key_path, key)
 
-        if dh != None:
+        if dh is not None:
             dh_path = entry_path + '/dh'
             self.__augeas_vpn.set(dh_path, dh)
             self.__pending['VPN interface %s dh' % iface] = (dh_path, dh)
 
-        if enabled != None:
+        if enabled is not None:
             if enabled not in ['yes', 'no']:
-                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD, additional_message=str(enabled))
+                return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.INVALID_AVVPN_ENTRY_FIELD,
+                                                          additional_message=str(enabled))
 
             enabled_path = entry_path + '/enabled'
             self.__augeas_vpn.set(enabled_path, enabled)
@@ -453,7 +465,7 @@ class AVSysConfig (object):
         return AVConfigParserErrors.ALL_OK
 
     def is_net_iface_address_set(self, iface):
-        """ Return whether a iface addess is set
+        """ Return whether a iface address is set
         """
         try:
             address = self.__augeas_iface.get("/files/etc/alienvault/network/interfaces.conf/%s/address" % iface)
@@ -465,16 +477,17 @@ class AVSysConfig (object):
     # Private methods
     #
 
-    def __reload_config__ (self):
-        self.__net_ifaces = self.__get_net_iface_config_all__ ()
-        self.__hosts_entries = self.__get_hosts_config_all__ ()
-        self.__avvpn_entries = self.__get_avvpn_config_all__ ()
+    def __reload_config__(self):
+        self.__net_ifaces = self.__get_net_iface_config_all__()
+        self.__hosts_entries = self.__get_hosts_config_all__()
+        self.__avvpn_entries = self.__get_avvpn_config_all__()
 
-    ### Related to /etc/alienvault/network/interfaces.conf
+    # Related to /etc/alienvault/network/interfaces.conf
 
-    def __get_net_iface_config_all__ (self):
+    def __get_net_iface_config_all__(self):
         """
-        Return a dict with all the network interface names as keys, and their configuration attributes as values.
+        Return a dict with all the network interface names as keys,
+        and their configuration attributes as values.
         """
         # Get all the configured and unconfigured interfaces
         all_ifaces = get_network_interfaces()
@@ -495,28 +508,31 @@ class AVSysConfig (object):
             log_management = self.__augeas_iface.get("%s/log_management" % iface_path)
             monitor = self.__augeas_iface.get("%s/monitor" % iface_path)
             enabled = self.__augeas_iface.get("%s/enabled" % iface_path)
-            response[name] = {'address': address if address != None else '',
-                              'netmask': netmask if netmask != None else '',
-                              'gateway': gateway if gateway != None else '',
-                              'dns_search': dns_search if dns_search != None else '',
-                              'dns_nameservers': dns_nameservers if dns_nameservers != None else '',
-                              'broadcast': broadcast if broadcast != None else '',
-                              'network': network if network != None else '',
-                              'administration': administration if administration != None else '',
-                              'log_management': log_management if log_management != None else '',
-                              'monitor': monitor if monitor != None else '',
-                              'enabled': enabled if enabled != None else '',
-            }
+            response[name] = {'address': address if address is not None else '',
+                              'netmask': netmask if netmask is not None else '',
+                              'gateway': gateway if gateway is not None else '',
+                              'dns_search': dns_search if dns_search is not None else '',
+                              'dns_nameservers': dns_nameservers if dns_nameservers is not None else '',
+                              'broadcast': broadcast if broadcast is not None else '',
+                              'network': network if network is not None else '',
+                              'administration': administration if administration is not None else '',
+                              'log_management': log_management if log_management is not None else '',
+                              'monitor': monitor if monitor is not None else '',
+                              'enabled': enabled if enabled is not None else '',
+                              }
 
         for iface in all_ifaces:
             if iface.name not in response.keys():
-                response[iface.name] = {'address': '', 'netmask': '', 'gateway': '', 'dns_search': '', 'dns_nameservers': '', 'broadcast': '', 'network': ''}
+                response[iface.name] = {'address': '', 'netmask': '',
+                                        'gateway': '', 'dns_search': '',
+                                        'dns_nameservers': '', 'broadcast': '',
+                                        'network': ''}
 
         return response
 
-    ### Related to /etc/hosts
+    # Related to /etc/hosts
 
-    def __get_hosts_config_all__ (self):
+    def __get_hosts_config_all__(self):
         """
         Return a dict with all the entries in /etc/hosts as keys, and their configuration attributes as values.
         """
@@ -525,25 +541,26 @@ class AVSysConfig (object):
 
         # Build the response dictionary.
         response = {}
-        for counter, entry_path in enumerate(configured_hosts, start = 1):
+        for counter, entry_path in enumerate(configured_hosts, start=1):
             ipaddr = self.__augeas_host.get("%s/ipaddr" % entry_path)
             canonical = self.__augeas_host.get("%s/canonical" % entry_path)
-            if self.__augeas_host.match("%s/alias" % entry_path) != None:
+            if self.__augeas_host.match("%s/alias" % entry_path) is not None:
                 aliases = [self.__augeas_host.get(x) for x in self.__augeas_host.match("%s/alias" % entry_path)]
             else:
                 aliases = []
-            response[str(counter)] = {'ipaddr': ipaddr if ipaddr != None else '',
-                                      'canonical': canonical if canonical != None else '',
+            response[str(counter)] = {'ipaddr': ipaddr if ipaddr is not None else '',
+                                      'canonical': canonical if canonical is not None else '',
                                       'aliases': aliases
-            }
+                                      }
 
         return response
 
-    ### Related to /etc/alienvault/network/vpn.conf
+    # Related to /etc/alienvault/network/vpn.conf
 
-    def __get_avvpn_config_all__ (self):
+    def __get_avvpn_config_all__(self):
         """
-        Return a dict with all the entries in /etc/alienvault/network/vpn.conf as keys, and their configuration attributes as values.
+        Return a dict with all the entries in /etc/alienvault/network/vpn.conf as keys,
+        and their configuration attributes as values.
         """
 
         configured_avvpn = self.__augeas_vpn.match("/files/etc/alienvault/network/vpn.conf/*")
@@ -564,15 +581,15 @@ class AVSysConfig (object):
             enabled = self.__augeas_vpn.get("%s/enabled" % entry_path)
 
             response[iface] = {'role': role if role in ['server', 'client'] else '',
-                               'config_file': config_file if config_file != None else '',
-                               'network': network if network != None else '',
-                               'netmask': netmask if netmask != None else '',
-                               'port': port if port != None else '',
-                               'ca': ca if ca != None else '',
-                               'cert': cert if cert != None else '',
-                               'key': key if key != None else '',
-                               'dh': dh if dh != None else '',
+                               'config_file': config_file if config_file is not None else '',
+                               'network': network if network is not None else '',
+                               'netmask': netmask if netmask is not None else '',
+                               'port': port if port is not None else '',
+                               'ca': ca if ca is not None else '',
+                               'cert': cert if cert is not None else '',
+                               'key': key if key is not None else '',
+                               'dh': dh if dh is not None else '',
                                'enabled': enabled if enabled in ['yes', 'no'] else 'no'
-            }
+                               }
 
         return response

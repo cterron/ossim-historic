@@ -52,3 +52,13 @@
 
 #alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any (msg:"GPL TELNET root login"; flow:from_server,established; content:"login|3A| root"; fast_pattern:only; classtype:suspicious-login; sid:2100719; rev:8;)
 
+alert tcp $EXTERNAL_NET any -> $HOME_NET [23,2323,3323,4323] (msg:"ET TELNET SUSPICIOUS Path to BusyBox"; flow:to_server,established; content:"/bin/busybox"; flowbits:set,ET.telnet.busybox;threshold: type limit, count 1, track by_src, seconds 30; reference:url,lists.emergingthreats.net/pipermail/emerging-sigs/2016-August/027524.html; classtype:suspicious-filename-detect; sid:2023016; rev:1;)
+
+alert tcp $EXTERNAL_NET any -> $HOME_NET [23,2323,3323,4323] (msg:"ET TELNET SUSPICIOUS busybox shell"; flow:to_server,established; content:"shell"; fast_pattern:only; pcre:"/\bshell\b/"; flowbits:isset,ET.telnet.busybox; flowbits:set,ET.telnet.busybox.shell;threshold: type limit, count 1, track by_src, seconds 30; reference:url,lists.emergingthreats.net/pipermail/emerging-sigs/2016-August/027524.html; classtype:attempted-admin; sid:2023017; rev:2;)
+
+alert tcp $EXTERNAL_NET any -> $HOME_NET [23,2323,3323,4323] (msg:"ET TELNET SUSPICIOUS busybox enable"; flow:to_server,established; content:"enable"; fast_pattern:only; pcre:"/\benable\b/"; flowbits:set,ET.telnet.busybox.enable; flowbits:isset,ET.telnet.busybox;threshold: type limit, count 1, track by_src, seconds 30; reference:url,lists.emergingthreats.net/pipermail/emerging-sigs/2016-August/027524.html; classtype:attempted-admin; sid:2023018; rev:3;)
+
+alert tcp $EXTERNAL_NET any -> $HOME_NET [23,2323,3323,4323] (msg:"ET TELNET busybox MIRAI hackers - Possible Brute Force Attack"; flow:to_server,established; content:"MIRAI"; flowbits:isset,ET.telnet.busybox; threshold: type limit, count 1, track by_src, seconds 30; reference:url,lists.emergingthreats.net/pipermail/emerging-sigs/2016-August/027524.html; classtype:attempted-admin; sid:2023019; rev:2;)
+
+alert tcp $EXTERNAL_NET any -> $HOME_NET [23,2323,3323,4323] (msg:"ET TELNET busybox ECCHI hackers - Possible Brute Force Attack"; flow:to_server,established; content:"ECCHI"; flowbits:isset,ET.telnet.busybox; threshold: type limit, count 1, track by_src, seconds 30; reference:url,lists.emergingthreats.net/pipermail/emerging-sigs/2016-August/027524.html; classtype:attempted-admin; sid:2023304; rev:1;)
+

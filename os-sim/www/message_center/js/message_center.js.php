@@ -296,6 +296,8 @@ $(document).ready(function ()
     var mark_as_read_timeout;
     var mark_as_read_messages_ids = [];
     var display_start = 0;
+    var selection_type =  'manual';
+    var message_total_count = 0;
 
 
     /************************
@@ -466,20 +468,39 @@ $(document).ready(function ()
             oSettings._iRecordsTotal += mark_as_read_messages_ids.length;
             oSettings._iRecordsDisplay += mark_as_read_messages_ids.length;
         },
-        fnDrawCallback     : function ()
+        fnDrawCallback     : function (oSettings)
         {
+            message_total_count = oSettings._iRecordsTotal;
             clearTimeout(mark_as_read_timeout);
+
 
             if (display_start == 0)
             {
                 $notification_details.hide();
             }
             $('#chk-all-rows').click(function() {
+
                 if ($(this).is(':checked')) {
                     $(".dataTable :checkbox").prop('checked', true);
+                    var message_count  =  current_message_count();
+
+                    if(message_count != message_total_count ) {
+                        $('#selectall').css('visibility','visible');
+                    }
                 } else {
                     $(".dataTable :checkbox").prop('checked', false);
+                    $('#selectall').css('visibility','hidden');
                 }
+
+                var curent_count = 0;
+                $(".dataTable :checkbox" ).each(function() {
+                    if($(this).is(':checked')) {
+                        curent_count++;
+                    }
+                });
+
+                $('#selectall > span').text(message_count-1);
+                $('#selectall a span').text(message_total_count);
             });
             var container = $("#notifications_list");
             var selector = "[name='status_message_id[]']:checkbox";
@@ -494,21 +515,30 @@ $(document).ready(function ()
             container.find(selector).change();
             $('#delete').off('click').on('click', function ()
             {
-                var data = {
-                    'status_message_id[]': container.find(selector_checked).map(function(){
-                        return $(this).val();
-                     }).get(),
-                    'action'             : 'set_suppressed'
-               };
-               var remove_row = function ()
-               {
-                   table_data.fnDraw();
-               };
-               var msg_confirm = '<?php echo _('Are you sure you would like to delete this message(s)?') ?>';
-               var keys        = {
-                   yes: "<?php echo _('Yes') ?>",
-                   no: "<?php echo _('No') ?>"
-               };
+                if(selection_type == 'all') {
+                    var data = {
+                        'status_message_id[]': '',
+                        'action'             : 'set_suppressed',
+                        'delete_all'         :  true
+                    };
+                    selection_type = 'manual';
+                }else {
+                    var data = {
+                        'status_message_id[]': container.find(selector_checked).map(function(){
+                            return $(this).val();
+                        }).get(),
+                        'action'             : 'set_suppressed'
+                    };
+                }
+                var remove_row = function ()
+                {
+                    table_data.fnDraw();
+                };
+                var msg_confirm = '<?php echo _('Are you sure you would like to delete this message(s)?') ?>';
+                var keys        = {
+                    yes: "<?php echo _('Yes') ?>",
+                    no: "<?php echo _('No') ?>"
+                };
 
                av_confirm(msg_confirm, keys).done(function () {
                    do_action(data, $av_info, [remove_row]);
@@ -573,6 +603,22 @@ $(document).ready(function ()
                 }
             });
         }
+    });
+
+    function current_message_count() {
+        var count = 0;
+        $(".dataTable :checkbox" ).each(function() {
+            if($(this).is(':checked')) {
+                count++;
+            }
+        });
+        return  count -1;
+    }
+
+    $('#selectall a').on('click', function (){
+        $('#selectall').css('visibility','hidden');
+        selection_type = 'all';
+        return false;
     });
 
     // Datatables search box

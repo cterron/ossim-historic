@@ -69,7 +69,7 @@ def alienvault_asynchronous_reconfigure(system_ip, new_system_ip):
         (success, log_file) = ansible_run_async_reconfig(system_ip)
         if not success:
             logger.error("Error running alienvault reconfig: %s" % log_file)
-            return JobResult(False, "Something wrong happend while running alienvault reconfig %s" % log_file, log_file, "0").serialize
+            return JobResult(False, "Something wrong happened while running alienvault reconfig %s" % log_file, log_file, "0").serialize
 
         logger.info("reconfigure <%s> waiting to finish...." % system_ip)
 
@@ -130,9 +130,9 @@ def alienvault_asynchronous_update(system_ip, only_feed=False, update_key=""):
         rt, error_str = ansible_run_async_update(system_ip, only_feed=only_feed, update_key=update_key)
         # When the task has been launched properly the error_str variable will contain the log file.
         if not rt:
-            return JobResult(False, "Something wrong happend while running the alienvault update %s" % error_str, "", "300091").serialize
+            return JobResult(False, "Something wrong happened while running the alienvault update %s" % error_str, "", "300091").serialize
         logger.info(" alienvault-update <%s> waiting to finish...." % system_ip)
-        time.sleep(1)  # Wait until the task is lauched.
+        time.sleep(1)  # Wait until the task is launched.
         n_process = 1
         while n_process > 0:
             success, n_process = ansible_check_if_process_is_running(system_ip, error_str)
@@ -142,7 +142,7 @@ def alienvault_asynchronous_update(system_ip, only_feed=False, update_key=""):
 
         rt, log_file = ansible_get_asynchronous_command_log_file(system_ip, error_str)
         if not rt:
-            return JobResult(False, "Something wrong happened while retrieving the alienvault-update log file %s" % log_file, "", "300092").serialize
+            return JobResult(False, "Something wrong happened while retrieving the alienvault-update log file: %s" % log_file, "", "300092").serialize
         rt, return_code_msg = ansible_check_asynchronous_command_return_code(system_ip, error_str+".rc")
         if not rt:
             error_msg = "Something wrong happened while retrieving the alienvault-return code <%s>" % str(return_code_msg)

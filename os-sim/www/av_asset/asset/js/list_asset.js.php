@@ -80,7 +80,7 @@ function av_asset_list(perms)
         __self.table = $("[data-bind='av_table_assets']").AV_table(
         {
             "selectable": true,
-            "num_rows"  : 20,
+            "num_rows"  : <?= isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 20?>,
             "with_tray" : true,
             "language"  : "assets",
             "ajax_url"  : __self.cfg.asset.providers + "load_assets_result.php",

@@ -81,12 +81,21 @@ require_once 'schedule_strategy.php';
 
 
 Session::logcheck('environment-menu', 'EventsVulnerabilitiesScan');
-
+$stripReflectedXSSRecursive = function($data) use (& $stripReflectedXSSRecursive) {
+    if (is_array($data)) {
+        foreach ($data as $key => $item) {
+            $data[$key] = $stripReflectedXSSRecursive($item);
+        }
+    } else {
+        $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    }
+    return $data;
+};
 
 $schedule = new Schedule();
-array_walk($schedule->parameters , function(&$item, $key) {
+array_walk($schedule->parameters , function(&$item, $key) use ($stripReflectedXSSRecursive) {
 	if (isset($_REQUEST[$key])) {
-		$item = REQUEST($key);
+		$item = $stripReflectedXSSRecursive(REQUEST($key));
 	}
 });
 ossim_valid($schedule->parameters["action"], 'create_scan', 'save_scan', 'edit_sched', 'delete_scan', 'rerun_scan', OSS_NULLABLE, 'Illegal:'._('Action'));

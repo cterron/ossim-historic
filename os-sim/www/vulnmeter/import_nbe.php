@@ -134,7 +134,6 @@ if (POST('action') == 'save')
                         copy($dest, "/usr/share/ossim/uploads/nbe/".$rid.".nbe");
                     }
                     preg_match_all("/skipping\shost\s\[(.*)\]/i", implode("\n", $output_arr), $n_founds);
-                    unlink($dest);
                     $status = 2;
                     Util::memcacheFlush();
                 }
@@ -143,6 +142,7 @@ if (POST('action') == 'save')
                     $status = 1;
                     $error_importing =_("No valid results found in the uploaded file. Please check the NBE file syntax.");
                 }
+                unlink($dest);
             }
         }
     }

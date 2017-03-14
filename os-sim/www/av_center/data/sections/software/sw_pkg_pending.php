@@ -81,7 +81,6 @@ catch (\Exception $e)
         <?php
     }
     ?>
-
     <div id='c_latest_update'>
         <?php
         if (!empty($res_si['last_update']) && $res_si['last_update'] != 'unknown')

@@ -43,7 +43,7 @@ $sec    = intval(POST('sEcho'));
 $limit  = POST('iDisplayLength');
 $offset = POST('iDisplayStart');
 
-$limit  = ($limit != '') ? intval($limit) : 10;
+$_SESSION["per_page"] = $limit  = ($limit != '') ? intval($limit) : (isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 10);
 $offset = ($offset != '') ? intval($offset) : 0;
 
 

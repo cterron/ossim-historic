@@ -7,7 +7,7 @@
   args: []
   kwargs: {}
   interval:
-    every: 5
+    every: 8
     period: "minutes"
   enabled: True
 
@@ -70,7 +70,7 @@
   args: []
   kwargs: {}
   interval:
-    every: 15
+    every: 45
     period: "minutes"
   enabled: True
 
@@ -106,7 +106,7 @@
   args: []
   kwargs: {}
   interval:
-    every: 15
+    every: 20
     period: "minutes"
   enabled: True
 
@@ -115,7 +115,7 @@
   args: []
   kwargs: {}
   interval:
-    every: 15
+    every: 25
     period: "minutes"
   enabled: True
 
@@ -128,8 +128,26 @@
     period: "minutes"
   enabled: True
 
+"monitor_retrieves_remote_status":
+  task: "celerymethods.tasks.monitor_tasks.monitor_retrieves_remote_status"
+  args: []
+  kwargs: {}
+  interval:
+    every: 5
+    period: "minutes"
+  enabled: True
+
 "monitor_retrieves_remote_info":
   task: "celerymethods.tasks.monitor_tasks.monitor_retrieves_remote_info"
+  args: []
+  kwargs: {}
+  interval:
+    every: 20
+    period: "minutes"
+  enabled: True
+
+"monitor_update_system_with_remote_info":
+  task: "celerymethods.tasks.monitor_tasks.monitor_update_system_with_remote_info"
   args: []
   kwargs: {}
   interval:
@@ -151,7 +169,7 @@
   args: []
   kwargs: {}
   interval:
-    every: 2
+    every: 8
     period: "minutes"
   enabled: True
 
@@ -196,8 +214,8 @@
   args: []
   kwargs: {}
   interval:
-    every: 60
-    period: "minutes"
+    every: 1
+    period: "days"
   enabled: True
 
 "monitor_server_eps_stats":
@@ -232,7 +250,7 @@
   args: []
   kwargs: {}
   interval:
-    every: 60
+    every: 120
     period: "minutes"
   enabled: True
 

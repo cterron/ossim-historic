@@ -86,8 +86,6 @@ delete_deprecated_firewall_configuration(){
 
     # 2. Removing deprecated startup scripts from the different runlevels 
     update-rc.d -f ossim-firewall remove
-
-
 }
 
 

@@ -1274,19 +1274,20 @@ p.ticket_body
     width: 57px;
     border-radius: 3px;
     text-transform: uppercase;
+    white-space: pre;
 }
 
 .risk-bar.low {
     background-color: #92d100;
 }
-.risk-bar.medium {
+.risk-bar.med {
     background-color: #ff8a00;
 }
 .risk-bar.high {
     background-color: #fd0000;
 }
 
-.ad_content .risk-bar {
+.alarm_content .risk-bar {
     margin-top: 12px;
 }
 

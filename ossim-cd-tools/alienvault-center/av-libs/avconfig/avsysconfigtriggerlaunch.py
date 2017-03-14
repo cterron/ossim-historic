@@ -31,12 +31,14 @@
 import subprocess
 import re
 
+
 class RegexDict(dict):
     def get_match(self, event):
         return (self[key] for key in self if re.match(key, event))
 
-class AVSysConfigTriggerLaunch (object):
-    def __init__ (self):
+
+class AVSysConfigTriggerLaunch(object):
+    def __init__(self):
 
         # Create a RegexDict that associates augeas paths to triggers.
         self.__triggers = RegexDict(
@@ -49,9 +51,11 @@ class AVSysConfigTriggerLaunch (object):
              '/files/etc/alienvault/network/vpn.conf/tun\d/key': 'alienvault-network-vpn-crypto-config',
              '/files/etc/alienvault/network/vpn.conf/tun\d/dh': 'alienvault-network-vpn-crypto-config',
              '/files/etc/alienvault/network/vpn.conf/tun\d/enabled': 'alienvault-network-vpn-enabled'}
-            )
+        )
 
-    def run (self, paths = []):
+    def run(self, paths=None):
+        if paths is None:
+            paths = []
         triggered = set([])
         for path in paths:
             triggered |= set(self.__triggers.get_match(path))
@@ -59,11 +63,14 @@ class AVSysConfigTriggerLaunch (object):
         if triggered:
             for trigger in triggered:
                 try:
-                    proc = subprocess.Popen('dpkg-trigger --no-await %s' % trigger, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    proc = subprocess.Popen(
+                        'dpkg-trigger --no-await %s' % trigger,
+                        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                    )
                     out, err = proc.communicate()
                 except Exception, e:
-                    return (False, 'Error: %s; Output message: %s' % (str(e), str(err)))
+                    return False, 'Error: %s; Output message: %s' % (str(e), str(err))
 
         # After saving the configuration files, a reconfig should run and it will trigger the pending changes
 
-        return (True, '')
+        return True, ''

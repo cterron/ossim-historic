@@ -454,7 +454,7 @@ function load_alarm_group_dt()
         "bServerSide"     : true,
         "bDeferRender"    : true,
         "sAjaxSource"     : "providers/alarm_group_console_ajax.php",
-        "iDisplayLength"  : 50,
+        "iDisplayLength"  : <?=isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 50?>,
         "bLengthChange"   : true,
         "sPaginationType" : "full_numbers",
         "bFilter"         : false,

@@ -43,6 +43,8 @@
 */
 require_once 'av_init.php';
 
+$maxrows    = $_SESSION["per_page"] = (POST('iDisplayLength') != '') ? POST('iDisplayLength') : (isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 10);
+
 session_write_close();
 
 
@@ -54,7 +56,6 @@ $db   = new ossim_db(TRUE);
 $conn = $db->connect();
 
 //DataTables Pagination and search Params
-$maxrows    = (POST('iDisplayLength') != '') ? POST('iDisplayLength') : 10;
 $from       = (POST('iDisplayStart') != '')  ? POST('iDisplayStart') : 0;
 $order      = (POST('iSortCol_0') != '')     ? POST('iSortCol_0') : '';
 $torder     = POST('sSortDir_0');

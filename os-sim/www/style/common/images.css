@@ -131,3 +131,9 @@ img.newticket
     width:17px;
     vertical-align: text-bottom;
 }
+
+.warning-ico {
+	height:30px;
+    width:30px;
+    float:left;
+}

@@ -192,7 +192,7 @@ class Session
     * @access public 
     */
     public $login_method;
-        
+    public $salt;        
            
     /**
     * Class constructor
@@ -221,7 +221,7 @@ class Session
     */
     public function __construct($login, $pass, $uuid = '', $ctx = array(), $sensors = array(), $assets = array(), $template_id = '', 
         $name = '', $email = '', $company = '', $department = '', $language = '', $enabled = 1, $is_admin = 0, $conn = 1, 
-        $timezone = '', $last_logon = '', $foundrows = 0, $login_method = '')
+        $timezone = '', $last_logon = '', $foundrows = 0, $login_method = '',$salt = '')
     {
              
         if ($conn) 
@@ -249,6 +249,7 @@ class Session
         $this->external      = FALSE;
         $this->foundrows     = $foundrows;
         $this->login_method  = $login_method;
+        $this->salt	     = $salt;
     }
     
     
@@ -545,7 +546,7 @@ class Session
                         
         if (is_array($rs->fields) && !empty($rs->fields))
         {
-            $secure_id = (valid_hex32($rs->fields['uuid']) && $rs->fields['uuid'] != '0x0') ? $rs->fields['uuid'] : sha1($user.'#'.$rs->fields['pass']);
+            $secure_id = self::make_secure_id($rs->fields['uuid'], $rs->fields['pass'], $user);
         }
                     
         $db->close();
@@ -565,10 +566,9 @@ class Session
     *
     * @return boolean 
     */
-    public static function set_secure_id($conn, $login, $new_uuid)
+    public static function set_secure_id($login, $new_uuid)
     {    
-        Ossim_db::check_connection($conn);
-        
+        $conn = self::db_connect();        
         $params = array($new_uuid, $login);
         $query  = "UPDATE users SET uuid = UNHEX(?) WHERE login = ?";
                 
@@ -917,11 +917,10 @@ class Session
                 {
                     $rs->fields['last_logon_try'] = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime($rs->fields['last_logon_try']) + 3600*$tz);
                 }
-
                 $list[]   = new Session($rs->fields['login'], $rs->fields['pass'], $rs->fields['uuid'], $entities, $sensors, $assets, 
                     $rs->fields['template_id'], $rs->fields['name'], $rs->fields['email'], $rs->fields['company'], $rs->fields['department'], 
                     $rs->fields['language'], $rs->fields['enabled'], $rs->fields['is_admin'], 0, $rs->fields['timezone'], $rs->fields['last_logon_try'], 
-                    $foundrows, $rs->fields['login_method']);
+                    $foundrows, $rs->fields['login_method'], $rs->fields['salt']);
             }
             
             $rs->MoveNext();
@@ -1563,6 +1562,22 @@ class Session
         return TRUE;
     }
 
+    private function get_user_by_login_and_pass($pass = null, $pass_sha = null, $hashed = null) {
+        $conn = self::db_connect();
+        $hashed = $hashed === null ? $pass || $pass_sha : $hashed;
+        $query	= "SELECT *,HEX(uuid) AS uuid FROM users ".self::get_login_pass_where($this->login,$pass_sha,$pass,$hashed);
+
+        $rs = $conn->Execute($query);
+        if(!$rs) {
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            return false;
+        }
+        if ($rs->EOF) {
+            return false;
+        }
+        return $rs;
+    }
+
 
     /**
     * This function returns TRUE if it's first time that user is logged in the system
@@ -1571,29 +1586,11 @@ class Session
     */
     public function get_first_login()
     {
-        $conn     = $this->conn;
-        $pass     = md5($this->pass);
-        $pass_sha = hash('sha256', $this->pass);
-        $login    = $this->login;
-
-        $params = array($login, $pass, $pass_sha);
-        $query  = "SELECT * FROM users WHERE login = ? AND (pass = ? OR pass = ?)";
-
-        $rs = $conn->Execute($query, $params);
-
-        if(!$rs)
-        {
-            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-
-            return FALSE;
-        }
-
-        if (!$rs->EOF)
-        {
+        if ($rs  = $this->get_user_by_login_and_pass()) {
             $first_login = $rs->fields['first_login'];
-
-            return ($first_login) ? TRUE : FALSE;
+            return (bool) $first_login;
         }
+        return false;
     }
     
     
@@ -1625,7 +1622,59 @@ class Session
         
         return TRUE;
     }
-    
+
+    private function populate_session($rs,$autologin,$conf,$conn,$version) {
+        //Generate a new session identifier
+        session_regenerate_id();
+        $_SESSION['_user_language'] = $rs->fields['language'];
+        $_SESSION['_is_admin']      = $rs->fields['is_admin'];
+        $_SESSION['_timezone']      = self::get_timezone($rs->fields['timezone']);
+        self::make_secure_id($rs->fields['uuid'],$rs->fields['pass'],$this->login);
+        ossim_set_lang($rs->fields['language']);
+        $this->allowed_menus        = $this->allowedMenus($this->login);
+        $_SESSION['_user']          = $this->login;
+        $_SESSION['_remote_login']  = base64_encode(Util::encrypt($this->login.'####'.$rs->fields['pass'].'####'.$rs->fields['pass'], $conf->get_conf('remote_key')));
+        $_SESSION['_allowed_menus'] = $this->allowed_menus;
+        if (preg_match('/pro|demo/i',$version))
+        {
+            $_SESSION['_version']     = 'pro';
+            $_SESSION['_user_vision'] = Acl::get_user_vision($conn);
+        }
+        else
+        {
+            $_SESSION['_version']     = 'opensource';
+            $_SESSION['_user_vision'] = self::get_user_vision($conn);
+        }
+        //License info
+        $_license                 = self::get_system_license();
+        $_SESSION['_exp_date']    = $_license['appliance']['expire'];
+        $_SESSION['_max_devices'] = $_license['appliance']['devices'];
+        if (!$autologin)
+        {
+            self::update_logon_try($this->login);
+            Session_activity::insert($this->conn);
+        }
+
+        if($this->login == 'admin' || intval($rs->fields['is_admin']) == 1)
+        {
+            $this->check_all_user_accounts($this->conn);
+        }
+
+        self::delete_orphan_asset_selections();
+   }
+
+
+    public static function make_secure_id($uuid = null,$pass,$login) {
+        //Get secure_id
+        if (valid_hex32($uuid) && $uuid != '0x0') {
+            $_SESSION['_secureid'] = $uuid;
+        } else {
+            $secure_id = sha1("$pass#$login");
+            self::set_secure_id($login, $secure_id);
+            $_SESSION['_secureid'] = $secure_id;
+        }
+        return $_SESSION['_secureid'];
+    }    
     
     /**
     * This function checks if login credentials are valid
@@ -1644,31 +1693,15 @@ class Session
                
         $version      = $conf->get_conf('ossim_server_version');
         $login_method = ($conf->get_conf('login_enable_ldap') == 'yes') ? 'ldap' : 'pass'; // Login method is LDAP or PASSWORD
-        
+       
         $conn      = $this->conn;
         $orig_pass = $this->pass;
         
-        $pass      = (preg_match('/^[A-Fa-f0-9]{32}$/',$this->pass) && $this->external) ? $this->pass : md5($this->pass); //Used in Wizard Scheduler and Remote Interfaces
-        $pass_sha  = (preg_match('/^[A-Fa-f0-9]{64}$/',$this->pass) && $this->external) ? $this->pass : hash('sha256', $this->pass); //Used in Wizard Scheduler and Remote Interfaces
         $login     = $this->login;
-        
-        
-        $params1 = array($login);        
-        $query_1 = 'SELECT * FROM users WHERE login = ?';        
-        
-        $rs_1 = $conn->Execute($query_1, $params1);
-        
-        if (!$rs_1->EOF) 
-        {
-            // Specific login method for Admin
-            if ($rs_1->fields['login_method'] == 'pass' || $login == AV_DEFAULT_ADMIN) 
-            { 
-                $login_method = 'pass'; 
-            }
-        }
-        
-        unset($query_1, $rs_1, $params1);        
-                
+
+        $pass = null;
+        $pass_sha = null;
+
         if ($autologin)
         {
             $login_method = 'pass';
@@ -1678,83 +1711,30 @@ class Session
         }
         else
         {
-            $query  = "SELECT *, HEX(uuid) AS uuid FROM users WHERE login = ? AND (pass = ? OR pass = ?)";
-            $params = array($login, $pass, $pass_sha);
-            $rs     = $conn->Execute($query, $params);
+            $hashed = false;
+            if ($this->external) {
+                $hashed = true;
+                if (preg_match('/^[A-Fa-f0-9]{32}$/',$this->pass)) {
+                    $pass = $this->pass;
+                } elseif (preg_match('/^[A-Fa-f0-9]{64}$/',$this->pass)) {
+                    $pass_sha = $this->pass;
+                }
+            } else {
+                $pass_sha = $this->pass;
+            }
+            $rs = $this->get_user_by_login_and_pass($pass,$pass_sha,$hashed);
         }
-
-        
-        //Case 1: Login method is 'pass' or external process(AV Report Scheduler or Remote Interface) are trying to log in the system
-        if (($login_method != 'ldap' 
-                || preg_match('/^[A-Fa-f0-9]{32}$/',$this->pass)
-                || preg_match('/^[A-Fa-f0-9]{64}$/',$this->pass)) && (!$rs->EOF))  
-        {                        
-            //Generate a new session identifier
-            session_regenerate_id(); 
-            $_SESSION['_user_language'] = $rs->fields['language'];
-            $_SESSION['_is_admin']      = $rs->fields['is_admin'];
-            $_SESSION['_timezone']      = self::get_timezone($rs->fields['timezone']);
-            
-            //Get secure_id
-            if (valid_hex32($rs->fields['uuid']) && $rs->fields['uuid'] != '0x0')
-            {
-                $_SESSION['_secureid'] = $rs->fields['uuid'];
-            }
-            else
-            {
-                self::set_secure_id($conn, $login, sha1($login.'#'.$pass));
-                $_SESSION['_secureid'] = sha1($login."#".$pass);
-            }
-                                    
-            ossim_set_lang($rs->fields['language']);
-            $this->allowed_menus        = $this->allowedMenus($login);
-            
-            $_SESSION['_user']          = $login;
-            $_SESSION['_remote_login']  = base64_encode(Util::encrypt($login.'####'.$pass.'####'.$pass_sha, $conf->get_conf('remote_key')));
-            $_SESSION['_allowed_menus'] = $this->allowed_menus;
-            
-            if (preg_match('/pro|demo/i',$version)) 
-            {
-                $_SESSION['_version']     = 'pro';
-                $_SESSION['_user_vision'] = Acl::get_user_vision($conn);
-            } 
-            else 
-            {
-                $_SESSION['_version']     = 'opensource';
-                $_SESSION['_user_vision'] = self::get_user_vision($conn);
-            }
-
-            //License info 
-            $_license                 = self::get_system_license();
-            $_SESSION['_exp_date']    = $_license['appliance']['expire'];
-            $_SESSION['_max_devices'] = $_license['appliance']['devices'];
-
-            if (!$autologin)
-            {
-                self::update_logon_try($login);
-                Session_activity::insert($conn);
-            }
-            
-            if($login == 'admin' || intval($rs->fields['is_admin']) == 1)
-            {
-                $this->check_all_user_accounts($conn);
-            }
-            
-            self::delete_orphan_asset_selections();
-            
-            return TRUE;
+        // Specific login method for Admin
+        if (($rs && !$rs->EOF) || $login == AV_DEFAULT_ADMIN) {
+            $login_method = 'pass';
         }
-        
-                
         //Case 2: LDAP Login
         if ($login_method == 'ldap' && self::login_ldap($login, $orig_pass)) 
         {
             $params = array($login);
             $query  = 'SELECT *, HEX(uuid) AS uuid FROM users WHERE login = ?';
-                                            
             //Logged user exists in Database
-            if (($rs = $conn->Execute($query, $params)) && ($rs->EOF)) 
-            {                                                           
+            if (($rs = $conn->Execute($query, $params)) && ($rs->EOF)) {
                 if($conf->get_conf('login_ldap_require_a_valid_ossim_user') == 'no')
                 {
                     //Create the user with default perms
@@ -1764,8 +1744,7 @@ class Session
                     {
                         $perms      = $conf->get_conf('login_create_not_existing_user_menu');
                         $entities[] = $conf->get_conf('login_create_not_existing_user_entity');
-                        
-                        $error = self::insert($conn, $login, 'ldap', hash('sha256', $orig_pass), $login, '', $perms, $entities, array(), array(), NULL , NULL, $conf->get_conf('language') ,0, $timezone, 0);
+                        $error = self::insert($conn, $login, 'ldap', $orig_pass, $login, '', $perms, $entities, array(), array(), NULL , NULL, $conf->get_conf('language') ,0, $timezone, 0);
                     }
                     else
                     {                                                              
@@ -1781,12 +1760,9 @@ class Session
                         }
                                                 
                         $template_id = self::update_template($conn, $login.'_perms', $perms);
-                        
-                        $error       = self::insert($conn, $login, 'ldap', hash('sha256', $orig_pass), $login, '', $template_id, '', array(), array() , '', '', $conf->get_conf('language') ,0, $timezone, 0);
+                        $error       = self::insert($conn, $login, 'ldap', $orig_pass, $login, '', $template_id, '', array(), array() , '', '', $conf->get_conf('language') ,0, $timezone, 0);
                     }              
-                    
                     User_config::copy_panel($conn, $login);
-                    
                     $rs = $conn->Execute($query, $params); //Get information for created user
                 }
                 else
@@ -1799,64 +1775,11 @@ class Session
                 //Password update. Necessary for AV Report Scheduler and Remote Interfaces (save last password in Database)
                 self::change_pass($conn, $login, $orig_pass, NULL, FALSE);
             }
-
-            $_SESSION['_user_language'] = $rs->fields['language'];
-            $_SESSION['_is_admin']      = $rs->fields['is_admin'];
-            $_SESSION['_timezone']      = self::get_timezone($rs->fields['timezone']);
-            
-            //Get secure_id
-            if (valid_hex32($rs->fields['uuid']) && $rs->fields['uuid'] != '0x0')
-            {
-                $_SESSION['_secureid'] = $rs->fields['uuid'];
-            }
-            else
-            {
-                self::set_secure_id($conn, $login, sha1($login.'#'.$pass));
-                $_SESSION['_secureid'] = sha1($login.'#'.$pass);
-            }
-            
-            ossim_set_lang($rs->fields['language']);
-            $this->allowed_menus = $this->allowedMenus($login);
-            
-            //Generate a new session identifier
-            session_regenerate_id(); 
-            $_SESSION['_user']          = $login;
-            $_SESSION['_remote_login']  = base64_encode(Util::encrypt($login.'####'.$pass.'####'.$pass_sha, $conf->get_conf('remote_key')));
-            $_SESSION['_allowed_menus'] = $this->allowed_menus;
-            
-            if (preg_match('/pro|demo/i',$version)) 
-            {
-                $_SESSION['_version']     = 'pro';
-                $_SESSION['_user_vision'] = Acl::get_user_vision($conn);
-            } 
-            else 
-            {
-                $_SESSION['_version']     = 'opensource';
-                $_SESSION['_user_vision'] = self::get_user_vision($conn);
-            }
-
-            //License info 
-            $_license                 = self::get_system_license();
-            $_SESSION['_exp_date']    = $_license['appliance']['expire'];
-            $_SESSION['_max_devices'] = $_license['appliance']['devices'];
-
-            
-            if (!$autologin)
-            {
-                self::update_logon_try($login);
-                Session_activity::insert($conn);
-            }
-            
-            if($login == 'admin' || intval($rs->fields['is_admin']) == 1)
-            {
-                $this->check_all_user_accounts($conn);
-            }
-            
-            self::delete_orphan_asset_selections();
-            
+        }
+        if ($rs && !$rs->EOF) {
+            $this->populate_session($rs,$autologin,$conf,$conn,$version);
             return TRUE;
         }
-                        
         return FALSE;
     }
 
@@ -1976,7 +1899,6 @@ class Session
         {
             //Authentication
             $ldapbind = @ldap_bind($ldapconn, $ldap_bindDN, $ldap_pass);
-            
             //Check bind
             if (!$ldapbind) 
             {                             
@@ -1990,20 +1912,16 @@ class Session
             $ldap_filter = preg_replace('/%u/',$login,$ldap_filter);
             $search      = ldap_search($ldapconn,$ldap_baseDN,$ldap_filter);
             $info        = ldap_get_entries($ldapconn,$search);
-            
             if ($info[0]['dn'] == '') 
             {
                 return FALSE;
             }
-            
             $ldapbind = @ldap_bind($ldapconn, $info[0]["dn"], $password1);
-                                    
             if ($ldapbind) 
             {
                 return TRUE;
             }
         }
-
         return FALSE;
     }
     
@@ -2235,7 +2153,9 @@ class Session
     {
         Ossim_db::check_connection($conn); 
         
-        $pass  = ($login_method=='ldap') ? hash('sha256', $login) : hash('sha256', $pass);
+        $salt = self::generate_salt();
+        $pass = self::salt_the_pass($salt,$pass);
+        $pass = self::hash_the_pass($pass);
         $login = strtolower($login);
         
         $params = array(
@@ -2244,6 +2164,7 @@ class Session
             $login_method,
             $name,
             $pass,
+            $salt,
             $email,
             $company,
             $department,
@@ -2252,12 +2173,12 @@ class Session
             $first_login,
             $timezone,
             $is_admin,
-            sha1($login.'#'.$pass)
+            self::make_secure_id(null,$pass,$login)
         );
         
         
         /* Insert into OSSIM database */
-        $query = "INSERT INTO users (last_pass_change, login, login_method, name, pass, email, company, department, template_id, language, first_login, timezone, is_admin, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UNHEX(?), ?, ?, ?, ?, UNHEX(?))";
+        $query = "INSERT INTO users (last_pass_change, login, login_method, name, pass, salt, email, company, department, template_id, language, first_login, timezone, is_admin, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, UNHEX(?), ?, ?, ?, ?, UNHEX(?))";
         
         
         $rs = $conn->Execute($query, $params);
@@ -2663,7 +2584,55 @@ class Session
         
         return TRUE;
     }
+
+    public static function get_hashed_pass_by_plain_pass($login,$pass)  {
+        $qry = "SELECT pass FROM users ".self::get_login_pass_where($login,$pass,$pass);
+        $conn = self::db_connect();
+        $rs = $conn->getOne($qry);
+        if (!$rs)
+        {
+        	Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        	return FALSE;
+        }
+        return $rs;
+    }
     
+    public static function get_login_pass_where($login, $pass_sha = null,$pass = null, $hashed = false) {
+        $params = array();
+        if (!$hashed && ($pass || $pass_sha)) {
+            $conn = self::db_connect();
+            $rs = $conn->Execute("SELECT salt FROM users WHERE login = ?", array($login));
+            $salt = $rs->fields['salt'];
+            if (!$rs)
+            {
+                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                return false;
+            }
+            if ($pass_sha) {
+                $params[] = self::hash_the_pass(self::salt_the_pass($salt,$pass_sha));
+            }
+            if ($pass) {
+                $params[] = md5(self::salt_the_pass($salt,$pass));
+            }
+        }
+        $qry = " WHERE login = '$login' ";
+        if ($params) {
+            $qry .= " AND pass IN ('".implode("','",$params)."')";
+        }
+        return $qry;
+    }
+
+    public static function generate_salt($length = 8) {
+        return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
+    }
+
+    public static function salt_the_pass($salt,$pass) {
+        return $salt.$pass;
+    }
+    
+    public static function hash_the_pass($pass) {
+        return hash('sha256',$pass);
+    }
 
     /**
     * This function updates the user password
@@ -2681,14 +2650,13 @@ class Session
     public static function change_pass($conn, $login, $pass, $current_pass = NULL, $log = TRUE) 
     {
         Ossim_db::check_connection($conn); 
-        
-        $pass   = hash('sha256', $pass);        
-        $params = array($pass, $login);
-        
-        $query  = 'UPDATE users SET pass = ?';
+        $salt = self::generate_salt();
+        $pass = self::salt_the_pass($salt,$pass);
+        $pass = self::hash_the_pass($pass);
+        $params = array($pass, $salt, $login);
+        $query  = 'UPDATE users SET pass = ?, salt = ? ';
         $query .= ($log == TRUE) ? ', last_pass_change=UTC_TIMESTAMP()' : '';
-        $query .= " WHERE login = ?";
-        $query .= (!empty($current_pass)) ? " AND (pass='".md5($current_pass)."' OR pass='".hash('sha256', $current_pass)."')" : '';
+        $query .= self::get_login_pass_where($login,$current_pass,$current_pass,false);
         
         $rs = $conn->Execute($query, $params);
                 
@@ -2716,38 +2684,12 @@ class Session
     * @return string 
     */
     public function last_pass_change() 
-    {
-        global $_SESSION;
-        
-        $date = gmdate('Y-m-d H:i:s');
-        
-        $db = new ossim_db();
-        $conn = $db->connect();
-        
-        $pass     = md5($this->pass);
-        $pass_sha = hash('sha256', $this->pass);
-        $login    = $this->login;
-        
-        $params = array($login, $pass, $pass_sha);
-        $query  = 'SELECT * FROM users WHERE login = ? AND (pass = ? OR pass = ?)';
-       
-        $rs = $conn->Execute($query, $params);
-                
-        if (!$rs) 
-        {
-            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());       
-        } 
-        else
-        {
-            if (!$rs->EOF) 
-            {                        
-                $date = $rs->fields['last_pass_change'];
-            }
-        }
-             
-        $db->close();
-        
-        return $date;
+    {  
+        $rs = $this->get_user_by_login_and_pass($this->pass,$this->pass); 
+        if ($rs && !$rs->EOF) {                        
+            return $rs->fields['last_pass_change'];
+        }        
+        return gmdate('Y-m-d H:i:s');
     }
     
     
@@ -2792,6 +2734,10 @@ class Session
         return TRUE;        
     }
     
+    public static function db_connect() {
+        $db   = new ossim_db();
+        return $db->connect();
+    }
     
     /**
     * This function adds the new password to password history (Pass_history table)
@@ -2801,34 +2747,15 @@ class Session
     *
     * @return boolean 
     */
-    public static function log_pass_history($user, $pass) 
+    public static function log_pass_history($user) 
     {        
         $res  = TRUE;
         
-        $db   = new ossim_db();
-        $conn = $db->connect();
+        $db     = new ossim_db();
+        $conn   = $db->connect();
         
-        $hist_number = 1;
-        
-        $params = array($user);
-        $query  = 'SELECT MAX(hist_number) AS num FROM pass_history WHERE user = ?';
-            
-        $rs = $conn->Execute($query, $params);
-                
-        if (!$rs) 
-        {
-            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-            
-            return FALSE;
-        } 
-                
-        if (!$rs->EOF) 
-        {
-            $hist_number = $rs->fields['num'] + 1;
-        }
-        
-        $params = array($user, $pass, $hist_number);
-        $query  = "INSERT INTO pass_history (user, pass, hist_number) VALUES (?, ?, ?)";        
+        $params = array($user, $user);
+        $query  = "INSERT INTO pass_history (user, pass, hist_number, salt) (SELECT login, pass, IFNULL((SELECT MAX(hist_number) FROM pass_history WHERE user = ?),0) + 1, salt FROM users WHERE login = ?)";
         
         $rs = $conn->Execute($query, $params);               
                 
@@ -4470,7 +4397,7 @@ class Session
     	// For some long taking reports, the session could be expired from the command line
     	// It is causing empty graph images in scheduled PDF reports
     	// Important: do not move this lines down
-    	if (preg_match('/AV Report Scheduler/', $_SERVER['HTTP_USER_AGENT']))
+    	if ('AV Report Scheduler' == $_SERVER['HTTP_USER_AGENT'])
     	{
     		return TRUE;
     	}
@@ -5121,6 +5048,11 @@ class Session
                 Session_activity::update($_SESSION['_expiration_time']);
             }
         }
+    }
+
+    public function is_password_correct($pass) {
+        $salted_pass = self::salt_the_pass($this->salt,$pass);
+        return ($this->pass == md5($salted_pass) || $this->pass == self::hash_the_pass($salted_pass));
     }
 }      
 

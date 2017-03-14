@@ -417,7 +417,7 @@ $CONFIG = array(
             'backup_conf_pass' => array(
                 'type' => 'password',
                 'id'   => 'backup_encryption',
-                'help' => _('Password length must be between').' '.$conf->get_conf('pass_length_min')._(' and ').$conf->get_conf('pass_length_max').' '._('characters'),
+                'help' => _('Password length must be between').' '.$conf->get_conf('pass_length_min')._(' and ').$conf->get_conf('pass_length_max').' '._('characters').'. The following characters are prohibited: [;, |, &, <, >, \n, (, ), [, ], {, }, ?, *, ^, \\]',
                 'desc' => _('Password to encrypt backup files'),
                 'advanced' => 0
             )
@@ -787,6 +787,7 @@ function custom_actions($api_client, $var, $value)
         case 'track_usage_information':
             $api_client->system()->set_telemetry($value > 0 ? TRUE : FALSE);
         break;
+
     }
 }
 
@@ -986,10 +987,14 @@ if (POST('update'))
         if(in_array(POST("conf_$i"), $passwords))
         {
             ossim_valid(POST("value_$i"), OSS_NULLABLE, OSS_PASSWORD, 'illegal:' . POST("conf_$i"));
-            if (POST("conf_$i") == "backup_conf_pass" && POST("value_$i")) {
-                $len = strlen(POST("value_$i"));
-                $min = 7;
-                $max = 32;
+            $is_fake_pass = Util::is_fake_pass(POST("value_$i"));
+
+            if ((POST("conf_$i") == "backup_conf_pass") && POST("value_$i") && (! $is_fake_pass)) {
+                $raw_password = POST("value_$i");
+                $len = strlen($raw_password);
+                $min = $config->get_conf('pass_length_min');
+                $max = $config->get_conf('pass_length_max');
+
                 foreach ($_POST as $key => $value) {
                     if ($key == "pass_length_min") {
                         $key = str_replace("conf_","value_");
@@ -1003,11 +1008,15 @@ if (POST('update'))
                     }
                 }
                 if ($len < $min) {
-                    $error_string .= ' '._('Password is not long enough').' ['._('Minimum password size is').' '.$min.']';
+                    $error_string .= ' '._('Backup password is not long enough').' ['._('Minimum password size is').' '.$min.']';
                     $flag_status = 2;
                 }
                 if ($len > $max) {
-                    $error_string .= ' '._('Password is too long').' ['._('Maximum password size is').' '.$max.']';
+                    $error_string .= ' '._('Backup password is too long').' ['._('Maximum password size is').' '.$max.']';
+                    $flag_status = 2;
+                }
+                if ($raw_password != str_replace(array(';', '|', '&', '<', '>', '\n', '(', ')', '[', ']', '{', '}', '?', '*', '^', '\\'), "", $raw_password)) {
+                    $error_string .= ' '._('Backup password contains prohibited characters.');
                     $flag_status = 2;
                 }
             }

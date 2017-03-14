@@ -75,7 +75,6 @@ if ($cnd_1 || $cnd_2)
     exit();
 }
 
-
 $pass_1 = base64_decode(POST('pass1'));
 $pass_2 = base64_decode(POST('pass2'));
 $c_pass = base64_decode(POST('current_pass'));
@@ -299,6 +298,11 @@ if ($flag != '')
 
             $('#submit_button').addClass('av_b_processing');
         }
+        $(document).ready(function() {
+            $('#pass1u,#pass2u').focus(function() {
+                $('#validation-text').css('visibility','hidden');
+            });
+        });
     </script>
 </head>
 
@@ -357,7 +361,7 @@ if ($flag != '')
                             ?>
                             <tr>
                                 <td class='td_info'>
-                                <?php echo _('The administrator has requested a <strong>password change after first login</strong>.<br/>Please enter your new password')?>
+                                <?php echo _('For security reasons, <strong>you are required to change your password</strong>.<br/>Please enter your new password')?>
                                 </td>
                             </tr>
                             <?php
@@ -398,7 +402,7 @@ if ($flag != '')
                         if ($msg != '')
                         {
                             ?>
-                            <tr><td class="center noborder" style="color:red"><?php echo $msg?></td></tr>
+                            <tr><td id="validation-text" class="center noborder" style="color:red"><?php echo $msg?></td></tr>
                             <?php
                         }
                         ?>

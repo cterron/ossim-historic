@@ -10,29 +10,30 @@
 import re
 import os
 from avconfigparsererror import AVConfigParserErrors
+
+
 class InvalidConfigLine(Exception):
     """Invalid line in the config file
     """
 
-    def __init__(self, msg='',filename ="", lineno=0):
-        self.msg = "Invalid Line:%s:%d -  %s" %(filename,lineno,msg)
-
+    def __init__(self, msg='', filename="", lineno=0):
+        self.msg = "Invalid Line:%s:%d -  %s" % (filename, lineno, msg)
 
     def __str__(self):
         return repr(self.msg)
+
 
 class DuplicatedConfigSeciton(Exception):
-    def __init__(self, msg='',filename ="", lineno=0):
-        self.msg = "Duplicated Section:%s:%d -  %s" %(filename,lineno,msg)
-
+    def __init__(self, msg='', filename="", lineno=0):
+        self.msg = "Duplicated Section:%s:%d -  %s" % (filename, lineno, msg)
 
     def __str__(self):
         return repr(self.msg)
-    
-class WriteConfigError(Exception):
-    def __init__(self, msg='',filename ="", lineno=0):
-        self.msg = "Cannot write:%s:%d -  %s" %(filename,lineno,msg)
 
+
+class WriteConfigError(Exception):
+    def __init__(self, msg='', filename="", lineno=0):
+        self.msg = "Cannot write:%s:%d -  %s" % (filename, lineno, msg)
 
     def __str__(self):
         return repr(self.msg)
@@ -44,12 +45,13 @@ class AVConfigParser():
     It's possible to find values without section.
     This code is based on python2.6 RawConfigParser
     """
-    VARIABLES_WITHOUT_SECTION = "DEFAULT" 
+    VARIABLES_WITHOUT_SECTION = "DEFAULT"
     SECTION_REGEX = re.compile("\[(?P<header>[^]]+)\]")
     OPTION_REGEX = re.compile("^(?P<option>[^\[\]:=\s][^\[\]:=]*)\s*(?P<vi>[:=])\s*(?P<value>.*)$")
     BOOLEAN_VALUES = {'1': True, 'yes': True, 'true': True, 'on': True,
-                       '0': False, 'no': False, 'false': False, 'off': False}
-    def __init__(self,default_section_for_values_without_section=None):
+                      '0': False, 'no': False, 'false': False, 'off': False}
+
+    def __init__(self, default_section_for_values_without_section=None):
         """Constructor
         @param default_section_for_values_without_section: Name of the section assigned to 
         those variables that doesn't have section.
@@ -66,11 +68,9 @@ class AVConfigParser():
         """
         return self.__sections.keys()
 
-
     def has_section(self, section):
         """Indicate whether the named section is present in the configuration."""
         return self.__sections.has_key(section)
-
 
     def options(self, section):
         """Return the list of option names for the given section name"""
@@ -78,13 +78,12 @@ class AVConfigParser():
             return self.__sections[section].keys()
         return []
 
-
     def read(self, filename):
         """Reads the given filename   
         @param filename the ossim-setup.conf path
         @returns a tuple (code, "error string") 
         """
-        
+
         if not os.path.isfile(filename):
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.FILE_NOT_EXIST)
         try:
@@ -93,7 +92,7 @@ class AVConfigParser():
             current_section = None
             nline = 0
             for line in configfile.readlines():
-                nline +=1
+                nline += 1
                 if line.strip() == '' or line[0] in '#;':
                     continue
                 line = line.strip()
@@ -104,7 +103,7 @@ class AVConfigParser():
                         current_section = section_name
                         self.__sections[section_name] = {}
                     else:
-                        raise DuplicatedConfigSeciton(filename=filename,lineno=nline,msg=section_name)
+                        raise DuplicatedConfigSeciton(filename=filename, lineno=nline, msg=section_name)
                 else:
                     opt_data = self.OPTION_REGEX.match(line)
                     if opt_data:
@@ -115,7 +114,7 @@ class AVConfigParser():
                             pos = optval.find(';')
                             if pos != -1 and optval[pos - 1].isspace():
                                 optval = optval[:pos]
-                            # allow empty values
+                                # allow empty values
                         if optval == '""':
                             optval = ''
                         optname = optname.rstrip().lower()
@@ -124,7 +123,7 @@ class AVConfigParser():
                             self.__sections[current_section] = {}
                         self.__sections[current_section][optname] = optval
                     else:
-                        raise InvalidConfigLine(filename=filename,lineno=nline,msg=line)
+                        raise InvalidConfigLine(filename=filename, lineno=nline, msg=line)
             configfile.close()
         except Exception, e:
             self.__sections.clear()
@@ -132,18 +131,18 @@ class AVConfigParser():
 
         if self.__sections['sensor']['detectors'] != '':
             detector_plugin_list = self.__sections['sensor']['detectors']
-            detector_plugin_list = detector_plugin_list.replace(' ','')
+            detector_plugin_list = detector_plugin_list.replace(' ', '')
             detector_plugin_list = detector_plugin_list.split(',')
 
             detector_plugin_list = ["AlienVault_NIDS" if p == "suricata" else p for p in detector_plugin_list]
             detector_plugin_list = ["AlienVault_HIDS" if p == "ossec-single-line" else p for p in detector_plugin_list]
             detector_plugin_list = ["availability_monitoring" if p == "nagios" else p for p in detector_plugin_list]
-            detector_plugin_list = ["AlienVault_HIDS-IDM" if p == "ossec-idm-single-line" else p for p in detector_plugin_list]
+            detector_plugin_list = ["AlienVault_HIDS-IDM" if p == "ossec-idm-single-line" else p for p in
+                                    detector_plugin_list]
 
             self.__sections['sensor']['detectors'] = ', '.join(detector_plugin_list)
 
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SUCCESS)
-
 
     def get_option(self, section, option):
         """Returns the option value. 
@@ -158,7 +157,6 @@ class AVConfigParser():
                 return self.__sections[section][option]
         return None
 
-
     def get_items(self, section):
         """Return the section hash table.
         """
@@ -167,7 +165,6 @@ class AVConfigParser():
         if self.__sections.has_key(section):
             return self.__sections[section]
         return {}
-
 
     def has_option(self, section, option):
         """Returns true whether the option exists inside the given section
@@ -182,7 +179,6 @@ class AVConfigParser():
                 return self.__sections[section][option]
         return None
 
-
     def get_int(self, section, option):
         """Returns an integer value for the given option whether it exists, 
         (and it's a valid int value),otherwise returns None
@@ -195,7 +191,6 @@ class AVConfigParser():
             print "Error :%s" % str(e)
             int_value = None
         return int_value
-
 
     def get_float(self, section, option):
         """Returns an float value for the given option whether it exists
@@ -210,7 +205,6 @@ class AVConfigParser():
             value = None
         return value
 
-
     def get_boolean(self, section, option):
         """Returns the boolean value for the given option whether it exists 
         (and it's a valid boolean value),otherwise returns None
@@ -223,12 +217,11 @@ class AVConfigParser():
                     value = None
                 else:
                     value = self.BOOLEAN_VALUES[value.lower()]
-            
+
         except Exception, e:
             print "Error :%s" % str(e)
             value = None
         return value
-
 
     def write(self, filename):
         """Write an .ini-format representation of the configuration state.
@@ -250,14 +243,18 @@ class AVConfigParser():
                 for key in sorted_keys:
                     value = self.__sections[section][key]
 
-                    if section == 'sensor' and key == 'detectors' and value !='':
-                        detector_plugin_list = value.replace(' ','')
+                    if section == 'sensor' and key == 'detectors' and value != '':
+                        detector_plugin_list = value.replace(' ', '')
                         detector_plugin_list = detector_plugin_list.split(',')
 
-                        detector_plugin_list = ["suricata" if p == "AlienVault_NIDS" else p for p in detector_plugin_list]
-                        detector_plugin_list = ["ossec-single-line" if p == "AlienVault_HIDS" else p for p in detector_plugin_list]
-                        detector_plugin_list = ["nagios" if p == "availability_monitoring" else p for p in detector_plugin_list]
-                        detector_plugin_list = ["ossec-idm-single-line" if p == "AlienVault_HIDS-IDM" else p for p in detector_plugin_list]
+                        detector_plugin_list = ["suricata" if p == "AlienVault_NIDS" else p for p in
+                                                detector_plugin_list]
+                        detector_plugin_list = ["ossec-single-line" if p == "AlienVault_HIDS" else p for p in
+                                                detector_plugin_list]
+                        detector_plugin_list = ["nagios" if p == "availability_monitoring" else p for p in
+                                                detector_plugin_list]
+                        detector_plugin_list = ["ossec-idm-single-line" if p == "AlienVault_HIDS-IDM" else p for p in
+                                                detector_plugin_list]
 
                         value = ', '.join(detector_plugin_list)
 
@@ -266,7 +263,6 @@ class AVConfigParser():
         except Exception, e:
             return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.EXCEPTION, str(e))
         return AVConfigParserErrors.get_error_msg(AVConfigParserErrors.SUCCESS)
-
 
     def set(self, section, option, value):
         """Set an option."""

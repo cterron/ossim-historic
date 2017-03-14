@@ -56,7 +56,7 @@ def nano(epoch):
 
 
 def epoch(nano):
-    return (nano / 1e9)
+    return nano / 1e9
 
 
 class SDEE:
@@ -174,7 +174,7 @@ class SDEE:
         try: 
             context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             req = urllib2.Request("%s?%s" % (self._uri, params))
-            req.add_header('Authorization', "BASIC %s" % self._b64pass)
+            req.add_header('Authorization', "BASIC {0}".format(self._b64pass).rstrip())
             data = urllib2.urlopen(req, timeout=10, context=context)
             self._response = data.read()
 

@@ -28,8 +28,6 @@
 #
 # Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
-import time
-import string
 import nmap
 import xml.dom.minidom
 import re
@@ -44,7 +42,7 @@ logger = Logger.logger
 
 
 class NMAP_TASK(InventoryTask):
-    '''
+    """
     NMAP-OPTIONS
     -O Sistema operativo
     -sV Deteccion de version
@@ -56,35 +54,42 @@ class NMAP_TASK(InventoryTask):
     -P0 (No realizar ping)
     -sP (Sondeo ping)
     -sL (Sondeo de lista)
-    '''
+    """
 
-
-    def __init__(self, task_name, task_params, task_period, task_reliability, task_enable, task_type,task_type_name):
-        '''
+    def __init__(self, task_name, task_params, task_period, task_reliability, task_enable, task_type, task_type_name):
+        """
         Constructor
-        '''
+        """
         self._running = False
         self._nm = nmap.PortScanner()
-        InventoryTask.__init__(self, task_name, task_params, task_period, task_reliability, task_enable, task_type,task_type_name)
-
+        InventoryTask.__init__(self, task_name, task_params, task_period, task_reliability, task_enable,
+                               task_type, task_type_name)
 
     def runQuery(self):
-        #print "Query: hosts: %s - args: %s" % (query.get_hosts(),query.get_args())
         try:
-            host_arg, args_arg = self._task_params.split ('#', 1)
+            host_arg, args_arg = self._task_params.split('#', 1)
+            if "!" in host_arg:
+                # Prepare exclude parameter with IPs to exclude
+                excludes = ','.join([host.lstrip('!') for host in host_arg.split(' ') if host.startswith('!')])
+                host_arg = ' '.join([host for host in host_arg.split(' ') if not host.startswith('!')])
+                args_arg += ' --exclude={}'.format(excludes)
+
+            logger.debug("NMAP scan: %s %s" % (str(host_arg), str(args_arg)))
             self._nm.scan(hosts=host_arg, arguments=args_arg)
             xmldata = self._nm.get_nmap_last_output()
         except Exception, e:
             logger.error("ERRROR :%s" % str(e))
             return
+
         dom = xml.dom.minidom.parseString(xmldata)
-        for nmaphost in  dom.getElementsByTagName('host'):
+        for nmaphost in dom.getElementsByTagName('host'):
             host = HostInfoEvent()
             for status in nmaphost.getElementsByTagName('status'):
                 # States: (up|down|unknown|skipped)
                 host['state'] = status.getAttributeNode('state').value
             for address in nmaphost.getElementsByTagName('address'):
-                if address.getAttributeNode('addrtype').value == 'ipv4' or address.getAttributeNode('addrtype').value == 'ipv6':
+                addrtype = address.getAttributeNode('addrtype').value
+                if addrtype == 'ipv4' or addrtype == 'ipv6':
                     host['ip'] = address.getAttributeNode('addr').value
                 if address.getAttributeNode('addrtype').value == 'mac':
                     host['mac'] = address.getAttributeNode('addr').value
@@ -112,8 +117,6 @@ class NMAP_TASK(InventoryTask):
                     if state != "open":
                         continue
                     str_services = ''
-                    tunnel=''
-                    ocpe = ''
                     product = ''
                     version = ''
                     extrainfo = ''
@@ -135,18 +138,18 @@ class NMAP_TASK(InventoryTask):
 
                         service_name = ps.getAttributeNode('name').value
                         if service_name == '' or service_name is None:
-                            continue;
+                            continue
                             
                         try:
                             tunnel = ps.getAttributeNode('tunnel').value
-                            if tunnel=='ssl' and service_name=='http':
+                            if tunnel == 'ssl' and service_name == 'http':
                                 service_name = 'https'
                         except AttributeError:
                             pass
                             
                         services.append(service_name)
                             
-                        #create banner
+                        # create banner
                         banner = []
                         if product:
                             banner.append(product)
@@ -157,23 +160,23 @@ class NMAP_TASK(InventoryTask):
 
                         for cpe in ps.getElementsByTagName('cpe'):
                             if not banner:
-                                banner.append(' '.join([s[0].upper() + s[1:] for s in re.sub(':',' ',re.sub(r"^cpe:/.:", '', re.sub(r":+", ':', cpe.firstChild.nodeValue))).split(' ')]))
+                                banner.append(self.get_pretty_cpe(cpe))
 
-                            ocpe = cpe.firstChild.nodeValue # save the original cpe
+                            ocpe = cpe.firstChild.nodeValue  # save the original cpe
 
                             cpe.firstChild.nodeValue += '|'
                             cpe.firstChild.nodeValue += (' '.join(banner)).lstrip(' ')
 
                             if cpe.firstChild.nodeValue.startswith('cpe:/o:'):
-                                operative_system.add (cpe.firstChild.nodeValue)
+                                operative_system.add(cpe.firstChild.nodeValue)
                             elif cpe.firstChild.nodeValue.startswith('cpe:/h:'):
-                                hardware.add (cpe.firstChild.nodeValue)
+                                hardware.add(cpe.firstChild.nodeValue)
                             else:
                                 if str_cpe:
                                     str_cpe += ','
                                 str_cpe += ocpe
 
-                                software.add (cpe.firstChild.nodeValue)
+                                software.add(cpe.firstChild.nodeValue)
 
                         if not str_cpe and banner:
                             str_cpe = (' '.join(banner)).lstrip(' ')
@@ -185,7 +188,7 @@ class NMAP_TASK(InventoryTask):
                     if str_cpe:
                         str_ports += '%s|%s|%s|%s' % (protocol, portnumber, str_services, str_cpe)
                     else:
-                        str_ports += '%s|%s|%s|unknown' % (protocol, portnumber,str_services)
+                        str_ports += '%s|%s|%s|unknown' % (protocol, portnumber, str_services)
 
             os = nmaphost.getElementsByTagName('os')
             if os:
@@ -198,7 +201,7 @@ class NMAP_TASK(InventoryTask):
                     except:
                         pass
 
-                    if not osfamily in ['embedded', '', 'unknown']:
+                    if osfamily not in ['embedded', '', 'unknown']:
                         accuracy = 0
                         try:
                             accuracy = os.getAttributeNode('accuracy').value
@@ -211,7 +214,7 @@ class NMAP_TASK(InventoryTask):
                             operative_system_new = set()
                             hardware_new = set()
                             for cpe in os.getElementsByTagName('cpe'):
-                                banner = ' '.join([s[0].upper() + s[1:] for s in re.sub(':',' ',re.sub(r"^cpe:/.:", '', re.sub(r":+", ':', cpe.firstChild.nodeValue))).split(' ')])
+                                banner = self.get_pretty_cpe(cpe)
                                 if cpe.firstChild.nodeValue.startswith('cpe:/o:'):
                                     operative_system_new.add(cpe.firstChild.nodeValue + '|' + banner)
                                 elif cpe.firstChild.nodeValue.startswith('cpe:/h:'):
@@ -228,15 +231,20 @@ class NMAP_TASK(InventoryTask):
             software.update(hardware)
             for s in software:
                 if str_software == '':
-                    str_software += '%s' % (s)
+                    str_software += '%s' % s
                 else:
-                    str_software += ',%s' % (s)
+                    str_software += ',%s' % s
 
             host['service'] = str_ports
             host['software'] = str_software
 
-            host['inventory_source'] = 5; # SELECT id FROM host_source_reference WHERE name = 'NMAP';
+            host['inventory_source'] = 5  # SELECT id FROM host_source_reference WHERE name = 'NMAP';
             self.send_message(host)
+
+    @staticmethod
+    def get_pretty_cpe(cpe):
+        data_source = re.sub(r"^cpe:/.:", '', re.sub(r":+", ':', cpe.firstChild.nodeValue))
+        return ' '.join([s[0].upper() + s[1:] for s in re.sub(':', ' ', data_source).split(' ')])
 
     def doJob(self):
         self._running = True 
@@ -244,6 +252,6 @@ class NMAP_TASK(InventoryTask):
         self.runQuery()
         logger.info("NMAP collector ending..")
         self._running = False
-    def get_running(self):
-        self._running
 
+    def get_running(self):
+        return self._running

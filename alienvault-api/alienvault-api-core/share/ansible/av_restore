@@ -48,6 +48,7 @@ import os.path
 import shutil
 import subprocess as sub
 import sys
+from pipes import quote
 
 import yaml
 
@@ -118,7 +119,7 @@ def disk_space_available(percentage=80):
              False otherwise
     """
     try:
-        return_code, output, error = _run_command("df / | tail -1 |df / | tail -1 | awk '{print $5}'|sed 's/%//'")
+        return_code, output, error = _run_command("df / | awk '(/\/$/) {print $5}'|sed 's/%//'")
         if return_code != 0 or int(output) > percentage:
             return False
     except:
@@ -285,7 +286,7 @@ def create_backup_folder():
 def decrypt_backup(backup_file, backup_pass=''):
     success = True
     decrypted_backup = os.path.splitext(backup_file)[0]
-    cmd = "gpg --decrypt --batch --yes --passphrase %s --output %s %s" % (backup_pass,
+    cmd = "gpg --decrypt --batch --yes --passphrase %s --output %s %s" % (quote(backup_pass),
                                                                           decrypted_backup,
                                                                           backup_file)
     return_code, output, error = _run_command(cmd)

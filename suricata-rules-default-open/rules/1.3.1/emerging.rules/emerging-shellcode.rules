@@ -238,17 +238,63 @@ alert tcp any any -> any any (msg:"ET SHELLCODE Rothenburg Shellcode"; flow:esta
 
 #alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"ET SHELLCODE METASPLOIT BSD SPARC Reverse shell (SPARC Encoded 2)"; content:"|ea 23 e0 20 a2 04 40 15 81 db e0 20 12 bf ff fb 9e 03 e0 04|"; reference:url,doc.emergingthreats.net/2010436; classtype:shellcode-detect; sid:2010436; rev:2;)
 
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE AIX NOOP"; content:"O|FF FB 82|O|FF FB 82|O|FF FB 82|O|FF FB 82|"; classtype:shellcode-detect; sid:2100640; rev:7;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE Digital UNIX NOOP"; content:"G|FF 04 1F|G|FF 04 1F|G|FF 04 1F|G|FF 04 1F|"; reference:arachnids,352; classtype:shellcode-detect; sid:2100641; rev:7;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE HP-UX NOOP"; content:"|08|!|02 80 08|!|02 80 08|!|02 80 08|!|02 80|"; reference:arachnids,358; classtype:shellcode-detect; sid:2100642; rev:7;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE HP-UX NOOP"; content:"|0B|9|02 80 0B|9|02 80 0B|9|02 80 0B|9|02 80|"; reference:arachnids,359; classtype:shellcode-detect; sid:2100643; rev:8;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE Linux shellcode"; content:"|90 90 90 E8 C0 FF FF FF|/bin/sh"; reference:arachnids,343; classtype:shellcode-detect; sid:2100652; rev:10;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE SGI NOOP"; content:"|03 E0 F8|%|03 E0 F8|%|03 E0 F8|%|03 E0 F8|%"; reference:arachnids,356; classtype:shellcode-detect; sid:2100638; rev:6;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE SGI NOOP"; content:"|24 0F 12|4|24 0F 12|4|24 0F 12|4|24 0F 12|4"; reference:arachnids,357; classtype:shellcode-detect; sid:2100639; rev:6;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc NOOP"; content:"|13 C0 1C A6 13 C0 1C A6 13 C0 1C A6 13 C0 1C A6|"; reference:arachnids,345; classtype:shellcode-detect; sid:2100644; rev:6;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc NOOP"; content:"|80 1C|@|11 80 1C|@|11 80 1C|@|11 80 1C|@|11|"; reference:arachnids,353; classtype:shellcode-detect; sid:2100645; rev:6;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc NOOP"; content:"|A6 1C C0 13 A6 1C C0 13 A6 1C C0 13 A6 1C C0 13|"; reference:arachnids,355; classtype:shellcode-detect; sid:2100646; rev:6;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc setuid 0"; content:"|82 10| |17 91 D0| |08|"; reference:arachnids,282; classtype:system-call-detect; sid:2100647; rev:7;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x71FB7BAB NOOP unicode"; content:"q|00 FB 00|{|00 AB 00|q|00 FB 00|{|00 AB 00|q|00 FB 00|{|00 AB 00|q|00 FB 00|{|00 AB 00|"; classtype:shellcode-detect; sid:2102313; rev:3;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x71FB7BAB NOOP"; content:"q|FB|{|AB|q|FB|{|AB|q|FB|{|AB|q|FB|{|AB|"; classtype:shellcode-detect; sid:2102312; rev:3;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x90 NOOP unicode"; content:"|90 00 90 00 90 00 90 00 90 00 90 00 90 00 90 00|"; classtype:shellcode-detect; sid:2102314; rev:4;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x90 unicode NOOP"; content:"|90 00 90 00 90 00 90 00 90 00|"; classtype:shellcode-detect; sid:2100653; rev:10;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0xEB0C NOOP"; content:"|EB 0C EB 0C EB 0C EB 0C EB 0C EB 0C EB 0C EB 0C|"; fast_pattern:only; classtype:shellcode-detect; sid:2101424; rev:8;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 NOOP"; content:"|90 90 90 90 90 90 90 90 90 90 90 90 90 90|"; depth:128; reference:arachnids,181; classtype:shellcode-detect; sid:2100648; rev:8;)
+
+alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 inc ebx NOOP"; content:"CCCCCCCCCCCCCCCCCCCCCCCC"; classtype:shellcode-detect; sid:2101390; rev:6;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 setgid 0"; content:"|B0 B5 CD 80|"; reference:arachnids,284; classtype:system-call-detect; sid:2100649; rev:9;)
+
+#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 setuid 0"; content:"|B0 17 CD 80|"; reference:arachnids,436; classtype:system-call-detect; sid:2100650; rev:9;)
+
+alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 stealth NOOP"; content:"|EB 02 EB 02 EB 02|"; reference:arachnids,291; classtype:shellcode-detect; sid:2100651; rev:9;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"GPL SHELLCODE ssh CRC32 overflow /bin/sh"; flow:to_server,established; content:"/bin/sh"; reference:bugtraq,2347; reference:cve,2001-0144; reference:cve,2001-0572; classtype:shellcode-detect; sid:2101324; rev:7;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"GPL SHELLCODE ssh CRC32 overflow NOOP"; flow:to_server,established; content:"|90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90|"; reference:bugtraq,2347; reference:cve,2001-0144; reference:cve,2001-0572; classtype:shellcode-detect; sid:2101326; rev:7;)
+
+#alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 1433 (msg:"GPL SHELLCODE MSSQL shellcode attempt"; flow:to_server,established; content:"9 |D0 00 92 01 C2 00|R|00|U|00|9 |EC 00|"; fast_pattern:only; classtype:shellcode-detect; sid:2100691; rev:7;)
+
 alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET SHELLCODE Possible Unescape %u Shellcode/Heap Spray"; flow:established,to_client; content:"unescape"; nocase; content:"%u"; nocase; distance:0; content:"%u"; nocase; within:6; pcre:"/unescape.+\x25u[0-9,a-f]{2,4}\x25u[0-9,a-f]{2,4}/smi"; reference:url,www.w3schools.com/jsref/jsref_unescape.asp; reference:url,isc.sans.org/diary.html?storyid=7906; reference:url,isc.sans.org/diary.html?storyid=7903; reference:url,malzilla.sourceforge.net/tutorial01/index.html; reference:url,doc.emergingthreats.net/2011346; classtype:shellcode-detect; sid:2011346; rev:7;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible TCP x86 JMP to CALL Shellcode Detected"; flow:established; content:"|EB|"; byte_jump:1,0,relative; content:"|E8|"; within:1; content:"|FF FF FF|"; distance:1; within:3; content:!"MZ"; content:!"This program cannot be run in DOS mode"; content:!"Windows Program"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2011803; rev:5;)
 
 #alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible UDP x86 JMP to CALL Shellcode Detected"; content:"|EB|"; byte_jump:1,0,relative; content:"|E8|"; within:1; content:"|FF FF FF|"; distance:1; within:3; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2011804; rev:2;)
 
-alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset TCP Shellcode"; flow:established; content:"|E8 00 00 00 00 58|"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012086; rev:2;)
-
 alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset UDP Shellcode"; content:"|E8 00 00 00 00 58|"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012087; rev:2;)
 
-alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset TCP Shellcode"; flow:established; content:"|E8 00 00 00 00 8F|"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012088; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset TCP Shellcode"; flow:established; content:"|E8 00 00 00 00 8F|"; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012088; rev:3;)
 
 alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Call with No Offset UDP Shellcode"; content:"|E8 00 00 00 00 8F|"; fast_pattern:only; reference:url,www.networkforensics.com/2010/05/16/network-detection-of-x86-buffer-overflow-shellcode/; classtype:shellcode-detect; sid:2012089; rev:2;)
 
@@ -322,8 +368,6 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible %41%41
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE JavaScript Redefinition of a HeapLib Object - Likely Malicious Heap Spray Attempt"; flow:established,to_client; content:"heap|2E|"; nocase; fast_pattern:only; pcre:"/var\x20[^\n\r]*\x3D[^\n\r]*heap\x2E/smi"; classtype:shellcode-detect; sid:2013148; rev:3;)
 
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Excessive Use of HeapLib Objects Likely Malicious Heap Spray Attempt"; flow:established,to_client; file_data; content:"Heap|2E|"; nocase; content:"Heap|2E|"; nocase; distance:0; content:"Heap|2E|"; nocase; distance:0; classtype:shellcode-detect; sid:2013222; rev:3;)
-
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0a0a0a0a"; flow:established,to_client; file_data; content:"|5C|x0a|5C|x0a|5C|x0a|5C|x0a"; nocase; reference:url,www.darkreading.com/security/vulnerabilities/221901428/index.html; classtype:shellcode-detect; sid:2013267; rev:4;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0b0b0b0b"; flow:established,to_client; file_data; content:"|5C|x0b|5C|x0b|5C|x0b|5C|x0b"; nocase; reference:url,www.darkreading.com/security/vulnerabilities/221901428/index.html; classtype:shellcode-detect; sid:2013268; rev:4;)
@@ -359,52 +403,4 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Backsl
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible Backslash Escaped UTF-16 0c0c Heap Spray"; flow:established,to_client; file_data; content:"|5C|0c0c"; nocase; distance:0; classtype:bad-unknown; sid:2016715; rev:2;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible UTF-16 u9090 NOP SLED"; file_data; flow:established,to_client; content:"|5c|u9090|5c|"; nocase; pcre:"/^[a-f0-9]{4}/Ri"; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; reference:url,www.windowsecurity.com/articles/Obfuscated-Shellcode-Part1.html; classtype:shellcode-detect; sid:2017345; rev:4;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE AIX NOOP"; content:"O|FF FB 82|O|FF FB 82|O|FF FB 82|O|FF FB 82|"; classtype:shellcode-detect; sid:2100640; rev:7;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE Digital UNIX NOOP"; content:"G|FF 04 1F|G|FF 04 1F|G|FF 04 1F|G|FF 04 1F|"; reference:arachnids,352; classtype:shellcode-detect; sid:2100641; rev:7;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE HP-UX NOOP"; content:"|08|!|02 80 08|!|02 80 08|!|02 80 08|!|02 80|"; reference:arachnids,358; classtype:shellcode-detect; sid:2100642; rev:7;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE HP-UX NOOP"; content:"|0B|9|02 80 0B|9|02 80 0B|9|02 80 0B|9|02 80|"; reference:arachnids,359; classtype:shellcode-detect; sid:2100643; rev:8;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE Linux shellcode"; content:"|90 90 90 E8 C0 FF FF FF|/bin/sh"; reference:arachnids,343; classtype:shellcode-detect; sid:2100652; rev:10;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE SGI NOOP"; content:"|03 E0 F8|%|03 E0 F8|%|03 E0 F8|%|03 E0 F8|%"; reference:arachnids,356; classtype:shellcode-detect; sid:2100638; rev:6;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE SGI NOOP"; content:"|24 0F 12|4|24 0F 12|4|24 0F 12|4|24 0F 12|4"; reference:arachnids,357; classtype:shellcode-detect; sid:2100639; rev:6;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc NOOP"; content:"|13 C0 1C A6 13 C0 1C A6 13 C0 1C A6 13 C0 1C A6|"; reference:arachnids,345; classtype:shellcode-detect; sid:2100644; rev:6;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc NOOP"; content:"|80 1C|@|11 80 1C|@|11 80 1C|@|11 80 1C|@|11|"; reference:arachnids,353; classtype:shellcode-detect; sid:2100645; rev:6;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc NOOP"; content:"|A6 1C C0 13 A6 1C C0 13 A6 1C C0 13 A6 1C C0 13|"; reference:arachnids,355; classtype:shellcode-detect; sid:2100646; rev:6;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE sparc setuid 0"; content:"|82 10| |17 91 D0| |08|"; reference:arachnids,282; classtype:system-call-detect; sid:2100647; rev:7;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x71FB7BAB NOOP unicode"; content:"q|00 FB 00|{|00 AB 00|q|00 FB 00|{|00 AB 00|q|00 FB 00|{|00 AB 00|q|00 FB 00|{|00 AB 00|"; classtype:shellcode-detect; sid:2102313; rev:3;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x71FB7BAB NOOP"; content:"q|FB|{|AB|q|FB|{|AB|q|FB|{|AB|q|FB|{|AB|"; classtype:shellcode-detect; sid:2102312; rev:3;)
-
-alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x90 NOOP unicode"; content:"|90 00 90 00 90 00 90 00 90 00 90 00 90 00 90 00|"; classtype:shellcode-detect; sid:2102314; rev:3;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0x90 unicode NOOP"; content:"|90 00 90 00 90 00 90 00 90 00|"; classtype:shellcode-detect; sid:2100653; rev:10;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 0xEB0C NOOP"; content:"|EB 0C EB 0C EB 0C EB 0C EB 0C EB 0C EB 0C EB 0C|"; fast_pattern:only; classtype:shellcode-detect; sid:2101424; rev:8;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 NOOP"; content:"|90 90 90 90 90 90 90 90 90 90 90 90 90 90|"; depth:128; reference:arachnids,181; classtype:shellcode-detect; sid:2100648; rev:8;)
-
-alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 inc ebx NOOP"; content:"CCCCCCCCCCCCCCCCCCCCCCCC"; classtype:shellcode-detect; sid:2101390; rev:6;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 setgid 0"; content:"|B0 B5 CD 80|"; reference:arachnids,284; classtype:system-call-detect; sid:2100649; rev:9;)
-
-#alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 setuid 0"; content:"|B0 17 CD 80|"; reference:arachnids,436; classtype:system-call-detect; sid:2100650; rev:9;)
-
-alert ip $EXTERNAL_NET $SHELLCODE_PORTS -> $HOME_NET any (msg:"GPL SHELLCODE x86 stealth NOOP"; content:"|EB 02 EB 02 EB 02|"; reference:arachnids,291; classtype:shellcode-detect; sid:2100651; rev:9;)
-
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"GPL SHELLCODE ssh CRC32 overflow /bin/sh"; flow:to_server,established; content:"/bin/sh"; reference:bugtraq,2347; reference:cve,2001-0144; reference:cve,2001-0572; classtype:shellcode-detect; sid:2101324; rev:7;)
-
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"GPL SHELLCODE ssh CRC32 overflow NOOP"; flow:to_server,established; content:"|90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90|"; reference:bugtraq,2347; reference:cve,2001-0144; reference:cve,2001-0572; classtype:shellcode-detect; sid:2101326; rev:7;)
-
-#alert tcp $EXTERNAL_NET any -> $SQL_SERVERS 1433 (msg:"GPL SHELLCODE MSSQL shellcode attempt"; flow:to_server,established; content:"9 |D0 00 92 01 C2 00|R|00|U|00|9 |EC 00|"; fast_pattern:only; classtype:shellcode-detect; sid:2100691; rev:7;)
 

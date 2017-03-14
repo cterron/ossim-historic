@@ -990,7 +990,6 @@ class Av_scan
                             }
                         }
 
-
                         //Adding services
                         if(is_array($services) && !empty($services))
                         {
@@ -1002,9 +1001,8 @@ class Av_scan
                             {
                                 //Inserting services with less relevance than current ones
                                 $filters = array(
-                                    'where' => "h.id = UNHEX('$id') AND host_services.host_ip = inet6_aton('$ip') AND host_source_reference.relevance > 7"
+                                    'where' => "h.id = UNHEX('$id') AND host_services.host_ip = inet6_aton('$ip') "
                                 );
-
                                 list($previous_services, $total_services) = Asset_host_services::get_list($conn, $filters);
                             }
 
@@ -1012,31 +1010,27 @@ class Av_scan
                             {
                                 $p_id  = Protocol::get_protocol_by_name($service['proto']);
                                 $s_key = $ip.'-'.$service['port'].'-'.$p_id;
-
-                                if ($total_services == 0 || ($total_services > 0 && empty($previous_services[$id][$s_key])))
-                                {
-                                    $s_data = array(
-                                        'ip'        => $ip,
-                                        'service'   => $service['service'],
-                                        'port'      => $service['port'],
-                                        'protocol'  => $p_id,
-                                        'version'   => $service['version'],
-                                        'source_id' => 5,
-                                        'nagios'    => 0
-                                    );
-
-                                    try
-                                    {
-                                        Asset_host_services::save_service_in_db($conn, $id, $s_data);
-                                    }
-                                    catch(Exception $e)
-                                    {
-                                        $warnings['service_error'] = _('Some services could not be saved');
-                                    }
-                                }
-                                else
-                                {
+                                $prev = isset($previous_services[$id][$s_key]) ? $previous_services[$id][$s_key] : false;
+                                if ($prev && $prev["relevance"] > 7) {
                                     $warnings['service_error'] = _('Some services could not be saved [More relevant services were previously inserted]');
+                                    continue;
+                                }
+                                $s_data = array(
+                                    'ip'        => $ip,
+                                    'service'   => $service['service'],
+                                    'port'      => $service['port'],
+                                    'protocol'  => $p_id,
+                                    'version'   => $service['version'],
+                                    'source_id' => 5,
+                                    'nagios'    => $prev ? $prev["nagios"]["enabled"] : 0
+                                );
+                                try
+                                {
+                                    Asset_host_services::save_service_in_db($conn, $id, $s_data);
+                                }
+                                catch(Exception $e)
+                                {
+                                    $warnings['service_error'] = _('Some services could not be saved');
                                 }
                             }
                         }

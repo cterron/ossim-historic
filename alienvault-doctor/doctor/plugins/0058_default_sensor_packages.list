@@ -2,6 +2,14 @@ acl
 acpi
 acpid
 adduser
+alienvault-suricata-hyperv-sensor-standard
+hyperv-daemons
+alienvault-hyperv-sensor-remote
+alienvault-hyperv-sensor-standard-6x1gb
+alienvault-hyperv-sensor-remote-lite
+alienvault-ami-sensor-standard-6x1gb
+alienvault-ami-sensor-remote
+alienvault-ami-sensor-remote-lite
 alienvault-agent-generator
 alienvault-api-core
 alienvault-crypto
@@ -25,6 +33,7 @@ alienvault-openssl
 alienvault-openvas
 alienvault-openvas8-feed
 alienvault-ossec
+alienvault-ossec-rules
 alienvault-pam
 alienvault-plugin-sids
 alienvault-plugins

@@ -1242,7 +1242,7 @@ switch ($step)
 				break;
 				
 			default:
-				$preview_url = '/ossim/dashboard/sections/'.$widget_url.add_url_character($widget_url)."wtype=".$widget_type."&height=".$widget_height."&asset=".$widget_asset."&value=".serialize($widget_params);
+				$preview_url = '/ossim/dashboard/sections/'.$widget_url.add_url_character($widget_url)."wtype=".$widget_type."&height=".$widget_height."&asset=".$widget_asset."&value=".json_encode($widget_params);
 		}
 		
 		$widget_config_json = array(

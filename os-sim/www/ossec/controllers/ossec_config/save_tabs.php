@@ -84,135 +84,42 @@ if($tab == '#tab1')
     try
     {
         $conf_data = Ossec::get_configuration_file($sensor_id);
+        $pattern     = array('~\r~','~>\s+<~','~<(/?)\s+([a-z]+)\s+>~');
+        $replacement = array("","><","<$1$2>");
+        $ossec_conf_data   = preg_replace($pattern, $replacement, $conf_data['data']);
 
-        //Ossec Rule List 
+        //Ossec Rule List
         $all_rules = Ossec::get_rule_files($sensor_id, TRUE);
+        $rules_enabled  = isset($_POST["rules_added"]) ? POST("rules_added") : array();
+        //Special case: rules_config.xml should be always enabled
+        $rules_enabled[] = "rules_config.xml";
 
-        $rules_enabled  = POST('rules_added');
+        $rule_order     = array_flip(Ossec::get_rule_order($sensor_id));
+        ksort($rule_order);
+        $xml_rules = array_intersect($rule_order,$all_rules);
 
-        $rules_enabled  = (empty($rules_enabled)) ? array() : array_flip($rules_enabled);
-
-
-        //Special case: rules_config.xml is always added
-
-        if (!array_key_exists('rules_config.xml', $rules_enabled))
-        {
-            $size = count($rules_enabled);
-            $rules_enabled['rules_config.xml'] = $size;
+        //Special case: local_rules.xml (with order -1) should be always at the end
+        $pre_rules = array();
+        $post_rules = array();
+        foreach ($xml_rules as $key => $value) {
+            $key >=0 ? $pre_rules[]=$value : $post_rules[]=$value;
         }
 
-        $rule_order     = Ossec::get_rule_order($sensor_id);
+        $xml_rules = array_merge($pre_rules, array_diff($all_rules, $rule_order), $post_rules);
 
-        $xml_rules = array_fill(0, count($rule_order), NULL);
-        $xml_rules[0] = '<rules>';
-
-        foreach ($all_rules as $rule)
-        {
-            if (!array_key_exists($rule, $rule_order))
-            {
-                if (array_key_exists($rule, $rules_enabled))
-                {
-                    $xml_rules[] = "<include>$rule</include>";
-                }
-                else
-                {
-                    $xml_rules[] = "<!--<include>$rule</include>-->";
-                }
-            }
-            else
-            {
-                if (array_key_exists($rule, $rules_enabled))
-                {
-                    $xml_rules[$rule_order[$rule]] = "<include>$rule</include>";
-                }
-                else
-                {
-                    $xml_rules[$rule_order[$rule]] = "<!--<include>$rule</include>-->";
-                }
-            }
+        $wrap = function($val,$active = true) {
+             $val = "<include>alienvault/rules/$val</include>";
+             if ($active === false) {
+                 $val = "<!--$val-->";
+             }
+             return $val;
+        };
+        foreach ($xml_rules as $rule) {
+            $includes .= $wrap($rule,array_search($rule, $rules_enabled));
         }
-
-        $rule_xml       = Util::execute_command("egrep \"<[[:space:]]*rule[[:space:]]*>.*<[[:space:]]*/[[:space:]]*rule[[:space:]]*>\" ?", array($conf_data['path']), 'array');
-        $rule_dir_xml   = Util::execute_command("egrep \"<[[:space:]]*rule_dir[[:space:]]*>.*<[[:space:]]*/[[:space:]]*rule_dir[[:space:]]*>\" ?", array($conf_data['path']), 'array');
-        $decode_xml     = Util::execute_command("egrep \"<[[:space:]]*decode[[:space:]]*>.*<[[:space:]]*/[[:space:]]*decode[[:space:]]*>\" ?", array($conf_data['path']), 'array');
-        $decode_dir_xml = Util::execute_command("egrep \"<[[:space:]]*decode_dir[[:space:]]*>.*<[[:space:]]*/[[:space:]]*decode_dir[[:space:]]*>\" ?", array($conf_data['path']), 'array');
-        
-        if (is_array($rule_xml) && !empty($rule_xml))
-        {
-            foreach ($rule_xml as $k => $v)
-            {
-                $xml_rules[] = trim($v);
-            }
-        }
-        
-        if (is_array($rule_dir_xml) && !empty($rule_dir_xml))
-        {
-            foreach ($rule_dir_xml as $k => $v)
-            {
-                $xml_rules[] = trim($v);
-            }
-        }
-        
-        if (is_array($decode_xml) && !empty($decode_xml))
-        {
-            foreach ($decode_xml as $k => $v)
-            {
-                $xml_rules[] = trim($v);
-            }
-        }
-
-        if (is_array($decode_dir_xml) && !empty($decode_dir_xml))
-        {
-            foreach ($decode_dir_xml as $k => $v)
-            {
-                $xml_rules[] = trim($v);
-            }
-        }
-
-        $xml_rules[] = '</rules>';
-
-
-        $pattern     = '/\s*[\r?\n]+\s*/';
-        $conf_file   = preg_replace($pattern, "", $conf_data['data']);
-        $copy_cf     = $conf_file;
-        
-        $pattern     = array('/<\/\s*rules\s*>/');
-        $replacement = array("</rules>\n");
-        $conf_file   = preg_replace($pattern, $replacement, $conf_file);
-        
-        
-        preg_match_all('/<\s*rules\s*>.*<\/rules>/', $conf_file, $match);
-        
-        $size_m    = count($match[0]);
-        $unique_id = uniqid();
-        
-        if ($size_m > 0)
-        {
-            for ($i=0; $i<$size_m-1; $i++)
-            {
-                $pattern = trim($match[0][$i]);
-                $copy_cf = str_replace($pattern, "", $copy_cf);
-            }
-            
-            $pattern = trim($match[0][$size_m-1]);
-            $copy_cf = str_replace($pattern, $unique_id, $copy_cf);
-        }
-        else
-        {
-            if (preg_match("/<\s*ossec_config\s*>/", $copy_cf))
-            {
-                $copy_cf = preg_replace("/<\/\s*ossec_config\s*>/", "$unique_id</ossec_config>", $copy_cf, 1);
-            }
-            else
-            {
-                $copy_cf = "<ossec_config>$unique_id</ossec_config>";
-            }
-        }
-        
-        $copy_cf    = preg_replace("/$unique_id/", implode('', $xml_rules), $copy_cf);
-        $conf_data  = Ossec_utilities::formatXmlString($copy_cf);
-        
-        $data = Ossec::set_configuration_file($sensor_id, $conf_data);    
+        $ossec_conf_data = preg_replace("~<rules>(<\!--)?<include>.*</include>(-->)?</rules>~","<rules>$includes</rules>",$ossec_conf_data,1);
+        $ossec_conf_data  = Ossec_utilities::formatXmlString($ossec_conf_data);
+        $data = Ossec::set_configuration_file($sensor_id, $ossec_conf_data);
     }
     catch(Exception $e)
     {

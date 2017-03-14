@@ -1,0 +1,11 @@
+alienvault-dummies-hyperv (5.3.5) stable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 11 Jan 2017 06:24:03 -0500
+
+alienvault-dummies-hyperv (5.3.5) unstable; urgency=low
+
+  * First release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 05 Oct 2016 04:23:50 -0400

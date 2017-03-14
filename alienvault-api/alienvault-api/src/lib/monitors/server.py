@@ -38,6 +38,7 @@ from ansiblemethods.server.server import get_server_stats
 import celery.utils.log
 logger = celery.utils.log.get_logger("celery")
 
+
 class MonitorServerEPSStats(Monitor):
     """
     Monitor correlation EPS in the current server.
@@ -72,7 +73,7 @@ class MonitorServerEPSStats(Monitor):
                     eps_data = []
 
         args = {'server_ip': self.__server_ip, 'server_port': self.__server_port, 'server_stats': 'yes'}
-        ansible_output = get_server_stats (self.__server_ip, args)
+        ansible_output = get_server_stats(self.__server_ip, args)
         if ansible_output['dark'] != {}:
             logger.error("Error querying server EPS stats: %s" % ansible_output['dark'])
             return False
@@ -89,7 +90,10 @@ class MonitorServerEPSStats(Monitor):
 
         eps_data = eps_data[-(self.__max_samples - 1):] + [eps]
         with open(self.__eps_log_file, 'w') as f:
-            os.chmod(self.__eps_log_file, 0644)
+            try:
+                os.chmod(self.__eps_log_file, 0644)
+            except Exception, e:
+                logger.error("Cannot change file permissions: %s" % str(e))
             try:
                 f.write(json.dumps(eps_data, indent=4, separators=(',', ': ')))
             except Exception, e:

@@ -49,6 +49,7 @@ case "$1" in
 
             # update openvas-mkcert-client
             sed -i /usr/sbin/openvas-mkcert-client -e "s/default_days.*=.*/default_days = 1460/"
+            sed -i /usr/sbin/openvas-mkcert-client -e "s/^DFL_CERT_LIFETIME=.*$/DFL_CERT_LIFETIME=\$\{x\:\-1460\}/"
 
             # create the certificate or update it if it is going to expire
             cur_y=`date +%Y`
@@ -56,7 +57,9 @@ case "$1" in
             if [ ! -f /var/lib/openvas/CA/clientcert.pem ] || [ $crt_y -le $cur_y ]
             then
                 /usr/sbin/openvas-mkcert -f -q
-                /usr/sbin/openvas-mkcert-client -n om -i
+                /usr/sbin/openvas-mkcert-client -n -i
+                scanner_id=$( openvasmd --get-scanners | awk '{ if ($3 ~ /Default/) print $1 }' )
+                openvasmd --modify-scanner ${scanner_id} --scanner-ca-pub /var/lib/openvas/CA/cacert.pem --scanner-key-pub /var/lib/openvas/CA/clientcert.pem --scanner-key-priv /var/lib/openvas/private/CA/clientkey.pem
                 RET=$((RET&0))
                 # TODO: distribute the certificate to the sensors with the API
                 # TODO: what openvas certificate does a sensor use if it is accessible from two servers?

@@ -4,8 +4,16 @@ acpi-support-base
 acpid
 adduser
 alienvault-agent-generator
+alienvault-suricata-hyperv-server-sensor
+hyperv-daemons
+alienvault-hyperv-aio-6x1gb
+alienvault-hyperv-aio-6x1gb-lite
+alienvault-hyperv-usm-standard
+alienvault-hyperv-logger-standard
+alienvault-ami-usm-standard
 alienvault-ami-aio-6x1gb
-alienvault-ami-aio-6x1gb
+alienvault-ami-aio-6x1gb-lite
+alienvault-ami-logger-standard
 alienvault-apache2
 alienvault-api
 alienvault-api-core
@@ -60,6 +68,7 @@ alienvault-openvas
 alienvault-openvas-feed
 alienvault-openvas8-feed
 alienvault-ossec
+alienvault-ossec-rules
 alienvault-pam
 alienvault-php5
 alienvault-plugin-sids

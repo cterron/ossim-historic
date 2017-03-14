@@ -275,7 +275,7 @@ class Status
 	                }
 		}
 		foreach ($result as $key => $value) {
-			$result[$key]["date"] = preg_replace('/:00:00$/', 'H', $result[$key]["date"]);
+			$result[$key]["date"] = preg_replace('/:00:00$/', 'H', $value["date"]);
 		}
 		return $result;
 	}
@@ -341,10 +341,9 @@ class Status
 			}
 			$rs->MoveNext();
 		}
-		$cnt = count($result);
-                foreach ($result as $i => $j) {
-			$result[$i]["ip_src"] = self::IPkeysToNtop($result[$i]["ip_src"]);
-			$result[$i]["ip_dst"] = self::IPkeysToNtop($result[$i]["ip_dst"]);
+        foreach ($result as $i => $j) {
+			$result[$i]["ip_src"] = self::IPkeysToNtop($j["ip_src"]);
+			$result[$i]["ip_dst"] = self::IPkeysToNtop($j["ip_dst"]);
 		}
 		return $result;
 	}

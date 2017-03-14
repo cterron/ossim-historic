@@ -783,7 +783,7 @@ function Process_Details_tab ($tab_changed, $profile_changed) {
 							  	  "default"  => array_key_exists('customfmt', $process_form) ?
 										$process_form['customfmt'] : '',
 							  	  "allow_null" => 1,
-							  	  "match" => "/^$|^[\s!-~]+$/",
+							  	  "match" => "/^[^\r\n;]*$/",
 							  	  "validate" => NULL),
 		"fmt_save" 		=> array( "required" => 0, 
 							  	  "default"  => array_key_exists('fmt_save', $process_form) ?

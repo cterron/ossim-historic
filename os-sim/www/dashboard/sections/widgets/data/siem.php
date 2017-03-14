@@ -79,7 +79,7 @@ if (!isset($id) || empty($id))
 	$winfo['height'] = GET("height");					//Height of the widget
 	$winfo['wtype']  = GET("wtype");					//Type of widget: chart, tag_cloud, etc.
 	$winfo['asset']  = GET("asset");					//Assets implicated in the widget.
-	$chart_info      = unserialize(GET("value")); 		//Params of the widget representation, this is: type of chart, legend params, etc.
+	$chart_info      = json_decode(GET("value"),true); 		//Params of the widget representation, this is: type of chart, legend params, etc.
 
 } 
 else  //If the ID is not empty, we are in the normal case; loading the widget from the dashboard. In this case we get the info from the DB.

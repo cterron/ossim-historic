@@ -85,15 +85,16 @@ from ansiblemethods.system.system import (
     ansible_remove_system_certificate,
     ansible_restart_frameworkd,
     ansible_get_child_alarms,
-    ansible_resend_alarms)
+    ansible_resend_alarms,
+    ansible_clean_squid_config,
+)
 
 from ansiblemethods.system.about import (
     get_license_info,
     get_alienvault_version,
     get_is_professional)
 
-from ansiblemethods.system.network import \
-    make_tunnel as ansible_make_tunnel_with_vpn
+from ansiblemethods.system.network import make_tunnel as ansible_make_tunnel_with_vpn
 
 from ansiblemethods.server.server import (
     ans_add_server,
@@ -111,25 +112,19 @@ from ansiblemethods.helper import (
 from ansiblemethods.system.util import rsync_pull
 
 # Celery methods
-from celerymethods.utils import (
-    get_task_status,
-    get_running_tasks)
-
+from celerymethods.utils import get_task_status, get_running_tasks
 from celerymethods.jobs.system import alienvault_asynchronous_update
-
 from celerymethods.jobs.reconfig import alienvault_reconfigure, job_alienvault_reconfigure
-from apimethods.otx.otx import apimethod_is_otx_enabled
 
 # API methods
+from apimethods.otx.otx import apimethod_is_otx_enabled
 from apimethods.utils import (
     create_local_directory,
     get_base_path_from_system_id,
     get_hex_string_from_uuid,
     is_valid_ipv4)
 from apimethods.system.status import ping_system
-from apimethods.system.cache import (
-    use_cache,
-    flush_cache)
+from apimethods.system.cache import use_cache, flush_cache
 
 # API Exceptions
 from apiexceptions import APIException
@@ -399,7 +394,7 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
 
 def add_system(system_id, password):
     """
-    Add a system usign a system id. Already in database
+    Add a system using a system id. Already in database
     """
     (success, system_ip) = get_system_ip_from_system_id(system_id)
     if not success:
@@ -494,7 +489,13 @@ def apimethod_delete_system(system_id):
                     "<%s>" % str(aim_error)
         return False, error_msg
 
-    # 6 - Try to connect to the child and remove the parent
+    # 6 - Clean Squid config
+    success, result_msg = ansible_clean_squid_config(system_ip)
+    if not success:
+        error_msg = "Can't clean the squid config: {}".format(result_msg)
+        return success, error_msg
+
+    # 7 - Try to connect to the child and remove the parent
     # using it's server_id
     success, own_server_id = get_server_id_from_local()
     if not success:
@@ -724,7 +725,7 @@ def apimethod_get_remote_software_update(system_id, no_cache=False):
     """Retrieves the available updates for the given system_id
     Args:
       system_id(str): The system id of which we want to know
-                      if it has available updates
+                      if it has available updatesz
     Returns:
       (success,data): success=True when the operation when ok,
                       otherwise success=False.
@@ -732,7 +733,7 @@ def apimethod_get_remote_software_update(system_id, no_cache=False):
                       with the updates information.
     """
     systems = []  # Systems that we are going to check the updates
-    updates = {}  # Dic with the updates available for each system
+    updates = {}  # Dict with the updates available for each system
 
     if system_id == 'all':  # If all, we load all the systems
         result, all_systems = get_systems(directly_connected=False)
@@ -758,6 +759,8 @@ def apimethod_get_remote_software_update(system_id, no_cache=False):
 
         info = {'current_version': data['current_version'],
                 'last_update': data['last_update'],
+                'last_update_status': data['last_update_status'],
+                'last_feed_update_status': data['last_feed_update_status'],
                 'packages': {'total': data['total_packages'],
                              'pending_updates': data['pending_updates'],
                              'pending_feed_updates': data['pending_feed_updates']}}

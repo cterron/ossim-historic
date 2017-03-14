@@ -385,6 +385,7 @@ trait ScheduleTraitModal {
 
 class ScheduleStrategyEdit extends ScheduleStrategyHelper implements ScheduleStrategyInterface {
 	use ScheduleTraitMain;
+	private $daysW = array("Su","Mo","Tu","We","Th","Fr","Sa");
 	public function init() {
 		// read the configuration from database
 		$query    = 'SELECT * FROM vuln_job_schedule WHERE id = ?';
@@ -394,38 +395,23 @@ class ScheduleStrategyEdit extends ScheduleStrategyHelper implements ScheduleStr
 		$this->loadData();
 		//job name
 		$this->schedule->parameters["SVRid"] = $database['email'];
-		$this->schedule->scan_locally = intval($database['meth_Ucheck']);
+		$this->schedule->parameters["exclude_ports"] = $database['exclude_ports'];
+		$this->schedule->parameters["scan_locally"]  = intval($database['meth_Ucheck']);
 		$this->schedule->setPrimarySettingsFromDB($database);
-		$this->schedule->parameters["next_CHECK"] = Util::get_utc_unixtime($database['next_CHECK']);
-		if ($database['schedule_type'] != 'O') {
-			preg_match('/(\d{4})(\d{2})(\d{2})/', $database['begin'], $found);
-			$this->schedule->parameters["biyear"]      = $found[1];
-			$this->schedule->parameters["bimonth"]     = $found[2];
-			$this->schedule->parameters["biday"]       = $found[3];
-		};
-		 // date to fill the form
-		 $this->schedule->parameters["next_CHECK"] = gmdate('Y-m-j-G-i-w', $this->schedule->parameters["next_CHECK"] + 3600*$this->tz);
 
-		 $data = explode("-",$this->schedule->parameters["next_CHECK"]);
-		 $this->schedule->parameters["time_hour"]		= $data[3];
-		 $this->schedule->parameters["time_min"]		= $data[4];
-		 $this->schedule->parameters["dayofweek"]		= $data[5];
-		 $this->schedule->parameters["time_interval"]	= 1;
-		 $this->schedule->parameters["dayofmonth"]		= 1;
-		 $this->schedule->parameters["nthweekday"]		= 1;
-		 $this->schedule->parameters["not_resolve"]		= 1;
-		
-
-		 list($this->schedule->parameters["ROYEAR"],$this->schedule->parameters["ROMONTH"],$this->schedule->parameters["ROday"]) = $data;
-		 list($this->schedule->parameters["biyear"],$this->schedule->parameters["bimonth"],$this->schedule->parameters["biday"]) = $data;
-		 
+		$this->schedule->parameters["biyear"]      = intval($database['begin']/10000);
+		$this->schedule->parameters["bimonth"]     = intval(($database['begin']%10000)/100);
+		$this->schedule->parameters["biday"]       = intval($database['begin']%100);
+		$this->schedule->parameters["time_hour"]   = substr($database['time'],0,2);
+		$this->schedule->parameters["time_min"]    = substr($database['time'],3,2);
+		$this->schedule->parameters["not_resolve"]		= (!$database["resolve_names"])*1;
 		$this->schedule->parameters["time_interval"] = $database['time_interval'];
 		$this->schedule->parameters["dayofmonth"] = $database['day_of_month'];
-		$this->schedule->parameters["dayofweek"] = $database['day_of_week'];
+		$days = array_flip($this->daysW);
+		$this->schedule->parameters["nthdayofweek"] = $this->schedule->parameters["dayofweek"] = $days[$database['day_of_week']];
 		$this->schedule->parameters["schedule_type"] = $database['schedule_type'];
 		$this->schedule->parameters["nthweekday"] = $database['day_of_month'];
 		$this->schedule->load_targets();
-
 	}
 }
 
@@ -440,6 +426,7 @@ class ScheduleStrategyRerun extends ScheduleStrategyHelper implements ScheduleSt
 		$result   = $this->schedule->conn->execute($query, $params);
 		$database = $result->fields;
 		$this->schedule->parameters["SVRid"] = $database['notify'];
+		$this->schedule->parameters["exclude_ports"] = $database['exclude_ports'];
 		$this->schedule->parameters["scan_locally"] = intval($database['authorized']);
 		$this->schedule->setPrimarySettingsFromDB($database);
 		$this->loadData();
@@ -447,7 +434,7 @@ class ScheduleStrategyRerun extends ScheduleStrategyHelper implements ScheduleSt
 	}
 	
 	public function persetDefaults() {
-		$this->schedule->current_time_to_paramaters();
+		$this->current_time_to_paramaters();
 	}
 }
 
@@ -517,7 +504,7 @@ trait ScheduleCreate {
 		$this->schedule->parameters["hosts_alive"]  = 1;
 	}
 	public function persetDefaults() {
-		$this->schedule->current_time_to_paramaters();
+		$this->current_time_to_paramaters();
 		if (!$this->schedule->parameters["sid"]) {
 			foreach ($this->schedule->get_v_profiles() as $key => $value) {
 				if (preg_match("/^Default\s-\s.*/",$value )) {
@@ -542,8 +529,6 @@ class ScheduleStrategyCreateModal extends ScheduleStrategyHelper implements Sche
 
 trait ScheduleSave {
 	public function persetDefaults() {
-                $conf = $GLOBALS['CONF'];
-                $this->schedule->parameters["scan_locally"] = $this->schedule->parameters["authorized"] = $conf->get_conf('nessus_pre_scan_locally');
 		$this->schedule->load_targets();
 	}
 
@@ -559,65 +544,45 @@ trait ScheduleSave {
 	}
 	
 	public function submit_scan() {
-		$btime_hour = $this->schedule->parameters["time_hour"];  // save local time
-		$btime_min  = $this->schedule->parameters["time_min"];
-			
-		$bbiyear    = sprintf('%02d',$this->schedule->parameters["biyear"]);
-		$bbimonth   = sprintf('%02d',$this->schedule->parameters["bimonth"]);
-		$bbiday     = sprintf('%02d',$this->schedule->parameters["biday"]);
-		$uyear = $umonth = $uday = null;
-		$insert_time = $requested_run = gmdate('YmdHis');
-		if ($this->schedule->parameters["schedule_type"] != "N") {
-			$run_time   = sprintf('%02d%02d%02d',  $this->schedule->parameters['time_hour'], $this->schedule->parameters['time_min'], '00');
-			if($this->schedule->parameters["schedule_type"] == 'O') {
-				// date and time for run once
-				$uyear  = empty($this->schedule->parameters["ROYEAR"]) ? gmdate('Y') : $this->schedule->parameters["ROYEAR"];
-				$umonth = empty($this->schedule->parameters["ROMONTH"]) ? gmdate('m') : $this->schedule->parameters["ROMONTH"];
-				$uday = empty($this->schedule->parameters["ROday"]) ? gmdate('d') : $this->schedule->parameters["ROday"];
-				$requested_run = sprintf('%04d%02d%02d%06d', $uyear, $umonth, $uday, $run_time );
-			} else {
-				$begin_in_seconds   = Util::get_utc_unixtime("$bbiyear-$bbimonth-$bbiday {$this->schedule->parameters['time_hour']}:{$this->schedule->parameters['time_min']}:00") - 3600 * $this->tz;
-				$current_in_seconds = gmdate('U');                // current datetime in UTC
-				$ndays = dates::$daysMap;
-				if($this->schedule->parameters["schedule_type"] == 'NW') {
-					$array_time = array();
-					if( $begin_in_seconds > $current_in_seconds ) {
-						// if it is a future date
-						$array_time = array('month'=> $bbimonth, 'day' => $bbiday, 'year' => $bbiyear);
-					}
-					$requested_run = $this->weekday_month(strtolower($ndays[$this->schedule->parameters['nthdayofweek']]), $this->schedule->parameters['nthweekday'], $btime_hour, $btime_min, $array_time);
-					
-					$this->schedule->parameters['dayofmonth'] = $this->schedule->parameters['nthweekday'];
-					$this->schedule->parameters['dayofweek'] = $this->schedule->parameters['nthdayofweek'];
-				} elseif ($this->schedule->parameters["schedule_type"] == 'W') {
-					$timing = mktime ( 0, 0, 0, $bbiyear, $bbimonth, $bbiday);
-					$wday  = date("w",$timing); // make week day for begin day
-					if( $begin_in_seconds > $current_in_seconds  && $this->schedule->parameters["dayofweek"] == $wday) { // if it is a future date
-						$next_day = "$bbiyear-$bbimonth-$bbiday";  // selected date by user
-					} else {
-						$next_day = gmdate("Y-m-d", strtotime("next ".$ndays[$this->schedule->parameters["dayofweek"]]." GMT",gmdate("U"))); // next week
-					}
-					$requested_run = "$next_day $btime_hour:$btime_min:00";
-				} else {
-					if( $begin_in_seconds > $current_in_seconds ) {
-						$requested_run = $bbiyear.$bbimonth.$bbiday.$run_time;
-					} else {
-						$requested_run = $this->schedule->parameters["schedule_type"] == "D"
-								? gmdate("Ymd", strtotime("+1 day GMT",gmdate("U"))).$run_time
-								//else if month
-						: gmdate("Y-m-", strtotime("next month GMT", gmdate("U"))). "{$this->schedule->parameters['dayofmonth']} $btime_hour:$btime_min:00";
-					}
+		$parameters = $this->schedule->parameters;
+		$year		= $parameters["biyear"];
+		$month  	= $parameters["bimonth"];
+		$day	    	= $parameters["biday"];
+		$dof		= $parameters["dayofmonth"];
+		$hour		= $parameters['time_hour'];
+		$min		= $parameters['time_min'];
+		$insert_time = gmdate('YmdHis');
+		$hourandmin = str_pad($hour, 2, "0", STR_PAD_LEFT).str_pad($min, 2, "0", STR_PAD_LEFT);
+		$tztimediff = $this->tz * 3600;
+		$datevs = date("Hi", time() + $tztimediff);
+		$datedvs = date("dHi",time() + $tztimediff);
+		if ($parameters["schedule_type"] != "N" && $parameters["schedule_type"] != "O") {
+			$begin_in_seconds = max(mktime($hour,$min,0,$month,$day,$year),time());
+			$ndays = dates::$daysMap;
+			if($parameters["schedule_type"] == 'NW') {
+				list($year,$month,$day) = $this->weekday_month(
+					strtolower($ndays[$parameters['nthdayofweek']]), $parameters['nthweekday'], $year, $month, $hour, $minute, $tztimediff);
+				$this->schedule->parameters['dayofmonth'] = $parameters['nthweekday'];
+				$this->schedule->parameters['dayofweek'] = $parameters['nthdayofweek'];
+			} elseif ($parameters["schedule_type"] == 'W') {
+				if (date("w",$begin_in_seconds) != $parameters["dayofweek"] || $datevs >= $hourandmin) {
+					list($year,$month,$day) = explode("-",date("Y-m-d", strtotime("next ".$ndays[$parameters["dayofweek"]],$begin_in_seconds)));
+				}
+			} elseif ($parameters["schedule_type"] == "D" && $datevs >= $hourandmin) {
+				list($year,$month,$day) = explode("-",date("Y-m-d", strtotime("+1 day")));
+			} elseif ($parameters["schedule_type"] == "M") {
+				$day = $dof;
+				if ($datedvs >= $day.$hourandmin) {
+					list($year,$month) = explode("-",date("Y-m", strtotime("+1 month")));
 				}
 			}
-			list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($this->schedule->conn,$requested_run, $this->tz);
-			$requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
 		}
-
+		$requested_run = date("YmdHi00", mktime($hour,$min,0,$month,$day,$year) - $tztimediff);
 		ossim_clean_error();
-		$queries = $this->schedule->load_ctx_from_targets($insert_time, $bbiyear, $bbimonth, $bbiday, $requested_run);
+		$queries = $this->schedule->load_ctx_from_targets($insert_time, $parameters["biyear"], $parameters["bimonth"], $parameters["biday"], $requested_run);
 		$execute_errors = array();
 
-		foreach ($queries as $id => $sql_data)
+		foreach ($queries as $sql_data)
 		{
 			$rs = $this->schedule->conn->execute($sql_data['query'], $sql_data['params']);
 			if ($rs === FALSE)
@@ -625,14 +590,14 @@ trait ScheduleSave {
 				$execute_errors[] = $this->schedule->conn->ErrorMsg();
 			}
 		}
-                if (!empty($execute_errors)) {
-                    Av_exception::throw_error(Av_exception::DB_ERROR, implode("; ",$execute_errors));
-                }
-		if (empty($execute_errors) && $this->schedule->parameters["schedule_type"] != 'N')
+		if (!empty($execute_errors)) {
+			Av_exception::throw_error(Av_exception::DB_ERROR, implode("; ",$execute_errors));
+		}
+		if (empty($execute_errors) && $parameters["schedule_type"] != 'N')
 		{
 			// We have to update the vuln_job_assets
 
-			if (intval($this->schedule->parameters["sched_id"]) == 0)
+			if (intval($parameters["sched_id"]) == 0)
 			{
 				$query = ossim_query('SELECT LAST_INSERT_ID() as sched_id');
 				$rs    = $this->schedule->conn->Execute($query);
@@ -643,11 +608,11 @@ trait ScheduleSave {
 				}
 				else
 				{
-					$sched_id = $rs->fields['sched_id'];
+					$parameters["sched_id"] = $rs->fields['sched_id'];
 				}
 			}
 
-			Vulnerabilities::update_vuln_job_assets($this->schedule->conn, 'insert', $this->schedule->parameters["sched_id"], 0);
+			Vulnerabilities::update_vuln_job_assets($this->schedule->conn, 'insert', $parameters["sched_id"], 0);
 		}
 		$this->saveSuccess();
 	}
@@ -668,34 +633,25 @@ trait ScheduleSave {
 		$this->schedule->conn->close($this->schedule->conn);		
 	}
 
-
-	private function weekday_month($day, $nth, $h, $m, $start_date = array()) {
-		list($current_year,$current_month,$current_day,$current_hour,$current_minute) = explode("-",date("Y-m-d-H-i"));
-		if(!empty($start_date)) {
-			$current_month = $start_date["month"];
-			$current_day = $start_date["day"];
-			$current_year = $start_date["year"];
+	private function weekday_month($day, $nth, $current_year,$current_month, $current_hour, $current_minute, $tztimediff) {
+		$inc = $current_hour * 3600 + $current_minute * 60;
+		$today  = time();
+		$initial_time = mktime(0, 0, 0, $current_month, 1, $current_year);
+		$time = strtotime("-1 day", $initial_time);
+		$time = $this->calculate_day_in_week_in_month($nth, $day, $time);
+		while ( $time + $inc - $tztimediff <= $today ) {
+			$time = strtotime("next month", $initial_time);
+			$time = $this->calculate_day_in_week_in_month($nth, $day, $time);
 		}
-		$today  = mktime($current_hour, $current_minute, 0,  $current_month, $current_day, $current_year);
-		//Last day of previous month
-		$date = $this->calculate_day_in_week_in_month($current_month, $current_year, $nth, $day);
-		//If date is less than current, we search in next month
-		if ( $date < $today )
-		{
-			$current_month = date("m",strtotime("+1 month", $today));
-			$date = $this->calculate_day_in_week_in_month($current_month, $current_year, $nth, $day);
-		}
-
-		return date('Y-m-d $h:$m:00', $date);
+		return explode("-",date('Y-m-d', $time));
 	}
 
-	private function calculate_day_in_week_in_month($current_month, $current_year, $nth, $day) {
-		$date   = strtotime("-1 day", mktime(0, 0, 0, $current_month, 1, $current_year));
+	private function calculate_day_in_week_in_month($nth, $day, $time) {
 		//Search date
 		for ($i=0; $i<$nth; $i++){
-			$date = strtotime("next $day", $date);
+			$time = strtotime("next $day", $time);
 		}
-		return $date;
+		return $time;
 	}
 }
 

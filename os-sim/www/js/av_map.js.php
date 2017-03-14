@@ -45,31 +45,7 @@ require_once 'av_init.php';
 
 function Av_map(map_id)
 {
-    <?php
-    /****************************************************
-     **************** Configuration Data ****************
-     ****************************************************/
-     
-    $conf = $GLOBALS['CONF'];
-                    									
-    if (!$conf)
-    {
-        $conf = new Ossim_conf();
-        $GLOBALS['CONF'] = $conf;
-    }
-    
-    //Google Maps Key
-    $map_key = $conf->get_conf('google_maps_key');
-    
-    if ($map_key == '') 
-    {
-        $map_key = 'ABQIAAAAbnvDoAoYOSW2iqoXiGTpYBTIx7cuHpcaq3fYV4NM0BaZl8OxDxS9pQpgJkMv0RxjVl6cDGhDNERjaQ';
-    }
-    ?>
-    
     var _map_id       = '#' + map_id;    
-    var _map_key      = '<?php echo $map_key?>';
-    
     var _lat          = null;
     var _lng          = null;
     var _address      = ''; 
@@ -141,15 +117,6 @@ function Av_map(map_id)
     {
         return _map_id;
     };
-    
-    
-    // Get Map Key
-    this.get_map_key = function()
-    {
-        return _map_key;
-    };
-        
-    
     // Get Latitude
     this.get_lat = function()
     {
@@ -683,7 +650,7 @@ Av_map.is_map_available = function(callback)
         {
             var script = document.createElement('script');
             script.type = 'text/javascript';
-            script.src = 'https://maps-api-ssl.google.com/maps/api/js?sensor=false&callback=Av_map.load_map_callback';
+            script.src = "<?=Av_map_helper::getUrl()?>";
             document.body.appendChild(script);
 
             return false;

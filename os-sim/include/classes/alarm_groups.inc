@@ -487,9 +487,11 @@ class Alarm_groups
 	$having = "";
         $having_params = array();
         if ($min_risk) {
+            $min_risk++;
             $having_params[] = " max_risk >= $min_risk ";
         }
         if ($vmax_risk != "" && $vmax_risk !=2) {
+            $vmax_risk++;
             $having_params[] = " max_risk <= $vmax_risk ";
         }
         if ($having_params) {

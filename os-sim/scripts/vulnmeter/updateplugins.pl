@@ -616,10 +616,10 @@ sub import_plugins {
             my $bugtraq_id = $nvt->{'bugtraq_id'};
             my $xref = $nvt->{'xrefs'};
 
-            $sql = qq{INSERT IGNORE INTO vuln_plugins VALUES ('$id','$oid',"$name",'$family','$category',"$copyright","$summary","$description",'$version','$cve_id','$bugtraq_id', '$xref', '$cvss_base')};
+            $sql = qq{INSERT IGNORE INTO vuln_plugins VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)};
+            $sth_sel = $dbh->prepare($sql);
+            $sth_sel->execute($id,$oid,$name,$family,$category,$copyright,$summary,$description,$version,$cve_id,$bugtraq_id, $xref, $cvss_base);
             #print "$sql\n";
-            $sth_sel = $dbh->prepare( $sql );
-            $sth_sel->execute;
             
             $nplugins++;
             #print "\r$nplugins";

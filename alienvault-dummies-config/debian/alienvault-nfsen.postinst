@@ -57,11 +57,19 @@ configure_nfsen() {
     /usr/bin/nfsen reconfig
 }
 
+security_patch() {
+    # ENG-104863
+    cp /usr/libexec/nfsen/Nfcomm.pm /usr/libexec/nfsen/Nfcomm.pm_backup
+    cd /
+    patch -p1 < /usr/libexec/nfsen/security.patch
+    /usr/bin/nfsen reconfig
+}
 
 case "$1" in
     configure)
         configure_nfsen
         configure_firewall
+        security_patch
     ;;
 
     triggered)

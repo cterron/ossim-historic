@@ -697,6 +697,9 @@ sub enable_services(){
 				if ( -x "/etc/init.d/asec-mixter" ){
 					system("update-rc.d asec-mixter defaults  $stdout $stderr ");
 				}
+				system("update-rc.d rabbitmq-server defaults  $stdout $stderr ");
+				system("update-rc.d redis-server defaults  $stdout $stderr ");
+				system("update-rc.d alienvault-api defaults  $stdout $stderr ");
 			}
 			when ( m/Sensor/ ) { 
 				system("update-rc.d ossim-agent defaults  $stdout $stderr ");

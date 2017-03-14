@@ -69,7 +69,10 @@ function activate_account()
     
     $otx = new Otx();
     $otx->register_token($token);
-    
+    $file = "/usr/share/ossim/uploads/otx-debug.tar.gz";
+    if (file_exists($file) && filesize($file) == 0) {
+        unlink($file);
+    }
     return array(
         'msg'           => _("Your OTX account has been connected. The OTX pulses that you have subscribed to will begin downloading shortly. This process may take a few minutes."),
         'token'         => $token,

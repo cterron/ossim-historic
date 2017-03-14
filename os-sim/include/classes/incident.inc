@@ -1036,7 +1036,6 @@ class Incident
     {
         $tz    = Util::get_timezone();
         $list  = array();
-
         $user  = (empty($user)) ? Session::get_session_user() : $user;
         $user_list = self::get_allowed_users($conn, $user);//Users that I can view their tickets
 	$where = isset($args["where"]) ? $args["where"] : "";
@@ -2040,7 +2039,6 @@ class Incident
         $pro   = Session::is_pro();
 
         $list1 = array();
-        $list2 = array();
 
 
         //Getting subscriptors
@@ -2062,15 +2060,17 @@ class Incident
                 $rs->MoveNext();
             }
         }
-
         //Getting entity users
+        $users = null;
         if ($pro && valid_hex32($entity_id))
         {
             $users_entity = array();
             $users = Acl::get_all_users_by_entity($conn, $entity_id);
-
-            if (is_array($users) && !empty($users))
-            {
+        } elseif ($entity_id !== '') {
+            $users = array($entity_id);
+        }
+        if (is_array($users) && !empty($users))
+        {
                 foreach ($users as $user)
                 {
                     $users_entity[] = "'".$user."'";
@@ -2088,14 +2088,12 @@ class Incident
                 {
                     while (!$rs->EOF)
                     {
-                        $list2[] = $rs->fields;
+                        $list1[] = $rs->fields;
                         $rs->MoveNext();
                     }
                 }
-            }
         }
-
-        return array_merge($list1, $list2);
+        return array_map("unserialize", array_unique(array_map("serialize", $list1)));
     }
 
 
@@ -2298,7 +2296,6 @@ class Incident
         {
             $in_charge = $user;
         }
-
         $tz = Util::get_timezone();
 
         if($tz != 0 )
@@ -2378,9 +2375,11 @@ class Incident
         }
 
         $last_id = $rs->fields["id"];
-
         // Automatically subscribe incident creator
         self::insert_subscription($conn, $last_id, $user);
+        if ($user != $in_charge) {
+            self::insert_subscription($conn, $last_id, $in_charge);
+        }
 
         return $last_id;
     }
@@ -2965,20 +2964,23 @@ class Incident
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
-
+	if (!is_array($id)) {
+		$id = array($id);
+	}
+	$in = implode(",",$id);
         $conn->StartTrans();
 
-        $conn->Execute("DELETE FROM incident_alarm     WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_anomaly   WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_custom    WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_event     WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_file      WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_metric    WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_subscrip  WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_tag       WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_vulns     WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident_ticket    WHERE incident_id=$id");
-        $conn->Execute("DELETE FROM incident           WHERE id=$id");
+        $conn->Execute("DELETE FROM incident_alarm     WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_anomaly   WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_custom    WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_event     WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_file      WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_metric    WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_subscrip  WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_tag       WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_vulns     WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident_ticket    WHERE incident_id in ($in)");
+        $conn->Execute("DELETE FROM incident           WHERE id in ($in)");
 
         $_result = $conn->CompleteTrans();
 
@@ -2986,12 +2988,13 @@ class Incident
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-
-        $files = glob("/usr/share/ossim/www/uploads/Incident-$id-*-*.*");
+	$files = array();
+	foreach ($id as $ticket_id) {
+        	$files = array_merge($files,glob("/usr/share/ossim/www/uploads/Incident-$ticket_id-*-*.*"));
+	}
         array_map('unlink', $files);
 
-        $infolog = array($id);
-
+        $infolog = array($in);
         Log_action::log(16, $infolog);
     }
 
@@ -3544,7 +3547,7 @@ class Incident
 
             foreach($months as $m => $m_query)
             {
-                $args  = "AND incident.status='Closed' AND $query_et AND $m_query";
+                $args  = array("where" => "AND incident.status='Closed' AND $query_et AND $m_query");
 
                 $incident_list = self::get_list_filtered($conn, $assets, $args, $user);
                 $data[$m]      = count($incident_list);

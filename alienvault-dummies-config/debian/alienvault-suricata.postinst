@@ -252,6 +252,7 @@ configure_rule_files_in_yaml() {
 ---
 default-rule-path: /etc/suricata/rules
 rule-files:
+- alienvault.rules
 - emerging_pro-activex.rules
 - emerging_pro-attack_response.rules
 - emerging_pro-chat.rules

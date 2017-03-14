@@ -37,7 +37,6 @@ from apimethods.sensor.nmap import (apimethod_run_nmap_scan, apimethod_monitor_n
 from celerymethods.tasks import celery_instance
 from celerymethods.utils import is_task_in_celery
 
-
 logger = get_logger("celery")
 
 
@@ -60,6 +59,7 @@ def run_nmap_scan(sensor_id, target, targets_number, scan_type, rdns, scan_timin
         A tuple (success|error, data | msg_error)
     """
     job_id = current_task.request.id
+
     try:
         # Create a new scan job structure. This JSON will be in redis to keep track of the scan status.
         scan_job = {"job_id": job_id,

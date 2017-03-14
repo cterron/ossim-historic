@@ -49,6 +49,7 @@ function alarm_detail(alarm, perms)
     
     this.status         = alarm.status || '';
     this.risk           = alarm.risk || '';
+    this.risk_text      = alarm.risk_text || '';
     this.attack_pattern = alarm.attack_pattern || '';
     this.created        = alarm.created || '';
     this.duration       = alarm.duration || '';
@@ -206,7 +207,7 @@ function alarm_detail(alarm, perms)
         {
             $('[data-alarm="status"]').html("<?php echo _('Open') ?>");
         }
-        $('[data-alarm="risk"]').html(self.risk);
+        $('[data-alarm="risk_text"]').html(self.risk_text);
         $('[data-alarm="attack_pattern"]').text(self.attack_pattern);
         $('[data-alarm="created"]').html(self.created);
         $('[data-alarm="duration"]').html(self.duration);
@@ -241,13 +242,13 @@ function alarm_detail(alarm, perms)
     {
         var sections =
         {
-            "id"       : 'ad_tabs',
+            "id"       : 'alarm_tabs',
             "selected" : 0,
             "hide"     : 0,
             "tabs"     :
             [
                 {
-                    "id"   : "ad_tabs",
+                    "id"   : "alarm_tabs",
                     "name" : "<?php echo Util::js_entities(_('Events')) ?>",
                     "href" : __alarm_url['view'] + "alarm_event_list.php?backlog_id="+ self.backlog_id +"&show_all=2&box=1&hide=directive",
                     "hide" : false,
@@ -288,7 +289,7 @@ function alarm_detail(alarm, perms)
                 "show": true,
                 "action": self.create_ticket
             },
-            <?php if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") ) { ?>
+            <?php if (Session::menu_perms("analysis-menu", "ControlPanelAlarmsClose") ) { ?>
             {
                 "name": "<?php echo Util::js_entities(_('Close Alarm')) ?>",
                 "show": (self.status == 'open'),
@@ -399,7 +400,7 @@ function alarm_detail(alarm, perms)
             error: function(XMLHttpRequest, textStatus, errorThrown)
             {
                 var error = XMLHttpRequest.responseText;
-                show_notification('ad_notification', error, 'nf_error', 5000, true);
+                show_notification('alarm_notification', error, 'nf_error', 5000, true);
             }
         });
     }
@@ -526,7 +527,7 @@ function alarm_detail(alarm, perms)
                     $('<img/>',
                     {
                         'src'  : asset.location.flag,
-                        'class': 'ad_flag' 
+                        'class': 'alarm_flag'
                     }).appendTo($loc);
                 }
                 $loc.append(asset.location.country);
@@ -548,7 +549,7 @@ function alarm_detail(alarm, perms)
                 {
                     $('<div/>',
                     {
-                        'class': 'fleft av_link ad_box_group' ,
+                        'class': 'fleft av_link alarm_box_group' ,
                         'text' : n.name,
                         'click': function()
                         {
@@ -577,7 +578,7 @@ function alarm_detail(alarm, perms)
                 {
                     $('<span/>',
                     {
-                        'class': 'fleft av_link ad_box_net',
+                        'class': 'fleft av_link alarm_box_net',
                         'text' : g.name,
                         'click': function()
                         {
@@ -801,7 +802,7 @@ function alarm_detail(alarm, perms)
                 }
                 else
                 {
-                    show_notification('ad_notification', data, 'nf_error', 20000, true);
+                    show_notification('alarm_notification', data, 'nf_error', 20000, true);
                 }
             },
             'on_delete': function (status, data)
@@ -813,7 +814,7 @@ function alarm_detail(alarm, perms)
                 }
                 else
                 {
-                    show_notification('ad_notification', data, 'nf_error', 20000, true);
+                    show_notification('alarm_notification', data, 'nf_error', 20000, true);
                 }
             }
         };
@@ -879,12 +880,12 @@ function alarm_detail(alarm, perms)
             {
                 if (data.error)
                 {
-                    show_notification('ad_notification', data.msg, 'nf_error', 15000, true);
+                    show_notification('alarm_notification', data.msg, 'nf_error', 15000, true);
                 }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) 
             {
-                show_notification('ad_notification', textStatus, 'nf_error', 15000, true);
+                show_notification('alarm_notification', textStatus, 'nf_error', 15000, true);
             }
         });
     }

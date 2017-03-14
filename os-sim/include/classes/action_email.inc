@@ -72,13 +72,14 @@ class Action_email
     public $message;
 
 
-    public function __construct($action_id, $from, $to, $subject, $message)
+    public function __construct($action_id, $from, $to, $subject, $message, $message_suffix)
     {
         $this->action_id = $action_id;
         $this->from      = $from;
         $this->to        = $to;
         $this->subject   = $subject;
         $this->message   = $message;
+        $this->message_suffix   = $message_suffix;
     }
 
 
@@ -111,6 +112,11 @@ class Action_email
         return $this->message;
     }
 
+    public function get_message_suffix()
+    {
+        return $this->message_suffix;
+    }
+
 
     public static function get_list($conn, $args = '')
     {
@@ -128,7 +134,7 @@ class Action_email
 
             while (!$rs->EOF)
             {
-                $list[] = new self($rs->fields["action_id"], $rs->fields["_from"], $rs->fields["_to"], $rs->fields["subject"], $rs->fields["message"]);
+                $list[] = new self($rs->fields["action_id"], $rs->fields["_from"], $rs->fields["_to"], $rs->fields["subject"], $rs->fields["message"],$rs->fields["message_suffix"]);
 
                 $rs->MoveNext();
             }
@@ -138,16 +144,17 @@ class Action_email
     }
 
 
-    public static function insert($conn, $id, $from, $to, $subject, $message)
+    public static function insert($conn, $id, $from, $to, $subject, $message,$message_suffix)
     {
-        $query = "INSERT INTO action_email (action_id, _from, _to, subject, message)
-                    VALUES (UNHEX(?), ?, ?, ?, ?)";
+        $query = "INSERT INTO action_email (action_id, _from, _to, subject, message, message_suffix)
+                    VALUES (UNHEX(?), ?, ?, ?, ?, ?)";
         $params = array(
             $id,
             $from,
             $to,
             $subject,
-            $message
+            $message,
+            $message_suffix
         );
 
         if ($conn->Execute($query, $params) === FALSE)
@@ -157,9 +164,9 @@ class Action_email
     }
 
 
-    public static function update($conn, $id, $from, $to, $subject, $message)
+    public static function update($conn, $id, $from, $to, $subject, $message, $message_suffix)
     {
-        $query = "REPLACE INTO action_email (action_id, _from, _to, subject, message) VALUES (UNHEX(?), ?, ?, ?, ?)";
+        $query = "REPLACE INTO action_email (action_id, _from, _to, subject, message, message_suffix) VALUES (UNHEX(?), ?, ?, ?, ?, ?)";
 
         $params = array(
             $id,
@@ -167,6 +174,7 @@ class Action_email
             $to,
             $subject,
             $message,
+            $message_suffix
         );
 
         if ($conn->Execute($query, $params) === FALSE)

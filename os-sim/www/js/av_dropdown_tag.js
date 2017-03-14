@@ -31,6 +31,9 @@
         var $dropdown_box, $tray_triangle, $list_box, $search_box, $edit_button, $dropdown_wrapper;
         var selected_components = [], tag_list = {}, search_str = '';
 
+        this.setMCU = function(url) {
+		o.manage_components_url = url;
+        }
 
         /***************
          /** Elements **

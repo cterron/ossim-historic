@@ -74,7 +74,7 @@ class Incident_tag
     {
         $list = array();
 
-        $query = "SELECT td.id, td.name, td.descr, count(t.incident_id) as num
+        $query = "SELECT td.id, td.name, td.descr, count(t.incident_id) as num, td.class
             FROM incident_tag_descr td LEFT JOIN incident_tag t
             ON t.tag_id = td.id $args
             GROUP BY td.id 
@@ -101,11 +101,41 @@ class Incident_tag
     }
 
 
-    public function insert($name, $descr)
+    public function get_plain_id_list()
+    {
+        $list = array();
+
+        $query = "SELECT tag_id,incident_id FROM incident_tag";
+        $query = ossim_query($query);
+        $rs    = $this->conn->Execute($query);
+
+        if (!$rs)
+        {
+            Av_exception::write_log(Av_exception::DB_ERROR, $this->conn->ErrorMsg());
+        }
+        else
+        {
+            while (!$rs->EOF)
+            {
+                $tag_id = $rs->fields["tag_id"];
+                if (!isset($list[$tag_id])) {
+                     $list[$tag_id] = array();
+                }
+                array_push($list[$tag_id],$rs->fields["incident_id"]);
+                $rs->MoveNext();
+            }
+        }
+
+        return $list;
+    }
+
+
+    public function insert($name, $descr, $class)
     {
         $f['id']    = $this->conn->GenID('incident_tag_descr_seq');
         $f['name']  = $name;
         $f['descr'] = $descr;
+        $f['class'] = $class;
 
         $ok = $this->conn->AutoExecute('incident_tag_descr', $f, 'INSERT');
 
@@ -123,11 +153,11 @@ class Incident_tag
     }
 
 
-    public function update($id, $name, $descr)
+    public function update($id, $name, $descr, $class = "")
     {
         $f['name'] = $name;
         $f['descr'] = $descr;
-        
+        $f['class'] = $class;
         $ok = $this->conn->AutoExecute('incident_tag_descr', $f, 'UPDATE', "id = $id");
 
         if (!$ok)
@@ -227,6 +257,23 @@ class Incident_tag
 
         return $ret;
     }
+
+    public function delete_incident_ids($tag_id, $incident_ids)
+    {
+        $conn = $this->conn;
+        $incident_ids = array_map("intval",$incident_ids);
+        $query  = "DELETE FROM incident_tag WHERE incident_id IN (".implode(",",$incident_ids).") AND tag_id = ?";
+        $params = array($tag_id);
+
+        if (!$conn->Execute($query, $params))
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+
+        return TRUE;
+    }
+
+
 }
 
 /* End of file incident_tag.inc */

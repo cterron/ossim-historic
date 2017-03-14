@@ -82,7 +82,7 @@ class Auth_provider extends Provider
         {
             $params = array(
                 'username' => $user,
-                'password' => hash('sha256', $pass)
+                'password' => Session::get_hashed_pass_by_plain_pass($user,$pass)
             );
         }
 

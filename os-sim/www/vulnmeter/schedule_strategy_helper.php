@@ -23,11 +23,14 @@ class ScheduleStrategyHelper implements ScheduleStrategyInterface {
 	}
 	
 	public function show() {
+		if (!isset($this->schedule->parameters["exclude_ports"])) {
+			$this->schedule->parameters["exclude_ports"]="";
+		}
 		$daysMap		= dates::$daysMap;
 		$nweekday		= dates::$nweekday;
 		$hours		= dates::getHours();
 		$minutes		= dates::getMinutes();
-		$years		= dates::getYears();
+		$years		= dates::getYears($this->schedule->parameters["biyear"]);
 		$months		= dates::getMonths();
 		$days		= dates::getDays();
 		$frequencies	= dates::getFrequencies();
@@ -124,7 +127,7 @@ class ScheduleStrategyHelper implements ScheduleStrategyInterface {
                     if (usehide && typeof parent.GB_hide == 'function')
                     {
                         <?php
-                            if ($schedule_type == 'N')
+                            if ($this->schedule->parameters["schedule_type"] == 'N')
                             {
                                 $message = sprintf(_('Vulnerability scan in progress for (%s) assets'), $total_assets);
                             }
@@ -403,21 +406,18 @@ class ScheduleStrategyHelper implements ScheduleStrategyInterface {
 	            <tr>
 	                <td class='job_option'><?php echo _('Select Sensor:')?></td>
 	                <td style='text-align:left;'>
-	                    <?php if ($this->type == "single") {
-	                    	$this->schedule->create_key_val_function(null,'SVRid',$this->schedule->get_sensors(),'SVRid',function($key,$value) {
-	                    	return $value['name'] . '[' . $value['ip'] .']';
-	                    }); } else { 
-	                    	$sensors = $this->schedule->get_sensors();
-	                    	    if (!$sensors) {
-	                    		$sensors = array();
-	                    	} else {
-		                    	array_walk($sensors, function(&$item) {
-		                    		$item = $item['name'] . '[' . $item['ip'] .']';
-		                    	});
-	                    	}
-	                    	$sensors = array("Null" => _("First Available Sensor-Distributed")) + $sensors;
-	                    	$this->schedule->create_key_val_function(null,'SVRid',$sensors,'SVRid');
-						} ?>
+                        <?php
+                            $sensors = $this->schedule->get_sensors();
+                            if (!$sensors) {
+                                $sensors = array();
+                            } else {
+                                array_walk($sensors, function(&$item) {
+                                   $item = $item['name'] . '[' . $item['ip'] .']';
+                                });
+                            }
+                            $sensors = array("Null" => _("First Available Sensor-Distributed")) + $sensors;
+                            $this->schedule->create_key_val_function(null,'SVRid',$sensors,'SVRid');
+                            ?>
 	                </td>
 	            </tr>
 	            <tr>
@@ -445,29 +445,18 @@ class ScheduleStrategyHelper implements ScheduleStrategyInterface {
 	            <tr $smethodtr_display id='smethodtr'>
 	                <td>&nbsp;</td>
 	                <td>
-	                    <div id="idSched1" class="forminput"></div>
 	                    <div id="idSched8" class="forminput">
 	                        <table cellspacing="2" cellpadding="0" width="100%">
-	                            <tr><th width="35%"><?php echo _("Begin in") ?></th>
+	                            <tr><th width="35%">
+	                            	<span id="fl-run-once" class="forminput-label"><?php echo _("Day") ?></span>
+	                            	<span id="fl-run-many" class="forminput-label"><?php echo _("Begin in") ?></span>
+	                            	</th>
 	                                <td class="noborder" nowrap="nowrap">
 										<?php $this->schedule->create_key_val_function('Year','biyear',$years); ?>
 	                                    &nbsp;&nbsp;&nbsp;
 	                                    <?php $this->schedule->create_key_val_function('Month','bimonth',$months); ?>
 	                                    &nbsp;&nbsp;&nbsp;
 	                                    <?php $this->schedule->create_key_val_function('Day','biday',$days); ?>
-	                                </td>
-	                            </tr>
-	                        </table>
-	                    </div>
-	                    <div id="idSched3" class="forminput" style="display: block;">
-	                        <table cellspacing="2" cellpadding="0" width="100%">
-	                            <tr><th width="35%"><?php echo _('Day') ?></th>
-	                                <td colspan="6" class="noborder" nowrap="nowrap">
-	                                    <?php $this->schedule->create_key_val_function('Year','ROYEAR',$years); ?>
-	                                    &nbsp;&nbsp;&nbsp;
-	                                    <?php $this->schedule->create_key_val_function('Month','ROMONTH',$months); ?>
-	                                    &nbsp;&nbsp;&nbsp;
-	                                    <?php $this->schedule->create_key_val_function('Day','ROday',$days); ?>
 	                                </td>
 	                            </tr>
 	                        </table>
@@ -524,8 +513,8 @@ class ScheduleStrategyHelper implements ScheduleStrategyInterface {
 	                                <td width='100%' style='text-align:center;' class='nobborder'>
 	                                    <span style='margin-right:5px;'><?php echo _('Every') ?></span>
 	                                    <?php $this->schedule->create_key_val_function(null,'time_interval',$frequencies); ?>
-	                                    <span id='days' style='margin-left:5px'><?php echo _('day(s)') ?></span>
-	                                    <span id='weeks' style='margin-left:5px'><?php echo _('week(s)') ?></span>
+	                                    <span id="fl-days" class="forminput-label" style='margin-left:5px'><?php echo _('day(s)') ?></span>
+	                                    <span id="fl-weeks" class="forminput-label" style='margin-left:5px'><?php echo _('week(s)') ?></span>
 	                                </td>
 	                            </tr>
 	                        </table>
@@ -612,6 +601,14 @@ class ScheduleStrategyHelper implements ScheduleStrategyInterface {
 	                    </table>
 	                </td>
 	            </tr>
+                    <tr>
+                        <td class='job_option'>
+                            <?echo _("Exclude Ports:")?>
+                        </td>
+                        <td style="text-align:left;">
+                            <input type="text" name="exclude_ports" value="<?php echo $this->schedule->parameters["exclude_ports"]?>" />
+                        </td>
+                    </tr>
 	    	    <tr>
 	        	    <td valign="top" colspan="<?php echo $this->colspan ?>" class="job_option noborder"><br>
 	                    <div class="job_option-label"><input onclick="toggle_scan_locally(true)" type="checkbox" id="hosts_alive" name="hosts_alive" value="1" <?php echo $hosts_alive_data['disabled'] . ' ' . $hosts_alive_data['checked'] ?>><?php echo _('Only scan hosts that are alive (greatly speeds up the scanning process)'); ?></div>
@@ -639,5 +636,8 @@ class ScheduleStrategyHelper implements ScheduleStrategyInterface {
 	public function injectJS() {}
 	public function injectCSS() {}
 	public function injectHTML() {}
-	
+
+	public function current_time_to_paramaters() {
+		$this->schedule->current_time_to_paramaters($this->tz);
+	}
 }

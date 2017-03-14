@@ -5,7 +5,7 @@ description=Check the dummy packages
 category=alienvault,system
 affects_strike_zone=True
 type=command
-command=dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw)' | awk '{ print $2 }'
+command=dpkg -l | egrep '^ii\s+alienvault\-(vmware|ami|hw|hyper)' | awk '{ print $2 }'
 requires=@dpkg:alienvault-professional
 
 # Checks if a platform AlienVault dummy package is installed

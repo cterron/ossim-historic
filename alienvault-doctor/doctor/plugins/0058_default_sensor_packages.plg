@@ -21,6 +21,6 @@ summary_passed=The installed packages are default
 summary_failed=Some packages do not match with the AlienVault default installation
 remediation=AlienVault systems are designed to work with a well defined set of packages. Adding or deleting packages manually is not supported and may lead to unexpected results
 affects_strike_zone=True
-appliance_type=@vmware_sensor_profiles@,@hw_sensor_profiles@
+appliance_type=@vmware_sensor_profiles@,@hw_sensor_profiles@,@hyperv_sensor_profiles@
 min_doctor_version=4.15
 affects_strike_zone=True

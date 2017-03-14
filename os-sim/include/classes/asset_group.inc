@@ -1451,8 +1451,7 @@ class Asset_group
             //Getting networks from inventory tasks
             foreach ($task_list as $task_data)
             {
-                $_aux  = explode('#', $task_data['task_params']);
-                $_nets = explode(' ', $_aux[0]);
+                list($_nets)  = Util::nmap_without_excludes($task_data['task_params']);
 
                 foreach ($_nets as $net)
                 {

@@ -1,4 +1,17 @@
+alienvault-hyperv-sensor-remote
+alienvault-hyperv-sensor-standard-6x1gb
+alienvault-hyperv-sensor-remote-lite
+alienvault-hyperv-aio-6x1gb
+alienvault-hyperv-aio-6x1gb-lite
+alienvault-hyperv-usm-standard
+alienvault-hyperv-logger-standard
+alienvault-ami-usm-standard
 alienvault-ami-aio-6x1gb
+alienvault-ami-aio-6x1gb-lite
+alienvault-ami-logger-standard
+alienvault-ami-sensor-standard-6x1gb
+alienvault-ami-sensor-remote
+alienvault-ami-sensor-remote-lite
 alienvault-hw-aio-6x1gb
 alienvault-hw-aio-extended
 alienvault-hw-aio-niap

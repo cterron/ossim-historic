@@ -80,8 +80,7 @@ $rdns         = 1;
 
 if($params != '')
 {
-    $tmp_data  = explode('#', $params);
-
+    $tmp_data = Util::nmap_without_excludes($params);
     // Getting timing template
     $tmp_data[1] = preg_replace('/\-(T[0-5])/', '$1', $tmp_data[1]);
 
@@ -102,21 +101,20 @@ if($params != '')
     $rdns = ($matches[1] != '') ? FALSE : TRUE;
 
     // Scan type
-
-    if(preg_match('/-sS -F/', $tmp_data[1]))
+    if(strpos($tmp_data[1],'-sV -p21') !== false)
     {
         $scan_type = 'fast';
     }
-    elseif (preg_match('/\-sS \-p 1\-65535/', $tmp_data[1]))
+    elseif (preg_match("/-sV -sS -p1-65535$/",$tmp_data[1]))
     {
         $scan_type = 'full';
     }
-    elseif (preg_match('/\-sS \-p (\d+\-\d+)/', $tmp_data[1], $matches))
+    elseif (preg_match('/-sS -sV -p (\d+\-\d+)/', $tmp_data[1], $matches))
     {
         $scan_type  = 'custom';
         $scan_ports = $matches[1];
     }
-    elseif (preg_match('/\-sS/', $tmp_data[1]))
+    elseif (preg_match("/-sS -sV$/",$tmp_data[1]))
     {
         $scan_type = 'normal';
     }
@@ -127,14 +125,14 @@ if($params != '')
     }
 
 
-    $targets = $tmp_data[0];
+
+
+    $targets = implode(', ',$tmp_data[0]);
 }
 else
 {
     $targets = '';
 }
-
-$targets = str_replace(' ', ', ', $targets);
 
 ?>
 

@@ -1076,6 +1076,7 @@ sub configure_apache_configuration_files(){
     
     <FilesMatch "\\.(cgi|shtml|phtml|php)\$">
         SSLOptions +StdEnvVars
+        Require expr %{HTTP_USER_AGENT} != 'AV Report Scheduler'
     </FilesMatch>
     <Directory /usr/lib/cgi-bin>
         SSLOptions +StdEnvVars

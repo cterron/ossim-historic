@@ -340,7 +340,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER MY
 
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER sumthin scan"; flow:established,to_server; content:"GET"; nocase; http_method; content:"/sumthin"; nocase; http_uri; reference:url,www.webmasterworld.com/forum11/2100.htm; reference:url,doc.emergingthreats.net/2002667; classtype:attempted-recon; sid:2002667; rev:38;)
 
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER DFind w00tw00t GET-Requests"; flow:established,to_server; content:"GET"; nocase; http_method; content:"/w00tw00t."; nocase; http_uri; reference:url,doc.emergingthreats.net/2010794; classtype:attempted-recon; sid:2010794; rev:7;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER DFind w00tw00t GET-Requests"; flow:established,to_server; content:"GET"; nocase; http_method; content:"/w00tw00t."; nocase; http_uri; depth:10; reference:url,doc.emergingthreats.net/2010794; classtype:attempted-recon; sid:2010794; rev:8;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Possible Cisco PIX/ASA HTTP Web Interface HTTP Response Splitting Attempt"; flow:established,to_server; content:"GET "; depth:4; uricontent:"|0D 0A|Location|3A|"; nocase; reference:url,www.secureworks.com/ctu/advisories/SWRX-2010-001/; reference:url,tools.cisco.com/security/center/viewAlert.x?alertId=20737; reference:cve,2008-7257; reference:url,doc.emergingthreats.net/2011763; classtype:web-application-attack; sid:2011763; rev:3;)
 
@@ -350,7 +350,141 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER MY
 
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER /bin/ksh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/ksh"; nocase; http_uri; classtype:web-application-attack; sid:2011467; rev:5;)
 
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP"; flow:to_server,established; content:"http|3a|//127.0.0.1"; pcre:"/http\x3A\/\/127\.0\.0\.1\/.*\.asp/i"; reference:cve,2005-2678; classtype:web-application-activity; sid:2100139; rev:5;)
+
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SERVER WEB-PHP phpinfo access"; flow:to_server,established; content:"/phpinfo.php"; http_uri; nocase; reference:bugtraq,5789; reference:cve,2002-1149; reference:url,www.osvdb.org/displayvuln.php?osvdb_id=3356; classtype:successful-recon-limited; sid:2019526; rev:4;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER TRACE attempt"; flow:to_server,established; content:"TRACE"; http_method; reference:bugtraq,9561; reference:nessus,11213; reference:url,www.whitehatsec.com/press_releases/WH-PR-20030120.pdf; classtype:web-application-attack; sid:2102056; rev:6;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SERVER Tomcat null byte directory listing attempt"; flow:to_server,established; content:"|00|.jsp"; http_uri; reference:bugtraq,2518; reference:bugtraq,6721; reference:cve,2003-0042; classtype:web-application-attack; sid:2102061; rev:6;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER globals.pl access"; flow:to_server,established; content:"/globals.pl"; http_uri; reference:bugtraq,2671; reference:cve,2001-0330; classtype:web-application-activity; sid:2102073; rev:5;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER mod_gzip_status access"; flow:to_server,established; content:"/mod_gzip_status"; http_uri; reference:nessus,11685; classtype:web-application-activity; sid:2102156; rev:4;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER perl post attempt"; flow:to_server,established; content:"POST"; http_method; content:"/perl/"; http_uri; reference:bugtraq,5520; reference:cve,2002-1436; reference:nessus,11158; classtype:web-application-attack; sid:2101979; rev:6;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 2301 (msg:"GPL WEB_SERVER Compaq Insight directory traversal"; flow:to_server,established; content:"../../../"; reference:arachnids,244; reference:bugtraq,282; reference:cve,1999-0771; classtype:web-application-attack; sid:2101199; rev:13;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /bin/ls command attempt"; flow:to_server,established; content:"/bin/ls"; http_uri; nocase; classtype:web-application-attack; sid:2101369; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /bin/ls| command attempt"; flow:to_server,established; content:"/bin/ls|7C|"; http_uri; nocase; classtype:web-application-attack; sid:2101368; rev:9;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /bin/ps command attempt"; flow:to_server,established; content:"/bin/ps"; http_uri; nocase; classtype:web-application-attack; sid:2101328; rev:9;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /etc/inetd.conf access"; flow:to_server,established; content:"/etc/inetd.conf"; http_uri; nocase; classtype:web-application-activity; sid:2101370; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /etc/motd access"; flow:to_server,established; content:"/etc/motd"; http_uri; nocase; classtype:web-application-activity; sid:2101371; rev:7;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /usr/bin/id command attempt"; flow:to_server,established; content:"/usr/bin/id"; http_uri; nocase; classtype:web-application-attack; sid:2101332; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /usr/bin/perl execution attempt"; flow:to_server,established; content:"/usr/bin/perl"; http_uri; nocase; classtype:web-application-attack; sid:2101355; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER bin/python access attempt"; flow:to_server,established; content:"bin/python"; http_uri; nocase; classtype:web-application-attack; sid:2101349; rev:7;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER python access attempt"; flow:to_server,established; content:"python "; http_uri; nocase; classtype:web-application-attack; sid:2101350; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER perl command attempt"; flow:to_server,established; content:"/perl?"; http_uri; nocase; reference:arachnids,219; reference:cve,1999-0509; reference:nessus,10173; reference:url,www.cert.org/advisories/CA-1996-11.html; classtype:attempted-recon; sid:2101649; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER printenv access"; flow:to_server,established; content:"/printenv"; http_uri; reference:bugtraq,1658; reference:cve,2000-0868; reference:nessus,10188; reference:nessus,10503; classtype:web-application-activity; sid:2101877; rev:10;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER datasource attempt"; flow:to_server,established; content:"CF_ISCOLDFUSIONDATASOURCE|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100920; rev:8;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER datasource password attempt"; flow:to_server,established; content:"CF_SETDATASOURCEPASSWORD|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100919; rev:9;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER datasource username attempt"; flow:to_server,established; content:"CF_SETDATASOURCEUSERNAME|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100909; rev:7;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER getodbcin attempt"; flow:to_server,established; content:"CFUSION_GETODBCINI|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100923; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /_vti_bin/ access"; flow:to_server,established; content:"/_vti_bin/"; http_uri; nocase; reference:nessus,11032; classtype:web-application-activity; sid:2101288; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER _vti_rpc access"; flow:to_server,established; content:"/_vti_rpc"; http_uri; nocase; reference:bugtraq,2144; reference:cve,2001-0096; reference:nessus,10585; classtype:web-application-activity; sid:2100937; rev:13;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER author.exe access"; flow:to_server,established; content:"/_vti_bin/_vti_aut/author.exe"; http_uri; nocase; classtype:web-application-activity; sid:2100952; rev:9;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER authors.pwd access"; flow:to_server,established; content:"/authors.pwd"; http_uri; nocase; reference:bugtraq,989; reference:cve,1999-0386; reference:nessus,10078; classtype:web-application-activity; sid:2100951; rev:13;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.cnf access"; flow:to_server,established; content:"/_vti_pvt/service.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100958; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.pwd"; flow:to_server,established; content:"/service.pwd"; http_uri; nocase; reference:bugtraq,1205; classtype:web-application-activity; sid:2100959; rev:9;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER services.cnf access"; flow:to_server,established; content:"/_vti_pvt/services.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100961; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER writeto.cnf access"; flow:to_server,established; content:"/_vti_pvt/writeto.cnf"; nocase; http_uri; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100965; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /scripts/iisadmin/default.htm access"; flow:to_server,established; content:"/scripts/iisadmin/default.htm"; http_uri; nocase; classtype:web-application-attack; sid:2100994; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER IISProtect access"; flow:to_server,established; content:"/iisprotect/admin/"; http_uri; nocase; reference:nessus,11661; classtype:web-application-activity; sid:2102131; rev:4;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER ISAPI .printer access"; flow:to_server,established; content:".printer"; http_uri; nocase; reference:arachnids,533; reference:bugtraq,2674; reference:cve,2001-0241; reference:nessus,10661; reference:url,www.microsoft.com/technet/security/bulletin/MS01-023.mspx; classtype:web-application-activity; sid:2100971; rev:13;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER MS Site Server admin attempt"; flow:to_server,established; content:"/Site Server/Admin/knowledge/persmbr/"; nocase; http_uri; reference:nessus,11018; classtype:web-application-attack; sid:2101818; rev:5;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER MS Site Server default login attempt"; flow:to_server,established; content:"/SiteServer/Admin/knowledge/persmbr/"; nocase; http_uri; content:"TERBUF9Bbm9ueW1vdXM6TGRhcFBhc3N3b3JkXzE"; pcre:"/^Authorization|3A|\s*Basic\s+TERBUF9Bbm9ueW1vdXM6TGRhcFBhc3N3b3JkXzE=/smi"; reference:nessus,11018; classtype:web-application-attack; sid:2101817; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER SAM Attempt"; flow:to_server,established; content:"sam._"; http_uri; nocase; reference:url,www.ciac.org/ciac/bulletins/h-45.shtml; classtype:web-application-attack; sid:2100988; rev:9;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER WEBDAV nessus safe scan attempt"; flow:to_server,established; content:"SEARCH"; http_method; content:"/"; http_uri; urilen:1; content:" HTTP/1.1|0D 0A|Host|3A|"; content:"|0D 0A 0D 0A|"; within:255; reference:bugtraq,7116; reference:cve,2003-0109; reference:nessus,11412; reference:nessus,11413; reference:url,www.microsoft.com/technet/security/bulletin/ms03-007.mspx; classtype:attempted-admin; sid:2102091; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER global.asa access"; flow:to_server,established; content:"/global.asa"; http_uri; nocase; reference:cve,2000-0778; reference:nessus,10491; reference:nessus,10991; classtype:web-application-activity; sid:2101016; rev:15;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER iisadmin access"; flow:to_server,established; content:"/iisadmin"; nocase; http_uri; reference:bugtraq,189; reference:cve,1999-1538; reference:nessus,11032; classtype:web-application-attack; sid:2100993; rev:13;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER msadcs.dll access"; flow:to_server,established; content:"/msadcs.dll"; nocase; http_uri; reference:bugtraq,529; reference:cve,1999-1011; reference:nessus,10357; classtype:web-application-activity; sid:2101023; rev:13;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER msdac access"; flow:to_server,established; content:"/msdac/"; nocase; http_uri; reference:nessus,11032; classtype:web-application-activity; sid:2101285; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER unicode directory traversal attempt"; flow:to_server,established; content:"/..%255c.."; nocase; reference:bugtraq,1806; reference:cve,2000-0884; reference:nessus,10537; classtype:web-application-attack; sid:2101945; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htaccess access"; flow:to_server,established; content:".htaccess"; nocase; http_uri; classtype:attempted-recon; sid:2101129; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htpasswd access"; flow:to_server,established; content:".htpasswd"; nocase; classtype:web-application-attack; sid:2101071; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /etc/passwd"; flow:to_server,established; content:"/etc/passwd"; nocase; classtype:attempted-recon; sid:2101122; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~ftp access"; flow:to_server,established; content:"/~ftp"; nocase; http_uri; classtype:attempted-recon; sid:2101662; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~nobody access"; flow:to_server,established; content:"/~nobody"; http_uri; reference:nessus,10484; classtype:web-application-attack; sid:2101489; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~root access"; flow:to_server,established; content:"/~root"; http_uri; nocase; classtype:attempted-recon; sid:2101145; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Apache Chunked-Encoding worm attempt"; flow:to_server,established; content:"CCCCCCC|3A| AAAAAAAAAAAAAAAAAAA"; nocase; reference:bugtraq,4474; reference:bugtraq,4485; reference:bugtraq,5033; reference:cve,2002-0071; reference:cve,2002-0079; reference:cve,2002-0392; classtype:web-application-attack; sid:2101809; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER DELETE attempt"; flow:to_server,established; content:"DELETE"; http_method; nocase; reference:nessus,10498; classtype:web-application-activity; sid:2101603; rev:13;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Oracle Java Process Manager access"; flow:to_server,established; content:"/oprocmgr-status"; http_uri; reference:nessus,10851; classtype:web-application-activity; sid:2101874; rev:5;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat directory traversal attempt"; flow:to_server,established; content:"|00|.jsp"; http_uri; reference:bugtraq,2518; classtype:web-application-attack; sid:2101055; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat server snoop access"; flow:to_server,established; content:"/jsp/snp/"; http_uri; content:".snp"; http_uri; reference:bugtraq,1532; reference:cve,2000-0760; classtype:attempted-recon; sid:2101108; rev:13;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER Tomcat sourcecode view attempt 1"; flow:to_server,established; content:".%256Asp"; http_uri; nocase; classtype:attempted-recon; sid:2101238; rev:7;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat sourcecode view attempt 2"; flow:to_server,established; content:".j%2573p"; http_uri; nocase; classtype:attempted-recon; sid:2101237; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat sourcecode view attempt 3"; flow:to_server,established; content:".js%2570"; http_uri; nocase; classtype:attempted-recon; sid:2101236; rev:9;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat view source attempt"; flow:to_server,established; content:"%252ejsp"; http_uri; reference:bugtraq,2527; reference:cve,2001-0590; classtype:web-application-attack; sid:2101056; rev:10;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER apache ?M=D directory list attempt"; flow:to_server,established; content:"/?M=D"; http_uri; reference:bugtraq,3009; reference:cve,2001-0731; classtype:web-application-activity; sid:2101519; rev:11;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER apache directory disclosure attempt"; flow:to_server,established; content:"////////"; depth:200; reference:bugtraq,2503; classtype:attempted-dos; sid:2101156; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER apache source.asp file access"; flow:to_server,established; content:"/site/eg/source.asp"; http_uri; nocase; reference:bugtraq,1457; reference:cve,2000-0628; reference:nessus,10480; classtype:attempted-recon; sid:2101110; rev:12;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER global.inc access"; flow:to_server,established; content:"/global.inc"; nocase; http_uri; reference:bugtraq,4612; reference:cve,2002-0614; classtype:web-application-attack; sid:2101738; rev:8;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER ls%20-l"; flow:to_server,established; content:"ls%20-l"; nocase; classtype:attempted-recon; sid:2101118; rev:7;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER robot.txt access"; flow:to_server,established; content:"/robot.txt"; http_uri; nocase; reference:nessus,10302; classtype:web-application-activity; sid:2101857; rev:5;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER robots.txt access"; flow:to_server,established; content:"/robots.txt"; http_uri; nocase; reference:nessus,10302; classtype:web-application-activity; sid:2101852; rev:5;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER viewcode access"; flow:to_server,established; content:"/viewcode"; http_uri; reference:cve,1999-0737; reference:nessus,10576; reference:nessus,12048; classtype:web-application-attack; sid:2101403; rev:11;)
+
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER webalizer access"; flow:established,to_server; content:"/webalizer/"; nocase; http_uri; reference:bugtraq,3473; reference:cve,2001-0835; reference:nessus,10816; classtype:web-application-activity; sid:2101847; rev:12;)
+
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL WEB_SERVER 403 Forbidden"; flow:from_server,established; content:"403"; http_stat_code; classtype:attempted-recon; sid:2101201; rev:10;)
 
 #alert http $HTTP_SERVERS any -> any any (msg:"ET WEB_SERVER Phoenix Exploit Kit - Admin Login Page Detected Outbound"; flow:established,to_client; content:"<title>Phoenix Exploit's Kit - Log In</title>"; classtype:bad-unknown; sid:2011280; rev:3;)
 
@@ -634,7 +768,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible N
 
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Apache Struts Possible xwork Disable Method Execution"; flow:established,to_server; content:"xwork"; http_uri; nocase; content:"MethodAccessor"; http_uri; nocase; content:"denyMethodExecution"; http_uri; nocase; fast_pattern:only; reference:url,struts.apache.org/development/2.x/docs/s2-013.html; classtype:attempted-admin; sid:2016920; rev:2;)
 
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER SQL Injection Select Sleep Time Delay"; flow:established,to_server; content:"SELECT"; http_uri; nocase; content:"SLEEP"; http_uri; nocase; distance:0; pcre:"/\bSELECT.*?\bSLEEP/Ui"; reference:url,pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet; classtype:web-application-attack; sid:2016935; rev:2;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER SQL Injection Select Sleep Time Delay"; flow:established,to_server; content:"SELECT"; http_uri; nocase; content:"SLEEP|28|"; http_uri; nocase; distance:0; pcre:"/\bSELECT.*?\bSLEEP\x28/Ui"; reference:url,pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet; classtype:web-application-attack; sid:2016935; rev:3;)
 
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER SQL Injection Local File Access Attempt Using LOAD_FILE"; flow:established,to_server; content:"LOAD_FILE("; http_uri; nocase; fast_pattern:only; reference:url,dev.mysql.com/doc/refman/5.1/en/string-functions.html#function_load-file; reference:url,pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet; classtype:web-application-attack; sid:2016936; rev:2;)
 
@@ -703,8 +837,6 @@ alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET WEB_SERVER WebShell A
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER WebShell Generic - ASP File Uploaded"; flow:established,to_server; content:"|0D 0A|"; http_client_body; content:"<%"; within:5; http_client_body; fast_pattern; content:"%>"; http_client_body; distance:0; pcre:"/<%[\x00-\x7f]{20}/P"; classtype:trojan-activity; sid:2017260; rev:11;)
 
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL in Dynamic Action"; flow:established,to_server; content:"/${"; http_uri; fast_pattern:only; pcre:"/\/\$\{[^\}\x2c]+?=/U"; reference:cve,2013-2135; reference:bugtraq,60345; reference:url,cwiki.apache.org/confluence/display/WW/S2-015; classtype:attempted-user; sid:2017277; rev:4;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Expression Injection"; flow:to_server,established; content:"|24 7b|"; http_uri; content:"|25 7b|"; distance:0; http_uri; content:"|7d|"; distance:0; http_uri; pcre:"/${\s*?%{/U"; reference:cve,2013-2135; reference:bugtraq,60345; reference:url,cwiki.apache.org/confluence/display/WW/S2-015; classtype:web-application-attack; sid:2017278; rev:2;)
 
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible OpenX Backdoor Backdoor Access POST to flowplayer"; flow:established,to_server; content:"POST"; http_method; nocase; content:"/flowplayer-3.1.1.min.js"; http_uri; nocase; reference:url,blog.sucuri.net/2013/08/openx-org-compromised-and-downloads-injected-with-a-backdoor.html; classtype:trojan-activity; sid:2017280; rev:3;)
 
@@ -1052,137 +1184,23 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Ar
 
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Apache Continuum Arbitrary Command Execution"; flow:to_server,established; content:"POST"; http_method; content:"/saveInstallation.action"; http_uri; fast_pattern:only; content:"&installation.varValue="; http_client_body; content:"|25|60"; http_client_body; classtype:attempted-user; sid:2022912; rev:2;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP"; flow:to_server,established; content:"http|3a|//127.0.0.1"; pcre:"/http\x3A\/\/127\.0\.0\.1\/.*\.asp/i"; reference:cve,2005-2678; classtype:web-application-activity; sid:2100139; rev:5;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER AnonGhost PHP Webshell"; flow:from_server,established; file_data; content:"base64_decode("; content:"Bbm9uR2hvc3Qg"; fast_pattern; classtype:trojan-activity; sid:2023143; rev:2;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER TRACE attempt"; flow:to_server,established; content:"TRACE"; http_method; reference:bugtraq,9561; reference:nessus,11213; reference:url,www.whitehatsec.com/press_releases/WH-PR-20030120.pdf; classtype:web-application-attack; sid:2102056; rev:6;)
+alert udp $HTTP_SERVERS any -> any 53 (msg:"ET WEB_SERVER DNS Query for Suspicious 33db9538.com Domain - Anuna Checkin - Compromised PHP Site"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|33db9538|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:misc-activity; sid:2023227; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SERVER Tomcat null byte directory listing attempt"; flow:to_server,established; content:"|00|.jsp"; http_uri; reference:bugtraq,2518; reference:bugtraq,6721; reference:cve,2003-0042; classtype:web-application-attack; sid:2102061; rev:6;)
+alert udp $HTTP_SERVERS any -> any 53 (msg:"ET WEB_SERVER DNS Query for Suspicious 9507c4e8.com Domain - Anuna Checkin - Compromised PHP Site"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|9507c4e8|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:misc-activity; sid:2023228; rev:1;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER globals.pl access"; flow:to_server,established; content:"/globals.pl"; http_uri; reference:bugtraq,2671; reference:cve,2001-0330; classtype:web-application-activity; sid:2102073; rev:5;)
+alert udp $HTTP_SERVERS any -> any 53 (msg:"ET WEB_SERVER DNS Query for Suspicious e5b57288.com Domain - Anuna Checkin - Compromised PHP Site"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|e5b57288|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:misc-activity; sid:2023229; rev:1;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER mod_gzip_status access"; flow:to_server,established; content:"/mod_gzip_status"; http_uri; reference:nessus,11685; classtype:web-application-activity; sid:2102156; rev:4;)
+alert udp $HTTP_SERVERS any -> any 53 (msg:"ET WEB_SERVER DNS Query for Suspicious 54dfa1cb.com Domain - Anuna Checkin - Compromised PHP Site"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|54dfa1cb|03|com|00|"; fast_pattern; distance:0; nocase; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:misc-activity; sid:2023230; rev:1;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL WEB_SERVER perl post attempt"; flow:to_server,established; content:"POST"; http_method; content:"/perl/"; http_uri; reference:bugtraq,5520; reference:cve,2002-1436; reference:nessus,11158; classtype:web-application-attack; sid:2101979; rev:6;)
+alert tcp $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER HTTP Request to a *.33db9538.com domain - Anuna Checkin - Compromised PHP Site"; flow:to_server,established; content:"33db9538.com"; http_header; fast_pattern:only; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:bad-unknown; sid:2023231; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 2301 (msg:"GPL WEB_SERVER Compaq Insight directory traversal"; flow:to_server,established; content:"../../../"; reference:arachnids,244; reference:bugtraq,282; reference:cve,1999-0771; classtype:web-application-attack; sid:2101199; rev:13;)
+alert tcp $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER HTTP Request to a *.9507c4e8.com domain - Anuna Checkin - Compromised PHP Site"; flow:to_server,established; content:"9507c4e8.com"; http_header; fast_pattern:only; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:bad-unknown; sid:2023232; rev:1;)
 
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /bin/ls command attempt"; flow:to_server,established; content:"/bin/ls"; http_uri; nocase; classtype:web-application-attack; sid:2101369; rev:8;)
+alert tcp $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER HTTP Request to a *.e5b57288.com domain - Anuna Checkin - Compromised PHP Site"; flow:to_server,established; content:"e5b57288.com"; http_header; fast_pattern:only; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:bad-unknown; sid:2023233; rev:1;)
 
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /bin/ls| command attempt"; flow:to_server,established; content:"/bin/ls|7C|"; http_uri; nocase; classtype:web-application-attack; sid:2101368; rev:9;)
+alert tcp $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER HTTP Request to a *.54dfa1cb.com domain - Anuna Checkin - Compromised PHP Site"; flow:to_server,established; content:"54dfa1cb.com"; http_header; fast_pattern:only; reference:url,www.symantec.com/security_response/writeup.jsp?docid=2015-111911-4342-99&tabid=2; reference:url,security.stackexchange.com/questions/47253/hacked-site-encrypted-code; classtype:bad-unknown; sid:2023234; rev:1;)
 
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /bin/ps command attempt"; flow:to_server,established; content:"/bin/ps"; http_uri; nocase; classtype:web-application-attack; sid:2101328; rev:9;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /etc/inetd.conf access"; flow:to_server,established; content:"/etc/inetd.conf"; http_uri; nocase; classtype:web-application-activity; sid:2101370; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /etc/motd access"; flow:to_server,established; content:"/etc/motd"; http_uri; nocase; classtype:web-application-activity; sid:2101371; rev:7;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /usr/bin/id command attempt"; flow:to_server,established; content:"/usr/bin/id"; http_uri; nocase; classtype:web-application-attack; sid:2101332; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /usr/bin/perl execution attempt"; flow:to_server,established; content:"/usr/bin/perl"; http_uri; nocase; classtype:web-application-attack; sid:2101355; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER bin/python access attempt"; flow:to_server,established; content:"bin/python"; http_uri; nocase; classtype:web-application-attack; sid:2101349; rev:7;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER python access attempt"; flow:to_server,established; content:"python "; http_uri; nocase; classtype:web-application-attack; sid:2101350; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER perl command attempt"; flow:to_server,established; content:"/perl?"; http_uri; nocase; reference:arachnids,219; reference:cve,1999-0509; reference:nessus,10173; reference:url,www.cert.org/advisories/CA-1996-11.html; classtype:attempted-recon; sid:2101649; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER printenv access"; flow:to_server,established; content:"/printenv"; http_uri; reference:bugtraq,1658; reference:cve,2000-0868; reference:nessus,10188; reference:nessus,10503; classtype:web-application-activity; sid:2101877; rev:10;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER datasource attempt"; flow:to_server,established; content:"CF_ISCOLDFUSIONDATASOURCE|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100920; rev:8;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER datasource password attempt"; flow:to_server,established; content:"CF_SETDATASOURCEPASSWORD|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100919; rev:9;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER datasource username attempt"; flow:to_server,established; content:"CF_SETDATASOURCEUSERNAME|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100909; rev:7;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER getodbcin attempt"; flow:to_server,established; content:"CFUSION_GETODBCINI|28 29|"; nocase; reference:bugtraq,550; classtype:web-application-attack; sid:2100923; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /_vti_bin/ access"; flow:to_server,established; content:"/_vti_bin/"; http_uri; nocase; reference:nessus,11032; classtype:web-application-activity; sid:2101288; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER _vti_rpc access"; flow:to_server,established; content:"/_vti_rpc"; http_uri; nocase; reference:bugtraq,2144; reference:cve,2001-0096; reference:nessus,10585; classtype:web-application-activity; sid:2100937; rev:13;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER author.exe access"; flow:to_server,established; content:"/_vti_bin/_vti_aut/author.exe"; http_uri; nocase; classtype:web-application-activity; sid:2100952; rev:9;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER authors.pwd access"; flow:to_server,established; content:"/authors.pwd"; http_uri; nocase; reference:bugtraq,989; reference:cve,1999-0386; reference:nessus,10078; classtype:web-application-activity; sid:2100951; rev:13;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.cnf access"; flow:to_server,established; content:"/_vti_pvt/service.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100958; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER service.pwd"; flow:to_server,established; content:"/service.pwd"; http_uri; nocase; reference:bugtraq,1205; classtype:web-application-activity; sid:2100959; rev:9;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER services.cnf access"; flow:to_server,established; content:"/_vti_pvt/services.cnf"; http_uri; nocase; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100961; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER writeto.cnf access"; flow:to_server,established; content:"/_vti_pvt/writeto.cnf"; nocase; http_uri; reference:bugtraq,4078; reference:nessus,10575; classtype:web-application-activity; sid:2100965; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /scripts/iisadmin/default.htm access"; flow:to_server,established; content:"/scripts/iisadmin/default.htm"; http_uri; nocase; classtype:web-application-attack; sid:2100994; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER IISProtect access"; flow:to_server,established; content:"/iisprotect/admin/"; http_uri; nocase; reference:nessus,11661; classtype:web-application-activity; sid:2102131; rev:4;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER ISAPI .printer access"; flow:to_server,established; content:".printer"; http_uri; nocase; reference:arachnids,533; reference:bugtraq,2674; reference:cve,2001-0241; reference:nessus,10661; reference:url,www.microsoft.com/technet/security/bulletin/MS01-023.mspx; classtype:web-application-activity; sid:2100971; rev:13;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER MS Site Server admin attempt"; flow:to_server,established; content:"/Site Server/Admin/knowledge/persmbr/"; nocase; http_uri; reference:nessus,11018; classtype:web-application-attack; sid:2101818; rev:5;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER MS Site Server default login attempt"; flow:to_server,established; content:"/SiteServer/Admin/knowledge/persmbr/"; nocase; http_uri; content:"TERBUF9Bbm9ueW1vdXM6TGRhcFBhc3N3b3JkXzE"; pcre:"/^Authorization|3A|\s*Basic\s+TERBUF9Bbm9ueW1vdXM6TGRhcFBhc3N3b3JkXzE=/smi"; reference:nessus,11018; classtype:web-application-attack; sid:2101817; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER SAM Attempt"; flow:to_server,established; content:"sam._"; http_uri; nocase; reference:url,www.ciac.org/ciac/bulletins/h-45.shtml; classtype:web-application-attack; sid:2100988; rev:9;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER WEBDAV nessus safe scan attempt"; flow:to_server,established; content:"SEARCH"; http_method; content:"/"; http_uri; urilen:1; content:" HTTP/1.1|0D 0A|Host|3A|"; content:"|0D 0A 0D 0A|"; within:255; reference:bugtraq,7116; reference:cve,2003-0109; reference:nessus,11412; reference:nessus,11413; reference:url,www.microsoft.com/technet/security/bulletin/ms03-007.mspx; classtype:attempted-admin; sid:2102091; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER global.asa access"; flow:to_server,established; content:"/global.asa"; http_uri; nocase; reference:cve,2000-0778; reference:nessus,10491; reference:nessus,10991; classtype:web-application-activity; sid:2101016; rev:15;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER iisadmin access"; flow:to_server,established; content:"/iisadmin"; nocase; http_uri; reference:bugtraq,189; reference:cve,1999-1538; reference:nessus,11032; classtype:web-application-attack; sid:2100993; rev:13;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER msadcs.dll access"; flow:to_server,established; content:"/msadcs.dll"; nocase; http_uri; reference:bugtraq,529; reference:cve,1999-1011; reference:nessus,10357; classtype:web-application-activity; sid:2101023; rev:13;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER msdac access"; flow:to_server,established; content:"/msdac/"; nocase; http_uri; reference:nessus,11032; classtype:web-application-activity; sid:2101285; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER unicode directory traversal attempt"; flow:to_server,established; content:"/..%255c.."; nocase; reference:bugtraq,1806; reference:cve,2000-0884; reference:nessus,10537; classtype:web-application-attack; sid:2101945; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htaccess access"; flow:to_server,established; content:".htaccess"; nocase; http_uri; classtype:attempted-recon; sid:2101129; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER .htpasswd access"; flow:to_server,established; content:".htpasswd"; nocase; classtype:web-application-attack; sid:2101071; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /etc/passwd"; flow:to_server,established; content:"/etc/passwd"; nocase; classtype:attempted-recon; sid:2101122; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~ftp access"; flow:to_server,established; content:"/~ftp"; nocase; http_uri; classtype:attempted-recon; sid:2101662; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~nobody access"; flow:to_server,established; content:"/~nobody"; http_uri; reference:nessus,10484; classtype:web-application-attack; sid:2101489; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER /~root access"; flow:to_server,established; content:"/~root"; http_uri; nocase; classtype:attempted-recon; sid:2101145; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Apache Chunked-Encoding worm attempt"; flow:to_server,established; content:"CCCCCCC|3A| AAAAAAAAAAAAAAAAAAA"; nocase; reference:bugtraq,4474; reference:bugtraq,4485; reference:bugtraq,5033; reference:cve,2002-0071; reference:cve,2002-0079; reference:cve,2002-0392; classtype:web-application-attack; sid:2101809; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER DELETE attempt"; flow:to_server,established; content:"DELETE"; http_method; nocase; reference:nessus,10498; classtype:web-application-activity; sid:2101603; rev:13;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Oracle Java Process Manager access"; flow:to_server,established; content:"/oprocmgr-status"; http_uri; reference:nessus,10851; classtype:web-application-activity; sid:2101874; rev:5;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat directory traversal attempt"; flow:to_server,established; content:"|00|.jsp"; http_uri; reference:bugtraq,2518; classtype:web-application-attack; sid:2101055; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat server snoop access"; flow:to_server,established; content:"/jsp/snp/"; http_uri; content:".snp"; http_uri; reference:bugtraq,1532; reference:cve,2000-0760; classtype:attempted-recon; sid:2101108; rev:13;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER Tomcat sourcecode view attempt 1"; flow:to_server,established; content:".%256Asp"; http_uri; nocase; classtype:attempted-recon; sid:2101238; rev:7;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat sourcecode view attempt 2"; flow:to_server,established; content:".j%2573p"; http_uri; nocase; classtype:attempted-recon; sid:2101237; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat sourcecode view attempt 3"; flow:to_server,established; content:".js%2570"; http_uri; nocase; classtype:attempted-recon; sid:2101236; rev:9;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER Tomcat view source attempt"; flow:to_server,established; content:"%252ejsp"; http_uri; reference:bugtraq,2527; reference:cve,2001-0590; classtype:web-application-attack; sid:2101056; rev:10;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER apache ?M=D directory list attempt"; flow:to_server,established; content:"/?M=D"; http_uri; reference:bugtraq,3009; reference:cve,2001-0731; classtype:web-application-activity; sid:2101519; rev:11;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER apache directory disclosure attempt"; flow:to_server,established; content:"////////"; depth:200; reference:bugtraq,2503; classtype:attempted-dos; sid:2101156; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER apache source.asp file access"; flow:to_server,established; content:"/site/eg/source.asp"; http_uri; nocase; reference:bugtraq,1457; reference:cve,2000-0628; reference:nessus,10480; classtype:attempted-recon; sid:2101110; rev:12;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER global.inc access"; flow:to_server,established; content:"/global.inc"; nocase; http_uri; reference:bugtraq,4612; reference:cve,2002-0614; classtype:web-application-attack; sid:2101738; rev:8;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER ls%20-l"; flow:to_server,established; content:"ls%20-l"; nocase; classtype:attempted-recon; sid:2101118; rev:7;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER robot.txt access"; flow:to_server,established; content:"/robot.txt"; http_uri; nocase; reference:nessus,10302; classtype:web-application-activity; sid:2101857; rev:5;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER robots.txt access"; flow:to_server,established; content:"/robots.txt"; http_uri; nocase; reference:nessus,10302; classtype:web-application-activity; sid:2101852; rev:5;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER viewcode access"; flow:to_server,established; content:"/viewcode"; http_uri; reference:cve,1999-0737; reference:nessus,10576; reference:nessus,12048; classtype:web-application-attack; sid:2101403; rev:11;)
-
-#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SERVER webalizer access"; flow:established,to_server; content:"/webalizer/"; nocase; http_uri; reference:bugtraq,3473; reference:cve,2001-0835; reference:nessus,10816; classtype:web-application-activity; sid:2101847; rev:12;)
-
-#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"GPL WEB_SERVER 403 Forbidden"; flow:from_server,established; content:"403"; http_stat_code; classtype:attempted-recon; sid:2101201; rev:10;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Apache Struts OGNL Expression Injection"; flow:to_server,established; content:"|24 7b|"; http_uri; content:"|25 7b|"; distance:0; http_uri; content:"|7d|"; distance:0; http_uri; pcre:"/\${\s*?%{/U"; reference:cve,2013-2135; reference:bugtraq,60345; reference:url,cwiki.apache.org/confluence/display/WW/S2-015; classtype:web-application-attack; sid:2023535; rev:2;)
 

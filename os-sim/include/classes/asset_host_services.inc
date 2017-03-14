@@ -866,7 +866,8 @@ class Asset_host_services
                     'id'   => $rs->fields['source_id'],
                     'name' => $rs->fields['source_name'],
                 ),
-                'date' => $rs->fields['last_modified']
+                'date' => $rs->fields['last_modified'],
+                'relevance' => $rs->fields['source_relevance']
             );
             
             if ($filters['response_type'] == 'by_service')

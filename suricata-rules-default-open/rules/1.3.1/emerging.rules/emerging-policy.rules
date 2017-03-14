@@ -38,6 +38,8 @@
 
 # This Ruleset is EmergingThreats Open optimized for suricata-1.3.
 
+#alert tcp $HOME_NET any -> $EXTERNAL_NET ![25,587,6666:7000,8076] (msg:"ET POLICY IRC Channel JOIN on non-standard port"; flow:to_server,established; dsize:<64; content:"JOIN "; nocase; depth:5; pcre:"/&|#|\+|!/R"; reference:url,doc.emergingthreats.net/bin/view/Main/2000348; classtype:trojan-activity; sid:2000348; rev:15;)
+
 #alert tcp $HOME_NET any -> any !6666:7000 (msg:"ET POLICY IRC DCC file transfer request on non-std port"; flow:to_server,established; content:"PRIVMSG "; depth:8; content:" |3a|.DCC SEND"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2000349; classtype:non-standard-protocol; sid:2000349; rev:13;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Weatherbug Activity"; flow: to_server,established; content:"weatherbug.com|0d 0a|"; nocase; http_header; threshold: type limit, track by_src, count 1, seconds 3600; reference:url,doc.emergingthreats.net/bin/view/Main/2001267; classtype:misc-activity; sid:2001267; rev:18;)
@@ -624,7 +626,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Java Url Lib User 
 
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Windows 3.1 User-Agent Detected - Possible Malware or Non-Updated System"; flow:established,to_server; content:"Windows 3.1"; fast_pattern; http_user_agent; content:!"Cisco AnyConnect VPN Agent"; http_user_agent; pcre:"/User-Agent\x3a[^\n]+Windows 3.1/Hi"; reference:url,doc.emergingthreats.net/2011694; classtype:policy-violation; sid:2011694; rev:9;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Windows 98 User-Agent Detected - Possible Malware or Non-Updated System"; flow:established,to_server; content:"Windows 98"; http_user_agent; content:!"X-Trend-ActiveUpdate"; http_header; reference:url,doc.emergingthreats.net/bin/view/Main/Windows98UA; classtype:policy-violation; sid:2007695; rev:20;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Windows 98 User-Agent Detected - Possible Malware or Non-Updated System"; flow:established,to_server; content:"Windows 98"; http_user_agent; content:!"X-Trend-ActiveUpdate"; http_header; content:!"HTTrack"; http_header; reference:url,doc.emergingthreats.net/bin/view/Main/Windows98UA; classtype:policy-violation; sid:2007695; rev:21;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Windows 98 User-Agent Detected - Possible Malware or Non-Updated System (Win98)"; flow:established,to_server; content:"User-Agent|3a| "; http_header; content:"Win98"; http_header; fast_pattern; pcre:"/User-Agent\x3a[^\n]+?Win98/Hi"; reference:url,doc.emergingthreats.net/bin/view/Main/Windows98UA; classtype:policy-violation; sid:2008070; rev:8;)
 
@@ -650,9 +652,9 @@ alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Windows 98
 
 #alert tcp $EXTERNAL_NET any <> $HOME_NET any (msg:"ET POLICY Possible hidden zip extension .cpl"; flow:established; content:"|20 20 2E 63 70 6C 50 4B|"; reference:url,doc.emergingthreats.net/2001406; classtype:suspicious-filename-detect; sid:2001406; rev:10;)
 
-#alert tcp $EXTERNAL_NET any <> $HOME_NET any (msg:"ET POLICY hidden zip extension .pif"; flow:established; content:"|50 4b 03 04|"; byte_jump:2,22,relative,little, post_offset +2; content:".pif"; distance:-4; within:4; reference:url,doc.emergingthreats.net/2001407; classtype:suspicious-filename-detect; sid:2001407; rev:12;)
+#alert tcp $EXTERNAL_NET any <> $HOME_NET any (msg:"ET POLICY hidden zip extension .pif"; flow:established; content:"|50 4b 03 04|"; byte_jump:2,22,relative,little, post_offset 2; content:".pif"; distance:-4; within:4; reference:url,doc.emergingthreats.net/2001407; classtype:suspicious-filename-detect; sid:2001407; rev:13;)
 
-#alert tcp $EXTERNAL_NET any <> $HOME_NET any (msg:"ET POLICY hidden zip extension .scr"; flow:established; content:"|50 4b 03 04|"; byte_jump:2,22,relative,little, post_offset +2; content:".scr"; distance:-4; within:4; reference:url,doc.emergingthreats.net/2001408; classtype:suspicious-filename-detect; sid:2001408; rev:13;)
+#alert tcp $EXTERNAL_NET any <> $HOME_NET any (msg:"ET POLICY hidden zip extension .scr"; flow:established; content:"|50 4b 03 04|"; byte_jump:2,22,relative,little, post_offset 2; content:".scr"; distance:-4; within:4; reference:url,doc.emergingthreats.net/2001408; classtype:suspicious-filename-detect; sid:2001408; rev:14;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Baidu.com Agent User-Agent (Desktop Web System)"; flow:to_server,established; content:"User-Agent|3a| Desktop Web System"; nocase; http_header; reference:url,doc.emergingthreats.net/2003604; classtype:trojan-activity; sid:2003604; rev:8;)
 
@@ -690,17 +692,57 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Data POST to an im
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Data POST to an image file (png)"; flow:established,to_server; content:"POST"; nocase; http_method; content:".png"; nocase; http_uri; content:".png HTTP"; nocase; pcre:"/\.png$/Ui"; reference:url,doc.emergingthreats.net/2010070; classtype:trojan-activity; sid:2010070; rev:6;)
 
+#alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY TRAFFIC Non-Standard IP protocol"; ip_proto:!1; ip_proto:!2; ip_proto:!47; ip_proto:!50; ip_proto:!51; ip_proto:!6; ip_proto:!89; ip_proto:!17; classtype:non-standard-protocol; sid:2101620; rev:7;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY Windows Media Video download"; flow:from_server,established; content:"Content-type|3A| video/x-ms-asf"; nocase; classtype:policy-violation; sid:2101438; rev:14;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY Windows Media download"; flow:from_server,established; content:"Content-Type|3A|"; nocase; http_header; pcre:"/^Content-Type\x3a\s*(?=[av])(video\/x\-ms\-(w[vm]x|asf)|a(udio\/x\-ms\-w(m[av]|ax)|pplication\/x\-ms\-wm[zd]))/Hi"; classtype:policy-violation; sid:2101437; rev:13;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 1080 (msg:"GPL POLICY SOCKS Proxy attempt"; flags:S,12; flow:to_server; reference:url,help.undernet.org/proxyscan/; classtype:attempted-recon; sid:2100615; rev:11;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 1723 (msg:"GPL POLICY PPTP Start Control Request attempt"; flow:to_server,established,no_stream; content:"|00 01|"; depth:2; offset:2; content:"|00 01|"; depth:2; offset:8; classtype:attempted-admin; sid:2102044; rev:6;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"GPL POLICY MS Remote Desktop Request RDP"; flow:to_server,established; content:"|03 00 00|"; depth:3; content:"|e0 00 00 00 00 00|"; distance:2; within:6; reference:bugtraq,3099; reference:cve,2001-0540; reference:url,www.microsoft.com/technet/security/bulletin/MS01-040.mspx; classtype:protocol-command-decode; sid:2101447; rev:14;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 34012 (msg:"GPL POLICY Remote PC Access connection attempt"; flow:to_server,established; content:"|28 00 01 00 04 00 00 00 00 00 00 00|"; depth:12; reference:nessus,11673; classtype:trojan-activity; sid:2102124; rev:4;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 5631 (msg:"GPL POLICY PCAnywhere Attempted Administrator Login"; flow:to_server,established; content:"ADMINISTRATOR"; classtype:attempted-admin; sid:2100507; rev:5;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 5800:5802 (msg:"GPL POLICY vncviewer Java applet download attempt"; flow:to_server,established; content:"/vncviewer.jar"; reference:nessus,10758; classtype:misc-activity; sid:2101846; rev:5;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET 8080 (msg:"GPL POLICY Linksys router default password login attempt"; flow:to_server,established; content:"Authorization|3A| OmFkbWlu"; http_header; nocase; reference:nessus,10999; classtype:default-login-attempt; sid:2101860; rev:9;)
+
+#alert http $EXTERNAL_NET any -> $HOME_NET 8080 (msg:"GPL POLICY Linksys router default username and password login attempt"; flow:to_server,established; content:"Authorization|3A| YWRtaW46YWRtaW4"; http_header; nocase; reference:nessus,10999; classtype:default-login-attempt; sid:2101861; rev:12;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET 9090 (msg:"GPL POLICY Sun JavaServer default password login attempt"; flow:to_server,established; content:"/servlet/admin"; http_uri; content:"ae9f86d6beaa3f9ecb9a5b7e072a4138"; reference:cve,1999-0508; reference:nessus,10995; classtype:default-login-attempt; sid:2101859; rev:7;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY VNC server response"; flow:established; content:"RFB 0"; depth:5; content:".0"; depth:2; offset:7; classtype:misc-activity; sid:2100560; rev:7;)
+
+#alert tcp $EXTERNAL_NET any <> $HOME_NET 0 (msg:"GPL POLICY tcp port 0 traffic"; flow:stateless; classtype:misc-activity; sid:2100524; rev:9;)
+
+#alert tcp $HOME_NET 5631:5632 -> $EXTERNAL_NET any (msg:"GPL POLICY PCAnywhere Failed Login"; flow:from_server,established; content:"Invalid login"; depth:16; reference:arachnids,240; classtype:unsuccessful-user; sid:2100512; rev:5;)
+
+#alert udp $EXTERNAL_NET any -> $HOME_NET 500 (msg:"GPL POLICY IPSec PGPNet connection attempt"; content:"|00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 10 02 00 00 00 00 00 00 00 00 88 0D 00 00 5C 00 00 00 01 00 00 00 01 00 00 00|P|01 01 00 02 03 00 00 24 01 01 00 00 80 01 00 06 80 02 00 02 80 03 00 03 80 04 00 05 80 0B 00 01 00 0C 00 04 00 01|Q|80 00 00 00 24 02 01 00 00 80 01 00 05 80 02 00 01 80 03 00 03 80 04 00 02 80 0B 00 01 00 0C 00 04 00 01|Q|80 00 00 00 10|"; classtype:protocol-command-decode; sid:2101771; rev:7;)
+
+#alert udp $EXTERNAL_NET any -> $HOME_NET 5632 (msg:"GPL POLICY PCAnywhere server response"; content:"ST"; depth:2; classtype:misc-activity; sid:2100566; rev:5;)
+
+#alert udp $EXTERNAL_NET any -> $HOME_NET 7001 (msg:"GPL POLICY AFS access"; content:"|00 00 03 E7 00 00 00 00 00 00 00|e|00 00 00 00 00 00 00 00 0D 05 00 00 00 00 00 00 00|"; fast_pattern:only; reference:nessus,10441; classtype:misc-activity; sid:2101504; rev:7;)
+
+#alert udp $EXTERNAL_NET any <> $HOME_NET 0 (msg:"GPL POLICY udp port 0 traffic";  reference:bugtraq,576; reference:cve,1999-0675; reference:nessus,10074; classtype:misc-activity; sid:2100525; rev:10;)
+
+#alert udp any any -> any 53 (msg:"GPL POLICY MISC Tunneling IP over DNS with NSTX"; byte_test: 1,>,32,12; content: "|00 10 00 01|"; offset: 12; rawbytes; threshold: type threshold, track by_src, count 50, seconds 60; reference:url,nstx.dereference.de/nstx/; reference:url,slashdot.org/articles/00/09/10/2230242.shtml; classtype:policy-violation; sid:2100208; rev:3;)
+
 #alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET POLICY route1.com SSL certificate for remote access detected"; flow:established,to_client; content:"Route1 Security Corporation"; nocase; classtype:bad-unknown; sid:2011579; rev:1;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.4.x Detected"; flow:established,to_server; content:"Java/1.4."; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable;  threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2011584; rev:11;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.5.x Detected"; flow:established,to_server; content:" Java/1.5."; nocase; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2011581; rev:9;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.6.x Detected"; flow:established,to_server; content:"Java/1.6.0_"; http_user_agent; content:!"121"; within:3; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,www.oracle.com/technetwork/java/javase/2col/6u85-bugfixes-2298235.html; classtype:bad-unknown; sid:2011582; rev:44;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.6.x Detected"; flow:established,to_server; content:"Java/1.6.0_"; http_user_agent; content:!"141"; within:3; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,www.oracle.com/technetwork/java/javase/2col/6u85-bugfixes-2298235.html; classtype:bad-unknown; sid:2011582; rev:46;)
 
 #alert tcp any 443 -> any any (msg:"ET POLICY OpenSSL Demo CA - Internet Widgits Pty (CN)"; flow:established,to_client; content:"|16|"; content:"|0b|"; within:8; content:"|55 04 03|"; content:"PCA"; within:50; classtype:not-suspicious; sid:2011539; rev:3;)
 
-alert tcp any 443 -> any any (msg:"ET POLICY OpenSSL Demo CA - Internet Widgits Pty (O)"; flow:established,to_client; content:"|16|"; content:"|0b|"; within:8; content:"|55 04 0a|"; content:"Internet Widgits Pty Ltd"; within:50; classtype:trojan-activity; sid:2011540; rev:4;)
+alert tcp any 443 -> any any (msg:"ET POLICY OpenSSL Demo CA - Internet Widgits Pty (O)"; flow:established,to_client; content:"|16|"; content:"|0b|"; within:8; content:"|55 04 0a|"; content:"Internet Widgits Pty Ltd"; within:50; classtype:not-suspicious; sid:2011540; rev:5;)
 
 #alert tcp any 443 -> any any (msg:"ET POLICY OpenSSL Demo CA - Cryptsoft Pty (CN)"; flow:established,to_client; content:"|16|"; content:"|0b|"; within:8; content:"|55 04 03|"; content:"Test PCA (1024 bit)"; within:50;  classtype:trojan-activity; sid:2011541; rev:4;)
 
@@ -874,7 +916,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY HTTP Request to a 
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Internal Host Retrieving External IP Via myip.ozymo.com"; flow:established,to_server; content:"myip.ozymo.com"; fast_pattern:only; nocase; http_header; classtype:attempted-recon; sid:2013217; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Suspicious User-Agent Containing .exe"; flow:to_server,established; content:".exe"; http_user_agent; fast_pattern:only; nocase; pcre:"/\.exe$/Vi"; content:!"|5C|Citrix|5C|ICA Client|5C|"; nocase; http_user_agent; content:!"vsee.exe"; nocase; http_user_agent; content:!"CTX_"; http_uri; content:!"update.gfi.com|0d 0a|"; http_header; content:!"pandasoftware.com"; http_header; content:!"lnssatt.exe"; http_header; classtype:trojan-activity; sid:2013224; rev:12;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Suspicious User-Agent Containing .exe"; flow:to_server,established; content:".exe"; http_user_agent; fast_pattern:only; nocase; pcre:"/\.exe$/Vi"; content:!"|5C|Citrix|5C|ICA Client|5C|"; nocase; http_user_agent; content:!"vsee.exe"; nocase; http_user_agent; content:!"CTX_"; http_uri; content:!"gfi.com|0d 0a|"; http_header; content:!"pandasoftware.com"; http_header; content:!"lnssatt.exe"; http_header; classtype:trojan-activity; sid:2013224; rev:13;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Yandexbot Request Inbound"; flow:established,to_server; content:"User-Agent|3a| YandexBot"; http_header; classtype:policy-violation; sid:2013253; rev:4;)
 
@@ -958,9 +1000,9 @@ alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Self Signed SSL Cer
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Windows Mobile 7.0 User-Agent detected"; flow:to_server,established; content:"ZDM/4.0|3B| Windows Mobile 7.0|3B|"; http_user_agent; depth:28; classtype:not-suspicious; sid:2013784; rev:6;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY OutGoing Chromoting Session"; flow:to_server,established; content:"|58 2d 53 65 73 73 69 6f 6e 2d 54 79 70 65 3a 20 67 6f 6f 67 6c 65 3a 72 65 6d 6f 74 69 6e 67|"; reference:url,xinn.org/Chromoting.html; classtype:not-suspicious; sid:2013800; rev:2;)
+alert udp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Outgoing Chromoting Session Response"; content:"|63 68 72 6F 6D 6F 74 69 6E 67|"; depth:170; content:"|63 68 72 6F 6D 6F 74 69 6E 67|"; distance:39; reference:url,xinn.org/Chromoting.html; classtype:not-suspicious; sid:2013800; rev:3;)
 
-alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Incoming Chromoting Session"; content:"|63 68 72 6F 6D 6F 74 69 6E 67|"; depth:170; content:"|63 68 72 6F 6D 6F 74 69 6E 67|"; distance:39; reference:url,xinn.org/Chromoting.html; classtype:not-suspicious; sid:2013801; rev:3;)
+alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Incoming Chromoting Session Response"; content:"|63 68 72 6F 6D 6F 74 69 6E 67|"; depth:170; content:"|63 68 72 6F 6D 6F 74 69 6E 67|"; distance:39; reference:url,xinn.org/Chromoting.html; classtype:not-suspicious; sid:2013801; rev:4;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Bomgar Remote Assistance Tool Download"; flow:established,from_server; content:"filename="; content:"bomgar-scc-"; nocase; distance:0; fast_pattern; content:".exe"; nocase; distance:0; reference:url,www.bomgar.com; classtype:policy-violation; sid:2013867; rev:3;)
 
@@ -1038,11 +1080,11 @@ alert tcp $HOME_NET 1024: -> any 6784 (msg:"ET POLICY Splashtop Remote Control S
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup"; flow:established,to_server; content:"/getip.php?action=getip&ip_url="; http_uri; classtype:policy-violation; sid:2014292; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.7.x Detected"; flow:established,to_server; content:"Java/1.7.0_"; http_user_agent; content:!"111"; within:3; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,java.com/en/download/manual_java7.jsp; classtype:bad-unknown; sid:2014297; rev:43;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.7.x Detected"; flow:established,to_server; content:"Java/1.7.0_"; http_user_agent; content:!"131"; within:3; http_user_agent; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; reference:url,java.com/en/download/manual_java7.jsp; classtype:bad-unknown; sid:2014297; rev:45;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup Attempt To Wipmania"; flow:established,to_server; content:"Host|3A 20|api.wipmania.com|0d 0a|"; http_header; reference:md5,b318988249cd8e8629b4ef8a52760b65; classtype:policy-violation; sid:2014304; rev:3;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Executable Download From DropBox"; flow:established,to_client; content:"Server|3A 20|dbws|0d 0a|"; http_header; content:"|0d 0a 0d 0a|MZ"; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; classtype:not-suspicious; sid:2014313; rev:8;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Executable Download From DropBox"; flow:established,to_client; content:"Server|3A 20|dbws|0d 0a|"; http_header; file_data; content:"MZ"; depth:2; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; classtype:not-suspicious; sid:2014313; rev:9;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Coral Web Proxy/Content Distribution Net Use"; flow:to_server,established; content:"Host|3a|"; http_header; content:".nyud.net|0d 0a|"; fast_pattern; http_header; within:100; reference:url,en.wikipedia.org/wiki/Coral_Content_Distribution_Network; classtype:policy-violation; sid:2014332; rev:1;)
 
@@ -1056,7 +1098,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Installshield One 
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY HTTP GET invalid method case outbound"; flow:established,to_server; content:"get "; depth:4; nocase; content:!"GET "; depth:4; reference:url,www.w3.org/Protocols/rfc2616/rfc2616-sec9.html; classtype:bad-unknown; sid:2014379; rev:2;)
 
-#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY HTTP POST invalid method case outbound"; flow:established,to_server; content:"post "; depth:5; nocase; content:!"POST "; depth:5; reference:url,www.w3.org/Protocols/rfc2616/rfc2616-sec9.html; classtype:bad-unknown; sid:2014380; rev:2;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY HTTP POST invalid method case outbound"; flow:established,to_server; content:"post "; depth:5; nocase; content:!"POST "; depth:5; pcre:"/^\/[^\r\n]+ HTTP\/1\./R"; reference:url,www.w3.org/Protocols/rfc2616/rfc2616-sec9.html; classtype:bad-unknown; sid:2014380; rev:4;)
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY HTTP HEAD invalid method case outbound"; flow:established,to_server; content:"head "; depth:5; nocase; content:!"HEAD "; depth:5; reference:url,www.w3.org/Protocols/rfc2616/rfc2616-sec9.html; classtype:bad-unknown; sid:2014381; rev:2;)
 
@@ -1070,7 +1112,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY CNET TechTracker U
 
 #alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Cisco IOS Self Signed Certificate Served to External Host"; flow:established,to_client; content:"IOS-Self-Signed-Certificate-"; classtype:misc-activity; sid:2014617; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"18,0,0,366|0d 0a|"; distance:0; within:12; http_header; content:!"22,0,0,209|0d 0a|"; distance:0; within:12; http_header;  content:!"22,0,0,210|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?MSIE\s/Hm"; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:84;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Outdated Windows Flash Version IE"; flow:established,to_server; content:"x-flash-version|3a 20|"; http_header; content:!"24,0,0,194|0d 0a|"; distance:0; within:12; http_header; content:"MSIE "; http_header; pcre:"/^User-Agent\x3a[^\r\n]+?MSIE\s/Hm"; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.adobe.com/software/flash/about/; classtype:policy-violation; sid:2014726; rev:90;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Internal Host Getting External IP Address - ip2city.asp"; flow:established,to_server; content:"/ip2city.asp"; http_uri; classtype:misc-activity; sid:2014761; rev:2;)
 
@@ -1216,7 +1258,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET POLICY Executable 
 
 #alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY SSL Certificate IRC GEEKS Likely Encrypted IRC or CnC"; flow:established,from_server; content:"|16 03 00|"; content:"|0b|"; within:7; content:"|13 09|IRC geeks"; distance:0; classtype:misc-activity; sid:2019387; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.8.x Detected"; flow:established,to_server; content:" Java/1.8.0_"; http_header; content:!"101"; within:3; http_header; content:!"102"; within:3; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2019401; rev:14;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Vulnerable Java Version 1.8.x Detected"; flow:established,to_server; content:" Java/1.8.0_"; http_header; content:!"121"; within:3; http_header; flowbits:set,ET.http.javaclient.vulnerable; threshold: type limit, count 2, seconds 300, track by_src; reference:url,javatester.org/version.html; classtype:bad-unknown; sid:2019401; rev:17;)
 
 alert tcp $HOME_NET [443,465,993,995,25] -> any any (msg:"ET POLICY SSLv3 inbound connection to server vulnerable to POODLE attack"; flow:established,to_client; ssl_version:sslv3; ssl_state:server_hello; content:"|16 03 00|"; depth:3; threshold: type limit, track by_src, seconds 300, count 1; reference:cve,2014-3566; reference:url,blog.fox-it.com/2014/10/15/poodle/; reference:url,www.openssl.org/~bodo/ssl-poodle.pdf; reference:cve,2014-3566; reference:url,askubuntu.com/questions/537196/how-do-i-patch-workaround-sslv3-poodle-vulnerability-cve-2014-3566; reference:url,www.imperialviolet.org/2014/10/14/poodle.html; classtype:policy-violation; sid:2019415; rev:3;)
 
@@ -1282,7 +1324,7 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.lt)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|lt|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020115; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.to)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|to|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020116; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for .onion proxy Domain (onion.to)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|02|to|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020116; rev:3;)
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (pay2tor.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|pay2tor|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020117; rev:2;)
 
@@ -1302,7 +1344,7 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4life.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|tor4life|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020125; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tor4pay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor4pay|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020126; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for .onion proxy Domain (tor4pay.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tor4pay|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020126; rev:3;)
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (toralpacho.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|toralpacho|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020127; rev:2;)
 
@@ -1316,7 +1358,7 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torjam.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|torjam|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020132; rev:2;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torminater.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torminater|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020133; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for .onion proxy Domain (torminater.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|0a|torminater|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020133; rev:3;)
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torpacho.com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|torpacho|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:bad-unknown; sid:2020134; rev:2;)
 
@@ -1408,7 +1450,7 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Doma
 
 #alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Middle Earth Illegal Marketplace Tor Hidden Service DNS Query"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|mango7u3rivtwxy7"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2020417; rev:1;)
 
-#alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.city)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|city|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2020430; rev:2;)
+#alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for .onion proxy Domain (onion.city)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|city|00|"; nocase; distance:0; fast_pattern; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2020430; rev:3;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Metasploit Framework Checking For Update"; flow:established,to_server; content:"POST"; http_method; urilen:13; content:"/updateserver"; http_uri; fast_pattern:only; content:"MSFX/"; depth:5; http_user_agent; content:!"Referer|3a 20|"; http_header; classtype:misc-activity; sid:2020475; rev:3;)
 
@@ -1560,7 +1602,7 @@ alert tcp $HOME_NET 22 -> $EXTERNAL_NET any (msg:"ET POLICY FOX-SRT - Juniper Sc
 
 #alert tcp any !$SSH_PORTS -> any any (msg:"ET POLICY SSHv2 Server KEX Detected within Banner on Unusual Port"; flow: from_server,established; flowbits:noalert; content:"SSH-"; offset:0; depth:4; byte_test:1,>,48,0,relative; byte_test:1,<,51,0,relative; byte_test:1,=,46,1,relative; content:"|0d 0a|"; offset: 4; depth: 255; byte_test:1,=,20,5,relative; flowbits: set,is_ssh_server_banner; flowbits: set,is_ssh_server_kex; reference:url,www.proftpd.org/docs/contrib/mod_sftp.html; classtype:misc-activity; sid:2022326; rev:1;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (onion.link)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|link|00|"; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2022332; rev:3;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for .onion proxy Domain (onion.link)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|onion|04|link|00|"; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:trojan-activity; sid:2022332; rev:4;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY HotSpotShield Activity"; flow:established,to_server; content:"POST"; http_method; content:"Content-Type|3a 20|multipart/form-data|3b 20|boundary=AfPr0xY|0d 0a|"; http_header; fast_pattern:35,18; content:"|2d 2d 41 66 50 72 30 78 59|"; depth:9; http_client_body; content:"|2d 2d 41 66 50 72 30 78 59 2d 2d|"; distance:0; http_client_body; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; reference:md5,45f4e1bb4efd12f0e8b949174a198bf3; classtype:policy-violation; sid:2022342; rev:3;)
 
@@ -1570,7 +1612,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup - meuip.net.br"; flow:established,to_server; content:"Host|3a 20|meuip.net.br|0d 0a|"; http_header; fast_pattern:only; classtype:policy-violation; sid:2022405; rev:2;)
 
-alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible HTA Application Download"; flow:established,to_server; content:"GET"; http_method; content:".hta"; http_uri; nocase; fast_pattern:only; pcre:"/\.hta$/Ui"; flowbits:set,ET.HTA.Download; reference:url,www.trustedsec.com/july-2015/malicious-htas/; classtype:bad-unknown; sid:2022520; rev:3;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible HTA Application Download"; flow:established,to_server; content:"GET"; http_method; content:".hta"; http_uri; nocase; fast_pattern:only; pcre:"/\.hta$/Ui"; flowbits:set,ET.HTA.Download; content:!"kaspersky.com|0d 0a|"; http_header; reference:url,www.trustedsec.com/july-2015/malicious-htas/; classtype:bad-unknown; sid:2022520; rev:4;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY HotSpotShield Activity"; flow:established,to_server; content:"POST"; http_method; content:"Content-Type|3a 20|multipart/form-data|3b 20|boundary=AfPr0xY|0d 0a|"; http_header; fast_pattern:35,18; content:"|2d 2d 41 66 50 72 30 78 59|"; depth:9; http_client_body; content:"|2d 2d 41 66 50 72 30 78 59 2d 2d|"; distance:0; http_client_body; content:!"Accept"; http_header; content:!"Referer|3a|"; http_header; reference:md5,45f4e1bb4efd12f0e8b949174a198bf3; classtype:policy-violation; sid:2022533; rev:2;)
 
@@ -1594,7 +1636,7 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to a *.ngrok domain 
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to a *.neokred domain - Likely Hostile"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|neokred|03|org|00|"; fast_pattern; distance:0; nocase; classtype:policy-violation; sid:2022643; rev:1;)
 
-alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (torgate.es)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torgate|02|es|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022644; rev:2;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query for .onion proxy Domain (torgate.es)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|torgate|02|es|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022644; rev:3;)
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (tormaster.fr)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|09|tormaster|02|fr|00|"; fast_pattern; distance:0; nocase; reference:url,en.wikipedia.org/wiki/Tor_(anonymity_network); classtype:policy-violation; sid:2022645; rev:2;)
 
@@ -1608,49 +1650,29 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Windows Quicktime 
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Possible SQLi Attempt in User Agent (Outbound)"; flow:established,from_client; content:"User-Agent|3a 20|"; http_header; content:"select"; nocase; distance:0; fast_pattern; http_header; content:"from"; nocase; http_header; within:20; pcre:"/User-Agent\x3a\x20[^\r\n]+select[^\r\n]+from/Hi"; reference:url,blog.cloudflare.com/the-sleepy-user-agent/; classtype:trojan-activity; sid:2022815; rev:2;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY BitCoinMiner Cpuminer Login"; flow: to_server,established; content:"|7b 22|method|22 3a 20 22|login|22 2c 20 22|params|22 3a 20 7b 22|login"; nocase; depth:37; fast_pattern:17,20; content:"agent|22 3a 20 22|cpuminer-multi"; nocase; distance:0; reference:md5,d1082e445f932938366a449631b82946; reference:md5,33d7a82fe13c9737a103bcc4a21f9425; classtype:trojan-activity; sid:2022886; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Crypto Coin Miner Login"; flow: to_server,established; content:"|7b 22|method|22 3a 20 22|login|22 2c 20 22|params|22 3a 20 7b 22|login"; nocase; depth:37; fast_pattern:17,20; content:"agent|22 3a 20 22|"; nocase; distance:0; reference:md5,d1082e445f932938366a449631b82946; reference:md5,33d7a82fe13c9737a103bcc4a21f9425; reference:md5,ebe1aeb5dd692b222f8cf964e7785a55; classtype:trojan-activity; sid:2022886; rev:2;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Lookup ip-score.com"; flow:established,to_server; content:"Host|3a 20|ip-score.com|0d 0a|"; fast_pattern:only; http_header; content:!"Referer|3a|"; http_header; classtype:policy-violation; sid:2022892; rev:2;)
 
 alert udp any 68 -> any 67 (msg:"ET POLICY Possible Kali Linux hostname in DHCP Request Packet"; content:"|63 82 53 63 35 01 03|"; content:"|0c 04|kali"; distance:0; nocase; reference:url,www.kali.org; classtype:policy-violation; sid:2022973; rev:1;)
 
-#alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY TRAFFIC Non-Standard IP protocol"; ip_proto:!1; ip_proto:!2; ip_proto:!47; ip_proto:!50; ip_proto:!51; ip_proto:!6; ip_proto:!89; ip_proto:!17; classtype:non-standard-protocol; sid:2101620; rev:7;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY External IP Address Lookup - b4secure .com"; flow:established,to_server; urilen:12; content:"/index.shtml"; http_uri; content:"Host|3a 20|"; http_header; content:"b4secure.com|0d 0a|"; distance:0; http_header; fast_pattern; pcre:"/^Host\x3a[^\r\n]+(?:www\.)?b4secure\.com\r$/Hmi"; reference:url,researchcenter.paloaltonetworks.com/2016/10/unit42-psa-conference-invite-used-lure-operation-lotus-blossom-actors/; classtype:policy-violation; sid:2023469; rev:2;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY Windows Media Video download"; flow:from_server,established; content:"Content-type|3A| video/x-ms-asf"; nocase; classtype:policy-violation; sid:2101438; rev:14;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY OpenDNS IP Lookup"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|04|myip|07|opendns|03|com"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2023472; rev:1;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY Windows Media download"; flow:from_server,established; content:"Content-Type|3A|"; nocase; http_header; pcre:"/^Content-Type\x3a\s*(?=[av])(video\/x\-ms\-(w[vm]x|asf)|a(udio\/x\-ms\-w(m[av]|ax)|pplication\/x\-ms\-wm[zd]))/Hi"; classtype:policy-violation; sid:2101437; rev:13;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET POLICY Android Adups Firmware Checkin"; flow:to_server,established; content:"POST"; http_method; nocase; content:"{|22|dc_date|22 3a|"; depth:11; http_client_body; content:",|22|dc_type|22 3a|"; fast_pattern:only; http_client_body; content:",|22|keyword|22 3a|"; http_client_body; content:",|22|md5|22 3a|"; http_client_body; content:",|22|msg_date|22 3a|"; http_client_body; content:",|22|msg_type|22 3a|"; http_client_body; content:",|22|tell|22 3a|"; http_client_body; reference:url,www.kryptowire.com/adups_security_analysis.html; classtype:policy-violation; sid:2023514; rev:2;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 1080 (msg:"GPL POLICY SOCKS Proxy attempt"; flags:S,12; flow:to_server; reference:url,help.undernet.org/proxyscan/; classtype:attempted-recon; sid:2100615; rev:11;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Android Adups Firmware DNS Query"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|bigdata|05|adups|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,www.kryptowire.com/adups_security_analysis.html; classtype:policy-violation; sid:2023515; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 1723 (msg:"GPL POLICY PPTP Start Control Request attempt"; flow:to_server,established,no_stream; content:"|00 01|"; depth:2; offset:2; content:"|00 01|"; depth:2; offset:8; classtype:attempted-admin; sid:2102044; rev:6;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Android Adups Firmware DNS Query 2"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|bigdata|0b|adsunflower|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,www.kryptowire.com/adups_security_analysis.html; classtype:policy-violation; sid:2023516; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"GPL POLICY MS Remote Desktop Request RDP"; flow:to_server,established; content:"|03 00 00|"; depth:3; content:"|e0 00 00 00 00 00|"; distance:2; within:6; reference:bugtraq,3099; reference:cve,2001-0540; reference:url,www.microsoft.com/technet/security/bulletin/MS01-040.mspx; classtype:protocol-command-decode; sid:2101447; rev:14;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Android Adups Firmware DNS Query 3"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|bigdata|08|adfuture|02|cn|00|"; nocase; distance:0; fast_pattern; reference:url,www.kryptowire.com/adups_security_analysis.html; classtype:policy-violation; sid:2023517; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 34012 (msg:"GPL POLICY Remote PC Access connection attempt"; flow:to_server,established; content:"|28 00 01 00 04 00 00 00 00 00 00 00|"; depth:12; reference:nessus,11673; classtype:trojan-activity; sid:2102124; rev:4;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Android Adups Firmware DNS Query 4"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|bigdata|06|advmob|02|cn|00|"; nocase; distance:0; fast_pattern; reference:url,www.kryptowire.com/adups_security_analysis.html; classtype:policy-violation; sid:2023518; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 5631 (msg:"GPL POLICY PCAnywhere Attempted Administrator Login"; flow:to_server,established; content:"ADMINISTRATOR"; classtype:attempted-admin; sid:2100507; rev:5;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Android Adups Firmware DNS Query 5"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|rebootv5|0b|adsunflower|03|com|00|"; nocase; distance:0; fast_pattern; reference:url,www.kryptowire.com/adups_security_analysis.html; classtype:policy-violation; sid:2023519; rev:1;)
 
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 5800:5802 (msg:"GPL POLICY vncviewer Java applet download attempt"; flow:to_server,established; content:"/vncviewer.jar"; reference:nessus,10758; classtype:misc-activity; sid:2101846; rev:5;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY External IP Lookup (tinytools.nu)"; flow:established,to_server; content:"Host|3a 20|www.tinytools.nu|0d 0a|"; http_header; fast_pattern:only; content:"/MyIPAddress/"; nocase; http_uri; classtype:policy-violation; sid:2023520; rev:1;)
 
-alert http $EXTERNAL_NET any -> $HOME_NET 8080 (msg:"GPL POLICY Linksys router default password login attempt"; flow:to_server,established; content:"Authorization|3A| OmFkbWlu"; http_header; nocase; reference:nessus,10999; classtype:default-login-attempt; sid:2101860; rev:9;)
-
-#alert http $EXTERNAL_NET any -> $HOME_NET 8080 (msg:"GPL POLICY Linksys router default username and password login attempt"; flow:to_server,established; content:"Authorization|3A| YWRtaW46YWRtaW4"; http_header; nocase; reference:nessus,10999; classtype:default-login-attempt; sid:2101861; rev:12;)
-
-alert http $EXTERNAL_NET any -> $HOME_NET 9090 (msg:"GPL POLICY Sun JavaServer default password login attempt"; flow:to_server,established; content:"/servlet/admin"; http_uri; content:"ae9f86d6beaa3f9ecb9a5b7e072a4138"; reference:cve,1999-0508; reference:nessus,10995; classtype:default-login-attempt; sid:2101859; rev:7;)
-
-#alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"GPL POLICY VNC server response"; flow:established; content:"RFB 0"; depth:5; content:".0"; depth:2; offset:7; classtype:misc-activity; sid:2100560; rev:7;)
-
-#alert tcp $EXTERNAL_NET any <> $HOME_NET 0 (msg:"GPL POLICY tcp port 0 traffic"; flow:stateless; classtype:misc-activity; sid:2100524; rev:9;)
-
-#alert tcp $HOME_NET 5631:5632 -> $EXTERNAL_NET any (msg:"GPL POLICY PCAnywhere Failed Login"; flow:from_server,established; content:"Invalid login"; depth:16; reference:arachnids,240; classtype:unsuccessful-user; sid:2100512; rev:5;)
-
-#alert udp $EXTERNAL_NET any -> $HOME_NET 500 (msg:"GPL POLICY IPSec PGPNet connection attempt"; content:"|00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 10 02 00 00 00 00 00 00 00 00 88 0D 00 00 5C 00 00 00 01 00 00 00 01 00 00 00|P|01 01 00 02 03 00 00 24 01 01 00 00 80 01 00 06 80 02 00 02 80 03 00 03 80 04 00 05 80 0B 00 01 00 0C 00 04 00 01|Q|80 00 00 00 24 02 01 00 00 80 01 00 05 80 02 00 01 80 03 00 03 80 04 00 02 80 0B 00 01 00 0C 00 04 00 01|Q|80 00 00 00 10|"; classtype:protocol-command-decode; sid:2101771; rev:7;)
-
-#alert udp $EXTERNAL_NET any -> $HOME_NET 5632 (msg:"GPL POLICY PCAnywhere server response"; content:"ST"; depth:2; classtype:misc-activity; sid:2100566; rev:5;)
-
-#alert udp $EXTERNAL_NET any -> $HOME_NET 7001 (msg:"GPL POLICY AFS access"; content:"|00 00 03 E7 00 00 00 00 00 00 00|e|00 00 00 00 00 00 00 00 0D 05 00 00 00 00 00 00 00|"; fast_pattern:only; reference:nessus,10441; classtype:misc-activity; sid:2101504; rev:7;)
-
-#alert udp $EXTERNAL_NET any <> $HOME_NET 0 (msg:"GPL POLICY udp port 0 traffic";  reference:bugtraq,576; reference:cve,1999-0675; reference:nessus,10074; classtype:misc-activity; sid:2100525; rev:10;)
-
-#alert udp any any -> any 53 (msg:"GPL POLICY MISC Tunneling IP over DNS with NSTX"; byte_test: 1,>,32,12; content: "|00 10 00 01|"; offset: 12; rawbytes; threshold: type threshold, track by_src, count 50, seconds 60; reference:url,nstx.dereference.de/nstx/; reference:url,slashdot.org/articles/00/09/10/2230242.shtml; classtype:policy-violation; sid:2100208; rev:3;)
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (anonym.to)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|anonym|02|to|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2023597; rev:1;)
 

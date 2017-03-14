@@ -745,7 +745,7 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                             <option value=""><?php echo _("Select One") ?></option>
                             <option value="ip"         <?php if (preg_match("/base_stat_(uaddr|iplink)/", $_SERVER['SCRIPT_NAME'])) echo "selected" ?>><?php echo _("IP") ?></option>
                             <option value="hostname"   <?php if (preg_match("/base_stat_uidm/", $_SERVER['SCRIPT_NAME']) && preg_match("/host/", $addr_type)) echo "selected" ?>><?php echo _("IDM Hostname") ?></option>
-                            <option value="username"   <?php if (preg_match("/base_stat_uidm/", $_SERVER['SCRIPT_NAME']) && preg_match("/user/", $addr_type)) echo "selected" ?>><?php echo _("IDM Username") ?></option>
+                            <option value="idmusername"   <?php if (preg_match("/base_stat_uidm/", $_SERVER['SCRIPT_NAME']) && preg_match("/user/", $addr_type)) echo "selected" ?>><?php echo _("IDM Username") ?></option>
                             <option value="signature"  <?php if (preg_match("/base_stat_alerts\.php/", $_SERVER['SCRIPT_NAME'])) echo "selected" ?>><?php echo _("Signature") ?></option>
                             <option value="port"       <?php if (preg_match("/base_stat_ports/", $_SERVER['SCRIPT_NAME'])) echo "selected" ?>><?php echo _("Port") ?></option>
                             <option value="sensor"     <?php if (preg_match("/base_stat_sensor\.php/", $_SERVER['SCRIPT_NAME'])) echo "selected" ?>><?php echo _("Sensors") ?></option>
@@ -754,6 +754,16 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                             <option value="plugins"    <?php if (preg_match("/base_stat_plugins/", $_SERVER['SCRIPT_NAME'])) echo "selected" ?>><?php echo _("Data Source") ?></option>
                             <option value="country"    <?php if (preg_match("/base_stat_country/", $_SERVER['SCRIPT_NAME'])) echo "selected" ?>><?php echo _("Country") ?></option>
                             <option value="categories" <?php if (preg_match("/base_stat_categories/", $_SERVER['SCRIPT_NAME'])) echo "selected" ?>><?php echo _("Categories") ?></option>
+                            <option value="username"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/username/", $addr_type)) echo "selected" ?>><?php echo _("Username") ?></option>
+                            <option value="userdata1"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata1/", $addr_type)) echo "selected" ?>><?php echo _("Userdata1") ?></option>
+                            <option value="userdata2"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata2/", $addr_type)) echo "selected" ?>><?php echo _("Userdata2") ?></option>
+                            <option value="userdata3"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata3/", $addr_type)) echo "selected" ?>><?php echo _("Userdata3") ?></option>
+                            <option value="userdata4"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata4/", $addr_type)) echo "selected" ?>><?php echo _("Userdata4") ?></option>
+                            <option value="userdata5"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata5/", $addr_type)) echo "selected" ?>><?php echo _("Userdata5") ?></option>
+                            <option value="userdata6"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata6/", $addr_type)) echo "selected" ?>><?php echo _("Userdata6") ?></option>
+                            <option value="userdata7"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata7/", $addr_type)) echo "selected" ?>><?php echo _("Userdata7") ?></option>
+                            <option value="userdata8"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata8/", $addr_type)) echo "selected" ?>><?php echo _("Userdata8") ?></option>
+                            <option value="userdata9"   <?php if (preg_match("/base_stat_extra/", $_SERVER['SCRIPT_NAME']) && preg_match("/userdata9/", $addr_type)) echo "selected" ?>><?php echo _("Userdata9") ?></option>
                         </select>
     
                         <!-- Level 2: IP -->

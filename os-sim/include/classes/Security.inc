@@ -927,7 +927,7 @@ function ossim_error($error_msg = NULL, $error_type = AV_ERROR, $styles = 'width
  * small and elegant recursive function
  * to replace ugly and copy pasted validation
  */
-function utfize($val, $validate_rules) {
+function utfize($val) {
 	if (!isset($validate[$k])) {
 		return $val;
 	}
@@ -957,7 +957,7 @@ function validate_form_fields_new($type, $validate_rules)
 	$temp = array_map(function () {return null;},$validate_rules);
 	//populate input array with null's for missing data
 	$data = array_merge($temp,$data);
-	$values = utfize($data,$validate_rules);
+	$values = utfize($data);
 	// do validate
 	foreach ($values as $k => $v) {
 		ossim_valid($v, constant($validate_rules[$k]['validation']), $validate_rules[$k]['e_message']);
@@ -974,7 +974,7 @@ function check_last_ossim_error(&$validation_errors) {
 		{
 			$last_error = mb_convert_encoding($last_error, 'UTF-8', 'ISO-8859-1');
 		}
-		$validation_errors[$k] = $last_error;
+		$validation_errors[] = $last_error;
 		ossim_clean_error();
 	}
 }
@@ -1145,7 +1145,8 @@ function valid_cidr($cidrs)
 
 	return TRUE;
 }
-
+//unused variable $key is required to specify third parameter here.
+//Because this function is called from array_walk
 function append_protocol(&$item, $key, $protocol)
 {
     $item = $item . ' - ' . $protocol;
@@ -1941,8 +1942,8 @@ function check_pass($conn, $user, $c_pass, $pass_1, $pass_2)
 
 
     //SQL statements to get the user password
-    $q_where_1 = "WHERE login = '$user' AND (pass = '".md5($c_pass)."' OR pass = '".hash('sha256', $c_pass)."')";
-    $q_where_2 = "WHERE login = '$user' AND (pass = '".md5($pass_1)."' OR pass = '".hash('sha256', $pass_1)."')";
+    $q_where_1 = Session::get_login_pass_where($user,$c_pass,$c_pass);
+    $q_where_2 = Session::get_login_pass_where($user,$pass_1,$pass_1);
 
 
     if (empty($c_pass))
@@ -1984,11 +1985,7 @@ function check_pass($conn, $user, $c_pass, $pass_1, $pass_2)
         return _("The password does not meet the password complexity requirements [Password should contain lowercase and uppercase letters, digits and special characters]");
     }
 
-    $recent_pass = Log_action::get_last_pass($conn, $user);
-    $recent_pass = array_flip($recent_pass);
-
-    if (count($recent_pass) > 0 && (array_key_exists(md5($pass_1), $recent_pass) || array_key_exists(hash('sha256', $pass_1), $recent_pass)))
-    {
+    if (Log_action::recent_pass_exists($conn, $user, $pass_1)) {
         return _('This password is recently used. Try another');
     }
 

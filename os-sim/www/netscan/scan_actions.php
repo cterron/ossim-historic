@@ -128,14 +128,13 @@ try
             $autodetect      = POST('autodetect');
             $rdns            = POST('rdns');
 
-
             $validate = array (
                 'sensor'          => array('validation' => 'OSS_HEX, OSS_ALPHA, OSS_NULLABLE',                      'e_message' => 'illegal:' . _('Sensor')),
                 'scan_type'       => array('validation' => 'OSS_LETTER',                                            'e_message' => 'illegal:' . _('Scan Mode')),
                 'timing_template' => array('validation' => 'OSS_TIMING_TEMPLATE',                                   'e_message' => 'illegal:' . _('Timing Template')),
                 'custom_ports'    => array('validation' => "OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, ','",    'e_message' => 'illegal:' . _('Custom Ports')),
                 'autodetect'      => array('validation' => 'OSS_BINARY',                                            'e_message' => 'illegal:' . _('Autodetected services and OS')),
-                'rdns'            => array('validation' => 'OSS_BINARY',                                            'e_message' => 'illegal:' . _('Reverse DNS '))
+                'rdns'            => array('validation' => 'OSS_BINARY',                                            'e_message' => 'illegal:' . _('Reverse DNS ')),
             );
 
             $validation_errors = validate_form_fields('POST', $validate);
@@ -147,16 +146,20 @@ try
                 if (is_array($assets) && count($assets) > 0)
                 {
                     $assets_string = array();
-
+                    $excludes = array();
                     foreach ($assets as $asset)
                     {
+			if (strpos($asset,"!") === 0) {
+                            $excludes[] = str_replace("!","",$asset);
+                            continue;
+                        }
+
+
                         // Validate UUID#IP or IP, other cases will fail
                         $_asset = explode('#', $asset);
-
                         if (count($_asset) == 1)
                         {
                             $_asset_ip = $_asset[0];
-
                             ossim_valid($_asset_ip, OSS_IP_ADDRCIDR, 'illegal:' . _('Asset IP'));
 
                         }
@@ -215,7 +218,8 @@ try
                     'autodetect_os' => $autodetect,
                     'reverse_dns'   => $rdns,
                     'scan_ports'    => $custom_ports,
-                    'idm'           => 'false'
+                    'idm'           => 'false',
+                    'excludes'      => implode(",",$excludes)
                 );
 
                 $av_scan = new Av_scan($assets_p, $sensor, $scan_options);
@@ -341,10 +345,26 @@ try
 
                 $scan_report = $av_scan->download_scan_report();
 
+                $db   = new ossim_db();
+                $conn = $db->connect();
+
                 if (!empty($scan_report))
                 {
                     $nmap_parser = new Nmap_parser();
                     $scan_report = $nmap_parser->parse_json($scan_report, $av_scan->get_sensor());
+                    $fqdns = ($_POST['rdns'] == '1') ? 1 : 0;
+
+                    if ($fqdns == 1) {
+                        foreach ($scan_report["scanned_ips"] as $host_ip => $host_arr) {
+                            if ($host_arr["fqdn"] == "") {
+                                $api_client  = new Alienvault_client();
+                                $system_id = $scan_report["sensor"]["ctx"];
+                                $response = $api_client->system($system_id)->get_fqdns($system_id, $host_ip);
+                                $fqdn = json_decode($response, true)['data']['fqdn'];
+                                $scan_report["scanned_ips"][$host_ip]["fqdn"] = $fqdn;
+                            };
+                        };
+                    };
 
                     file_put_contents($scan_report_file, serialize($scan_report));
                 }

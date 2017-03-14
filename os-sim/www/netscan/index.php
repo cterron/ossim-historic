@@ -594,7 +594,8 @@ $db->close();
         {
             var scan_data = {
                "token"  : Token.get_token("assets_form"),
-               "action" : "download_scan_report"
+               "action" : "download_scan_report",
+               "rdns" : $("#rdns").attr("checked") ? "1": "0"
             }
 
             $.ajax({
@@ -967,7 +968,7 @@ $db->close();
                 {
                     var ip_cidr = $("#searchbox").val();
 
-                    targetRegex = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))?$/;
+                    targetRegex = /^!?(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))?$/;
 
                     if(ip_cidr.match(targetRegex))
                     {
@@ -1284,7 +1285,7 @@ $db->close();
 
                                     <?php $rdns_checked = ($rdns == 1) ? 'checked="checked"' : '';?>
 
-                                    <input type="checkbox" id="rdns" name="rdns" class='vfield' <?php echo $rdns_checked?> value="1"/>
+                                    <input type="checkbox" id="rdns" name="rdns" class='vfield' <?php echo $rdns_checked?> value="1" />
                                     <label for="rdns"><?php echo _('Enable reverse DNS Resolution')?></label>
                                 </td>
                             </tr>

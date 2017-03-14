@@ -34,14 +34,18 @@ from celery import current_task
 import db
 from db.models.alienvault_api import Current_Status
 
+
 @celery_instance.task
 def asset_clean_orphan_status_messages():
     task_id = current_task.request.id
     try:
-        query = "delete alienvault_api.current_status.* from alienvault_api.current_status left join alienvault.host on component_id=id where component_type='host' and id is null"
-        data = db.session.connection(mapper=Current_Status).execute(query)
+        query = "DELETE alienvault_api.current_status.* FROM alienvault_api.current_status " \
+                "LEFT JOIN alienvault.host " \
+                "ON alienvault_api.current_status.component_id=alienvault.host.id " \
+                "WHERE alienvault_api.current_status.component_type='host' AND alienvault.host.id IS NULL"
+        db.session.connection(mapper=Current_Status).execute(query)
     except Exception as e:
         db.session.rollback()
-        return (False, "A error detected while deleting orphan assets: " + str(e))
+        return False, "A error detected while deleting orphan assets: " + str(e)
 
-    return (True, task_id)
+    return True, task_id

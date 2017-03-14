@@ -37,9 +37,10 @@ from flask.ext.login import current_user
 from functools import wraps, partial
 import uuid
 import re
+import redis
 
 from api import app
-from api.lib.common import make_bad_request,make_error
+from api.lib.common import make_bad_request, make_error
 from db.methods.auth import has_admin_users
 
 valid_user_regex = re.compile("[0-9a-zA-Z_\-\.]+", re.UNICODE)
@@ -53,7 +54,7 @@ valid_canonical_uuid = re.compile("[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-
 #     return Pagination(query, page, per_page, total, items)
 
 
-def accepted_url(url={}, func=None):
+def accepted_url(url=None, func=None):
     """ Check for url values.
      This can be used in a variety of ways:
       * Check for a parameter type:
@@ -70,6 +71,9 @@ def accepted_url(url={}, func=None):
 
      Please note, if you use this decorator, you should write a check for *every* parameter in the URL.
     """
+
+    url = {} if url is None else url
+
     if func is not None:
 
         func._url = url
@@ -127,6 +131,7 @@ def accepted_url(url={}, func=None):
             return accepted_url(url, func)
         return partial_check
 
+
 def has_permission(func = None):
     if func is None:
         return partial(has_permission)
@@ -168,10 +173,12 @@ def has_permission(func = None):
         return func(*args, **params)
     return check_permission
 
+
 def is_admin_user():
     if current_user.is_authenticated():
         return current_user.is_admin == 1 or current_user.login == 'admin'
     return False
+
 
 def is_valid_user(username):
     """Check whether a username is valid or not
@@ -212,8 +219,45 @@ def is_valid_user_password(password):
         return True
     return False
 
+
 def first_init_admin_access():
     if is_admin_user() or not has_admin_users():
         return True
 
     return False
+
+
+def only_one_call_without_caching(function=None, timeout=120):
+    """Allow only one function call without caching at the moment (no_cache=True).
+    If there is the same function running - force it to use cache.
+
+    Args:
+        function(obj): wrapped function.
+        timeout(int): time to live for the lock.
+    """
+    def _dec(run_func):
+        """Decorator."""
+
+        def _caller(*args, **kwargs):
+            """Caller."""
+            lock = None
+            try:
+                # Perform this action only on function calls that don't use cache
+                if kwargs.get('no_cache') and run_func:
+                    lock = redis.Redis("localhost").lock(run_func.__name__, timeout=timeout)
+                    kwargs['no_cache'] = lock.acquire(blocking=False)
+            except (ValueError, AttributeError, redis.exceptions.RedisError):
+                kwargs['no_cache'] = False
+
+            finally:
+                result = run_func(*args, **kwargs)
+                try:
+                    lock.release()
+                except (AttributeError, ValueError, redis.exceptions.RedisError):
+                    pass
+
+            return result
+
+        return _caller
+
+    return _dec(function) if function is not None else _dec

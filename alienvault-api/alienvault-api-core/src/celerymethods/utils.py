@@ -36,6 +36,7 @@ from celery.task.control import inspect
 from celery.task.control import revoke
 from amqplib import client_0_8 as amqp
 import json
+from celeryconfig import CELERY_QUEUES
 from ansiblemethods.system.system import ansible_get_process_pid
 import api_log
 
@@ -44,7 +45,7 @@ logger = get_logger("celery")
 redis_instance = redis.Redis("localhost")
 
 
-class JobResult():
+class JobResult:
     def __init__(self, result, message, log_file="", error_id="0"):
         self.result = result
         self.message = message
@@ -53,8 +54,10 @@ class JobResult():
 
     @property
     def serialize(self):
-        return {'result': self.result, 'message': self.message,
-                'log_file': self.log_file, 'error_id': self.error_id}
+        return {'result': self.result,
+                'message': self.message,
+                'log_file': self.log_file,
+                'error_id': self.error_id}
 
 
 def exist_task_running(task_type, current_task_request, param_to_compare=None, argnum=0):
@@ -315,18 +318,21 @@ def is_task_in_rabbit(task_id):
     try:
         conn = amqp.Connection(host="localhost:5672 ", userid="guest", password="guest", virtual_host="/", insist=False)
         chan = conn.channel()
-        while True:
-            msg = chan.basic_get(queue="celery")
-            if msg is not None:
-                try:
-                    task_json = json.loads(msg.body)
-                    if task_json['id'] == task_id:
-                        api_log.warning("Task found in rabbit... that means celery is busy..")
-                        return task_json
-                except Exception as cannot_parse:
-                    api_log.warning("Cannot parse rabbit message: %s" % str(cannot_parse))
-            else:
-                break
+
+        # Inspect all available queues
+        for celery_queue in CELERY_QUEUES:
+            while True:
+                msg = chan.basic_get(queue=celery_queue.name)
+                if msg is not None:
+                    try:
+                        task_json = json.loads(msg.body)
+                        if task_json['id'] == task_id:
+                            api_log.warning("Task found in rabbit... that means celery is busy..")
+                            return task_json
+                    except Exception as cannot_parse:
+                        api_log.warning("Cannot parse rabbit message: %s" % str(cannot_parse))
+                else:
+                    break
     except Exception as e:
         api_log.error("Cannot inspect rabbitmq: %s" % str(e))
     return None

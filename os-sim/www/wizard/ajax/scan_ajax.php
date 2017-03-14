@@ -391,9 +391,7 @@ function schedule_scan($conn, $wizard, $data)
         }
 
     }
-
-    $targets   = implode(' ', $targets);
-    $params    = $targets .'#-T3 -A -sS -F';
+    $params = Util::nmap_with_excludes($targets,array("-sL","-sn","-PE","-n","-T3"));
 
     Inventory::insert($conn, $sensor_id, $name, $type, $period, $params, $targets);
 

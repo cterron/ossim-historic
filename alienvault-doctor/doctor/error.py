@@ -28,40 +28,45 @@
 #
 
 
-class DoctorError (Exception):
-    '''
-    Class DoctorError.
-    General exception for the Doctor
-    '''
-    def __init__(self, msg, plugin, **kargs):
+class DoctorError(Exception):
+    """Class DoctorError. General exception for the Doctor
+    """
+
+    def __init__(self, msg, plugin=None):
+        super(DoctorError, self).__init__(msg)
         self.msg = msg
-        self.plugin = plugin
+        self.plugin = "" if plugin is None else plugin
 
-    def __repr__(self):
-        return self.msg
+    def __str__(self):
+        return "{}, {}".format(self.args[0], self.plugin)
+
+    __repr__ = __str__
 
 
-class PluginConfigParserError (DoctorError):
-    '''
-    Class PluginConfigParserError.
+class PluginError(DoctorError):
+    """PluginError class.
+    Define an error exception for the Plugin class.
+    """
+
+    def __init__(self, msg, plugin, **kwargs):
+        super(PluginError, self).__init__(msg, plugin)
+        self.kwargs = kwargs
+
+    def __str__(self):
+        return "{}, {}, {}".format(self.args[0], self.plugin, self.kwargs)
+
+    __repr__ = __str__
+
+
+class PluginConfigParserError(DoctorError):
+    """Class PluginConfigParserError.
     Exceptions for dependencies.
-    '''
+    """
     pass
 
 
-class PluginError (DoctorError):
-    '''
-    PluginError class.
-    Define an error exception for the Plugin class.
-    '''
-    def __init__(self, plugin_data={}, **kargs):
-        self.plugin_data = plugin_data
-        super(PluginError, self).__init__(**kargs)
-
-
-class CheckError (PluginError):
-    '''
-    Class CheckError.
+class CheckError(PluginError):
+    """Class CheckError.
     Exceptions for the Check class
-    '''
+    """
     pass

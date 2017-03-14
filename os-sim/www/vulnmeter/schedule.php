@@ -5,11 +5,11 @@ define("EXCLUDING_IP2", "!(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.)
 class Schedule {
 	public $conn; // database connection
 	// get parameters
-	public $parameters = array('action' => null, 'job_name' => null, 'targets' => array(), 'schedule_type' => null, 'ROYEAR' => null, 'ROMONTH' => null, 'ROday' => null, 'time_hour' => null,
+	public $parameters = array('action' => null, 'job_name' => null, 'targets' => array(), 'schedule_type' => null, 'time_hour' => null,
 			'time_min' => null, 'dayofweek' => null, 'dayofmonth' => null, 'timeout' => 57600, 'SVRid' => null, 'sid' => null, 'targets' => null, 'job_id' => null,
 			'sched_id' => null, 'user' => null, 'entity' => null, 'scan_locally' => null, 'nthweekday' => null, 'nthdayofweek' => null,
 			'time_interval' => null, 'biyear' => null, 'bimonth' => null, 'biday' => null, 'send_email' => null, 'ssh_credential' => null,
-			'smb_credential' => null, 'hosts_alive' => null, 'scan_locally' => null, 'not_resolve' => null, 'net_id' => null, 'status' => 1);
+			'smb_credential' => null, 'hosts_alive' => null, 'scan_locally' => null, 'not_resolve' => null, 'net_id' => null, 'status' => 1, 'exclude_ports' => "");
 	private $sgr = array();
 	private $arr_ctx = array();
 	private $all_sensors; //  sensors list
@@ -33,11 +33,11 @@ class Schedule {
     private $is_modal = false;
     
     public function setModal($is_modal) {
-    	$this->is_mdoal = $is_modal;
+    	$this->is_modal = $is_modal;
     }
     
     public function isModal() {
-    	return $this->is_mdoal;
+    	return $this->is_modal;
     }
     
 	public function __construct() {
@@ -138,8 +138,11 @@ class Schedule {
 				$this->selected_targets[$asset] = Net_group::get_name_by_id($conn, $found[1]);
 				$nets = Net_group::get_networks($conn,$found[1]);
 				foreach ($nets as $net) {
-					$plain = Cidr::expand_CIDR($found[2], "FULL", "IP");
-					$this->total_targets = array_merge($this->total_targets,$plain);
+					$ips = Asset_net::get_ips_by_id($conn,$net->net_id);
+					foreach ($ips as $ip) {
+						$plain = Cidr::expand_CIDR($ip, "FULL", "IP");
+						$this->total_targets = array_merge($this->total_targets,$plain);
+					}
 				}
 			}
 			else
@@ -174,7 +177,8 @@ class Schedule {
 				"meth_TIMEOUT"	=> $this->parameters["timeout"],
 				//invert boolean
 				"resolve_names"	=> $this->parameters["not_resolve"] ^ 1,
-				"credentials"	=> $this->parameters["ssh_credential"] . '|' . $this->parameters["smb_credential"]
+				"credentials"	=> $this->parameters["ssh_credential"] . '|' . $this->parameters["smb_credential"],
+				"exclude_ports"	=> $this->parameters["exclude_ports"]
 		);
 		$plain_targets = $this->getPlainTargets();
 		$submit_data = array();
@@ -182,7 +186,6 @@ class Schedule {
 		if (Filter_list::MAX_VULNS_ITEMS < count($plain_targets)) {
 			$plain_targets = array_chunk($plain_targets,Filter_list::MAX_VULNS_ITEMS);
 			$cnt = count($plain_targets);
-			
 			$sensors = array_unique($_SESSION['_vuln_targets']);
 			$sensors_cnt = count($sensors);
 			$counter = ceil($cnt/$sensors_cnt);
@@ -193,10 +196,11 @@ class Schedule {
 					$sensor = next($sensors);
 				}
 				$params["name"] = sprintf(_("%s (part %s of %s)"),$this->parameters["job_name"],$i+1,$cnt);
+				$targs = array_combine($plain_targets[$i],$plain_targets[$i]);
 				$submit_data[] = array(
-					"IP_ctx" => $plain_targets[$i],
+					"IP_ctx" => $targs,
 					"params" => $params,
-					"targets" => $plain_targets[$i],
+					"targets" => $targs,
 					"notify_sensor" => $sensor
 				);
 			}
@@ -250,7 +254,7 @@ class Schedule {
 		if ($this->parameters["schedule_type"] == 'N') {
 			$this->resetImmediateJob();
 			foreach ($submit_data as $item) {
-				$queries[] = $this->formatImmediateQuery($item["targets"],$item["params"],$insert_time,$item["IP_ctx"],$item["notify_sensor"],$requested_run);
+				$queries[] = $this->formatImmediateQuery($item["targets"],$item["params"],$insert_time,$item["IP_ctx"],$item["notify_sensor"]);
 			}
 		} else {
 			foreach ($submit_data as $item) {
@@ -263,30 +267,32 @@ class Schedule {
 	
 
 
-	public function formatImmediateQuery($sgr,$params,$insert_time,$IP_ctx,$notify_sensor,$requested_run) {
+	public function formatImmediateQuery($sgr,$params,$insert_time,$IP_ctx,$notify_sensor) {
 		$queries = array();
 		$target_list = array_merge($sgr,$this->ip_exceptions_list());
-		$params["meth_TARGET"]	= $this->targetsToString($sgr);
+		$params["meth_TARGET"]	= $this->targetsToString($target_list);
 		$params["scan_PRIORITY"]= '3';
 		$params["status"]		= 'S';
 		$params["notify"]		= $notify_sensor;
-		$params["authorized"]	= $this->parameters["scan_locally"];
+		$params["authorized"]	= (int) $this->parameters["scan_locally"];
 		$params["scan_SUBMIT"]	= $insert_time;
 		$params["author_uname"]	= $this->targetsToString($IP_ctx);
 		$params["scan_ASSIGNED"]= $this->parameters["SVRid"];
-		$params["scan_next"]	= $requested_run;
+		$params["scan_next"]	= date("YmdHis");
 		$params["meth_SCHED"]	= $this->parameters["schedule_type"];
 		$keys = implode(",",array_keys($params));
 		$queries['query'] = "INSERT INTO vuln_jobs ( $keys )
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		$queries['params'] = $params;
 		return $queries;
 	}
 	
 	public function formatScheduledQuery($params, $bbiyear, $bbimonth, $bbiday, $insert_time, $requested_run, $IP_ctx, $targets) {
 		$queries = array();
-		$params["begin"]		= $bbiyear . $bbimonth . $bbiday;
-		$params["day_of_week"]	= $this->parameters["dayofweek"];
+		$params["begin"]		= $bbiyear . sprintf("%02d", $bbimonth) . sprintf("%02d", $bbiday); 
+		//because in database week starts from 1
+		//dozens of gracias to one whom implemented the "architecture"
+		$params["day_of_week"]	= $this->parameters["dayofweek"] + 1;
 		$params["day_of_month"]	= $this->parameters["dayofmonth"];
 		$params["time"]			= "{$this->parameters['time_hour']}:{$this->parameters['time_min']}:00";
 		$params["meth_Ucheck"]	= $this->parameters["scan_locally"];
@@ -306,7 +312,7 @@ class Schedule {
 		} else {
 			$keys = implode(",",array_keys($params));
 			$queries['query'] = "INSERT INTO vuln_job_schedule ( $keys )
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
 		}
 		$queries['params'] = $params;
 		return $queries;
@@ -382,7 +388,7 @@ class Schedule {
 		$args = '';
 		if (!Session::am_i_admin())
 		{
-			list($owners, $sqlowners) = Vulnerabilities::get_users_and_entities_filter($conn);
+			list($owners) = Vulnerabilities::get_users_and_entities_filter($conn);
 			$owners[]   = '0';
 			$sql_perms .= " OR owner IN('".implode("', '",$owners)."')";
 			$args = "WHERE name='Default' OR name='Deep' OR name='Ultimate' ".$sql_perms;
@@ -402,7 +408,7 @@ class Schedule {
 	public function load_users() {
 		$users           = Session::get_users_to_assign($this->conn);
 		$this->users_to_assign = array();
-		foreach ($users as $u_key => $u_value) {
+		foreach ($users as $u_value) {
 			$this->users_to_assign[$u_value->get_login()] = $u_value->get_login();
 		}
 	}
@@ -445,7 +451,7 @@ class Schedule {
 				if ($errorcb)
 					$errorcb();
 			} else {
-				if ($succes)
+				if ($success)
 					$success();
 			}
 	}
@@ -497,9 +503,13 @@ class Schedule {
 				},
 				$this->parameters["smb_credential"]
 				);
+		if ($this->parameters["exclude_ports"] != "" && !preg_match("/^([0-9]{1,5}(,|-))*[0-9]{1,5}$/",$this->parameters["exclude_ports"])) {
+			$this->validation_errors[] = _('Invalid Exclude Ports');
+		}
 		$this->ip_exceptions_list = array();
 		$tip_target         = array();
-		foreach($this->selected_targets as $target => $val) {
+		$targets = array_keys($this->selected_targets);
+		foreach($targets as $target) {
 			$target_error = FALSE;
 			$target = trim($target);
 			if (preg_match("/^\!\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/",$target)) {
@@ -588,13 +598,14 @@ class Schedule {
 		</select>
 		<?php 	
 	}
-	public function current_time_to_paramaters() {
-		$curdate = explode("-",date("Y-m-d-H"));
-		list($this->parameters["ROYEAR"],$this->parameters["ROMONTH"],
-			$this->parameters["ROday"],$this->parameters["time_hour"]) = $curdate;
-		$this->parameters["biyear"]=$this->parameters["ROYEAR"];
-		$this->parameters["bimonth"]=$this->parameters["ROMONTH"];
-		$this->parameters["biday"]=$this->parameters["ROday"];
+	public function current_time_to_paramaters($tz) {
+		list(
+			$this->parameters["biyear"],
+			$this->parameters["bimonth"],
+			$this->parameters["biday"],
+			$this->parameters["time_hour"]
+		//plus one hour to show always future date
+		) = explode("-",date("Y-n-j-G",time() + 3600 * ($tz+1)));
 	}
 
 }

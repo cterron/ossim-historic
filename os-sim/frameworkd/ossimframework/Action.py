@@ -387,11 +387,12 @@ class Action(threading.Thread):
                                    self.__email_server_passwd, use_local_server)
 
                     for mail in email_to:
+                        if action_email['message_suffix'] == 1:
+                            email_message += "\n\n" + self.requestRepr(self.__request, mail)
                         m.sendmail(email_from,
                                    mail,
                                    email_subject,
-                                   email_message + \
-                                   "\n\n" + self.requestRepr(self.__request, mail))
+                                   email_message)
                     del(m)
 
             # execute external command

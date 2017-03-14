@@ -1241,8 +1241,7 @@ class Asset_net extends Asset
             //Getting networks from inventory tasks
             foreach ($task_list as $task_data)
             {
-                $_aux = explode('#', $task_data['task_params']);
-                $_nets = explode(' ', $_aux[0]);
+                list($_nets) = Util::nmap_without_excludes($task_data['task_params']);
 
                 foreach ($_nets as $net)
                 {
@@ -2356,7 +2355,6 @@ class Asset_net extends Asset
         $name = NULL;
 
         $query  = 'SELECT name FROM net WHERE id = UNHEX(?)';
-
         $params = array($id);
 
         $rs = $conn->Execute($query, $params);

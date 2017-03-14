@@ -75,8 +75,7 @@ if (!isset($id) || empty($id))
 	$winfo['height'] = GET("height");					//Height of the widget
 	$winfo['wtype']  = GET("wtype");					//Type of widget: chart, tag_cloud, etc.
 	$winfo['asset']  = GET("asset");					//Assets implicated in the widget
-	$chart_info      = unserialize(GET("value")); 		//Params of the widget representation, this is: type of chart, legend params, etc.
-
+	$chart_info      = json_decode(GET("value"),true); 		//Params of the widget representation, this is: type of chart, legend params, etc.
 } 
 else  //If the ID is not empty, we are in the normal case; loading the widget from the dashboard. In this case we get the info from the DB.
 { 
@@ -90,15 +89,19 @@ else  //If the ID is not empty, we are in the normal case; loading the widget fr
 ossim_valid($winfo['wtype'], 	OSS_TEXT, 								'illegal:' . _("Type"));
 ossim_valid($winfo['height'],	OSS_DIGIT, 								'illegal:' . _("Widget ID"));
 ossim_valid($winfo['asset'], 	OSS_HEX,OSS_SCORE,OSS_ALPHA,OSS_USER, 	'illegal:' . _("Asset/User/Entity"));
-
 if (is_array($chart_info) && !empty($chart_info))
 {
 	$validation = get_array_validation();
-	
 	foreach($chart_info as $key=>$val)
 	{
-		eval("ossim_valid(\"\$val\", ".$validation[$key].", 'illegal:" . _($key)."');");
-	}	
+		if ($key == "type") {
+			if (!preg_match("/^[a-zA-Z]{3}_?[a-zA-Z]*$/",$val)) {
+				ossim_set_error('illegal: '. _($key));
+			}
+		} else {
+			ossim_valid($val, constant($validation[$key]), 'illegal: '. _($key));
+		}
+	}
 }
 
 if (ossim_error()) 

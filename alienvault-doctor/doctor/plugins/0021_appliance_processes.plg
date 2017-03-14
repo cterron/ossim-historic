@@ -65,7 +65,7 @@ description=Checks if all the AlienVault services are up and running
 summary_passed=All the expected services are up and running
 summary_failed=One or more AlienVault services are behaving unsuccessfully
 remediation=AlienVault services shouldn't be manually stopped
-appliance_type=alienvault-vmware-usm-standard,alienvault-vmware-aio-6x1gb-lite,alienvault-vmware-aio-6x1gb
+appliance_type=@vmware_aio_profiles@,@hyperv_aio_profiles@,@ami_aio_profiles@,@hw_aio_profiles@,@vmware_usm_standard_profiles@,@hyperv_usm_standard_profiles@,@ami_usm_standard_profiles@,@hw_usm_standard_profiles@,@vmware_sensor_profiles@,@hyperv_sensor_profiles@,@ami_sensor_profiles@,alienvault-hw-sensor-remote,alienvault-hw-sensor-standard-6x1gb,alienvault-hw-sensor-standard-2x10gb
 min_doctor_version=4.15
 
 # Check for aio processes which should(n't) be there

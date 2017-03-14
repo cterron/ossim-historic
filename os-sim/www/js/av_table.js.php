@@ -97,7 +97,7 @@ require_once 'av_init.php';
                 "bLengthChange": true,
                 "sPaginationType": "full_numbers",
                 "bFilter": opt.search,
-                "aLengthMenu": [10, 20, 50],
+                "aLengthMenu": [10, 20, 50, 100, 250, 500],
                 "bJQueryUI": true,
                 "aaSorting": [[0, "desc"]],
                 "oLanguage": get_dt_languages(opt.language, opt.pagination),

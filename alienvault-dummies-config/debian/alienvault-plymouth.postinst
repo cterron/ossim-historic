@@ -36,6 +36,15 @@ ESCALATOR_CONFIG="escalator=noop"
 GRUB_CMDLINE_LINUX_DEFAULT=" $PLYMOUTH_CONFIG $ESCALATOR_CONFIG"
 GRUB_CMDLINE_LINUX=""
 EOF
+
+## hyperv splash disable temporal workaround.-
+## next fragment is intended to avoid re enable it in 5.3.5 and later, if it will be needed
+if [ -e /etc/plymouth/.nosplash ]; then
+	echo "File /etc/plymouth/.nosplash found. Skipping splash enable."
+	sed -i -e "s/\<splash vga=792\>//g" /etc/default/grub
+fi
+## -.
+
 	    MD5_POST=`md5sum $DEFAULT_GRUB_FILE | awk '{print $1}'`
 
             MODULE_INCLUDED=$(grep "^uvesafb" "$MODULES_FILE" || true)

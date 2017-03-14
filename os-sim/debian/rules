@@ -106,6 +106,7 @@ install: build
 	install -m755 etc/cron.d/ossim-scanner-job $(TMP)/ossim-framework/etc/cron.d/ossim-scanner-job
 	install -m755 etc/cron.d/mail-subscription $(TMP)/ossim-framework/etc/cron.d/mail-subscription
 	install -m755 etc/cron.d/assets-sync $(TMP)/ossim-framework/etc/cron.d/assets-sync
+	install -m755 etc/cron.d/otx-debugger $(TMP)/ossim-framework/etc/cron.d/otx-debugger
 
 	install -m644 etc/logrotate.d/ossim-framework $(TMP)/ossim-framework/etc/logrotate.d/
 

@@ -132,9 +132,11 @@ class Sysinfo (object):
         # Find software profile.
         line = setup_file[(setup_file.find('\nprofile=') + 9):]
         sw_profile = [x.strip() for x in line[:line.find('\n')].split(',')]
-        self.__alienvault_config['sw_profile'] = filter(lambda x: x in ['Server', 'Framework', 'Database', 'Sensor'], sw_profile)
+        self.__alienvault_config['sw_profile'] = filter(
+            lambda x: x in ['Server', 'Framework', 'Database', 'Sensor'], sw_profile
+        )
 
-        if self.__alienvault_config['sw_profile'] == []:
+        if not self.__alienvault_config['sw_profile']:
             Output.error('There are no defined profile in ossim_setup.conf')
             sys.exit(default.error_codes['undef_software_profile'])
 
@@ -146,7 +148,8 @@ class Sysinfo (object):
         if os.path.isfile(default.ossim_license_file):
             with open(default.ossim_license_file, 'r') as f:
                 content = f.read()
-                self.__alienvault_config['versiontype'] = 'TRIAL' if re.findall(r'^expire\=9999-12-31$', content, re.MULTILINE) == [] else 'PRO'
+                self.__alienvault_config['versiontype'] = 'TRIAL' if re.findall(
+                    r'^expire\=9999-12-31$', content, re.MULTILINE) == [] else 'PRO'
                 license = re.findall(r'^key\=(\S+)$', content, re.MULTILINE)
                 self.__alienvault_config['license'] = license[0] if len(license) > 0 else 'None'
                 if 'Server' in self.__alienvault_config['sw_profile']:
@@ -165,9 +168,18 @@ class Sysinfo (object):
         if self.__alienvault_config['versiontype'] != 'FREE':
             available_hw_packages = ['alienvault-ami-usm-standard',
                                      'alienvault-ami-aio-6x1gb',
+                                     'alienvault-ami-aio-6x1gb-lite',
                                      'alienvault-ami-logger-standard',
-                                     'alienvault-ami-sensor-standard',
+                                     'alienvault-ami-sensor-standard-6x1gb',
                                      'alienvault-ami-sensor-remote',
+                                     'alienvault-ami-sensor-remote-lite',
+                                     'alienvault-hyperv-aio-6x1gb',
+                                     'alienvault-hyperv-aio-6x1gb-lite',
+                                     'alienvault-hyperv-sensor-remote',
+                                     'alienvault-hyperv-sensor-remote-lite',
+                                     'alienvault-hyperv-usm-standard',
+                                     'alienvault-hyperv-logger-standard',
+                                     'alienvault-hyperv-sensor-standard-6x1gb',
                                      'alienvault-vmware-usm-standard',
                                      'alienvault-vmware-aio-6x1gb',
                                      'alienvault-vmware-aio-6x1gb-lite',
@@ -198,7 +210,8 @@ class Sysinfo (object):
             self.__alienvault_config['hw_profile'] = "ossim-free"
 
         # Find the version.
-        versions = list(set(re.findall('^ii\s+(?:ossim-server|ossim-agent|ossim-framework|ossim-mysql)\s+(?:1|10):(?P<version>\S+)-\S+\s+', output, re.MULTILINE)))
+        regexp = '^ii\s+(?:ossim-server|ossim-agent|ossim-framework|ossim-mysql)\s+(?:1|10):(?P<version>\S+)-\S+\s+'
+        versions = list(set(re.findall(regexp, output, re.MULTILINE)))
         if len(versions) != 1:
             Output.error('Essential packages %s have different versions' % ', '.join(cmd[2:]))
         self.__alienvault_config['version'] = versions[0] if versions else ''
@@ -280,7 +293,7 @@ class Sysinfo (object):
         update_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
         for update_file in update_files:
             with open(update_file, 'r') as f:
-                if re.findall('code (?!0)', f.read(), re.MULTILINE) == []:
+                if not re.findall('code (?!0)', f.read(), re.MULTILINE):
                     self.__alienvault_config['last_updated'] = os.path.getmtime(update_file)
                     break
 
@@ -436,7 +449,8 @@ class Sysinfo (object):
     # Get up & running network interfaces.
     # Credits to:
     # http://code.activestate.com/recipes/439093-get-names-of-all-up-network-interfaces-linux-only/#c7
-    def __get_running_network_interfaces__(self):
+    @staticmethod
+    def __get_running_network_interfaces__():
         is_64bits = sys.maxsize > 2**32
         struct_size = 40 if is_64bits else 32
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -459,19 +473,19 @@ class Sysinfo (object):
                 for i in range(0, outbytes, struct_size)]
 
     def get_alienvault_config(self):
-        return (self.__alienvault_config)
+        return self.__alienvault_config
 
     def get_successful_config(self):
-        return (self.__successful_config)
+        return self.__successful_config
 
     def get_system_config(self):
-        return (self.__system_config)
+        return self.__system_config
 
     def get_hardware_config(self):
-        return (self.__hardware_config)
+        return self.__hardware_config
 
     def get_system_status(self):
-        return (self.__system_status)
+        return self.__system_status
 
     def get_value(self, string):
         if string in self.__alienvault_config.keys():
@@ -561,12 +575,11 @@ class Sysinfo (object):
         return platform_info
 
     def cpuinfo(self):
-        '''
-        Return the information in /proc/cpuinfo
+        """Return the information in /proc/cpuinfo
         as a dictionary in the following format:
         cpu_info['proc0']={...}
         cpu_info['proc1']={...}
-        '''
+        """
 
         cpuinfo = {}
         procinfo = {}

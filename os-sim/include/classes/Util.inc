@@ -775,7 +775,6 @@ class Util
         }
     
         $sizes = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
-    
         $k = 1024;
         $i = floor(log($bytes) / log($k));
     
@@ -1155,6 +1154,15 @@ class Util
         return strtotime($date . ' GMT');
     }
 
+    public static function format_payload_extermnal($binary) {
+        $id = rand(0,999).time();
+        $tmpfile = "/var/tmp/base_packet_" . $id . ".pcap";
+        $cmd = "/usr/share/ossim/scripts/snortlogtopcap.py -u ? -p ?";
+        self::execute_command("$cmd > /dev/null 2>&1", array($binary, $tmpfile));
+        $bin = file_get_contents($tmpfile);
+        unlink($tmpfile);
+        return $bin;
+    }
 
     /**
     * Function get_unixtime_utc
@@ -3082,13 +3090,46 @@ class Util
         file_put_contents(LAST_UPDATE_LOCK,$uuid);
         return true;
     }
+//0 for events
+//1 for alarms
+    public static function get_risk_rext($risk,$type = 1) {
+        $rrisk=$risk - $type;
+        $text = "high";
+        if ($rrisk <= 0) $text = "low ";
+        if ($rrisk == 1) $text = "med ";
+        return "$text ($risk)";
+    }
 
-    public static function get_risk_rext($risk) {
-        if ($risk==0) return "low";
-        if ($risk==1) return "medium";
-        return "high";
+    public static function nmap_with_excludes($task_params,$nmap_options) {
+        $res = array();
+        $excludes = array();
+        foreach ($task_params as $tp) {
+            if (strpos($tp,"!") === 0) {
+                $tp = str_replace("!","",$tp);
+                $excludes[] = $tp;
+            } else {
+                $res[] = $tp;
+            }
+        }
+        if ($excludes) {
+            $nmap_options[] = "--exclude ".implode(",",$excludes);
+        }
+        return implode(" ",$res).'#'.implode(' ', $nmap_options);
+    }
+
+    public static function nmap_without_excludes($task_params) {
+	$regexp = "/\s?--exclude\s([^\s]+)/";
+	list($params,$options) = explode("#", $task_params);
+	$params = explode(" ",$params);
+	if (preg_match($regexp,$options,$res)) {
+            $res = explode(",",$res[1]);
+            foreach ($res as $item) {
+                $params[] = "!$item";
+            }
+        }
+	$options = preg_replace($regexp,"",$options);
+	return array($params,$options);
     }
 }
-
 /* End of file Util.inc */
 /* Location: ../include/classes/Util.inc */

@@ -28,6 +28,7 @@
 #
 
 from celery.utils.log import get_logger
+from celery_once.tasks import QueueOnce
 from celerymethods.tasks import celery_instance
 
 from api.lib.monitors.sensor import (MonitorSensorLocation,
@@ -49,7 +50,9 @@ from api.lib.monitors.system import (MonitorSystemCPULoad,
                                      MonitorDiskUsage,
                                      MonitorSystemDNS,
                                      MonitorRemoteCertificates,
+                                     MonitorRetrievesRemoteSysStatus,
                                      MonitorRetrievesRemoteInfo,
+                                     MonitorUpdateSysWithRemoteInfo,
                                      MonitorPendingUpdates,
                                      MonitorDownloadMessageCenterMessages,
                                      MonitorSystemCheckDB,
@@ -231,6 +234,20 @@ def monitor_remote_certificates():
 
 
 @celery_instance.task
+def monitor_retrieves_remote_status():
+    """Monitor to retrieve remote system status
+    :return: True on  successful, False otherwise
+    """
+    logger.info("Monitor MonitorRetrievesRemoteSysStatus started")
+    monitor = MonitorRetrievesRemoteSysStatus()
+    rt = False
+    if monitor.start():
+        rt = True
+    logger.info("Monitor MonitorRetrievesRemoteSysStatus stopped")
+    return rt
+
+
+@celery_instance.task
 def monitor_retrieves_remote_info():
     """Monitor de Remote Certificates
     :return: True on  successful, False otherwise
@@ -241,6 +258,20 @@ def monitor_retrieves_remote_info():
     if monitor.start():
         rt = True
     logger.info("Monitor MonitorRetrievesRemoteInfo stopped")
+    return rt
+
+
+@celery_instance.task
+def monitor_update_system_with_remote_info():
+    """Monitor to retrieve remote system status
+    :return: True on  successful, False otherwise
+    """
+    logger.info("Monitor MonitorUpdateSysWithRemoteInfo started")
+    monitor = MonitorUpdateSysWithRemoteInfo()
+    rt = False
+    if monitor.start():
+        rt = True
+    logger.info("Monitor MonitorUpdateSysWithRemoteInfo stopped")
     return rt
 
 
@@ -459,7 +490,7 @@ def monitor_download_pulses_ha():
     return rt
 
 
-@celery_instance.task
+@celery_instance.task(base=QueueOnce)
 def monitor_update_host_plugins():
     """Monitor to fill host_scan table with active plugins per device
         True if successful, False otherwise
@@ -476,7 +507,7 @@ def monitor_update_host_plugins():
     return rt
 
 
-@celery_instance.task
+@celery_instance.task(base=QueueOnce)
 def monitor_enabled_plugins_limit():
     """Monitor to check enabled plugins limit and send notification in MC.
         True if successful, False otherwise

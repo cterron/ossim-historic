@@ -1,8 +1,50 @@
-alienvault-dummy-common (5.3.0-0) stable; urgency=low
+alienvault-dummy-common (5.3.5-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 27 Jun 2016 04:39:02 -0400
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 11 Jan 2017 06:24:08 -0500
+
+alienvault-dummy-common (5.3.5-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Tue, 15 Nov 2016 07:37:58 -0500
+
+alienvault-dummy-common (5.3.4-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 05 Oct 2016 04:23:59 -0400
+
+alienvault-dummy-common (5.3.3-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 14 Sep 2016 07:10:46 -0400
+
+alienvault-dummy-common (5.3.2-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 05 Sep 2016 06:52:10 -0400
+
+alienvault-dummy-common (5.3.2-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 31 Aug 2016 08:27:54 -0400
+
+alienvault-dummy-common (5.3.1-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 03 Aug 2016 06:06:51 -0400
+
+alienvault-dummy-common (5.4-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 27 Jun 2016 04:39:47 -0400
 
 alienvault-dummy-common (5.3-0) unstable; urgency=low
 

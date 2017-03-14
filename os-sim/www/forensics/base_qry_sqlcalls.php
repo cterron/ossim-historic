@@ -20,7 +20,7 @@ require_once 'classes/geolocation.inc';
 $geoloc = new Geolocation('/usr/share/geoip/GeoLiteCity.dat');
 
 global $colored_alerts, $debug_mode;
-
+$show_rows = POST("show_rows") ? POST("show_rows") : 50;
 // PLOT
 ?>
 <div id="plot_option">
@@ -31,6 +31,18 @@ global $colored_alerts, $debug_mode;
                     <tr>
                         <td style="padding-left:0px;vertical-align:top" nowrap>
                             <table class="transparent" cellpadding=0 cellspacing=0><tr>
+
+                            <td class="siem_title_gray"><?= _("Show")?>&nbsp;</td>
+                            <td>
+                            <input type="submit" name="submit" style="display:none" id="pagx" value="0">
+                            <select name="show_rows" onchange="$('#pagx').click()">
+                                <? foreach (array(50,100,250,500) as $i) {?>
+                                <option value="<?=$i?>" <?= $show_rows == $i ? 'selected="selected"' : '' ?>><?=$i?></option>
+                                <? } ?>
+                            </select>
+                            </td>
+                            <td class='siem_title_gray'>&nbsp;<?= _("Entries")?></td>
+                            </tr><tr>
                             <td class='siem_title_gray' style="padding-right:5px">
                                 <?php echo _("SHOW TREND GRAPH") ?>
                             </td>
@@ -839,7 +851,7 @@ if ($qs->num_result_rows > 0)
         //qroPrintEntry("<img src=\"bar2.php?value=" . $current_oriskc . "&value2=" . $current_oriska . "&max=9&range=1\" border='0' align='absmiddle' title='$current_oriskc -> $current_oriska'>&nbsp;");
 
         $current_maxrisk = ($current_oriska > $current_oriskc) ? $current_oriska : $current_oriskc;
-        $risk_text = Util::get_risk_rext($current_maxrisk);
+        $risk_text = Util::get_risk_rext($current_maxrisk,0);
         $risk_bar = "<span class='risk-bar $risk_text'>"._($risk_text)."</span>";
         $risk_detail = "<div class='risk-popup' style='text-align:right'>
             <table CELLPADDING='0' CELLSPACING='0'>

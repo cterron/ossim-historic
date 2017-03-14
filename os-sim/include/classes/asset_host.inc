@@ -1621,8 +1621,7 @@ class Asset_host extends Asset
             //Getting networks from inventory tasks
             foreach ($task_list as $task_data)
             {
-                $_aux  = explode('#', $task_data['task_params']);
-                $_nets = explode(' ', $_aux[0]);
+                list($_nets)  = Util::nmap_without_excludes($task_data['task_params']);
 
                 foreach ($_nets as $net)
                 {
@@ -2509,11 +2508,11 @@ class Asset_host extends Asset
         $queries[] = "DELETE h.* FROM bp_asset_member h,          $tmp_table f WHERE f.host_id = h.member";
         $queries[] = "DELETE h.* FROM repository_relationships h, $tmp_table f WHERE f.host_id = UNHEX(h.keyname)";
         $queries[] = "DELETE h.* FROM host_plugin_sid h
-            LEFT JOIN (SELECT ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.host_ip = f.ip AND f.ctx = h.ctx";
+            JOIN (SELECT ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.host_ip = f.ip AND f.ctx = h.ctx";
         $queries[] = "DELETE h.* FROM vuln_nessus_latest_reports h
-            LEFT JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
+            JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
         $queries[] = "DELETE h.* FROM vuln_nessus_latest_results h
-            LEFT JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
+            JOIN (SELECT INET6_NTOA(ip) AS ip, ctx FROM host_ip hi, $tmp_table t WHERE hi.host_id = t.host_id) AS f ON h.hostIP = f.ip AND f.ctx = h.ctx";
 
         //Update statements
         $queries[] = "UPDATE hids_agents ha INNER JOIN $tmp_table f ON f.host_id=ha.host_id SET ha.host_id = NULL";
@@ -2666,7 +2665,6 @@ class Asset_host extends Asset
         $name = '';
 
         $query = 'SELECT hostname FROM host WHERE id = UNHEX(?)';
-
         $params = array($id);
 
         $rs = $conn->Execute($query, $params);

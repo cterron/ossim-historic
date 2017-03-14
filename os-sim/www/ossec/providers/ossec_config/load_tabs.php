@@ -83,8 +83,11 @@ if($tab == '#tab1')
         foreach($output as $k => $v)
         {
             if (preg_match("/^<\s*include\s*>(.*)<\s*\/include\s*>/", trim($v), $match))
-            {
-                $rules_enabled[] = $match[1];
+            {   
+                //Get only rulename from path to show in the UI
+                $rule_path = explode('/', rtrim($match[1], '/'));
+                $rule_name = array_pop($rule_path);
+                $rules_enabled[] = $rule_name;
             }
         }
 

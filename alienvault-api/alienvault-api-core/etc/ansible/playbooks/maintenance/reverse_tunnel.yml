@@ -217,7 +217,7 @@
 
   
     - name: Create the avsupport user
-      shell: set -o pipefail; echo "CALL alienvault.user_del('avsupport');CALL alienvault.user_add('avsupport','{{web_password.stdout}}',1)" | ossim-db
+      shell: set -o pipefail; echo "CALL alienvault.user_del('avsupport');CALL alienvault.user_add('avsupport','{{web_password.stdout}}','',1)" | ossim-db
       when: IS_PROFILE_FRAMEWORK.stdout == 'yes' and db_ok.rc == 0
       register: avsupport_user
       ignore_errors: True

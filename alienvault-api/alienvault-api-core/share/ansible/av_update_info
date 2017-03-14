@@ -51,12 +51,13 @@ options:
 EXAMPLES="""
 """
 
+
 def _run_command(command, args=None):
     """Run the given command and returns the return code, the output and the stderr"""
     try:
-        pipe = sub.Popen(command, stdout=sub.PIPE,stdin=sub.PIPE,stderr=sub.PIPE, shell=True)
+        pipe = sub.Popen(command, stdout=sub.PIPE, stdin=sub.PIPE, stderr=sub.PIPE, shell=True)
         if args is not None:
-            pipe = sub.Popen([command, args], stdout=sub.PIPE,stdin=sub.PIPE,stderr=sub.PIPE, shell=True)
+            pipe = sub.Popen([command, args], stdout=sub.PIPE, stdin=sub.PIPE, stderr=sub.PIPE, shell=True)
 
         output, error = pipe.communicate()
         return_code = pipe.returncode
@@ -74,7 +75,7 @@ def run_apt_get_update():
         return_code, output, error = _run_command(cmd)
     except:
         pass
-    return return_code,output, error
+    return return_code, output, error
 
 
 def get_available_updates():
@@ -87,24 +88,24 @@ def get_available_updates():
         %D -> pacakge size
         %o -> download size
         """
-        #Retrieve all the packages upgradeables (~U) and omit the hold ones (\!~aHold).
+        # Retrieve all the packages upgradeables (~U) and omit the hold ones (\!~aHold).
         cmd = "aptitude -F '%p,%v,%V,%D,%o' --disable-columns search ~U\!~aHold"
         return_code, output, error_str = _run_command(cmd)
         if return_code == 0:
             packages = []
             for line in output.split('\n'):
                 data = line.split(',')
-                if len(data) ==  5:
-                    package_data = {'package-name':data[0],
+                if len(data) == 5:
+                    package_data = {'package-name': data[0],
                                     'package-current-version': data[1],
                                     'package-candidate-version': data[2],
-                                    'package-size':data[3]}
+                                    'package-size': data[3]}
                     packages.append(package_data)
             if len(packages) > 0:
                 output = packages
     except:
         pass
-    return  return_code,output, error_str
+    return return_code, output, error_str
 
 
 def get_total_packages():
@@ -130,22 +131,22 @@ def get_my_timezone():
                 return pytz.timezone(timezone)
     except Exception as err:
         pass
-    return None # If no timezone found return None  
+    # If no timezone found return None
+    return None
 
 
 def get_last_time_update():
     last_time_str = "unknown"
     try:
-        #cmd ="tail -1 /var/log/dpkg.log  | awk {'print $1,$2'}"
-        cmd = "cat $(ls /var/log/dpkg.log* | grep -v .*\.gz) | awk {'print $1,$2'} | sort -u | tail -1"
-        return_code, output,error_str = _run_command(cmd)
+        cmd = "tail -1 /var/log/dpkg.log | awk {'print $1,$2'}"
+        return_code, output, error_str = _run_command(cmd)
         if return_code == 0:
             last_time_str = output.rstrip()
-            #Convert the date to UTC:
+            # Convert the date to UTC:
             mytimezone = get_my_timezone()
             if mytimezone is not None:
-                formatted_local_datetime = datetime.datetime.strptime (last_time_str, "%Y-%m-%d %H:%M:%S")
-                local_dt = mytimezone.localize(formatted_local_datetime, is_dst = None)
+                formatted_local_datetime = datetime.datetime.strptime(last_time_str, "%Y-%m-%d %H:%M:%S")
+                local_dt = mytimezone.localize(formatted_local_datetime, is_dst=None)
                 utc_dt = local_dt.astimezone(pytz.utc)
                 last_time_str = utc_dt.strftime("%Y-%m-%d %H:%M:%S")
     except Exception as err:
@@ -157,7 +158,7 @@ def get_current_version():
     cmd = "dpkg -l | grep ossim-cd-tools | awk '{print $3}' | awk -F'-' '{ print $1 }'"
     try:
         version = "Unknown"
-        return_code, output,error_str = _run_command(cmd)
+        return_code, output, error_str = _run_command(cmd)
         if return_code == 0:
             version = output.rstrip()
     except Exception as err:
@@ -170,7 +171,9 @@ def get_packages_info():
             'total_packages': get_total_packages(),
             'total_packages_with_updates_available': 0,
             'pending_updates': False,
+            'last_update_status': get_last_update_status(),
             'pending_feed_updates': False,
+            'last_feed_update_status': get_last_update_status(feed_only=True),
             'current_version': get_current_version(),
             'last_update': get_last_time_update(),
             'available_updates': [],
@@ -189,7 +192,7 @@ def get_packages_info():
         state['error'] = error
         return True, state
     state['available_updates'] = output 
-    if len(output)>0:
+    if len(output) > 0:
         state['pending_updates'] = True
         state['total_packages_with_updates_available'] = len(output)
         package_name_list = [x['package-name'] for x in state['available_updates']]
@@ -197,6 +200,41 @@ def get_packages_info():
         state['pending_feed_updates'] = any(x in feed for x in package_name_list)
 
     return True, state
+
+
+def get_last_update_status(feed_only=False):
+    """Returns last update status from *.log.rc files
+    Args:
+      feed_only(bool): True for feed updates
+
+    Returns:
+      True if return code from *.log.rc is 0
+      Otherwise returns False
+
+    Examples:
+      get_last_update_status(feed_only=False)
+      "awk 'NR==1' $(find /var/log/alienvault/update -name 'system_update_*.log.rc' | sort -V | grep -v feed | tail -1)"
+
+      get_last_update_status(feed_only=True)
+      "awk 'NR==1' $(find /var/log/alienvault/update -name 'system_update_feed*.log.rc' | sort -V | tail -1)"
+    """
+    logs_path = "/var/log/alienvault/update"
+    feed_rc = "system_update_feed*.log.rc"
+    update_rc = "system_update_*.log.rc"
+    exclude_feed = "| grep -v feed "
+
+    cmd = "awk 'NR==1' $(find {} -name '{}' | sort -V {}| tail -1)".format(
+        logs_path,
+        feed_rc if feed_only else update_rc,
+        "" if feed_only else exclude_feed
+    )
+    try:
+        return_code, output, error_str = _run_command(cmd)
+        if return_code == 0:
+            status = int(output.rstrip())
+    except Exception as err:
+        status = "Unknown"
+    return True if status < 1 else False
 
 
 def main():

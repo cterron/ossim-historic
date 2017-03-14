@@ -102,8 +102,8 @@ function email_form($action)
         <td class="left nobborder">
             <input onfocus='set_focus(this);' value="<?php echo ((is_null($action)) ? "" : $action->get_from()); ?>" class="vfield" name="email_from" id="email_from" type="text" size="60"/>
         </td>
-    </tr>
     <tr class="temail">
+    </tr>
         <th><label for='email_to'><?php echo _('To:') . required(); ?></label></th>
         <td class="left nobborder">
             <input onfocus='set_focus(this);' <?php echo ((is_null($action)) ? "style=\"color: #C0C0C0\"" : ""); ?> value="<?php echo ((is_null($action)) ? _("email;email;email"):$action->get_to());?>" class="vfield" name="email_to" id="email_to" type="text" size="60"/>
@@ -119,6 +119,11 @@ function email_form($action)
         <th class="lth"><label for='email_message'><?php echo _('Message:') . required(); ?></label></th>
         <td class="left nobborder">
         <textarea onfocus='set_focus(this);' name="email_message" id="email_message" class="vfield"><?php echo ((is_null($action)) ? "" : $action->get_message()); ?></textarea>
+    </tr>
+    <tr class="temail">
+        <th class="lth"><label for='email_message_suffix'><?php echo _('Include all available event fields at the end of the message') ?>:</label></th>
+        <td class="left nobborder">
+        <input type="checkbox" name="email_message_suffix" id="email_message_suffix" <?php echo !is_null($action) && $action->get_message_suffix() ? 'checked="checked"' : '' ?>/>
     </tr>
 <?php
 }

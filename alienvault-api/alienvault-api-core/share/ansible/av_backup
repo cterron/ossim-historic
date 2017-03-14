@@ -48,6 +48,7 @@ import yaml
 import shutil
 import sys
 import socket
+from pipes import quote
 
 sys.path.append("/usr/share/alienvault-center/av-libs/")
 from avconfig import ossimsetupconfig
@@ -116,7 +117,7 @@ def disk_space_available(percentage=80):
              False otherwise
     """
     try:
-        return_code, output, error = _run_command("df / | tail -1 |df / | tail -1 | awk '{print $5}'|sed 's/%//'")
+        return_code, output, error = _run_command("df / | awk '(/\/$/) {print $5}'|sed 's/%//'")
         if return_code != 0 or int(output) > percentage:
             return False
     except:
@@ -303,7 +304,7 @@ def encrypt_backup(backup_file, backup_pass=''):
     success = True
     encrypted_backup = '%s.enc' % backup_file
 
-    cmd = "gpg --symmetric --batch --yes --passphrase %s --cipher-algo AES256 --output %s %s" % (backup_pass,
+    cmd = "gpg --symmetric --batch --yes --passphrase %s --cipher-algo AES256 --output %s %s" % (quote(backup_pass),
                                                                                                  encrypted_backup,
                                                                                                  backup_file)
     return_code, output, error = _run_command(cmd)

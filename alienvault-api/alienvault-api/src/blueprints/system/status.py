@@ -30,27 +30,25 @@
 """
     Implement the calls to obtain several system facts
 """
-from flask import Blueprint, request
-from api.lib.utils import accepted_url
 from uuid import UUID
-from api.lib.common import (
-    make_ok,
-    make_error,
-    make_error_from_exception,
-    document_using)
-from api.lib.auth import admin_permission
-from apimethods.system.status import system_all_info
-from apimethods.system.status import network_status
-from apimethods.system.status import alienvault_status
-from apimethods.system.status import package_list
-from apimethods.system.status import ping_system
-from apimethods.utils import (
-    is_json_true,
-    BOOL_VALUES)
 
-from apiexceptions import APIException
 import api_log
-
+from api.lib.auth import admin_permission
+from api.lib.common import (make_ok,
+                            make_error,
+                            make_error_from_exception,
+                            document_using)
+from api.lib.utils import accepted_url, only_one_call_without_caching
+from apiexceptions import APIException
+from apimethods.system.status import (system_all_info,
+                                      network_status,
+                                      alienvault_status,
+                                      package_list, ping_system)
+from apimethods.system.system import (check_if_process_is_running,
+                                      apimethod_get_remote_software_update,
+                                      apimethod_get_pending_packges)
+from apimethods.utils import is_json_true, is_json_boolean, BOOL_VALUES
+from flask import Blueprint, request
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -59,7 +57,7 @@ blueprint = Blueprint(__name__, __name__)
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-              'no_cache': {'optional': True, 'values':['true', 'false']}
+               'no_cache': {'optional': True, 'values': ['true', 'false']}
                })
 def get_system_status(system_id):
     """
@@ -71,10 +69,11 @@ def get_system_status(system_id):
 
     """
     no_cache = True if request.args.get('no_cache', 'false') == 'true' else False
-    success, result = system_all_info(system_id, no_cache=no_cache)
+    success, result = only_one_call_without_caching(system_all_info)(system_id, no_cache=no_cache)
     if not success:
         api_log.error("Cannot retrieve system status for system_id %s. Error: %s" % (system_id, str(result)))
-        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (
+            request.remote_addr, request.host, request.blueprint, request.base_url))
         return make_error("Cannot retrieve system status for system %s" % system_id, 500)
     return make_ok(**result)
 
@@ -83,7 +82,7 @@ def get_system_status(system_id):
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-              'no_cache': {'optional': True, 'values':['true', 'false']}
+               'no_cache': {'optional': True, 'values': ['true', 'false']}
                })
 def get_network_status(system_id):
     """
@@ -95,11 +94,40 @@ def get_network_status(system_id):
 
     """
     no_cache = True if request.args.get('no_cache', 'false') == 'true' else False
-    success, result = network_status(system_id, no_cache=no_cache)
+    success, result = only_one_call_without_caching(network_status)(system_id, no_cache=no_cache)
     if not success:
         api_log.error("Cannot retrieve network status for system_id %s. Error: %s" % (system_id, str(result)))
-        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (
+            request.remote_addr, request.host, request.blueprint, request.base_url))
         return make_error("Cannot retrieve network status for system %s" % system_id, 500)
+    return make_ok(**result)
+
+
+@blueprint.route('/<system_id>/status/software', methods=['GET'])
+@document_using('static/apidocs/system.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'system_id': {'type': UUID, 'values': ['local', 'all']},
+               'no_cache': {'type': str, 'optional': False}})
+def get_remote_software_status(system_id):
+    """Get the software status from a given AlienVault system or all systems
+
+    The blueprint handle the following url:
+    GET /av/api/1.0/system/<system_id>/status/software
+
+    Args:
+        system_id (str): String with system id (uuid) local or all
+
+    """
+    no_cache = request.args.get('no_cache')
+    if not is_json_boolean(no_cache):
+        return make_error("Invalid value for the no_cache parameter", 500)
+    no_cache = is_json_true(no_cache)
+
+    success, result = only_one_call_without_caching(apimethod_get_remote_software_update)(system_id, no_cache)
+    if not success:
+        api_log.error("Error: " + str(result))
+        return make_error("Cannot retrieve packages status " + str(result), 500)
+
     return make_ok(**result)
 
 
@@ -107,7 +135,7 @@ def get_network_status(system_id):
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-              'no_cache': {'optional': True, 'values':['true', 'false']}
+               'no_cache': {'optional': True, 'values': ['true', 'false']}
                })
 def get_alienvault_status(system_id):
     """Get the status of each profile from a given AlienVault system
@@ -121,10 +149,11 @@ def get_alienvault_status(system_id):
 
     """
     no_cache = True if request.args.get('no_cache', 'false') == 'true' else False
-    success, result = alienvault_status(system_id, no_cache=no_cache)
+    success, result = only_one_call_without_caching(alienvault_status)(system_id, no_cache=no_cache)
     if not success:
         api_log.error("Cannot retrieve AlienVault status for system_id %s. Error: %s" % (system_id, str(result)))
-        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (
+            request.remote_addr, request.host, request.blueprint, request.base_url))
         return make_error("Cannot retrieve AlienVault status for system %s" % system_id, 500)
     return make_ok(**result)
 
@@ -146,10 +175,62 @@ def get_alienvault_packages(system_id):
     """
     success, result = package_list(system_id)
     if not success:
-        api_log.error("Cannot retrieve installed packages status for system_id %s. Error: %s" % (system_id, str(result)))
-        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        api_log.error(
+            "Cannot retrieve installed packages status for system_id %s. Error: %s" % (system_id, str(result)))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (
+            request.remote_addr, request.host, request.blueprint, request.base_url))
         return make_error("Cannot retrieve installed packages status for system %s" % system_id, 500)
     return make_ok(**result)
+
+
+@blueprint.route('/<system_id>/status/pending_packages', methods=['GET'])
+@document_using('static/apidocs/system.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']},
+               'no_cache': {'type': str, 'optional': False}})
+def get_pending_packages(system_id):
+    """Get pending update packages from a given AlienVault system
+
+    The blueprint handle the following url:
+    GET /av/api/1.0/system/<system_id>/status/pending_packages
+
+    Args:
+        system_id (str): String with system id (uuid) or local
+
+    """
+    no_cache = request.args.get('no_cache')
+    if not is_json_boolean(no_cache):
+        return make_error("Invalid value for the no_cache parameter", 500)
+    no_cache = is_json_true(no_cache)
+    success, result = apimethod_get_pending_packges(system_id, no_cache)
+    if not success:
+        api_log.error("Error: " + str(result))
+        return make_error("Cannot retrieve packages status " + str(result), 500)
+    return make_ok(available_updates=result)
+
+
+@blueprint.route('/<system_id>/status/ready_for_update', methods=['GET'])
+@document_using('static/apidocs/system.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
+def is_system_ready_for_update(system_id):
+    """ Find out if a system is ready for update.
+        Determine whether openvas is still rebuilding (ENG-100405).
+
+    The blueprint handle the following url:
+    GET /av/api/1.0/system/<system_id>/status/ready_for_update
+
+    Args:
+        system_id (str): String with system id (uuid) or local
+
+    """
+    is_ready = True
+    ps_filters = ['openvasmd --update', 'openvasmd --rebuild', 'openvasmd: Updating', 'openvasmd: Reloading']
+    for ps_filter in ps_filters:
+        if check_if_process_is_running(system_id, ps_filter)[1]:
+            is_ready = False
+            break
+    return make_ok(is_ready=is_ready)
 
 
 @blueprint.route('/<system_id>/status/ping', methods=['GET'])
@@ -170,7 +251,6 @@ def is_system_reachable(system_id):
     no_cache = is_json_true(request.args.get('no_cache', None))
     try:
         reachable = ping_system(system_id, no_cache=no_cache)
+        return make_ok(reachable=reachable)
     except APIException as e:
         make_error_from_exception(e)
-
-    return make_ok(reachable=reachable)

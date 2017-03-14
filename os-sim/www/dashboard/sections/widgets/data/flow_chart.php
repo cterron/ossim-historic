@@ -37,7 +37,6 @@ require_once '../widget_common.php';
 require_once AV_MAIN_ROOT_PATH . '/nfsen/conf.php';
 require_once AV_MAIN_ROOT_PATH . '/sensor/nfsen_functions.php';
 
-
 //Checking if we have permissions to go through this section
 Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 Session::logcheck("environment-menu", "MonitorsNetflows");
@@ -69,7 +68,7 @@ session_write_close();
 if (!isset($id) || empty($id))
 {
 	$height    = GET("height");					//Height of the widget
-	$flow_info = unserialize(GET("value")); 	//Params of the flow representation.
+	$flow_info = json_decode(GET("value"),true); 	//Params of the flow representation.
 	$limit     = $flow_info['range'];
 	$type      = $flow_info['class'];
 	

@@ -83,7 +83,7 @@ $alarm_detail_url  = (empty($stats)) ? "load_alarm_detail('$event_id', 'event')"
 
 $alarm_close_url   = "tray_close('$backlog_id');";
 
-$alarm_open_url    = "open_alarm('$backlog_id');";
+$alarm_open_url    = "tray_open('$backlog_id');";
 
 $alarm_delete_url  = "tray_delete('$backlog_id');";
 
@@ -243,6 +243,7 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
             <div class="padding-top"><?php echo  strtoupper($alarm_life_unit) ?></div>
         </td>
         <td class="tray_alarm_actions" style="width:120px;">
+
             <div class="padding-right">
                 <button type="button" onclick="<?php echo $alarm_detail_url ?>"><?php echo _("View Details")?></button>
             </div>
@@ -265,11 +266,15 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
             {
                 if ($alarm->get_status() == 'open')
                 {
+                    $class = "button_dissabled";
+                    $extra = 'disabled="disabled"';
+                    if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsClose") ) {
+                        $class = "";
+                        $extra = "onclick=\"$alarm_close_url\"";
+                    }
                 ?>
                     <div class="padding-right padding-top">
-                        <button class="av_b_secondary" onclick="<?php echo $alarm_close_url ?>">
-                            <?php echo _("Close") ?>
-                        </button>
+                        <button class="av_b_secondary <?=$class?>" <?=$extra?> ><?php echo _("Close")?></button>
                     </div>
                 <?php  
                 }
@@ -283,11 +288,19 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
                     </div>
                 <?php      
                 }
-            ?>
-            
-                <div class="padding-right padding-top">
-                    <button class="av_b_secondary" onclick="<?php echo $alarm_delete_url ?>"><?php echo _("Delete")?></button>
-                </div>
+			$class = "button_dissabled";
+			$extra = 'disabled="disabled"';
+			if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") ) {
+				$class = "";
+				$extra = "onclick=\"$alarm_delete_url\"";
+			}
+			?>
+
+            <div class="padding-right padding-top">
+                <button class="av_b_secondary <?=$class?>" <?=$extra?> ><?php echo _("Delete")?></button>
+            </div>
+
+
                 <div class="padding-right padding-top" style="position:relative">
                     <button id="apply_label_<?php echo $backlog_id ?>" class="button_labels av_b_secondary" data-backlog="<?php echo $backlog_id ?>">
                         <?php echo _("Apply Label") ?>
@@ -299,7 +312,10 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
         </td>
     </tr>
     </table>
+
+
 </div>
+
 <?php
 
 $db->close();

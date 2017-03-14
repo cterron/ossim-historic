@@ -22,8 +22,6 @@ DESC="AlienVault API"
 
 CELERYD="/usr/share/python/alienvault-api/scripts/venv_celeryd.sh"
 CELERYBEAT="/usr/share/python/alienvault-api/scripts/venv_celerybeat.sh"
-CELERYD_PID="/var/run/alienvault/w1.pid"
-CELERYBEAT_PID="/var/run/alienvault/beat.pid"
 
 #
 # Function to cleanup rabbit queues.

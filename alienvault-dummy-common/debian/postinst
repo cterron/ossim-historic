@@ -124,12 +124,18 @@ EOF
     echo -en "$MOTD_TAIL_TEMPLATE" > "$MOTD_TAIL_FILE"
 }
 
+configure_interfaces_conf(){
+    # to keep custom network domain after update
+    DOMAIN=$(grep "^domain=.*" "$OSSIM_SETUP_CONF" 2> /dev/null | cut -d "=" -f 2 || true)
+    sed -i "s/^\(dns-search=\).*$/\1$DOMAIN/"  /etc/alienvault/network/interfaces.conf
+}
+
 configure_etc_hosts_file(){
     OSSIM_SETUP_CONF="/etc/ossim/ossim_setup.conf"
     ADMIN_IP=$(grep "^admin_ip=.*" "$OSSIM_SETUP_CONF" 2> /dev/null | cut -d "=" -f 2 || true)
     HOSTNAME=$(grep "^hostname=.*" "$OSSIM_SETUP_CONF" 2> /dev/null | cut -d "=" -f 2 || true)
     DOMAIN=$(grep "^domain=.*" "$OSSIM_SETUP_CONF" 2> /dev/null | cut -d "=" -f 2 || true)
-    
+
     # Remove duplicated entries in /etc/hosts
     ETC_HOSTS_FILE="/etc/hosts"
     cat "$ETC_HOSTS_FILE" | uniq > "$ETC_HOSTS_FILE.aux"
@@ -205,6 +211,7 @@ case "$1" in
         configure_apt_flags
         configure_remove_unused
         configure_remove_unused_users
+        configure_interfaces_conf
     ;;
 
     triggered)

@@ -8,7 +8,7 @@ INSERT IGNORE INTO acl_entities (id, name, admin_user, timezone, entity_type) VA
 
 select UNHEX(REPLACE(UUID(),'-','')) into @tpl;
 INSERT IGNORE INTO `acl_templates` (`id`, `name`) VALUES (@tpl, 'All Sections');
-INSERT IGNORE INTO `acl_templates_perms` (`ac_templates_id`, `ac_perm_id`) VALUES (@tpl, 1),(@tpl, 3),(@tpl, 4),(@tpl, 9),(@tpl, 10),(@tpl, 11),(@tpl, 12),(@tpl, 14),(@tpl, 15),(@tpl, 17),(@tpl, 18),(@tpl, 19),(@tpl, 22),(@tpl, 23),(@tpl, 24),(@tpl, 25),(@tpl, 27),(@tpl, 28),(@tpl, 29),(@tpl, 30),(@tpl, 31),(@tpl, 32),(@tpl, 33),(@tpl, 34),(@tpl, 35),(@tpl, 36),(@tpl, 39),(@tpl, 40),(@tpl, 42),(@tpl, 44),(@tpl, 46),(@tpl, 47),(@tpl, 48),(@tpl, 49),(@tpl, 51),(@tpl, 53),(@tpl, 54),(@tpl, 55),(@tpl, 57),(@tpl, 60),(@tpl, 61),(@tpl, 62),(@tpl, 63),(@tpl, 64),(@tpl, 65),(@tpl, 66),(@tpl, 68),(@tpl, 69),(@tpl, 70),(@tpl, 71),(@tpl, 72),(@tpl, 73),(@tpl, 74),(@tpl, 75),(@tpl, 76),(@tpl, 77),(@tpl, 78),(@tpl, 79),(@tpl, 81),(@tpl, 82),(@tpl, 83),(@tpl, 84),(@tpl, 85);
+INSERT IGNORE INTO `acl_templates_perms` (`ac_templates_id`, `ac_perm_id`) VALUES (@tpl, 1),(@tpl, 3),(@tpl, 4),(@tpl, 9),(@tpl, 10),(@tpl, 11),(@tpl, 12),(@tpl, 14),(@tpl, 15),(@tpl, 17),(@tpl, 18),(@tpl, 19),(@tpl, 22),(@tpl, 23),(@tpl, 24),(@tpl, 25),(@tpl, 27),(@tpl, 28),(@tpl, 29),(@tpl, 30),(@tpl, 31),(@tpl, 32),(@tpl, 33),(@tpl, 34),(@tpl, 35),(@tpl, 36),(@tpl, 39),(@tpl, 40),(@tpl, 42),(@tpl, 44),(@tpl, 46),(@tpl, 47),(@tpl, 48),(@tpl, 49),(@tpl, 51),(@tpl, 53),(@tpl, 54),(@tpl, 55),(@tpl, 57),(@tpl, 60),(@tpl, 61),(@tpl, 62),(@tpl, 63),(@tpl, 64),(@tpl, 65),(@tpl, 66),(@tpl, 68),(@tpl, 69),(@tpl, 70),(@tpl, 71),(@tpl, 72),(@tpl, 73),(@tpl, 74),(@tpl, 75),(@tpl, 76),(@tpl, 77),(@tpl, 78),(@tpl, 79),(@tpl, 81),(@tpl, 82),(@tpl, 83),(@tpl, 84),(@tpl, 85),(@tpl, 88);
 
 INSERT IGNORE INTO corr_engine_contexts VALUES (UNHEX(REPLACE(@default_engine, '-', '')), UNHEX(REPLACE(@default_ctx,'-','')), 'Default');
 
@@ -177,8 +177,8 @@ INSERT IGNORE INTO `incident_type` (`id`, `descr`, `keywords`) VALUES
 ('Security Weakness', '', '');
 INSERT IGNORE INTO incident_vulns_seq VALUES(0);
 INSERT IGNORE INTO incident_tag_descr_seq VALUES (0);
-INSERT IGNORE INTO incident_tag_descr VALUES (65001,'AlienVault_INTERNAL_PENDING','Vulnerability scanner pending tag - Prevents this event from being detected until tag is unset');
-INSERT IGNORE INTO incident_tag_descr VALUES (65002,'AlienVault_INTERNAL_FALSE_POSITIVE','Vulnerability scanner false positive tag - Prevents this event from being detected in the future');
+INSERT IGNORE INTO incident_tag_descr VALUES (65001,'AlienVault_INTERNAL_PENDING','Vulnerability scanner pending tag - Prevents this event from being detected until tag is unset','av_tag_1');
+INSERT IGNORE INTO incident_tag_descr VALUES (65002,'AlienVault_INTERNAL_FALSE_POSITIVE','Vulnerability scanner false positive tag - Prevents this event from being detected in the future','av_tag_1');
 INSERT IGNORE INTO plugin_scheduler_seq (id) VALUES (0);
 INSERT IGNORE INTO map_seq VALUES (0);
 INSERT IGNORE INTO map_element_seq VALUES (0);
@@ -238,7 +238,9 @@ INSERT IGNORE INTO `acl_perm` (`id`, `type`, `name`, `value`, `description`, `gr
 (84, 'MENU', 'dashboard-menu', 'IPReputation', 'Dashboard -> Open Threat Exchange, Configuration -> Open Threat Exchange', 0, 0, 1, '01.06'),
 (85, 'MENU', 'environment-menu', 'AlienVaultInventory', 'Environment -> Assets & Groups -> Schedule Scan', 0, 0, 1, '03.03'),
 (86, 'MENU', 'configuration-menu', 'AlienVaultInventory', 'Configuration -> Deployment -> Scheduler', 0, 0, 1, '05.04'),
-(87, 'MENU', 'message_center-menu', 'MessageCenterDelete', 'MessageCenter',0,0,1,'13.01');
+(87, 'MENU', 'message_center-menu', 'MessageCenterDelete', 'MessageCenter',0,0,1,'13.01'),
+(88, 'MENU','report-menu','ReportsClone','Reports -> Clone Reports',1,1,1,'04.05'),
+(89, 'MENU','analysis-menu','ControlPanelAlarmsClose','Analysis -> Alarms -> Close Alarms',1,1,1,'02.15');
 
 INSERT IGNORE INTO credential_type(name) VALUES ("SSH");
 INSERT IGNORE INTO credential_type(name) VALUES ("Windows");
@@ -491,5 +493,5 @@ INSERT IGNORE INTO config (conf, value) VALUES ('internet_connection', 1);
 
 INSERT IGNORE INTO config (conf, value) VALUES ('track_usage_information', '');
 
-REPLACE INTO config (conf, value) VALUES ('last_update', '2016-08-02');
-REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.3.0');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2017-01-24');
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.3.5');

@@ -69,8 +69,8 @@ function print_form($import_type)
             ),
             'help' => array(
                 'Version 4.x.x, 5.x.x' => array(
-                    'format'  => _('"IPs(IP1,IP2,...)";"Hostname";"FQDNs(FQDN1,FQDN2,...)";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Asset ID";"External Asset";"Device Types(Type1,Type2,...)"'),
-                    'header'  => '"IPs";"Hostname";"FQDNs";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Asset ID";"External Asset";"Device Type"',
+                    'format'  => _('"IPs(IP1,IP2,...)";"Hostname";"FQDNs(FQDN1,FQDN2,...)";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Host ID";"External Asset";"Device Types(Type1,Type2,...)"'),
+                    'header'  => '"IPs";"Hostname";"FQDNs";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Host ID";"External Asset";"Device Type"',
                     'example' => '"192.168.10.3";"Host-1";"www.example-1.es,www.example-2.es";"'._('Short description').'";"2";"Windows";"23.78";"121.45";"379D45C0BBF22B4458BD2F8EE09ECCC2";0;"Server:Mail Server"'
                 ),
                 'Version 3.x.x' => array(
@@ -299,7 +299,7 @@ function print_form($import_type)
 
 function clean_iic($string)
 {
-    $str  = strtr($string, "ٹŒژڑœ‍ں¥µہءآأؤإئابةتثجحخدذرزسشصضطظعغـفكàلâ�
+    $str  = strtr($string, "ٹŒژڑœ‍ں¥µہءآأؤإئابةتثجحخدذرزسشصضطظعغـفكàلâ�
 نهوçèéêëىيîïًٌٍَôُِّùْûü‎ے","SOZsozYYuAAAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaaceeeeiiiionoooooouuuuyy");
     $size = strlen($str);
 

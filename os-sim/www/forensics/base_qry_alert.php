@@ -877,7 +877,7 @@ echo '                </TD>
             </div>
         </div>
 ';
-$risk_text = Util::get_risk_rext($ossim_risk);
+$risk_text = Util::get_risk_rext($ossim_risk,0);
 /* Summary Bar */
 echo '<TABLE class="siem_table">
       <TR>
@@ -1183,13 +1183,18 @@ else
 {
     echo '<div class="siem_detail_table">
               <div class="siem_detail_section">'._("Raw Log").'</div>';
+
 }
 
 echo '       <div class="siem_detail_content siem_border">';
 if ($payload)
 {
-    /* print the packet based on encoding type */
-    PrintPacketPayload($payload, $encoding, 1, ($plugin_id==$otx_plugin_id ? true : false));
+    if ($binary) {
+         $hex = bin2hex(Util::format_payload_extermnal($binary));
+         PrintPacketPayload($hex, $encoding, 1, $plugin_id==$otx_plugin_id);
+    } else {
+         PrintPacketPayload($payload, $encoding, 1, ($plugin_id==$otx_plugin_id ? true : false));
+    }
     if ($layer4_proto == "1")
     {
         if ( /* IF ICMP source quench */

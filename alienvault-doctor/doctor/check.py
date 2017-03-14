@@ -185,7 +185,7 @@ class Check:
         conditions = filter(bool, value.split(';'))
         for condition in conditions:
             matches = re.findall(r'^(@[a-zA-Z_]+@)(?:\:(.*))?$', condition)
-            if matches == []:
+            if not matches:
                 raise CheckError('Condition "%s" for check "%s" in plugin "%s" is invalid' % (condition, self.__name, self.__plugin.get_name()), self.__name)
             cond_type, cond_str = matches[0]
 
@@ -209,7 +209,7 @@ class Check:
             # 'Set' type conditions
             elif cond_type == '@set@':
                 matches = re.findall(r'^(@[a-zA-Z_]+@)(\S+)', cond_str)
-                if matches == []:
+                if not matches:
                     raise CheckError('Set condition "%s" for check "%s" in plugin "%s" is invalid' % (condition, self.__name, self.__plugin.get_name()), self.__name)
 
                 cond_op, cond_set = matches[0]
@@ -306,7 +306,7 @@ class Check:
         if ignore_dummy_platform:
             return True
         else:
-            if appliance_types == []:
+            if not appliance_types:
                 if hw_profile.lower() in self.__appliance_type:
                     return True
 
@@ -316,7 +316,6 @@ class Check:
 
             if hw_profile.lower() in appliance_types and hw_profile.lower() in self.__appliance_type:
                 return True
-
         return False
 
     def check_version(self, version):
@@ -330,7 +329,7 @@ class Check:
             check_version[0] = '.'.join([aux_main_version[0],
                                          "%s" % str(aux_main_version[1]),
                                          "00"])
-        elif len(aux_main_version == 3):
+        elif len(aux_main_version) == 3:
             second_p, third_p = aux_main_version[1:3]
             if len(second_p) == 1:
                 second_p = "0%s" % str(second_p)
@@ -396,7 +395,7 @@ class Check:
             return self.__run_hw__()
         else:
             fo = 'Unknown check type %s' % self.__name
-            return (False, 'Unknown check type "%s"' % self.__name, fo)
+            return False, 'Unknown check type "%s"' % self.__name, fo
 
     # Run a checksum against a file.
     def __run_checksum__(self):
@@ -410,12 +409,12 @@ class Check:
                 description = '\n\tChecksum "%s" over "%s" failed' % (crypto_func, self.__plugin.get_filename())
                 fo = '\n\tChecksum "%s" over "%s" failed' % (crypto_func, self.__plugin.get_filename())
                 outcome = False
-                return (outcome, description, fo)
+                return outcome, description, fo
 
         description = '\n\tAll checksums over "%s" succeeded' % self.__plugin.get_filename()
         fo = '\n\tAll checksums over %s succeeded' % self.__plugin.get_filename()
         outcome = True
-        return (outcome, description, fo)
+        return outcome, description, fo
 
     # Check against a regular expression.
     def __run_pattern__(self):
@@ -424,7 +423,7 @@ class Check:
         matches = self.__regex.findall(self.__plugin.get_data())
         self.__output = str(matches)
 
-        if matches != []:
+        if matches:
             (outcome, description, fo) = self.__check_conditions__(matches)
         else:
             description = '\n\tEmpty match set for pattern "%s" in check "%s"' % (self.__regex.pattern, self.__name)
@@ -436,7 +435,7 @@ class Check:
             else:
                 fo = "\n\tEmpty match set for pattern %s in check %s" % (self.__regex.pattern, self.__name)
 
-        return (outcome, description, fo)
+        return outcome, description, fo
 
     # Run a db query and parse the result.
     def __run_query__(self):
@@ -461,7 +460,7 @@ class Check:
             description = '\n\tEmpty result for query "%s"' % self.__query
             fo = '\n\tEmpty result for query %s' % self.__query
 
-        return (outcome, description, fo)
+        return outcome, description, fo
 
     def __run_hw__(self):
         (outcome, description, fo) = (True, '', '')
@@ -484,7 +483,7 @@ class Check:
                                                                           aux[0][2],
                                                                           aux[0][0])
 
-        return (outcome, description, fo)
+        return outcome, description, fo
 
     # Check conditions against a set of 'values'.
     def __check_conditions__(self, values):
@@ -502,7 +501,7 @@ class Check:
             raise CheckError(msg='There are no conditions to use in check "%s"' % self.__name,
                              plugin=self.__name)
 
-        return (outcome, description, fo)
+        return outcome, description, fo
 
     # Check regular 'basic' type conditions.
     def __check_basic_conditions__(self, values):
@@ -528,8 +527,11 @@ class Check:
                 try:
                     datatype, condition = self.__conditions['basic'][j]
                 except IndexError:
-                    raise CheckError(msg='One of the patterns in check "%s" does not have the same size as the values set' % (self.__name),
-                                     plugin=self.__plugin.get_name())
+                    raise CheckError(
+                        msg='One of the patterns in check "{0}" does not have the same size as the values set'.format(
+                            self.__name),
+                        plugin=self.__plugin.get_name()
+                    )
                 except ValueError:
                     datatype, = self.__conditions['basic'][j]
                     condition = None
@@ -553,8 +555,9 @@ class Check:
                             data = 0
                         fo = fo.replace(datatype, str(data), 1)
                     except:
-                        raise CheckError(msg='Condition datatype is marked as "int" but "%s" is not an integer' % str(data),
-                                         plugin=self.__plugin.get_name())
+                        raise CheckError(
+                            msg='Condition datatype is marked as "int" but "%s" is not an integer' % str(data),
+                            plugin=self.__plugin.get_name())
 
                 elif datatype == '@float@':
                     try:
@@ -564,16 +567,21 @@ class Check:
                             data = 0.0
                         fo = fo.replace(datatype, str(data), 1)
                     except:
-                        raise CheckError(msg='Condition datatype is marked as "float" but "%s" is not a float' % str(data),
-                                         plugin=self.__plugin.get_name())
+                        raise CheckError(
+                            msg='Condition datatype is marked as "float" but "%s" is not a float' % str(data),
+                            plugin=self.__plugin.get_name()
+                        )
 
                 elif datatype == '@char@' and not data.isalpha():
-                    raise CheckError(msg='Condition datatype is marked as "char" but "%s" is not a character' % str(data),
-                                     plugin=self.__plugin.get_name())
+                    raise CheckError(
+                        msg='Condition datatype is marked as "char" but "%s" is not a character' % str(data),
+                        plugin=self.__plugin.get_name()
+                    )
 
                 elif datatype == '@string@':
                     try:
-                        data = data.replace('\r', '\\r').replace('\n', '\\n').replace('"', '\\"').replace("'", "\\'").replace(r"\\", r"\\\\")
+                        data = data.replace('\r', '\\r').replace('\n', '\\n').replace('"', '\\"').replace(
+                            "'", "\\'").replace(r"\\", r"\\\\")
                         fo = fo.replace(datatype, data, 1)
                     except:
                         raise CheckError(msg='Cannot escape quotes in condition "%s"' % str(data),
@@ -584,8 +592,10 @@ class Check:
                         fo.replace(datatype, data, 1)
                         data = repr(IPNetwork(data))
                     except:
-                        raise CheckError(msg='Condition datatype is marked as "ipaddr" but "%s" is not an IP Address' % str(data),
-                                         plugin=self.__plugin.get_name())
+                        raise CheckError(
+                            msg='Condition datatype is marked as "ipaddr" but "%s" is not an IP Address' % str(data),
+                            plugin=self.__plugin.get_name()
+                        )
 
                 if self.__severity == 'Debug':
                     aux_final_fo += "\n\t" + fo
@@ -597,7 +607,7 @@ class Check:
                 # Sometimes, conditions are only for checking the match type, so they have
                 # only a type, e.g. '@string@;@int@:==1'
 
-                if condition == None:
+                if condition is None:
                     aux_final_fo += "\n\t" + fo
                     continue
 
@@ -727,7 +737,7 @@ class Check:
                 raise CheckError(msg='No conditions to evaluate',
                                  plugin=self.__plugin.get_name())
 
-        return (outcome, description, final_fo)
+        return outcome, description, final_fo
 
     # Check against a 'set' type.
     def __check_set_conditions__(self, values):
@@ -759,9 +769,9 @@ class Check:
                 raise CheckError(msg='Invalid syntax',
                                  plugin=self.__plugin.get_name())
 
-        return (outcome, description, fo)
+        return outcome, description, fo
 
-  # Run actions related to this check.
+    # Run actions related to this check.
     def __run_actions__(self):
         for (action_type, action_data) in self.__actions:
             if action_type == '@command':

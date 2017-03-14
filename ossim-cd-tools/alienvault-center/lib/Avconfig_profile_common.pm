@@ -331,7 +331,7 @@ if ( -f "/etc/ossim/first_login" ){
     my $pname = `cat /etc/ossim/first_login` ; $pname =~ s/\n//g;
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.3.0 - \\m - \\l
+AlienVault USM 5.3.5 - \\m - \\l
 
 =========================================================================
 == #### First time instructions ####   
@@ -343,7 +343,7 @@ EOF
 }else{
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.3.0 - \\m - \\l
+AlienVault USM 5.3.5 - \\m - \\l
 
 EOF
 }
@@ -416,7 +416,7 @@ close(MOTDFILE);
                 if ( "$config{'first_init'}" eq "yes" ) {
 		debug_log("FIRST INIT: common profile");
                     system(
-                        "echo \"deb http://data.alienvault.com/$release_version/ binary/\" > /etc/apt/sources.list.d/$release_version.list"
+                        "echo \"deb http://data.alienvault.com/$release_version/alienvault/ binary/\" > /etc/apt/sources.list.d/$release_version.list"
                     );
                     system(
                         "echo \"deb http://data.alienvault.com/feed/ binary/\" >> /etc/apt/sources.list.d/$release_version.list"

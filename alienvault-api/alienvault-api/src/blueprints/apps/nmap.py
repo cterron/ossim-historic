@@ -47,7 +47,6 @@ from apimethods.sensor.nmap import (
     apimethod_get_nmap_scan_list, apimethod_delete_running_scans)
 from celerymethods.jobs.nmap import run_nmap_scan, monitor_nmap_scan
 
-
 blueprint = Blueprint(__name__, __name__)
 
 
@@ -86,7 +85,6 @@ def explain_nmap():
         ],
         "total_assets": 4,
 
-
     }
     return make_ok(nmap_explain=nmap_explain)
 
@@ -112,11 +110,13 @@ def get_list_nmap_scans():
                'scan_timing': str,
                'autodetect': str,
                'scan_ports': str,
-               'idm': str})
+               'idm': str,
+               'excludes': str})
 @logged_permission.require(http_exception=401)
 def do_nmap_scan():
     sensor_id = request.form.get('sensor_id', None)
     target = request.form.get('target', None)
+    excludes = request.form.get('excludes', None)
     scan_type = request.form.get('scan_type', None)
     scan_timing = request.form.get('scan_timing', None)
     scan_ports = request.form.get('scan_ports', None)
@@ -153,12 +153,20 @@ def do_nmap_scan():
     except Exception as err:
         return make_error("Cannot flush old scans before running new nmap scan %s" % str(err), 500)
 
-    job = run_nmap_scan.delay(sensor_id=sensor_id, target=','.join(ftargets),
+    targets = ','.join(ftargets)
+    if targets and excludes:
+        # Prepare new targets string with excludes. e.g "192.168.87.0/22,!192.168.87.222/32,!192.168.87.223/32"
+        targets += ',' + ','.join(['!{}'.format(exclude_item) for exclude_item in excludes.split(',')])
+
+    job = run_nmap_scan.delay(sensor_id=sensor_id,
+                              target=targets,
                               targets_number=targets_number,
                               scan_type=scan_type,
-                              rdns=rdns, scan_timing=scan_timing,
+                              rdns=rdns,
+                              scan_timing=scan_timing,
                               autodetect=autodetect,
-                              scan_ports=scan_ports, idm=idm,
+                              scan_ports=scan_ports,
+                              idm=idm,
                               user=current_user.login)
     monitor_nmap_scan.delay(sensor_id=sensor_id, task_id=job.id)
     time.sleep(2)

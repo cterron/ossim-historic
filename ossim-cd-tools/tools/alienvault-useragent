@@ -57,11 +57,14 @@ USERAGENT="AlienVault $CDTOOLS/${CENTER:=0} ($UUID) ${STATUS:=ISO}"
 #echo $USERAGENT
 #echo "Acquire::http::User-Agent \"$USERAGENT APT $OTX\";" > /etc/apt/apt.conf.d/99alienvault-httpuseragent
 
-## CPYTYPE field: VMWARE, AMI, MBX
-#dmidecode -s system-manufacturer |grep -i VMware
-dmidecode -s system-manufacturer |grep -i VMware >/dev/null 2>&1
+## CPYTYPE field: VMWARE, HV, AMI, MBX
+dmidecode -s system-manufacturer | grep -iq vmware
 if [ $? -eq 0 ]; then
     CPYTYPE=VMWARE
+fi
+dmidecode -s system-manufacturer | grep -iq microsoft
+if [ $? -eq 0 ]; then
+    CPYTYPE=HV
 fi
 if [ -d /opt/rightscale ]; then
     CPYTYPE=AMI

@@ -294,16 +294,16 @@ class Doctor:
             elif options.output_type == 'support':
                 output_data = plain_data
 
-                if output_data != None:
+                if output_data is not None:
                     output_data = self.__compress__(output_data)
 
-                if output_data != None:
+                if output_data is not None:
                     output_fd.write(self.__cipher__(output_data))
 
                 output_fd.close()
 
                 # If the FTP upload fails, let the file stay in the directory for the web to take care of it.
-                if output_data != None:
+                if output_data is not None:
                     if self.__upload__(self.__output_file):
                         unlink(self.__output_file)
                     else:
@@ -420,13 +420,12 @@ class Doctor:
                 sections = []
                 try:
                     sections = config_file.sections()
-                except Exception as e:
+                except Exception:
                     pass
 
-                plugin_data = e.plugin_data if e.plugin_data else {}
                 self.__generate_blocked_output(config_file=config_file,
                                                plugin=e.plugin,
-                                               plugin_data=plugin_data,
+                                               plugin_data=e.kwargs,
                                                sections=sections,
                                                error_msg=e.msg)
 
@@ -436,10 +435,10 @@ class Doctor:
         else:
             msg = "There was an error parsing the plugin file %s" % filename
             self.__generate_blocked_output(config_file=None,
-                                           plugin=e.plugin,
-                                           plugin_data=e.plugin_data,
+                                           plugin=filename,
+                                           plugin_data={},
                                            sections=[],
-                                           error_msg=e.msg)
+                                           error_msg=msg)
 
     def __generate_blocked_output(self, config_file, plugin, plugin_data, sections, error_msg):
         # Parse the plugin configuration file.
@@ -473,7 +472,7 @@ class Doctor:
                                 pass
                         elif 'type' in plugin_data.keys() and plugin_data['type'] == "file":
                             try:
-                                data['command'] = "cat %s" % filename
+                                data['command'] = "cat %s" % data['filename']
                             except Exception:
                                 pass
 
@@ -528,6 +527,7 @@ class Doctor:
             del aes_cipher
 
         # Load our RSA key and cipher the pass.
+        rsa_cipher = None
         try:
             rsa_cipher = RSA.load_pub_key(self.__config['public_key'])
             ciphered_pass = rsa_cipher.public_encrypt(random_key, RSA.sslv23_padding)

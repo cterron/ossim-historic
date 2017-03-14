@@ -320,7 +320,7 @@ class Pdf_report
        return $this->pdfEmail($title, $email, $pdfName, $dirUser, $body, $path, $filename);
    }
 
-   public function sendHTMLEmail($title, $email, $pdfName = NULL, $dirUser = NULL, $body = '') {
+   public function sendHTMLEmail($title, $email) {
        $arr = explode("/",$this->pathHtml);
        $filename = array_pop($arr);
        $new = str_replace(".html",".html__",$this->pathHtml);
@@ -331,8 +331,8 @@ class Pdf_report
        $images = array_unique($images[1]);
        $encoded = array();
        foreach ($images as $value) {
-           $ext = preg_match("/\.[a-zA-Z]+$/",$value,$res);
-           $encoded[] = 'data:image/'.$ext.';base64,' . base64_encode(file_get_contents($value));
+           preg_match("/\.[a-zA-Z]+$/",$value,$res);
+           $encoded[] = 'data:image/'.$res[0].';base64,' . base64_encode(file_get_contents($value));
        }
        $html = str_replace($images,$encoded,$html);
        $html = "
@@ -345,7 +345,7 @@ class Pdf_report
                {$html}
            </td></tr></table>";
        file_put_contents($new,$html);
-       return $this->pdfEmail($title, $email, true, $dirUser, $body, $new, $filename);
+       return $this->pdfEmail($title, $email, true, null, '', $new, $filename);
        unlink($new);
    }
 

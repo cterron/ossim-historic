@@ -156,6 +156,7 @@ use IO::Socket;
 use Data::Dumper;
 use POSIX qw(strftime);
 
+
 local $ENV{XML_SIMPLE_PREFERRED_PARSER} = "XML::Parser";
 use XML::Simple;
 
@@ -303,7 +304,6 @@ my %options=();
 getopts("cdij:k:l:no:qr:st:u:v:w:h?",\%options);
 
 clean_old_omp_files( ); # clean old omp files with xml results
-
 main( );
 exit;
 
@@ -316,7 +316,6 @@ sub main {
         $debug = 1;
         $log_level = 5;
     }
-
     if( $options{c} || $options{s} ) {                              #CHECK / RUN A QUEUED SCAN
         if( $options{s} ) { 
             print "SCANLITE mode\n";
@@ -684,14 +683,14 @@ sub run_job {
 
     my $startdate = getCurrentDateTime();
 
-    #$sql = qq{ SELECT name, username, fk_name, job_TYPE, meth_TARGET, meth_VSET, meth_TIMEOUT
-    $sql = qq{ SELECT fk_name, name, username, notify, job_TYPE, meth_TARGET, meth_VSET, meth_TIMEOUT, meth_CRED, authorized, resolve_names
+    $sql = qq{ SELECT fk_name, name, username, notify, job_TYPE, meth_TARGET, 
+        meth_VSET, meth_TIMEOUT, meth_CRED, authorized, resolve_names, exclude_ports 
         FROM vuln_jobs WHERE id='$job_id' LIMIT 1 };
     logwriter( $sql, 5 );
     $sth_sel = $dbh->prepare( $sql );
     $sth_sel->execute(  );
     
-    my ( $creator, $Jname, $juser, $sensor_id, $Jtype, $host_list, $Jvset, $jtimout, $meth_CRED, $scan_locally, $resolve_names) = $sth_sel->fetchrow_array(  );
+    my ( $creator, $Jname, $juser, $sensor_id, $Jtype, $host_list, $Jvset, $jtimout, $meth_CRED, $scan_locally, $resolve_names, $exclude_ports) = $sth_sel->fetchrow_array(  );
     
     get_asset_data($host_list, $job_id, $sensor_id, $creator);
     
@@ -742,7 +741,7 @@ sub run_job {
         #generate_email ( $job_id, "start" );	    #ie MANUAL/REQUESTS
     }
 
-    my $enddate = setup_scan( $job_id, $Jname, $juser, $Jtype, $host_list, $Jvset, $jtimout, $sensor_id, $meth_CRED, $scan_locally, $resolve_names, $creator);
+    my $enddate = setup_scan( $job_id, $Jname, $juser, $Jtype, $host_list, $Jvset, $jtimout, $sensor_id, $meth_CRED, $scan_locally, $resolve_names, $creator, $exclude_ports);
 
     if ( $notify_by_email ) {
         #generate_email ( $job_id, "finish" );	    #ie MANUAL/REQUESTS
@@ -754,7 +753,7 @@ sub run_job {
 #build hostlist, remove exceptions, call scanlite, load results,  
 sub setup_scan {
     # VER: 1.0 MODIFIED: 3/29/07 13:03
-    my ( $job_id, $Jname, $juser, $Jtype, $target, $Jvset, $timeout, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator) = @_;
+    my ( $job_id, $Jname, $juser, $Jtype, $target, $Jvset, $timeout, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator, $exclude_ports) = @_;
 
     my ( $sql, $sth_sel, $sth_upd, $sth_ins );
     my ( $targetinfo, @results, $job_title, $nessusok, $scantime, $already_marked );
@@ -837,7 +836,7 @@ sub setup_scan {
     #MAKE IT GLOBAL FOR USE WITH INCIDENT TRACKER
     @vuln_nessus_plugins = get_plugins( $Jvset, $job_id );
 
-    @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $job_title, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator);
+    @results = run_nessus($nessus_pref, \@vuln_nessus_plugins, $timeout, $job_title, $juser, \@hostarr, $Jvset, $job_id, $Jtype, $fk_name, $meth_CRED, $scan_locally, $resolve_names, $creator, $exclude_ports);
     $scantime = getCurrentDateTime();
 
     if ( check_dbOK() == "0" ) { $dbh = conn_db(); }
@@ -1130,6 +1129,7 @@ sub run_nessus {
     my ($scan_locally)  = $_[11];
     my ($resolve_names) = $_[12];
     my ($creator)       = $_[13];
+    my ($exclude_ports) = $_[14];
     
     logwriter("Run Job Id=$job_id",4);
 
@@ -1200,18 +1200,17 @@ sub run_nessus {
 
     logwriter("resolve_names: $resolve_names, meth_CRED: $meth_CRED, scan_locally: $scan_locally, sensor_id: $fk_name, creator: $creator", 4);
     
-    if($resolve_names eq "1") {
-        disconn_db($dbh);
-        if ($meth_CRED eq "1") {
-            if ($scan_locally eq "1") {
-                $targets = scan_discover($targets, $creator, 'local');
-            } elsif ($fk_name ne "") {
-                $targets = scan_discover($targets, $creator, $fk_name);
-            }
+    disconn_db($dbh);
+    if ($meth_CRED eq "1") {
+        if ($scan_locally eq "1") {
+            $targets = scan_discover($targets, $creator, 'local');
+        } elsif ($fk_name ne "") {
+            $targets = scan_discover($targets, $creator, $fk_name);
         }
-        $dbh = conn_db();
-        $targets = filter_assets($targets, $job_id);
     }
+    $dbh = conn_db();
+    $targets = filter_assets($targets, $job_id);
+
     print TARGET "$targets"; 
     close TARGET;
     logwriter("targets: $targets", 4);
@@ -1282,7 +1281,7 @@ sub run_nessus {
             %credentials = generate_credentials($job_id);
             
             logwriter("get_target_id for targets:$targets", 4);
-            $target_id = get_target_id($targets, \%credentials, $job_id);
+            $target_id = get_target_id($targets, \%credentials, $job_id, $exclude_ports);
             
             logwriter("get_config_id for sid:$sid", 4);
             $config_id = get_config_id($sid, $job_id);
@@ -3347,16 +3346,7 @@ sub check_schedule {
         
         if ($diff > 1.0)
         {
-            # The "Run Once" jobs will be deleted
-            if ($schedule_type eq 'O') {
-                $sql = qq{ DELETE FROM vuln_job_schedule WHERE id='$jid' };
-                safe_db_write($sql, 4);
-            }
-            else
-            {
-                # The others jobs will be rescheduled
-                resched_scan ($jid, $schedule_type);   
-            }
+            gen_sched_next_scan($jid, $schedule_type);
         }
         else
         {
@@ -3371,7 +3361,6 @@ sub check_schedule {
             system("/usr/bin/php /usr/share/ossim/scripts/vulnmeter/get_jobs.php '$jid' > $get_jobs_file ");
     
             open(SCHEDULED_JOBS, $get_jobs_file) or die "failed to fork :$!\n";
-            
             while(<SCHEDULED_JOBS>){
                 chomp;
                 
@@ -3381,7 +3370,6 @@ sub check_schedule {
                     my $sensor_id   = $1;
                     
                     $job_targets =~ s|;|\n|g;
-                    
                     $sql = qq{ INSERT INTO vuln_jobs ( name, username, fk_name, job_TYPE, meth_TARGET, meth_CRED, meth_VSET,
                         meth_TIMEOUT, scan_ASSIGNED, scan_SUBMIT, scan_NEXT,  notify, tracker_id, authorized, resolve_names, author_uname, meth_Wfile, credentials ) VALUES (
                         'SCHEDULED - $name', '$username', $fk_name, '$jobTYPE', '$job_targets', '$meth_CRED', '$meth_VSET', 
@@ -3823,260 +3811,53 @@ sub get_prefs {
 #setup next scan field based on job schedule input
 sub gen_sched_next_scan {
     my ( $schedid, $schedule_type ) = @_;
-
-    my ( $sth_sel, $sql, $next_run, $time_interval, $day_offset, $week_offset );   
+    my $sql;   
 
     #RECODED TO ELIMINATE THE NON-SENSE
-    
-    if ($schedule_type ne "NW") {
+    if ($schedule_type eq "O") {
+        $sql = qq{ DELETE FROM vuln_job_schedule WHERE id='$schedid' };
+    } elsif ($schedule_type eq "NW") {
+        #read this one by line as query goes
+        #actual update
+        #concatenate result time with hour and minute saved in db
+        #in case current month differs from the planned month - add suitable interval
+        #this helps in case week does not start from the current date
+        #as well if customer tries to select week number with the day
+        #that does not exist in the planned month
+        #in that case - run will be scheduled to the first or to the next day of the planned month
+        #search weekday in the result week
+        #get next month
+        #convert enum day_of_week to numeric
+        #normalize weekdays to the same template (Sun - 1 to Sat - 7)
+        #in case weekday in next_check field differers day_of_week - compensate the difference
+
+        $sql = qq{ UPDATE vuln_job_schedule SET next_CHECK = (
+            SELECT CONCAT(DATE_FORMAT(day + INTERVAL (MONTH(NOW()) + 1 - MONTH(day)) WEEK,'%Y%m%d'),LPAD(hour,2,'0'),LPAD(minute,2,'0'),'00')
+                FROM (SELECT 
+                    adddate(nextmonth,INTERVAL day_of_week-DAYOFWEEK(nextmonth) DAY) 
+                        + INTERVAL (day_of_month -1) WEEK 
+                        + INTERVAL (wd - day_of_week + 1) DAY as day
+                    , HOUR(next_CHECK) as hour,MINUTE(next_CHECK) as minute
+                    FROM (SELECT LAST_DAY(NOW()) + INTERVAL 1 DAY as nextmonth
+                        ,day_of_week+0 as day_of_week,
+                        day_of_month,next_CHECK, IF(WEEKDAY(next_CHECK) < 7,WEEKDAY(next_CHECK)+1,1) as wd FROM vuln_job_schedule WHERE id='$schedid') as a) as b
+            ) WHERE id='$schedid';
+        }
+    } else {
         #select time_interval to skip some days or weeks
-        if($schedule_type eq "D" || $schedule_type eq "W") {
-            $sth_sel = $dbh->prepare( qq{ SELECT time_interval FROM vuln_job_schedule WHERE id='$schedid' } );
-            $sth_sel->execute(  );
-            $time_interval = $sth_sel->fetchrow_array(  ); 
-            
-            $day_offset  = $time_interval;
-            $week_offset = 7*$time_interval;
-        }
-        
+        my $interval = "";
         if ($schedule_type eq "D") {
-            $sql = qq{ SELECT next_CHECK + INTERVAL $day_offset DAY FROM vuln_job_schedule WHERE id='$schedid' };
-        } elsif ($schedule_type eq "O") {
-            $sql = qq{ DELETE FROM vuln_job_schedule WHERE id='$schedid' };
+            $interval = "time_interval DAY";
         } elsif ($schedule_type eq "W") {
-            $sql = qq{ SELECT next_CHECK + INTERVAL $week_offset DAY FROM vuln_job_schedule WHERE id='$schedid' };
+            $interval = "time_interval*7 DAY";
         } elsif ($schedule_type eq "M") {
-            $sql = qq{ SELECT next_CHECK + INTERVAL 1 MONTH FROM vuln_job_schedule WHERE id='$schedid' }; 
-        };
-
-        if ($schedule_type ne "O") {
-            $sth_sel = $dbh->prepare( $sql );
-            $sth_sel->execute(  );
-            $next_run = $sth_sel->fetchrow_array(  ); 
-
-            $next_run  =~ s/://g;
-            $next_run  =~ s/-//g;
-            $next_run  =~ s/\s//g;
+            $interval = "1 MONTH";
         }
-        else {
-            safe_db_write ( $sql, 4 );
-            $next_run = "00000000000000"; 
-        }
+        $sql = qq{ UPDATE vuln_job_schedule SET next_CHECK=REPLACE(REPLACE(REPLACE(next_CHECK+INTERVAL $interval,"-",""),":","")," ","") WHERE id='$schedid' };
     }
-    else {
-        my %day_of_week = ("Su" => "sunday", 
-                           "Mo" => "monday",
-                           "Tu" => "tuesday",
-                           "We" => "wednesday",
-                           "Th" => "thursday",
-                           "Fr" => "friday", 
-                           "Sa" => "saturday");
-        
-        my %day_of_month = ("1" => "first", 
-                            "2" => "second",
-                            "3" => "third",
-                            "4" => "fourth",
-                            "5" => "fifth");
-                            
-        my %months = ("1" => "january", 
-                      "2" => "february",
-                      "3" => "march",
-                      "4" => "april",
-                      "5" => "may",
-                      "6" => "june", 
-                      "7" => "july",
-                      "8" => "august",
-                      "9" => "september",
-                      "10" => "october",
-                      "11" => "november",
-                      "12" => "december");
-                            
+    safe_db_write ( $sql, 4 );            #use insert/update routine   
 
-        $sql = qq{ SELECT day_of_week, day_of_month, next_CHECK FROM vuln_job_schedule WHERE id='$schedid' };
-        $sth_sel = $dbh->prepare( $sql );
-        $sth_sel->execute(  );
-        my ( $day_of_week_db, $day_of_month_db, $next_check_db ) = $sth_sel->fetchrow_array(  );
-
-        my ($year, $month) = (localtime(time()))[5,4];
-        $year+=1900;
-        $month+=1;
-        
-        $month+=1; #select next month
-        if($month==13){
-            $month=1; 
-            $year++;
-        }
-
-        #$month = 1; # to debug
-
-        my $last_date = "";
-        my $i     = 1; # first, second, third ...
-        my $total = 0;
-        do {
-            $next_run = ParseDate($day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year);
-            #print $day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year."\n";
-            #logwriter( "Parse date: ".$day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year, 4 );
-            
-            if($next_run eq "") {
-                $i = 1; # to begin with the first day
-                $month+=1;
-                if($month==13){
-                    $month=1; 
-                    $year++;
-                }
-            }
-            elsif($last_date ne $next_run){
-                $last_date = $next_run;
-                $total++;
-                $i++;
-            }
-            else {
-                $i++;
-            }
-        } while($day_of_month_db != $total);
-
-        $next_check_db =~ s/........(......)/$1/;
-        $next_run =~ s/^(........).*/$1/;
-        $next_run = $next_run.$next_check_db; # date and time
-
-    }
-
-    logwriter( "\tnextscan=$next_run", 4 );
-
-    if ($schedule_type ne "O") {
-        $sql = qq{ UPDATE vuln_job_schedule SET next_CHECK='$next_run' WHERE id='$schedid' };
-        safe_db_write ( $sql, 4 );            #use insert/update routine   
-    }
-
-    return $next_run; 
-}
-
-
-sub resched_scan{
-    my ( $schedid, $schedule_type ) = @_;
-
-    my ( $sth_sel, $sql, $next_run, $time_interval, $day_offset, $week_offset, $now );
-    
-    $now = getCurrentDateTime();
-
-    do {
-        if ($schedule_type ne "NW") {
-            #select time_interval to skip some days or weeks
-            if($schedule_type eq "D" || $schedule_type eq "W") {
-                $sth_sel = $dbh->prepare( qq{ SELECT time_interval FROM vuln_job_schedule WHERE id='$schedid' } );
-                $sth_sel->execute(  );
-                $time_interval = $sth_sel->fetchrow_array(  ); 
-                
-                $day_offset  = $time_interval;
-                $week_offset = 7*$time_interval;
-            }
-            
-            if ($schedule_type eq "D") {
-                $sql = qq{ SELECT next_CHECK + INTERVAL $day_offset DAY FROM vuln_job_schedule WHERE id='$schedid' };
-            } elsif ($schedule_type eq "W") {
-                $sql = qq{ SELECT next_CHECK + INTERVAL $week_offset DAY FROM vuln_job_schedule WHERE id='$schedid' };
-            } elsif ($schedule_type eq "M") {
-                $sql = qq{ SELECT next_CHECK + INTERVAL 1 MONTH FROM vuln_job_schedule WHERE id='$schedid' }; 
-            };
-    
-    
-            $sth_sel = $dbh->prepare( $sql );
-            $sth_sel->execute();
-            $next_run = $sth_sel->fetchrow_array(  ); 
-    
-            $next_run  =~ s/://g;
-            $next_run  =~ s/-//g;
-            $next_run  =~ s/\s//g;
-    
-        }
-        else {
-            my %day_of_week = ("Su" => "sunday", 
-                               "Mo" => "monday",
-                               "Tu" => "tuesday",
-                               "We" => "wednesday",
-                               "Th" => "thursday",
-                               "Fr" => "friday", 
-                               "Sa" => "saturday");
-            
-            my %day_of_month = ("1" => "first", 
-                                "2" => "second",
-                                "3" => "third",
-                                "4" => "fourth",
-                                "5" => "fifth");
-                                
-            my %months = ("1" => "january", 
-                          "2" => "february",
-                          "3" => "march",
-                          "4" => "april",
-                          "5" => "may",
-                          "6" => "june", 
-                          "7" => "july",
-                          "8" => "august",
-                          "9" => "september",
-                          "10" => "october",
-                          "11" => "november",
-                          "12" => "december");
-                                
-    
-            $sql = qq{ SELECT day_of_week, day_of_month, next_CHECK FROM vuln_job_schedule WHERE id='$schedid' };
-            $sth_sel = $dbh->prepare( $sql );
-            $sth_sel->execute(  );
-            my ( $day_of_week_db, $day_of_month_db, $next_check_db ) = $sth_sel->fetchrow_array(  );
-    
-            my ($year, $month) = (localtime(time()))[5,4];
-            $year+=1900;
-            $month+=1;
-            
-            $month+=1; #select next month
-            if($month==13){
-                $month=1; 
-                $year++;
-            }
-    
-            #$month = 1; # to debug
-    
-            my $last_date = "";
-            my $i     = 1; # first, second, third ...
-            my $total = 0;
-            do {
-                $next_run = ParseDate($day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year);
-                #print $day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year."\n";
-                #logwriter( "Parse date: ".$day_of_month{$i}." ".$day_of_week{$day_of_week_db}." in ".$months{$month}." ".$year, 4 );
-                
-                if($next_run eq "") {
-                    $i = 1; # to begin with the first day
-                    $month+=1;
-                    if($month==13){
-                        $month=1; 
-                        $year++;
-                    }
-                }
-                elsif($last_date ne $next_run){
-                    $last_date = $next_run;
-                    $total++;
-                    $i++;
-                }
-                else {
-                    $i++;
-                }
-            } while($day_of_month_db != $total);
-    
-            $next_check_db =~ s/........(......)/$1/;
-            $next_run =~ s/^(........).*/$1/;
-            $next_run = $next_run.$next_check_db; # date and time
-    
-        }
-        
-        # Update the next_CHECK field to find the next datetime
-        
-        $sql = qq{ UPDATE vuln_job_schedule SET next_CHECK='$next_run' WHERE id='$schedid' };
-        safe_db_write ( $sql, 5 ); 
-        
-    } until ($next_run - $now > 0);
-
-    logwriter( "\tresched_scan nextscan=$next_run", 4 );
-
-    return $next_run; 
+    return; 
 }
 
 sub get_live_subnets {
@@ -5125,9 +4906,9 @@ sub get_target_id {
      my $input = $_[0];
      my (%credentials) = %{$_[1]};
      my $job_id = $_[2];
+     my ($port_excludes)  = $_[3];
      my @sorted_hosts = ();
-     my ($xml);
-
+     my ($xml); 
 
     my @value = sort(split(/\n/, $input));
     my @chunk = (0,0);
@@ -5191,10 +4972,58 @@ sub get_target_id {
         $ls_credentials .= "<ssh_lsc_credential id='".$credentials{'ssh_credential'}."'/>";
         logwriter("<ssh_lsc_credential id='".$credentials{'ssh_credential'}."'/>", 4);
     }
-    
-    $xml = execute_omp_command("<create_target><name>target$$</name><hosts>".join(",", @sorted_hosts)."</hosts>".$ls_credentials."</create_target>", '', $job_id);
-
+    my $ports = $port_excludes == "" ? "" : "<port_range>".invert_port_ranges($port_excludes)."</port_range>";
+    logwriter("<create_target><name>target$$</name><hosts>".join(",", @sorted_hosts)."</hosts>".$ls_credentials.$ports."</create_target>", 4);
+    $xml = execute_omp_command(
+    	"<create_target><name>target$$</name><hosts>".join(",", @sorted_hosts)."</hosts>".$ls_credentials.$ports."</create_target>"
+    	, '', $job_id);
     return $xml->{'id'};
+}
+
+
+sub invert_port_ranges {
+	my $str = shift;
+	my @ports;
+	$ports[0][0] = 1;
+	$ports[0][1] = 65535;
+	if ($str) {
+		my @ports_exclude = split /,/, $str;
+		foreach my $port_exclude (@ports_exclude) {
+			my @val = ($port_exclude,$port_exclude);
+			if (index($port_exclude, "-") != -1) {
+				@val = split /-/, $port_exclude;
+			}
+			foreach my $index (0 .. $#ports) {
+				if (@val[0] <= $ports[$index][0] && @val[1] >= $ports[$index][1]) {
+					delete $ports[$index];
+					next;
+				}
+				if (@val[0] <= $ports[$index][0] && @val[1] >= $ports[$index][0]) {
+					$ports[$index][0] = @val[1]+1;
+				}
+				if (@val[0] <= $ports[$index][1] && @val[1] >= $ports[$index][1]) {
+					$ports[$index][1] = @val[0]-1;
+				}
+				if (@val[0] >= $ports[$index][0] && @val[1] <= $ports[$index][1]) {
+					my $len = $#ports+1;
+					$ports[$len][0] = @val[1]+1;
+					$ports[$len][1] = $ports[$index][1];
+					$ports[$index][1] = @val[0]-1;
+				}
+			}
+		}
+	}
+	my @result = ();
+	foreach my $index (0 .. $#ports) {
+		my $val;
+		if ($ports[$index][0] == $ports[$index][1]) {
+			$val = $ports[$index][0];
+		} else {
+			$val = "$ports[$index][0]-$ports[$index][1]";
+		}
+		push @result, $val;
+	}
+	return  join ',', @result;
 }
 
 sub get_config_id {

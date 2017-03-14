@@ -251,4 +251,26 @@ affects_strike_zone=True
 # appliance_type=alienvault-vmware-usm-standard
 # min_doctor_version=4.15
 
+# [00290021]
+# pattern=^alienvault\-ami\-aio\-6x1gb\-lite:(\S+)\s+$
+# conditions=@int@:>495163392@and@<521377792
+# formatted_output=@int@ size is out of the standard size limits
+# severity=Warning
+# description=Check if disk_size is within +/-50GB range of standard disk size
+# summary_passed=The disk size in this installation is adequate
+# summary_failed=The disk size is out of range
+# remediation=Appliances are designed to work nicely with the standard disk size
+# appliance_type=alienvault-ami-aio-6x1gb-lite
+# min_doctor_version=4.15#
 
+# [00290022]
+# pattern=^alienvault\-ami\-sensor\-remote\-lite:(\S+)\s+$
+# conditions=@int@:>238389248@and@<264603648
+# formatted_output=@int@ size is out of the standard size limits
+# severity=Warning
+# description=Check if disk_size is within +/-50GB range of standard disk size
+# summary_passed=The disk size in this installation is adequate
+# summary_failed=The disk size is out of range
+# remediation=Appliances are designed to work nicely with the standard disk size
+# appliance_type=alienvault-ami-sensor-remote-lite
+# min_doctor_version=4.15#

@@ -80,8 +80,8 @@ $date_to         = GET('date_to');
 $ds_id           = GET('ds_id');
 $ds_name         = GET('ds_name');
 $beep            = intval(GET('beep'));
-$num_alarms_page = (GET('num_alarms_page') != "") ? intval(GET('num_alarms_page')) : 20;
-
+$_SESSION["per_page"] = $num_alarms_page = (GET('num_alarms_page') != "") 
+	? intval(GET('num_alarms_page')) : (isset($_SESSION["per_page"]) ? $_SESSION["per_page"] : 20);
 list($tags_count, $tags) = Tag::get_tags_by_type($conn, 'alarm');
 
 $asset_sensors    = Av_sensor::get_list($conn, array(), FALSE, TRUE);
@@ -240,6 +240,7 @@ $alarm_url = Alarm::get_alarm_path();
             array('src' => 'av_tags.js.php',                    'def_path' => TRUE),
             array('src' => 'av_dropdown_tag.js',                'def_path' => TRUE),
             array('src' => '/alarm/js/alarm_console.js.php',    'def_path' => FALSE),
+            array('src' => '/js/av_storage.js.php',    'def_path' => FALSE),
             array('src' => 'selectToUISlider.jQuery.js',         'def_path' => TRUE)
         );
         
@@ -262,6 +263,10 @@ $alarm_url = Alarm::get_alarm_path();
         var graph_filter = false;
         var draw_label   = false;
         var dd_alarm     = '';
+        var selection_type = 'manual';
+        var curent_checkbox_selected = false;
+        var count_of_all_alarm = 0;
+        alarm_session_db = new av_session_db('alarm_db_datatables');
 
         /*  Local Storage Keys  */
         var __local_storage_keys =
@@ -317,6 +322,55 @@ $alarm_url = Alarm::get_alarm_path();
             }           
         }
 
+        function alarm_action(action_number, open_msg)  {
+
+            av_confirm(open_msg).done(function()
+            {
+
+                $('#delete_data').html("<?php echo _("Opening selected alarm ...") ?>");
+                $('#info_delete').show();
+
+                var ids = [];
+                var atoken = Token.get_token("alarm_operations");
+                var get_db =  selection_type == 'all' ? '' : sessionStorage.getObj('alarm_db_datatables');
+                if(get_db.length != 0) {
+
+                    for (var id in get_db) {
+                        ids.push(id);
+                    }
+                }
+                alarm_session_db.clean_checked();
+                selection_type = 'manual';
+
+                $.ajax(
+                    {
+                        type: "POST",
+                        url: "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
+                        dataType: "json",
+                        data: {"action": action_number, "data": {"id": ids} },
+                        success: function(data)
+                        {
+                            if(data.error)
+                            {
+                                $('#info_delete').hide();
+                                notify(data.msg, 'nf_error');
+                            }
+                            else
+                            {
+                                $('#delete_data').html("<?php echo _("Reloading alarms ...") ?>");
+                                document.location.href='<?php echo $refresh_url?>';
+                            }
+
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown)
+                        {
+                            $('#info_delete').hide();
+                            notify(textStatus, 'nf_error');
+                        }
+                    });
+
+            });
+        }
         function tray_delete(backlog_id)
         {
             select_tray_input(backlog_id);
@@ -328,7 +382,12 @@ $alarm_url = Alarm::get_alarm_path();
             select_tray_input(backlog_id);
             bg_close();
         }
-        
+        function tray_open(backlog_id)
+        {
+            select_tray_input(backlog_id);
+            open_alarm();
+        }
+
         function select_tray_input (backlog_id) 
         {
             //First we unselect every checkbox
@@ -348,10 +407,60 @@ $alarm_url = Alarm::get_alarm_path();
             
             chk_actions();
         }
-                
+
+        function selectedAlarm() {
+
+
+            var checkbox_count = 0 ;
+            var checkbox_selected = 0;
+            $("input[type=checkbox].alarm_check").each(function()
+            {
+                if (this.id.match(/^check_[0-9A-Z]+/))
+                {
+
+                    if(!$(this).prop('disabled'))
+                    {
+                        checkbox_count++;
+                        if (alarm_session_db.is_checked($(this).attr('id')))
+                        {
+                            checkbox_selected++;
+                            $(this).prop('checked', true);
+                        }
+                    }
+                }
+            });
+            curent_checkbox_selected =  checkbox_count == checkbox_selected && checkbox_selected != 0;
+
+            if (curent_checkbox_selected) {
+                $('#allcheck').prop('checked', true);
+                $('#selectall').show();
+            }else  {
+                $('#selectall').hide();
+                $('#allcheck').prop('checked', false);
+            }
+
+            if( selection_type == 'all') {
+                selected_checkbox( true,false);
+                $('#allcheck').prop('checked', true);
+            }
+        }
+
         function checkall (that) 
         {
-            var status = that.checked;
+
+            if( selection_type == 'all')
+            {
+                selection_type = 'manual';
+                selected_checkbox(false,false);
+
+            }else{
+                that.checked ? $('#selectall').show() : $('#selectall').hide();
+                selected_checkbox( that.checked,true);
+            }
+            chk_actions();
+        }
+
+        function selected_checkbox(status, sesion_store_save) {
 
             $("input[type=checkbox].alarm_check").each(function() 
             {
@@ -360,11 +469,12 @@ $alarm_url = Alarm::get_alarm_path();
                     if(!$(this).prop('disabled'))
                     {
                         $(this).prop('checked', status);
+                        if(sesion_store_save) {
+                            manage_check(this);
+                        }
                     }
                 }
             });
-            
-            chk_actions();
         }
 
         function toggle_filters()
@@ -505,85 +615,20 @@ $alarm_url = Alarm::get_alarm_path();
 
         }
 
+       <?php if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsClose") ) { ?>
         function bg_close() 
         {
             var close_msg = "<?php echo Util::js_entities(_("You are going to close the selected alarm(s). Would you like to continue?")) ?>";
-            
-            av_confirm(close_msg).done(function()
-            {  
-                $('#delete_data').html("<?php echo _("Closing selected alarm ...") ?>");            
-                $('#info_delete').show();
-                
-                var params = "";
-                $(".alarm_check").each(function()
-                {
-                    if ($(this).is(':checked'))
-                    {
-                        params += "&"+$(this).attr('name')+"=1";
-                    }
-                });
-                
-                var atoken = Token.get_token("alarm_operations");
-                
-                $.ajax(
-                {
-                    type: "POST",
-                    url: "controllers/alarms_check_delete.php?token=" + atoken,
-                    data: "background=1&only_close=1" + params,
-                    success: function(msg)
-                    {
-                        $('#delete_data').html('<?php echo _("Reloading alarms ...") ?>');
-                        document.location.href='<?php echo $refresh_url?>';
-                    },
-                    error: function(XMLHttpRequest, textStatus, errorThrown)
-                    {
-                            $('#info_delete').hide();
-                            notify(textStatus, 'nf_error');
-                    }
-                });
-            });
+            var action_number =  selection_type == 'all' ? 5 : 1;
+            alarm_action(action_number,close_msg);
         }
+        <?php } ?>
 
-        function open_alarm(id) 
+        function open_alarm()
         {
             var open_msg = "<?php echo Util::js_entities(_("You are going to open the selected alarm. Would you like to continue?")) ?>";
-            
-            av_confirm(open_msg).done(function()
-            {
-            
-                $('#delete_data').html("<?php echo _("Opening selected alarm ...") ?>");
-                $('#info_delete').show();            
-    
-                var atoken = Token.get_token("alarm_operations");
-                
-                $.ajax(
-                {
-                    type: "POST",
-                    url: "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
-                    dataType: "json",
-                    data: {"action": 2, "data": {"id": id} },
-                    success: function(data)
-                    {
-                        if(data.error)
-                        {
-                            $('#info_delete').hide();     
-                            notify(data.msg, 'nf_error');
-                        } 
-                        else
-                        {
-                            $('#delete_data').html("<?php echo _("Reloading alarms ...") ?>");
-                            document.location.href='<?php echo $refresh_url?>';                             
-                        }
-    
-                    },
-                    error: function(XMLHttpRequest, textStatus, errorThrown) 
-                    {
-                            $('#info_delete').hide();
-                            notify(textStatus, 'nf_error');
-                    }
-                });
-            
-            });
+            var action_number =  selection_type == 'all' ? 8 : 2;
+            alarm_action(action_number,open_msg);
             
         }
 
@@ -699,46 +744,14 @@ $alarm_url = Alarm::get_alarm_path();
         }
                             
         <?php
-        if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") )
-        {
+       if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") )
+       {
             ?>
             function bg_delete()
             {
                 var msg_delete = "<?php echo Util::js_entities(_("Alarms should never be deleted unless they represent a false positive. Would you like to continue?")) ?>"
-                
-                av_confirm(msg_delete).done(function()
-                {
-                    $('#info_delete').show();
-                    
-                    var params = "";
-                    $(".alarm_check").each(function()
-                    {
-                        if ($(this).is(':checked')) 
-                        {
-                            params += "&"+$(this).attr('name')+"=1";
-                        }
-                    });
-                    
-                    var atoken = Token.get_token("alarm_operations");
-                    
-                    $.ajax(
-                    {
-                        type: "POST",
-                        url: "controllers/alarms_check_delete.php?token=" + atoken,
-                        data: "background=1" + params,
-                        success: function(msg)
-                        {
-                            $('#delete_data').html('<?php echo _("Reloading alarms ...") ?>');
-                            document.location.href='<?php echo $refresh_url?>';
-                        },
-                        error: function(XMLHttpRequest, textStatus, errorThrown)
-                        {
-                                $('#info_delete').hide();
-                                notify(textStatus, 'nf_error');
-                        }
-                    });
-                    
-                });
+                var action_number = 6;
+                alarm_action(action_number,msg_delete);
             }
         
             function delete_all_alarms()
@@ -756,7 +769,8 @@ $alarm_url = Alarm::get_alarm_path();
                         $('#info_delete').show();
                         
                         var atoken = Token.get_token("alarm_operations");
-                        
+                        selection_type = 'manual';
+
                         $.ajax({
                             type: "POST",
                             url: "<?php echo $alarm_url['controller'] ?>alarm_actions.php?token="+atoken,
@@ -821,9 +835,7 @@ $alarm_url = Alarm::get_alarm_path();
 
             }  
             
-            <?php
-        }
-        ?>
+            <?php } ?>
         
         function load_trend(layer,pid,sid) 
         {
@@ -1045,6 +1057,7 @@ $alarm_url = Alarm::get_alarm_path();
 
             // input click
             $('input[name^="check_"]').off('click').on('click', function() {
+                manage_check(this);
                 chk_actions();
             });
             
@@ -1053,7 +1066,12 @@ $alarm_url = Alarm::get_alarm_path();
         
         function chk_actions()
         {
-            if ($('input[name^="check_"]:checked').length > 0)
+            var count_ids = (sessionStorage.getObj('alarm_db_datatables')) ?  Object.keys(sessionStorage.getObj('alarm_db_datatables')).length : 0;
+
+            $('#selectall > span').text(count_ids);
+            $('#selectall a span').text(count_of_all_alarm);
+
+            if (count_ids > 0 || selection_type == 'all')
             {
                 $('#button_action').prop('disabled', false);
                 $('#btn_al').removeClass('disabled');
@@ -1064,12 +1082,27 @@ $alarm_url = Alarm::get_alarm_path();
                 $('#btn_al').addClass('disabled');
                 
                 $('.apply_label_layer').empty();
-            }         
+            }
         }
-        
+
+        function manage_check (input)
+        {
+            var __self = this;
+
+            if($(input).prop('checked'))
+            {
+                __self.alarm_session_db.save_check($(input).attr('id'));
+            }
+            else
+            {
+                __self.alarm_session_db.remove_check($(input).attr('id'));
+            }
+
+        }
         
         function display_datatables_column(show)
         {
+
             alarm_table.fnSetColumnVis(3, show, false);
         }
 
@@ -1217,6 +1250,7 @@ $alarm_url = Alarm::get_alarm_path();
         
         $(document).ready(function()
         {
+
             $('#arangeA, #arangeB').selectToUISlider({
                 tooltip: false,
                 labelSrc: 'text'
@@ -1414,7 +1448,7 @@ $alarm_url = Alarm::get_alarm_path();
                 "bLengthChange": true,
                 "sPaginationType": "full_numbers",
                 "bFilter": false,
-                "aLengthMenu": [[10, 20, 50, 100], [10, 20, 50, 100]],
+                "aLengthMenu": [[10, 20, 50, 100, 250, 500], [10, 20, 50, 100, 250, 500]],
                 "bJQueryUI": true,
                 "aaSorting": [[ <?php echo $order ?>, "<?php echo $torder ?>" ]],
                 "aoColumns": [
@@ -1498,8 +1532,10 @@ $alarm_url = Alarm::get_alarm_path();
                 "fnDrawCallback" : function(oSettings)
                 {
                     // Load callbacks, tiptips and more
+                    count_of_all_alarm =  oSettings._iRecordsTotal;
                     load_handlers();
                     chk_actions();
+                    selectedAlarm();
                 },
                 "fnInitComplete": function()
                 {
@@ -1526,7 +1562,6 @@ $alarm_url = Alarm::get_alarm_path();
                             {
                                 oSettings.iInitDisplayStart = json.iDisplayStart;
                             }
-                            
                             draw_label = json.show_label;
                             display_datatables_column(draw_label);
 
@@ -1549,7 +1584,9 @@ $alarm_url = Alarm::get_alarm_path();
                     } );
                 }
             });
-            
+
+            alarm_session_db.clean_checked();
+
             $('#alarm_graph').on('load', postload_graph);
 
             $('#dropdown-2').on('show', function(event,data)
@@ -1577,6 +1614,7 @@ $alarm_url = Alarm::get_alarm_path();
             {
                 $('#btnsearch').trigger('click');
             });
+
         });
 
         var alt_pressed = false;
@@ -1794,11 +1832,11 @@ if (!isset($_GET["hide_search"]))
                         </div>
                     </div>
                 </div>
-        
+
             </div>
-            
+
             <div class='p_column'>
-                
+
                 <label for='asset_group'><?php echo _('Asset Group')?></label>
                 <select name='asset_group' id='asset_group'>
                     <option value=''><?php echo (count($asset_groups) > 0) ? '' : '- '._('No groups found').' -' ?></option>
@@ -1812,7 +1850,7 @@ if (!isset($_GET["hide_search"]))
                     }
                     ?>
                 </select>
-                
+
                 <label for='intent'><?php echo _('Intent')?></label>
                 <select name="intent" id='intent'><option value="0"></option>
                 <?php
@@ -1938,24 +1976,21 @@ if (!isset($_GET["hide_search"]))
 
     <!-- ALARM LIST -->
     <div id='alarm_list'>
-        
-        <?php
-        // Menu buttons
-        if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") )
-        {                        
-        ?> 
             <div id ='alarm_console_button_list'>
                 
                 <img id="btn_al" class="button_labels av_b_secondary" src="/ossim/pixmaps/label.png" />
-            
                 <button id='button_action' class='small' data-dropdown="#dropdown-actions">
                     <?php echo _('Actions') ?> &nbsp;&#x25be;
                 </button>               
             </div>
-        <?php
-        }
-        ?>
-        
+
+        <div  class="hidden" id="selectall" style=" text-align: center; position: relative; top: 24px;  z-index: 100; ">
+            <?=sprintf(_("You have selected %s alarms on this page."),'<span></span>')?>
+            <a href="#" onclick="$('#selectall').hide(); $('#allcheck').prop('checked', true);  selection_type = 'all';  alarm_session_db.clean_checked(); return false;">
+                <?=sprintf(_("Select all %s alarms."),'<span></span>')?>
+            </a>
+        </div>
+
         <table class='table_data'>
             <thead>
                 <tr>
@@ -2004,18 +2039,24 @@ if (!isset($_GET["hide_search"]))
             <tbody>
             </tbody>
         </table>
-    </div>  
-        
+    </div>
 
+    <?php if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") ) { ?>
     <a href="javascript:;" class="fright" style="padding-bottom:15px;" onclick="delete_all_alarms();">
         <?php echo _("Delete ALL"); ?>
     </a>
+    <?php } ?>
     
     
     <div id="dropdown-actions"  class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
         <ul class="dropdown-menu">
-            <li><a href="#1" id="btn_cs" onclick="bg_close();"><?php echo _('Close Alarm') ?></a></li>
-            <li><a href="#2" id="btn_ds" onclick="bg_delete();"><?php echo _('Delete Alarm') ?></a></li>
+            <li><a href="#1" id="btn_ds" onclick="open_alarm();"><?php echo _('Open Alarm') ?></a></li>
+            <?php if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsClose") ) {?>
+                <li><a href="#2" id="btn_cs" onclick="bg_close();"><?php echo _('Close Alarm') ?></a></li>
+            <?php }
+            if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") ) { ?>
+                <li><a href="#3" id="btn_ds" onclick="selection_type == 'all' ?  delete_all_alarms() : bg_delete();"><?php echo _('Delete Alarm') ?></a></li>
+            <?php } ?>
         </ul>
     </div>
 

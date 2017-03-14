@@ -160,7 +160,8 @@ $alarm = array(
     'agent_ctx'      => $event_info["agent_ctx"],
     'sid_name'       => $alarm_name['name'],
     'status'         => $status,
-    'risk'           => "<span class='risk-bar $risk_text'>"._($risk_text)."</span>",
+    'risk'           => $risk,
+    'risk_text'      => "<span class='risk-bar $risk_text'>"._($risk_text)."</span>",
     'attack_pattern' => $attack_pattern,
     'created'        => $alarm_life,
     'duration'       => $alarm_time,
@@ -258,7 +259,7 @@ $perms = array(
 
 <body>
 
-<div id='ad_wrapper' data-alarm="main-wrapper">
+<div id='alarm_wrapper' data-alarm="main-wrapper">
 
     <div id="bread_crumb_alarm" data-alarm="breadcrumb"></div>
     
@@ -266,7 +267,7 @@ $perms = array(
         <?php echo _('Actions') ?> &nbsp;&#x25be;
     </button>
 
-    <div id='ad_notification'></div>
+    <div id='alarm_notification'></div>
 
     <div id='alarm_name' data-alarm="name"></div>        
     
@@ -279,47 +280,47 @@ $perms = array(
     
     <div class='clear_layer'></div>
     
-    <div id='ad_summary' data-alarm='summary' class='ad_section'>
-        <div id='ad_status' class='item'>
-            <div class='ad_header center'><?php echo _('Status') ?></div>
-            <div data-alarm='status' class='ad_content'></div>
+    <div id='alarm_summary' data-alarm='summary' class='alarm_section'>
+        <div id='alarm_status' class='item'>
+            <div class='alarm_header center'><?php echo _('Status') ?></div>
+            <div data-alarm='status' class='alarm_content'></div>
         </div>
         
-        <div id='ad_risk' class='item'>
-            <div class='ad_header center'><?php echo _('Risk') ?></div>
-            <div data-alarm='risk' class='ad_content'></div>
+        <div id='alarm_risk' class='item'>
+            <div class='alarm_header center'><?php echo _('Risk') ?></div>
+            <div data-alarm='risk_text' class='alarm_content'></div>
         </div>
         
-        <div id='ad_attack_pattern' class='item'>
-            <div class='ad_header center'><?php echo _('Attack Pattern') ?></div>
-            <div data-alarm='attack_pattern' class='ad_content'></div>
+        <div id='alarm_attack_pattern' class='item'>
+            <div class='alarm_header center'><?php echo _('Attack Pattern') ?></div>
+            <div data-alarm='attack_pattern' class='alarm_content'></div>
         </div>
                     
-        <div id='ad_created' class='item'>
-            <div class='ad_header center'><?php echo _('Created') ?></div>
-            <div data-alarm='created' class='ad_content'></div>
+        <div id='alarm_created' class='item'>
+            <div class='alarm_header center'><?php echo _('Created') ?></div>
+            <div data-alarm='created' class='alarm_content'></div>
         </div>
         
-        <div id='ad_duration' class='item'>
-            <div class='ad_header center'><?php echo _('Duration') ?></div>
-            <div data-alarm='duration' class='ad_content'></div>
+        <div id='alarm_duration' class='item'>
+            <div class='alarm_header center'><?php echo _('Duration') ?></div>
+            <div data-alarm='duration' class='alarm_content'></div>
         </div>
         
-        <div id='ad_events' class='item'>
-            <div class='ad_header center'><?php echo _('# Events') ?></div>
-            <div data-alarm='events' class='ad_content'></div>
+        <div id='alarm_events' class='item'>
+            <div class='alarm_header center'><?php echo _('# Events') ?></div>
+            <div data-alarm='events' class='alarm_content'></div>
         </div>
-        <div id='ad_id' class='item'>
-            <div class='ad_header center'><?php echo _('Alarm ID') ?></div>
-            <div class='ad_content'><?php echo $alarm["backlog_id"]?></div>
+        <div id='alarm_id' class='item'>
+            <div class='alarm_header center'><?php echo _('Alarm ID') ?></div>
+            <div class='alarm_content'><?php echo $alarm["backlog_id"]?></div>
         </div>
 
-        <div id='ad_otx' class='item'>
-            <div class='ad_header center'>
+        <div id='alarm_otx' class='item'>
+            <div class='alarm_header center'>
                 <img data-alarm="otx-icon" class="otx_icon" style="display:none;"></img>
                 <?php echo _('OTX Indicators') ?>
             </div>
-            <div data-alarm='otx' class='ad_content'></div>
+            <div data-alarm='otx' class='alarm_content'></div>
         </div>
         
         <div class='clear_layer'></div>
@@ -327,27 +328,27 @@ $perms = array(
     </div>
 
     
-    <div id='ad_boxes' class='ad_section'>
+    <div id='alarm_boxes' class='alarm_section'>
 
         <div class='box fleft'>
             <div class='box_wrapper'>
-                <div class='ad_header'>
+                <div class='alarm_header'>
                     <?php echo _('Source') ?> 
                     (<span data-alarm="total-src"></span>)
                     <div class="box_ip_selector" data-alarm="select-src"></div>
                 </div>
-                <div class='ad_content' data-alarm="box-src"></div>
+                <div class='alarm_content' data-alarm="box-src"></div>
             </div>
         </div>
 
         <div class='box fright'>
             <div class='box_wrapper'>
-                <div class='ad_header'>
+                <div class='alarm_header'>
                     <?php echo _('Destination') ?> 
                     (<span data-alarm="total-dst"></span>)
                     <div class="box_ip_selector" data-alarm="select-dst"></div>
                 </div>
-                <div class='ad_content' data-alarm="box-dst"></div>
+                <div class='alarm_content' data-alarm="box-dst"></div>
             </div>
         </div>
         
@@ -355,19 +356,19 @@ $perms = array(
         
     </div>
     
-    <div id='ad_tabs' class='ad_section'>
+    <div id='alarm_tabs' class='alarm_section'>
         <ul></ul>
     </div>
 
 </div>
 
 
-<div id="ad_box_template" data-alarm="box-template">
+<div id="alarm_box_template" data-alarm="box-template">
     
     <div class='box_section'>
-        <div class='ad_box_name'>
-            <div class="ad_asset_name" data-alarm="asset-name"></div>
-            <div class="ad_asset_loc" data-alarm="asset-location">
+        <div class='alarm_box_name'>
+            <div class="alarm_asset_name" data-alarm="asset-name"></div>
+            <div class="alarm_asset_loc" data-alarm="asset-location">
                 <strong><?php echo _('Location:') ?> </strong>
                 <span data-bind='val'></span>
             </div>
@@ -375,19 +376,19 @@ $perms = array(
         </div>
         
         
-        <div class='ad_box_sec' data-alarm="group-list">
+        <div class='alarm_box_sec' data-alarm="group-list">
             <div class='el_header'><?php echo _('Asset Groups:') ?> </div>
             <div class='el_val' data-bind='val'></div>
             <div class='clear_layer'></div>
         </div>
         
-        <div class='ad_box_sec' data-alarm="network-list">
+        <div class='alarm_box_sec' data-alarm="network-list">
             <div class='el_header'><?php echo _('Networks:') ?> </div>
             <div class='el_val' data-bind='val'></div>
             <div class='clear_layer'></div>
         </div>
         
-        <div class='ad_box_sec' data-alarm="ip-reputation">
+        <div class='alarm_box_sec' data-alarm="ip-reputation">
             <span class='el_header'><?php echo _('OTX IP Reputation:') ?> </span>
             <span class='el_val' data-bind='val'></span>
             <div class='clear_layer'></div>
@@ -404,7 +405,7 @@ $perms = array(
     <hr>
     
     <div class='box_section'>
-        <div class='ad_box_title'><?php echo _('Other Details:') ?></div>
+        <div class='alarm_box_title'><?php echo _('Other Details:') ?></div>
         
         <div class="extra_url">
             <a data-alarm='extra-siem'   href="javascript:;"><?php echo _('SIEM Events') ?></a>,

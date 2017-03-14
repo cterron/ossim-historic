@@ -52,7 +52,7 @@ $cs->ReadState();
 // }
 
 //print_r($_SESSION['ip_addr']);
-if (!in_array($addr_type,array("userdomain","username","hostname","domain"))) $addr_type = "userdomain";
+if (!in_array($addr_type,array("userdomain","idmusername","hostname","domain"))) $addr_type = "userdomain";
 $type_name = ucfirst(str_replace("userdomain","user@domain",$addr_type))."s";
 
 $page_title = _("Unique")." "._($type_name);

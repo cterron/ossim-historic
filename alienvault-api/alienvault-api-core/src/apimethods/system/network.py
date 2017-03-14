@@ -29,7 +29,7 @@
 
 import ipaddress
 import ansiblemethods.system.network
-from db.methods.system import get_system_ip_from_system_id
+from db.methods.system import get_system_ip_from_system_id, get_system_ip_from_local
 from celerymethods.jobs.reconfig import alienvault_reconfigure
 from ansiblemethods.system.system import get_av_config
 from apimethods.system.cache import use_cache, flush_cache
@@ -179,3 +179,10 @@ def get_traffic_stats (system_id):
         return ret
 
     return ansiblemethods.system.network.get_iface_stats(ip)
+
+
+def get_fqdn_api(system_id, host_ip):
+    success, system_ip = get_system_ip_from_system_id(system_id)
+    if not success:
+        success, system_ip = get_system_ip_from_local()
+    return ansiblemethods.system.network.get_fqdn(system_ip, host_ip)
