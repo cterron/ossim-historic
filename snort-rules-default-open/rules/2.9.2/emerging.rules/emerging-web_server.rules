@@ -914,7 +914,7 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HTTP_SERVERS any (msg:"ET WEB_SERVER PHP
 
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HTTP_SERVERS any (msg:"ET WEB_SERVER PHP WebShell Embedded In PNG (INBOUND)"; flow:established,from_server; file_data; content:"PNG|0D 0A 1A 0A|"; distance:1; within:7; content:"<?php"; fast_pattern; distance:0; reference:url,blog.spiderlabs.com/2013/10/hiding-webshell-backdoor-code-in-image-files.html; classtype:successful-admin; sid:2017609; rev:1;)
 
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Encrypted Webshell Download"; flow:established,to_client; file_data; content:"eval"; content:"mcrypt_decrypt"; distance:0; reference:url,blog.sucuri.net/2013/10/backdoor-evasion-using-encrypted-content.html; classtype:bad-unknown; sid:2017640; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HTTP_SERVERS any (msg:"ET WEB_SERVER Possible Encrypted Webshell Download"; flow:established,to_client; file_data; content:"eval"; content:"mcrypt_decrypt"; distance:0; within:30; reference:url,blog.sucuri.net/2013/10/backdoor-evasion-using-encrypted-content.html; classtype:bad-unknown; sid:2017640; rev:2;)
 
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible Encrypted Webshell in POST"; flow:established,to_server; content:"POST"; http_method; content:"eval"; http_client_body; content:"mcrypt_decrypt"; http_client_body; distance:0; reference:url,blog.sucuri.net/2013/10/backdoor-evasion-using-encrypted-content.html; classtype:bad-unknown; sid:2017641; rev:2;)
 

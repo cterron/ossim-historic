@@ -368,8 +368,6 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Possible %41%41
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE JavaScript Redefinition of a HeapLib Object - Likely Malicious Heap Spray Attempt"; flow:established,to_client; content:"heap|2E|"; nocase; fast_pattern:only; pcre:"/var\x20[^\n\r]*\x3D[^\n\r]*heap\x2E/smi"; classtype:shellcode-detect; sid:2013148; rev:3;)
 
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0a0a0a0a"; flow:established,to_client; file_data; content:"|5C|x0a|5C|x0a|5C|x0a|5C|x0a"; nocase; reference:url,www.darkreading.com/security/vulnerabilities/221901428/index.html; classtype:shellcode-detect; sid:2013267; rev:4;)
-
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0b0b0b0b"; flow:established,to_client; file_data; content:"|5C|x0b|5C|x0b|5C|x0b|5C|x0b"; nocase; reference:url,www.darkreading.com/security/vulnerabilities/221901428/index.html; classtype:shellcode-detect; sid:2013268; rev:4;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0c0c0c0c"; flow:established,to_client; content:"|5C|x0c|5C|x0c|5C|x0c|5C|x0c"; nocase; fast_pattern:only; reference:url,www.darkreading.com/security/vulnerabilities/221901428/index.html; classtype:shellcode-detect; sid:2013269; rev:2;)

@@ -699,7 +699,7 @@
 2002069 || ET WEB_SPECIFIC_APPS Blog Spam Insert Attempt || url,doc.emergingthreats.net/2002069 || url,www.webmasterworld.com/forum92/3683.htm || url,lists.geeklog.net/pipermail/geeklog-spam/2005-June/000020.html || url,spamhuntress.com/2005/05/14/new-block-for-bulgarians/
 2002070 || ET WEB_SPECIFIC_APPS phpBB Remote Code Execution Attempt || url,doc.emergingthreats.net/2002070 || url,www.securiteam.com/unixfocus/6Z00R2ABPY.html || bugtraq,14086 || url,secunia.com/advisories/15845/
 2002071 || ET MALWARE XupiterToolbar Spyware User-Agent (XupiterToolbar) || url,doc.emergingthreats.net/2002071 || url,castlecops.com/tk781-Xupitertoolbar_dll_t_dll.html
-2002078 || ET MALWARE Spyware User-Agent (SideStep) || url,doc.emergingthreats.net/2002078
+2002078 || ET USER_AGENTS SideStep User-Agent || url,github.com/chetan51/sidestep/ || url,doc.emergingthreats.net/2002078
 2002079 || ET USER_AGENTS MyWaySearch Products Spyware User Agent || url,www.funwebproducts.com || url,doc.emergingthreats.net/2002079
 2002080 || ET MALWARE MySearch Products Spyware User-Agent (MySearch) || url,doc.emergingthreats.net/2002080
 2002083 || ET MALWARE Pacimedia Spyware 1 || url,doc.emergingthreats.net/bin/view/Main/2002083
@@ -6332,7 +6332,7 @@
 2008493 || ET TROJAN Pushdo Checkin || url,doc.emergingthreats.net/2008493
 2008494 || ET TROJAN Suspicious User-Agent (ieagent) || url,doc.emergingthreats.net/bin/view/Main/2008494
 2008495 || ET TROJAN Suspicious User-Agent (antispyprogram) || url,doc.emergingthreats.net/bin/view/Main/2008495
-2008500 || ET MALWARE Sogoul.com Spyware User-Agent (SogouIMEMiniSetup) || url,doc.emergingthreats.net/2008500
+2008500 || ET MALWARE Sogou.com Spyware User-Agent (SogouIMEMiniSetup) || url,doc.emergingthreats.net/2008500
 2008502 || ET TROJAN Antispywareexpert.com Fake AS Install Checkin || url,doc.emergingthreats.net/2008502
 2008503 || ET MALWARE ZCOM Adware/Spyware User-Agent (ZCOM Software)
 2008504 || ET TROJAN Suspicious User-Agent (SUiCiDE/1.5) || url,doc.emergingthreats.net/bin/view/Main/2008504
@@ -10574,7 +10574,7 @@
 2013264 || ET SCAN Nessus FTP Scan detected (ftp_writeable_directories.nasl) || url,osvdb.org/show/osvdb/76 || url,www.nessus.org/plugins/index.php?view=single&id=19782
 2013265 || ET MOBILE_MALWARE SymbOS/SymGam CnC Checkin || url,www.fortiguard.com/encyclopedia/virus/symbos_symgam.a!tr.html
 2013266 || ET MOBILE_MALWARE SymbOS/SymGam Receiving SMS Message Template from CnC Server || url,www.fortiguard.com/encyclopedia/virus/symbos_symgam.a!tr.html
-2013267 || ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0a0a0a0a || url,www.darkreading.com/security/vulnerabilities/221901428/index.html
+2013267 || ET INFO Possible Hex Obfuscated JavaScript Heap Spray 0a0a0a0a || url,www.darkreading.com/security/vulnerabilities/221901428/index.html
 2013268 || ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0b0b0b0b || url,www.darkreading.com/security/vulnerabilities/221901428/index.html
 2013269 || ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0c0c0c0c || url,www.darkreading.com/security/vulnerabilities/221901428/index.html
 2013270 || ET SHELLCODE Hex Obfuscated JavaScript Heap Spray 0d0d0d0d || url,www.darkreading.com/security/vulnerabilities/221901428/index.html
@@ -14603,7 +14603,7 @@
 2017512 || ET CURRENT_EVENTS W32/Caphaw DriveBy Campaign Statistic.js || url,blog.damballa.com/archives/2147 || url,research.zscaler.com/2013/09/a-new-wave-of-win32caphaw-attacks.html
 2017513 || ET CURRENT_EVENTS W32/Caphaw DriveBy Campaign Ping.html || url,blog.damballa.com/archives/2147 || url,research.zscaler.com/2013/09/a-new-wave-of-win32caphaw-attacks.html
 2017515 || ET INFO User-Agent (python-requests) Inbound to Webserver
-2017516 || ET TROJAN Worm.VBS.ayr Checkin 1 || md5,d2e799904582f03281060689f5447585
+2017516 || ET TROJAN Worm.VBS.Dunihi Checkin 1 || md5,d2e799904582f03281060689f5447585
 2017517 || ET TROJAN Worm.VBS.ayr Checkin 2 || md5,d2e799904582f03281060689f5447585
 2017518 || ET TROJAN Worm.VBS.ayr CnC command (/iam-ready) || url,www.fireeye.com/blog/uncategorized/2013/09/now-you-see-me-h-worm-by-houdini.html
 2017519 || ET TROJAN Worm.VBS.ayr CnC command (is-enum-driver) || url,www.fireeye.com/blog/uncategorized/2013/09/now-you-see-me-h-worm-by-houdini.html
@@ -15047,7 +15047,7 @@
 2017966 || ET DOS Likely NTP DDoS In Progress MON_LIST Response to Non-Ephemeral Port IMPL 0x03 || url,en.wikipedia.org/wiki/Ephemeral_port || url,www.symantec.com/connect/blogs/hackers-spend-christmas-break-launching-large-scale-ntp-reflection-attacks
 2017967 || ET TROJAN StartPage jsp checkin || md5,bb7bbb0646e705ab036d73d920983256
 2017968 || ET INFO Suspicious Possible Process Dump in POST body || url,www.securelist.com/en/blog/208214213/The_Icefog_APT_Hits_US_Targets_With_Java_Backdoor
-2017969 || ET CURRENT_EVENTS Netgear N150 passwordrecovered.cgi attempt || url,www.securityfocus.com/archive/1/530743/30/0/threaded
+2017969 || ET CURRENT_EVENTS Netgear passwordrecovered.cgi attempt || cve,2017-5521 || url,www.trustwave.com/Resources/Security-Advisories/Advisories/TWSL2017-003/?fid=8911 || url,www.securityfocus.com/archive/1/530743/30/0/threaded
 2017970 || ET TROJAN PWS.Win32/Daceluw.A Checkin || url,xylibox.com/2014/01/trojwowspy-a.html
 2017971 || ET CURRENT_EVENTS Possible Neutrino IE/Silverlight Payload Download
 2017972 || ET TROJAN ICEFOG JAVAFOG JAR checkin || url,jsunpack.jeek.org/dec/go?report=6b63068d3259f5032a301e0d3f935b4d3f2e2998 || url,www.securelist.com/en/blog/208214213/The_Icefog_APT_Hits_US_Targets_With_Java_Backdoor
@@ -15072,7 +15072,7 @@
 2017991 || ET TROJAN Cybergate/Rebhip/Spyrat Backdoor Keepalive Response
 2017992 || ET MALWARE Win32/OutBrowse.G Variant Checkin || url,www.virustotal.com/en/file/95e0eaaee080f2c167464ed6da7e4b7a27937ac64fd3e1792a1aa84c1aed488e analysis/ || md5,d75055c45e2c5293c3e0fbffb299ea6d
 2017993 || ET TROJAN GoonEK Jan 21 2013
-2017994 || ET CURRENT_EVENTS VBSAutorun_VBS_Jenxcus Check-in UA || url, www.microsoft.com/security/portal/threat/encyclopedia/entry.aspx?ThreatId=-2147283579&mstLocPickShow=False#tab=2 || url,kc.mcafee.com/resources/sites/MCAFEE/content/live/PRODUCT_DOCUMENTATION/24000/PD24761/en_US/McAfee%20Labs%20Threat%20Advisory-VBSAutorun%20Worm.pdf
+2017994 || ET CURRENT_EVENTS VBS.Dunihi Check-in UA || url, www.microsoft.com/security/portal/threat/encyclopedia/entry.aspx?ThreatId=-2147283579&mstLocPickShow=False#tab=2 || url,kc.mcafee.com/resources/sites/MCAFEE/content/live/PRODUCT_DOCUMENTATION/24000/PD24761/en_US/McAfee%20Labs%20Threat%20Advisory-VBSAutorun%20Worm.pdf
 2017995 || ET CURRENT_EVENTS GoonEK Landing Jan 21 2013 SilverLight 1
 2017996 || ET CURRENT_EVENTS GoonEK Landing Jan 21 2013 SilverLight 2
 2017997 || ET CURRENT_EVENTS GoonEK Landing Jan 21 2013 SilverLight 3
@@ -18164,7 +18164,7 @@
 2021175 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Downloader CnC) || url,sslbl.abuse.ch
 2021176 || ET TROJAN Bladabindi/njRAT CnC Command (ll) || md5,ac7b1fdc679fdbd3cb0cd8a3e30ecddb
 2021177 || ET CURRENT_EVENTS Fake AV Phone Scam Landing June 2 2015
-2021178 || ET ATTACK_RESPONSE Metasploit Meterpreter Reverse HTTPS certificate || url,blog.didierstevens.com/
+2021178 || ET ATTACK_RESPONSE Metasploit Meterpreter Reverse HTTPS certificate || url,blog.didierstevens.com/2015/05/11/detecting-network-traffic-from-metasploits-meterpreter-reverse-http-module
 2021179 || ET TROJAN Possible BlackEnergy Accessing SMB/SMB2 Named Pipe (ASCII) || url,cyberx-labs.com/wp-content/uploads/2015/05/BlackEnergy-CyberX-Report_27_May_2015_FINAL.pdf
 2021180 || ET TROJAN Possible BlackEnergy Accessing SMB/SMB2 Named Pipe (Unicode) || url,cyberx-labs.com/wp-content/uploads/2015/05/BlackEnergy-CyberX-Report_27_May_2015_FINAL.pdf
 2021181 || ET CURRENT_EVENTS Fake AV Phone Scam Landing June 4 2015 M1
@@ -20219,7 +20219,7 @@
 2023315 || ET CURRENT_EVENTS Possible Locky AlphaNum Downloader Oct 3 2016
 2023316 || ET CURRENT_EVENTS Possible Locky AlphaNum Downloader Oct 3 2016
 2023317 || ET EXPLOIT BIND9 msg->reserved Assertion DoS Packet Inbound (CVE-2016-2776) || url,blog.infobytesec.com/2016/10/a-tale-of-dns-packet-cve-2016-2776.html || cve,cve-2016-2776
-2023318 || ET CURRENT_EVENTS Nemucod Downloader Oct 04
+2023318 || ET DELETED Nemucod Downloader Oct 04
 2023319 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
 2023320 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
 2023321 || ET TROJAN ABUSE.CH SSL Blacklist Malicious SSL certificate detected (Gozi MITM) || url,sslbl.abuse.ch
@@ -20384,7 +20384,7 @@
 2023482 || ET CURRENT_EVENTS Evil Redirector Leading to EK EITest Inject Oct 17 2016 M2
 2023483 || ET MOBILE_MALWARE Trojan-Banker.AndroidOS.Marcher Sending Credit Card Info || url,blog.fortinet.com/2016/11/01/android-banking-malware-masquerades-as-flash-player-targeting-large-banks-and-popular-social-media-apps || md5,78c2444fe15a8e58c629076781d9442a
 2023484 || ET EXPLOIT Possible iOS Pegasus Safari Exploit (CVE-2016-4657) || url,blog.lookout.com/blog/2016/11/02/trident-pegasus-technical-details/ || cve,2016-4657
-2023485 || ET TROJAN Unknown Malicious JS Checkin || md5,d3abaa6736d7d549eca8644c67e9fcfe
+2023485 || ET TROJAN JS.Downloader.HLD Checkin M1 || md5,d3abaa6736d7d549eca8644c67e9fcfe
 2023486 || ET TROJAN Sednit/APT28/Sofacy Delphocy CnC Beacon || url,www.welivesecurity.com/post_paper/en-route-with-sednit-part-3-a-mysterious-downloader/
 2023487 || ET CURRENT_EVENTS Successful Tesco Bank Phish M1 Nov 08 2016
 2023488 || ET CURRENT_EVENTS Successful Tesco Bank Phish M2 Nov 08 2016
@@ -20631,7 +20631,7 @@
 2023735 || ET TROJAN DeepEnd Research Ransomware CrypMIC Payment Onion Domain || url,www.deependresearch.org/2017/01/threat-intel-ransomware-payment-sites.html
 2023736 || ET TROJAN DeepEnd Research Ransomware CryptoWall .onion Proxy Domain || url,www.deependresearch.org/2017/01/threat-intel-ransomware-payment-sites.html
 2023737 || ET TROJAN Ransomware CrypMIC Payment Onion Domain
-2023738 || ET TROJAN Ransomware CrypMIC Payment Onion Domain
+2023738 || ET DELETED Ransomware CrypMIC Payment Onion Domain
 2023739 || ET TROJAN Maldoc Second Stage VBS Downloader with URL Padding || md5,57ce6f966c6b441fe82a211647c6e863
 2023740 || ET TROJAN Possible Pony Payload DL || md5,62e7a146079f99ded1a6b8f2db08ad18
 2023741 || ET TROJAN Pony DLL Download M2
@@ -20644,6 +20644,131 @@
 2023748 || ET CURRENT_EVENTS Evil Redirector Leading to EK EITest Inject Oct 17 2016 M4
 2023749 || ET INFO Lock Emoji In Title - Possible Social Engineering Attempt
 2023750 || ET MALWARE Windows executable sent when remote host claims to send an image 3
+2023751 || ET CURRENT_EVENTS Tech Support Phone Scam Landing M1 Jan 20 2017
+2023752 || ET CURRENT_EVENTS Tech Support Phone Scam Landing M2 Jan 20 2017
+2023753 || ET SCAN MS Terminal Server taffic on Non-standard Port
+2023754 || ET CURRENT_EVENTS Malicious JS.Nemucod to PS Dropping PE Nov 14 M2 || md5,551c440d76be5ab9932d8f3e8f65726e
+2023755 || ET CURRENT_EVENTS Possible Microsoft RDP Client for Mac RCE || url,www.wearesegment.com/research/Microsoft-Remote-Desktop-Client-for-Mac-Remote-Code-Execution
+2023756 || ET WEB_CLIENT Possible Chrome WebEx Extension RCE Attempt || url,bugs.chromium.org/p/project-zero/issues/detail?id=1096
+2023757 || ET CURRENT_EVENTS Fake AV Phone Scam Landing Jan 24
+2023758 || ET CURRENT_EVENTS Successful Apple iCloud Phish Jan 23 2017
+2023759 || ET CURRENT_EVENTS Possible Successful Generic Paypal Phish Jan 23 2016
+2023760 || ET CURRENT_EVENTS Successful Paypal Phish Jan 23 2017
+2023761 || ET TROJAN APT28 DealersChoice DNS Lookup (gtranm .com) || url,malware.prevenity.com/2017/01/ataki-na-instytucje-rzadowe-grudzien.html
+2023762 || ET TROJAN APT28 DealersChoice DNS Lookup (zpfgr .com) || url,malware.prevenity.com/2017/01/ataki-na-instytucje-rzadowe-grudzien.html
+2023763 || ET TROJAN OSX Backdoor Quimitchin DNS Lookup || md5,e4744b9f927dc8048a19dca15590660c || url,blog.malwarebytes.com/threat-analysis/2017/01/new-mac-backdoor-using-antiquated-code/
+2023764 || ET TROJAN Unknown Trojan Checkin Jan 24 2017 || md5,4c3b84efe89e5f5cf3e17f1e1751e708
+2023765 || ET TROJAN Unknown Trojan Checkin Jan 24 2017 || md5,4c3b84efe89e5f5cf3e17f1e1751e708
+2023766 || ET TROJAN Sage Ransomware Checkin Primer || url,isc.sans.edu/forums/diary/Sage+20+Ransomware/21959
+2023767 || ET TROJAN Sage Ransomware Checkin || url,isc.sans.edu/forums/diary/Sage+20+Ransomware/21959
+2023768 || ET CURRENT_EVENTS Possible Broken/Filtered RIG EK Payload Download
+2023769 || ET TROJAN Possible Unknown Trojan Checkin Jan 26 2017 || md5,2ccd95bb2e9d8c6e6b6eb68963461f08
+2023770 || ET CURRENT_EVENTS Successful RBC Royal Bank Phish Jan 30 2017
+2023771 || ET CURRENT_EVENTS Successful Wells Fargo Phish Jan 30 2017
+2023772 || ET CURRENT_EVENTS Successful Find My iPhone Phish (SP) Jan 30 2017
+2023773 || ET CURRENT_EVENTS Successful Tangerine Bank Phish M1 Jan 30 2017
+2023774 || ET CURRENT_EVENTS Successful Tangerine Bank Phish M2 Jan 30 2017
+2023775 || ET CURRENT_EVENTS Possible Ebay Phishing Domain Jan 30 2017
+2023776 || ET CURRENT_EVENTS Possible Successful Ebay Phish Jan 30 2017
+2023777 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (webfile .myq-see.com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023778 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (downloadmyhost .zapto.org) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023779 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (help2014 .linkpc.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023780 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (safara .sytes.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023781 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (exportball .servegame.org) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023782 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (viewnet .better-than.tv) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023783 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (down .downloadoneyoutube.co.vu) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023784 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (netstreamag .publicvm.com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023785 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (hostgatero .ddns.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023786 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (subsidiaryohio .linkpc.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023787 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (helpyoume .linkpc.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023788 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (downloadtesting .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023789 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (gameoolines .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023790 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (onlinesoft .space) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023791 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (newphoneapp .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023792 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (gamestoplay .bid) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023793 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (smartsftp .pw) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023794 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (galaxysupdates .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023795 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (galaxy-s .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023796 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (datasamsung .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023797 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (progsupdate .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023798 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (topgamse .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023799 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (bandtester .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023800 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (speedbind .com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023801 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (ukgames .tech) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023802 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (wallanews .publicvm.com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023803 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (wallanews .sytes.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023804 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (noredirecto .redirectme.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023805 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (dynamicipaddress .linkpc.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023806 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (downloadlog .linkpc.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023807 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (havan .qhigh.com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023808 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (kolabdown .sytes.net) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023809 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (rotter2 .publicvm.com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023810 || ET TROJAN DustySky Downeks/Quasar/other DNS Lookup (ftpserverit .otzo.com) || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/
+2023811 || ET TROJAN Downeks Variant CnC Beacon || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/ || md5,31cf042e91de7492c86e1ad02dc9eaec
+2023812 || ET TROJAN Possible DustySky PoisonIvy CnC Beacon || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/ || md5,2cd8c27bdc88ebba3e36114a1b55cef6
+2023813 || ET TROJAN DustySky QuasarRAT CnC Beacon || url,researchcenter.paloaltonetworks.com/2017/01/unit42-downeks-and-quasar-rat-used-in-recent-targeted-attacks-against-governments/ || md5,a19d4ff89a3f699a6f8237a7905e80e1
+2023814 || ET TROJAN CryptoShield 1.0 Ransomware Checkin || md5,ef815146b802cfd6a5fb67d1f9267745
+2023815 || ET TROJAN Shafttt MySQL Bruteforce Bot CnC Beacon || md5,cb4ab17468984f1b292adac9f745cb2b
+2023816 || ET TROJAN WSF/JS Downloader Jan 30 2017 M1 || md5,852cbd70766feb96923a79b210e94646
+2023817 || ET CURRENT_EVENTS EITest SocEng Inject Jan 15 2017 EXE Download || url,blog.brillantit.com/exposing-eitest-campaign || url,www.proofpoint.com/us/threat-insight/post/EITest-Nabbing-Chrome-Users-Chrome-Font-Social-Engineering-Scheme
+2023818 || ET INFO Windows Update/Microsoft FP Flowbit
+2023819 || ET CURRENT_EVENTS Possible Discover Phishing Domain Feb 02 2017
+2023820 || ET CURRENT_EVENTS Possible Successful Chase Phish Feb 02 2017
+2023821 || ET CURRENT_EVENTS Possible Successful Apple Phishing Domain Feb 02 2017
+2023822 || ET CURRENT_EVENTS Possible Successful USAA Phishing Domain Feb 02 2017
+2023823 || ET CURRENT_EVENTS Possible Successful Paypal Phishing Domain Feb 02 2017
+2023824 || ET CURRENT_EVENTS Possible Successful Bank of America Phishing Domain Feb 02 2017
+2023825 || ET CURRENT_EVENTS Possible Successful Google Drive Phishing Domain Feb 02 2017
+2023826 || ET CURRENT_EVENTS Possible Successful Cartasi Phishing Domain Feb 02 2017
+2023827 || ET CURRENT_EVENTS Possible Successful Linkedin Phishing Domain Feb 02 2017
+2023828 || ET CURRENT_EVENTS Possible Successful Ebay Phishing Domain Feb 02 2017
+2023829 || ET CURRENT_EVENTS Possible Successful Discover Phish Feb 02 2017
+2023830 || ET WEB_SPECIFIC_APPS Netgear WNR2000v5 Possible Serial Number Leak || url,cve.circl.lu/cve/CVE-2016-10175 || cve,2016-10175
+2023831 || ET DOS Excessive Large Tree Connect Response || url,isc.sans.edu/forums/diary/Windows+SMBv3+Denial+of+Service+Proof+of+Concept+0+Day+Exploit/22029/
+2023832 || ET DOS SMB Tree_Connect Stack Overflow Attempt (CVE-2017-0016) || cve,2017-0016
+2023833 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 01 || url,citizenlab.org/2017/02/nilephish-report
+2023834 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 02 || url,citizenlab.org/2017/02/nilephish-report
+2023835 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 03 || url,citizenlab.org/2017/02/nilephish-report
+2023836 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 04 || url,citizenlab.org/2017/02/nilephish-report
+2023837 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 05 || url,citizenlab.org/2017/02/nilephish-report
+2023838 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 06 || url,citizenlab.org/2017/02/nilephish-report
+2023839 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 07 || url,citizenlab.org/2017/02/nilephish-report
+2023840 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 08 || url,citizenlab.org/2017/02/nilephish-report
+2023841 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 09 || url,citizenlab.org/2017/02/nilephish-report
+2023842 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 10 || url,citizenlab.org/2017/02/nilephish-report
+2023843 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 11 || url,citizenlab.org/2017/02/nilephish-report
+2023844 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 12 || url,citizenlab.org/2017/02/nilephish-report
+2023845 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 13 || url,citizenlab.org/2017/02/nilephish-report
+2023846 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 14 || url,citizenlab.org/2017/02/nilephish-report
+2023847 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 15 || url,citizenlab.org/2017/02/nilephish-report
+2023848 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 16 || url,citizenlab.org/2017/02/nilephish-report
+2023849 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 17 || url,citizenlab.org/2017/02/nilephish-report
+2023850 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 18 || url,citizenlab.org/2017/02/nilephish-report
+2023851 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 19 || url,citizenlab.org/2017/02/nilephish-report
+2023852 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 20 || url,citizenlab.org/2017/02/nilephish-report
+2023853 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 21 || url,citizenlab.org/2017/02/nilephish-report
+2023854 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 22 || url,citizenlab.org/2017/02/nilephish-report
+2023855 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 23 || url,citizenlab.org/2017/02/nilephish-report
+2023856 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 24 || url,citizenlab.org/2017/02/nilephish-report
+2023857 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 25 || url,citizenlab.org/2017/02/nilephish-report
+2023858 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 26 || url,citizenlab.org/2017/02/nilephish-report
+2023859 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 27 || url,citizenlab.org/2017/02/nilephish-report
+2023860 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 28 || url,citizenlab.org/2017/02/nilephish-report
+2023861 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 29 || url,citizenlab.org/2017/02/nilephish-report
+2023862 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 30 || url,citizenlab.org/2017/02/nilephish-report
+2023863 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 31 || url,citizenlab.org/2017/02/nilephish-report
+2023864 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 32 || url,citizenlab.org/2017/02/nilephish-report
+2023865 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 33 || url,citizenlab.org/2017/02/nilephish-report
+2023866 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 34 || url,citizenlab.org/2017/02/nilephish-report
+2023867 || ET CURRENT_EVENTS DNS Request to NilePhish Domain 35 || url,citizenlab.org/2017/02/nilephish-report
+2023868 || ET TROJAN Turla Kopiluwak User-Agent || url,securelist.com/blog/research/77429/kopiluwak-a-new-javascript-payload-from-turla/
+2023869 || ET CURRENT_EVENTS Fake AV Phone Scam Landing Feb 2
+2023870 || ET TROJAN Ursnif Variant CnC Beacon || md5,4dbff312f5ee5bfbd757030109faec2d
+2023871 || ET TROJAN Ursnif Variant Retrieving Payload (x32) || md5,4dbff312f5ee5bfbd757030109faec2d
+2023872 || ET TROJAN Ursnif Variant Retrieving Payload (x64) || md5,4dbff312f5ee5bfbd757030109faec2d
+2023873 || ET POLICY DNS Query to Hamas Terrorist Propaganda TV Channel (alqsatv.ps)
+2023874 || ET POLICY Hamas Terrorist Propaganda TV Channel (alqsatv.ps) || url,nctc.gov/site/groups/hamas.html
+2023875 || ET TROJAN JS/Nemucod requesting EXE payload 2016-02-06
 2100110 || GPL DELETED netbus getinfo || arachnids,403
 2100116 || GPL TROJAN BackOrifice access || arachnids,399
 2100139 || GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP || cve,2005-2678
@@ -23174,11 +23299,11 @@
 2405000 || ET CNC Shadowserver Reported CnC Server Port 22 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2405001 || ET CNC Shadowserver Reported CnC Server Port 80 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2405002 || ET CNC Shadowserver Reported CnC Server Port 81 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405003 || ET CNC Shadowserver Reported CnC Server Port 443 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405004 || ET CNC Shadowserver Reported CnC Server Port 805 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405005 || ET CNC Shadowserver Reported CnC Server Port 1023 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405006 || ET CNC Shadowserver Reported CnC Server Port 1337 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
-2405007 || ET CNC Shadowserver Reported CnC Server Port 1881 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
+2405003 || ET CNC Shadowserver Reported CnC Server Port 223 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
+2405004 || ET CNC Shadowserver Reported CnC Server Port 443 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
+2405005 || ET CNC Shadowserver Reported CnC Server Port 805 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
+2405006 || ET CNC Shadowserver Reported CnC Server Port 1023 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
+2405007 || ET CNC Shadowserver Reported CnC Server Port 1337 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2405008 || ET CNC Shadowserver Reported CnC Server Port 2319 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2405009 || ET CNC Shadowserver Reported CnC Server Port 3303 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
 2405010 || ET CNC Shadowserver Reported CnC Server Port 3306 Group 1 || url,www.shadowserver.org || url,doc.emergingthreats.net/bin/view/Main/BotCC
@@ -23317,22 +23442,6 @@
 2500091 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 46 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2500092 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 47 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2500093 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 47 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500094 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 48 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500095 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 48 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500096 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 49 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500097 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 49 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500098 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 50 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500099 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 50 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500100 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 51 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500101 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 51 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500102 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 52 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500103 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 52 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500104 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 53 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500105 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 53 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500106 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 54 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500107 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 54 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500108 || ET COMPROMISED Known Compromised or Hostile Host Traffic TCP group 55 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
-2500109 || ET COMPROMISED Known Compromised or Hostile Host Traffic UDP group 55 || url,doc.emergingthreats.net/bin/view/Main/CompromisedHosts
 2520000 || ET TOR Known Tor Exit Node TCP Traffic group 1 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520001 || ET TOR Known Tor Exit Node UDP Traffic group 1 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520002 || ET TOR Known Tor Exit Node TCP Traffic group 2 || url,doc.emergingthreats.net/bin/view/Main/TorRules
@@ -23495,6 +23604,12 @@
 2520159 || ET TOR Known Tor Exit Node UDP Traffic group 80 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520160 || ET TOR Known Tor Exit Node TCP Traffic group 81 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2520161 || ET TOR Known Tor Exit Node UDP Traffic group 81 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2520162 || ET TOR Known Tor Exit Node TCP Traffic group 82 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2520163 || ET TOR Known Tor Exit Node UDP Traffic group 82 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2520164 || ET TOR Known Tor Exit Node TCP Traffic group 83 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2520165 || ET TOR Known Tor Exit Node UDP Traffic group 83 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2520166 || ET TOR Known Tor Exit Node TCP Traffic group 84 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2520167 || ET TOR Known Tor Exit Node UDP Traffic group 84 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2522000 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 1 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2522001 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 1 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2522002 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 2 || url,doc.emergingthreats.net/bin/view/Main/TorRules
@@ -24883,6 +24998,54 @@
 2523385 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 693 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2523386 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 694 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 2523387 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 694 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523388 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 695 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523389 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 695 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523390 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 696 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523391 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 696 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523392 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 697 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523393 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 697 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523394 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 698 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523395 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 698 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523396 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 699 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523397 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 699 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523398 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 700 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523399 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 700 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523400 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 701 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523401 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 701 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523402 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 702 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523403 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 702 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523404 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 703 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523405 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 703 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523406 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 704 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523407 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 704 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523408 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 705 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523409 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 705 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523410 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 706 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523411 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 706 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523412 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 707 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523413 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 707 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523414 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 708 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523415 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 708 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523416 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 709 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523417 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 709 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523418 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 710 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523419 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 710 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523420 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 711 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523421 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 711 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523422 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 712 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523423 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 712 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523424 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 713 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523425 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 713 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523426 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 714 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523427 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 714 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523428 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 715 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523429 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 715 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523430 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 716 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523431 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 716 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523432 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 717 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523433 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 717 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523434 || ET TOR Known Tor Relay/Router (Not Exit) Node TCP Traffic group 718 || url,doc.emergingthreats.net/bin/view/Main/TorRules
+2523435 || ET TOR Known Tor Relay/Router (Not Exit) Node UDP Traffic group 718 || url,doc.emergingthreats.net/bin/view/Main/TorRules
 100000102 || GPL DELETED Halocon Denial of Service Empty UDP Packet || bugtraq,12281
 100000103 || GPL DELETED Breed Game Server Denial of Service Empty UDP Packet || bugtraq,12262
 100000104 || GPL DELETED Amp II 3D Game Server Denial of Service Empty UDP Packet || bugtraq,12192

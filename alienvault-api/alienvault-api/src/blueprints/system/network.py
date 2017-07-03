@@ -31,7 +31,7 @@ from flask import Blueprint, request, current_app
 from api.lib.common import (make_ok, make_error, make_bad_request, document_using)
 
 from api.lib.utils import accepted_url
-from apimethods.utils import is_json_boolean, is_json_true
+from apimethods.utils import is_json_boolean, is_json_true, is_valid_ipv4
 from apimethods.system.network import dns_resolution, get_interfaces, get_interface, set_interfaces_roles, \
     get_interface_traffic, get_traffic_stats, put_interface, get_fqdn_api
 from uuid import UUID
@@ -152,7 +152,11 @@ def get_system_network_resolve(system_id):
 
 @blueprint.route('/<system_id>/network/fqdn', methods=['POST'])
 @document_using('static/apidocs/system/network.html')
+@logged_permission.require(http_exception=401)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}, 'host_ip': str})
 def get_host_fqdn(system_id):
     host_ip = request.form.get('host_ip')
+    if not is_valid_ipv4(host_ip):
+        return make_error("Invalid host IP address", 500)
+
     return make_ok(fqdn=get_fqdn_api(system_id, host_ip))

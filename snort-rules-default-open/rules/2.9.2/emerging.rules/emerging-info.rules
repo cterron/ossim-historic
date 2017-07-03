@@ -64,6 +64,8 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS H
 
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a 3322.net Domain *.8866.org"; flow:established,to_server; content:"8866.org"; nocase; http_header; fast_pattern:only; pcre:"/Host\x3A[^\r\n]*\x2E8866.org/Hi"; reference:url,www.mywot.com/en/scorecard/8866.org; classtype:misc-activity; sid:2013220; rev:3;)
 
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Possible Hex Obfuscated JavaScript Heap Spray 0a0a0a0a"; flow:established,to_client; content:"|5C|x0a|5C|x0a|5C|x0a|5C|x0a"; nocase; fast_pattern:only; reference:url,www.darkreading.com/security/vulnerabilities/221901428/index.html; classtype:shellcode-detect; sid:2013267; rev:2;)
+
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a *.de.ms domain"; flow:to_server,established; content:".de.ms|0d 0a|"; fast_pattern:only; http_header; classtype:bad-unknown; sid:2013378; rev:2;)
 
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a *.co.com.au domain"; flow:to_server,established; content:".co.com.au|0D 0A|"; fast_pattern:only; http_header; classtype:bad-unknown; sid:2013412; rev:2;)
@@ -754,7 +756,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Possible MSXM
 
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Possible MSXMLHTTP Request (msp) unset (no exe)"; flow:to_server,established; flowbits:isset,et.MS.XMLHTTP.no.exe.request; content:".msp"; nocase; http_uri; fast_pattern:only; flowbits:unset,et.MS.XMLHTTP.no.exe.request; flowbits:noalert; classtype:misc-activity; sid:2022266; rev:5;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO SUSPICIOUS Possible Evil Download wsf Double Ext No Referer"; flow:established,to_server; content:"GET"; http_method; content:".wsf"; http_uri; nocase; fast_pattern:only; pcre:"/\/[^\x2f]+\.[^\x2f]+\.wsf$/Ui"; classtype:trojan-activity; sid:2022271; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO SUSPICIOUS Possible Evil Download wsf Double Ext No Referer"; flow:established,to_server; content:"GET"; http_method; content:!"User-Agent|3a 20 2a|"; http_header; content:".wsf"; http_uri; nocase; fast_pattern:only; pcre:"/\/[^\x2f]+\.[^\x2f]+\.wsf$/Ui"; classtype:trojan-activity; sid:2022271; rev:2;)
 
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO ZoneAlarm Download Flowbit Set"; flow:established,to_server; content:"pkg"; http_uri; content:"Host|3a 20|"; http_header; nocase; content:"zonealarm.com|0d 0a|"; distance:0; http_header; pcre:"/^Host\x3a[^\r\n]+?zonealarm\.com\r?$/Hmi"; flowbits:set,ET.ZoneAlarm.Site.Download; flowbits:noalert; classtype:misc-activity; sid:2022285; rev:1;)
 
@@ -845,4 +847,6 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO ATF file in H
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Adobe FDF in HTTP Flowbit Set"; flow:from_server,established; file_data; content:"%FDF-"; within:5; flowbits:set,ET.fdf.in.http; flowbits:noalert; classtype:not-suspicious; sid:2023715; rev:2;)
 
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Lock Emoji In Title - Possible Social Engineering Attempt"; flow:from_server,established; file_data; content:"<title>"; nocase; pcre:"/^(?:(?!<\/title).)*\x26\x23x1F512/Ri"; content:"|26 23|x1F512"; fast_pattern:only; classtype:trojan-activity; sid:2023749; rev:1;)
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO Windows Update/Microsoft FP Flowbit"; flow:established,to_server; content:".windowsupdate.com|0d 0a|"; http_header; pcre:"/\.windowsupdate\.com\r?$/Hmi"; flowbits:set,ET.INFO.WindowsUpdate; flowbits:noalert; classtype:trojan-activity; sid:2023818; rev:1;)
 

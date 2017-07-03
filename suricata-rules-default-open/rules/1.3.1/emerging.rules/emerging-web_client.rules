@@ -580,3 +580,5 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Google Chrome 
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_CLIENT Metasploit Browser Autopwn Aug1 2016"; flow:established,from_server; file_data; content:"|65 78 70 6c 6f 69 74 4c 69 73 74 2e 73 70 6c 69 63 65|"; nocase; fast_pattern:only; content:"|73 65 74 54 69 6d 65 6f 75 74 28 22 6c 6f 61 64 45 78 70 6c 6f 69 74 28 29 22|"; nocase; classtype:attempted-admin; sid:2023014; rev:2;)
 
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET WEB_CLIENT Possible Chrome WebEx Extension RCE Attempt"; flow:to_server,established; content:"cwcsf-nativemsg-iframe-43c85c0d-d633-af5e-c056-32dc7efc570b.html"; http_uri; fast_pattern:only; reference:url,bugs.chromium.org/p/project-zero/issues/detail?id=1096; classtype:attempted-user; sid:2023756; rev:2;)
+

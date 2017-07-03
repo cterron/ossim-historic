@@ -23,7 +23,7 @@ NFSEN_CONF_ALT_DIR="/etc/nfsen"
 NFSEN_CONF_ALT_FILE="/etc/nfsen/nfsen.conf"
 
 configure_firewall(){
-    
+
     nfsen_tmp="/tmp/nfsen_sources.conf"
 
     init_sources=$(grep -n "^%sources" $NFSEN_CONF_FILE | cut -d':' -f1)
@@ -38,7 +38,7 @@ configure_firewall(){
     done
 
     dpkg-trigger --no-await alienvault-restart-firewall
-    
+
 }
 
 configure_nfsen() {
@@ -59,10 +59,20 @@ configure_nfsen() {
 
 security_patch() {
     # ENG-104863
-    cp /usr/libexec/nfsen/Nfcomm.pm /usr/libexec/nfsen/Nfcomm.pm_backup
-    cd /
-    patch -p1 < /usr/libexec/nfsen/security.patch
-    /usr/bin/nfsen reconfig
+    REG_FILE="/usr/libexec/nfsen/Nfcomm.pm"
+    BACKUP="/usr/libexec/nfsen/Nfcomm.pm_backup"
+    PATCH="/usr/libexec/nfsen/security.patch"
+
+    # We should avoid applying the path if it has already been applied earlier
+    if ! grep -q "ENG-104863" ${REG_FILE}
+        then
+                cp "$REG_FILE" "$BACKUP"
+                cd /
+                patch -p0 < "$PATCH" && echo "Patch successfully applied!" || echo "ERROR: Failed to apply patch!"
+                /usr/bin/nfsen reconfig
+        else
+                echo "Patching is not required."
+    fi
 }
 
 case "$1" in

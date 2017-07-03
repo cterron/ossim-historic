@@ -10918,3 +10918,5 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_A
 
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS Joomla GoogleMaps Plugin Open Proxy Access"; flow:established,to_server; content:"/plugins/system/plugin_googlemap2_proxy.php?url="; http_uri; fast_pattern:28,20; content:!"Referer|3a 20|"; http_header; reference:url,bnshosting.net/googlemap-proxy-vulnerability; classtype:web-application-attack; sid:2023574; rev:1;)
 
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS Netgear WNR2000v5 Possible Serial Number Leak"; flow:to_server,established; content:"/BRS_netgear_success.html"; nocase; http_uri; reference:cve,2016-10175; reference:url,cve.circl.lu/cve/CVE-2016-10175; classtype:attempted-recon; sid:2023830; rev:1;)
+

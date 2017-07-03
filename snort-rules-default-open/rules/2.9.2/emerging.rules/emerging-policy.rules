@@ -72,7 +72,7 @@ alert tcp $HOME_NET any -> any $HTTP_PORTS (msg:"ET POLICY Outgoing Basic Auth B
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET POLICY Incoming Basic Auth Base64 HTTP Password detected unencrypted"; flow:established,to_server; content:"Authorization|3a 20|Basic"; nocase; http_header; content:!"YW5vbnltb3VzOg=="; within:32; http_header; threshold: type both, count 1, seconds 300, track by_src; reference:url,doc.emergingthreats.net/bin/view/Main/2006402; classtype:policy-violation; sid:2006402; rev:9;)
 
-alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY Executable and linking format (ELF) file download"; flow:established; flowbits:isnotset,ET.ELFDownload; content:"|7F|ELF"; fast_pattern; content:"|00 00 00 00 00 00 00 00|"; distance:0; flowbits:set,ET.ELFDownload; reference:url,www.itee.uq.edu.au/~cristina/students/david/honoursThesis96/bff.htm; reference:url,doc.emergingthreats.net/bin/view/Main/2000418; classtype:policy-violation; sid:2000418; rev:15;)
+alert tcp $EXTERNAL_NET !$HTTP_PORTS -> $HOME_NET any (msg:"ET POLICY Executable and linking format (ELF) file download"; flow:established;  content:"|7F|ELF"; fast_pattern; content:"|00 00 00 00 00 00 00 00|"; distance:0; flowbits:set,ET.ELFDownload; reference:url,www.itee.uq.edu.au/~cristina/students/david/honoursThesis96/bff.htm; reference:url,doc.emergingthreats.net/bin/view/Main/2000418; classtype:policy-violation; sid:2000418; rev:16;)
 
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET POLICY PE EXE or DLL Windows file download"; flow:established,to_client; content:"MZ"; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; flowbits:set,ET.http.binary; reference:url,doc.emergingthreats.net/bin/view/Main/2000419; classtype:policy-violation; sid:2000419; rev:18;)
 
@@ -848,7 +848,7 @@ alert tcp $HOME_NET any -> any $HTTP_PORTS (msg:"ET POLICY Http Client Body cont
 
 alert tcp $HOME_NET any -> any $HTTP_PORTS (msg:"ET POLICY Http Client Body contains pass= in cleartext"; flow:established,to_server; content:"pass="; nocase; http_client_body; classtype:policy-violation; sid:2012887; rev:2;)
 
-alert tcp $HOME_NET any -> any $HTTP_PORTS (msg:"ET POLICY Http Client Body contains pwd= in cleartext"; flow:established,to_server; content:"pwd="; nocase; http_client_body; classtype:policy-violation; sid:2012888; rev:2;)
+#alert tcp $HOME_NET any -> any $HTTP_PORTS (msg:"ET POLICY Http Client Body contains pwd= in cleartext"; flow:established,to_server; content:"pwd="; nocase; http_client_body; classtype:policy-violation; sid:2012888; rev:2;)
 
 alert tcp $HOME_NET any -> any $HTTP_PORTS (msg:"ET POLICY Http Client Body contains passphrase= in cleartext"; flow:established,to_server; content:"passphrase="; nocase; http_client_body; classtype:policy-violation; sid:2012890; rev:2;)
 
@@ -1244,7 +1244,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 443 (msg:"ET POLICY onion.cab tor2web .
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY possible Xiaomi phone data leakage HTTP"; flow:to_server,established; content:"Host|3a 20|api.account.xiaomi.com|0d 0a|"; reference:url,thehackernews.com/2014/08/xiaomi-phones-secretly-sending-users.html; classtype:policy-violation; sid:2018919; rev:1;)
 
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET POLICY PE EXE or DLL Windows file download HTTP"; flow:established,to_client; flowbits:isnotset,ET.http.binary; file_data; content:"MZ"; within:2; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; flowbits:set,ET.http.binary; reference:url,doc.emergingthreats.net/bin/view/Main/2000419; classtype:policy-violation; sid:2018959; rev:2;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET POLICY PE EXE or DLL Windows file download HTTP"; flow:established,to_client; flowbits:isnotset,ET.http.binary; flowbits:isnotset,ET.INFO.WindowsUpdate; file_data; content:"MZ"; within:2; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; flowbits:set,ET.http.binary; reference:url,doc.emergingthreats.net/bin/view/Main/2000419; classtype:policy-violation; sid:2018959; rev:3;)
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 4899 (msg:"ET POLICY Radmin Remote Control Session Setup Initiate OUTBOUND"; flow:to_server,established; dsize:10; content:"|01 00 00 00 01 00 00 00 08 08|"; depth:10; classtype:policy-violation; sid:2019101; rev:2;)
 
@@ -1677,4 +1677,8 @@ alert udp $HOME_NET any -> any 53 (msg:"ET POLICY Android Adups Firmware DNS Que
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY External IP Lookup (tinytools.nu)"; flow:established,to_server; content:"Host|3a 20|www.tinytools.nu|0d 0a|"; http_header; fast_pattern:only; content:"/MyIPAddress/"; nocase; http_uri; classtype:policy-violation; sid:2023520; rev:1;)
 
 alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to .onion proxy Domain (anonym.to)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|anonym|02|to|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2023597; rev:1;)
+
+alert udp $HOME_NET any -> any 53 (msg:"ET POLICY DNS Query to Hamas Terrorist Propaganda TV Channel (alqsatv.ps)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|06|aqsatv|02|ps|00|"; nocase; distance:0; fast_pattern; classtype:policy-violation; sid:2023873; rev:1;)
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET POLICY Hamas Terrorist Propaganda TV Channel (alqsatv.ps)"; flow:established,to_server; content:"GET"; http_method; content:"Host|3a 20|aqsatv.ps"; http_header; reference:url,nctc.gov/site/groups/hamas.html; classtype:policy-violation; sid:2023874; rev:2;)
 

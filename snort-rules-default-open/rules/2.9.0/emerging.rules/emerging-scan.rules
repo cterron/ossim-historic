@@ -158,7 +158,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -sS window 4096"
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -sA (1)"; fragbits:!D; dsize:0; flags:A,12; window:1024; threshold: type both, track by_dst, count 1, seconds 60; reference:url,doc.emergingthreats.net/2000538; classtype:attempted-recon; sid:2000538; rev:8;)
 
-alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -sA (2)"; fragbits:!D; dsize:0; flags:A,12; window:3072; threshold: type both, track by_dst, count 1, seconds 60; reference:url,doc.emergingthreats.net/2000540; classtype:attempted-recon; sid:2000540; rev:8;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -sA (2)"; fragbits:!D; dsize:0; flags:A,12; window:3072; threshold: type both, track by_dst, count 1, seconds 60; reference:url,doc.emergingthreats.net/2000540; classtype:attempted-recon; sid:2000540; rev:8;)
 
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP -f -sF"; fragbits:!M; dsize:0; flags:F,12; ack:0; window:2048; threshold: type both, track by_dst, count 1, seconds 60; reference:url,doc.emergingthreats.net/2000543; classtype:attempted-recon; sid:2000543; rev:7;)
 
@@ -591,4 +591,6 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 6379 (msg:"ET SCAN Redis SSH Key Overwr
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN Acunetix scan in progress acunetix_wvs_security_test in http_uri"; flow:established,to_server; content:"acunetix_wvs_security_test"; http_uri; fast_pattern:only; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.acunetix.com/; classtype:web-application-attack; sid:2023687; rev:1;)
 
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN Acunetix scan in progress acunetix variable in http_uri"; flow:established,to_server; content:"|24|acunetix"; http_uri; fast_pattern:only; threshold: type limit, count 1, seconds 60, track by_src; reference:url,www.acunetix.com/; classtype:web-application-attack; sid:2023688; rev:1;)
+
+alert tcp $EXTERNAL_NET any -> $HOME_NET !3389 (msg:"ET SCAN MS Terminal Server taffic on Non-standard Port"; flow:to_server,established; content:"|03 00 00|"; depth:3; content:"|e0 00 00 00 00 00|"; offset:5; depth:6; content:"Cookie|3a| mstshash="; fast_pattern; classtype:attempted-recon; sid:2023753; rev:1;)
 

@@ -4086,7 +4086,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Possible Call with
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Sakura Jar Download SET"; flow:established,to_server; content:".php"; http_uri; content:"Java/1."; http_user_agent; fast_pattern; flowbits:set,ET.Sakura.php.Java; flowbits:noalert; classtype:trojan-activity; sid:2016720; rev:5;)
 
-#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Blackhole/Cool plugindetect in octal"; flow:established,from_server; file_data; content:"mCharCode"; pcre:"/(?P<p>[0-9a-f]{2,4})(?P<sep>[\x2e\x2c\x3b\x3a])(?P<d>(?!(?P=p))[0-9a-f]{2,4})(?P=sep)(?P=p)(?P=sep)(?P=d)(?P=sep)([0-9a-f]{2,4}(?P=sep)){10}(?P<q>(?!((?P=p)|(?P=d)))[0-9a-f]{2,4})(?P=sep)[0-9a-f]{2,4}(?P=sep)(?P<dot>(?!((?P=p)|(?P=d)|(?P=q)))[0-9a-f]{2,4})(?P=sep)[0-9a-f]{2,4}(?P=sep)(?P=dot)(?P=sep)[0-9a-f]{2,4}(?P=sep)(?P=q)/R"; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2016730; rev:13;)
+#alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Blackhole/Cool plugindetect in octal"; flow:established,from_server; file_data; content:"mCharCode"; pcre:"/(?P<p>[0-9a-f]{2,4})(?P<sep>[\x2e\x2c\x3b\x3a])(?P<d>(?!(?P=p))[0-9a-f]{2,4})(?P=sep)(?P=p)(?P=sep)(?P=d)(?P=sep)([0-9a-f]{2,4}(?P=sep)){10}(?P<q>(?!((?P=p)|(?P=d)))[0-9a-f]{2,4})(?P=sep)[0-9a-f]{2,4}(?P=sep)(?P<dot>(?!((?P=p)|(?P=d)|(?P=q)))[0-9a-f]{2,4})(?P=sep)[0-9a-f]{2,4}(?P=sep)(?P=dot)(?P=sep)[0-9a-f]{2,4}(?P=sep)(?P=q)/R"; classtype:trojan-activity; sid:2016730; rev:14;)
 
 #alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Blackhole/Cool plugindetect in octal Apr 18 2013"; flow:established,from_server; file_data; content:"telppa"; pcre:"/(?P<p>[0-7]{2,4})(?P<sep>[^0-7])(?P<d>(?!(?P=p))[0-7]{2,4})(?P=sep)(?P=p)(?P=sep)(?P=d)(?P=sep)([0-7]{2,4}(?P=sep)){10}(?P<q>[0-7]{2,4})(?P=sep)[0-7]{2,4}(?P=sep)(?P<dot>[0-7]{2,4})(?P=sep)[0-7]{2,4}(?P=sep)(?P=dot)(?P=sep)[0-7]{2,4}(?P=sep)(?P=q)/R"; flowbits:set,et.exploitkitlanding; classtype:trojan-activity; sid:2016776; rev:3;)
 
@@ -4542,5 +4542,9 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET DELETED Possible Call with
 
 #alert udp $HOME_NET any -> any 53 (msg:"ET DELETED Ransomware Locky .onion Payment Domain (zjfq4lnfbs7pncr5)"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|zjfq4lnfbs7pncr5"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2022997; rev:2;)
 
+#alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Nemucod Downloader Oct 04"; flow:established,to_server; content:"/log.php?f="; http_uri; depth:11; fast_pattern; pcre:"/^\/log\.php\?f=[0-1](?:\.[a-z]+)?$/U"; content:"User-Agent|3a 20|Mozilla/4.0 (compatible|3b| MSIE 7.0|3b|"; http_header; content:!"Referer|3a|"; content:!"Cookie|3a 20|"; classtype:trojan-activity; sid:2023318; rev:3;)
+
 #alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET DELETED Unknown Potentially Malicious Traffic 1"; flow:established,to_server; content:"285d7b6cf94d8fdc657edaa73c2f07f3"; classtype:trojan-activity; sid:2023339; rev:3;)
+
+#alert udp $HOME_NET any -> any 53 (msg:"ET DELETED Ransomware CrypMIC Payment Onion Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|10|j24ojpexpgaorlxj"; fast_pattern; distance:0; nocase; classtype:trojan-activity; sid:2023738; rev:2;)
 

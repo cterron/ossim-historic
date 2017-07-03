@@ -40,7 +40,7 @@
 
 alert udp $HOME_NET any -> [$EXTERNAL_NET,!255.255.255.255] 69 (msg:"ET TFTP Outbound TFTP Read Request"; content:"|00 01|"; depth:2; reference:url,doc.emergingthreats.net/2008120; classtype:policy-violation; sid:2008120; rev:4;)
 
-#alert udp $HOME_NET any -> $EXTERNAL_NET 69 (msg:"ET TFTP Outbound TFTP Write Request"; content:"|00 02|"; depth:2; reference:url,doc.emergingthreats.net/2008116; classtype:policy-violation; sid:2008116; rev:3;)
+#alert udp $HOME_NET any -> [$EXTERNAL_NET,!255.255.255.255] 69 (msg:"ET TFTP Outbound TFTP Write Request"; content:"|00 02|"; depth:2; reference:url,doc.emergingthreats.net/2008116; classtype:policy-violation; sid:2008116; rev:4;)
 
 #alert udp $HOME_NET any -> $EXTERNAL_NET 69 (msg:"ET TFTP Outbound TFTP Data Transfer"; content:"|00 03|"; depth:2; reference:url,doc.emergingthreats.net/2008117; classtype:policy-violation; sid:2008117; rev:3;)
 
