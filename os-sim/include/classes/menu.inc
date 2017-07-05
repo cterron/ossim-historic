@@ -351,7 +351,11 @@ class Menu
                     + R_lmenu:
                         + (empty)
                 + Hmenu:Locations
-                + Hmenu:Smart Event Collection
+                + Hmenu:Scheduler (Alienvault Inventory)
+                    + L_lmenu:
+                        + Option:OCS
+                + Hmenu:Plugin Builder
+                + Hmenu:Locations
             + Submenu:Threat Intelligence
                 + Hmenu:Policy
                     + L_lmenu:
@@ -686,7 +690,8 @@ class Menu
                         "alarm_groups" => array(
                             "name"    => _("Group View"),
                             "enabled" => $perm_alarms,
-                            "url"     => "/alarm/alarm_group_console.php?hide_closed=1"
+                            "url"     => "/alarm/alarm_group_console.php?hide_closed=1",
+                            "b_param" => "/alarm/alarm_group_console.php?backlog="
                         )
                     )
                 ),
@@ -1191,6 +1196,8 @@ class Menu
         $perm_sensors   = $this->check_perm("configuration-menu", "PolicySensors");
         $perm_servers   = $this->check_perm("configuration-menu", "PolicyServers");
         $perm_wi        = $this->is_menu_pro() && $this->check_perm("configuration-menu", "PolicyServers");
+        $perm_scheduler = $this->check_perm("configuration-menu", "AlienVaultInventory");
+        $perm_av_plugin = $this->is_user_admin();
 
         $perm_components  = $perm_av_center || $perm_sensors || $perm_servers || $perm_wi;
 
@@ -1345,10 +1352,11 @@ class Menu
                             )
                         ),
 
-                        "smart_event_collection" => array(
-                            "name"    => _("Smart Event Collection"),
-                            "enabled" => $perm_sec,
-                            "url"     => "/asec/index.php"
+                            
+                        "plugins" => array(
+                            "name"    => _("Plugin Builder"),
+                            "enabled" => $perm_av_plugin,
+                            "url"     => "/av_plugin/index.php"
                         ),
 
                         "location" => array(

@@ -38,6 +38,7 @@
 """
 
 import datetime
+import json
 import os
 import time
 import traceback
@@ -47,6 +48,7 @@ import celery.utils.log
 from ansiblemethods.system.about import get_is_professional
 from ansiblemethods.system.maintenance import system_reboot_needed
 from ansiblemethods.system.network import ansible_check_insecure_vpn
+from ansiblemethods.system.status import get_local_time
 from ansiblemethods.system.support import check_support_tunnels
 from ansiblemethods.system.system import (
     get_root_disk_usage,
@@ -75,12 +77,16 @@ from apimethods.system.support import status_tunnel
 from apimethods.system.system import (
     get as system_get,
     apimethod_get_update_info,
+    apimethod_get_remote_software_update,
     system_is_trial,
     system_is_professional,
     get_license_devices,
     ping_system
 )
 from apimethods.utils import is_valid_ipv4
+from celery import group
+from celerymethods.jobs.system import alienvault_asynchronous_update
+from db.methods.api import get_monitor_data as db_get_monitor_data
 from db.methods.data import get_asset_list
 from db.methods.sensor import (
     get_sensor_id_from_system_id,
@@ -105,7 +111,8 @@ from db.methods.system import (
     get_wizard_data,
     get_trial_expiration_date,
     check_backup_process_running,
-    db_get_config
+    db_get_config,
+    get_feed_auto_update
 )
 
 messages = MessageReader()
@@ -977,5 +984,196 @@ class MonitorFederatedOTXKey(Monitor):
                         logger.error("Cannot save monitor info")
             except Exception, exc:
                 logger.error("[MonitorFederatedOTXKey]: %s" % str(exc))
+
+        return True
+
+
+class MonitorFeedAutoUpdates(Monitor):
+    """Periodic task to run automatic feed updates"""
+
+    default_data = {
+        'all_updated': False,
+        'error_on_update': False,
+        'number_of_hosts': 1,
+        'update_results': {}
+    }
+
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_FEED_AUTO_UPDATES)
+        self.id = MonitorTypes.MONITOR_FEED_AUTO_UPDATES
+        self.local_server_ip = '127.0.0.1'
+        self.local_server_id = None
+        self.local_server_updated = False
+        self.monitor_data = self.default_data.copy()
+        self.message = 'Run automatic feed updates'
+
+    def check_and_reset_old_data(self):
+        if self.monitor_data['all_updated'] and not self.monitor_data['error_on_update']:
+            self.monitor_data = self.default_data.copy()
+
+    def get_monitor_data(self):
+        try:
+            monitor_data = db_get_monitor_data(self.id)
+            if monitor_data:
+                self.monitor_data = json.loads(monitor_data[0]['data'])
+            self.check_and_reset_old_data()
+        except Exception as err:
+            logger.error("[Feed auto updates] Failed to get monitor's data: %s" % str(err))
+
+        return self.monitor_data
+
+    def update_monitors_data_with_results(self, update_job_results, systems):
+        """ Updates monitor with data about current feed update.
+
+        Args:
+            update_job_results (list): results of feed updates on different hosts
+            systems (dict): hosts connected
+        """
+        results_dict = {}
+        system_ip_to_id_map = dict((v, k) for k, v in systems.iteritems())
+
+        # Reset to defaults
+        self.monitor_data['error_on_update'] = False
+        self.monitor_data['all_updated'] = False
+
+        for host_result in update_job_results:
+            # Convert list of results to dict for each ip
+            system_ip = host_result.pop('system_ip')
+            host_result['system_id'] = system_ip_to_id_map.get(system_ip)
+            host_result['updated_at'] = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            results_dict[system_ip] = host_result
+
+        self.monitor_data['update_results'].update(results_dict)
+
+        for system_ip, upd_data in self.monitor_data['update_results'].iteritems():
+            # Check if there was failed update attempt
+            if not upd_data.get('result'):
+                self.monitor_data['error_on_update'] = True
+            # If result is True and system_id == server_id notify that server was updated.
+            elif upd_data.get('system_id') == self.local_server_id:
+                self.local_server_updated = True
+
+        # Check if all hosts were updated and at least one of them by auto-updates (to show message later).
+        if not self.monitor_data['error_on_update']:
+            self.monitor_data['all_updated'] = (
+                len(self.monitor_data['update_results']) >= self.monitor_data['number_of_hosts'])
+
+    @staticmethod
+    def has_pending_feed_updates(system_id):
+        """ Checks if given system_id has pending feed updates.
+
+        Args:
+            system_id: (uuid) System ID.
+
+        Returns: True if has pending updates or False otherwise.
+        """
+        pending_feed_updates = False
+        status, result = apimethod_get_remote_software_update(system_id, no_cache=True)
+
+        if status:
+            pending_feed_updates = result.get(system_id, {}).get('packages', {}).get('pending_feed_updates')
+        else:
+            logger.error('[MonitorFeedAutoUpdates] Failed to get status of remote updates: {}'.format(str(result)))
+
+        return pending_feed_updates
+
+    @staticmethod
+    def system_could_be_updated_by_schedule(system_ip, scheduled_hour):
+        time_to_update = False
+
+        status_ok, system_local_hour = get_local_time(system_ip, date_fmt='%H')
+        logger.info('[MonitorFeedAutoUpdates] System ({}) - local time is {}'.format(system_ip, system_local_hour))
+        if status_ok and int(system_local_hour) == int(scheduled_hour):
+            time_to_update = True
+
+        return time_to_update
+
+    def get_connected_systems_with_pending_updates(self):
+        """
+        Returns dict of the connected systems that have pending feed updates.
+        """
+        systems = {}
+
+        # ATM get connected sensors only, whe can't update other servers
+        success_get, connected_systems = get_systems(
+            system_type="Sensor",
+            convert_to_dict=True,
+            exclusive=True,
+            directly_connected=True
+        )
+        if not success_get:
+            logger.error('[MonitorFeedAutoUpdates] Failed to get connected systems: {}'.format(connected_systems))
+            connected_systems = {}
+        else:
+            logger.info('[MonitorFeedAutoUpdates] Connected systems: {}'.format(connected_systems))
+
+        for system_id, system_ip in connected_systems.iteritems():
+            if self.has_pending_feed_updates(system_id):
+                logger.info('[MonitorFeedAutoUpdates] {} has pending updates'.format(system_ip))
+                systems.update({system_id: system_ip})
+
+        return systems
+
+    def get_list_of_scheduled_update_tasks_for_systems(self, systems, scheduled_hour):
+        """ Get list of task for systems that have pending updates and meet the schedule.
+        Args:
+            systems: (dict) {system_id: system_id,...}
+            scheduled_hour: (int) Hour in local timezone when update should be performed.
+        Returns:
+            List of the celery tasks (in canvas representation).
+        """
+        pending_updates = []
+
+        for idx, system_id in enumerate(systems, start=1):
+            system_ip = systems[system_id]
+            try:
+                if self.system_could_be_updated_by_schedule(system_ip, scheduled_hour):
+                    # http://docs.celeryproject.org/en/latest/userguide/canvas.html#signatures
+                    upd_task = alienvault_asynchronous_update.s(system_ip, only_feed=True)
+
+                    # Small offset added because sometimes job returns log file with same timestamp for all updates.
+                    # And it could cause unexpected side-effects.
+                    upd_task.set(countdown=idx * 2)
+                    pending_updates.append(upd_task)
+            except Exception as exc:
+                logger.error("[MonitorFeedAutoUpdates] Failed to get list of update tasks: {}".format(str(exc)))
+        return pending_updates
+
+    def start(self):
+        """ Starts the monitor activity. """
+        auto_updates_enabled, scheduled_hour = get_feed_auto_update()
+        if not auto_updates_enabled or scheduled_hour is None:
+            return False
+
+        success_get, local_server_id = get_system_id_from_local()
+        if not success_get:
+            logger.error('[MonitorFeedAutoUpdates] Cannot retrieve local system_id: {}'.format(local_server_id))
+            return False
+
+        logger.info('[MonitorFeedAutoUpdates] Scheduled time for auto-updates is: {}'.format(scheduled_hour))
+        self.local_server_id = local_server_id
+        self.get_monitor_data()  # Loads the data from the DB into monitor
+        self.remove_monitor_data()  # Clean DB data
+
+        # Check pending packages for local server
+        self.local_server_updated = not self.has_pending_feed_updates(local_server_id)
+        # Try to update it first and then recheck the status
+        if not self.local_server_updated and self.system_could_be_updated_by_schedule(self.local_server_ip,
+                                                                                      scheduled_hour):
+            local_server_upd_result = alienvault_asynchronous_update.delay(self.local_server_ip, only_feed=True).wait()
+            self.update_monitors_data_with_results([local_server_upd_result, ], {local_server_id: self.local_server_ip})
+
+        # Update connected systems only when server updated
+        if self.local_server_updated:
+            systems_to_update = self.get_connected_systems_with_pending_updates()
+            pending_updates = self.get_list_of_scheduled_update_tasks_for_systems(systems_to_update, scheduled_hour)
+            self.monitor_data['number_of_hosts'] = len(systems_to_update) + 1  # +1 to include local server
+
+            if pending_updates:
+                logger.info('[MonitorFeedAutoUpdates] Pending update tasks: {}'.format(pending_updates))
+                job_results = group(pending_updates)().join()
+                self.update_monitors_data_with_results(job_results, systems_to_update)
+
+        self.save_data(local_server_id, ComponentTypes.SYSTEM, self.get_json_message(self.monitor_data))
 
         return True

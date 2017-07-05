@@ -301,7 +301,7 @@ $subtitle_2_empty = _('You have not configured any plugin yet. In order to compl
                         <th><?php echo _('Asset') ?></th>
                         <th><?php echo _('Type') ?></th>
                         <th><?php echo _('Plugin Enabled') ?></th>
-                        <th><?php echo _('Receiving Data') ?></th>
+                      <!--  <th><?php /*echo _('Receiving Data') */?></th>-->
                         <th><?php echo _('Instructions') ?></th>
                     </tr>
                     </thead>

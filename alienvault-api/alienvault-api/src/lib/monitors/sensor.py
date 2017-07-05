@@ -27,10 +27,12 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
+import glob
 from itertools import chain
 
 import celery.utils.log
 from ansiblemethods.system.about import get_is_professional
+from ansiblemethods.system.util import rsync_push
 from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
 from apiexceptions import APIException
 from apimethods.sensor.network import get_network_stats
@@ -243,7 +245,7 @@ class MonitorSensorDroppedPackages(Monitor):
                     packet_lost_average = sensor_stats["contacted"][sensor_ip]["stats"]["packet_lost_average"]
                     monitor_data = {'packet_loss': packet_lost_average}
                     logger.info("Lost packet average for sensor: %s =  %s" % (sensor_ip, packet_lost_average))
-                    #Save data component_id = canonical uuid
+                    # Save data component_id = canonical uuid
                     if not self.save_data(sensor_id, ComponentTypes.SENSOR, self.get_json_message(monitor_data)):
                         logger.error("Can't save monitor info")
                 except KeyError:
@@ -283,7 +285,7 @@ class MonitorPluginsVersion(Monitor):
             (success, local_version) = get_plugin_package_info_local()
             for (system_id, _) in sensor_list:
                 (success, sensor_id) = get_sensor_id_from_system_id(system_id)
-                #logger.info("INFO => " + str(sensor_id))
+                # logger.info("INFO => " + str(sensor_id))
                 if success:
                     if sensor_id == '':
                         logger.warning("Sensor (%s) ID not found" % sensor_id)
@@ -470,4 +472,46 @@ class MonitorEnabledPluginsLimit(Monitor):
                              "Can't obtain plugin information from system {0}: {1}".format(system_id, str(e)))
                 continue
 
+        return True
+
+
+class MonitorSyncCustomPlugins(Monitor):
+    """
+    rsync all the custom_plugins over all connected sensors
+    """
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_SYNC_CUSTOM_PLUGINS)
+        self.message = "Sync Custom Plugins Monitor started"
+
+    def start(self):
+        """ Starts the monitor activity
+        """
+        # Remove the previous monitor data.
+        self.remove_monitor_data()
+
+        # Check if we have custom plugins. We need only cfg
+        local_path = "/etc/alienvault/plugins/custom/"
+        plugins_to_sync = glob.glob(local_path + '*.cfg')
+        if not plugins_to_sync:
+            logger.info('Nothing to sync...')
+            return True
+
+        # Iterate over the sensors.
+        # We should specify exclusive=True to fetch only sensors instead of
+        # every machine with sensor profile
+        result, systems = get_systems(system_type="Sensor", exclusive=True)
+
+        if not result:
+            logger.error("[MonitorSyncCustomPlugins] Can't retrieve the system info: {}".format(str(systems)))
+            return False
+
+        for (system_id, system_ip) in systems:
+            for plugin_file_path in plugins_to_sync:
+                success, msg = rsync_push(local_ip="127.0.0.1",
+                                          remote_ip=system_ip,
+                                          local_file_path=plugin_file_path,
+                                          remote_file_path=plugin_file_path)
+                if not success:
+                    logger.error("[MonitorSyncCustomPlugins] Can't rsync with {}".format(system_ip))
+                    return False
         return True

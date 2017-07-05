@@ -1,14 +1,26 @@
-alienvault-rhythm (5.3.6-0) stable; urgency=low
+alienvault-rhythm (5.4.0-0) stable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 06 Feb 2017 06:58:06 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Thu, 18 May 2017 10:13:06 -0400
 
-alienvault-rhythm (5.3.5-0) stable; urgency=low
+alienvault-rhythm (5.4-0) unstable; urgency=low
 
   * New release
 
- -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 11 Jan 2017 06:24:06 -0500
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Tue, 07 Mar 2017 05:40:26 -0500
+
+alienvault-rhythm (5.3.7-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Mon, 06 Feb 2017 07:11:25 -0500
+
+alienvault-rhythm (5.3.6-0) unstable; urgency=low
+
+  * New release
+
+ -- AlienVault ENG Team <debian-devel@alienvault.com>  Wed, 11 Jan 2017 06:24:54 -0500
 
 alienvault-rhythm (5.3.5-0) unstable; urgency=low
 

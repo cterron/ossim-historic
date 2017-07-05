@@ -56,18 +56,18 @@ class WSHandler:
     # Sanitize the id param. Exactly we need 32 hex characters
     if re.match(r'^[a-fA-F0-9]{32}$',self.__id) == None:
         raise Exception('Bad  webservice id')
-    data = db.exec_query ("SELECT HEX(id), type, name, url, namespace, user, pass FROM alienvault.webservice WHERE id = UNHEX('%s')" % self.__id)
+    data = db.exec_query ("SELECT HEX(id), type, name, url, namespace, user, pass FROM alienvault.webservice WHERE id = UNHEX(%s)", (self.__id,))
     if data != []:
       ws_config = data[0]
     else:
       raise Exception('Id %s does not match a valid webservice' % id)
 
-    ws_default = db.exec_query ("SELECT field, value FROM alienvault.webservice_default WHERE ws_id = UNHEX('%s')" % self.__id)
+    ws_default = db.exec_query ("SELECT field, value FROM alienvault.webservice_default WHERE ws_id = UNHEX(%s)", (self.__id,))
     if ws_default != []:
       for item in ws_default:
         self.__default[item['field']] = item['value']
 
-    ws_oper = db.exec_query ("SELECT op, type, attrs FROM alienvault.webservice_operation WHERE ws_id = UNHEX('%s')" % self.__id)
+    ws_oper = db.exec_query ("SELECT op, type, attrs FROM alienvault.webservice_operation WHERE ws_id = UNHEX(%s)", (self.__id,))
     if ws_oper == []:
       raise Exception('Id %s does not match a valid webservice' % id)
 

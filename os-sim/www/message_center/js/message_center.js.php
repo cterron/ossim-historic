@@ -298,6 +298,11 @@ $(document).ready(function ()
     var display_start = 0;
     var selection_type =  'manual';
     var message_total_count = 0;
+    var  $chk_all_rows = $('#chk-all-rows');
+    var container = $("#notifications_list");
+    var selector = "[name='status_message_id[]']:checkbox";
+    var selector_checked = selector+":checked";
+    var pull_selected_msg = [] ;
 
 
     /************************
@@ -452,7 +457,7 @@ $(document).ready(function ()
         },
         fnServerData     : function (sSource, aoData, fnCallback, oSettings)
         {
-            oSettings.jqXHR = execute_ajax_call(sSource, aoData, $av_info, [set_stats, fnCallback]);
+            oSettings.jqXHR = execute_ajax_call(sSource, aoData, $av_info, [set_stats, fnCallback, chk_current_messag]);
             oSettings.jqXHR.fail(function (data)
             {
                 //DataTables Stuffs
@@ -478,35 +483,14 @@ $(document).ready(function ()
             {
                 $notification_details.hide();
             }
-            $('#chk-all-rows').click(function() {
 
-                if ($(this).is(':checked')) {
-                    $(".dataTable :checkbox").prop('checked', true);
-                    var message_count  =  current_message_count();
-
-                    if(message_count != message_total_count ) {
-                        $('#selectall').css('visibility','visible');
-                    }
-                } else {
-                    $(".dataTable :checkbox").prop('checked', false);
-                    $('#selectall').css('visibility','hidden');
-                }
-
-                var curent_count = 0;
-                $(".dataTable :checkbox" ).each(function() {
-                    if($(this).is(':checked')) {
-                        curent_count++;
-                    }
-                });
-
-                $('#selectall > span').text(message_count-1);
-                $('#selectall a span').text(message_total_count);
+            $($chk_all_rows).click(function() {
+                rows_action();
             });
-            var container = $("#notifications_list");
-            var selector = "[name='status_message_id[]']:checkbox";
-            var selector_checked = selector+":checked";
+
             container.on("change",":checkbox",function() {
                 if (container.find(selector_checked).length) {
+                    show_selected_count();
                     $("#button_action").prop('disabled', false).removeClass('disabled av_b_disabled');
                 } else {
                     $("#button_action").prop('disabled', true).addClass('disabled av_b_disabled');
@@ -518,8 +502,10 @@ $(document).ready(function ()
                 if(selection_type == 'all') {
                     var data = {
                         'status_message_id[]': '',
-                        'action'             : 'set_suppressed',
-                        'delete_all'         :  true
+                        'action'              : 'set_suppressed',
+                        'delete_all'          :  true,
+                        'message_total_count' :  message_total_count
+
                     };
                     selection_type = 'manual';
                 }else {
@@ -605,22 +591,61 @@ $(document).ready(function ()
         }
     });
 
-    function current_message_count() {
-        var count = 0;
+    function rows_action() {
+
+        if ($($chk_all_rows).is(':checked')) {
+            chk_all_messag();
+            $('#selectall').css('visibility','visible');
+        } else {
+            $(".dataTable :checkbox").prop('checked', false);
+            $('#selectall').css('visibility','hidden');
+        }
+        show_selected_count();
+
+    }
+
+    function show_selected_count() {
+
+        pull_selected_msg = container.find(selector_checked).map(function () {
+            return $(this).val();
+        }).get();
+
+        var message_current_count = pull_selected_msg.length;
+        $('#selectall > span').text( message_current_count);
+        $('#selectall a span').text(message_total_count);
+
+        if(message_current_count == message_total_count) {
+            $('#selectall').css('visibility','hidden');
+        }
+    }
+
+    function chk_current_messag () {
+
+        if(pull_selected_msg.length > 0){
+            $("#button_action").prop('disabled', false).removeClass('disabled av_b_disabled');
+        }
+        if (  selection_type == 'all') {
+            chk_all_messag();
+            return;
+        }
+
         $(".dataTable :checkbox" ).each(function() {
-            if($(this).is(':checked')) {
-                count++;
+            if ($.inArray( $(this).val() , pull_selected_msg ) != -1) {
+                $(this).prop('checked', true);
             }
         });
-        return  count -1;
+
+    }
+    function chk_all_messag  () {
+        $(".dataTable :checkbox").prop('checked', true);
     }
 
     $('#selectall a').on('click', function (){
         $('#selectall').css('visibility','hidden');
         selection_type = 'all';
+        chk_all_messag();
         return false;
     });
-
     // Datatables search box
     var search_timeout = false;
     $nf_search.on('input', function ()

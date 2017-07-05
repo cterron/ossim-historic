@@ -37,7 +37,9 @@ message_ids: {
     $MESSAGE_OLD_OTX_KEY: "00000000-0000-0000-0000-000000010036",
     $MESSAGE_PLUGINS_LIMIT_APPROACHING: "00000000-0000-0000-0000-000000010037",
     $MESSAGE_PLUGINS_LIMIT_REACHED: "00000000-0000-0000-0000-000000010038",
-    $MESSAGE_CONFIGURATION_BACKUP_WITHOUT_PASS_DISABLED: "00000000-0000-0000-0000-000000010039"
+    $MESSAGE_CONFIGURATION_BACKUP_WITHOUT_PASS_DISABLED: "00000000-0000-0000-0000-000000010039",
+    $MESSAGE_AUTO_FEED_UPDATE_SUCCESS: "00000000-0000-0000-0000-000000010040",
+    $MESSAGE_AUTO_FEED_UPDATE_FAIL: "00000000-0000-0000-0000-000000010041"
 }
 
 message_sources:
@@ -526,6 +528,30 @@ messages: [
      description: 'SYSTEM_NAME (SYSTEM_IP) has reached the maximum allowance for data source plugins. Additional plugins should not be enabled for the assets being monitored by this sensor at this time. Exceeding this limit will result in unexpected behavior and reduced performance.',
      actions: 'Each plugin enabled in the asset view in the USM web interface is saved in /etc/ossim/agent/config.yml, as opposed to /etc/ossim/agent/config.cfg, which holds information about globally enabled plugins. Every plugin enabled per asset counts towards the total active plugins count, the max of which is 100. Enabling a plugin globally also counts towards the total active plugin count. But if multiple assets are sending logs via syslog and those logs are being normalized by a globally enabled plugin, it will still only count as one towards the total active plugins count. Please disable PLG_DISABLE unneeded plugins to prevent unexpected issues.',
      alternative_actions: "Please contact AlienVault Support for additional information.",
+     source: "monitor"
+   },
+   {
+     id: "$MESSAGE_AUTO_FEED_UPDATE_SUCCESS",
+     level: Info,
+     type: Update,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Your system has been automatically updated",
+     description: 'The following devices have the latest version of AlienVault Labs Threat Intelligence and plugin updates:',
+     actions: '* LIST_OF_HOSTS_UPDATED.',
+     alternative_actions: "Please see the release notes for more information.",
+     source: "monitor"
+   },
+   {
+     id: "$MESSAGE_AUTO_FEED_UPDATE_FAIL",
+     level: Error,
+     type: Update,
+     message_role: "admin",
+     action_role: "admin",
+     title: "Error(s) occurred during automatic update [DATE]",
+     description: 'We were unable to update some of your devices with the latest AlienVault Labs Threat Intelligence and plugins. The following error(s) occurred:',
+     actions: '* LIST_OF_HOSTS_NOT_UPDATED.',
+     alternative_actions: "Please go to the update page in AlienVault Center to try again. If you need additional help, please contact AlienVault Support.",
      source: "monitor"
    }
 ]

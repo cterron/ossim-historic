@@ -299,11 +299,11 @@ class DoNagios(threading.Thread):
             query = ('SELECT inet6_ntoa(hss.host_ip) AS ip, h.hostname AS hostname, h.id AS id, '
                      'hss.port AS port, hss.protocol AS protocol, hss.service AS service '
                      'FROM host h, host_services hss '
-                     'WHERE hss.host_id=unhex("%s") AND hss.host_ip=inet6_aton("%s") '
+                     'WHERE hss.host_id=unhex(%s) AND hss.host_ip=inet6_aton(%s) '
                      'AND (hss.protocol=1 OR hss.protocol=0 OR hss.protocol=6 OR hss.protocol=17) '
-                     'AND nagios=1 AND hss.host_id = h.id;' % (hostid, hostip))
+                     'AND nagios=1 AND hss.host_id = h.id;')
 
-            services = self.__dbConnection.exec_query(query)
+            services = self.__dbConnection.exec_query(query, (hostid, hostip))
             for service in services:
                 s = HostService(service['port'], service['protocol'], service['service'])
                 self.__active_hosts[hostid].appendServiceToIP(hostip, s)
@@ -323,10 +323,10 @@ class DoNagios(threading.Thread):
         @param hgid hostgroup id (in standard uuid mode)
         @returns host_list [{},{},...]
         """
-        query = "SELECT hex(host_id) AS host_id FROM host_group_reference WHERE hex(host_group_id) = '%s'" % hgid
+        query = "SELECT hex(host_id) AS host_id FROM host_group_reference WHERE hex(host_group_id) = %s"
         if not self.__dbConnected:
             self.__dbConnection.connect()
-        data = self.__dbConnection.exec_query(query)
+        data = self.__dbConnection.exec_query(query, (hgid,))
         return data
 
     def make_nagios_changes(self):

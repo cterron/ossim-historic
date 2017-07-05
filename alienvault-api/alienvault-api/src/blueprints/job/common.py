@@ -36,8 +36,10 @@ from api.lib.auth import logged_permission
 
 blueprint = Blueprint(__name__, __name__)
 
+# This method is used in system's welcome wizard, which doesn't have a user
+# context, so it should not check authentication. Please see ENG-105020 for
+# details
 @blueprint.route('/<job_id>', methods=['GET'])
-#@logged_permission.require(http_exception=401)
 def job_status(job_id):
     job_full_status = celery_manager.CeleryManager.get_job_status(job_id)
     success = True

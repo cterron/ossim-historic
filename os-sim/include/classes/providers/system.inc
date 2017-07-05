@@ -836,6 +836,21 @@ else return '{
 
 
     /**
+     * This method set automatic feed_update task with new values.
+     *
+     * @return object
+     */
+    public function set_auto_update($enabled = FALSE)
+    {
+        $params = array("enabled" => ($enabled) ? 1 : 0);
+
+        $response = $this->conn->do_request('/system/auto_update', $params, 'PUT');
+
+        return $response;
+    }
+
+
+    /**
      * This function check if there is an AlienVault Update/Reconfig running
      *
      * @return string in JSON format

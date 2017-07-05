@@ -54,33 +54,27 @@ def make_request(context, url , request_type='GET', is_login=False):
     urlparams = urllib.urlencode(context.urlparams)
     if urlparams != '' and request_type != 'POST':
         url =  url + "?" + urlparams
-    elif request_type == 'POST':
-        payload = dict(map(lambda x: x.split('='), urlparams.split('&')))
 
-    if hasattr(context,'request_cookies'):
-        cookies = dict(cookies_are=";".join(context.request_cookies))
-    else:
-        cookies = {}
+    if is_login:
+        context.cookies = {}
 
+    headers = {"Accept": "application/json"}  # force a JSON response to allow correct handling and avoid the internal
+                                              # server error (500)
     if request_type == 'GET':
-        r = requests.get(url.encode('ascii'), verify=False)
+        r = requests.get(url.encode('ascii'), verify=False, headers=headers, cookies=context.cookies)
     elif request_type == 'POST':
-        r = requests.post(url.encode('ascii'), verify=False, data=payload)
+        r = requests.post(url.encode('ascii'), verify=False, data=context.urlparams, headers=headers, cookies=context.cookies)
     elif request_type == 'PUT':
-        r = requests.put(url.encode('ascii'), verify=False)
+        r = requests.put(url.encode('ascii'), verify=False, headers=headers, cookies=context.cookies)
     elif request_type == 'DELETE':
-        r = requests.delete(url.encode('ascii'), verify=False)
+        r = requests.delete(url.encode('ascii'), verify=False, headers=headers, cookies=context.cookies)
     else:
         return None
 
-    context.result = str(r.text)
-    context.resultheader = str(r.headers)
-    context.resultcode = str(r.status_code)
-    context.resultcookies = str(requests.utils.dict_from_cookiejar(r.cookies))
-    if is_login:
-        #Save the login cookie to use it in subsequent calls
-        context.request_cookies = str(requests.utils.dict_from_cookiejar(r.cookies))
-
+    context.result.write(r.text)
+    context.resultheader = r.headers
+    context.resultcode = r.status_code
+    context.cookies = requests.utils.dict_from_cookiejar(r.cookies)
     context.urlparams = {}
     return r
 

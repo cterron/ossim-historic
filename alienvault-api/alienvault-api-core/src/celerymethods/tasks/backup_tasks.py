@@ -115,13 +115,13 @@ def make_system_backup(system_id, backup_type, rotate=True, retry=True, method="
                                   'system_ip': system_ip})
 
     if not backup_pass or backup_pass == 'NULL':
-        error_msg = 'Password for configuration backups was not set. Backups will be disabled...'
-        notifier.error(error_msg)
+        msg = 'Password for configuration backups was not set. Backups will be disabled...'
+        notifier.warning(msg)
         insert_current_status_message("00000000-0000-0000-0000-000000010039",
                                       system_id,
                                       "system",
                                       additional_info=additional_info)
-        return False, error_msg
+        return False, msg
 
     try:
         notifier.info("Running Backup [%s - %s]" % (system_ip, backup_type))
@@ -131,7 +131,7 @@ def make_system_backup(system_id, backup_type, rotate=True, retry=True, method="
         else:
             make_system_backup_by_system_ip(system_ip, backup_type, method=method, backup_pass=backup_pass)
     except Exception as e:
-        notifier.warning("Backup fails [%s - %s]: %s" % (system_ip, backup_type, str(e)))
+        notifier.error("Backup fails [%s - %s]: %s" % (system_ip, backup_type, str(e)))
         # To do: Launch a Notification message
         success, result = insert_current_status_message("00000000-0000-0000-0000-000000010018",
                                                         system_id,

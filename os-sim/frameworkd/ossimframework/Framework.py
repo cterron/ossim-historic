@@ -233,7 +233,7 @@ class Framework:
                        self.__conf[VAR_DB_USER], self.__conf[VAR_DB_PASSWORD])
         mydb.connect()
         select_query = "select value from config where conf=\"encryption_key\";"
-        insert_query = "REPLACE INTO config VALUES ('encryption_key', '%s')"
+        insert_query = "REPLACE INTO config VALUES ('encryption_key', %s)"
         data = mydb.exec_query(select_query)
         keyFilePath = self.__conf[VAR_KEY_FILE]
         if keyFilePath == "" or keyFilePath is None:
@@ -261,7 +261,7 @@ class Framework:
                 extra_data = "#Generated using random uuid on %s\n" % d.isoformat(' ')
                 key = uuid.uuid4()
             newfile = open(self.__conf[VAR_KEY_FILE], 'w')
-            mydb.exec_query(insert_query % key)
+            mydb.exec_query(insert_query, (key,))
             key = "key=%s\n" % key
             newfile.write("#This file is generated automatically by ossim. Please don't modify it!\n")
             newfile.write(extra_data)
@@ -308,7 +308,7 @@ class Framework:
 
         # BackupManager
         t = None
-        bkm = BackupManager()
+        bkm = BackupManager(self.__conf)
         bkm.start()
 
         for c in self.__classes:

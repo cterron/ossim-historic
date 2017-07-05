@@ -34,7 +34,7 @@ from ansiblemethods.helper import ansible_is_valid_response
 ansible = Ansible()
 
 
-def send_email(host, port, sender, recipients,subject, body,user,passwd,use_ssl,attachemnts):
+def send_email(host, port, sender, recipients, subject, body, user, passwd, use_ssl, attachemnts):
     """
     Send an email.
     """
@@ -47,23 +47,20 @@ def send_email(host, port, sender, recipients,subject, body,user,passwd,use_ssl,
     user=%s \
     passwd=%s \
     use_ssl=%s \
-    attach=%s" % (host, port,sender, recipients,subject, body,user,passwd, use_ssl,attachemnts )
+    attach=%s" % (host, port, sender, recipients, subject, body, user, passwd, use_ssl, attachemnts)
 
-    data =  ansible.run_module([], "av_mail", args, use_sudo=False,local=True)
+    data = ansible.run_module([], "av_mail", args, use_sudo=False, local=True)
     result = True
     if 'failed' in data:
-        result= False
-    return (result,data)
+        result = False
+    return result, data
 
 
 def ping(host):
     """
     Ping the Ansible connection to a host.
     """
-    hostlist = []
-    hostlist.append(host)
-    data = ansible.run_module(hostlist, "ping", "", use_sudo=False)
-    return data
+    return ansible.run_module([host], "ping", "", use_sudo=False)
 
 
 def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
@@ -82,7 +79,7 @@ def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
 
     # Get local file md5
     try:
-        response = ansible.run_module(host_list=[local_ip], module='stat', args="path="+local_file_path)
+        response = ansible.run_module(host_list=[local_ip], module='stat', args="path=" + local_file_path)
     except Exception, exc:
         return False, "Ansible Error: An error occurred while running stat module: %s" % str(exc)
 
@@ -95,31 +92,31 @@ def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
 
     # Get remote file md5
     try:
-        response = ansible.run_module(host_list=[remote_ip], module='stat', args="path="+remote_file_path)
+        response = ansible.run_module(host_list=[remote_ip], module='stat', args="path=" + remote_file_path)
     except Exception, exc:
         return False, "Ansible Error: An error occurred while running stat module: %s" % str(exc)
 
     (success, msg) = ansible_is_valid_response(remote_ip, response)
     if success:
         if not response['contacted'][remote_ip]['stat']['exists']:
-            return (False, "Remote files does not exist")
+            return False, "Remote files does not exist"
         else:
             remote_md5 = response['contacted'][remote_ip]['stat']['md5']
 
     if local_md5 and remote_md5 and local_md5 == remote_md5:
-        return (False, "Files already in sync")
+        return False, "Files already in sync"
     else:
         try:
-            fetch_args = "src=%s dest=%s flat=yes validate_md5=yes" % (remote_file_path, local_file_path)
+            fetch_args = "src={} dest={} flat=yes validate_md5=yes".format(remote_file_path, local_file_path)
             response = ansible.run_module(host_list=[remote_ip], module='fetch', args=fetch_args)
-        except Exception, exc:
-            return False, "Ansible Error: An error occurred while running fetch module: %s" % str(exc)
+        except Exception as e:
+            return False, "Ansible Error: An error occurred while running fetch module: {}".format(e)
 
         (success, msg) = ansible_is_valid_response(remote_ip, response)
         if success:
-            return (success, "File retrieved")
+            return success, "File retrieved"
         else:
-            return (success, msg)
+            return success, msg
 
 
 def rsync(local_ip, src, dest):
@@ -131,26 +128,29 @@ def rsync(local_ip, src, dest):
     :returns True if the file was fetched, False elsewhere
     """
     # Check parameters
-    if not local_ip or not src or not dest:
-        return False, "Invalid parameters"
+    if not all((local_ip, src, dest)):
+        return False, "Invalid parameters: {}".format(locals())
 
     ssh_key_file = '/var/ossim/ssl/local/private/cakey_avapi.pem'
     # Use -i option to know if the file has changed
-    rsync_command = 'rsync -aizPe "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i %s" %s %s' % (ssh_key_file, src, dest)
+    # To avoid warning massage in ansible output "-q" key has been added:
+    # u'stderr': u"Warning: Permanently added '192.168.87.198' (RSA) to the list of known hosts.",
+    rsync_command = 'rsync -aizPe "ssh -q -o UserKnownHostsFile=/dev/null ' \
+                    '-o StrictHostKeyChecking=no -i {}" {} {}'.format(ssh_key_file, src, dest)
 
     # Rsync pull remote file
     try:
         response = ansible.run_module(host_list=[local_ip], module='command', args=rsync_command, use_sudo=False)
-    except Exception, exc:
-        return False, "Ansible Error: An error occurred while rsyncing file(s): %s" % str(exc)
+    except Exception as e:
+        return False, "Ansible Error: An error occurred while rsyncing file(s): {}".format(e)
 
-    (success, msg) = ansible_is_valid_response(local_ip, response)
+    success, msg = ansible_is_valid_response(local_ip, response)
     if not success or response['contacted'][local_ip]['stderr'] != '':
-        return (success, "Could't retrieve file")
+        return success, "Could't retrieve file"
     elif response['contacted'][local_ip]['stdout'] == '':
-        return (False, "File(s) already in sync")
+        return False, "File(s) already in sync"
     else:
-        return (success, "File(s) synced")
+        return success, "File(s) synced"
 
 
 def rsync_pull(remote_ip, remote_file_path, local_ip, local_file_path):
@@ -162,16 +162,15 @@ def rsync_pull(remote_ip, remote_file_path, local_ip, local_file_path):
     :returns True if the file(s) was fetched, False elsewhere
     """
     # Check parameters
-    if not local_ip or not remote_ip or not remote_file_path or not local_file_path:
-        return False, "Invalid parameters"
-
-    src = "%s:%s" % (remote_ip, remote_file_path)
-    dest = local_file_path
-    return rsync(local_ip=local_ip, src=src, dest=dest)
+    if not all((remote_ip, remote_file_path, local_ip, local_file_path)):
+        return False, "Invalid parameters: {}".format(locals())
+    src = "{}:{}".format(remote_ip, remote_file_path)
+    destination = local_file_path
+    return rsync(local_ip=local_ip, src=src, dest=destination)
 
 
 def rsync_push(local_ip, local_file_path, remote_ip, remote_file_path):
-    """ Rsync pull remote file to local path
+    """Rsync pull remote file to local path
     :param local_ip: The local system ip
     :param local_file_path: Path to local file(s)
     :param remote_ip: The target system ip
@@ -180,9 +179,8 @@ def rsync_push(local_ip, local_file_path, remote_ip, remote_file_path):
     :returns True if the file(s) was pushed, False elsewhere
     """
     # Check parameters
-    if not local_ip or not remote_ip or not remote_file_path or not local_file_path:
-        return False, "Invalid parameters"
-
+    if not all((local_ip, local_file_path, remote_ip, remote_file_path)):
+        return False, "Invalid parameters: {}".format(locals())
     src = local_file_path
-    dest = "%s:%s" % (remote_ip, remote_file_path)
-    return rsync(local_ip=local_ip, src=src, dest=dest)
+    destination = "{}:{}".format(remote_ip, remote_file_path)
+    return rsync(local_ip=local_ip, src=src, dest=destination)

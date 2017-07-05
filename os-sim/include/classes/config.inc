@@ -319,14 +319,15 @@ class Config
             'ossim_web_user'      => 'admin',
             'ossim_web_pass'      => 'admin',
              
-            'backup_type'         => 'mysql', // Backup: Backup configuration: backup database, directory, interval
-            'backup_base'         => 'alienvault_siem',
-            'backup_user'         => 'root',
-            'backup_pass'         => 'ossim',
-            'backup_host'         => 'localhost',
-            'backup_port'         => '3306',
-            'backup_dir'          => '/var/lib/ossim/backup',
-            'backup_day'          => '5',
+            'backup_type'                               => 'mysql', // Backup: Backup configuration: backup database, directory, interval
+            'backup_events_min_free_disk_space'         => '10',
+            'backup_base'                               => 'alienvault_siem',
+            'backup_user'                               => 'root',
+            'backup_pass'                               => 'ossim',
+            'backup_host'                               => 'localhost',
+            'backup_port'                               => '3306',
+            'backup_dir'                                => '/var/lib/ossim/backup',
+            'backup_day'                                => '5',
              
             'nessus_user'         => 'ossim', // Nessus: Nessus client configuration
             'nessus_pass'         => 'ossim',

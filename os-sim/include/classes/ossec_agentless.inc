@@ -545,6 +545,7 @@ class Ossec_agentless
             
             $query = "REPLACE INTO host_agentless (ip, sensor_id, hostname, user, pass, ppass, use_su, descr, status)
                       VALUES (?, ?, ?, ?, ".$q_pass.", ".$q_ppass.", ?, ?, ?)";
+            $log_code = 103;
         }
         else
         {
@@ -589,6 +590,8 @@ class Ossec_agentless
             
             $query = "UPDATE host_agentless SET hostname=?, user=?, ".$q_pass." ".$q_ppass." descr = ?, status = ?, use_su = ? 
                 WHERE ip = ? AND sensor_id = ?;";
+
+            $log_code = 105;
         }
         
 
@@ -614,6 +617,9 @@ class Ossec_agentless
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
+
+        $user_name = Session::get_session_user();
+        Log_action::log($log_code,[$user_name, $hostname,$ip]);
 
         return TRUE;
     }
@@ -645,17 +651,23 @@ class Ossec_agentless
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        } 
-        
+        }
+        $get_agentless_host_name =  "SELECT hostname  FROM host_agentless WHERE ip = ? AND sensor_id = ?";
         $query = "DELETE FROM host_agentless WHERE ip = ? AND sensor_id = ?;";
-        
+
+        $agentless_host_name = $conn->Execute($get_agentless_host_name, $params);
         $rs = $conn->Execute($query, $params);
+
                     
         if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
+
+        $user_name = Session::get_session_user();
+        $agentless_host_name = str_replace("hostname"," ",$agentless_host_name);
+        Log_action::log(104,[$user_name, $agentless_host_name, $ip]);
+
         if ($conn->CompleteTrans())
         {
             
@@ -1693,7 +1705,7 @@ class Ossec_agentless
         //Modifying agentless status and changing 'apply configuration' flag
         if($agentless)
         {
-            if ($agentless->get_status() != 0)
+            if ($agentless->get_status() != 0 && $agentless->get_status()!=1)
             {
                 $agentless->set_status($conn, 1);
             }

@@ -30,29 +30,37 @@
 """
     Several methods to manage a ossec deployment
 """
+import StringIO
+import os
+import re
 import traceback
+from collections import namedtuple
 from tempfile import NamedTemporaryFile
+
+from passlib.hash import nthash, lmhash
 
 import api_log
 from ansiblemethods.ansiblemanager import Ansible, PLAYBOOKS
 from ansiblemethods.helper import ansible_is_valid_response
-from apimethods.utils import is_valid_ipv4, set_owner_and_group, set_file_permissions, set_ossec_file_permissions
-import re
-import os
-import json
-import stat
-from collections import namedtuple
-import StringIO
+from apimethods.utils import is_valid_ipv4, set_ossec_file_permissions
+
 # See PEP8 http://legacy.python.org/dev/peps/pep-0008/#global-variable-names
 # Pylint thinks that a variable at module scope is a constant
 _ansible = Ansible()  # pylint: disable-msg=C0103
 
 
-def get_ossec_agent_data(host_list=[], args={}):
+DEFAULT_ERR_MSG = 'Something wrong happened while running ansible command'
+
+
+def get_ossec_agent_data(host_list=None, args=None):
     """
         Return the ossec agent data
         @param host_list: List of ip whose data we need
     """
+    if host_list is None:
+        host_list = []
+    if args is None:
+        args = {}
     return _ansible.run_module(host_list, 'ossec_agent', args)
 
 
@@ -71,26 +79,31 @@ def ossec_win_deploy(sensor_ip, agent_name, windows_ip, windows_username, window
 
     try:
         # Create temporary files outside playbook
-        auth_file = NamedTemporaryFile(delete=False)
         auth_file_samba = NamedTemporaryFile(delete=False)
         agent_config_file = NamedTemporaryFile(delete=False)
         agent_key_file = NamedTemporaryFile(delete=False)
 
+        # Auth string for `wmiexec` tool: e.g. domain/username or username
+        domain_str = "%s/" % windows_domain if windows_domain else ""
+        windows_auth_sting = "%s%s" % (domain_str, windows_username)
+
         evars = {"target": "%s" % sensor_ip,
-                 "auth_file": "%s" % auth_file.name,
                  "auth_file_samba": "%s" % auth_file_samba.name,
                  "agent_config_file": "%s" % agent_config_file.name,
                  "agent_key_file": "%s" % agent_key_file.name,
                  "agent_name": "%s" % agent_name,
                  "windows_ip": "%s" % windows_ip,
-                 "windows_username": "%s" % windows_username,
                  "windows_domain": "%s" % windows_domain,
-                 "windows_password": "%s" % windows_password}
+                 "windows_username": "%s" % windows_username,
+                 "windows_password": "%s" % windows_password,
+                 "auth_str": "%s" % windows_auth_sting,
+                 "hashes": "%s:%s" % (lmhash.hash(windows_password), nthash.hash(windows_password))}
 
-        response = _ansible.run_playbook(playbook=PLAYBOOKS['OSSEC_WIN_DEPLOY'], host_list=[sensor_ip], extra_vars=evars)
+        response = _ansible.run_playbook(playbook=PLAYBOOKS['OSSEC_WIN_DEPLOY'],
+                                         host_list=[sensor_ip],
+                                         extra_vars=evars)
 
         # Remove temporary files
-        os.remove(auth_file.name)
         os.remove(auth_file_samba.name)
         os.remove(agent_config_file.name)
         os.remove(agent_key_file.name)
@@ -104,17 +117,16 @@ def ossec_win_deploy(sensor_ip, agent_name, windows_ip, windows_username, window
 
 def get_ossec_rule_filenames(sensor_ip):
     """
-        Get the ossec rule filenames
+        Get the ossec rule file names
     """
     try:
         command = "/usr/bin/find /var/ossec/alienvault/rules/*.xml -type f -printf \"%f\n\""
         response = _ansible.run_module(host_list=[sensor_ip], module="shell", args=command)
         if sensor_ip in response['dark'] or 'unreachable' in response:
-            return False, "[get_ossec_rule_filenames] Something wrong happened while running ansible command %s" % str(response)
+            return False, make_err_message('[get_ossec_rule_filenames]', DEFAULT_ERR_MSG, str(response))
         if 'failed' in response['contacted'][sensor_ip]:
-            return False, "[get_ossec_rule_filenames] Something wrong happened while running ansible command %s" % str(response)
-        file_list = response['contacted'][sensor_ip]['stdout']
-        file_list = file_list.split('\n')
+            return False, make_err_message('[get_ossec_rule_filenames]', DEFAULT_ERR_MSG, str(response))
+        file_list = response['contacted'][sensor_ip]['stdout'].split('\n')
     except Exception, exc:
         api_log.error("Ansible Error: An error occurred while running ossec_rule_filenames: %s" % str(exc))
         return False, str(exc)
@@ -123,17 +135,19 @@ def get_ossec_rule_filenames(sensor_ip):
 
 def ossec_extract_agent_key(sensor_ip, agent_id):
     """
-        Call the /usr/share/ossim/scripts/ossec-extract-key.sh with a agent id
+        Call the /usr/share/ossim/scripts/ossec-extract-key.sh with an agent id
     """
     try:
-        if re.match(r"^[0-9]{1,4}$", agent_id) is None:
-            return (False, "Bad agent_id %s" % agent_id)
+        result, msg = is_valid_agent_id(agent_id)
+        if not result:
+            return False, msg
+
         command = "/usr/share/ossim/scripts/ossec-extract-key.sh %s" % agent_id
         response = _ansible.run_module(host_list=[sensor_ip], module="shell", args=command, use_sudo=True)
         if sensor_ip in response['dark'] or 'unreachable' in response:
-            return False, "[ossec_extract_agent_key]  Something wrong happened while running ansible command %s" % str(response)
+            return False, make_err_message('[ossec_extract_agent_key]', DEFAULT_ERR_MSG, str(response))
         if 'failed' in response['contacted'][sensor_ip]:
-            return False, "[ossec_extract_agent_key]  Something wrong happened while running ansible command %s" % str(response)
+            return False, make_err_message('[ossec_extract_agent_key]', DEFAULT_ERR_MSG, str(response))
         # I need exactly the three lines
         stio = StringIO.StringIO(response['contacted'][sensor_ip]['stdout'])
         lines = stio.readlines()
@@ -286,7 +300,7 @@ def ossec_rootcheck(system_ip, agent_id=""):
             return False, "[ossec_rootcheck] Something wrong happened while running ansible command %s" % str(response)
     except Exception as err:
         return False, "[ossec_rootcheck] Something wrong happened while running ansible command %s" % str(err)
-    
+
     #Splitting by char an empty string returns [''] and we need []
     output = script_output.split("\n") if script_output else []
     return (True, output)
@@ -366,6 +380,7 @@ def ossec_get_check(system_ip, check_type, agent_name=""):
     if re.match(r"[a-zA-Z0-9_\-\(\)]+", agent_name) is None:
         return False, r"Invalid agent name. Allowed characters are [^a-zA-Z0-9_\-()]+"
 
+    data = ''
     try:
         if check_type == "lastscan":
             # We need to exec TWO results
@@ -426,8 +441,7 @@ def ossec_get_status(system_ip):
         result, msg = ansible_is_valid_response(system_ip, response)
         if not result:
             return False, msg
-        response['contacted'][system_ip]['data']
-        data = response['contacted'][system_ip]['data'] #json.loads(str(response['contacted'][system_ip]['data']))
+        data = response['contacted'][system_ip]['data']
     except Exception as err:
         return False, "[ossec_get_status] Something wrong happened while running ansible command ->  '%s'" % str(err)
     return True, data
@@ -659,7 +673,6 @@ def ossec_get_agentless_list(system_ip):
     :return (success,data) where success is True on success False otherwise
     """
     try:
-        #command = "/var/ossec/agentless/register_host.sh list"
         command = "cat /var/ossec/agentless/.passlist || true"
         response = _ansible.run_module(host_list=[system_ip], module="shell", args=command, use_sudo=True)
         result, msg = ansible_is_valid_response(system_ip, response)
@@ -668,16 +681,16 @@ def ossec_get_agentless_list(system_ip):
         script_return_code = int(response['contacted'][system_ip]['rc'])
         script_output = response['contacted'][system_ip]['stdout']
         if script_return_code != 0:
-            return False, "[ossec_get_agentless_list] Something wrong happened while running ansible command %s" % str(response)
+            return False, make_err_message("[ossec_get_agentless_list]", DEFAULT_ERR_MSG, str(response))
         output = {}
         for line in script_output.split("\n"):
             if line != '' and line.find("Available host") < 0:
                 parts = line.split('|')
-                if len(parts)==3:
-                    output[parts[0]] = {'pass':parts[1],'ppass':parts[2]}
+                if len(parts) == 3:
+                    output[parts[0]] = {'pass': parts[1], 'ppass': parts[2]}
     except Exception as err:
-        return False, "[ossec_get_agentless_list] Something wrong happened while running ansible command %s" % str(err)
-    return (True, output)
+        return False, make_err_message("[ossec_get_agentless_list]", DEFAULT_ERR_MSG, str(err))
+    return True, output
 
 
 def ossec_get_ossec_agent_detail(system_ip, agent_id):
@@ -715,8 +728,9 @@ def ossec_get_syscheck(system_ip, agent_id):
         :param agent_id: Agent id, must be \d{1,4}
         :return (success, data) where success is True in success, False otherwise. Data is a list of modified files
     """
-    if re.match(r"^[0-9]{1,4}$", agent_id) is None:
-        return False, "Invalid agent ID. The agent ID has to be 1-4 digital characters"
+    status, msg = is_valid_agent_id(agent_id)
+    if not status:
+        return False, msg
     try:
         command = "/var/ossec/bin/syscheck_control -s -i %s " % agent_id
         response = _ansible.run_module(host_list=[system_ip], module="shell", args=command, use_sudo=True)
@@ -734,5 +748,38 @@ def ossec_get_syscheck(system_ip, agent_id):
                 output[index] = line
                 index += 1
     except Exception as err:
-        return False, "[ossec_get_syscheck] Something wrong happened while running ansible command %s" % str(err)
-    return (True, output)  # Ignore the header and return the list
+        return False, make_err_message("[ossec_get_syscheck]", DEFAULT_ERR_MSG, str(err))
+
+    return True, output  # Ignore the header and return the list
+
+
+# Todo: replace agent_id validation with this function.
+def is_valid_agent_id(agent_id):
+    """ Checks if agent ID is valid or not.
+
+    Args:
+        agent_id: (str) Agent ID string
+
+    Returns:
+        status - True or False
+        msg - err message
+    """
+    if re.match(r"^[0-9]{1,4}$", agent_id) is None:
+        return False, 'Invalid agent ID. The agent ID has to be 1-4 digital characters'
+
+    return True, ''
+
+
+# Todo: replace error formatting with this function.
+def make_err_message(func_name, err_msg="", err_reason=""):
+    """ Makes unified error message.
+
+    Args:
+        func_name: (str) Name of the func which called it.
+        err_msg: (str) Err msg itself.
+        err_reason: (str) Reason why it happens.
+
+    Returns:
+        Formatted err_msg string.
+    """
+    return "{} {}{} {}".format(func_name, err_msg, ':' if err_msg and err_reason else '', err_reason)

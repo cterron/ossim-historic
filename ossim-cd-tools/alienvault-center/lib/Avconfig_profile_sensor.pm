@@ -51,6 +51,8 @@ my $agentcfg_last       = "/etc/ossim/agent/config.cfg_last";
 my $asset_plugins       = "/etc/ossim/agent/config.yml";
 my $asset_plugins_last  = "/etc/ossim/agent/config.yml_last";
 my $plugins_cfg_basedir = '/etc/ossim/agent/plugins';
+my $custom_plugins_cfg_basedir
+                        = '/etc/alienvault/plugins/custom';
 my $fprobeconfig        = "/etc/default/fprobe";
 my $monit_file          = "/etc/monit/alienvault/avsensor.monitrc";
 my $agentcfgorig        = "/etc/ossim/agent/config.cfg.orig";
@@ -146,7 +148,7 @@ sub config_profile_sensor() {
         $d_list{$item}++;
     }
     my $new_detector_list = join ', ', keys(%d_list);
-    
+
     system (qq{sed -i "s:^detectors=.*:detectors=$new_detector_list:g" $config_file});
 
 
@@ -353,11 +355,20 @@ sub config_profile_sensor() {
     delete $Config_plugins->{plugins};
 
     foreach my $var ( split( /,\s*/, $config{'sensor_detectors'} ) ) {
+        my $plugin_path = "$plugins_cfg_basedir/$var.cfg";
+        my $custom_plugin_path = "$custom_plugins_cfg_basedir/$var.cfg";
+        # Check if file exists and if it's custom plugin rewrite the path.
+        # Currently all our custom plugins have type=detectors.
+        if (! -f $plugin_path) {
+            if (-f $custom_plugin_path) {
+                $plugin_path = $custom_plugin_path;
+            }
+        }
 
 	# Do not enable simple plugin for these when multiple interfaces selected
         $Config_plugins->{plugins}->{$var}
             = $Config_plugins_orig->{plugins}->{$var}
-            // "$plugins_cfg_basedir/$var.cfg";
+            // "$plugin_path";
     }
 
     foreach my $var ( split( /,\s*/, $config{'sensor_monitors'} ) ) {
@@ -492,14 +503,14 @@ sub config_profile_sensor() {
             {
 
                 verbose_log("Sensor Profile: Add new sensor");
-                
+
                 my $ids   = ($config{'sensor_detectors'} =~ /suricata/) ? '1' : '0';
                 my $prads = ($config{'sensor_detectors'} =~ /prads/) ? '1' : '0';
                 my $nflow = ($config{'netflow'} =~ /yes/) ? '1' : '0';
-                
+
                 my $vs    = `dpkg -l | grep ossim-cd-tools | awk '{print \$3}' | awk -F'-' '{ print \$1 }'`;
                 $vs =~ s/\n//g;
-                
+
                 my $command = "echo \"CALL sensor_update (\'admin\',\'\',\'$admin_ip\',\'$server_hostname\',5,40001,\'$gmt_offset_in_hours\',\'\',\'\',\'$vs\',1,1,1,0,$ids,$prads,$nflow);\" | ossim-db $stdout $stderr";
                 debug_log($command);
                 system($command);
@@ -522,9 +533,9 @@ sub config_profile_sensor() {
 
             # check if system entries exists
             verbose_log("Sensor Profile: System update");
-        
+
             my $s_uuid = `/usr/bin/alienvault-system-id | tr -d '-'`;
-        
+
             my $profiles = 'Sensor';
             $profiles .= ',Framework' if ($profile_framework);
             $profiles .= ',Server' if ($profile_server);

@@ -47,7 +47,7 @@ from DoControl import ControlManager
 from DoASEC import ASECHandler
 from DoWS import WSHandler
 from DoNagios import NagiosManager
-from BackupManager import BackupRestoreManager
+from BackupManager import BackupRestoreManager, DoRestore
 from Logger import Logger
 from OssimConf import OssimConf
 from OssimDB import OssimDB
@@ -126,7 +126,9 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
 
                             elif command == "backup":
                                 if bkmanager is None:
-                                    bkmanager = BackupRestoreManager(OssimConf())
+                                    ossim_conf = OssimConf()
+                                    do_restore_cmd = DoRestore(ossim_conf)
+                                    bkmanager = BackupRestoreManager(ossim_conf, do_restore_cmd)
                                 response = bkmanager.process(line)
 
                             elif command == "asec":

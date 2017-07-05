@@ -26,6 +26,21 @@
 #
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 
+# Standard imports
+import ast
+import datetime
+import functools
+import json
+import urllib
+import time
+
+# Related third-party imports
+import requests
+from requests.exceptions import RequestException
+
+# Local specific imports
+import api_log
+
 from ansiblemethods.system.about import get_alienvault_version
 from apimethods.system.proxy import AVProxy
 from db.methods.system import db_set_config
@@ -33,35 +48,66 @@ from db.redis.redisdb import RedisDBKeyNotFound
 from db.redis.pulsedb import PulseDB
 from db.redis.pulsecorrelationdb import PulseCorrelationDB
 
-import urllib2
-import json
-import ast
-import datetime
-import api_log
+
+# 429 Too Many Requests
+# 500 Internal Server Error
+# 502 Bad Gateway
+GENERAL_ERROR_CODES = (429, 500, 502)
+INVALID_API_KEY_CODE = 403
+BAD_REQUEST_CODE = 400
 
 
+def retry(exception_or_tuple, tries=4, delay=3, backoff=2, logger=None):
+    """Retry calling the decorated function using an exponential backoff.
+
+    :param exception_or_tuple: the exception(or tuple) to check.
+    :type exception_or_tuple: Exception or tuple
+    :param tries: number of times to try (not retry) before giving up
+    :type tries: int
+    :param delay: initial delay between retries in seconds
+    :type delay: int
+    :param backoff: backoff multiplier e.g. value of 2 will double the delay
+    :type backoff: int
+    :param logger: logger to use. If None, print
+    :type logger: logging.Logger instance
+    """
+    def deco_retry(f):
+
+        @functools.wraps(f)
+        def f_retry(*args, **kwargs):
+            mtries, mdelay = tries, delay
+            while mtries > 1:
+                try:
+                    return f(*args, **kwargs)
+                except exception_or_tuple as e:
+                    msg = "{}, Retrying in {} seconds...".format(e, mdelay)
+                    if logger:
+                        logger.warning(msg)
+                    else:
+                        print msg
+                    time.sleep(mdelay)
+                    mtries -= 1
+                    mdelay *= backoff
+            return f(*args, **kwargs)
+        return f_retry
+    return deco_retry
+
+
+# TODO We need to move exception to the separate file
 class InvalidAPIKey(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 
 class BadRequest(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 
 class OTXv2(object):
     def __init__(self, key, server="https://otx.alienvault.com/"):
         self.key = key
         self.server = server
-        self.url_base = "%sapi/v1" % server
-
+        self.url_base = "{}api/v1".format(server)
+        self.avproxy = AVProxy()
         self.pulse_db = PulseDB()
         self.pulse_correlation_db = PulseCorrelationDB()
 
@@ -104,11 +150,24 @@ class OTXv2(object):
         try:
             latest_timestamp = self.pulse_db.get(date_type)
         except Exception as err:
-            api_log.warning("Cannot get messages revision: %s" % str(err))
+            api_log.warning("Cannot get messages revision: {}".format(err))
             return None
 
         return None if latest_timestamp == "" else latest_timestamp
 
+    def get_proxies(self):
+
+        proxy_url = self.avproxy.get_smart_proxy_url()
+        if proxy_url:
+            return {
+                'http': 'http://{}'.format(proxy_url),
+                'https': 'http://{}'.format(proxy_url),
+            }
+        # This helper function returns a dictionary of scheme to proxy server URL mappings.
+        # It scans the environment for variables named <scheme>_proxy
+        return urllib.getproxies()
+
+    @retry(RequestException, tries=5, backoff=2, logger=api_log)
     def make_request(self, url):
         """Make a request against the OTX server
         Args:
@@ -117,28 +176,29 @@ class OTXv2(object):
             response_data(json): The OTX response
             Raise an exception when something is wrong
         """
-        proxy = AVProxy()
-        if proxy is None:
-            api_log.error("Connection error with AVProxy")
-        try:
-            request = urllib2.Request(url)
-            request.add_header('X-OTX-API-KEY', self.key)
-            if self.otx_user_version:
-                # Information about system that is using OTX
-                request.add_header('User-Agent', self.otx_user_version)
-            response = proxy.open(request, timeout=20, retries=3)
-            response_data = json.loads(response.read(), encoding="utf-8")
-        except urllib2.HTTPError as err:
-            if err.code == 403:
-                raise InvalidAPIKey("Invalid API Key")
-            elif err.code == 400:
-                raise BadRequest("Bad Request")
-            else:
-                raise Exception(str(err))
-        except Exception as err:
-            raise Exception(str(err))
 
-        return response_data
+        api_log.info("trying to make a request: {}".format(url))
+        custom_headers = {'X-OTX-API-KEY': self.key}
+        if self.otx_user_version:
+            # Information about system that is using OTX
+            custom_headers['User-Agent'] = self.otx_user_version
+
+        # http://docs.python-requests.org/en/master/user/advanced/#proxies
+        proxies = self.get_proxies()
+        response_data = requests.get(url, headers=custom_headers, proxies=proxies, timeout=10)
+        api_log.info("Status code: {}".format(response_data.status_code))
+
+        if response_data.status_code in GENERAL_ERROR_CODES:
+            # Making timeout
+            raise RequestException("Response status code: {}".format(response_data.status_code))
+
+        if response_data.status_code == INVALID_API_KEY_CODE:
+            raise InvalidAPIKey("Invalid API Key")
+
+        if response_data.status_code == BAD_REQUEST_CODE:
+            raise BadRequest("Bad Request")
+
+        return response_data.json()
 
     def check_token(self):
         """Checks if a OTX token is valid and return user info if so.
@@ -147,12 +207,12 @@ class OTXv2(object):
         Returns:
             user_data(dict): A dict with the user info.
         """
-        url = "%s/user/" % self.url_base
+        url = "{}/user/".format(self.url_base)
 
         try:
             user_data = self.make_request(url)
-        except Exception as error:
-            api_log.warning("OTX key activation error: %s" % str(error))
+        except Exception as err:
+            api_log.warning("OTX key activation error: {}".format(err))
             raise
 
         return user_data
@@ -186,8 +246,8 @@ class OTXv2(object):
                 except RedisDBKeyNotFound:
                     del_pulses -= 1
                     continue
-                except Exception as error:
-                    api_log.error("Error deleting Pulse: %s" % str(error))
+                except Exception as err:
+                    api_log.error("Error deleting Pulse: {}".format(err))
                     del_pulses -= 1
                     continue
         return del_pulses
@@ -201,13 +261,13 @@ class OTXv2(object):
         """
         p_download = []
         for p_id in pulses:
-            request = "%s/pulses/%s/" % (self.url_base, p_id)
+            request = "{}/pulses/{}/".format(self.url_base, p_id)
             try:
                 json_data = self.make_request(request)
                 # Save pulse data on redis
                 p_download.append(json_data)
-            except Exception as error:
-                api_log.warning("Cannot download pulse %s: %s" % (str(p_id), str(error)))
+            except Exception as err:
+                api_log.warning("Cannot download pulse {}: {}".format(p_id, err))
                 continue
 
         return self.save_pulses(p_download)
@@ -221,7 +281,7 @@ class OTXv2(object):
         """
         pulse_downloaded = 0
         for author in authors:
-            next_request = "%s/pulses/subscribed?limit=20&author_name=%s" % (self.url_base, author)
+            next_request = "{}/pulses/subscribed?limit=20&author_name={}".format(self.url_base, author)
             while next_request:
                 try:
                     json_data = self.make_request(next_request)
@@ -229,8 +289,8 @@ class OTXv2(object):
                     pulse_downloaded += self.save_pulses(json_data.get('results'))
                     # Get next request
                     next_request = json_data.get('next')
-                except Exception as error:
-                    api_log.warning("Cannot download pulses from author %s: %s" % (str(author), str(error)))
+                except Exception as err:
+                    api_log.warning("Cannot download pulses from author {}: {}".format(author, err))
                     continue
 
         return pulse_downloaded
@@ -255,8 +315,6 @@ class OTXv2(object):
 
     def get_pulse_updates(self):
         """Update the redis with the pulses that must been re-added and deleted.
-        Args:
-            None
         Returns:
             tuple: Number of pulses updated and deleted.
         """
@@ -269,7 +327,7 @@ class OTXv2(object):
         if subscribed_timestamp is not None:
             # Getting event time or subscribed time in case event time is null by any reason.
             events_timestamp = subscribed_timestamp if events_timestamp is None else events_timestamp
-            next_request = "%s/pulses/events?limit=20&since=%s" % (self.url_base, events_timestamp)
+            next_request = "{}/pulses/events?limit=20&since={}".format(self.url_base, events_timestamp)
         else:
             return total_add, total_del
 
@@ -298,8 +356,8 @@ class OTXv2(object):
                 # Get next request
                 next_request = json_data.get('next')
 
-            except Exception as error:
-                api_log.warning("Cannot download pulse updates: %s" % str(error))
+            except Exception as err:
+                api_log.warning("Cannot download pulse updates: {}".format(err))
                 raise
 
         update_timestamp = event.get('created', None)
@@ -319,9 +377,9 @@ class OTXv2(object):
         subscribed_timestamp = self.get_latest_request('subscribed')
 
         if subscribed_timestamp is not None:
-            next_request = "%s/pulses/subscribed?limit=20&modified_since=%s" % (self.url_base, subscribed_timestamp)
+            next_request = "{}/pulses/subscribed?limit=20&modified_since={}".format(self.url_base, subscribed_timestamp)
         else:
-            next_request = "%s/pulses/subscribed?limit=20" % self.url_base
+            next_request = "{}/pulses/subscribed?limit=20".format(self.url_base)
 
         # This var will store the date of the newest pulse that will be used to query the next time.
         update_timestamp = None
@@ -342,8 +400,8 @@ class OTXv2(object):
                         pass
                 # Get next request
                 next_request = json_data.get('next')
-            except Exception as error:
-                api_log.warning("Cannot download new pulses: %s" % str(error))
+            except Exception as err:
+                api_log.warning("Cannot download new pulses: {}".format(err))
                 raise
 
         # Saving the request date
@@ -385,8 +443,8 @@ class OTXv2(object):
                 version_data = version_data.replace('ALIENVAULT', 'USM').split()[:2]
                 otx_user_version = 'OTX {}'.format('/'.join(version_data))
             else:
-                api_log.warning('Bad result returned for alienvault version: %s' % version_data)
+                api_log.warning('Bad result returned for alienvault version: {}'.format(version_data))
         except Exception as err:
-            api_log.warning('Failed to get alienvault version. Reason: {}'.format(str(err)))
+            api_log.warning('Failed to get alienvault version. Reason: {}'.format(err))
 
         return otx_user_version

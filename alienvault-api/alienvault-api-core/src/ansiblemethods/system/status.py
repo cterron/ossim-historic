@@ -178,6 +178,30 @@ def cpu(system_ip):
     return result
 
 
+def get_local_time(system_ip, date_fmt=None):
+    """ Returns local time on remote system
+
+    Args:
+        system_ip: (str) Remote system IP.
+        date_fmt: (str) Date format sting.
+
+    Returns: A tuple of the form (bool, data) where the first element is a true or false and second one is local time
+             or error message.
+    """
+    date_fmt = '%Y-%m-%d %H:%M:%S' if date_fmt is None else date_fmt
+    response = ansible.run_module(host_list=[system_ip], module='shell', args='date +"%s"' % date_fmt)
+    if system_ip in response['contacted']:
+        if not response['contacted'][system_ip].get('failed', False):
+            result = (True, response['contacted'][system_ip]['stdout'])
+        else:
+            result = (False, "Error getting local time: %s" % response['contacted'][system_ip].get('msg',
+                                                                                                   'Unknown error'))
+    else:
+        result = (False, "Can't connect to system with IP %s msg: %s " % (system_ip, str(response['dark'][system_ip])))
+
+    return result
+
+
 def disk_usage(system_ip):
     """
         Get the disk usage info

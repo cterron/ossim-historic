@@ -3,8 +3,8 @@
 # Provides:          ossim-agent
 # Required-Start:    $syslog $network $remote_fs $time $local_fs
 # Required-Stop:     $syslog $network $remote_fs $time $local_fs
-# Should-Start:      alienvault-idm ossim-server
-# Should-Stop:       alienvault-idm ossim-server
+# Should-Start:      ossim-server redis-server
+# Should-Stop:       ossim-server redis-server
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Open Source Security Information Management Agent

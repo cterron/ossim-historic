@@ -703,7 +703,7 @@ $dst_loc = str_replace('__LAT__',$src_latitude,str_replace('__LONG__',$src_longi
 $dbo->close($_conn);
 
 // Signature
-$htmlTriggeredSignature=explode("##", BuildSigByPlugin($plugin_id, $plugin_sid, $db));
+$htmlTriggeredSignature=explode("##", BuildSigByPlugin($plugin_id, $plugin_sid, $db, $ctx));
 
 // Extradata translation adding
 $myrow2['filename'] = $myrow6['filename'];
@@ -724,7 +724,7 @@ if (!array_key_exists("minimal_view", $_GET))
 <div id="bread_crumb" class="av_breadcrumb">
     <div class="av_breadcrumb_item av_link"><?php echo $back ?></div>
     <div class="av_breadcrumb_separator"></div>
-    <div class="av_breadcrumb_item last"><?php echo $htmlTriggeredSignature[1] ?></div>
+    <div class="av_breadcrumb_item last"><?php echo $signature ?></div>
     <div class='siem_detail_pagination'><?php echo $previous .'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'. $next ?></div>
 </div>
 <div class="av_breadcrumb title_header">

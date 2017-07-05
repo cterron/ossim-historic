@@ -1719,7 +1719,7 @@ class Policy_Extra_Data_Reference (Base):
         }
 
 
-class Plugin_Sid (Base):
+class Plugin_Sid(Base):
     __tablename__ = 'plugin_sid'
     plugin_ctx = Column('plugin_ctx', BINARY(16), ForeignKey('plugin_sid_changes.plugin_ctx'), primary_key=True)
     name = Column('name', VARCHAR(512), primary_key=False)
@@ -5445,4 +5445,48 @@ class Hids_Agents(Base):
             'agent_ip': self.agent_ip,
             'agent_status': self.agent_status,
             'host_id': get_uuid_string_from_bytes(self.host_id),
+        }
+
+
+class PluginDataType(object):
+    ALIENVAULT_PLUGIN = 0
+    ALIENVAULT_CUSTOM_PLUGIN = 1
+    ALIENVAULT_USER_CUSTOM_PLUGIN = 2
+
+
+class PluginData(Base):
+    """Object to encapsulate plugin_data table
+    Plugin types:
+        0 - alienvault-plugin
+        1 - alienvault-custom plugin. Plugin custom uploaded from the GUI
+        2 - user custom plugin. Old custom plugins made by the user
+    """
+    __tablename__ = "plugin_data"
+
+    ctx = Column('ctx', BINARY(16), primary_key=True)
+    plugin_id = Column('plugin_id', INTEGER(11), primary_key=True)
+    plugin_name = Column('plugin_name', VARCHAR(128), primary_key=False)
+    vendor = Column('vendor', VARCHAR(128), primary_key=False)
+    model = Column('model', VARCHAR(128), primary_key=False)
+    version = Column('version', VARCHAR(128), primary_key=False)
+    nsids = Column('nsids', INTEGER(11), primary_key=False)
+    nassets = Column('nassets', INTEGER(11), primary_key=False)
+    plugin_type = Column('plugin_type', TINYINT(1), primary_key=False)
+    product_type = Column('product_type', INTEGER, primary_key=False)
+    last_update = Column('last_update', TIMESTAMP, primary_key=False)
+
+    @property
+    def serialize(self):
+        return {
+            'ctx': get_uuid_string_from_bytes(self.ctx),
+            'plugin_id': self.plugin_id,
+            'plugin_name': self.plugin_name,
+            'vendor': self.vendor,
+            'model': self.model,
+            'version': self.version,
+            'nsids': self.nsids,
+            'nassets': self.nassets,
+            'plugin_type': self.plugin_type,
+            'product_type': self.product_type,
+            'last_update': self.last_update
         }

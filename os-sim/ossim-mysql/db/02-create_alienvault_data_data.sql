@@ -2871,9 +2871,9 @@ REPLACE INTO log_config (ctx, code, log, descr, priority) VALUES
 (@default_ctx, 043, 1, 'Tools - Network scan %1% ', 1),
 (@default_ctx, 044, 1, 'Tools - Backup restored %1% ', 2),
 (@default_ctx, 045, 1, 'Tools - Backup deleted %1% ', 3),
-(@default_ctx, 046, 1, 'Policy - Policy: new policy added %1% %2%', 2),
-(@default_ctx, 047, 1, 'Policy - Policy: policy %1% %2% deleted', 2),
-(@default_ctx, 048, 1, 'Policy - Policy: policy %1% %2% modified', 2),
+(@default_ctx, 046, 1, 'Policy (%1%) %2% by %3%', 2),
+(@default_ctx, 047, 1, 'Policy (%1%) %2% by %3%', 2),
+(@default_ctx, 048, 1, 'Policy (%1%) %2% by %3%', 2),
 (@default_ctx, 49, 1, 'Dashboards - Modify configuration variable: %1%', 2),
 (@default_ctx, 50, 1, 'Reports - Ticket added to %1%', 2),
 (@default_ctx, 51, 1, 'Reports - Ticket %1% deleted', 2),
@@ -2924,7 +2924,14 @@ REPLACE INTO log_config (ctx, code, log, descr, priority) VALUES
 (@default_ctx, 096, 1, 'SIEM Components - Webs Interfaces: %1% %2% modified', '2'),
 (@default_ctx, 097, 1, 'SIEM Components - Webs Interfaces: %1% deleted', '3' ),
 (@default_ctx, 098, 1, 'Policy - Order: change from %1% to %2%', 2),
-(@default_ctx, 099, 1, 'Policy Group - Order: change from %1% to %2%', 2);
+(@default_ctx, 099, 1, 'Policy Group - Order: change from %1% to %2%', 2),
+(@default_ctx, 100, 1, 'HIDS-agent (%2%) deployed to %3%(%4%)  by %1% ', 2),
+(@default_ctx, 101, 1, 'User %1% has changed HIDS configuration file: %2% ', 2),
+(@default_ctx, 102, 1, 'HIDS-agent (%2%)  deleted from %3%(%4%)  by %1% ', 2),
+(@default_ctx, 103, 1, 'Agentless HIDS deployed to host-server %2%(%3%) by %1% ', 2),
+(@default_ctx, 104, 1, 'Agentless HIDS deleted from  host-server %2%(%3%) by %1% ', 2),
+(@default_ctx, 105, 1, 'Agentless HIDS   %2%(%3%)  has been changed  by %1% ', 2),
+(@default_ctx, 106, 1, 'Policy (%1%) %2% by %3%', 2);
 
 --
 -- Mac Vendors

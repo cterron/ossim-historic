@@ -43,9 +43,7 @@ from Detector import Detector
 from TailFollowBookmark import TailFollowBookmark
 from Event import Event
 from ParserUtil import normalize_date
-from Logger import Logger
-
-logger = Logger.logger
+from Logger import Lazyformat
 
 
 class ParserJson(Detector):
@@ -62,9 +60,9 @@ class ParserJson(Detector):
         create_file = self.__plugin_configuration.getboolean("config", "create_file") if self.__plugin_configuration.has_option("config", "create_file") else False
         if not os.path.exists(location) and create_file:
             if not os.path.exists(os.path.dirname(location)):
-                logger.debug("Creating directory %s.." % (os.path.dirname(location)))
+                self.logdebug(Lazyformat("Creating directory {}...", os.path.dirname(location)))
                 os.makedirs(os.path.dirname(location), 0755)
-            logger.warning("Can not read from file {0}, no such file. Creating it...".format(location))
+            self.logwarn(Lazyformat("The {} file is missing. Creating a new one...", location))
             fd = open(location, 'w')
             fd.close()
 
@@ -75,18 +73,18 @@ class ParserJson(Detector):
             if os.path.isfile(location):
                 fd = open(location, 'r')
             else:
-                logger.warning("File: %s does not exist!" % location)
+                self.logwarn(Lazyformat("File: {} does not exist!", location))
                 can_read = False
 
         except IOError, e:
-            logger.error("Can not read from file %s: %s" % (location, e))
+            self.logerror(Lazyformat("Can not read from file {}: {}", location, e))
             can_read = False
         if fd is not None:
             fd.close()
         return can_read
 
     def stop(self):
-        logger.info("Scheduling stop of ParserJson")
+        self.loginfo("Scheduling plugin stop")
         self.__shutdown_event.set()
 
     def process(self):
@@ -100,7 +98,7 @@ class ParserJson(Detector):
         tail = TailFollowBookmark(filename=self.__location,
                                   track=True,
                                   encoding=self.__plugin_configuration.get('config', 'encoding'))
-        logger.info("Plugin[%s] Reading from %s " % (self.__plugin_id, self.__location))
+        self.loginfo(Lazyformat("Reading from {}", self.__location))
         while not self.__shutdown_event.is_set():
             try:
                 # stop processing tails if requested
@@ -126,12 +124,12 @@ class ParserJson(Detector):
                         number_of_lines += 1
                     except Exception as exp:
                         print "CRG %s" % exp
-                        logger.warning("Invalid Json event: %s" % str(line))
+                        self.logwarn(Lazyformat("Invalid Json event: {}", line))
                 # Added small sleep to avoid the excessive cpu usage
                 time.sleep(0.01)
             except Exception, e:
-                logger.error("Plugin[{0}]: {1}".format(self.__plugin_id, str(e)))
+                self.logerror(Lazyformat("Processing failed: {}", e))
         tail.close()
-        logger.debug("%s - Processing completed." % self.__plugin_id)
+        self.logdebug("Processing completed.")
 
 # vim:ts=4 sts=4 tw=79 expandtab:

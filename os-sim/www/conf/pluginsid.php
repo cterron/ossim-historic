@@ -283,7 +283,7 @@ $back_url = urlencode(preg_replace ('/([&|\?]msg\=)(\w+)/', '\\1', $_SERVER["REQ
             //Apply            
             $('#button_apply').on('click', function()
             {
-                var msg  = "<?php echo Util::js_entities(_('The server will be restarted and all correlation data will be lost. Are you sure?')) ?>";
+                var msg  = "<?php echo Util::js_entities(_('All directives will be reloaded and all current correlations will be reset. Are you sure?')) ?>";
                 var opts = {"yes": "<?php echo _('Yes') ?>", "no": "<?php echo _('No') ?>"}
                 av_confirm(msg, opts).done(function()
             		{

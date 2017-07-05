@@ -397,28 +397,45 @@ def get_current_hostname():
 
 
 def get_current_plugins_by_type(plugin_type):
-    cmd = "rgrep  \"type=%s\"  /etc/ossim/agent/plugins/*.cfg  | cut -d: -f1 |awk {'print $1'}" % plugin_type
-    plugin_list = []
+    plugins_path = "/etc/ossim/agent/plugins/*.cfg"
+    custom_plugin_path = "/etc/alienvault/plugins/custom/*.cfg"
+
+    # -H, --with-filename
+    # Print the file name for each match.  This is the default when there is more than one file to search.
+    cmd_standard = "grep -H type={} {}".format(plugin_type, plugins_path)
+    cmd_custom = "grep -H type={} {}".format(plugin_type, custom_plugin_path)
+    filter_path = "| awk -F/ '{print $6}'|awk -F: '{print $1}'"
+    standard_plugin_list, custom_plugin_list = [], []
+
+    # Retrieve custom plugins list
     try:
-        # print cmd
-        status, output = commands.getstatusoutput(cmd)
+        status, output = commands.getstatusoutput(cmd_custom + filter_path)
         if status == 0:
-            for line in output.split('\n'):
-                basename = os.path.basename(line)
-                if re.match("([0-9\w\-]+\.cfg)", basename):
-                    pname = os.path.splitext(basename)[0]
-                    plugin_list.append(pname)
+            for plugin_name in output.split('\n'):
+                if re.match("([0-9\w\-]+\.cfg)", plugin_name):
+                    # Removing ".cfg" suffix from the output
+                    custom_plugin_list.append(plugin_name.split('.')[0])
+            custom_plugin_list.sort()
+    except Exception as e:
+        print "error: {}".format(e)
 
-        if plugin_list:
-            plugin_list = ["AlienVault_NIDS" if p == "suricata" else p for p in plugin_list]
-            plugin_list = ["AlienVault_HIDS" if p == "ossec-single-line" else p for p in plugin_list]
-            plugin_list = ["availability_monitoring" if p == "nagios" else p for p in plugin_list]
-            plugin_list = ["AlienVault_HIDS-IDM" if p == "ossec-idm-single-line" else p for p in plugin_list]
-            plugin_list.sort()
-    except Exception, e:
-        print "error: %s" % str(e)
-
-    return plugin_list
+    # Retrieve standard plugins list
+    try:
+        status, output = commands.getstatusoutput(cmd_standard + filter_path)
+        if status == 0:
+            edited_output = output.replace(
+                    "suricata", "AlienVault_NIDS").replace(
+                    "ossec-single-line", "AlienVault_HIDS").replace(
+                    "nagios", "availability_monitoring").replace(
+                    "ossec-idm-single-line", "AlienVault_HIDS-IDM")
+            for plugin_name in edited_output.split('\n'):
+                if re.match("([0-9\w\-]+\.cfg)", plugin_name):
+                    # Removing ".cfg" suffix from the output
+                    standard_plugin_list.append(plugin_name.split('.')[0])
+            standard_plugin_list.sort()
+    except Exception as e:
+        print "error: {}".format(e)
+    return custom_plugin_list + standard_plugin_list
 
 
 def get_current_detector_plugin_list():

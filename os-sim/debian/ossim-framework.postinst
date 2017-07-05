@@ -84,8 +84,6 @@ sed -i "/etc/sudoers" \
 if ! [ `grep -c "openvas" /etc/sudoers` -ne 0 ]
 then
         echo "www-data ALL=NOPASSWD: /usr/sbin/openvas-nvt-sync" >> /etc/sudoers
-        echo "www-data ALL=NOPASSWD: /usr/sbin/nessus-update-plugins" >> /etc/sudoers
-        echo "www-data ALL=NOPASSWD: /opt/nessus/sbin/nessus-update-plugins" >> /etc/sudoers
 fi
 
 if ! [ `grep -c "cancel_scan" /etc/sudoers` -ne 0 ]
@@ -94,11 +92,6 @@ then
 fi
 
 sed -i '/nmap/d' /etc/sudoers
-
-if ! [ `grep -c "framework-restart" /etc/sudoers` -ne 0 ]
-then
-        echo "www-data ALL=NOPASSWD: /usr/share/ossim/scripts/framework-restart" >> /etc/sudoers
-fi
 
 if ! [ `grep -c "dmidecode" /etc/sudoers` -ne 0 ]
 then
@@ -118,6 +111,12 @@ fi
 if ! [ `grep -c "openvas_rebuild.sh" /etc/sudoers` -ne 0 ]
 then
                 echo "www-data ALL=NOPASSWD: /usr/share/ossim/scripts/vulnmeter/openvas_rebuild.sh" >> /etc/sudoers
+fi
+
+# ENG-105033
+if ! [ `grep -c "ossim-framework" /etc/sudoers` -ne 0 ]
+then
+    echo "www-data ALL=NOPASSWD: /etc/init.d/ossim-framework restart" >> /etc/sudoers
 fi
 
 # nmap ownership & permissions

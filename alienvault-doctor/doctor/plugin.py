@@ -267,18 +267,18 @@ class Plugin:
                     if not check.check_appliance_type(self.__alienvault_config['hw_profile'],
                                                       self.__appliance_type_list,
                                                       self.__ignore_dummy_platform):
-                        Output.warning("\nCheck %s is not meant to be run in %s" % (section,
-                                                                                    self.__alienvault_config['hw_profile']))
+                        Output.info("\nCheck %s is not meant to be run in %s" % (section,
+                                                                                 self.__alienvault_config['hw_profile']))
                         needs_deletion = True
 
                     elif not check.check_version(self.__alienvault_config['version']):
-                        Output.warning("\nCheck %s cannot be run in version %s" % (section,
-                                                                                   self.__alienvault_config['version']))
+                        Output.info("\nCheck %s cannot be run in version %s" % (section,
+                                                                                self.__alienvault_config['version']))
                         needs_deletion = True
 
                     elif not check.check_version_type():
-                        Output.warning("\nCheck %s is not meant to be run in a %s license" % (section,
-                                                                                              self.__alienvault_config['versiontype']))
+                        Output.info("\nCheck %s is not meant to be run in a %s license" % (section,
+                                                                                           self.__alienvault_config['versiontype']))
                         needs_deletion = True
                     if not needs_deletion:
                         self.__checks.append(check)

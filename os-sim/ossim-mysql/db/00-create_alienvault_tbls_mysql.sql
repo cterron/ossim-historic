@@ -683,6 +683,7 @@ CREATE TABLE IF NOT EXISTS `custom_report_scheduler` (
   `date_range` VARCHAR(30) NULL DEFAULT NULL,
   `assets` TINYTEXT NULL DEFAULT NULL,
   `save_in_repository` TINYINT(1) NOT NULL,
+  `file_type` TEXT NULL DEFAULT NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -3470,6 +3471,7 @@ CREATE TABLE IF NOT EXISTS `plugin_data` (
   `nassets` INT(11) NULL DEFAULT 0,
   `plugin_type` TINYINT(1) NULL DEFAULT 0,
   `last_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `product_type` INT NOT NULL,
   PRIMARY KEY (`ctx`, `plugin_id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -4970,7 +4972,7 @@ UPDATE_SYSTEM:BEGIN
             IF @ha_ip IS NULL OR @ha_ip = '' THEN
                 SELECT HEX(sensor_id),HEX(server_id),inet6_ntoa(admin_ip),inet6_ntoa(vpn_ip) FROM system WHERE id=UNHEX(@system_id) into @sensor_id, @server_id, @admin_ip, @vpn_ip;
                 
-                UPDATE server SET ip=inet6_aton(@admin_ip) WHERE id=UNHEX(@server_id);
+                UPDATE server SET ip=IFNULL(inet6_aton(@vpn_ip),inet6_aton(@admin_ip)) WHERE id=UNHEX(@server_id);
                 
                 UPDATE sensor SET ip=IFNULL(inet6_aton(@vpn_ip),inet6_aton(@admin_ip)) WHERE id=UNHEX(@sensor_id);
             END IF;
@@ -5364,7 +5366,7 @@ CREATE PROCEDURE user_add (
     IN _is_admin INT
 ) 
 BEGIN
-    
+    SET _passwd = SHA2(CONCAT(_salt,_passwd), 256);
     IF EXISTS (SELECT 1 FROM users WHERE users.login=_login)
     THEN
         SELECT CONCAT(_login,' already exist') as status;

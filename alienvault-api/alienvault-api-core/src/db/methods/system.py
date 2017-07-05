@@ -77,7 +77,7 @@ def db_get_hostname(system_id):
 
 
 @require_db
-#@accepted_values(['Server', 'Sensor', 'Database'])
+# @accepted_values(['Server', 'Sensor', 'Database'])
 def get_systems(system_type='', convert_to_dict=False, exclusive=False, directly_connected=True):
     """
     Return a list of id/admin ip address pairs for systems in the system table.
@@ -87,7 +87,7 @@ def get_systems(system_type='', convert_to_dict=False, exclusive=False, directly
                             if the function recieves system_type = Sensor it won't return this system.
     :param directly_connected(boolean) Whether it returns systems that are directly connected to this one or not.
     """
-    if type(system_type) != str or system_type.lower() not in ['sensor', 'server', 'database', '']:
+    if not isinstance(system_type, str) or system_type.lower() not in ['sensor', 'server', 'database', '']:
         return False, "Invalid system type <%s>. Allowed values are ['sensor','server','database']" % system_type
 
     try:
@@ -427,6 +427,23 @@ def get_logger_storage_days_life_time():
         api_log.error("[get_logger_storage_days_life_time] {0}".format(str(e)))
         logger_storage_days = 0
     return logger_storage_days
+
+
+@require_db
+def get_feed_auto_update():
+    """ Returns True if feed auto updates enabled or False otherwise.
+    """
+    updates_enabled = False
+    schedule = None
+    try:
+        raw_result = db.session.query(Config).filter(Config.conf == 'feed_auto_updates').one()
+        updates_enabled = True if raw_result.value.lower() == 'yes' else False
+        raw_schedule = db.session.query(Config).filter(Config.conf == 'feed_auto_update_time').one()
+        schedule = int(raw_schedule.value)
+    except Exception as err:
+        api_log.error("[get_feed_auto_updates] {}".format(str(err)))
+
+    return updates_enabled, schedule
 
 
 @require_db

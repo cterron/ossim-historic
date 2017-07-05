@@ -177,7 +177,7 @@ require_once 'av_init.php';
                             e.stopPropagation();
                             e.preventDefault();
                             
-                            window.open(__otx_base_url + 'browse?q=' + v + '<?php echo Otx::get_anchor('&') ?>', '_blank');
+                            window.open(__otx_base_url + 'browse/pulses/?q=tag:' + v + '<?php echo Otx::get_anchor('&') ?>', '_blank');
                         },
                         "data-pulse-list": "tag-list"
                     }).appendTo($tag_div);
@@ -453,7 +453,7 @@ require_once 'av_init.php';
                             e.stopPropagation();
                             e.preventDefault();
                             
-                            window.open(__otx_base_url + 'browse?q=' + v + '<?php echo Otx::get_anchor('&') ?>', '_blank');
+                            window.open(__otx_base_url + 'browse/pulses/?q=tag:' + v + '<?php echo Otx::get_anchor('&') ?>', '_blank');
                         }
                     }).appendTo(tag_div);
                 });

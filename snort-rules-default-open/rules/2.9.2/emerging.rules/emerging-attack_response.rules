@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2016, Emerging Threats
+#  Copyright (c) 2003-2017, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -196,36 +196,6 @@ alert tcp $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Po
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 25 (msg:"ET ATTACK_RESPONSE Possible /etc/passwd via SMTP (BSD style)"; flow:established,to_server; content:"root|3a|*|3a|0|3a|0|3a|"; nocase; content:"|3a|/root|3a|/bin"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2003150; classtype:successful-recon-limited; sid:2003150; rev:6;)
 
-#alert ip $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned userid"; content:"uid="; byte_test:5,<,65537,0,relative,string; content:" gid="; within:15; byte_test:5,<,65537,0,relative,string; classtype:bad-unknown; sid:2101882; rev:11;)
-
-alert ip any any -> any any (msg:"GPL ATTACK_RESPONSE id check returned root"; content:"uid=0|28|root|29|"; fast_pattern:only; classtype:bad-unknown; sid:2100498; rev:8;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL ATTACK_RESPONSE del attempt"; flow:to_server,established; content:"&del+/s+c|3A 5C|*.*"; fast_pattern:only; nocase; classtype:web-application-attack; sid:2101008; rev:9;)
-
-#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL ATTACK_RESPONSE directory listing"; flow:to_server,established; content:"/ServerVariables_Jscript.asp"; http_uri; nocase; reference:nessus,10573; classtype:web-application-attack; sid:2101009; rev:8;)
-
-#alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE directory listing"; flow:established; content:"Volume Serial Number"; fast_pattern:only; classtype:bad-unknown; sid:2101292; rev:11;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE Invalid URL"; flow:from_server,established; content:"Invalid URL"; fast_pattern:only; nocase; reference:url,www.microsoft.com/technet/security/bulletin/MS00-063.mspx; classtype:attempted-recon; sid:2101200; rev:12;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE command completed"; flow:established; content:"Command completed"; fast_pattern:only; nocase; reference:bugtraq,1806; classtype:bad-unknown; sid:2100494; rev:12;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE command error"; flow:established; content:"Bad command or filename"; fast_pattern:only; nocase; classtype:bad-unknown; sid:2100495; rev:10;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE file copied ok"; flow:established; content:"1 file|28|s|29| copied"; fast_pattern:only; nocase; reference:bugtraq,1806; reference:cve,2000-0884; classtype:bad-unknown; sid:2100497; rev:14;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned apache"; flow:from_server,established; content:"uid="; content:"|28|apache|29|"; fast_pattern:only; classtype:bad-unknown; sid:2101886; rev:7;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned http"; flow:from_server,established; content:"uid="; content:"|28|http|29|"; fast_pattern:only; classtype:bad-unknown; sid:2101885; rev:7;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned nobody"; flow:from_server,established; content:"uid="; content:"|28|nobody|29|"; fast_pattern:only; classtype:bad-unknown; sid:2101883; rev:7;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned web"; flow:from_server,established; content:"uid="; content:"|28|web|29|"; within:25; classtype:bad-unknown; sid:2101884; rev:8;)
-
-#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE index of /cgi-bin/ response"; flow:from_server,established; content:"Index of /cgi-bin/"; fast_pattern:only; nocase; reference:nessus,10039; classtype:bad-unknown; sid:2101666; rev:7;)
-
-#alert udp $HOME_NET 500 -> $EXTERNAL_NET 500 (msg:"GPL ATTACK_RESPONSE isakmp login failed"; content:"|10 05|"; depth:2; offset:17; content:"|00 00 00 01 01 00 00 18|"; within:8; distance:13; classtype:misc-activity; sid:2102043; rev:3;)
-
 #alert tcp $HOME_NET any -> any any (msg:"ET ATTACK_RESPONSE Windows 7 CMD Shell from Local System"; flow:established; dsize:<160; content:"Microsoft Windows [Version "; depth:30; content:"Copyright (c)"; distance:0; content:"Microsoft Corp"; distance:0; classtype:successful-admin; sid:2012690; rev:1;)
 
 #alert tcp $SQL_SERVERS 3306 -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL User Account Enumeration"; flow:from_server,established; content:"|02|"; offset:3; depth:4; content:"|15 04|Access denied for user"; fast_pattern:only; threshold:type both,track by_dst,count 10,seconds 1; reference:url,seclists.org/fulldisclosure/2012/Dec/att-9/; classtype:protocol-command-decode; sid:2015993; rev:2;)
@@ -353,4 +323,34 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SysInterna
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET ATTACK_RESPONSE Metasploit Meterpreter Reverse HTTPS certificate"; flow:from_server,established; content:"|A3 0D 30 0B 30 09 06 03 55 1D 13 04 02 30 00|"; fast_pattern:only; content:!"|06|ubuntu"; content:"|16 03 03|"; pcre:"/^..\x0B.{9}\x30\x82..\x30\x82..\xA0\x03\x02\x01\x02\x02(?:\x09.{9}|\x08.{8})/Rs"; content:"|30 0D 06 09 2A 86 48 86 F7 0D 01 01 0B 05 00 30|"; within:16; pcre:"/^.\x31.\x30.\x06\x03\x55\x04\x03\x0C.([a-z]{2,9})\x30.\x17\x0D[0-9]{12}Z\x17\x0D[0-9]{12}Z\x30.\x31.\x30.\x06\x03\x55\x04\x03\x0C.\g{1}\x30\x82../Rs"; content:"|30 0D 06 09 2A 86 48 86 F7 0D 01 01 01 05 00 03 82|"; within:17; pcre:"/^...\x30\x82..\x02\x82...{256,257}/Rs"; content:"|02 03 01 00 01 A3 0D 30 0B 30 09 06 03 55 1D 13 04 02 30 00 30 0D 06 09 2A 86 48 86 F7 0D 01 01 0B 05 00|"; within:36; reference:url,blog.didierstevens.com/2015/05/11/detecting-network-traffic-from-metasploits-meterpreter-reverse-http-module; classtype:trojan-activity; sid:2021178; rev:4;)
 
 alert udp $EXTERNAL_NET any -> $HOME_NET 500 (msg:"ET ATTACK_RESPONSE Possible CVE-2016-1287 Inbound Reverse CLI Shellcode"; flow:to_server; content:"|ff ff ff|tcp/CONNECT/3/"; pcre:"/^(?:\d{1,3}\.){3}\d{1,3}\/\d+\x00$/Ri"; reference:url,raw.githubusercontent.com/exodusintel/disclosures/master/CVE_2016_1287_PoC; classtype:attempted-admin; sid:2022819; rev:1;)
+
+#alert ip $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned userid"; content:"uid="; byte_test:5,<,65537,0,relative,string; content:" gid="; within:15; byte_test:5,<,65537,0,relative,string; classtype:bad-unknown; sid:2101882; rev:11;)
+
+alert ip any any -> any any (msg:"GPL ATTACK_RESPONSE id check returned root"; content:"uid=0|28|root|29|"; fast_pattern:only; classtype:bad-unknown; sid:2100498; rev:8;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL ATTACK_RESPONSE del attempt"; flow:to_server,established; content:"&del+/s+c|3A 5C|*.*"; fast_pattern:only; nocase; classtype:web-application-attack; sid:2101008; rev:9;)
+
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL ATTACK_RESPONSE directory listing"; flow:to_server,established; content:"/ServerVariables_Jscript.asp"; http_uri; nocase; reference:nessus,10573; classtype:web-application-attack; sid:2101009; rev:8;)
+
+#alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE directory listing"; flow:established; content:"Volume Serial Number"; fast_pattern:only; classtype:bad-unknown; sid:2101292; rev:11;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE Invalid URL"; flow:from_server,established; content:"Invalid URL"; fast_pattern:only; nocase; reference:url,www.microsoft.com/technet/security/bulletin/MS00-063.mspx; classtype:attempted-recon; sid:2101200; rev:12;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE command completed"; flow:established; content:"Command completed"; fast_pattern:only; nocase; reference:bugtraq,1806; classtype:bad-unknown; sid:2100494; rev:12;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE command error"; flow:established; content:"Bad command or filename"; fast_pattern:only; nocase; classtype:bad-unknown; sid:2100495; rev:10;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE file copied ok"; flow:established; content:"1 file|28|s|29| copied"; fast_pattern:only; nocase; reference:bugtraq,1806; reference:cve,2000-0884; classtype:bad-unknown; sid:2100497; rev:14;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned apache"; flow:from_server,established; content:"uid="; content:"|28|apache|29|"; fast_pattern:only; classtype:bad-unknown; sid:2101886; rev:7;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned http"; flow:from_server,established; content:"uid="; content:"|28|http|29|"; fast_pattern:only; classtype:bad-unknown; sid:2101885; rev:7;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned nobody"; flow:from_server,established; content:"uid="; content:"|28|nobody|29|"; fast_pattern:only; classtype:bad-unknown; sid:2101883; rev:7;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE id check returned web"; flow:from_server,established; content:"uid="; content:"|28|web|29|"; within:25; classtype:bad-unknown; sid:2101884; rev:8;)
+
+#alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL ATTACK_RESPONSE index of /cgi-bin/ response"; flow:from_server,established; content:"Index of /cgi-bin/"; fast_pattern:only; nocase; reference:nessus,10039; classtype:bad-unknown; sid:2101666; rev:7;)
+
+#alert udp $HOME_NET 500 -> $EXTERNAL_NET 500 (msg:"GPL ATTACK_RESPONSE isakmp login failed"; content:"|10 05|"; depth:2; offset:17; content:"|00 00 00 01 01 00 00 18|"; within:8; distance:13; classtype:misc-activity; sid:2102043; rev:3;)
 

@@ -19,8 +19,8 @@ Session::logcheck("analysis-menu", "EventsForensics");
 require_once 'classes/geolocation.inc';
 $geoloc = new Geolocation('/usr/share/geoip/GeoLiteCity.dat');
 
-global $colored_alerts, $debug_mode;
-$show_rows = POST("show_rows") ? POST("show_rows") : 50;
+global $colored_alerts, $debug_mode; 
+$show_rows = POST("show_rows") ? POST("show_rows") : (GET("show_rows") ? GET("show_rows") : 50); 
 // PLOT
 ?>
 <div id="plot_option">
@@ -47,14 +47,14 @@ $show_rows = POST("show_rows") ? POST("show_rows") : 50;
                                 <?php echo _("SHOW TREND GRAPH") ?>
                             </td>
                             <td>
-                                <div id="trend_checkbox"></div>
+                                <div id="trend_checkbox" style="overflow: hidden;width: 42px;"></div>
                             </td>
                             </tr></table>
                         </td>
                         <!-- Plot -->
-                        <td style="display:none;vertical-align:top;width:760px;text-align:center" id="iplot">
+                        <td style="display:none;vertical-align:top;width:710px;text-align:center" id="iplot">
                             <div style="padding-top:3px">
-                              <div id='loadingTrend' style='margin:0 auto;height:68px;width:760px;position:absolute;z-index:10000;background-color:#eee;text-align:center;opacity:0.85;filter:alpha(opacity=85);-moz-opacity:0.85;-khtml-opacity:0.85'>
+                              <div id='loadingTrend' style='margin:0 auto;height:68px;width:710px;position:absolute;z-index:10000;background-color:#eee;text-align:center;opacity:0.85;filter:alpha(opacity=85);-moz-opacity:0.85;-khtml-opacity:0.85'>
                                   <div style='margin:0 auto;padding-top:25px;line-height:18px;font-size:12px'>
                                       <?php echo _("Loading trend graph, please wait a few seconds") ?> <img src='../pixmaps/loading3.gif'/>
                                   </div>
@@ -353,6 +353,7 @@ foreach ($_SESSION['views'][$_SESSION['current_cview']]['cols'] as $field) {
 $qs->PrintEstimatedResultCnt(); //base_state_query.inc.php => $sqlgraph
 // COLUMNS of Events Table (with ORDER links)
 //$htmlPdfReport->set('<table cellpadding=2 cellspacing=0 class="w100">');
+
 if ($qs->num_result_rows > 0)
 {
     $qro->PrintHeader('',1);

@@ -388,6 +388,7 @@ avr_log_flush_buffer (AvrLog * log)
   gint key = 0;
   gint lines_written = 0;
   gchar ** buffer = NULL;
+  guint table_size = 0;
 
   // Lock the buffer here, so we make sure that no other thread is working on it.
   g_mutex_lock (&log->_priv->buffer_mutex);
@@ -396,15 +397,22 @@ avr_log_flush_buffer (AvrLog * log)
 
   if ((++ log->_priv->buffer_flushed) >= AVR_TYPES)
   {
+    table_size = g_hash_table_size (log->_priv->buffer_htable);
     g_message ("Input log file rotated, flushing pending events...");
-    if (g_hash_table_size (log->_priv->buffer_htable) > 0)
+    if (table_size > 0)
     {
+      //Almost never gets here
+      g_message("Input log file rotated, found %d pending event(s)", table_size);
+      // Iterate over all pending buffered records
       buffer_keys_head = buffer_keys_list = g_hash_table_get_keys (log->_priv->buffer_htable);
       do
       {
         key = GPOINTER_TO_INT (buffer_keys_list->data);
+        //Write all pending records where position/_lines_parsed > wrote records ...
+        //Should be up to AVR_TYPES(=4) records pending
         if (key > lines_written)
         {
+          g_message("Input log file rotated, flushing pending event key: %d", key);
           buffer = (gchar **)g_hash_table_lookup (log->_priv->buffer_htable, GINT_TO_POINTER(key));
           _avr_log_compose_and_write (log, buffer);
 

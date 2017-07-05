@@ -153,13 +153,15 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $tmp_iplookup = 'base_qry_main.php?num_result_rows=-1' . '&submit=' . gettext("Query DB") . '&current_view=-1';
     $tmp_iplookup2 = 'base_stat_alerts.php?num_result_rows=-1' . '&submit=' . gettext("Query DB") . '&current_view=-1&sort_order=occur_d';
 
-    $url_criteria = BuildIDMVars($currentIP, $addr_type);
-    $url_criteria_src = BuildIDMVars($currentIP, $addr_type, "src");
-    $url_criteria_dst = BuildIDMVars($currentIP, $addr_type, "dst");
+//    $url_criteria = BuildIDMVars($currentIP, $addr_type);
+//    $url_criteria_src = BuildIDMVars($currentIP, $addr_type, "src");
+//    $url_criteria_dst = BuildIDMVars($currentIP, $addr_type, "dst");
+      $url_criteria = '&userdata%5B0%5D='.$addr_type.'&userdata%5B1%5D=EQ&userdata%5B2%5D='.$currentIP;
 
     qroPrintEntry((Session::show_entities() && !empty($entities[$ctx])) ? $entities[$ctx] : ((Session::show_entities()) ? _("Unknown") : GetSensorName($ctx, $db)),'center','middle');
     qroPrintEntry('<A HREF="' . $tmp_iplookup . $url_criteria . '">' . Util::number_format_locale($num_events,0) . '</A>','center','middle');
-    qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria_src . '">' . Util::number_format_locale($num_sig,0) . '</A>','center','middle');
+   // qroPrintEntry('<A HREF="' . $tmp_iplookup2 . $url_criteria_src . '">' . Util::number_format_locale($num_sig,0) . '</A>','center','middle');
+    qroPrintEntry( Util::number_format_locale($num_sig,0) ,'center','middle');
     qroPrintEntry(Util::number_format_locale($num_ip,0),'center','middle');
     qroPrintEntryFooter();
     ++$i;

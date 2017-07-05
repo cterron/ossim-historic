@@ -48,6 +48,7 @@ require_once 'av_init.php';
 	        "language"        : "default",
 	        "pagination"      : "default",
 	        "search"          : false,
+	        "length_change"   : true,
 	        "dt_params"       : {},
             "load_params"     : [],
             "with_tray"       : false,
@@ -94,7 +95,7 @@ require_once 'av_init.php';
             var dt_cfg =
             {
                 "iDisplayLength": opt.num_rows,
-                "bLengthChange": true,
+                "bLengthChange": opt.length_change,
                 "sPaginationType": "full_numbers",
                 "bFilter": opt.search,
                 "aLengthMenu": [10, 20, 50, 100, 250, 500],
@@ -740,7 +741,7 @@ require_once 'av_init.php';
             "sProcessing": "&nbsp;<?php echo _('Loading') ?> <img src='/ossim/pixmaps/loading3.gif' align='absmiddle'/>",
             "sLengthMenu": "&nbsp;_MENU_ <?php echo _('Plugins') ?>",
             "sZeroRecords": "&nbsp;<?php echo _('No matching plugins found') ?>",
-            "sEmptyTable": "&nbsp;<?php echo _('No plugins found in the system') ?>",
+            "sEmptyTable": "&nbsp;<?php echo _('No custom plugins found in the system') ?>",
             "sLoadingRecords": "&nbsp;<?php echo _('Loading') ?>...",
             "sInfo": "&nbsp;<?php echo _('Showing _START_ to _END_ of _TOTAL_ plugins') ?>",
             "sInfoEmpty": "&nbsp;<?php echo _('Showing 0 to 0 of 0 plugins') ?>",

@@ -30,7 +30,6 @@
 ---
 # OSSEC Windows deployment
 # Input params:
-# auth_file: path to temporary auth file
 # auth_file_samba: path to temporary auth file for samba
 # agent_config_file: path to temporary agent configuration file
 # agent_key_file: path to temporary agent keys file
@@ -42,14 +41,15 @@
 # target: Host where should be done the deployment
 # Sample of usage:
 # ansible-playbook -c local  -vv --extra-vars='target=127.0.0.1
-#                                              auth_file=xxx
 #                                              agent_config_file=xxx
 #                                              agent_key_file=xxx
 #                                              agent_name=xxx
 #                                              windows_ip=192.168.1.221
 #                                              windows_username=Administrator
 #                                              windows_domain=DOMAIN
-#                                              windows_password=PASSWORD'
+#                                              windows_password=PASSWORD
+#                                              auth_str=DOMAIN/Administrator
+#                                              hashes=1234:56789'
 #                                              main.yml
 
 - name: OSSEC Windows Deployment Playbook
@@ -72,11 +72,8 @@
     - name: Generate authentication file for samba
       template: src=auth_file_template_samba.j2 dest={{auth_file_samba}}
 
-    - name: Generate authentication file for winexe
-      template: src=auth_file_template.j2 dest={{auth_file}}
-
     - name: Get Program Files
-      action: shell executable=/bin/bash program_files_x86=$(winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c set' | grep "^ProgramFiles(x86)=" | cut -d'=' -f 2-); program_files_x64=$(winexe  --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c set' | grep "^ProgramFiles=" | cut -d'=' -f 2-); [[ $program_files_x86 ]] && echo $program_files_x86 || echo $program_files_x64
+      action: shell executable=/bin/bash program_files_x86=$(/usr/share/python/alienvault-api-core/bin/wmiexec.py -hashes {{hashes}} {{auth_str}}@{{windows_ip}} 'cmd /c set' | grep "^ProgramFiles(x86)=" | cut -d'=' -f 2-); program_files_x64=$(/usr/share/python/alienvault-api-core/bin/wmiexec.py -hashes {{hashes}} {{auth_str}}@{{windows_ip}} 'cmd /c set' | grep "^ProgramFiles=" | cut -d'=' -f 2-); [[ $program_files_x86 ]] && echo $program_files_x86 || echo $program_files_x64
       register: PROGRAM_FILES
 
     - name: Cannot retrieve Program Files location from windows host
@@ -104,17 +101,17 @@
       action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file_samba}} --configfile={{smb_winexec_config_file}} --command='lcd {{downloads_dir}}; put {{ossec_agent_binary_file}}'
 
     - name: Stop the ossec agent if it is working.
-      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net stop OssecSvc > nul 2>&1'
+      action: shell executable=/bin/bash echo $'\n' | /usr/share/python/alienvault-api-core/bin/wmiexec.py -hashes {{hashes}} {{auth_str}}@{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net stop OssecSvc > nul 2>&1'
       register: stop_result
       ignore_errors: True
 
     - name: Kill the manager if it is working. When the manager is working the install process doesn't work
-      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c taskkill /IM win32ui.exe /F > nul 2>&1'
+      action: shell executable=/bin/bash echo $'\n' | /usr/share/python/alienvault-api-core/bin/wmiexec.py -hashes {{hashes}} {{auth_str}}@{{windows_ip}} 'cmd /c taskkill /IM win32ui.exe /F > nul 2>&1'
       register: install_result
       ignore_errors: True
 
     - name: Install agent
-      action: command winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c {{PROGRAM_FILES_DRIVE.stdout}}:\{{ossec_agent_binary_file}} /S'
+      action: command /usr/share/python/alienvault-api-core/bin/wmiexec.py -hashes {{hashes}} {{auth_str}}@{{windows_ip}} 'cmd /c {{PROGRAM_FILES_DRIVE.stdout}}:\{{ossec_agent_binary_file}} /S'
       register: install_result
 
     - debug: msg="Falla al instalar  {{install_result}}"
@@ -144,12 +141,12 @@
       action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file_samba}} --configfile={{smb_winexec_config_file}} --command='cd "{{PROGRAM_FILES_DIR.stdout}}\ossec-agent"; put {{agent_key_file}} client.keys'
 
     - name: Stop the agent
-      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net stop OssecSvc > nul 2>&1'
+      action: shell executable=/bin/bash echo $'\n' | /usr/share/python/alienvault-api-core/bin/wmiexec.py -hashes {{hashes}} {{auth_str}}@{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net stop OssecSvc > nul 2>&1'
       register: stop_result
       ignore_errors: True
 
     - name: Start the agent
-      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net start OssecSvc > nul 2>&1'
+      action: shell executable=/bin/bash echo $'\n' | /usr/share/python/alienvault-api-core/bin/wmiexec.py -hashes {{hashes}} {{auth_str}}@{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net start OssecSvc > nul 2>&1'
 
     - name: Set ossim agent plugin configuration
       action: command /usr/share/ossim/scripts/ossec_set_plugin_config.sh

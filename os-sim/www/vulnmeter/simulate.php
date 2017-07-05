@@ -279,7 +279,7 @@ if( !(valid_hex32($scan_server) && (Session::allowedSensors()=="" || in_array($s
     $scan_server = "";
 }
 
-$message_pre_scan        = _('Pre-scan localy');
+$message_pre_scan        = _('Pre-scan locally');
 $message_force_pre_scan  = _('Error: Need to force pre-scan locally');
 $ctest                   = array(); // to save connection test to servers
 $ttargets                = array(); // to save check for targets

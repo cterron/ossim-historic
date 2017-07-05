@@ -3,6 +3,9 @@ acpi
 acpid
 adduser
 alienvault-suricata-hyperv-sensor-standard
+alienvault-suricata-hyperv-sensor-remote
+alienvault-suricata-ami-sensor-standard
+alienvault-suricata-ami-sensor-remote
 hyperv-daemons
 alienvault-hyperv-sensor-remote
 alienvault-hyperv-sensor-standard-6x1gb
@@ -46,6 +49,7 @@ alienvault-redis-server-openvas
 alienvault-redis-server-otx
 alienvault-rhythm
 alienvault-rsyslog
+alienvault-samba
 alienvault-snmpd
 alienvault-suricata
 alienvault-suricata-hw-sensor-enterprise
@@ -308,6 +312,7 @@ libheimbase1-heimdal:amd64
 libheimntlm0-heimdal:amd64
 libhiredis0.10:amd64
 libhogweed2:amd64
+libhtp-0.5.23-1:amd64
 libhtml-parser-perl
 libhtml-tagset-perl
 libhtml-tree-perl
@@ -316,6 +321,7 @@ libhttp-date-perl
 libhttp-message-perl
 libhttp-negotiate-perl
 libhx509-5-heimdal:amd64
+libhyperscan4
 libice6:amd64
 libicu52:amd64
 libidn11:amd64
@@ -366,6 +372,8 @@ liblrm2
 liblsan0:amd64
 libltdl7:amd64
 liblua5.2-0:amd64
+libluajit-5.1-2:amd64
+libluajit-5.1-common
 liblwp-mediatypes-perl
 liblwp-protocol-https-perl
 liblwp-useragent-determined-perl
@@ -398,6 +406,7 @@ libnet-ssleay-perl
 libnet1-dev
 libnet1:amd64
 libnetfilter-acct1:amd64
+libnetfilter-log1:amd64
 libnetfilter-queue1
 libnettle4:amd64
 libnewt0.52:amd64
@@ -733,6 +742,7 @@ ssl-cert
 startpar
 sudo
 suricata
+suricata-hyperscan
 suricata-rules-default
 sysbench
 sysstat

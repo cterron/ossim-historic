@@ -161,9 +161,6 @@ configure_default_file() {
 
     MD5_PREV=`md5sum $SURICATA_DEFAULT_FILE|awk '{print $1}'`
 
-    # Remove LD_LIBRARY_PATH with sed when we no longer use our custom libpcre
-    grep "LD_LIBRARY_PATH" $SURICATA_DEFAULT_FILE > /dev/null || echo "export LD_LIBRARY_PATH=/opt/alienvault-pcre/lib/x86_64-linux-gnu/" >> $SURICATA_DEFAULT_FILE
-
     # Sensor Detectors have changed in ossim_setup.conf
     if [ "$DETECTORS_CHANGE" = "1" ]; then
         
@@ -213,6 +210,12 @@ configure_log_permissions() {
         chmod 640 $suricata_log_file
         chown root:alienvault $suricata_log_file
     done
+}
+
+remove_default_log_rotation() {
+
+	rm -f /etc/logrotate.d/suricata &>/dev/null
+
 }
 
 restart_suricata() {
@@ -378,6 +381,7 @@ case "$1" in
         configure_default_file "1" "1"
         configure_plugin_file
         configure_log_permissions
+	remove_default_log_rotation
 
         # YAML changes
         configure_rule_files_in_yaml

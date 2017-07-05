@@ -28,13 +28,14 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-import BaseHTTPServer  # For HTTP codes.
-from flask import (
-    jsonify, request, render_template, redirect, abort, make_response,Response)
 import mimeparse
-from functools import wraps
-from werkzeug.exceptions import default_exceptions, HTTPException
+import BaseHTTPServer  # For HTTP codes.
 from decorator import decorator
+
+from flask import (
+    jsonify, request, render_template, redirect, abort, make_response, Response
+)
+from werkzeug.exceptions import default_exceptions, HTTPException
 
 # Table mapping response codes to messages; entries have the
 # form {code: (shortmessage, longmessage)}.

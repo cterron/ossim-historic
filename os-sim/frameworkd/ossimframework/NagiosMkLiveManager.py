@@ -290,8 +290,8 @@ class NagiosMkLiveManager(threading.Thread):
         @param name host group name
         @returns the host group uuid if it exists, otherwise empty
         """
-        query = "select hex(id) as id from host_group where name='%s'" % name
-        data = _DB.exec_query(query)
+        query = "select hex(id) as id from host_group where name=%s"
+        data = _DB.exec_query(query, (name,))
         if data:
             return data[0]['id']
         return ""
@@ -302,8 +302,8 @@ class NagiosMkLiveManager(threading.Thread):
         @param host_ip The host IP address
         @returns the host_id uuid if it exists, otherwise empty
         """
-        query = """select hex(host.id) as id  from host,host_ip where host_ip.ip =inet6_aton('%s') and host.id = host_ip.host_id"""  % (host_ip)
-        data = _DB.exec_query(query)
+        query = """select hex(host.id) as id  from host,host_ip where host_ip.ip =inet6_aton(%s) and host.id = host_ip.host_id"""
+        data = _DB.exec_query(query, (host_ip,))
         if data:
             return data[0]['id']
 
@@ -343,15 +343,19 @@ class NagiosMkLiveManager(threading.Thread):
                     hostsData[host_id].setHostServicesState(host_services_state)
                     # Update status column accordingly (host_scan)
                     host_states={0:2, 1:1, 2:1, 3:0}
-                    query = "UPDATE host_scan SET status = %d WHERE host_id = unhex('%s') AND plugin_id = %d AND plugin_sid = %d" % (host_states[host_state], host_id, 2007, 0)
-                    _DB.exec_query(query)
+                    query = "UPDATE host_scan SET status = %s WHERE host_id = unhex(%s) AND plugin_id = %s AND plugin_sid = %s"
+                    _DB.exec_query(query, (host_states[host_state], host_id, 2007, 0))
 
             for hostid,hostinfo in hostsData.iteritems():
                 logger.info("Host ID: %s " % hostid)
                 severity = hostinfo.getSeverity()
-                query = "DELETE FROM bp_member_status WHERE member_id = unhex('%s') and measure_type = '%s';" % (hostid,'host_availability') 
-                _DB.exec_query(query)
-                query = "INSERT INTO bp_member_status (member_id, status_date, measure_type, severity) VALUES(0x%s, now(), '%s', %d);" % (hostid,'host_availability',severity)
+                query = "DELETE FROM bp_member_status WHERE member_id = unhex(%s) and measure_type = %s;"
+                _DB.exec_query(query, (hostid, 'host_availability'))
+                query = "INSERT INTO bp_member_status (member_id, status_date, measure_type, severity) VALUES(0x%s, now(), '%s', %d);" % (
+                    hostid,
+                    'host_availability',
+                    severity
+                )
                 _DB.exec_query(query)
                 logger.info("Updating Host Availability bp_member_status -> member:%s type: %s severity:%s" % (hostid,'host_availability',severity))
 
@@ -366,10 +370,12 @@ class NagiosMkLiveManager(threading.Thread):
                         else:
                             protocol = "6"
 
-                        query = "UPDATE host_services SET nagios_status = %s WHERE host_id = unhex('%s') AND port = %s AND protocol = %s" % (state, hostid, service_split[2], protocol)
+                        query = "UPDATE host_services SET nagios_status = %s WHERE host_id = unhex(%s) AND port = %s AND protocol = %s"
+                        params = (state, hostid, service_split[2], protocol)
                     else:
-                        query = "UPDATE host_services SET nagios_status = %s WHERE host_id = unhex('%s') AND service LIKE '%s'" % (state, hostid, service)
-                    _DB.exec_query(query)
+                        query = "UPDATE host_services SET nagios_status = %s WHERE host_id = unhex(%s) AND service LIKE %s"
+                        params = (state, hostid, service)
+                    _DB.exec_query(query, params)
                     logger.info("Updating Host Service Status host_services -> host_id: %s service: %s state: %s" % (hostid, service, state))
 
     def updataHostGroups(self):
@@ -393,9 +399,13 @@ class NagiosMkLiveManager(threading.Thread):
                             if len(host) == 3:
                                 # hostgroup_states.append(host[1])
                                 if host[1] != 0 and host[2] == 1:#host state
-                                    query = "DELETE FROM bp_member_status WHERE hex(member_id) = '%s' and measure_type = '%s';" % (host_group_id,'host_group_availability') 
-                                    _DB.exec_query(query)
-                                    query = "INSERT INTO bp_member_status (member_id, status_date, measure_type, severity) VALUES(0x%s, now(), '%s', %d);" % (host_group_id,'host_group_availability', NagiosMkLiveManager.HOST_STATES_SEVERITY [host[1]])
+                                    query = "DELETE FROM bp_member_status WHERE hex(member_id) = %s and measure_type = %s;"
+                                    _DB.exec_query(query, (host_group_id, 'host_group_availability'))
+                                    query = "INSERT INTO bp_member_status (member_id, status_date, measure_type, severity) VALUES(0x%s, now(), '%s', %d);" % (
+                                        host_group_id,
+                                        'host_group_availability',
+                                        NagiosMkLiveManager.HOST_STATES_SEVERITY[host[1]]
+                                    )
                                     _DB.exec_query(query)
                                     logger.info("Updating Host Group bp_member_status -> member:%s type: %s severity:%s" % (host_group_name,'host_group_availability',NagiosMkLiveManager.HOST_STATES_SEVERITY [host[1]]))
 

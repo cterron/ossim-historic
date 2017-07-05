@@ -16,7 +16,7 @@ from ConfigParser import ConfigParser
 import uuid
 import asyncore
 import signal
-from subprocess import call
+from subprocess import call, Popen, PIPE
 import time
 from sqlalchemy.orm.exc import NoResultFound,MultipleResultsFound
 import paramiko
@@ -30,7 +30,7 @@ from db.models.alienvault import Sensor, Acl_Sensors
 from celerymethods.celery_manager import   CeleryManager
 from commom import make_request, dereference_step_parameters_and_data, resolve_table_vars
 from apimethods.system.cache import flush_cache
-from apimethods.utils import get_ip_str_from_bytes
+from apimethods.utils import get_ip_str_from_bytes, get_bytes_from_uuid
 from steps.smtpdebugger import SMTPDebugger
 from nose.tools import assert_equal,assert_not_equal
 
@@ -101,12 +101,12 @@ def then_compare_json (context,json_data):
 @behave.then('Store the cookies into vault with key "{key_vault}"')
 @dereference_step_parameters_and_data
 def the_store_cookies_from_request (context,key_vault):
-  context.alienvault[key_vault] = context.resultcookies 
+  context.alienvault[key_vault] = context.cookies
 
 @behave.given('I set cookies from key "{cookies}" from vault')
 @dereference_step_parameters_and_data
 def given_set_cookies_from_vault (context,cookies):
-  context.request_cookies = context.alienvault[cookies] 
+  context.cookies = context.alienvault[cookies]
 
 @behave.given('I set username and password to ghost administrator')
 @dereference_step_parameters_and_data
@@ -130,8 +130,7 @@ def given_gen_rand_string (context,len_string,vault_key):
 @behave.given('I clear the cookies')
 @dereference_step_parameters_and_data
 def given_clear_cookies (context):
-    if hasattr(context,'request_cookies'):
-        delattr(context,'request_cookies')
+    context.cookies = {}
 
 
 @behave.given('I generate a non-existent username with len "{len_string}" and store in vault key "{vault_key}"')
@@ -186,7 +185,7 @@ def when_make_url (context,var_name):
     context.alienvault[var_name] = "/".join([str(x) for x in urlpath])
 
 
-
+# TODO: Extract remote command execution (via popen) to a separate func in apimethods.utils
 @behave.given(u'I get the interfaces for sensor for uuid stored in variable "{var_uuid}" and store in variable "{var_ifaces}"')
 def given_get_interfaces (context, var_uuid,var_ifaces):
     #print context.alienvault[var_uuid]
@@ -202,11 +201,15 @@ def given_get_interfaces (context, var_uuid,var_ifaces):
         assert config.read ("/etc/ansible/ansible.cfg")[0] == "/etc/ansible/ansible.cfg", "Can\'t load ansible.cfg file"
         sshkey = config.get("defaults","private_key_file")
         ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         #print "ip_ => " + str(ip_sensor)
-        ssh.connect (ip_sensor,username="avapi",key_filename=sshkey)
-        stdin,stdout,stderr = ssh.exec_command ("/sbin/ifconfig -s -a")
-        lines = stdout.readlines()
+        ssh = Popen(
+            ["ssh", "-i", sshkey, "-l", "avapi", ip_sensor, "/sbin/ifconfig -s -a"],
+            shell=False, # this protects you against most of the risk associated with piping commands to the shell
+            stdout=PIPE,
+            stderr=PIPE
+        )
+        (stdoutdata, stderrdata) = ssh.communicate()
+        lines = filter(None, stdoutdata.splitlines())
         # The format is
         # Iface   MTU Met   RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg
         # eth0       1500 0    339579      0      0 0         47558      0      0      0 BMPRU
@@ -296,24 +299,28 @@ def given_select_iface_ethernet(context,var_uuid,var_iface):
     eth = [x for x in v if x != 'lo']
     context.alienvault[var_iface]= random.choice(eth)
 
+# TODO: Extract remote command execution (via popen) to a separate func in apimethods.utils
 @behave.given('I get the interfaces for system for uuid stored in variable "{var_uuid}" and store in variable "{var_ifaces}"')
 def given_get_system_ifaces (context,var_uuid,var_ifaces):
-    u = (context.alienvault[var_uuid])
+    uuid = get_bytes_from_uuid(context.alienvault[var_uuid])
     tempdir= ""
     try:
-        dbsensor = db.session.query(System).filter (System.id  == u).one()
-        ip_system = dbsensor.admin_ip
+        dbsensor = db.session.query(System).filter(System.id  == uuid).one()
+        ip_system = dbsensor.serialize.get("admin_ip")
         # Create a tempdir
         tempdir =  tempfile.mkdtemp (suffix =".behave")
         # Get the private pass used in ssh to communicate with other sensors
         config = ConfigParser()
         assert config.read ("/etc/ansible/ansible.cfg")[0] == "/etc/ansible/ansible.cfg", "Can\'t load ansible.cfg file"
         sshkey = config.get("defaults","private_key_file")
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect (ip_system,username="avapi",key_filename=sshkey)
-        stdin,stdout,stderr = ssh.exec_command ("/sbin/ifconfig -s -a")
-        lines = stdout.readlines()
+        ssh = Popen(
+            ["ssh", "-i", sshkey, "-l", "avapi", ip_system, "/sbin/ifconfig -s -a"],
+            shell=False,
+            stdout=PIPE,
+            stderr=PIPE
+        )
+        (stdoutdata, stderrdata) = ssh.communicate()
+        lines = filter(None, stdoutdata.splitlines())
         # The format is
         # Iface   MTU Met   RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg
         # eth0       1500 0    339579      0      0 0         47558      0      0      0 BMPRU

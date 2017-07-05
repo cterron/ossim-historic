@@ -207,7 +207,7 @@ foreach($alarm_group as $group)
     		$_st_df_aux    = (preg_match("/^\d\d\d\d\-\d\d\-\d\d$/", $st_df)) ? $st_df." ".date("H:i:s") : $st_df;
     		$_st_dt_aux    = (preg_match("/^\d\d\d\d\-\d\d\-\d\d$/", $st_dt)) ? $st_dt." ".date("H:i:s") : $st_dt;
     		
-    		$incident_link = '<a class="greybox2" href="../incidents/newincident.php?ref=Alarm&title=' . urlencode($ticket_name) . "&" . "priority=$max_risk&" . "src_ips=$src_ip&" . "event_start=$_st_df_aux&" . "event_end=$_st_dt_aux&" . "src_ports=&" . "dst_ips=$dst_ip&" . "dst_ports=" . '" title="'._("New Ticket").'">' . '<img border="0" title="'._("Add new ticket").'"  src="../pixmaps/new_ticket.png" class="tip newticket" />' . '</a>';
+    		$incident_link = '<a class="greybox2" href="../incidents/newincident.php?ref=Alarm&title=' . urlencode($ticket_name) . "&" . "priority=$max_risk&" . "src_ips=$src_ip&"  . "event_start=$_st_df_aux&alarm_group_id=" .$group_id . "&event_end=$_st_dt_aux&" . "src_ports=&" . "dst_ips=$dst_ip&" . "dst_ports=" . '" title="'._("New Ticket").'">' . '<img border="0" title="'._("Add new ticket").'"  src="../pixmaps/new_ticket.png" class="tip newticket" />' . '</a>';
 		}
 		else
 		{

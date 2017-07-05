@@ -101,6 +101,7 @@ def before_all(context):
     context.internal_vault = {}
     context.result = StringIO.StringIO()
     context.resultheader = StringIO.StringIO()
+    context.cookies = {}
 
     try:
         context.tempdir = tempfile.mkdtemp (suffix =".behave")
@@ -114,11 +115,18 @@ def before_all(context):
     # Verify we're under a ossim enviroment
     # file test: I have /etc/ossim/ossim_setup.conf
     assert os.path.exists ('/etc/ossim/ossim_setup.conf')
+
     # Verify each API is UP and running. Make a call using libcurl to 
     # the auth API
-    r = requests.get("https://127.0.0.1:40011/av/api/1.0/auth/login?username=admin&password=").json()
-    assert r.get('status') == 'error','Bad return from API'
-    #assert r.get('status_code') == 401,'Bad return from API'
+    response = requests.get(
+        "https://127.0.0.1:40011/av/api/1.0/auth/login",
+        verify=False,
+        params={"username": "abc", "password": "abc"},
+        headers={"Accept": "application/json"}
+    )
+    assert response.json().get("status") == 'error', 'Bad return from API'
+    assert response.status_code == 401, 'Bad return from API'
+
     # Insert a admin user:
     cp = db.session.query(Users).filter (Users.login == 'admin').one()
     u = Users()

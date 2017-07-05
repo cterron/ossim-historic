@@ -197,7 +197,7 @@ else
             'dst_ports'      => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE', 'e_message' => 'illegal:' . _('Dest Ports')),
             'backlog_id'     => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                    'e_message' => 'illegal:' . _('Backlog ID')),
             'event_id'       => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                    'e_message' => 'illegal:' . _('Event ID')),
-            'alarm_group_id' => array('validation' => 'OSS_DIGIT, OSS_NULLABLE',                                  'e_message' => 'illegal:' . _('Alarm group ID')),
+            'alarm_group_id' => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                  'e_message' => 'illegal:' . _('Alarm group ID')),
             'event_start'    => array('validation' => 'OSS_DATETIME, OSS_NULLABLE',                               'e_message' => 'illegal:' . _('Event start')),
             'event_end'      => array('validation' => 'OSS_DATETIME, OSS_NULLABLE',                               'e_message' => 'illegal:' . _('Event end'))
        );

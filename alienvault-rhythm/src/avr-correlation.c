@@ -350,7 +350,6 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
                  avr_type_names[correlation->_priv->type],
                  correlation->_priv->events_processed,
                  g_atomic_int_get (&correlation->_priv->lines_matched));
-
       last_time = current_time;
     }
 
@@ -386,6 +385,7 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
         if (file_stat.st_size < (off_t)file_len)
         {
           // Increment "flush buffer" counter (and perform actual flush when last thread notices the truncation)
+          g_message ("Thread: %s File has been truncated. stat.size=%ld file_len=%ld", avr_type_names[correlation->_priv->type], file_stat.st_size, file_len);
           avr_log_flush_buffer (correlation->_priv->event_log);
 
           // Set cursor at the start of the new file.
@@ -405,8 +405,7 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
 
           file_len = 0;
           g_atomic_int_set (&correlation->_priv->lines_parsed, 0);
-          g_message ("Thread: %s File has been truncated.",
-                     avr_type_names[correlation->_priv->type]);
+          g_message ("Thread: %s Line index has been reset.", avr_type_names[correlation->_priv->type]);
         }
       }
       else
@@ -420,7 +419,9 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
       continue;
     }
 
-    file_len += (line_term + 1);
+    // Empty lines are not detected by g_io_channel_read_line(). Relying on the fact that suricata does not produce empty lines
+    //Fix: ENG-104018 alienvault-rhythm appears to be matching incorrectly
+    file_len += line_len;
 
     // Ignore line if there is no otx data loaded
     if (avr_db_has_otx_data() == FALSE)
@@ -444,7 +445,6 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
       }
       continue;
     }
-
 
     correlation->_priv->events_processed += 1;
     utf8_line_len = g_utf8_strlen(line_str, -1);
@@ -473,7 +473,7 @@ _avr_correlation_loop (gpointer avr_correlation_ptr)
         case FILE_HASH:
         case DOMAIN:
         case HOSTNAME:
-          result_str = _avr_correlation_match_string (correlation, parsed_array);
+          result_str = _avr_correlation_match_string(correlation, parsed_array);
           break;
 
         default:
@@ -531,6 +531,7 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
   gint i = 0;
   GString * header_str = NULL;
   gchar * value = NULL;
+  const GError *gerror = NULL;
 
   parser = json_parser_new ();
   if (json_parser_load_from_data (parser, line_str, line_len, &error) != TRUE)
@@ -539,19 +540,20 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
     parser = NULL;
 
     if (error != NULL)
-      {
-        // This could happen in, at least, two different situations
-        //  1 - when the file is opened to be read, and it's being written very fast by an external process,
-        //      when you set the cursor to the end of the file, you could be setting the cursor in the middle of the line
-        //
-        //  2 - When suricata stop writing logs and the latest line is not fully written, this causes the latest line to be an invalid json line
-        g_debug("Cannot parse line from file \"%s\": %s Line:%s", correlation->_priv->file_path, error->message, line_str);
-        g_error_free(error);
-      }
-      else
-      {
-        g_warning("Cannot parse line from file \"%s\"", correlation->_priv->file_path);
-      }
+    {
+      // This could happen in, at least, two different situations
+      //  1 - when the file is opened to be read, and it's being written very fast by an external process,
+      //      when you set the cursor to the end of the file, you could be setting the cursor in the middle of the line
+      //
+      //  2 - When suricata stop writing logs and the latest line is not fully written, this causes the latest line to be an invalid json line
+      g_message("Error: Thread=%d: Cannot parse line from file %s | Error:%s | Line:%s", correlation->_priv->type, correlation->_priv->file_path, error->message, line_str);
+      g_error_free(error);
+    }
+    else
+    {
+      g_warning("Warning: Cannot parse line from file \"%s\"", correlation->_priv->file_path);
+    }
+
     return (NULL);
   }
 
@@ -594,7 +596,8 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
   g_string_append_len (header_str, line_str, line_len - 1);
   g_string_append (header_str, ",");
 
-  g_ptr_array_add (parsed_array, (gpointer)g_string_free (header_str, FALSE));
+  gchar* index = g_string_free (header_str, FALSE);
+  g_ptr_array_add (parsed_array, (gpointer)index);
 
   switch(correlation->_priv->type)
   {
@@ -605,12 +608,24 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
       value = g_strdup_printf ("%s", json_reader_get_string_value (reader));
       g_ptr_array_add (parsed_array, (gpointer)value);
     }
+    else
+    {
+      gerror = json_reader_get_error(reader);
+      if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+        g_message("Error: FILE_HASH: json_reader_read_member('src_ip'): %s", error->message);
+    }
     json_reader_end_member (reader);
 
     if (json_reader_read_member (reader, "dest_ip"))
     {
       value = g_strdup_printf ("%s", json_reader_get_string_value (reader));
       g_ptr_array_add (parsed_array, (gpointer)value);
+    }
+    else
+    {
+      gerror = json_reader_get_error(reader);
+      if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+        g_message("Error: FILE_HASH: json_reader_read_member('dest_ip'): %s", error->message);
     }
     json_reader_end_member (reader);
 
@@ -624,7 +639,12 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
         value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
         g_ptr_array_add (parsed_array, (gpointer)value);
       }
-      json_reader_end_member (reader);
+    }
+    else
+    {
+      gerror = json_reader_get_error(reader);
+      if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+        g_message("Error: FILE_HASH: json_reader_read_member('fileinfo'): %s", error->message);
     }
     json_reader_end_member (reader);
 
@@ -637,7 +657,7 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
       {
         if (!g_ascii_strncasecmp ("answer", json_reader_get_string_value (reader), 6))
         {
-          json_reader_end_member (reader);
+          json_reader_end_member(reader);
           if (json_reader_read_member (reader, "rrname"))
           {
             value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
@@ -650,11 +670,29 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
               g_debug ("Stripped Domain: %s", value);
             }
           }
-          json_reader_end_member (reader);
+          else
+          {
+            gerror = json_reader_get_error(reader);
+            if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+              g_message("Error: DOMAIN: json_reader_read_member('rrname'): %s", error->message);
+          }
         }
       }
+      else
+      {
+        gerror = json_reader_get_error(reader);
+        if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+          g_message("Error: DOMAIN: json_reader_read_member('type'): %s", error->message);
+      }
+    }
+    else
+    {
+      gerror = json_reader_get_error(reader);
+      if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+        g_message("Error: DOMAIN: json_reader_read_member('dns'): %s", error->message);
     }
     json_reader_end_member (reader);
+
     if (json_reader_read_member (reader, "http"))
     {
       if (json_reader_read_member (reader, "hostname"))
@@ -669,10 +707,20 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
           g_debug ("Stripped Domain: %s", value);
         }
       }
-      json_reader_end_member (reader);
+      else
+      {
+        gerror = json_reader_get_error(reader);
+        if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+          g_message("Error: DOMAIN: json_reader_read_member('hostname'): %s", error->message);
+      }
+    }
+    else
+    {
+      gerror = json_reader_get_error(reader);
+      if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+        g_message( "Error: DOMAIN: json_reader_read_member('http'): %s", error->message );
     }
     json_reader_end_member (reader);
-
 
     break;
   case HOSTNAME:
@@ -689,9 +737,26 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
             value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
             g_ptr_array_add (parsed_array, (gpointer)value);
           }
-          json_reader_end_member (reader);
+          else
+          {
+            gerror = json_reader_get_error(reader);
+            if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+              g_message( "Error: HOSTNAME: json_reader_read_member('rrname'): %s", error->message );
+          }
         }
       }
+      else
+      {
+        gerror = json_reader_get_error(reader);
+        if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+          g_message("Error: HOSTNAME: json_reader_read_member('type'): %s", error->message);
+      }
+    }
+    else
+    {
+      gerror = json_reader_get_error(reader);
+      if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+        g_message("Error: HOSTNAME: json_reader_read_member('dns'): %s", error->message);
     }
     json_reader_end_member (reader);
 
@@ -703,7 +768,18 @@ _avr_correlation_parse_line (AvrCorrelation * correlation, const gchar * line_st
         value = g_utf8_strdown(json_reader_get_string_value (reader), -1);
         g_ptr_array_add (parsed_array, (gpointer)value);
       }
-      json_reader_end_member (reader);
+      else
+      {
+        gerror = json_reader_get_error(reader);
+        if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+          g_message("Error: HOSTNAME: json_reader_read_member('hostname'): %s", error->message);
+      }
+    }
+    else
+    {
+      gerror = json_reader_get_error(reader);
+      if (gerror->code != JSON_READER_ERROR_INVALID_MEMBER)
+        g_message("Error: HOSTNAME: json_reader_read_member('http'): %s", error->message);
     }
     json_reader_end_member (reader);
 
@@ -829,7 +905,9 @@ _avr_correlation_match_string (AvrCorrelation * correlation, GPtrArray * parsed_
   for (i = 1; i < parsed_array->len; i++)
   {
     // Remember, this is a pointer to the original value, never free it!
-    found_array = (GPtrArray *)g_hash_table_lookup ((GHashTable *)data, g_ptr_array_index(parsed_array, i));
+    gpointer parsed_array_1 = g_ptr_array_index(parsed_array, i);
+    //search in redis DB(type) for data
+    found_array = (GPtrArray *)g_hash_table_lookup ((GHashTable *)data, parsed_array_1);
 
     if (found_array != NULL)
     {
@@ -865,7 +943,6 @@ _avr_correlation_match_string (AvrCorrelation * correlation, GPtrArray * parsed_
   }
 
   avr_db_unref_data (correlation->_priv->db, data);
-
 
   if (result_htable != NULL)
   {

@@ -340,6 +340,8 @@ class Ossec_agent
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
 
+        self::log_OSSEC_activity('create',$agent_name,$agent_ip);
+
         $new_agent = $response['data']['agent_detail'];
 
         return $new_agent;
@@ -358,6 +360,7 @@ class Ossec_agent
      */
     public static function delete($sensor_id, $agent_id)
     {
+    	list($agent_name,$asset) =  array_slice(self::get_info($sensor_id, $agent_id),1,2);
         $client   = new Alienvault_client();
         $response = $client->sensor($sensor_id)->delete_ossec_agent($agent_id);
         $response = @json_decode($response, TRUE);
@@ -368,6 +371,8 @@ class Ossec_agent
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
+
+        self::log_OSSEC_activity('delete',$agent_name,$asset);
 
         return TRUE;
     }
@@ -875,6 +880,32 @@ class Ossec_agent
         }
 
         return $data;
+    }
+
+    public static function log_OSSEC_activity ($action, $agent_name,$agent_ip){
+
+        $user_name    = Session::get_session_user();
+        $db      = new ossim_db();
+        $conn    = $db->connect();
+        $host_name = '';
+
+        try {
+            $query = " select hostname  from host where id=(select host_id  from host_ip where ip=INET6_ATON(?))";
+            $rs = $conn->Execute($query, $agent_ip);
+            $host_name = $rs->fields['hostname'];
+        }catch (Exception $e) {
+            Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+        }
+
+
+        switch ($action) {
+            case "create":
+                Log_action::log(100,[$user_name,$agent_name,$host_name,$agent_ip]);
+                break;
+            case "delete":
+                Log_action::log(102,[$user_name,$agent_name,$host_name,$agent_ip]);
+                break;
+        }
     }
 }
 

@@ -39,6 +39,7 @@ setup (
                 'alienvault-api.blueprints.server',
                 'alienvault-api.blueprints.data',
                 'alienvault-api.blueprints.apps',
+                'alienvault-api.blueprints.plugin',
                 'alienvault-api.api_i18n'
     ],
     package_dir = {'alienvault-api': 'src'},

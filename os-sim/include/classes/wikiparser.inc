@@ -297,7 +297,7 @@ class Wikiparser
     function handle_externallink($matches)
     {
         $href  = $matches[2];
-        $title = trim($matches[3]);
+        $title = trim($matches[4]);
 
         if (!$title)
         {
@@ -418,7 +418,7 @@ class Wikiparser
                 ')',
             'externallink' => '('.
                 '\['.
-                    '(https?:\/\/[^\]\s]+)'.
+                    '((https?:\/)?\/[^\]\s]+)'.
                     '(\s+[^\]]*?)?'.
                 '\]'.
                 ')',

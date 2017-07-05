@@ -275,6 +275,9 @@ class Ossec
         $response = $client->sensor($sensor_id)->set_ossec_config();
         $response = @json_decode($response, TRUE);
 
+        $user_name = Session::get_session_user();
+        Log_action::log(101,[$user_name, $data['msg']]);
+
         if (!$response || $response['status'] == 'error')
         {
             $exp_msg = $client->get_error_message($response);

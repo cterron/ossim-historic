@@ -53,12 +53,12 @@ update_ansible_hosts_file(){
 case "$1" in
     configure)
         # Create user, group and log directories, if needed.
-	    if ! getent group alienvault > /dev/null; then
-		    addgroup --quiet --system alienvault
-	    fi
-	    if ! getent passwd avapi > /dev/null; then
+        if ! getent group alienvault > /dev/null; then
+            addgroup --quiet --system alienvault
+        fi
+        if ! getent passwd avapi > /dev/null; then
             adduser --home /home/avapi --system --shell /bin/bash --ingroup alienvault --gecos "AlienVault API" avapi
-	    fi
+        fi
         # Generate /home/avapi/.ssh
         prepare_dir "/home/avapi/.ssh" "0750"
         if [ -f /home/avapi/.ssh/known_hosts ]
@@ -78,6 +78,14 @@ case "$1" in
         mkdir -p $EVENT_STATS_FOLDER
         chown avapi:alienvault -R $EVENT_STATS_FOLDER
         chmod 750 -R $EVENT_STATS_FOLDER
+
+        # We need to create the folder where we will store the plugins
+        [ -d /etc/alienvault/plugins/custom ] || mkdir -p -m 0770 /etc/alienvault/plugins/custom
+        chown root:alienvault /etc/alienvault/plugins/custom/
+
+        # We need to create a temporal folder where the new custom plugins will be stored until the validation is done.
+        [ -d /var/alienvault/tmp/ ] || mkdir -p -m 0770 /var/alienvault/tmp
+        chown avapi:alienvault /var/alienvault/tmp
 
         rm -f /etc/ansible/facts.d/avalaible_plugins.fact
         rm -f /etc/ansible/facts.d/enabled_plugins.fact

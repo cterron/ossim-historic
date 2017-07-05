@@ -42,6 +42,7 @@ var __interval       = null;
 var __open_groups    = {};
 var __ajax_url       = '<?php echo AV_MAIN_PATH ?>/alarm/controllers/alarm_group_actions.php';
 var __alarm_url      = <?php echo json_encode(Alarm::get_alarm_path()) ?>;
+var groupID = '';
 
 /*  Local Storage Keys  */
 var __local_storage_keys =
@@ -52,6 +53,11 @@ var __local_storage_keys =
 /************************************************************************************/
 /*************************        DOCUMENT READY       ******************************/
 /************************************************************************************/
+
+
+function setGroupID(id) {
+    groupID = id ;
+}
 
 /*
  *    Document Ready for alarm group console
@@ -553,7 +559,12 @@ function load_alarm_group_dt()
                 {                            
                     //DataTables Stuffs
                     $(oSettings.oInstance).trigger('xhr', oSettings);
-                    fnCallback(json);                	
+                    fnCallback(json);
+
+                    //Select group by ID
+                    if(groupID != '') {
+                        $('#' + groupID + ' .toggle_group').click();
+                    }
                 },
                 "error": function(data)
                 {

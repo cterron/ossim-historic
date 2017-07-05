@@ -111,11 +111,13 @@ def copy_file(host_list=[], args={}):
     return True, ''
 
 
-def remove_file(host_list=[], file_name=None):
+def remove_file(host_list, file_name=None):
     """
     Remove a file from one or more remote systems.
     """
-    response = ansible.run_module(host_list, 'command', 'rm -f %s' % file_name)
+    if host_list is None:
+        host_list = []
+    response = ansible.run_module(host_list, 'command', 'rm -f {}'.format(file_name))
     for host in host_list:
         if host in response['dark']:
             return False, "remove_file : " + response['dark'][host]['msg']

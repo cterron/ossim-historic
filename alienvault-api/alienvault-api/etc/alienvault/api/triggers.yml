@@ -139,3 +139,11 @@ triggers:
   - name: The number of enabled plugins is reached over its limit
     when: $MONITOR_ENABLED_PLUGINS_LIMIT.limit_reached == True
     trigger_message_id: $MESSAGE_PLUGINS_LIMIT_REACHED
+- trigger: Automatic feed updates.
+  conditions:
+  - name: All components were updated
+    when: $MONITOR_FEED_AUTO_UPDATES.all_updated == True
+    trigger_message_id: $MESSAGE_AUTO_FEED_UPDATE_SUCCESS
+  - name: Feed update failed
+    when: $MONITOR_FEED_AUTO_UPDATES.error_on_update == True
+    trigger_message_id: $MESSAGE_AUTO_FEED_UPDATE_FAIL

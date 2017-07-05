@@ -1311,3 +1311,60 @@ p.ticket_body
     color: #FFF;
     background-color: #2a2a2a;
 }
+
+
+#iemail {
+    position: absolute;
+    right: 0;
+    background-color: #eeefee;
+    margin-top: 10px;
+    padding: 20px;
+    display: none;
+}
+
+#iemail::before {
+    content: " ";
+    border-bottom: 5px solid #eeefee;
+    height: 10px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    margin: -35px -50%;
+    position: absolute;
+}
+
+
+#iemail td {
+    text-align:left;
+}
+
+.radio-ico.xls-ico {
+    background-image: url(/ossim/pixmaps/xls.gif);
+}
+
+.radio-ico.pdf-ico {
+    background-image: url(/ossim/pixmaps/pdf_button.png);
+}
+
+.radio-ico.download-ico {
+    background-image: url(/ossim/pixmaps/download.png);
+}
+
+.radio-ico.email-ico {
+    background-image: url(/ossim/pixmaps/emailButton.png);
+}
+
+
+.radio-ico {
+   margin-top:1px;
+   line-height: 16px;
+   text-indent: 18px;
+   background: transparent no-repeat 0;
+   background-size: 16px;
+   display: inline-block;
+   vertical-align:top;
+}
+
+.efield {
+    width:100%;
+    display:none;
+}

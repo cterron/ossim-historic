@@ -118,6 +118,39 @@ def _format_enabled_plugins_limit(message, additional_info):
     message['message_actions'] = message['message_actions'].replace('PLG_DISABLE', disable_plg_count)
 
 
+def _format_feed_auto_updates(message, additional_info):
+    """
+        Format message for automatic feed updates.
+    """
+    system_name = 'USM SYSTEM'
+    updated_ips = failed_ips = ''
+    update_results = additional_info['update_results']
+    failed_date = message['creation_time'].strftime("%Y-%m-%d %H:%M:%S")
+
+    # Sort by updated_at date:
+    sorted_result_ips = sorted(update_results, key=lambda x: update_results[x].get('updated_at'))
+
+    for system_ip in sorted_result_ips:
+        update_data = update_results[system_ip]
+        name_success, name = db_get_hostname(update_data['system_id'])
+        updated_ips += '* {} ({}) on {} UTC\n'.format(name if name_success else system_name,
+                                                      system_ip,
+                                                      update_data['updated_at'])
+        if not update_data['result']:
+            failed_ips += '* {} ({}) on {} - {} UTC\n'.format(name if name_success else system_name,
+                                                              system_ip,
+                                                              update_data['updated_at'],
+                                                              update_data['message'])
+            # replace the default with failed date of last update attempt.
+            failed_date = update_data['updated_at']
+
+    if additional_info['all_updated']:
+        message['message_actions'] = updated_ips
+    if additional_info['error_on_update']:
+        message['message_actions'] = failed_ips
+        message['message_title'] = message['message_title'].replace('DATE', failed_date)
+
+
 def _format_system_name(message, additional_info):
     """
         Format system name
@@ -141,6 +174,7 @@ def format_messages(messages):
         'plugins_changed': _format_plugins_changed,
         'plugins_removed': _format_plugins_removed,
         'plugins_enabled_total': _format_enabled_plugins_limit,
+        'update_results': _format_feed_auto_updates,
         'rsyslog_files_removed': _format_rsyslog_files_removed,
         'rsyslog_files_changed': _format_rsyslog_files_changed,
         'system_id': _format_system_name

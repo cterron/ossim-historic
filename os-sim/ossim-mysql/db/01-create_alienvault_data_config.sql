@@ -64,6 +64,7 @@ REPLACE INTO device_types (`id`, `name`, `class`) VALUES
 (7,'Security Device',0),
 (8,'Media Device',0),
 (9,'General Purpose',0),
+(10,'Medical Device',0),
 (100,'HTTP Server',1),
 (101,'Mail Server',1),
 (102,'Domain Controller',1),
@@ -92,6 +93,10 @@ REPLACE INTO device_types (`id`, `name`, `class`) VALUES
 (125,'Point of Sale Controller',1),
 (126,'Server (Other)',1),
 (127,'Web Server',1),
+(128,'DMZ Server',1),
+(129,'Internal Server',1),
+(130,'Backup Server',1),
+(131,'DHCP Server',1),
 (200,'Laptop',2),
 (201,'Endpoint (Other)',2),
 (202,'Workstation',2),
@@ -125,7 +130,9 @@ REPLACE INTO device_types (`id`, `name`, `class`) VALUES
 (801,'Game Console',8),
 (802,'Television',8),
 (803,'Set Top Box',8),
-(804,'IoT Device (Other)',8);
+(804,'IoT Device (Other)',8),
+(1001,'Other',10),
+(1002,'High Priority',10);
 
 
 
@@ -319,6 +326,7 @@ INSERT IGNORE INTO config (conf, value) VALUES ('backup_events', '4000000');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_hour', '01:00');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_netflow', '45');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_conf_pass', '');
+INSERT IGNORE INTO config (conf, value) VALUES ('backup_events_min_free_disk_space', 10);
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_user', 'ossim');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_pass', 'ossim');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_admin_user', 'ovas-super-admin');
@@ -486,12 +494,19 @@ INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_nfsen_config_dir', '
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_nfsen_monit_config_dir', '/etc/monit/alienvault/nfcapd.monitrc');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_nagios_sock_path', '/var/lib/nagios3/rw/live');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_usehttps', '0');
-INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_maxdiskusage','90');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_backup_storage_days_lifetime', 5);
+INSERT IGNORE INTO config (conf, value) VALUES 
+('tcp_max_download',0),
+('tcp_max_upload',0),
+('udp_max_download',0),
+('udp_max_upload',0),
+('agg_function',0),
+('inspection_window',0);
+
 
 INSERT IGNORE INTO config (conf, value) VALUES ('internet_connection', 1);
 
 INSERT IGNORE INTO config (conf, value) VALUES ('track_usage_information', '');
 
-REPLACE INTO config (conf, value) VALUES ('last_update', '2017-02-07');
-REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.3.6');
+REPLACE INTO config (conf, value) VALUES ('last_update', '2017-06-06');
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '5.4.0');

@@ -55,11 +55,14 @@ from api.blueprints.sensor import ossec_agent
 from api.blueprints.sensor import detector
 from api.blueprints.sensor import ossec
 from api.blueprints.sensor import ossec_configuration
+
 # server
 from api.blueprints.server import server
+
 # data
 from api.blueprints.data import status
 from api.blueprints.data import host
+
 # job
 from api.blueprints.job import common
 from api.blueprints.job import reconfig
@@ -73,10 +76,13 @@ from api.blueprints.system import config
 from api.blueprints.system import status as system_status
 from api.blueprints.system import otx
 from api.blueprints.system import support
+
 # Host
 from api.blueprints.host import host as host_config
 from api.blueprints.apps import nmap
 
+# Plugin
+from api.blueprints.plugin import plugin
 # Attach blueprints.
 
 API_VERSION = "1.0"
@@ -124,3 +130,6 @@ app.register_blueprint(common.blueprint, url_prefix=API_URL_BEGIN + 'job')
 app.register_blueprint(host_config.blueprint, url_prefix=API_URL_BEGIN + 'host')
 # apps
 app.register_blueprint(nmap.blueprint, url_prefix=API_URL_BEGIN + 'nmap')
+
+# plugin
+app.register_blueprint(plugin.blueprint, url_prefix=API_URL_BEGIN + 'plugin')

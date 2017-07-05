@@ -140,7 +140,7 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
             'dst_ports'       => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Dest Ports')),
 			'backlog_id'      => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                      'e_message' => 'illegal:' . _('Backlog ID')),
             'event_id'        => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                      'e_message' => 'illegal:' . _('Event ID')),
-            'alarm_group_id'  => array('validation' => 'OSS_DIGIT, OSS_NULLABLE',                                    'e_message' => 'illegal:' . _('Alarm group ID')),
+            'alarm_group_id'  => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                    'e_message' => 'illegal:' . _('Alarm group ID')),
             'event_start'     => array('validation' => 'OSS_DATETIME, OSS_NULLABLE',                                 'e_message' => 'illegal:' . _('Event start')),
             'event_end'       => array('validation' => 'OSS_DATETIME, OSS_NULLABLE',                                 'e_message' => 'illegal:' . _('Event end'))
        );
@@ -322,8 +322,10 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
 					{
 						if($ref == 'Alarm')
 						{
-							$incident_id = Incident::insert_alarm($conn, $title, $type, $submitter, $priority, $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end, $backlog_id, $event_id, $alarm_group_id, $transferred_user, $transferred_entity);
-							Incident_ticket::insert($conn, $incident_id, "Open", $priority, $transferred_user, "<a target=\"_blank\" href=\"/ossim/#analysis/alarms/alarms-$backlog_id\">Link to Alarm</a>",'',NULL,array(),array(),false);
+                            $incident_id = Incident::insert_alarm($conn, $title, $type, $submitter, $priority, $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end, $backlog_id, $event_id, $alarm_group_id, $transferred_user, $transferred_entity);
+                            $alarm_id =  !empty($backlog_id) ? 'alarms-'.$backlog_id : (!empty($alarm_group_id) ? 'alarm_groups-' . $alarm_group_id : ' ');
+
+                            Incident_ticket::insert($conn, $incident_id, "Open", $priority, $transferred_user, "<a target=\"_blank\" href=\"/ossim/#analysis/alarms/$alarm_id\">Link to Alarm</a>",'',NULL,array(),array(),false);
 						}
 						else
 						{

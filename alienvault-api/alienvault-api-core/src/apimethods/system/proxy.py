@@ -33,6 +33,7 @@ from ntlm import HTTPNtlmAuthHandler
 
 from ansiblemethods.helper import read_file
 
+
 class AVProxy:
     """Alienvault Proxy Class
 
@@ -64,8 +65,8 @@ class AVProxy:
     def __str__(self):
         """Returns an string representing the object
         """
-        return "AVProxy: system_ip:%s proxy_uri:%s proxy_user:%s proxy_pass:%s" \
-            % (self.__system_ip, self.__proxy_url, self.__proxy_user, self.__proxy_pass)
+        return "AVProxy: system_ip:{} proxy_uri:{} proxy_user:{} proxy_pass:{}" .format(
+            self.__system_ip, self.__proxy_url, self.__proxy_user, self.__proxy_pass)
 
     def __read_proxy_file(self):
         """ Read the proxy curl configuration file
@@ -94,7 +95,7 @@ class AVProxy:
         if self.__read_proxy_file():
             proxy_full_url = "http://"
             if self.need_authentication():
-                proxy_full_url += "%s:%s@" % (self.__proxy_user, self.__proxy_pass)
+                proxy_full_url += "{}:{}@".format(self.__proxy_user, self.__proxy_pass)
             proxy_full_url += self.__proxy_url
 
             self.__proxy_handler = urllib2.ProxyHandler({'http': proxy_full_url, 'https': proxy_full_url})
@@ -107,13 +108,12 @@ class AVProxy:
         opener = None
         if self.need_authentication():
             password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None,
-                                      url,
-                                      self.__proxy_user,
-                                      self.__proxy_pass)
+            password_mgr.add_password(None, url, self.__proxy_user, self.__proxy_pass)
+
             proxy_basic_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
             proxy_digest_auth_handler = urllib2.ProxyDigestAuthHandler(password_mgr)
             proxy_ntlm_auth_handler = HTTPNtlmAuthHandler.HTTPNtlmAuthHandler(password_mgr)
+
             opener = urllib2.build_opener(self.__proxy_handler,
                                           proxy_basic_auth_handler,
                                           proxy_digest_auth_handler,
@@ -127,6 +127,12 @@ class AVProxy:
         """
         @return the proxy url
         """
+        return self.__proxy_url
+
+    def get_smart_proxy_url(self):
+        """Returns proxy url for otx requests"""
+        if self.need_authentication():
+            return "{}:{}@{}".format(self.__proxy_user, self.__proxy_pass, self.__proxy_url)
         return self.__proxy_url
 
     def need_authentication(self):
@@ -159,7 +165,7 @@ class AVProxy:
                 else:
                     response = opener.open(request, timeout=timeout)
                 success = True
-            except:
+            except Exception as e:
                 if attempt > retries:
                     raise
 
@@ -179,13 +185,10 @@ class AVProxy:
         request = urllib2.Request(url, headers={'User-Agent': AVProxy.USER_AGENT})
         try:
             response = self.open(request, timeout=timeout, retries=retries)
-        except Exception, e:
-            return False, "Connection error: %s" % str(e)
+        except Exception as e:
+            return False, "Connection error: {}".format(e)
 
         if response is None or response.getcode() != 200:
             return False, "Connection error"
 
         return True, response
-
-
-# vim:ts=4 sts=4 tw=79 expandtab:

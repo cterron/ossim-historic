@@ -17,8 +17,7 @@ import string
 import re
 import db
 from db.models.alienvault import Users
-from db.models.alienvault import Sensor
-from db.models.avcenter import Current_Local
+from db.models.alienvault import Sensor, System
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from behave.log_capture import capture
 import uuid
@@ -37,24 +36,25 @@ def then_json_sensors(context,key_path):
         assert sensors != None, "Key %s object not found " % key_path
     for s_data, value in sensors.items():
         print (s_data)
-        s_uuid = sensors[s_data]['system_id']
+        s_uuid = sensors[s_data]['sensor_id']
         u = uuid.UUID(s_uuid)
         result = db.session.query(Sensor).filter (Sensor.id == u.bytes).all()
         for r in result:
             dp = r.serialize
-            #print dp
             assert dp['id'] == s_uuid, "Bad id in API response" # Redundant check
             assert  dp['ip'] == value['admin_ip'], "Bad admin_ip in API response"
             assert dp['name'] == value['hostname'],"Bad name  in API response"
-            # Verify the system_id
+            # Verify the sensor_id
             try:
-                avcenter_sensor_uuid = db.session.query(Current_Local).filter( Current_Local.admin_ip == value['admin_ip']).one().uuid
-                avcenter_sensor_uuid = db.session.query(Current_Local).filter( Current_Local.admin_ip == value['admin_ip']).one().uuid
+                system_info = db.session.query(System).filter(
+                    System.admin_ip == get_ip_bin_from_str(value['admin_ip'])
+                ).one()
+                sensor_uuid = system_info.serialize['sensor_id']
             except NoResultFound:
                 assert False,"Can't find admin_ip from API response in database"
             except Exception, msg: 
                 assert False, "Exception " + str(msg)
-            assert avcenter_sensor_uuid == value['system_id'],"Bad system_id in API response"
+            assert sensor_uuid == value['sensor_id'],"Bad system_id in API response"
 @behave.given(u'I select a random uuid for sensor and store in variable "{var_name}"')
 def given_select_sensor_uuid (context,var_name):
      result =  db.session.query(Sensor).all()

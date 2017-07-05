@@ -284,6 +284,18 @@
     month_of_year: '*'
   enabled: False
 
+"feed_auto_updates":
+  task: "celerymethods.tasks.monitor_tasks.monitor_feed_auto_updates"
+  args: []
+  kwargs: {}
+  crontab:
+    minute: 5
+    hour: '*'
+    day_of_week: '*'
+    day_of_month: '*'
+    month_of_year: '*'
+  enabled: False
+
 "update_hids_agents":
   task: "celerymethods.tasks.hids.update_hids_agents"
   args: []
@@ -309,6 +321,15 @@
   interval:
     every: 1
     period: "hours"
+  enabled: True
+
+"sync_custom_plugins":
+  task: "celerymethods.tasks.monitor_tasks.monitor_sync_custom_plugins"
+  args: []
+  kwargs: {}
+  interval:
+    every: 8
+    period: "minutes"
   enabled: True
 
 "insecured_vpn":

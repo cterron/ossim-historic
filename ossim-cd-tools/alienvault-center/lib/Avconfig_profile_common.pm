@@ -331,7 +331,7 @@ if ( -f "/etc/ossim/first_login" ){
     my $pname = `cat /etc/ossim/first_login` ; $pname =~ s/\n//g;
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.3.6 - \\m - \\l
+AlienVault USM 5.4.0 - \\m - \\l
 
 =========================================================================
 == #### First time instructions ####   
@@ -343,7 +343,7 @@ EOF
 }else{
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 5.3.6 - \\m - \\l
+AlienVault USM 5.4.0 - \\m - \\l
 
 EOF
 }
@@ -758,7 +758,10 @@ EOF
 	}
 
 	if ( exists $ConfigFile->{firewall}->{active} and $ConfigFile->{firewall}->{active} ne $OldConfigFile->{firewall}->{active} ) {
-		push(@trigger_list, 'alienvault-config-firewall-active');
+                given ($ConfigFile->{firewall}->{active}) {
+                        when (m/yes/i) { push(@trigger_list, 'alienvault-config-firewall-active'); };
+                        when (m/no/i) { push(@trigger_list, 'alienvault-config-firewall-inactive'); };
+                };
 	}
 
 	if ( exists $ConfigFile->{framework}->{framework_https_cert} and $ConfigFile->{framework}->{framework_https_cert} ne $OldConfigFile->{framework}->{framework_https_cert} ) {

@@ -69,22 +69,22 @@ Feature: Status operations
     Then I print request result
     And The http status code must be "200"
 
-    # Test level filter
-    Scenario: Test level filter (default asc)
+    # Test ordering by message_level
+    Scenario: Test asc ordering by message_level
     Given I set username and password to ghost administrator
     And I log into the ossim API using "https://127.0.0.1:40011/av/api/1.0/auth/login"
     And I clean the status_message database 
     And I generate "100" current_status entries
-    And I set url param "order_by" to string "level"
+    And I set url param "order_by" to string "message_level"
     When I send a GET request to url "https://127.0.0.1:40011/av/api/1.0/data/status"
     Then The http status code must be "200"
 
-    Scenario: Test level filter with desc
+    Scenario: Test desc ordering by message_level
     Given I set username and password to ghost administrator
     And I log into the ossim API using "https://127.0.0.1:40011/av/api/1.0/auth/login"
     And I clean the status_message database 
     And I generate "100" current_status entries
-    And I set url param "order_by" to string "level"
+    And I set url param "order_by" to string "message_level"
     And I set url param "order_desc" to string "true"
     When I send a GET request to url "https://127.0.0.1:40011/av/api/1.0/data/status"
     Then The http status code must be "200"
@@ -113,7 +113,7 @@ Feature: Status operations
     # Alter the viewed flag
 
 
-    Scenario: Test the component_type filter
+    Scenario: Test message (current) status update
     Given I set username and password to ghost administrator
     And I log into the ossim API using "https://127.0.0.1:40011/av/api/1.0/auth/login"
     And I clean the status_message database 
@@ -121,12 +121,12 @@ Feature: Status operations
     And Select a random asset and store component_id in var "c_id" 
     And I store asset type with component_id "c_id" in var "asset_type"
     And I select a random message and store id in  var "m_id"
-    And I generate a current_status entry with component_id "c_id" message id "m_id" asset type "asset_type" and viewed "false"
+    And I create or update a current_status entry with component_id "c_id" message id "m_id" asset type "asset_type" and viewed "0"
+    And I store the id of current_status entry with component_id "c_id" message id "m_id" asset type "asset_type" in var "cs_id"
     And I make url with paths and store it in variable "url"
         |paths|
         |https://127.0.0.1:40011/av/api/1.0/data/status|
-        |$m_id|
-    And I set url param "component_id" to variable "c_id"
+        |$cs_id|
     And I set url param "viewed" to string "true"
     When I send a PUT request to url stored in the variable "url"
     Then The http status code must be "200"

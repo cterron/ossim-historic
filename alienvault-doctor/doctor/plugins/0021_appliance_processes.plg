@@ -56,7 +56,7 @@ min_doctor_version=4.15
 # Check for aio processes which should(n't) be there
 [00210004]
 severity=Error
-pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|\/var\/ossec\/bin\/(?!ossec-remoted)|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+\S+\s+\/usr\/s?bin\/)([^\d\s]+).*$
+pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|\/var\/ossec\/bin\/(?!ossec-remoted)|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+(?:\S+\s+)?\/usr\/s?bin\/)([^\d\s]+).*$
 conditions=@set@:@isequalto@mongod,rsyslogd,vmtoolsd,rabbitmq-server,acpid,apache,memcached,fprobe,mysqld_safe,cron,nfcapd,nagios,nfsend,redis-server,squid,av-forward,ossim-framework,mixterd,macheted,ossim-server,ossim-agent,prads_eth,suricata,celerybeat,celery.bin.celeryd,monit,sshd,ossec-analysisd,ossec-logcollector,ossec-syscheckd,ossec-monitord,alienvault-rhythm
 formatted_output=The following services are either running when they shouldn't be or stopped when they should be running: @set_list@
 formatted_output=There is a mismatch among the services which are actually running and the services which are expected to be running:@set_list@. These services are either stopped when they shouldn't be, or running when they should be stopped.  
@@ -65,13 +65,13 @@ description=Checks if all the AlienVault services are up and running
 summary_passed=All the expected services are up and running
 summary_failed=One or more AlienVault services are behaving unsuccessfully
 remediation=AlienVault services shouldn't be manually stopped
-appliance_type=@vmware_aio_profiles@,@hyperv_aio_profiles@,@ami_aio_profiles@,@hw_aio_profiles@,@vmware_usm_standard_profiles@,@hyperv_usm_standard_profiles@,@ami_usm_standard_profiles@,@hw_usm_standard_profiles@,@vmware_sensor_profiles@,@hyperv_sensor_profiles@,@ami_sensor_profiles@,alienvault-hw-sensor-remote,alienvault-hw-sensor-standard-6x1gb,alienvault-hw-sensor-standard-2x10gb
+appliance_type=alienvault-vmware-usm-standard,alienvault-vmware-aio-6x1gb-lite,alienvault-vmware-aio-6x1gb
 min_doctor_version=4.15
 
 # Check for aio processes which should(n't) be there
 [00210005]
 severity=Error
-pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+\S+\s+\/usr\/s?bin\/)([^\d\s]+).*$
+pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+(?:\S+\s+)?\/usr\/s?bin\/)([^\d\s]+).*$
 conditions=@set@:@isequalto@mongod,rsyslogd,rabbitmq-server,acpid,apache,memcached,fprobe,mysqld_safe,cron,nfcapd,nagios,nfsend,redis-server,squid,av-forward,ossim-framework,mixterd,macheted,ossim-server,ossim-agent,prads_eth,suricata,celerybeat,celery.bin.celeryd,monit,sshd,ossec-analysisd,ossec-logcollector,ossec-syscheckd,ossec-monitord,alienvault-rhythm
 formatted_output=The following services are either running when they shouldn't be or stopped when they should be running: @set_list@
 formatted_output=There is a mismatch among the services which are actually running and the services which are expected to be running:@set_list@. These services are either stopped when they shouldn't be, or running when they should be stopped.
@@ -80,7 +80,7 @@ description=Checks if all the AlienVault services are up and running
 summary_passed=All the expected services are up and running
 summary_failed=One or more AlienVault services are behaving unsuccessfully
 remediation=AlienVault services shouldn't be manually stopped
-appliance_type=@hw_aio_profiles@,alienvault-hw-usm-standard,alienvault-ami-aio-6x1gb
+appliance_type=@hw_aio_profiles@,alienvault-hw-usm-standard,@ami_aio_profiles@,@ami_usm_standard_profiles@
 min_doctor_version=4.15
 
 # Check for sensor processes which should(n't) be there
@@ -110,14 +110,14 @@ description=Checks all the services up and running
 summary_passed=All the expected services are up and running
 summary_failed=One or more services is behaving unsuccessfully
 remediation=AlienVault services shouldn't be manually stopped
-appliance_type=@hw_sensor_profiles@
+appliance_type=@hw_sensor_profiles@,@ami_sensor_profiles@
 min_doctor_version=4.15
 
 # Check for logger processes which should(n't) be there
 # Note that 'd' condition is for openvasm(d)
 [00210008]
 severity=Error
-pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|openvasmd|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+\S+\s+\/usr\/s?bin\/)(\S+).*$
+pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|openvasmd|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+(?:\S+\s+)?\/usr\/s?bin\/)(\S+).*$
 conditions=@set@:@isequalto@mongod,rsyslogd,rabbitmq-server,acpid,apache2,memcached,cron,mysqld_safe,nagios3,nfcapd,nfsend,ossec-analysisd,ossec-logcollector,ossec-syscheckd,ossec-monitord,redis-server,sshd,squid3,av-forward,ossim-framework,mixterd,macheted,ossim-server,celerybeat,celery.bin.celeryd,monit
 formatted_output=The following services are either running when they shouldn't be or stopped when they should be running: @set_list@
 fail_if_empty=True
@@ -125,14 +125,14 @@ description=Checks all the services up and running
 summary_passed=All the expected services are up and running
 summary_failed=One or more services is behaving unsuccessfully
 remediation=AlienVault services shouldn't be manually stopped
-appliance_type=@hw_logger_profiles@,alienvault-hw-aio-extended
+appliance_type=@hw_logger_profiles@,alienvault-hw-aio-extended,@ami_logger_profiles@
 min_doctor_version=4.15
 
 # Check for logger processes which should(n't) be there
 # Note that 'd' condition is for openvasm(d)
 [00210009]
 severity=Error
-pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|openvasmd|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+\S+\s+\/usr\/s?bin\/)(\S+).*$
+pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|openvasmd|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+(?:\S+\s+)?\/usr\/s?bin\/)(\S+).*$
 conditions=@set@:@isequalto@mongod,rsyslogd,vmtoolsd,rabbitmq-server,acpid,apache2,memcached,cron,mysqld_safe,nagios3,nfcapd,nfsend,ossec-analysisd,ossec-logcollector,ossec-syscheckd,ossec-monitord,redis-server,sshd,squid3,av-forward,ossim-framework,mixterd,macheted,ossim-server,celerybeat,celery.bin.celeryd,monit
 formatted_output=The following services are either running when they shouldn't be or stopped when they should be running: @set_list@
 fail_if_empty=True
@@ -143,3 +143,47 @@ remediation=AlienVault services shouldn't be manually stopped
 appliance_type=@vmware_logger_profiles@
 min_doctor_version=4.15
 
+# Check for aio processes which should(n't) be there (Hyper-V specific)
+[00210010]
+severity=Error
+pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|\/var\/ossec\/bin\/(?!ossec-remoted)|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward\/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+(?:\S+\s+)?\/usr\/s?bin\/|(?:\S+\s+)\[(?=hv_vmbus))([^\d\s\]]+).*$
+conditions=@set@:@isequalto@mongod,rsyslogd,rabbitmq-server,acpid,apache,memcached,fprobe,mysqld_safe,cron,nfcapd,nagios,nfsend,redis-server,squid,av-forward,ossim-framework,mixterd,macheted,ossim-server,ossim-agent,prads_eth,suricata,celerybeat,celery.bin.celeryd,monit,sshd,ossec-analysisd,ossec-logcollector,ossec-syscheckd,ossec-monitord,alienvault-rhythm,hv_vmbus_ctl,hv_vmbus_con
+formatted_output=The following services are either running when they shouldn't be or stopped when they should be running: @set_list@
+formatted_output=There is a mismatch among the services which are actually running and the services which are expected to be running:@set_list@. These services are either stopped when they shouldn't be, or running when they should be stopped.
+fail_if_empty=True
+description=Checks if all the AlienVault services are up and running
+summary_passed=All the expected services are up and running
+summary_failed=One or more AlienVault services are behaving unsuccessfully
+remediation=AlienVault services shouldn't be manually stopped
+appliance_type=@hyperv_aio_profiles@,@hyperv_usm_standard_profiles@
+min_doctor_version=4.15
+
+# Check for sensor processes which should(n't) be there (Hyper-V specific)
+# Note that 'd' condition is for openvasm(d)
+[00210011]
+severity=Error
+pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|openvasmd|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-api-core\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+\S+\s+\/usr\/s?bin\/|(?:\S+\s+)\[(?=hv_vmbus))([^\s\]]+).*$
+conditions=@set@:@isequalto@rsyslogd,acpid,cron,redis-server,ossim-agent,prads_eth0,suricata,monit,ossec-analysisd,ossec-logcollector,ossec-syscheckd,ossec-monitord,sshd,fprobe,alienvault-rhythm,hv_vmbus_ctl,hv_vmbus_con
+formatted_output=The following services are either running when they shouldn't be or stopped when they should be running: @set_list@
+fail_if_empty=True
+description=Checks all the services up and running
+summary_passed=All the expected services are up and running
+summary_failed=One or more services is behaving unsuccessfully
+remediation=AlienVault services shouldn't be manually stopped
+appliance_type=@hyperv_sensor_profiles@
+min_doctor_version=4.15
+
+# Check for logger processes which should(n't) be there (Hyper-V specific)
+# Note that 'd' condition is for openvasm(d)
+[00210012]
+severity=Error
+pattern=^(?:\S+\s+){10}(?:\/usr\/sbin\/(?!irqbalance)|openvasmd|\/var\/ossec\/bin\/|\/usr\/share\/python\/alienvault-(?:forward|api-core)\/bin\/python(?:\s+-m\s+|\s+\/usr\/share\/python\/alienvault-api-core\/bin\/|\s-tOO\s+\/usr\/share\/python\/alienvault-forward\/bin\/)|\/usr\/bin\/python\s+\S+\s+\/usr\/bin\/|\/bin\/sh\s+\/usr\/s?bin\/|\/usr\/bin\/(?!python|perl|rsync)|\/usr\/bin\/daemon\s+\/etc\/init\.d\/|\/usr\/bin\/perl\s+(?:\S+\s+)?\/usr\/s?bin\/|(?:\S+\s+)\[(?=hv_vmbus))([^\s\]]+).*$
+conditions=@set@:@isequalto@mongod,rsyslogd,rabbitmq-server,acpid,apache2,memcached,cron,mysqld_safe,nagios3,nfcapd,nfsend,ossec-analysisd,ossec-logcollector,ossec-syscheckd,ossec-monitord,redis-server,sshd,squid3,av-forward,ossim-framework,mixterd,macheted,ossim-server,celerybeat,celery.bin.celeryd,monit,hv_vmbus_con,hv_vmbus_ctl
+formatted_output=The following services are either running when they shouldn't be or stopped when they should be running: @set_list@
+fail_if_empty=True
+description=Checks all the services up and running
+summary_passed=All the expected services are up and running
+summary_failed=One or more services is behaving unsuccessfully
+remediation=AlienVault services shouldn't be manually stopped
+appliance_type=@hyperv_logger_profiles@
+min_doctor_version=4.15

@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2016, Emerging Threats
+#  Copyright (c) 2003-2017, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -40,6 +40,8 @@
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Possible Windows executable sent when remote host claims to send a Text File"; flow:established,from_server; content:"Content-Type|3a| text/plain"; nocase; http_header; file_data; content:"MZ"; within:2; byte_jump:4,58,relative,little; content:"PE|00 00|"; fast_pattern; distance:-64; within:4; flowbits:isnotset,ET.Adobe.Site.Download; flowbits:isnotset,ET.ZoneAlarm.Site.Download; flowbits:isnotset,ET.QuickenUpdater; flowbits:isnotset,ET.Symantec.Site.Download; reference:url,doc.emergingthreats.net/bin/view/Main/2008438; classtype:trojan-activity; sid:2008438; rev:18;)
 
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Mozilla User-Agent (Mozilla/5.0) Inbound Likely Fake"; flow:to_server,established; content:"User-Agent|3a| Mozilla/5.0|0d 0a|"; nocase; http_header; content:!"autodesk.com"; http_header; reference:url,doc.emergingthreats.net/2010908; classtype:trojan-activity; sid:2010908; rev:7;)
+
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO WinUpack Modified PE Header Inbound"; flow:established; content:"|4d 5a 4b 45 52 4e 45 4c 33 32 2e 44 4c 4c 00 00|"; fast_pattern:only; reference:url,doc.emergingthreats.net/bin/view/Main/WinPEHeaders; classtype:bad-unknown; sid:2003614; rev:5;)
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO WinUpack Modified PE Header Outbound"; flow:established; content:"|4d 5a 4b 45 52 4e 45 4c 33 32 2e 44 4c 4c 00 00|"; fast_pattern:only; reference:url,doc.emergingthreats.net/bin/view/Main/WinPEHeaders; classtype:bad-unknown; sid:2003615; rev:6;)
@@ -47,6 +49,8 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO WinUpack Modified PE 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Adobe PDF in HTTP Flowbit Set"; flow:from_server,established; file_data; content:"%PDF-"; within:5; flowbits:set,ET.pdf.in.http; flowbits:noalert; reference:cve,CVE-2008-2992; reference:bugtraq,30035; reference:secunia,29773; classtype:not-suspicious; sid:2015671; rev:9;)
 
 alert http $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO Embedded Executable File in PDF - This Program Cannot Be Run in DOS Mode"; flow:established,to_client; flowbits:isset,ET.pdf.in.http; file_data; content:"This program cannot be run in DOS mode"; nocase; classtype:bad-unknown; sid:2011865; rev:6;)
+
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET INFO http string in hex Possible Obfuscated Exploit Redirect"; flow:established,to_client; content:"=[|22 5c|x68|5c|x74|5c|x74|5c|x70|5c|x3A|5c|x2F|5c|x2F|5c|"; classtype:bad-unknown; sid:2012118; rev:3;)
 
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to 3322.org Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|04|3322|03|org"; fast_pattern; distance:0; nocase; reference:url,isc.sans.edu/diary.html?storyid=3266; reference:url,isc.sans.edu/diary.html?storyid=5710; reference:url,google.com/safebrowsing/diagnostic?site=3322.org/; reference:url,www.mywot.com/en/scorecard/3322.org; classtype:misc-activity; sid:2012171; rev:6;)
 
@@ -71,6 +75,8 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO HTTP Request to a *.
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO HTTP Request to a *.co.com.au domain"; flow:to_server,established; content:".co.com.au|0D 0A|"; http_header; classtype:bad-unknown; sid:2013412; rev:3;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO HTTP Request to a *.cz.tf domain"; flow:to_server,established; content:".cz.tf|0D 0A|"; http_header; classtype:bad-unknown; sid:2013415; rev:3;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Redirection to driveby Page Home index.php"; flow:established,from_server; content:"/Home/index.php|22| width=1 height=1 scrolling=no></iframe>"; classtype:bad-unknown; sid:2013436; rev:4;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO HTTP Request to a *.uni.cc domain"; flow:to_server,established; content:".uni.cc|0D 0A|"; http_header; classtype:bad-unknown; sid:2013438; rev:3;)
 
@@ -392,7 +398,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Executable Retrieved
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO SUSPICIOUS UA starting with Mozilla/7"; flow:established,to_server; content:"Mozilla/7"; depth:9; nocase; http_user_agent; classtype:bad-unknown; sid:2016692; rev:4;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO SUSPICIOUS UA starting with Mozilla/8"; flow:established,to_server; content:"Mozilla/8"; nocase; depth:9; http_user_agent; classtype:bad-unknown; sid:2016693; rev:4;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO SUSPICIOUS UA starting with Mozilla/8"; flow:established,to_server; content:"Mozilla/8"; nocase; depth:9; http_user_agent; classtype:bad-unknown; sid:2016693; rev:5;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO SUSPICIOUS UA starting with Mozilla/9"; flow:established,to_server; content:"Mozilla/9"; depth:9; nocase; http_user_agent; classtype:bad-unknown; sid:2016694; rev:4;)
 
@@ -760,13 +766,13 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO SUSPICIOUS Possible 
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO ZoneAlarm Download Flowbit Set"; flow:established,to_server; content:"pkg"; http_uri; content:"Host|3a 20|"; http_header; nocase; content:"zonealarm.com|0d 0a|"; distance:0; http_header; pcre:"/^Host\x3a[^\r\n]+?zonealarm\.com\r?$/Hmi"; flowbits:set,ET.ZoneAlarm.Site.Download; flowbits:noalert; classtype:misc-activity; sid:2022285; rev:2;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dnsalias.ru Domain"; flow:to_server,established; content:".dnsalias.ru|0D 0A|"; http_header; classtype:bad-unknown; sid:2022377; rev:2;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dnsalias.ru Domain"; flow:to_server,established; content:".dnsalias.ru|0D 0A|"; http_header; classtype:bad-unknown; sid:2022377; rev:3;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dnsip.ru Domain"; flow:to_server,established; content:".dnsip.ru|0D 0A|"; http_header; classtype:bad-unknown; sid:2022378; rev:1;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dnsip.ru Domain"; flow:to_server,established; content:".dnsip.ru|0D 0A|"; http_header; classtype:bad-unknown; sid:2022378; rev:2;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dyn-dns.ru Domain"; flow:to_server,established; content:".dyn-dns.ru|0D 0A|"; http_header; classtype:bad-unknown; sid:2022379; rev:2;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dyn-dns.ru Domain"; flow:to_server,established; content:".dyn-dns.ru|0D 0A|"; http_header; classtype:bad-unknown; sid:2022379; rev:3;)
 
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dns-free.ru Domain"; flow:to_server,established; content:".dns-free.com|0D 0A|"; http_header; classtype:bad-unknown; sid:2022380; rev:2;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO DYNAMIC_DNS HTTP Request to a *.dns-free.ru Domain"; flow:to_server,established; content:".dns-free.com|0D 0A|"; http_header; classtype:bad-unknown; sid:2022380; rev:3;)
 
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DYNAMIC_DNS Query to a Suspicious *.dnsalias.ru Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|08|dnsalias|02|ru"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2022381; rev:2;)
 
@@ -840,7 +846,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Unconfigured nginx A
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO IE7UA No Cookie No Referer"; flow:to_server,established; content:"GET"; http_method; content:"User-Agent|3a 20|Mozilla/4.0 (compatible|3b| MSIE 7.0|3b|"; http_header; fast_pattern:36,10; content:!"Referer|3a|"; http_header; content:!"|0d 0a|Cookie|3a|"; flowbits:set,et.IE7.NoRef.NoCookie; flowbits:noalert; classtype:bad-unknown; sid:2023670; rev:2;)
 
-alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO MP4 in HTTP Flowbit Set"; flow:from_server,established; file_data; content:"|00 00 00 1C|"; within:4; flowbits:set,ET.mp4.in.http; flowbits:noalert; classtype:not-suspicious; sid:2023713; rev:2;)
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO MP4 in HTTP Flowbit Set"; flow:from_server,established; file_data; content:"|66 74 79 70 6D|"; offset:4; depth:5; content:"mp4"; within:12; flowbits:set,ET.mp4.in.http; flowbits:noalert; classtype:not-suspicious; sid:2023713; rev:3;)
 
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO ATF file in HTTP Flowbit Set"; flow:from_server,established; file_data; content:"|41 54 46|"; within:3; flowbits:set,ET.atf.in.http; flowbits:noalert; classtype:not-suspicious; sid:2023714; rev:2;)
 
@@ -849,4 +855,32 @@ alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Adobe FDF in HTTP Fl
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Lock Emoji In Title - Possible Social Engineering Attempt"; flow:from_server,established; file_data; content:"<title>"; nocase; pcre:"/^(?:(?!<\/title).)*\x26\x23x1F512/Ri"; content:"|26 23|x1F512"; fast_pattern:only; classtype:trojan-activity; sid:2023749; rev:2;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO Windows Update/Microsoft FP Flowbit"; flow:established,to_server; content:".windowsupdate.com|0d 0a|"; http_header; pcre:"/\.windowsupdate\.com\r?$/Hmi"; flowbits:set,ET.INFO.WindowsUpdate; flowbits:noalert; classtype:trojan-activity; sid:2023818; rev:2;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO HTTP Request to a *.top domain"; flow:to_server,established; content:".top"; nocase; fast_pattern; http_header; content:"|0d 0a|"; http_header; within:8; pcre:"/^Host\x3a[^\r\n]+?\.top(\x3a\d{1,5})?\r$/Hmi"; threshold:type limit, track by_src, count 1, seconds 30; reference:url,www.symantec.com/connect/blogs/shady-tld-research-gdn-and-our-2016-wrap; reference:url,www.spamhaus.org/statistics/tlds/; classtype:bad-unknown; sid:2023882; rev:2;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO MP4 in HTTP Flowbit Set M2"; flow:from_server,established; file_data; content:"|66 74 79 70 69 73 6f 6d|"; offset:4; depth:8; flowbits:set,ET.mp4.in.http; flowbits:noalert; classtype:not-suspicious; sid:2023892; rev:2;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO MP4 in HTTP Flowbit Set M3"; flow:from_server,established; file_data; content:"|66 74 79 70 71 74 20 20|"; offset:4; depth:8; flowbits:set,ET.mp4.in.http; flowbits:noalert; classtype:not-suspicious; sid:2023900; rev:2;)
+
+#alert tcp any any -> any [139,445] (msg:"ET INFO Potentially unsafe SMBv1 protocol in use"; flow:established,to_server; content:"|FF|SMB"; offset:4; depth:4; content:!"r"; within:1; threshold: type limit, count 1, track by_src, seconds 1200; reference:url,www.us-cert.gov/ncas/current-activity/2017/01/16/SMB-Security-Best-Practices; reference:url,blogs.technet.microsoft.com/filecab/2016/09/16/stop-using-smb1/; classtype:not-suspicious; sid:2023997; rev:3;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO Opera Adblocker Update Flowbit Set"; flow:established,to_server; content:"Host|3a 20|get.geo.opera.com.global.prod.fastly.net|0d 0a|"; http_header; flowbits:set,ET.opera.adblock; flowbits:noalert; classtype:not-suspicious; sid:2024006; rev:2;)
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET 5500 (msg:"ET INFO Suspicious VNC Remote Admin Request"; flow:to_server,established; content:"|49 44 3a|"; depth:3; content:"temp"; nocase; fast_pattern; distance:0; content:"|52 46 42 20 30 30 33 2e 30 30 38 0a|"; distance:0; reference:md5,2faf3040e8286d506144a0585d8f4162; classtype:trojan-activity; sid:2024029; rev:1;)
+
+alert tls $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Lets Encrypt Free SSL Cert Observed with IDN/Punycode Domain - Possible Phishing"; flow:established,from_server; content:"|55 04 0a|"; content:"|0d|Let|27|s Encrypt"; distance:1; within:14; fast_pattern; content:"|55 04 03|"; distance:0; content:"|78 6e 2d 2d|"; within:25; nocase; reference:url,isc.sans.edu/forums/diary/Tool+to+Detect+Active+Phishing+Attacks+Using+Unicode+LookAlike+Domains/22310/; reference:url,letsencrypt.org/about/; classtype:policy-violation; sid:2024227; rev:2;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Suspicious HTML Decimal Obfuscated Title - Possible Phishing Landing Apr 19 2017"; flow:from_server,established; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"<title>"; nocase; content:"|26 23|"; within:5; content:"|3b 26 23|"; fast_pattern; within:6; content:"|3b 26 23|"; within:6; content:"|3b 26 23|"; within:6; content:"|3b 26 23|"; within:6; content:"|3b 26 23|"; within:6; content:"|3b 26 23|"; within:6; content:"|3b 26 23|"; within:6; content:"</title>"; nocase; distance:0; classtype:trojan-activity; sid:2024228; rev:2;)
+
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET INFO DNS Query to Free Hosting Domain (freevnn . com)"; content:"|01 00 00 01 00 00 00 00 00 00|"; content:"|07|freevnn|03|com"; distance:0; fast_pattern; reference:md5,18c1c99412549815bdb89c36316243a7; classtype:bad-unknown; sid:2024235; rev:2;)
+
+alert smtp $EXTERNAL_NET any -> $SMTP_SERVERS any (msg:"ET INFO SMTP PDF Attachment Flowbit Set"; flow:established,from_server; content:"|0d 0a 0d 0a|JVBERi"; fast_pattern:only; flowbits:set,ET.pdf.in.smtp.attachment; flowbits:noalert; classtype:bad-unknown; sid:2024236; rev:2;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO ARM File Requested via WGET (set)"; flow:to_server,established; content:"GET"; http_method; content:"Wget/"; depth:5; http_user_agent; fast_pattern; pcre:"/\.(?:arm(?:5n|7)?|m(?:ips|psl))$/U"; flowbits:set,ET.armwget; flowbits:noalert; classtype:policy-violation; sid:2024240; rev:2;)
+
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET INFO Miniproxy Cloned Page - Possible Phishing Landing"; flow:from_server,established; content:"200"; http_stat_code; content:"Content-Type|3a 20|text/html"; http_header; file_data; content:"<!-- Proxified page constructed by miniProxy"; fast_pattern:22,20; nocase; within:100; reference:url,github.com/joshdick/miniProxy; classtype:trojan-activity; sid:2024283; rev:2;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO Bitcoin QR Code Generated via Btcfrog.com"; flow:established,to_server; content:"/qr/bitcoinPNG.php?address="; fast_pattern; http_uri; content:"Host|3a 20|www.btcfrog.com|0d 0a|"; http_header; classtype:misc-activity; sid:2024292; rev:2;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET INFO Possible Successful Hostinger Generic Phish Jun 09 2017"; flow:to_server,established; content:"POST"; http_method; content:"wb_form_id="; nocase; depth:11; http_client_body; fast_pattern; content:"&message=&wb_input_0="; nocase; distance:8; within:21; http_client_body; content:"&wb_input_0="; nocase; http_client_body; distance:0; content:"&wb_input_1="; nocase; http_client_body; distance:0; content:"&wb_input_1="; nocase; http_client_body; distance:0; classtype:trojan-activity; sid:2024375; rev:2;)
 

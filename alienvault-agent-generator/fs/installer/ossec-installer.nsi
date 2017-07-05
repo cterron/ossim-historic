@@ -6,7 +6,7 @@
 ;--------------------------------
 ;General
 
-!define VERSION "2.8"
+!define VERSION "2.8.3"
 !define NAME "Ossec HIDS"
 !define /date CDATE "%b %d %Y at %H:%M:%S"
 
@@ -83,7 +83,7 @@ SetOutPath $INSTDIR
 
 ClearErrors
 
-File ossec-agent.exe ossec.conf default-ossec.conf manage_agents.exe os_win32ui.exe win32ui.exe ossec-rootcheck.exe internal_options.conf setup-windows.exe setup-syscheck.exe setup-iis.exe service-start.exe service-stop.exe doc.html rootkit_trojans.txt rootkit_files.txt add-localfile.exe LICENSE.txt rootcheck\rootcheck.conf rootcheck\db\win_applications_rcl.txt rootcheck\db\win_malware_rcl.txt rootcheck\db\win_audit_rcl.txt help.txt vista_sec.csv route-null.cmd restart-ossec.cmd client.keys
+File ossec-agent.exe ossec.conf default-ossec.conf ossec-lua.exe ossec-luac.exe manage_agents.exe os_win32ui.exe win32ui.exe ossec-rootcheck.exe internal_options.conf local_internal_options.conf setup-windows.exe setup-syscheck.exe setup-iis.exe service-start.exe service-stop.exe doc.html rootkit_trojans.txt rootkit_files.txt add-localfile.exe LICENSE.txt rootcheck\rootcheck.conf rootcheck\db\win_applications_rcl.txt rootcheck\db\win_malware_rcl.txt rootcheck\db\win_audit_rcl.txt help.txt vista_sec.csv route-null.cmd restart-ossec.cmd client.keys
 WriteRegStr HKLM SOFTWARE\ossec "Install_Dir" "$INSTDIR"
 
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ossec" "DisplayName" "OSSEC Hids Agent"

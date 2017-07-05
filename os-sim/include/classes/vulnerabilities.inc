@@ -289,16 +289,8 @@ class Vulnerabilities
                     fwrite($hfile, 'password=' . $cdata["password"] . "\n");
                     fclose($hfile);
 
-                    if (file_exists('/usr/bin/winexe'))
-                    {
-                        $command = 'winexe -A ? ? "ipconfig" 2>&1 | grep ERROR';
-                        $params  = array($pass_file, '//'.$host_ip);
-                    }
-                    else
-                    {
-                        $command = 'smbclient -A ? -L ? ?';
-                        $params  = array($pass_file, $host_ip, '\\\\\\\\'.$host_ip.'\\\\');
-                    }
+                    $command = 'smbclient -A ? -p ? -m ? -L ? ?';
+                    $params  = array($pass_file, '445', 'SMB3', $host_ip, '\\\\\\\\'.$host_ip.'\\\\');
 
                     $arr_out = array();
 

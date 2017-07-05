@@ -52,7 +52,8 @@ Feature: Sensor ossec operations
   Scenario: Check Ossec agent deletion through API
      Given I log in the server "127.0.0.1" using a ghost administrator
      And I select a random uuid for sensor and store in variable "s_uuid"
-     And I create an ossec agent in sensor variable "s_uuid" with IP "255.255.255.255", name "behave_test" store agent_id in "ossec_id"
+     And I generate a random string with len "8" and store in vault key "random_agent_name"
+     And I create an ossec agent in sensor variable "s_uuid" with IP "255.255.255.255", name variable "random_agent_name" and store agent_id in "ossec_id"
      And I make url with paths and store it in variable "url"
          |paths|
          |https://127.0.0.1:40011/av/api/1.0/sensor|

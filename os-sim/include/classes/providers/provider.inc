@@ -377,6 +377,16 @@ class Provider_factory
                 $result = new Asec_provider($conn, $common_url);
 
             break;
+            
+            
+            // Plugin
+            case 'plugin':
+                require_once 'plugin.inc';
+            
+                $result = new Plugin_provider($conn, $common_url);
+                
+            break;
+            
 
             default:
 

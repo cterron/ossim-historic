@@ -137,91 +137,16 @@ if ($id != "")
         $active   = $policy->get_active();
         $group    = $policy->get_group();
         $order    = $policy->get_order();
-		
-		//SOURCES
-        if ($source_host_list = $policy->get_hosts($conn, 'source'))
-        {
-			foreach ($source_host_list as $source_host) 
-			{
-				if (check_any($source_host->get_host_id()))
-				{
-					$sources[$source_host->get_host_id()] = _("ANY");					
-				}
-				else
-				{
-					$sources['host_'.$source_host->get_host_id()] = _("HOST").": " . Asset_host::get_name_by_id($conn, $source_host->get_host_id());
-				}
-	
-			}
+	$decorator = function($text,$vars) {
+		if (in_array($text,array(Policy::getHOMENET(),Policy::getNOTHOMENET(),Policy::getANY()))) {
+			return $text;
 		}
-		
-        if ($source_net_list = $policy->get_nets($conn, 'source'))
-        {
-			foreach ($source_net_list as $source_net) 
-			{
-            	$sources['net_'.$source_net->get_net_id()] = check_any($source_net->get_net_id()) ? _("ANY") : _("NETWORK").": " . Asset_net::get_name_by_id($conn, $source_net->get_net_id());
-            }
-        
-        }
-        
-        if ($source_host_list = $policy->get_host_groups($conn, 'source'))
-        {
-			foreach ($source_host_list as $source_host_group) 
-			{
-	        	 $sources['hostgroup_'.$source_host_group->get_host_group_id()] = check_any($source_host_group->get_host_group_id()) ? _("ANY") : _("HOST_GROUP").": " . Asset_group::get_name_by_id($conn, $source_host_group->get_host_group_id());
-	        }
-        }
-        
-        if ($source_net_list = $policy->get_net_groups($conn, 'source')) 
-        {
-        	foreach ($source_net_list as $source_net_group) 
-        	{
-            	$sources['netgroup_'.$source_net_group->get_net_group_id()] = check_any($source_net_group->get_net_group_id()) ? _("ANY") : _("NETWORK_GROUP").": " . Net_group::get_name_by_id($conn, $source_net_group->get_net_group_id());
-            }
-        }
-		
-		
-        //DESTINY
-        if ($dest_host_list = $policy->get_hosts($conn, 'dest'))
-        {
-			foreach ($dest_host_list as $dest_host) 
-			{
-				if ( check_any($dest_host->get_host_id()) )
-				{
-					$dests[$dest_host->get_host_id()] = _("ANY");
-				}
-				else
-				{
-					$dests['host_'.$dest_host->get_host_id()] = _("HOST").": " . Asset_host::get_name_by_id($conn, $dest_host->get_host_id());	
-				}
+		return "{$vars[0]}: $text";
+	};
+	$decorator_vars = array(_("HOST"),_("NETWORK"),_("HOST_GROUP"),_("NETWORK_GROUP"));
+	$sources = $policy->get_srcdst_cell("source",$conn,$decorator,$decorator_vars);
+        $dests = $policy->get_srcdst_cell("dest",$conn,$decorator,$decorator_vars);
 
-			}
-		} 
-		
-        if ($dest_net_list = $policy->get_nets($conn, 'dest'))
-        {
-        	foreach ($dest_net_list as $dest_net) 
-        	{
-           		$dests['net_'.$dest_net->get_net_id()] = check_any($dest_net->get_net_id()) ? _("ANY") : _("NETWORK").": " .Asset_net::get_name_by_id($conn, $dest_net->get_net_id());
-           	}
-        }
-        
-        if ($dest_host_list = $policy->get_host_groups($conn, 'dest'))
-        {
-        	foreach ($dest_host_list as $dest_host_group) 
-        	{
-            	$dests['hostgroup_'.$dest_host_group->get_host_group_id()] = check_any($dest_host_group->get_host_group_id()) ? _("ANY") : _("HOST_GROUP").": " . Asset_group::get_name_by_id($conn, $dest_host_group->get_host_group_id());
-            }
-        }
-        
-        if ($dest_net_list = $policy->get_net_groups($conn, 'dest'))
-        {
-        	foreach ($dest_net_list as $dest_net_group) 
-        	{
-          	  $dests['netgroup_'.$dest_net_group->get_net_group_id()] = check_any($dest_net_group->get_net_group_id()) ? _("ANY") : _("NETWORK_GROUP").": " . Net_group::get_name_by_id($conn, $dest_net_group->get_net_group_id());
-            }
-        }
-		
         //PORTS
 		//source
         if ($port_list = $policy->get_ports($conn, 'source')) 
@@ -809,7 +734,7 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 		{
 			combo = (suf=="c") ? 'sources' : 'dests';
 			
-			var tree_key = <?php echo (($open_source) ? "'assets|any'" : "'ae_'+ctx+'|any'") ?>;
+			var tree_key = <?php echo (($open_source) ? "'assets|any|home'" : "'ae_'+ctx+'|any|home'") ?>;
 			
 			layer = '#asset_tree_'+suf;
 
@@ -839,6 +764,11 @@ $net_form_url   = $paths['network']['views'] . 'net_form.php';
 						else 
 						{
 							deletevaluefrom(combo,'ANY','00000000000000000000000000000000');
+							if (dtnode.data.key == '02000000000000000000000000000000') {
+								deletevaluefrom(combo,'HOME_NET','01000000000000000000000000000000');
+							} else if (dtnode.data.key == '01000000000000000000000000000000') {
+								deletevaluefrom(combo,'!HOME_NET','02000000000000000000000000000000');
+							}
 							var key = dtnode.data.key.replace(/;.*/,"");
 							addto(combo, dtnode.data.val, key, true);
 						}

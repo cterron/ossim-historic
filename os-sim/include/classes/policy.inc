@@ -415,7 +415,15 @@ class Policy
         if (!$conn->Execute($sql, $params)) 
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-        }        
+        }
+
+        $get_policy_info = "SELECT  active, descr   FROM  policy  WHERE policy.id = UNHEX(?)";
+        $policy__result = $conn->Execute($get_policy_info, $params);
+
+        ($policy__result->fields['active'] ) ? $policy_state = 'enabled' :  $policy_state = 'disabled';
+        $policy_name = $policy__result->fields['descr'];
+        self::log_policy_activity(106, $policy_name, $policy_state);
+
     }
     
     
@@ -856,9 +864,7 @@ class Policy
         
         if (!isset($bt[1]) || (isset($bt[1])) && ($bt[1]["function"] != "update")) 
         {
-            $infolog = array($id, "(" . $descr . ")");
-            
-            Log_action::log(46, $infolog);
+            self::log_policy_activity(46, $descr, 'created');
         }
         
         Web_indicator::set_on("Reload_policies");
@@ -883,10 +889,8 @@ class Policy
         self::delete($conn, $id);
        
         self::insert($conn, $ctx, $priority, $active, $group, $order, $tzone, $b_month, $b_month_day, $b_week_day, $b_hour, $b_minute, $e_month, $e_month_day, $e_week_day, $e_hour, $e_minute, $descr, $host_source_list, $host_group_source_list, $host_dest_list, $host_group_dest_list, $net_source_list, $net_group_source_list, $net_dest_list, $net_group_dest_list, $portsrc, $portdst, $plug_groups, $sensor_list, $target_list, $taxonomy_list, $reputation_list, $event_list, $idm_list, $correlate, $cross_correlate, $store, $reputation, $qualify, $resend_alarm, $resend_event, $forward_list, $sign, $sem, $sim, $id);
-       
-        $infolog = array($id, "(" . $descr . ")");
-        
-        Log_action::log(48, $infolog);
+
+        self::log_policy_activity(48, $descr, 'modified');
         
         Web_indicator::set_on("Reload_policies");
         // ReloadPolicy key deprecated, now using Reload_policies always
@@ -939,9 +943,7 @@ class Policy
         $bt = debug_backtrace();
         if (!isset($bt[1]) || (isset($bt[1])) && ($bt[1]["function"] != "update")) 
         {
-            $infolog = array($id, "(" . $descr . ")");
-            
-            Log_action::log(47, $infolog);
+            self::log_policy_activity(47, $descr, 'deleted');
         }
         
         Web_indicator::set_on("Reload_policies");
@@ -1243,6 +1245,69 @@ class Policy
     	
     	return $sign_line;
     }  
+
+    public function get_srcdst_items($list, $getid, $getname, $preffix, $decorator, $decorator_vars, $conn) {
+                $source = array();
+                if (!$list) return array();
+                foreach($list as $item) {
+                        $id = $getid($item);
+                        if (check_any($id))
+                                return array($id => $decorator(self::getANY(),$decorator_vars));
+                        if ($id == self::getHOMENETKEY()) {
+                                $source[$id] = $decorator(self::getHOMENET(),$decorator_vars);
+                                continue;
+                        }
+                        if ($id == self::getNOTHOMENETKEY()) {
+                                $source[$id] = $decorator(self::getNOTHOMENET(),$decorator_vars);
+                                continue;
+                        }
+                        $source[$preffix.$id] = $decorator(call_user_func_array("$getname::get_name_by_id",array($conn, $id)),$decorator_vars);
+                }
+                return $source;
+    }
+
+    public function get_srcdst_cell($dir,$conn,$decorator,$decorator_vars) {
+           return array_merge($this->get_srcdst_items($this->get_hosts($conn, $dir),function($item) {
+                        return $item->get_host_id();
+                },"Asset_host","host_", $decorator, $decorator_vars[0], $conn)
+                ,$this->get_srcdst_items($this->get_nets($conn, $dir),function($item) {
+                        return $item->get_net_id();
+                }, "Asset_net","net_", $decorator, $decorator_vars[1], $conn)
+                ,$this->get_srcdst_items($this->get_host_groups($conn, $dir),function($item) {
+                        return $item->get_host_group_id();
+                }, "Asset_group","hostgroup_", $decorator, $decorator_vars[2], $conn)
+                ,$this->get_srcdst_items($this->get_net_groups($conn, $dir),function($item) {
+                        return $item->get_net_group_id();
+                }, "Net_group","netgroup_", $decorator, $decorator_vars[3], $conn));
+    }
+
+    public static function getHOMENET() {
+        return "HOME_NET";
+    }
+
+    public static function getNOTHOMENET() {
+        return "!HOME_NET";
+    }
+
+    public static function getANY() {
+        return "ANY";
+    }
+
+    public static function getHOMENETKEY() {
+        return "01000000000000000000000000000000";
+    }
+
+    public static function getNOTHOMENETKEY() {
+        return "02000000000000000000000000000000";
+    }
+
+    public  function  log_policy_activity($code,$policy_name, $policy_state) {
+
+        $user_name    = Session::get_session_user();
+        Log_action::log($code,[$policy_name,$policy_state,$user_name]);
+
+    }
+
 }
 
 /* End of file policy.inc */

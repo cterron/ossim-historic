@@ -30,7 +30,7 @@
 from flask import Blueprint, request, current_app
 from api.lib.common import (make_ok, make_error, make_bad_request, document_using)
 
-from api.lib.utils import accepted_url
+from api.lib.utils import accepted_url, first_init_admin_access
 from apimethods.utils import is_json_boolean, is_json_true, is_valid_ipv4
 from apimethods.system.network import dns_resolution, get_interfaces, get_interface, set_interfaces_roles, \
     get_interface_traffic, get_traffic_stats, put_interface, get_fqdn_api
@@ -142,6 +142,9 @@ def get_system_network_traffic_stats(system_id):
 @document_using('static/apidocs/system/network.html')
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
 def get_system_network_resolve(system_id):
+    if not first_init_admin_access():
+        return make_error('Request forbidden', 403)
+
     (success, data) = dns_resolution(system_id)
     if not success:
         current_app.logger.error("network: get_system_network_resolve error: " + str(data))

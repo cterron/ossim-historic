@@ -302,7 +302,7 @@ class Alarm
         $this->stats        = $data['stats'];
 
         // Private calls
-        list ($this->sid_name, $this->sid_priority) = $this->__get_sidname($conn, $this->plugin_id, $this->plugin_sid, $cache);
+        list ($this->sid_name, $this->sid_priority) = $this->__get_sidname($conn, $this->plugin_id, $this->plugin_sid, $cache,  $this->ctx);
         $this->taxonomy["name"]                     = $this->sid_name;
         $this->tags                                 = Tag::get_tags_by_component($conn, $this->backlog_id);
         $this->event_info                           = (!empty($data['event_info']) && is_array($data['event_info'])) ? $data['event_info'] : $this->get_event($conn, $this->event_id);
@@ -957,14 +957,14 @@ class Alarm
     *
     * @return array
     */
-    private function __get_sidname($conn, $pid, $psid, $cache = FALSE)
+    private function __get_sidname($conn, $pid, $psid, $cache = FALSE, $ctx)
     {
         Ossim_db::check_connection($conn);
 
-        $sql = "SELECT REPLACE(name, 'directive_event: ', '') as sid_name,priority FROM plugin_sid WHERE plugin_id=? AND sid=?";
+        $sql = "SELECT REPLACE(name, 'directive_event: ', '') as sid_name,priority FROM plugin_sid WHERE plugin_id=? AND sid=? AND  hex(plugin_ctx) IN (? ,'00000000000000000000000000000000')";
         $params = array
         (
-            $pid, $psid
+            $pid, $psid, $ctx
         );
         $rs = ($cache) ? $conn->CacheExecute($sql, $params) : $conn->Execute($sql, $params);
         if (!$rs)
@@ -1406,9 +1406,7 @@ class Alarm
             /* If both src and dst are equal, try to find all alarms where src OR dst are equal to the IP */
             if ($src_ip && $dst_ip)
             {
-                $where[] = "((unhex('".bin2hex(inet_pton($source_start))."') <= e.src_ip AND unhex('".bin2hex(inet_pton($source_end))."') >= e.src_ip)
-                            ".($src_ip == $dst_ip ? "OR" : "AND")."
-                (unhex('".bin2hex(inet_pton($dest_start))."') <= e.dst_ip AND unhex('".bin2hex(inet_pton($dest_end))."') >= e.dst_ip))";
+                $where[] = "(unhex('".bin2hex(inet_pton($source_end))."') = e.src_ip AND unhex('".bin2hex(inet_pton($dest_end))."') = e.dst_ip) ";
             }
             elseif ($src_ip)
             {

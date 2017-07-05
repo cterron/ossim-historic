@@ -85,4 +85,5 @@ header("Content-type: text/css");
 .contextMenu LI.addEntity A { background-image: url(../pixmaps/panel/tab_entity.png); background-repeat:no-repeat; font-weight:bold; }
 .contextMenu LI.delete A { white-space:nowrap; background-image: url(../vulnmeter/images/delete.gif); background-repeat:no-repeat; font-weight:bold; }
 .contextMenu LI.toggle A { white-space:nowrap; background-image: url(../pixmaps/eye.png); background-repeat:no-repeat; font-weight:bold; }
+.contextMenu LI.otx-url A { white-space:nowrap; background-image: url(../pixmaps/otx_url.png); background-repeat:no-repeat; font-weight:bold; }
 

@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2016, Emerging Threats
+#  Copyright (c) 2003-2017, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -174,8 +174,6 @@
 
 #alert tcp $HOME_NET any -> $EXTERNAL_NET 20000 (msg:"ET GAMES Gold VIP Club Casino Client in Use"; flow:established,to_server; dsize:25; content:"Gold VIP Club Casino"; reference:url,doc.emergingthreats.net/2007746; classtype:policy-violation; sid:2007746; rev:5;)
 
-#alert udp $EXTERNAL_NET any -> $HOME_NET 7787 (msg:"GPL GAMES Unreal Tournament secure overflow attempt"; content:"|5C|secure|5C|"; nocase; pcre:"/\x5csecure\x5c[^\x00]{50}/smi"; reference:bugtraq,10570; reference:cve,2004-0608; classtype:misc-attack; sid:2103080; rev:3;)
-
 #alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET GAMES Blizzard Web Downloader Install Detected"; flow: established,to_server; content: "User-Agent|3a| Blizzard Web Client"; nocase; classtype:policy-violation; sid:2012170; rev:2;)
 
 #alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET GAMES Second Life setup download"; flow:established,to_server; content:"/Second_Life_Setup.exe"; http_uri; reference:url,en.wikifur.com/wiki/Second_Life; reference:url,wiki.secondlife.com/wiki/Furry; classtype:policy-violation; sid:2013910; rev:3;)
@@ -185,4 +183,6 @@
 alert tcp $EXTERNAL_NET 25565 -> $HOME_NET any (msg:"ET GAMES MINECRAFT Server response inbound"; flow:established,from_server; content:"|7B 22|"; depth:10; classtype:policy-violation; sid:2021701; rev:1;)
 
 alert tcp $HOME_NET 25565 -> $EXTERNAL_NET any (msg:"ET GAMES MINECRAFT Server response outbound"; flow:established,from_server; content:"|7B 22|"; depth:10; classtype:policy-violation; sid:2021702; rev:1;)
+
+#alert udp $EXTERNAL_NET any -> $HOME_NET 7787 (msg:"GPL GAMES Unreal Tournament secure overflow attempt"; content:"|5C|secure|5C|"; nocase; pcre:"/\x5csecure\x5c[^\x00]{50}/smi"; reference:bugtraq,10570; reference:cve,2004-0608; classtype:misc-attack; sid:2103080; rev:3;)
 

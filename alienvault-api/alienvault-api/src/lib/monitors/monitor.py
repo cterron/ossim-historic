@@ -86,6 +86,8 @@ class MonitorTypes(object):
     MONITOR_ENABLED_PLUGINS_LIMIT = 25
     MONITOR_GET_REMOTE_SYSTEM_STATUS = 26
     MONITOR_UPDATE_SYSTEM_WITH_REMOTE_INFO = 27
+    MONITOR_FEED_AUTO_UPDATES = 28
+    MONITOR_SYNC_CUSTOM_PLUGINS = 29
     CHECK_TRIGGERS = 1500
 
 
@@ -96,9 +98,9 @@ class Monitor(object):
     """
 
     def __init__(self, monitor_id):
-        '''
+        """
         Constructor
-        '''
+        """
         self.monitor_id = monitor_id
         self.monitor_objects = []
 
@@ -152,12 +154,15 @@ class Monitor(object):
         """
         return self.message
 
-    def get_json_message(self, message_fields={}):
+    @staticmethod
+    def get_json_message(message_fields=None):
         """
         Builds the JSON monitor message and returns it.
-        :param extra_fields: A dict containing the extra values to insert inside the message
+        :param message_fields: A dict containing the extra values to insert inside the message
         :return: An json string
         """
+        if message_fields is None:
+            message_fields = dict()
         return json.dumps(message_fields)
 
     def get_monitor_id(self):
@@ -166,7 +171,8 @@ class Monitor(object):
     def get_monitor_data(self):
         return self.monitor_data
 
-    def save_message(self, component_id, message_code, level, data):
+    @staticmethod
+    def save_message(component_id, message_code, level, data):
         """
         Save the monitor data.
         :param component_id: The component id - uuid canonical string

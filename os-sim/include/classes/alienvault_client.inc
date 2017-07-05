@@ -303,6 +303,19 @@ class Alienvault_client
 
         return $this->providers->get('asec');
     }
+    
+    
+    /**
+     * This function returns "Plugin" provider
+     *
+     * @return "Plugin" object provider
+     */
+    public function plugin()
+    {
+        $this->providers->set($this->conn, 'plugin', $this->common_url.'/plugin');
+    
+        return $this->providers->get('plugin');
+    }
 }
 
 /* End of file alienvault_client.inc */

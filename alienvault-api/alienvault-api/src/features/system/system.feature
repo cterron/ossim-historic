@@ -36,7 +36,7 @@ Feature: System operations
     And JSON response has key "status" and value equals to string "success"
     And JSON response has key "data.info"
 
-    Scenario: Get a system interfaces 
+    Scenario: Get a system interfaces local
     Given I set username and password to ghost administrator
     And I log into the ossim API using "https://127.0.0.1:40011/av/api/1.0/auth/login"
     And I set variable "s_uuid" to string "local"
@@ -53,7 +53,7 @@ Feature: System operations
     And The JSON response has all the interfaces for system in variable "s_uuid"
     #And I print request result
      
-    Scenario: Get a system interfaces local
+    Scenario: Get a system interfaces
     Given I set username and password to ghost administrator
     And I log into the ossim API using "https://127.0.0.1:40011/av/api/1.0/auth/login"
     And I select the uuid for random system and store it in variable "s_uuid"
@@ -177,6 +177,7 @@ Feature: System operations
         |interface|
         |$iface|
         |traffic|
+    And I set url param "timeout" to string "10"
     When I send a GET request to url stored in the variable "url"
     #Then I print request result
     #And The http status code must be "200"
@@ -200,6 +201,7 @@ Feature: System operations
         |interface|
         |$iface|
         |traffic|
+    And I set url param "timeout" to string "10"
     When I send a GET request to url stored in the variable "url"
     #Then I print request result
     #And The http status code must be "200"

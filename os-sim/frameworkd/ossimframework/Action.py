@@ -149,7 +149,7 @@ class Action(threading.Thread):
                 request_hash[i[0]] = i[1]
         return request_hash
 
-    def getActions(self, id):
+    def getActions(self, policy_id):
         '''
         get matched actions from db
         '''
@@ -161,9 +161,9 @@ class Action(threading.Thread):
         #      for integers : 0
         #
 
-        query = "SELECT hex(action_id) as action_id FROM policy_actions " + \
-                        "WHERE policy_id = unhex('%s')" % re.escape(id)
-        action_info = self.__db.exec_query(query)
+        query = "SELECT hex(action_id) as action_id FROM policy_actions " \
+                "WHERE policy_id = unhex(%s)"
+        action_info = self.__db.exec_query(query, (policy_id,))
 
         for action in action_info:
             action_id = action['action_id']
@@ -177,9 +177,8 @@ class Action(threading.Thread):
         temp_str = " Alert detail: \n"
         for key, value in request.iteritems():
             if 'date' == key:
-                query = "SELECT timezone FROM users WHERE email = '%s'" \
-                        % email_to
-                result = self.__db.exec_query(query)
+                query = "SELECT timezone FROM users WHERE email = %s"
+                result = self.__db.exec_query(query, (email_to,))
                 if result:
                     to_zone = result[0]['timezone']
                     value = Util.change_datetime_timezone(value, 'UTC', to_zone)
@@ -188,9 +187,8 @@ class Action(threading.Thread):
                     policy_id = policy_id.replace('-', '')
                     query = "SELECT timezone FROM policy_time_reference, policy " \
                             "WHERE policy.id = policy_time_reference.policy_id " \
-                            "AND policy.id = UNHEX('%s')" \
-                            % policy_id
-                    result = self.__db.exec_query(query)
+                            "AND policy.id = UNHEX(%s)"
+                    result = self.__db.exec_query(query, (policy_id,))
                     if result:
                         to_zone = result[0]['timezone']
                         value = Util.change_datetime_timezone(value, 'UTC', to_zone)
@@ -201,8 +199,8 @@ class Action(threading.Thread):
 
     def getHostnameFromIP(self, hostip):
         hostname = ""
-        query = "select hostname from host,host_ip where host.id=host_ip.host_id and host_ip.ip=inet6_aton('%s')" % hostip;
-        data = self.__db.exec_query(query)
+        query = "select hostname from host,host_ip where host.id=host_ip.host_id and host_ip.ip=inet6_aton(%s)"
+        data = self.__db.exec_query(query, (hostip,))
         if data:            
             hostname = data[0]['hostname']
         return hostname
@@ -210,6 +208,8 @@ class Action(threading.Thread):
     def doAction(self, action_id):
         src_hostname = self.getHostnameFromIP(self.__request.get('src_ip', ''))
         dst_hostname = self.getHostnameFromIP(self.__request.get('dst_ip', ''))
+        plugin_id = int(self.__request['plugin_id'])
+        plugin_sid = int(self.__request['plugin_sid'])
         
         protocol = Util.getProtoByNumber(self.__request.get('protocol', ''))
         self.__request['protocol'] = protocol
@@ -249,23 +249,22 @@ class Action(threading.Thread):
         # Fields with integer values
         int_fields = ["PLUGIN_ID", "PLUGIN_SID", "RISK", "PRIORITY", "RELIABILITY", "SRC_PORT", "DST_PORT"]
 
-        query = "SELECT * FROM plugin WHERE id = %d" % int(self.__request['plugin_id'])
+        query = "SELECT * FROM plugin WHERE id = %s"
 
-        for plugin in self.__db.exec_query(query):
+        for plugin in self.__db.exec_query(query, (plugin_id,)):
             # should only yield one result anyway
             replaces["PLUGIN_NAME"] = plugin['name']
 
-        query = "SELECT * FROM plugin_sid WHERE plugin_id = %d AND sid = %d" % \
-            (int(self.__request['plugin_id']), int(self.__request['plugin_sid']))
-        for plugin_sid in self.__db.exec_query(query):
+        query = "SELECT * FROM plugin_sid WHERE plugin_id = %s AND sid = %s"
+        for plugin_sid in self.__db.exec_query(query, (plugin_id, plugin_sid)):
             # should only yield one result anyway
             replaces["SID_NAME"] = plugin_sid['name']
 
         query = "SELECT a.id as id,a.ctx as ctx,a.action_type as action_type ,\
                 a.cond as cond,a.on_risk as on_risk,a.descr as descr,\
                 at.name as name FROM action a, action_type at \
-                WHERE id = unhex('%s') and a.action_type = at.type" % (action_id)
-        for action in self.__db.exec_query(query):
+                WHERE id = unhex(%s) and a.action_type = at.type"
+        for action in self.__db.exec_query(query, (action_id,)):
 
             ####################################################################
             # Condition
@@ -324,14 +323,16 @@ class Action(threading.Thread):
                 risk_new = int(self.__request.get('risk', ''))
 
                 # get the old risk value
-                query = "SELECT * FROM action_risk WHERE action_id = unhex('%s') AND backlog_id = unhex('%s')" % (action_id, backlog_id)
-                for action_risk in self.__db.exec_query(query):
+                query = "SELECT * FROM action_risk WHERE action_id = unhex(%s) AND backlog_id = unhex(%s)"
+                for action_risk in self.__db.exec_query(query, (action_id, backlog_id)):
                     # should only yield one result anyway
                     risk_old = int(action_risk['risk'])
                     break
                 else:
-                    query = "INSERT INTO action_risk VALUES (%d, %d, %d)" % (
-                        int(action_id), int(backlog_id), int(risk_new))
+                    query = self.__db.format_query(
+                        "INSERT INTO action_risk VALUES (%s, %s, %s)",
+                        (int(action_id), int(backlog_id), int(risk_new))
+                    )
                     logger.debug(": %s" % query)
                     self.__db.exec_query(query)
 
@@ -340,8 +341,10 @@ class Action(threading.Thread):
                 if risk_new <= risk_old: continue
 
                 # save the new risk value
-                query = "UPDATE action_risk SET risk = %d WHERE action_id = unhex('%s') AND backlog_id = unhex('%s')" % (
-                    int(risk_new), action_id, backlog_id)
+                query = self.__db.format_query(
+                    "UPDATE action_risk SET risk = %s WHERE action_id = unhex(%s) AND backlog_id = unhex(%s)",
+                    (int(risk_new), action_id, backlog_id)
+                )
                 logger.debug(": %s" % query)
                 self.__db.exec_query(query)
 
@@ -358,9 +361,8 @@ class Action(threading.Thread):
                 self.get_mail_server_data()
                 if not self.__email_server_relay_enabled:
                     logger.warning("Email server relay not enabled. Using local postfix..")
-                query = "SELECT * FROM action_email WHERE action_id = unhex('%s')" % \
-                    (action_id)
-                for action_email in self.__db.exec_query(query):
+                query = "SELECT * FROM action_email WHERE action_id = unhex(%s)"
+                for action_email in self.__db.exec_query(query, (action_id,)):
                     email_from = action_email['_from']
                     email_to = action_email['_to'].split(',')
                     if len(email_to) == 1:
@@ -387,19 +389,19 @@ class Action(threading.Thread):
                                    self.__email_server_passwd, use_local_server)
 
                     for mail in email_to:
+                        new_email_message = email_message;
                         if action_email['message_suffix'] == 1:
-                            email_message += "\n\n" + self.requestRepr(self.__request, mail)
+                            new_email_message += "\n\n" + self.requestRepr(self.__request, mail)
                         m.sendmail(email_from,
                                    mail,
                                    email_subject,
-                                   email_message)
+                                   new_email_message)
                     del(m)
 
             # execute external command
             elif action['name'] == 'exec':
-                query = "SELECT * FROM action_exec WHERE action_id = unhex('%s')" % \
-                    (action_id)
-                for action_exec in self.__db.exec_query(query):
+                query = "SELECT * FROM action_exec WHERE action_id = unhex(%s)"
+                for action_exec in self.__db.exec_query(query, (action_id,)):
                     action = action_exec['command']
                     for replace in replaces:
                         replace_variable = r'\b%s\b' % replace
@@ -411,11 +413,11 @@ class Action(threading.Thread):
 
             elif action['name'] == 'ticket':
                 descr = action['descr']
-                plugin_id = int(self.__request.get('plugin_id', ''))
-                plugin_sid = int(self.__request.get('plugin_sid', ''))
                 title = 'Automatic Incident Ticket'
-                namequery = "select if((select name from plugin_sid where plugin_id='%s' and sid='%s')!='',(select name from plugin_sid where plugin_id='%s' and sid='%s')  , 'Automatic Incident Ticket') as name;" % (plugin_id, plugin_sid, plugin_id, plugin_sid)
-                data = self.__db.exec_query(namequery)
+                namequery = "select if((select name from plugin_sid where plugin_id=%(plugin_id)s" \
+                            " and sid=%(sid)s)!='',(select name from plugin_sid where plugin_id=%(plugin_id)s" \
+                            " and sid=%(sid)s)  , 'Automatic Incident Ticket') as name;"
+                data = self.__db.exec_query(namequery, {"plugin_id": plugin_id, "sid": plugin_sid})
                 if data != []:
                     title = data[0]['name']
                 regexp = re.compile('(?P<data>.*)##@##(?P<username>.*)')
@@ -436,7 +438,18 @@ class Action(threading.Thread):
 
 
                 ctx = ctx.replace('-', '')
-                insert_query = """insert into incident (uuid,ctx,title,date,ref,type_id,priority,status,last_update,in_charge,submitter,event_start,event_end) values (unhex('%s'),unhex('%s'),'%s',utc_timestamp(),'Event','Generic','%s','Open',utc_timestamp(),'%s','admin',utc_timestamp(),utc_timestamp()); """ % (incident_uuid, ctx, title, priority, in_charge)
+                insert_query = "insert into incident (uuid,ctx,title,date,ref,type_id,priority,status,last_update," \
+                               "in_charge,submitter,event_start,event_end) values (unhex(%(uuid)s)," \
+                               "unhex(%(ctx)s),%(title)s,utc_timestamp(),'Event','Generic',%(priority)s," \
+                               "'Open',utc_timestamp(),%(in_charge)s,'admin',utc_timestamp(),utc_timestamp());"
+                params = {
+                    "uuid": incident_uuid,
+                    "ctx": ctx,
+                    "title": title,
+                    "priority": priority,
+                    "in_charge": in_charge
+                }
+                insert_query = self.__db.format_query(insert_query, params)
                 self.__db.exec_query(insert_query)
                 logger.debug("Query: %s" % insert_query)
 
@@ -451,10 +464,10 @@ class Action(threading.Thread):
                 if data != []:
                     last_id = data[0]['id']
 
-                insert_incident_event_query = """ INSERT INTO incident_event (incident_id,src_ips,src_ports,dst_ips,dst_ports) values ('%s','%s','%s','%s','%s'); """ % (last_id, src_ip, src_port, dst_ip, dst_port) 
-                insert_subscription_query = "REPLACE INTO incident_subscrip(login, incident_id) VALUES('admin', {0})".format(last_id)
-                self.__db.exec_query(insert_incident_event_query)
-                self.__db.exec_query(insert_subscription_query)
+                insert_incident_event_query = "INSERT INTO incident_event (incident_id,src_ips,src_ports,dst_ips,dst_ports) values (%s,%s,%s,%s,%s);"
+                insert_subscription_query = "REPLACE INTO incident_subscrip(login, incident_id) VALUES('admin', %s)"
+                self.__db.exec_query(insert_incident_event_query, (last_id, src_ip, src_port, dst_ip, dst_port))
+                self.__db.exec_query(insert_subscription_query, (last_id,))
 
                 data = self.__db.exec_query("select max(id)+1 as id from incident_ticket;")
                 newid = '0'
@@ -474,18 +487,29 @@ class Action(threading.Thread):
                     # event_id = self.__request.get('event_id', '').upper().replace('-','')
                     # event_url = "<a target=\"_blank\" href=\"https://%s/ossim/forensics/base_qry_alert.php?noheader=true&pag=&submit=#0-%s&m_opt=analysis&sm_opt=security_events&h_opt=security_events\">Link to Event</a>" % (ossim_setup['framework_ip'], event_id)
                     # descr = descr + "<br>" + event_url
-                insert_ticket_query = """ insert into incident_ticket(id,incident_id,date,status,priority,description,in_charge,users) values ('%s','%s',utc_timestamp(),'Open','%s','%s','%s','admin');""" % (newid, last_id, priority, descr, in_charge)
-                self.__db.exec_query(insert_ticket_query)
+                insert_ticket_query = "insert into incident_ticket(id,incident_id,date,status,priority,description," \
+                                      "in_charge,users) values (%(id)s,%(incident_id)s,utc_timestamp(),'Open'," \
+                                      "%(priority)s,%(description)s,%(in_charge)s,'admin');"
+                insert_ticket_params = {
+                    "id": newid,
+                    "incident_id": last_id,
+                    "priority": priority,
+                    "description": descr,
+                    "in_charge": in_charge
+                }
+                self.__db.exec_query(insert_ticket_query, insert_ticket_params)
 
                 # Check if this context has an IRS webservice linked.
                 ticket_data = {'type': '', 'op': 'INSERT', 'incident_id': last_id, 'date': time.asctime(), 'in_charge': in_charge, 'description': descr, 'status': 'Open'}
-                ws_query = "SELECT id, type FROM webservice WHERE ctx = UNHEX('%s') AND type IN ('%s')" % (ctx, ','.join(IRS_TYPES))
-                ws_data = self.__db.exec_query(ws_query)
+                type_params = ["%s" for _ in xrange(len(IRS_TYPES))]
+                ws_query = "SELECT id, type FROM webservice WHERE ctx = UNHEX(%s) AND type IN (" + \
+                           ",".join(type_params) + ")"
+                ws_data = self.__db.exec_query(ws_query, tuple([ctx] + IRS_TYPES))
                 for item in ws_data:
                     ticket_data['type'] = ws_data['type']
                     # Create webservices, if available.
                     handler = WSHandler (self.__conf, item['id'])
-                    if handler != None:
+                    if handler is not None:
                         ret = handler.process_db (ticket_data)
             else:
                 logger.error("Invalid action_type: '%s'" % action['action_type'])

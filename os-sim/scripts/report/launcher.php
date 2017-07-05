@@ -61,7 +61,8 @@ function getScheduler($conn)
                         'date_to'               =>$rs->fields['date_to'],
                         'date_range'            =>$rs->fields['date_range'],
                         'assets'                =>$rs->fields['assets'],
-                        'save_in_repository'    =>$rs->fields['save_in_repository']
+                        'save_in_repository'    =>$rs->fields['save_in_repository'],
+                        'file_type'             =>$rs->fields['file_type']
                 );
             }
             else
@@ -490,8 +491,9 @@ foreach ( $scheduled_reports as $value )
 
     $text    = _('Save to').':';
     $to_text = sprintf("\n%-16s", $text);
-
-    $to_text .= $dirUserPdf.$pdfName.".pdf\n";
+    $extension = $value['file_type'] == 'xls' ? 'xlsx' : 'pdf';
+    $file = "$dirUserPdf$pdfName.$extension";
+    $to_text .= $file."\n";
 
     echo $to_text;
 
@@ -510,7 +512,7 @@ foreach ( $scheduled_reports as $value )
 
 
     // Generate PDF
-    $text    = _('Generating PDF').'...';
+    $text    = _('Generating').' '.strtoupper(_($extension)).'...';
     $to_text = sprintf("\n\t%s", $text);
 
     echo $to_text;
@@ -532,8 +534,8 @@ foreach ( $scheduled_reports as $value )
         $params = array(
                 'AV Report Scheduler ['.$id_sched.']',
                 $cookieName,
-                $server.'/report/wizard_run.php?pdf=true&extra_data=true&run='.$value['id_report'],
-                $dirUserPdf.$pdfName.'.pdf'
+                $server.'/report/wizard_run.php?'.$value['file_type'].'=true&extra_data=true&run='.$value['id_report'],
+                $file
                 );
         
         $output = Util::execute_command($cmd, $params, 'array');

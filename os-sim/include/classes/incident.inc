@@ -1041,6 +1041,8 @@ class Incident
 	$where = isset($args["where"]) ? $args["where"] : "";
         $having = isset($args["having"]) ? " HAVING ".$args["having"] : "";
         $order = isset($args["order"]) ? $args["order"] : "";
+        $all_param_together = !empty($args) && empty($where) && empty($having) && empty($order) ? $args : "";
+
         if(empty($user_list))
         {
             $query   = "SELECT incident.id, incident.uuid, incident.ctx, incident.title, incident.ref,
@@ -1051,7 +1053,7 @@ class Incident
                              DATE_ADD(incident.event_end, INTERVAL $tz HOUR) as event_end,
                              DATE_ADD(incident.date, INTERVAL $tz HOUR) as date
                       FROM incident WHERE 1=1
-                      $where $having $order
+                      $where $having $order $all_param_together
            ";
         }
         else

@@ -365,7 +365,7 @@ def resolv_ip(addr):
     try:
         (hostname, aliaslist, ipaddrlist) = socket.gethostbyaddr(addr)
 
-    except socket.gaierror:
+    except socket.error:
         return addr
 
     return hostname

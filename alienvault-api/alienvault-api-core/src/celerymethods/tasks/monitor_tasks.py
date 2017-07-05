@@ -38,7 +38,9 @@ from api.lib.monitors.sensor import (MonitorSensorLocation,
                                      MonitorPluginsVersion,
                                      MonitorPluginIntegrity,
                                      MonitorUpdateHostPlugins,
-                                     MonitorEnabledPluginsLimit)
+                                     MonitorEnabledPluginsLimit,
+                                     MonitorSyncCustomPlugins,
+                                     )
 
 from api.lib.monitors.assets import MonitorSensorAssetLogActivity
 
@@ -61,7 +63,8 @@ from api.lib.monitors.system import (MonitorSystemCPULoad,
                                      MonitorSystemRebootNeeded,
                                      MonitorDownloadPulses,
                                      MonitorInsecureVPN,
-                                     MonitorFederatedOTXKey)
+                                     MonitorFederatedOTXKey,
+                                     MonitorFeedAutoUpdates)
 
 from api.lib.monitors.doctor import MonitorPlatformTelemetryData
 
@@ -347,6 +350,23 @@ def monitor_check_platform_telemetry_data():
 
 
 @celery_instance.task
+def monitor_feed_auto_updates():
+    """Task to perform feed auto updates - when enabled from the UI.
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorAutoFeedUpdates started")
+    monitor = MonitorFeedAutoUpdates()
+    rt = False
+    if monitor.start():
+        rt = True
+    logger.info("Monitor MonitorAutoFeedUpdates stopped")
+
+    return rt
+
+
+@celery_instance.task
 def monitor_download_mcserver_messages():
     """Task to run periodically."""
     logger.info("Monitor monitor_download_mcserver_messages... started")
@@ -555,4 +575,21 @@ def monitor_federated_otx_key():
     except:
         return False
     logger.info("Monitor MonitorFederatedOTXKey stopped")
+    return rt
+
+
+@celery_instance.task
+def monitor_sync_custom_plugins():
+    """Monitor to rsync all plugins between connected sensors
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorSyncCustomPlugins started")
+    monitor = MonitorSyncCustomPlugins()
+    rt = False
+
+    if monitor.start():
+        rt = True
+
+    logger.info("Monitor MonitorSyncCustomPlugins stopped")
+
     return rt

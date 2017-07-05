@@ -36,7 +36,7 @@ import api_log
 import uuid
 from base64 import b64decode
 from os.path import basename
-from db.methods.system import get_system_ip_from_system_id
+from db.methods.system import get_system_ip_from_system_id, ossim_setup
 from apiexceptions.ansible import APIAnsibleError, APIAnsibleBadResponse
 from ansiblemethods.ansiblemanager import Ansible, PLAYBOOKS
 from ansiblemethods.helper import (
@@ -443,6 +443,18 @@ def ansible_clean_squid_config(remote_system_ip):
     can use this IP to bypass firewall restrictions and access the Internet via USM proxy;
     this in essence constitutes a security policy violation.
     """
+
+    response = None
+
+    try:
+        local_system_ip = ossim_setup.get_general_admin_ip(refresh=True)
+    except NoResultFound, msg:
+        return False, "No admin_ip found for local system"
+    except MultipleResultsFound, msg:
+        return False, "More than one admin_ip found for local system"
+    except Exception, msg:
+        return False, "Error captured while querying for local system admin_ip: %s" % str(msg)
+
     conf = "/etc/squid3/squid.conf"
     correct_regexp_ip = remote_system_ip.replace(".", "\.")
     # Whole command:

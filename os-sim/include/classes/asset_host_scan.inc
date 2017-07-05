@@ -422,7 +422,7 @@ class Asset_host_scan
         
         $query   = "SELECT HEX(asset_id) AS asset_id FROM user_component_filter 
                     WHERE asset_type = 'asset' AND session_id = ?
-                    AND asset_id NOT IN (SELECT host_id FROM host_scan WHERE status IN (0, 1, 2))";
+                    AND asset_id NOT IN (SELECT host_id FROM host_scan WHERE plugin_id = '2007' AND status IN (0, 1, 2))";
         
         $rs = $conn->Execute($query, array($session));
         

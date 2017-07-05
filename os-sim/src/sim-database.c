@@ -254,7 +254,7 @@ sim_database_execute_no_query  (SimDatabase  *database,
   {
     while (!GDA_IS_CONNECTION (database->_priv->conn) || !gda_connection_is_opened (database->_priv->conn)) //if database connection is not open, try to open it.
     {
-      g_message ("Error (1): DB Connection is closed. Trying to open it again....");
+      g_message ("Warning (1): DB Connection is closed. Trying to open it again....");
       conn = database->_priv->conn;
 
 
@@ -362,7 +362,7 @@ sim_database_execute_single_command (SimDatabase  *database,
 
   while (!GDA_IS_CONNECTION (database->_priv->conn) || !gda_connection_is_opened (database->_priv->conn))
   {
-    g_message ("Error (2): DB Connection is closed. Trying to open it again....");
+    g_message ("Warning (2): DB Connection is closed. Trying to open it again....");
     conn = database->_priv->conn;
 
     database->_priv->conn = gda_connection_open_from_string (database->_priv->provider,

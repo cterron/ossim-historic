@@ -114,11 +114,14 @@ class Policy_host_reference
     {
         foreach($host_list as $host_id) 
         {
-			$host_id = (!strcasecmp($host_id, 'any')) ? 0 : $host_id;
-			
-			$params  = array($policy_id, $host_id, $direction);            
+            switch(0) {
+                case strcasecmp($host_id,'any'): $host_id = 0; break;
+                case strcasecmp($host_id,'home_net'): $host_id = "01"; break;
+                case strcasecmp($host_id,'!home_net'): $host_id = "02"; break;
+                default: $host_id = $host_id;
+            }
+            $params  = array($policy_id, $host_id, $direction);            
             $query   = "INSERT INTO policy_host_reference VALUES (UNHEX(?), UNHEX(?), ?)";
-            
             if ($conn->Execute($query, $params) === FALSE) 
             {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());

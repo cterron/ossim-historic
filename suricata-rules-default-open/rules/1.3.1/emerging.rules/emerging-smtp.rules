@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2016, Emerging Threats
+#  Copyright (c) 2003-2017, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -38,6 +38,24 @@
 
 # This Ruleset is EmergingThreats Open optimized for suricata-1.3.
 
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ET SMTP Potential Exim HeaderX with run exploit attempt"; flow:established,to_server; content:"|0d 0a|HeaderX|3a 20|"; nocase; content:"run{"; distance:0; reference:url,www.exim.org/lurker/message/20101207.215955.bb32d4f2.en.html; reference:url,eclists.org/fulldisclosure/2010/Dec/221; classtype:attempted-admin; sid:2012054; rev:3;)
+
+#alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET SMTP IBM Lotus Domino iCalendar Email Address Stack Buffer Overflow Attempt"; flow:to_server,established; content:"|0d 0a|ORGANIZER"; content:"mailto|3a|"; nocase; within:50; isdataat:2000,relative; content:!"|0a|"; within:2000; reference:url,www.exploit-db.com/exploits/15005/; reference:cve,2010-3407; classtype:attempted-user; sid:2012135; rev:3;)
+
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Abuseat.org Block Message"; flow:established,from_server; content:"abuseat.org"; classtype:not-suspicious; sid:2012982; rev:3;)
+
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Spamcop.net Block Message"; flow:established,from_server; content:"spamcop.net"; classtype:not-suspicious; sid:2012983; rev:2;)
+
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sophos.com Block Message"; flow:established,from_server; content:"sophos.com"; classtype:not-suspicious; sid:2012984; rev:2;)
+
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sorbs.net Block Message"; flow:established,from_server; content:"sorbs.net"; classtype:not-suspicious; sid:2012985; rev:2;)
+
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Robtex.com Block Message"; flow:established,from_server; content:"robtex.com"; classtype:not-suspicious; sid:2012986; rev:2;)
+
+alert smtp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SMTP EXE - ZIP file with .pif filename inside"; flow:established; content:"|0D 0A 0D 0A|UmFyI"; pcre:"/^[A-Za-z0-9\/\+\x0D\x0A]+?(LnBpZ|5waW|ucGlm)/R"; classtype:bad-unknown; sid:2018144; rev:2;)
+
+alert tcp any any -> $SMTP_SERVERS [25,587] (msg:"ET SMTP Incoming SMTP Message with Possibly Malicious MIME Epilogue 2016-05-13 (BadEpilogue)"; flow:to_server,established; content:"|0d 0a|Content-Type|3a 20|multipart|2f|mixed|3b|"; fast_pattern:12,20; content:"|0d 0a 2d 2d|"; distance:0; pcre:"/^(?P<boundary>[\x20\x27-\x29\x2b-\x2f0-9\x3a\x3d\x3fA-Z\x5fa-z]{0,69}?[^\x2d])--(?:\x0d\x0a(?!--|\x2e|RSET)[^\r\n]*?)*\x0d\x0a--(?P=boundary)\x0d\x0a/R"; reference:url,www.certego.local/en/news/badepilogue-the-perfect-evasion/; classtype:bad-unknown; sid:2023255; rev:1;)
+
 #alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP EXPN overflow attempt"; flow:to_server,established; content:"EXPN"; nocase; isdataat:255,relative; content:!"|0a|"; within:255; pcre:"/^EXPN[^\n]{255}/smi"; reference:bugtraq,6991; reference:bugtraq,7230; reference:cve,2002-1337; reference:cve,2003-0161; classtype:attempted-admin; sid:2102259; rev:9;)
 
 #alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP MAIL FROM overflow attempt"; flow:to_server,established; content:"MAIL FROM"; nocase; isdataat:260; content:!"|0A|"; within:256; reference:bugtraq,10290; reference:bugtraq,7506; reference:cve,2004-0399; reference:url,www.guninski.com/exim1.html; classtype:attempted-admin; sid:2102590; rev:5;)
@@ -63,22 +81,4 @@
 #alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP SMTP relaying denied"; flow:established,from_server; content:"550 5.7.1"; depth:70; reference:arachnids,249; reference:url,mail-abuse.org/tsi/ar-fix.html; classtype:misc-activity; sid:2100567; rev:12;)
 
 #alert tcp $SMTP_SERVERS 25 -> $EXTERNAL_NET any (msg:"GPL SMTP AUTH LOGON brute force attempt"; flow:from_server,established; content:"Authentication unsuccessful"; offset:54; nocase; threshold:type threshold, track by_dst, count 5, seconds 60; classtype:suspicious-login; sid:2102275; rev:3;)
-
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 25 (msg:"ET SMTP Potential Exim HeaderX with run exploit attempt"; flow:established,to_server; content:"|0d 0a|HeaderX|3a 20|"; nocase; content:"run{"; distance:0; reference:url,www.exim.org/lurker/message/20101207.215955.bb32d4f2.en.html; reference:url,eclists.org/fulldisclosure/2010/Dec/221; classtype:attempted-admin; sid:2012054; rev:3;)
-
-#alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET SMTP IBM Lotus Domino iCalendar Email Address Stack Buffer Overflow Attempt"; flow:to_server,established; content:"|0d 0a|ORGANIZER"; content:"mailto|3a|"; nocase; within:50; isdataat:2000,relative; content:!"|0a|"; within:2000; reference:url,www.exploit-db.com/exploits/15005/; reference:cve,2010-3407; classtype:attempted-user; sid:2012135; rev:3;)
-
-#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Abuseat.org Block Message"; flow:established,from_server; content:"abuseat.org"; classtype:not-suspicious; sid:2012982; rev:3;)
-
-#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Spamcop.net Block Message"; flow:established,from_server; content:"spamcop.net"; classtype:not-suspicious; sid:2012983; rev:2;)
-
-#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sophos.com Block Message"; flow:established,from_server; content:"sophos.com"; classtype:not-suspicious; sid:2012984; rev:2;)
-
-#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sorbs.net Block Message"; flow:established,from_server; content:"sorbs.net"; classtype:not-suspicious; sid:2012985; rev:2;)
-
-#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Robtex.com Block Message"; flow:established,from_server; content:"robtex.com"; classtype:not-suspicious; sid:2012986; rev:2;)
-
-alert smtp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SMTP EXE - ZIP file with .pif filename inside"; flow:established; content:"|0D 0A 0D 0A|UmFyI"; pcre:"/^[A-Za-z0-9\/\+\x0D\x0A]+?(LnBpZ|5waW|ucGlm)/R"; classtype:bad-unknown; sid:2018144; rev:2;)
-
-alert tcp any any -> $SMTP_SERVERS [25,587] (msg:"ET SMTP Incoming SMTP Message with Possibly Malicious MIME Epilogue 2016-05-13 (BadEpilogue)"; flow:to_server,established; content:"|0d 0a|Content-Type|3a 20|multipart|2f|mixed|3b|"; fast_pattern:12,20; content:"|0d 0a 2d 2d|"; distance:0; pcre:"/^(?P<boundary>[\x20\x27-\x29\x2b-\x2f0-9\x3a\x3d\x3fA-Z\x5fa-z]{0,69}?[^\x2d])--(?:\x0d\x0a(?!--|\x2e|RSET)[^\r\n]*?)*\x0d\x0a--(?P=boundary)\x0d\x0a/R"; reference:url,www.certego.local/en/news/badepilogue-the-perfect-evasion/; classtype:bad-unknown; sid:2023255; rev:1;)
 

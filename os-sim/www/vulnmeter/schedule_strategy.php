@@ -561,7 +561,7 @@ trait ScheduleSave {
 			$ndays = dates::$daysMap;
 			if($parameters["schedule_type"] == 'NW') {
 				list($year,$month,$day) = $this->weekday_month(
-					strtolower($ndays[$parameters['nthdayofweek']]), $parameters['nthweekday'], $year, $month, $hour, $minute, $tztimediff);
+					strtolower($ndays[$parameters['nthdayofweek']]), $parameters['nthweekday'], $year, $month, $hour, $min, $tztimediff);
 				$this->schedule->parameters['dayofmonth'] = $parameters['nthweekday'];
 				$this->schedule->parameters['dayofweek'] = $parameters['nthdayofweek'];
 			} elseif ($parameters["schedule_type"] == 'W') {

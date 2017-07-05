@@ -1489,11 +1489,11 @@ function draw_active_device_table()
                 "html": led
             }).appendTo(row);
 
-            led = draw_led('host');
+         /*   led = draw_led('host');
 
             $('<td>', {
                 "html": led
-            }).appendTo(row);
+            }).appendTo(row);*/
 
             $('<td>', {
                 "html": "<a href='javascript:;' target='_blank' class='view_links av_l_main'><?php echo Util::js_entities(_('Instruction to forward logs')) ?></a>"

@@ -69,6 +69,7 @@ from avconfig import ossimsetupconfig
 # CONSTANTS
 CONFFILE = "/etc/ossim/ossim_setup.conf"
 PLUGIN_PATH = "/etc/ossim/agent/plugins"
+CUSTOM_PLUGIN_PATH = "/etc/alienvault/plugins/custom/"
 SHIPPED_PLUGIN_PATH = "/usr/share/alienvault-plugins/d_clean/plugins"
 CONFIG_YAML_FILE = "/etc/ossim/agent/config.yml"
 
@@ -205,7 +206,7 @@ def __parse_header(plugin_name, header_lines):
     return header_info
 
 
-def __get_available_plugins(plugin_path=PLUGIN_PATH):
+def __get_available_plugins(plugin_path=None):
     """
     plugin_info = {"file_name": {"plugin_id": "",
                                  "type"
@@ -227,7 +228,14 @@ def __get_available_plugins(plugin_path=PLUGIN_PATH):
     plugins = {}
 
     try:
-        plugin_files = glob.glob(os.path.join(plugin_path, '*.cfg'))
+        if plugin_path is not None:
+            # Check custom path
+            plugin_files = glob.glob(os.path.join(plugin_path, '*.cfg'))
+        else:
+            # Check directories for default and custom plugins
+            plugin_files = glob.glob(os.path.join(PLUGIN_PATH, '*.cfg'))
+            custom_plugin_files = glob.glob(os.path.join(CUSTOM_PLUGIN_PATH, '*.cfg'))
+            plugin_files.extend(custom_plugin_files)
     except:
         plugin_files = []
 

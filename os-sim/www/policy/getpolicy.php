@@ -190,116 +190,20 @@ foreach($policy_list as $policy)
 	
 	$xml   .= "<cell><![CDATA[" . $pname . "]]></cell>";
     $source = "";
-	
+
+
+
+
     if ($engine != 'engine')
     {
-        if ($source_host_list = $policy->get_hosts($conn, 'source')) 
-        {
-    		foreach($source_host_list as $source_host) 
-    		{
-    			if(!check_any($source_host->get_host_id()))
-    			{
-    				$source.= ($source == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/host.png' align=absbottom /> " . Asset_host::get_name_by_id($conn, $source_host->get_host_id());
-    			}
-    		}
-    	}
-    	
-        if ($source_net_list = $policy->get_nets($conn, 'source'))
-        {
-    		foreach($source_net_list as $source_net) 
-    		{
-    			if(!check_any($source_net->get_net_id()))
-    			{
-    				 $source.= ($source == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/net.png' align=absbottom /> " . Asset_net::get_name_by_id($conn, $source_net->get_net_id());		
-    			}
-    			
-    		}
-    	}
-    	
-        if ($source_host_list = $policy->get_host_groups($conn, 'source'))
-        {
-    		foreach($source_host_list as $source_host_group) 
-    		{
-    			if(!check_any($source_host_group->get_host_group_id()))
-    			{
-    				$source.= ($source == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/host_group.png' align=absbottom /> " . Asset_group::get_name_by_id($conn, $source_host_group->get_host_group_id());
-    			}
-    		}
-    	}
-    	
-        if ($source_net_list = $policy->get_net_groups($conn, 'source'))
-        {
-    		foreach($source_net_list as $source_net_group) 
-    		{
-    			if(!check_any($source_net_group->get_net_group_id()))
-    			{
-    				$source.= ($source == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/net_group.png' align=absbottom /> " . Net_group::get_name_by_id($conn, $source_net_group->get_net_group_id());
-    			}
-    		}
-    	}
-    	
-    	if (empty($source)) 
-    	{
-        	$source = "<img src='../pixmaps/theme/host.png' align=absbottom />$value_any";
-        }
-    	
-        $xml.= "<cell><![CDATA[" . $source . "]]></cell>";
-        //
-        $dest = "";
-    	
-        if ($dest_host_list = $policy->get_hosts($conn, 'dest'))
-        {
-    		foreach($dest_host_list as $dest_host) 
-    		{
-    			if(!check_any($dest_host->get_host_id())) 
-    			{
-    				$dest.= ($dest == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/host.png' align=absbottom /> " . Asset_host::get_name_by_id($conn, $dest_host->get_host_id());
-    			}
-    		}
-    	}
-    	
-        if ($dest_net_list = $policy->get_nets($conn, 'dest'))
-        {
-    		foreach($dest_net_list as $dest_net) 
-    		{
-    			if(!check_any($dest_net->get_net_id()))
-    			{
-    				$dest.= ($dest == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/net.png' align=absbottom /> " . Asset_net::get_name_by_id($conn, $dest_net->get_net_id());
-    			}
-    		}
-    	}
-    	
-        if ($dest_host_list = $policy->get_host_groups($conn, 'dest'))
-        {
-    		foreach($dest_host_list as $dest_host_group) 
-    		{
-    			if(!check_any($dest_host_group->get_host_group_id()))
-    			{
-    				$dest.= ($dest == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/host_group.png' align=absbottom /> " . Asset_group::get_name_by_id($conn, $dest_host_group->get_host_group_id());
-    			}
-    		}
-    	}
-    	
-        if ($dest_net_list = $policy->get_net_groups($conn, 'dest'))
-        {
-    		foreach($dest_net_list as $dest_net_group) 
-    		{
-    			if(!check_any($dest_net_group->get_net_group_id()))
-    			{
-    				$dest.= ($dest == "" ? "" : "<br/>") . "<img src='../pixmaps/theme/net_group.png' align=absbottom /> " . Net_group::get_name_by_id($conn, $dest_net_group->get_net_group_id());
-    			}
-    		}
-    	}   
-
-    	
-    	if (empty($dest)) 
-    	{
-        	$dest = "<img src='../pixmaps/theme/host.png' align=absbottom />$value_any";
-        }
-    	
-        $xml.= "<cell><![CDATA[" . $dest . "]]></cell>";
-        
-    	
+	$create_ico = function($text,$type) {
+		return "<img src='../pixmaps/theme/$type.png' align=absbottom /> $text";
+	};
+	$decorator_vars = array("host","net","host_group","net_group");
+	$get_cell = function($type) use ($conn,$create_ico,$decorator_vars,$policy) {
+		return "<cell><![CDATA[" .implode("<br/>",$policy->get_srcdst_cell($type,$conn,$create_ico,$decorator_vars)). "]]></cell>";
+	};
+	$xml .= $get_cell("source").$get_cell("dest");
         //Ports source
         $ports = "";
         if ($port_list = $policy->get_ports($conn, 'source'))

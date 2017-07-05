@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2016, Emerging Threats
+#  Copyright (c) 2003-2017, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -73,6 +73,16 @@
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username UNION SELECT SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"UNION"; within:200; nocase; content:"SELECT"; distance:0; nocase; pcre:"/UNION.+SELECT/i"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2009985; classtype:attempted-user; sid:2009985; rev:2;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Possible FTP Daemon Username INTO OUTFILE SQL Injection Attempt"; flow:established,to_server; content:"USER"; depth:4; content:"INTO"; within:200; nocase; content:"OUTFILE"; distance:0; nocase; pcre:"/INTO.+OUTFILE/i"; reference:url,www.milw0rm.com/papers/372; reference:url,www.greensql.net/publications/backdoor-webserver-using-mysql-sql-injection; reference:url,websec.wordpress.com/2007/11/17/mysql-into-outfile/; reference:url,doc.emergingthreats.net/2010081; classtype:attempted-user; sid:2010081; rev:2;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Percentage Symbol Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; nocase; content:!"|0d 0a|"; within:50; content:"%"; distance:0; reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011487; rev:2;)
+
+#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Quotation Mark Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; content:"|22|"; distance:0; pcre:"/^USER [^\r\n]*?\x22/";  reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011488; rev:2;)
+
+alert tcp any any -> $HOME_NET 21 (msg:"ET FTP ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ)"; flow:established,to_server; content:"HELP "; depth:5; content:"ACIDBITCHEZ"; distance:0; nocase; reference:url,slashdot.org/story/10/12/02/131214/ProFTPDorg-Compromised-Backdoor-Distributed; reference:url,xorl.wordpress.com/2010/12/02/news-proftpd-owned-and-backdoored/; reference:url, sourceforge.net/mailarchive/message.php?msg_name=alpine.DEB.2.00.1012011542220.12930%40familiar.castaglia.org; classtype:trojan-activity; sid:2011994; rev:5;)
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET 21 (msg:"ET FTP Outbound Java Anonymous FTP Login"; flow:to_server,established; content:"USER anonymous|0d 0a|PASS Java1."; fast_pattern:7,20; pcre:"/^\d\.\d(_\d+)?\@\r\n/R"; flowbits:set,ET.Java.FTP.Logon; classtype:misc-activity; sid:2016687; rev:2;)
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET 21 (msg:"ET FTP Outbound Java Downloading jar over FTP"; flow:to_server,established; flowbits:isset,ET.Java.FTP.Logon; content:".jar"; nocase; fast_pattern:only; content:"RETR "; pcre:"/^[^\r\n]+\.jar/Ri"; classtype:misc-activity; sid:2016688; rev:2;)
 
 #alert tcp $EXTERNAL_NET 21 -> $HOME_NET any (msg:"GPL FTP NextFTP client overflow"; flow:to_client,established; content:"|B4| |B4|!|8B CC 83 E9 04 8B 19|3|C9|f|B9 10|"; fast_pattern:only; reference:bugtraq,572; reference:cve,1999-0671; classtype:attempted-user; sid:2100308; rev:10;)
 
@@ -261,14 +271,4 @@
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"GPL FTP FTP file_id.diz access possible warez site"; flow:to_server,established; content:"RETR"; nocase; content:"file_id.diz"; distance:1; nocase; classtype:suspicious-filename-detect; sid:2101445; rev:6;)
 
 #alert tcp $HOME_NET 21 -> $EXTERNAL_NET any (msg:"GPL FTP FTP Bad login"; flow:from_server,established; content:"530 "; depth:4; pcre:"/^530\s+(Login|User)/smi"; classtype:bad-unknown; sid:2100491; rev:11;)
-
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Percentage Symbol Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; nocase; content:!"|0d 0a|"; within:50; content:"%"; distance:0; reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011487; rev:2;)
-
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET FTP Suspicious Quotation Mark Usage in FTP Username"; flow:established,to_server; content:"USER "; depth:5; content:"|22|"; distance:0; pcre:"/^USER [^\r\n]*?\x22/";  reference:url,www.checkpoint.com/defense/advisories/public/2010/sbp-16-Aug.html; classtype:bad-unknown; sid:2011488; rev:2;)
-
-alert tcp any any -> $HOME_NET 21 (msg:"ET FTP ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ)"; flow:established,to_server; content:"HELP "; depth:5; content:"ACIDBITCHEZ"; distance:0; nocase; reference:url,slashdot.org/story/10/12/02/131214/ProFTPDorg-Compromised-Backdoor-Distributed; reference:url,xorl.wordpress.com/2010/12/02/news-proftpd-owned-and-backdoored/; reference:url, sourceforge.net/mailarchive/message.php?msg_name=alpine.DEB.2.00.1012011542220.12930%40familiar.castaglia.org; classtype:trojan-activity; sid:2011994; rev:5;)
-
-alert tcp $HOME_NET any -> $EXTERNAL_NET 21 (msg:"ET FTP Outbound Java Anonymous FTP Login"; flow:to_server,established; content:"USER anonymous|0d 0a|PASS Java1."; fast_pattern:7,20; pcre:"/^\d\.\d(_\d+)?\@\r\n/R"; flowbits:set,ET.Java.FTP.Logon; classtype:misc-activity; sid:2016687; rev:2;)
-
-alert tcp $HOME_NET any -> $EXTERNAL_NET 21 (msg:"ET FTP Outbound Java Downloading jar over FTP"; flow:to_server,established; flowbits:isset,ET.Java.FTP.Logon; content:".jar"; nocase; fast_pattern:only; content:"RETR "; pcre:"/^[^\r\n]+\.jar/Ri"; classtype:misc-activity; sid:2016688; rev:2;)
 

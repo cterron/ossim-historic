@@ -33,7 +33,6 @@ import ansible.playbook
 import ansible.constants as AnsibleConstants
 import ansible.callbacks as ans_callbacks
 
-
 # DEFAULT_ANSIBLE_CONFIGURATION_FILE = "/etc/ansible/ansible.cfg"
 PLAYBOOKS = {
     'REMOVE_OLD_FILES': '/etc/ansible/playbooks/maintenance/remove_files_older_than.yml',
@@ -74,7 +73,7 @@ class AVAnsibleCallbacks(object):
     def __init__(self):
         self._lasterror = ''
         pass
-    
+
     @property
     def lasterror(self):
         return self._lasterror
@@ -111,7 +110,7 @@ class AVAnsibleCallbacks(object):
         self._lasterror = ''
 
     def on_failed(self, host, results, ignore_errors):
-        self._lasterror = { host: results}
+        self._lasterror = {host: results}
         EVENTS.append(['failed', [host, results, ignore_errors]])
 
     def on_ok(self, host, result):
@@ -151,13 +150,14 @@ class Ansible(object):
     __metaclass__ = Singleton
 
     """Ansible manager"""
+
     # https://github.com/ansible/ansible/blob/devel/lib/ansible/runner/__init__.py
     def __init__(self, username='avapi'):
         self.__username = username
         self.__host_list = AnsibleConstants.DEFAULT_HOST_LIST
         self.callbacks = AVAnsibleCallbacks()
 
-    def run_module(self, host_list, module, args, timeout = AnsibleConstants.DEFAULT_TIMEOUT,
+    def run_module(self, host_list, module, args, timeout=AnsibleConstants.DEFAULT_TIMEOUT,
                    forks=1, ans_remote_user=AnsibleConstants.DEFAULT_REMOTE_USER,
                    ans_remote_pass=AnsibleConstants.DEFAULT_REMOTE_PASS, use_sudo=True, local=False):
         """Runs an ansible module and returns its results
@@ -166,8 +166,8 @@ class Ansible(object):
         use_transport = AnsibleConstants.DEFAULT_TRANSPORT
         if local or use_transport == 'local' or host_list == ['127.0.0.1']:
             use_transport = "local"
-            host_list = []
-            host_list.append("127.0.0.1")
+            host_list = ["127.0.0.1"]
+
             # From: http://www.ansibleworks.com/docs/playbooks2.html#id20
             # To run an entire playbook locally, just set the "hosts:" line to "hosts:127.0.0.1" and then run the playbook like so:
             # ansible-playbook playbook.yml --connection=local

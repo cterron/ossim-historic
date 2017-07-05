@@ -182,11 +182,11 @@ def ossec_win_deploy(sensor_id, asset_id, windows_ip, windows_username, windows_
 
         res = True
         message = 'HIDS agent successfully deployed'
-    except APICannotDeployHIDSAgent:
-        message = error_msg
+    except APICannotDeployHIDSAgent as err:
+        message = str(err)
         res = False
-    except Exception as e:
-        message = str(e)
+    except Exception as err:
+        message = str(err)
         logger.error(message)
         res = False
 

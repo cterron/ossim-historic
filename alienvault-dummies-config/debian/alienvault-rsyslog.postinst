@@ -17,10 +17,12 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+OSSIM_SETUP_CONF="/etc/ossim/ossim_setup.conf"
+
 RSYSLOG_DEFAULT_FILE="/etc/default/rsyslog"
 RSYSLOG_CONF_FILE="/etc/rsyslog.conf"
 RSYSLOG_ALIENVAULT_CONF_FILE="/etc/rsyslog.d/alienvault.conf"
-
+RSYSLOG_ALIENVAULT_TMPL_FILE="/etc/rsyslog.d/zzz_alienvault_template.conf"
 
 
 change_rsyslog_default_file() {
@@ -69,12 +71,25 @@ change_rsyslog_alienvault_conf() {
 }
 
 
+change_rsyslog_av_tmpl_conf() {
+
+    if [ -f $OSSIM_SETUP_CONF ]; then
+        admin_ip=$( egrep "^admin_ip=" $OSSIM_SETUP_CONF | cut -d'=' -f2 )
+    fi
+
+    if [ -n $admin_ip ]; then
+        sed -i -e "s/127.1.1.1/$admin_ip/" $RSYSLOG_ALIENVAULT_TMPL_FILE
+    fi
+
+}
+
 
 case "$1" in
     configure)
         change_rsyslog_default_file
         change_rsyslog_conf
         change_rsyslog_alienvault_conf
+        change_rsyslog_av_tmpl_conf
         /etc/init.d/rsyslog restart
     ;;
 
@@ -86,6 +101,7 @@ case "$1" in
                     change_rsyslog_default_file
                     change_rsyslog_conf
                     change_rsyslog_alienvault_conf
+                    change_rsyslog_av_tmpl_conf
                     /etc/init.d/rsyslog restart || true
                     update-rc.d rsyslog defaults
                 ;;

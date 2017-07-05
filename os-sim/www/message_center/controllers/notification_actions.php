@@ -54,6 +54,7 @@ $data = array();
 // Get action type
 $action = POST('action');
 $delete_all = POST('delete_all');
+$message_total_count = POST('message_total_count');
 
 // Validate action type
 ossim_valid($action, OSS_LETTER, '_', 'illegal:'._('Action'));
@@ -130,7 +131,8 @@ else
 
         if($delete_all) {
             $status_message_id = '';
-            list($message_list, $total_messages) = $status->get_status_messages();
+            $get_all_messages ['page_rows'] = $message_total_count;
+            list($message_list, $total_messages) = $status->get_status_messages('',$get_all_messages);
             foreach ($message_list as $message)
             {
                 $status_message_id [] = $message['id'];

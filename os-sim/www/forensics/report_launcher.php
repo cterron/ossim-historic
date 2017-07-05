@@ -183,7 +183,7 @@ else
 
                     if ( num > 50 || '<?php echo Util::htmlentities($id) ?>' == 'Sensors_Report' || '<?php echo Util::htmlentities($id) ?>' == 'UniqueEvents_Report')
                     {
-                        var url = '<?php echo str_replace("&amp;", "&", Util::htmlentities($url)) ?>&numevents='+num;
+                        var url = '<?php echo str_replace("&amp;", "&", Util::htmlentities($url)) ?>&show_rows='+num;
                         $('#info_action').html("<img src='../pixmaps/loading.gif' style='border: none; width: 16px; margin-right: 5px' align='absmiddle'/><?php echo _("Loading data, please wait a few seconds.")?><br/>");
                         $('#forensics').attr('src',url);
                     }
@@ -366,7 +366,7 @@ else
                 <tr>
                     <td class="nobborder">
                         <?php echo _('Rows #')?>
-                        <select name="numrows" id="numrows">
+                        <select name="show_rows" id="numrows">
 
                             <?php
                             //Special Case

@@ -40,6 +40,8 @@ try:
     import MySQLdb
     import MySQLdb.cursors
     import _mysql_exceptions
+    from _mysql import escape
+    from MySQLdb.converters import conversions
 except ImportError:
     sys.exit("You need python MySQLdb module installed")
 
@@ -85,7 +87,7 @@ class OssimDB:
         return self._connected
 
     # execute query and return the result in a hash
-    def exec_query(self, query):
+    def exec_query(self, query, params=None):
         self._mutex.acquire()
         arr = []
         max_retries = 3
@@ -99,7 +101,7 @@ class OssimDB:
                     self.connect()
 
                 cursor = self._conn.cursor()
-                cursor.execute(query)
+                cursor.execute(query, params)
                 arr = cursor.fetchall()
                 continue_working = False
                 retries = max_retries + 1
@@ -127,7 +129,7 @@ class OssimDB:
         # We must return a hash table for row:
         return arr
 
-    def execute_non_query(self, query, autocommit=False):
+    def execute_non_query(self, query, autocommit=False, params=None):
         """Executes a non query statement. 
         @autocommit: Sets the autocommit value by default it's True
         """
@@ -138,13 +140,13 @@ class OssimDB:
         cursor = None
         continue_working = True
         returnvalue = False
-        self._conn.autocommit(autocommit)
         while continue_working:
             try:
                 if not self._connected or self._conn is None:
                     self.connect()
+                self._conn.autocommit(autocommit)
                 cursor = self._conn.cursor()
-                cursor.execute(query)
+                cursor.execute(query, params)
                 if not autocommit:
                     self._conn.commit()
                 continue_working = False
@@ -169,6 +171,19 @@ class OssimDB:
         # self.__close()
         self._mutex.release()
         return returnvalue
+
+    @staticmethod
+    def format_query(query, params):
+        """Formats the parametrized query in the same fashion as MySQLdb.cursor.execute(query, params) does. It is used
+           for explicit parameters conversion/escaping to avoid SQL injection. Although MySQLdb.cursor.execute() does
+           the same automatically, it is not possible to get the query out of there before execution, i.e. for logging
+           purposes. The solution is to format the query before execute() and then simply pass it and use in logs or
+           wherever.
+        """
+        if isinstance(params, dict):
+            return query % dict((key, escape(param, conversions)) for key, param in params.iteritems())
+        else:
+            return query % tuple((escape(param, conversions) for param in params))
 
     def __close(self):
         if self._conn:

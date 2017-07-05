@@ -46,17 +46,19 @@ redis_instance = redis.Redis("localhost")
 
 
 class JobResult:
-    def __init__(self, result, message, log_file="", error_id="0"):
+    def __init__(self, result, message, log_file="", error_id="0", system_ip=""):
         self.result = result
         self.message = message
         self.log_file = log_file
         self.error_id = error_id
+        self.system_ip = system_ip
 
     @property
     def serialize(self):
         return {'result': self.result,
                 'message': self.message,
                 'log_file': self.log_file,
+                'system_ip': self.system_ip,
                 'error_id': self.error_id}
 
 

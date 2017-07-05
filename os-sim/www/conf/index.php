@@ -64,7 +64,7 @@ $restart_server = 0;
 ossim_valid($section, OSS_ALPHA, OSS_NULLABLE,                                                                          'illegal:' . _('Section'));
 ossim_valid($flag_status, OSS_DIGIT, OSS_NULLABLE,                                                                      'illegal:' . _('Flag status'));
 ossim_valid($flag_reconfig, OSS_DIGIT, OSS_NULLABLE,                                                                    'illegal:' . _('Flag reconfig'));
-ossim_valid($error_string, OSS_LETTER, OSS_DIGIT, OSS_NULLABLE, OSS_SPACE, OSS_COLON, OSS_SCORE, '\.,\/\(\)\[\]\'',     'illegal:' . _('Error string'));
+//ossim_valid($error_string, OSS_LETTER, OSS_DIGIT, OSS_NULLABLE, OSS_SPACE, OSS_COLON, OSS_SCORE, '\.,\/\(\)\[\]\'',     'illegal:' . _('Error string'));
 ossim_valid($warning_string, OSS_LETTER, OSS_DIGIT, OSS_NULLABLE, OSS_SPACE, OSS_COLON, OSS_SCORE, '\.,\/\(\)\[\]\'',   'illegal:' . _('Warning string'));
 ossim_valid($word, OSS_INPUT, OSS_NULLABLE,                                                                             'illegal:' . _('Find Word'));
 
@@ -334,6 +334,14 @@ $CONFIG = array(
                 'desc' => _('Enable SIEM database backup'),
                 'advanced' => 1
             ),
+            'backup_events_min_free_disk_space' => array(
+                'type' => array(
+                    '10' => _('10%'),
+                    '15' => _('15%')
+                ),
+                'help' => _('Minimum free disk space for the SIEM backups in percentage.'),
+                'desc' => _('Allowed free disk  space for the SIEM backups'),
+            ),
             'frameworkd_backup_storage_days_lifetime' => array(
                 'type' => 'text',
                 'help' => _('Number of Backup files (One file per day of Siem events) are stored in hard-disk'),
@@ -417,8 +425,10 @@ $CONFIG = array(
             'backup_conf_pass' => array(
                 'type' => 'password',
                 'id'   => 'backup_encryption',
-                'help' => _('Password length must be between').' '.$conf->get_conf('pass_length_min')._(' and ').$conf->get_conf('pass_length_max').' '._('characters').'. The following characters are prohibited: [;, |, &, <, >, \n, (, ), [, ], {, }, ?, *, ^, \\]',
-                'desc' => _('Password to encrypt backup files'),
+                'desc' => _('Password to encrypt backup files') .'<br><br>'.
+                    _('Password length must be between').' '.$conf->get_conf('pass_length_min')._(' and ').$conf->get_conf('pass_length_max').' '._('characters').
+                    '.<br> The following characters are prohibited: ;, |, &, <, >, \n, \s, (, ), [, ], {, }, ?, *, ^, \\',
+                'help' => '',
                 'advanced' => 0
             )
         )
@@ -502,16 +512,6 @@ $CONFIG = array(
                 'advanced' => 0 ,
                 'section' => 'userlog'
             ),
-            'user_action_log' => array(
-                'type' => array(
-                    '0' => _('No'),
-                    '1' => _('Yes')
-                ),
-                'help' => '',
-                'desc' => _('Enable User Log'),
-                'advanced' => 0 ,
-                'section' => 'userlog'
-            ),
             'log_syslog' => array(
                 'type' => array(
                     '0' => _('No'),
@@ -520,13 +520,26 @@ $CONFIG = array(
                 'help' => '' ,
                 'desc' => _('Log to syslog'),
                 'advanced' => 0 ,
-                'section' => 'userlog'
+                'section' => 'userlog',
+                'id' => 'sys_log'
+
+            ),
+            'user_action_log' => array(
+                'type' => array(
+                    '0' => _('No'),
+                    '1' => _('Yes')
+                ),
+                'help' => '',
+                'desc' => _('Enable User Log'),
+                'advanced' => 0 ,
+                'section' => 'userlog',
+                'id' => 'user_log'
             ),
             'track_usage_information' => array(
                 'type' => array(
                     '0' => _('No'),
                     '1' => _('Yes')
-                ),
+            ),
                 'more' => sprintf('&nbsp;&nbsp;&nbsp;&nbsp; <a href="%s" target="_blank" class="terms">%s</a>', '/ossim/av_routing.php?action_type=EXT_TRACK_USAGE_INFORMATION', _('Learn more')),
                 'help' => sprintf(_('Shares performance, usage, system and customization data about your deployment with AlienVault to help us make %s better'), $product),
                 'desc' => sprintf(_('Send anonymous usage statistics and system data to AlienVault to improve %s'), $product),
@@ -767,8 +780,85 @@ $CONFIG = array(
                 'section' => 'tickets'
             )
         )
+    ),
+    'netflow' => array(
+        'title' => _('Netflow'),
+        'desc' => _('Set thresholds to create events on anomalous bandwidth usage in your environment (values are in MB)'),
+        'advanced' => 0,
+        'section' => 'netflow',
+        'conf' => array(
+            'tcp_max_download' => array(
+                'desc' => _('TCP Maximum Download'),
+                'section' => 'netflow',
+                'advanced' => 1
+            ),
+            'tcp_max_upload' => array(
+                'desc' => _('TCP Maximum Upload'),
+                'section' => 'netflow',
+                'advanced' => 1
+            ),
+            'udp_max_download' => array(
+                'desc' => _('UDP Maximum Download'),
+                'section' => 'netflow',
+                'advanced' => 1
+            ),
+            'udp_max_upload' => array(
+                'desc' => _('UDP Maximum Upload'),
+                'section' => 'netflow',
+                'advanced' => 1
+            ),
+            'inspection_window' => array(
+                'desc' => _('Inspection window (hours)'),
+                'section' => 'netflow',
+                'advanced' => 1
+            ),
+            'agg_function' => array(
+                'type' => array(
+                    1 => _('Summarize traffic by remote IP'),
+                    0 => _('Do not summarize traffic by remote IP')
+                ),
+                'default' => 0,
+                'desc' => _('Aggregation function'),
+                'section' => 'netflow',
+                'advanced' => 0
+            )
+        )
     )
 );
+
+if (Session::is_pro()) {
+//z for last in list
+    $CONFIG["zAutoUpdate"] = array(
+        'title' => _('Automatic updates'),
+        'desc' => _('Schedule automatic updates'),
+        'advanced' => 0,
+        'section' => 'updates',
+        'conf' => array(
+            'feed_auto_updates' => array(
+                'type' => array(
+                    'yes' => _('Yes'),
+                    'no' => _('No')
+                ),
+                'help' => _('Automatic updates are only available for feed updates. All platform updates must be run manually.'),
+                'desc' => _('Automatically run Plugin updates and Threat Intelligence updates:'),
+                'section' => 'updates',
+                'advanced' => 0,
+                'onchange' => 'change_feed_auto_update_time(this.value)',
+                'value' => ($conf->get_conf('feed_auto_updates') == "yes") ? "yes" : "no"
+            ),
+            'feed_auto_update_time' => array(
+                'type' => array_map(function($i) {return str_pad($i, 2, "0", STR_PAD_LEFT).":00";},range(0,23)),
+                'help' => _('Schedule is based on the system timezone configured in the console.'),
+                'desc' => _('Schedule automatic updates to run:'),
+                'section' => 'updates',
+                'advanced' => 0,
+                'id'    => 'feed_auto_update_time',
+                'disabled' => ($conf->get_conf('feed_auto_updates') == "yes") ? 0 : 1
+            )
+        )
+    );
+}
+
 
 ksort($CONFIG);
 
@@ -788,6 +878,9 @@ function custom_actions($api_client, $var, $value)
             $api_client->system()->set_telemetry($value > 0 ? TRUE : FALSE);
         break;
 
+        case 'feed_auto_updates':
+            $api_client->system()->set_auto_update($value == "yes" ? TRUE : FALSE);
+        break;
     }
 }
 
@@ -832,6 +925,14 @@ function submit()
 
             $(document).ready(function()
             {
+                $('#update').on('click', function () {
+                    var result = $('#sys_log').val();
+                    if(result === '1'){
+                        $('#user_log').val(result);
+                    }
+
+                    <?php Util::execute_command('/usr/bin/sudo /etc/init.d/ossim-framework restart > /dev/null 2>/dev/null &'); ?>
+                });
                 if (notify.isSupported)
                 {
                     $('#enable_notifications').show();
@@ -887,7 +988,12 @@ if (POST('update'))
         'unlock_user_interval',
         'tickets_max_days',
         'smtp_port',
-        'idm_user_login_timeout'
+        'idm_user_login_timeout',
+	'tcp_max_download',
+	'tcp_max_upload',
+        'udp_max_download',
+        'udp_max_upload',
+        'inspection_window'
     );
 
     $passwords = array(
@@ -957,7 +1063,7 @@ if (POST('update'))
             $pass_expire_min = POST("value_$i");
         }
 
-        if(in_array(POST("conf_$i"), $numeric_values) && intval(POST("value_$i")) < 0)
+        if(in_array(POST("conf_$i"), $numeric_values) && (!is_numeric(POST("value_$i")) || !is_int(POST("value_$i")*1) || POST("value_$i")*1 < 0))
         {
             $variable = $_SESSION['_main']['conf_'.$i];
 
@@ -994,6 +1100,7 @@ if (POST('update'))
                 $len = strlen($raw_password);
                 $min = $config->get_conf('pass_length_min');
                 $max = $config->get_conf('pass_length_max');
+                $symbols_prohibited = array(';', '|', '&', '<', '>', '\n', '(', ')', '[', ']', '{', '}', '?', '*', '^', ' ');
 
                 foreach ($_POST as $key => $value) {
                     if ($key == "pass_length_min") {
@@ -1011,12 +1118,28 @@ if (POST('update'))
                     $error_string .= ' '._('Backup password is not long enough').' ['._('Minimum password size is').' '.$min.']';
                     $flag_status = 2;
                 }
-                if ($len > $max) {
+                elseif ($len > $max) {
                     $error_string .= ' '._('Backup password is too long').' ['._('Maximum password size is').' '.$max.']';
                     $flag_status = 2;
                 }
-                if ($raw_password != str_replace(array(';', '|', '&', '<', '>', '\n', '(', ')', '[', ']', '{', '}', '?', '*', '^', '\\'), "", $raw_password)) {
-                    $error_string .= ' '._('Backup password contains prohibited characters.');
+                elseif ($raw_password != str_replace($symbols_prohibited, "", $raw_password)) {
+
+                    $symbols_found = [];
+
+                    foreach ($symbols_prohibited as $symbol) {
+
+                        if (strpos($raw_password, $symbol) !== false){
+
+                            if (preg_match('/\s/',$symbol)) {
+                                $symbols_found [] =  'white spaces' ;
+                                break;
+                            }
+                            $symbols_found [] =  $symbol ;
+                        }
+                    }
+
+                    $symbols_found_str =  implode(" , ", $symbols_found);
+                    $error_string .= ' '._('Backup password contains prohibited characters.') . ' Please delete prohibited characters: <i> ' .$symbols_found_str . '</i>';
                     $flag_status = 2;
                 }
             }
@@ -1257,7 +1380,7 @@ $default_open = REQUEST('open');
                                       '</tr>' +
                                  '</table>'
 
-                $(help_id).tipTip({defaultPosition: 'top', maxWidth: "400px", content: conf_info, edgeOffset: 3});
+                $(help_id).tipTip({defaultPosition: 'top', maxWidth: "400px", content: conf_info, edgeOffset: 18});
             });
         }
 
@@ -1404,6 +1527,12 @@ $default_open = REQUEST('open');
                 $('#alarms_lifetime').css('color','gray').val('0');
             }
         }
+
+	function change_feed_auto_update_time(val) {
+            var disabled = val == 'no';
+            var color = disabled ? 'gray' : 'black';
+            $('#feed_auto_update_time').prop('disabled',disabled).css('color',color);
+	}
 
         function check_logger_lifetime(val)
         {
@@ -1609,7 +1738,7 @@ $default_open = REQUEST('open');
     }
     elseif($flag_status == 2)
     {
-        $txt   = _('The following errors occurred');
+        $txt   = _('The following errors occurred:');
         $txt  .= "<BR/>".$status_message;
         $ntype = "nf_error";
     }
@@ -1697,6 +1826,11 @@ $default_open = REQUEST('open');
                             </tr>
                             <?php
                         }
+                        //If 'Log to syslog' option is enabled, 'Enable User Log' option should be enabled too.
+                        if($ossim_conf->get_conf('log_syslog'))
+                        {
+                            unset($val['conf']['user_action_log']['type'][0]);
+                        }
 
                         foreach($val['conf'] as $conf => $type)
                         {
@@ -1717,6 +1851,7 @@ $default_open = REQUEST('open');
 
                                     <td class="left" style="white-space:nowrap">
                                     <?php
+					if($type["type"] !== "label") {
                                         $input = '';
 
                                         $disabled = ($type['disabled'] == 1 || $ossim_conf->is_in_file($conf)) ? "class='disabled' style='color:gray' disabled='disabled'" : '';
@@ -1747,6 +1882,10 @@ $default_open = REQUEST('open');
                                                 $select_change = ($type['onchange'] != "") ? "onchange=\"".$type['onchange']."\"" : "";
                                                 $select_id = ($type['id'] != "") ? "id=\"".$type['id']."\"" : "";
                                                 $input.= "<select name='value_$count' $select_change $select_id $disabled>";
+                                                if (!$conf_value && $type['default'] != '')
+                                                {
+                                                   $conf_value = $type['default'];
+                                                }
 
                                                 if ($type['value'] != '')
                                                 {
@@ -1807,6 +1946,29 @@ $default_open = REQUEST('open');
                                         {
                                             $input.= $type['value']."<input type='hidden' name='value_$count' value='skip_this_config_value'>";
                                         }
+                                        /* datetime */
+                                        elseif ($type["type" ]=='datetime')
+                                        {
+					    $val = json_decode($conf_value);
+					    $id1 = "datetime-value_{$type['id']}_date";
+					    $id2 = "datetime-value_{$type['id']}_time";
+					    $id3 = "datetime-value_{$type['id']}";
+                                            $onchnage = "var obj = {day: \$(\"#$id1\").val(),time: \$(\"#$id2\").val()}; \$(\"#$id3\").val(JSON.stringify(obj));";
+                                            $input.= "
+                                            <input type='hidden' name='value_{$count}' value='$conf_value' id='$id3'/>
+                                            <select name='value_{$count}_date' id='$id1' onchange='$onchnage' $disabled>
+						<option value=''>"._("Day of the week")."</option>";
+                                                foreach (array(_("Sunday"),_("Monday"),_("Tuesday"),_("Wednesday"),_("Thursday"),_("Friday"),_("Saturday")) as $i=>$day) {
+                                                    $input.= "<option ".($i==$val->day ? 'selected="selected"' : "")." value='$i'>$day</option>";
+                                                }
+                                            $input.= "</select>
+                                            <select name='value_{$count}_time' id='$id2' onchange='$onchnage' $disabled>
+                                                <option value=''>"._("Time")."</option>";
+                                                for ($i=0;$i<24;$i++) {
+                                                    $input.= "<option ".($i==$val->time ? 'selected="selected"' : "")." value='$i'>".str_pad($i, 2, "0", STR_PAD_LEFT).":00</option>";
+                                                }
+                                            $input.= "</select>";
+                                        }
                                         /* input */
                                         else
                                         {
@@ -1819,11 +1981,12 @@ $default_open = REQUEST('open');
                                         }
 
                                         echo $input;
-
+					}
                                     ?>
                                     </td>
 
                                     <td class='conf_help_td'>
+                                <?php  if(!empty($type["help"])) { ?>
                                         <?php
                                         $conf_info = str_replace("'", "\'", $var)."###".str_replace("\n", " ", str_replace("'", "\'", $type["help"]));
                                         $help_id = 'help_'.$count;
@@ -1832,6 +1995,7 @@ $default_open = REQUEST('open');
                                         ?>
                                         <img src="/ossim/pixmaps/help_small.png" id='<?php echo $help_id?>' class='conf_help help_icon_small'/>
                                         <div class='conf_info' id='<?php echo $info_id?>'><?php echo $conf_info?></div>
+                                <?php }?>
                                     </td>
 
                                 </tr>

@@ -34,16 +34,21 @@ from api.lib.auth import admin_permission
 from api.lib.common import (make_ok,
                             make_bad_request,
                             make_error,
+                            make_error_from_exception,
                             document_using)
 from api.lib.utils import accepted_url
 from apimethods.system import system
 from apimethods.system.system import (asynchronous_update,
                                       check_update_and_reconfig_status,
+                                      set_feed_auto_update,
                                       set_system_certificate)
 from apimethods.system.system import get_jobs_running
 from apimethods.system.system import sync_asec_plugins as api_sync_asec
-from apimethods.utils import is_valid_ipv4, is_json_true
+from apimethods.utils import is_valid_ipv4, is_json_true, BOOL_VALUES
+from apiexceptions import APIException
+
 from flask import Blueprint, request, current_app
+
 
 blueprint = Blueprint(__name__, __name__)
 
@@ -60,6 +65,8 @@ def get_systems():
     return make_ok(systems=system_data)
 
 
+# This method should not check authentication since it's used during user's
+# login process. Please see ENG-105020 for details
 @blueprint.route('/local/info', methods=['GET'])
 @document_using('static/apidocs/system.html')
 def get_local_info():
@@ -211,9 +218,25 @@ def put_system_update_feed(system_id):
     return make_ok(job_id=job_id)
 
 
+@blueprint.route('/auto_update', methods=['PUT'])
+@document_using('static/apidocs/system.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'enabled': {'type': str, 'values': BOOL_VALUES}})
+def set_auto_updates():
+    enabled = is_json_true(request.args.get('enabled'))
+    try:
+        set_feed_auto_update(enabled=enabled)
+    except APIException as e:
+        return make_error_from_exception(e)
+
+    return make_ok()
+
+
+# This method is used in system's welcome wizard, which doesn't have a user
+# context, so it should not check authentication. Please see ENG-105020 for
+# details
 @blueprint.route('/<system_id>/tasks', methods=['GET'])
 @document_using('static/apidocs/system.html')
-# @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
 def get_tasks(system_id):
     """

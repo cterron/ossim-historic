@@ -18,6 +18,7 @@ import urllib
 import random
 import string
 import re
+from dateutil import parser as dateparser
 from sqlalchemy.orm.exc import NoResultFound,MultipleResultsFound
 from behave.log_capture import capture
 import paramiko
@@ -58,15 +59,26 @@ def then_verify_current_status(context):
         data = q.serialize
         print (data)
         print (m)
-        assert_equal (data['message_description'],m['message_description'])
+        assert_equal(
+            data['message_description']
+                .replace(
+                    "TIMESTAMP",
+                    data["creation_time"].strftime("%Y-%m-%d %H:%M:%S") + " UTC"
+                )
+                .decode("utf-8"),
+            m['message_description']
+        )
         assert_equal (data['message_level'],m['message_level'])
         assert_equal (data['component_id'],m['component_id'])
-        #assert_equal (data['component_ip'],m['component_ip'])
+        assert_equal(data['component_ip'], m['component_ip'])
         mip = m['component_ip'].split(',')
         for ip in data['component_ip'].split(','):
             assert ip in mip,"Bad ip in message response"  
         assert_equal (data['component_name'],m['component_name'])
-        #assert_equal (data['creation_time'],m['creation_time'])
+        assert_equal(
+            data['creation_time'].strftime("%Y-%m-%d %H:%M:%S"),
+            dateparser.parse(m["creation_time"]).strftime("%Y-%m-%d %H:%M:%S")
+        )
         assert_equal (data['viewed'], m['viewed'])
         assert_equal (data['component_type'], m['component_type'])
 
@@ -143,7 +155,7 @@ def given_store_asset_type(context,var_uuid,var_type):
         q = db.session.query(Current_Status).filter ( Current_Status.component_id == get_bytes_from_uuid(context.alienvault[var_uuid])
             
         ).limit(1).one()
-        context.alienvault[var_type] = q.serialize['component_id']
+        context.alienvault[var_type] = q.serialize['component_type']
     except NoResultFound:
         assert None,"No entry with uuid '%s'" % context.alienvault[var_uuid]
 
@@ -158,8 +170,8 @@ def given_select_random_message(context,var_mid):
         assert None,"No entries in status message" 
 
 
-@behave.given(u'I generate a current_status entry with component_id "{var_cid}" message id "{var_mid}" asset type "{var_type}" and viewed "{viewed}"')
-def given_generate_current_status_entry(context,var_cid,var_mid,var_type,viewed):
+@behave.given(u'I create or update a current_status entry with component_id "{var_cid}" message id "{var_mid}" asset type "{var_type}" and viewed "{viewed}"')
+def given_create_or_update_current_status_entry(context, var_cid, var_mid, var_type, viewed):
     #Using merging http://docs.sqlalchemy.org/en/latest/orm/session.html#merging to create or update    
     # Check if we must create or delete
     print (context.alienvault[var_cid])
@@ -172,8 +184,9 @@ def given_generate_current_status_entry(context,var_cid,var_mid,var_type,viewed)
     except  NoResultFound:
         # Create a new entry 
         entry = Current_Status()
-        entry.message_id =  context.alienvault[var_mid]
-        entry.component_id = uuid.UUID(context.alienvault[var_cid]).bytes
+        entry.id = uuid.uuid4().bytes
+        entry.message_id = get_bytes_from_uuid(context.alienvault[var_mid])
+        entry.component_id = get_bytes_from_uuid(context.alienvault[var_cid])
         entry.component_type = context.alienvault[var_type]
         entry.viewed = viewed
     try:
@@ -184,7 +197,22 @@ def given_generate_current_status_entry(context,var_cid,var_mid,var_type,viewed)
         print ("Error: %s" %str(e))
         db.session.rollback()
     
-     
+
+@behave.given(u'I store the id of current_status entry with component_id "{comp_id_key}" message id "{msg_id_key}" asset type "{type_key}" in var "{stat_id_key}"')
+def given_store_current_status_entry_id(context, comp_id_key, msg_id_key, type_key, stat_id_key):
+    entry = None
+    try:
+        entry = db.session.query(Current_Status).filter(
+            and_(
+                Current_Status.component_id == get_bytes_from_uuid(context.alienvault[comp_id_key]),
+                Current_Status.message_id == get_bytes_from_uuid(context.alienvault[msg_id_key]),
+                Current_Status.component_type == context.alienvault[type_key]
+            )
+        ).one()
+    except NoResultFound:
+        assert None, "Current_Status entry was not found"
+
+    context.alienvault[stat_id_key] = entry.serialize['id'] if entry is not None else ""
 
 
 @behave.then(u'I verify that all results has level equals to "{var_st}"')
@@ -374,16 +402,8 @@ def then_current_status(context):
     db.session.query(Current_Status).delete()
 @behave.then(u'All responses must have component_id equals to var "{var_cid}" and levels equals to "{var_info}"')
 def then_very_component_id_and_levels (context,var_cid,var_info):
-    q = db.session.query(Current_Status).filter (Current_Status.component_id == get_bytes_from_uuid (context.alienvault[var_cid]))
     levels = var_info.split(",")
-    f = [Current_Status.message.has (level = x) for x in levels]
-    q = q.filter (or_(*f))
-    results = q.all()
-    #print [x.serialize for x in results]
-    total = len(results)
     j = json.loads(context.result.getvalue())
-    resp_total = j['data']['total']
-    assert_equal (total,int(resp_total))
     for msg in j['data']['messages']:
         assert msg['component_id'] == context.alienvault[var_cid],"Bad component_id in response from API: %s" % msg['component_id']
         assert (msg['message_level'] in levels) == True, "Bad level %s" % msg['message_level']

@@ -155,8 +155,8 @@ function GetSignatureReferences($sid, $cid, $db) {
 	return $str."##";
 }
 
-function BuildSigByPlugin($plugin_id, $plugin_sid, $db) {
-    $sig_name = GetOssimSignatureName($plugin_id, $plugin_sid, $db);
+function BuildSigByPlugin($plugin_id, $plugin_sid, $db, $ctx) {
+    $sig_name = GetOssimSignatureName($plugin_id, $plugin_sid, $db, $ctx);
     if ($sig_name != "") {
         return GetOssimSignatureReferences($plugin_id, $plugin_sid, $db)." ".$sig_name;
     } else {
@@ -234,14 +234,14 @@ function GetPluginNameDesc($plugin_id, $db) {
     return explode(";",$_SESSION['_plugin_namedesc'][$plugin_id]);
 }
 
-function GetOssimSignatureName($plugin_id, $plugin_sid, $db) {
+function GetOssimSignatureName($plugin_id, $plugin_sid, $db,$ctx) {
     if (!isset($_SESSION['_sig_names'])) $_SESSION['_sig_names'] = array();
     if (isset($_SESSION['_sig_names'][$plugin_id." ".$plugin_sid])) {
         return $_SESSION['_sig_names'][$plugin_id." ".$plugin_sid];
     }
     if ($plugin_id=="" || $plugin_sid=="") return "";
     $name = "";
-    $temp_sql = "SELECT name FROM alienvault.plugin_sid WHERE plugin_id=$plugin_id AND sid=$plugin_sid";
+    $temp_sql = "SELECT name FROM alienvault.plugin_sid WHERE plugin_id=$plugin_id AND sid=$plugin_sid  AND  hex(plugin_ctx) IN ('$ctx' ,'00000000000000000000000000000000') ";
     $tmp_result = $db->baseExecute($temp_sql);
     if ($tmp_result) {
         $myrow = $tmp_result->baseFetchRow();

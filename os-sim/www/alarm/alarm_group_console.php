@@ -114,6 +114,7 @@ $db->close();
                 }
             });
 
+            setGroupID('<?php echo $_GET['backlog']?>');
             load_alarm_list();
         });
 

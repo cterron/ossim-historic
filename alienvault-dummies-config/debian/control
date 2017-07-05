@@ -206,7 +206,7 @@ Description: Configuration package for rsyslog
 Package: alienvault-suricata
 Architecture: all
 Depends: ${misc:Depends}
-Pre-Depends: suricata, ossim-agent
+Pre-Depends: suricata, suricata-hyperscan, ossim-agent
 Replaces: suricata, suricata-rules-default-pro, suricata-rules-default-open
 Description: Configuration package for Suricata IDS
 
@@ -234,3 +234,8 @@ Depends: alienvault-firewall (>= ${source:Upstream-Version}), easy-rsa
 Replaces: alienvault-vpn
 Description: Configuration package for vpn infraestructure
 
+Package: alienvault-samba
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: samba-common
+Description: Configuration package for samba

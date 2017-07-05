@@ -260,7 +260,7 @@ else
                         <?php $rdns_checked = ($rdns == TRUE) ? 'checked="checked"' : '';?>
 
                         <input type="checkbox" id="rdns" name="rdns" class='vfield' <?php echo $rdns_checked?>  value="1"/>
-                        <label for="rdns"><?php echo _('Enable reverse DNS Resolution')?></label>
+                        <label for="rdns"><?php echo _('Enable DNS Resolution')?></label>
                     </td>
                 </tr>
 

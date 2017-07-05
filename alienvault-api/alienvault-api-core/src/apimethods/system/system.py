@@ -115,6 +115,7 @@ from ansiblemethods.system.util import rsync_pull
 from celerymethods.utils import get_task_status, get_running_tasks
 from celerymethods.jobs.system import alienvault_asynchronous_update
 from celerymethods.jobs.reconfig import alienvault_reconfigure, job_alienvault_reconfigure
+from celerymethods.tasks.tasks import Scheduler
 
 # API methods
 from apimethods.otx.otx import apimethod_is_otx_enabled
@@ -128,6 +129,7 @@ from apimethods.system.cache import use_cache, flush_cache
 
 # API Exceptions
 from apiexceptions import APIException
+from apiexceptions.plugin import APICannotSavePlugin
 
 
 def get_all():
@@ -369,12 +371,12 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
             api_log.error(msg)
             error_msg = "Something wrong happened inserting " + \
                         "the system into the database"
-            return (False, error_msg)
+            return False, error_msg
         else:
-            result, _ = get_system_ip_from_system_id (system_info['system_id'])
+            result, _ = get_system_ip_from_system_id(system_info['system_id'])
             if not result:
                 error_msg = "System was not inserted, cannot continue"
-                return (False, error_msg)
+                return False, error_msg
 
     # Now that the system is in the database, check if it is a server and
     # open the firewall, if it is required.
@@ -387,9 +389,9 @@ def add_system_from_ip(system_ip, password, add_to_database=True):
     (success, msg) = create_directory_for_ossec_remote(system_info['system_id'])
     if not success:
         api_log.error(msg)
-        return (False, msg)
+        return False, msg
 
-    return (True, system_info)
+    return True, system_info
 
 
 def add_system(system_id, password):
@@ -825,6 +827,18 @@ def asynchronous_update(system_id, only_feed=False, update_key=""):
     flush_cache(namespace="system_packages")
 
     return True, job.id
+
+
+def set_feed_auto_update(enabled=False):
+    """ Enables/disables the automatic feed updates.
+
+    Args:
+        enabled (bool): flag to enable or disable automatic feed updates. False by default.
+    """
+    scheduler = Scheduler()
+    task = scheduler.get_task('feed_auto_updates')
+    task.enabled = enabled
+    scheduler.update_task(task)
 
 
 def check_if_process_is_running(system_id, ps_filter):

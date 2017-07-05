@@ -29,7 +29,7 @@
 # Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-'''
+"""
 +---------------------------------------+------------------------------------------------------+
 | conf                                  | value                                                |
 +---------------------------------------+------------------------------------------------------+
@@ -60,14 +60,12 @@
 
 INSERT INTO config (conf, value) VALUES ('frameworkd_nagios_mkl_period', '30');
 
+"""
 
+VAR_FRAMEWORK_PORT = 'frameworkd_port'
+VAR_FRAMEWORK_ADDRESS = 'frameworkd_address'
 
-'''
-
-VAR_FRAMEWORK_PORT='frameworkd_port'
-VAR_FRAMEWORK_ADDRESS='frameworkd_address'
-
-#From database
+# From database
 VAR_KEY_FILE = 'frameworkd_keyfile'
 VAR_KEY = 'frameworkd_aes_key'
 VAR_LOG_DIR = 'frameworkd_log_dir'
@@ -78,16 +76,17 @@ VAR_NAGIOS_MKL_PERIOD = 'frameworkd_nagios_mkl_period'
 VAR_SCHEDULED_PERIOD = 'frameworkd_scheduled_period'
 
 VAR_BACKUP_PERIOD = 'frameworkd_backup_period'
-VAR_BACKUP_MAX_DISKUSAGE = 'frameworkd_maxdiskusage'# percentage of disk.
-
+VAR_BACKUP_MAX_DISKUSAGE = 'frameworkd_maxdiskusage'  # percentage of disk.
 
 VAR_NOTIFYMANAGER_FILE = 'frameworkd_notificationfile'
-#NAGIOS
+
+# NAGIOS
 VAR_NAGIOS_SOCK_PATH = 'frameworkd_nagios_sock_path'
 VAR_NAGIOS_CFG = 'nagios_cfgs'
 
 VAR_USE_HTTPS = 'frameworkd_usehttps'
-#From ossim_setup.conf
+
+# From ossim_setup.conf
 VAR_DB_HOST = 'ossim_host'
 VAR_DB_SCHEMA = 'ossim_base'
 VAR_DB_USER = 'ossim_user'
@@ -96,3 +95,4 @@ VAR_ALERT_EMAIL = 'email_alert'
 VAR_ALERT_EMAIL_SENDER = 'email_sender'
 
 VAR_BACKUP_DAYS_LIFETIME = 'frameworkd_backup_storage_days_lifetime'
+VAR_FREE_SPACE_ALLOWED = 'backup_events_min_free_disk_space'

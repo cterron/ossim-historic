@@ -46,6 +46,7 @@ if (!$noready)
     <script type="text/javascript">
 
         var __cfg = <?php echo Asset::get_path_url() ?>;
+        var hasOTX = 0;
 
         function load_inframe(url)
         {
@@ -94,6 +95,7 @@ if (!$noready)
                     pre_action: function (el) {
 
                         var aux = $(el).attr('id').split(/;/);
+                        hasOTX = ($(el).parent().parent().find('.otx_icon').length > 0 || $(el).parent().parent().find('.otx').length > 0) ? 1 : 0;
 
                         // Disable all menu items when not a valid IP
                         if (aux[0] != '0.0.0.0' && aux[0].match(/^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$/))
@@ -365,6 +367,13 @@ if (!$noready)
                         var url = "http://whois.domaintools.com/"+ip;
                         var wnd = top.window.open(url,'whois_'+ip,'scrollbars=yes,location=no,toolbar=no,status=no,directories=no');
                     }
+                    else if (action=='otx')
+                    {
+                        var aux = $(el).attr('id').split(/;/);
+                        var ip = aux[0];
+                        var url =  hasOTX ? "https://otx.alienvault.com/indicator/ip/"+ip : "https://otx.alienvault.com/pulse/create/" ;
+                        var wnd = top.window.open(url,'otx_'+ip,'scrollbars=yes,location=no,toolbar=no,status=no,directories=no');
+                    }
                 }
             );
 
@@ -420,8 +429,22 @@ if (!$noready)
             });
         }
 
+        function hide_OTX_button() {
+            if ($('tbody tr td').length == 0) {
+                setTimeout(hide_OTX_button,500);
+                return;
+            }
+
+            var OTX_button = $('.otx-url');
+            $('tr').mousedown(function() {
+                var $otx_obg = $(this).find('.otx_icon');
+                ($otx_obg.length == 0) ? OTX_button.hide() :  OTX_button.show() ;
+            });
+        }
+
         $(document).ready(function(){
 
+            //hide_OTX_button();
             load_contextmenu();
 
             if (typeof postload == 'function')
@@ -448,6 +471,7 @@ if (!$noready)
         <?php
     }
     ?>
+    <li class="otx-url"><a href="#otx"><?php echo _("Look up in OTX")?></a></li>
     <li class="detail"><a href="#detail"><?php echo _("Asset Detail")?></a></li>
     <li class="edit"><a href="#edit"><?php echo _("Configure Asset")?></a></li>
     <li class="whois"><a href="#whois"><?php echo _("Whois")?></a></li>

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `current_status` (
   `message_id` BINARY(16) NOT NULL,
   `component_id` BINARY(16) NULL,
   `component_type` ENUM('net', 'host', 'user', 'sensor', 'server','system','external') NOT NULL,
-  `creation_time` TIMESTAMP NOT NULL COMMENT '(CURRENT_TIMESTAMP | on create CURRENT_TIMESTAMP )\n',
+  `creation_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '(CURRENT_TIMESTAMP | on create CURRENT_TIMESTAMP )\n',
   `viewed` TINYINT(1) NULL DEFAULT 0,
   `suppressed` TINYINT(1) NULL DEFAULT 0 COMMENT 'True or False. Indicates that this kind of message over this component id is disabled.',
   `suppressed_time` TIMESTAMP NULL,

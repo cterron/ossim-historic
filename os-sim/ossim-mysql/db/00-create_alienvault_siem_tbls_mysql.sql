@@ -301,11 +301,12 @@ CREATE PROCEDURE fill_tables(
     IN date_to VARCHAR(19)
 )
 BEGIN
+    ANALYZE TABLE acid_event; 
     IF date_from <> '' AND date_to <> '' THEN
         DELETE FROM po_acid_event WHERE timestamp BETWEEN date_from AND date_to;
         REPLACE INTO po_acid_event (select ctx, device_id, plugin_id, plugin_sid, ip_src, ip_dst, DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00'), IFNULL(src_host,0x00000000000000000000000000000000), IFNULL(dst_host,0x00000000000000000000000000000000), IFNULL(src_net,0x00000000000000000000000000000000), IFNULL(dst_net,0x00000000000000000000000000000000), count(*) FROM acid_event  WHERE timestamp BETWEEN date_from AND date_to GROUP BY 1,2,3,4,5,6,7,8,9,10,11);
         DELETE FROM ac_acid_event WHERE timestamp BETWEEN date_from AND date_to;
-        REPLACE INTO ac_acid_event (select ctx, device_id, plugin_id, plugin_sid, DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00'), IFNULL(src_host,0x00000000000000000000000000000000), IFNULL(dst_host,0x00000000000000000000000000000000), IFNULL(src_net,0x00000000000000000000000000000000), IFNULL(dst_net,0x00000000000000000000000000000000), count(*) FROM acid_event  WHERE timestamp BETWEEN date_from AND date_to GROUP BY 1,2,3,4,5,6,7,8,9);
+        INSERT INTO ac_acid_event (select ctx, device_id, plugin_id, plugin_sid, timestamp, src_host, dst_host, src_net, dst_net, sum(cnt) cnt FROM po_acid_event WHERE timestamp BETWEEN date_from AND date_to GROUP BY 1,2,3,4,5,6,7,8,9) ON duplicate key UPDATE cnt = values(cnt);
     ELSE
         TRUNCATE TABLE po_acid_event;
         REPLACE INTO po_acid_event (select ctx, device_id, plugin_id, plugin_sid, ip_src, ip_dst, DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00'), IFNULL(src_host,0x00000000000000000000000000000000), IFNULL(dst_host,0x00000000000000000000000000000000), IFNULL(src_net,0x00000000000000000000000000000000), IFNULL(dst_net,0x00000000000000000000000000000000), count(*) FROM acid_event GROUP BY 1,2,3,4,5,6,7,8,9,10,11);

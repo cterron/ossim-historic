@@ -479,7 +479,9 @@ class Tree
                 // Any
                 $this->draw_any_option();
             }
-
+            elseif ($key == "home") {
+		$this->draw_home_options();
+            }
             $flag = TRUE;
         }
 
@@ -2688,6 +2690,13 @@ class Tree
     {
         echo '{"title": "'._("ANY").'", "key":"ANY", "icon":"../../pixmaps/theme/host.png", "val": "'._("ANY").'"}';
     }
+
+    public function draw_home_options()
+    {
+        echo '{"title": "'._("HOME_NET").'", "key":"'.Policy::getHOMENETKEY().'", "icon":"../../pixmaps/theme/host.png", "val": "'._("HOME_NET").'"},
+            {"title": "'._("!HOME_NET").'", "key":"'.Policy::getNOTHOMENETKEY().'", "icon":"../../pixmaps/theme/host.png", "val": "'._("!HOME_NET").'"}';
+    }
+
 
 }
 

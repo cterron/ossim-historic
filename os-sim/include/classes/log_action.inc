@@ -271,9 +271,17 @@ class Log_action
         
         if ($log_syslog) 
         {
+            $user_data = '';
+            for( $count = 0; $count<5;){
+
+                $user_data_param = ($extrainfo[$count]) ? str_replace("-","",$extrainfo[$count]) : '-';
+                ++$count;
+                $user_data .= 'userdata'.$count.'="'.$user_data_param.'": ' ;
+            };
+
             //define_syslog_variables(); // This function has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0
             openlog("OSSIM", LOG_PID | LOG_PERROR, LOG_AUTH);
-            syslog(LOG_NOTICE, "User event log [$log_code]: $user from $user_ip: $info");
+            syslog(LOG_NOTICE, "User event sid=\"$log_code\": src_ip=\"$user_ip\":  username=\"$user \": $user_data msg=\"$info\"");
         }
         // tmp fix DK: timestamp is limited to seconds, two users can do something at the same second
         $sql = "INSERT IGNORE INTO log_action (login, ipfrom, date, code, info) VALUES (?, ?, UTC_TIMESTAMP() , ?, ?)";

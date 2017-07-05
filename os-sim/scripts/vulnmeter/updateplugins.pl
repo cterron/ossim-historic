@@ -1157,6 +1157,9 @@ CREATE TABLE `vuln_nessus_preferences_defaults` (
             $f0 = $f3;
         }
 
+        $f0 =~ s/"/\\"/g;
+        $f3 =~ s/"/\\"/g;
+
         # Does the current record exist? If not
         $sql = qq{ SELECT count(*) from vuln_nessus_preferences_defaults WHERE nessus_id = "$f0" };
         #logwriter( $cmd, 5 );
@@ -1635,6 +1638,9 @@ sub fill_preferences {
             $f2 = "T";
             $f0 = $f3;
         }
+
+        $f0 =~ s/"/\\"/g;
+        $f3 =~ s/"/\\"/g;
 
         $sql = qq{insert into vuln_nessus_settings_preferences (sid, nessus_id, type, 
                 value, category) values ($db_id,"$f0", "$f2", "$f4", "$f5");};

@@ -121,7 +121,6 @@ var LB_FLAG        = false;
             "onmousewheel" : '',
             load    : function() 
             {
-
                 if((o.post && $(this).attr('name') != '') || $(this).attr('src') != '')
                 {
                     _loading.remove();
@@ -129,7 +128,7 @@ var LB_FLAG        = false;
                     $(_that).css('background', '#F7F7F7');
 
                     $(this).contents().find('body').attr('id', 'body_scroll');
-
+                    $(this).contents().on("click","#LB_close",function () {_close.click();});
                     _adjust_height();
 
                     $(this).css('visibility', 'visible'); 

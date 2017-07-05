@@ -57,11 +57,27 @@ catch (\Exception $e)
 {
     $error_msg = $e->getMessage();
 }
+$installed_packages = Av_center::get_packages_installed($system_id);
+$packages = array();
+$get_version = function($version) {
+    return array_shift(explode("-",$version,2));
+};
+$packages = array(
+    array("name" => _("System"),		"version" => $get_version($installed_packages["alienvault-dummy-common"]["version"])),
+    array("name" => _("Threat Intelligence"),	"version" => $installed_packages["alienvault-directives-pro"]["version"]),
+    array("name" => _("Plugins"),		"version" => $installed_packages["alienvault-plugins"]["version"])
+);
 ?>
 <style>
 .update-error-link {
     margin-right: 78px;
     font-weight: normal;
+}
+#versions-content {
+    position: absolute;
+    margin: -46px 30px;
+    text-align: left;
+    font-size: 11px;
 }
 </style>
 <div id='cont_sw_av'>
@@ -81,6 +97,17 @@ catch (\Exception $e)
         <?php
     }
     ?>
+    <div id="versions-content">
+        <?php
+	if ($packages) {
+            echo "<div><b>"._("Current version")."</b></div>";
+            foreach ($packages as $val) {
+                if (!$val['version'] ) continue;
+                echo "<div>{$val['name']}: {$val['version']}</div>";
+            }
+       }
+       ?>
+    </div>
     <div id='c_latest_update'>
         <?php
         if (!empty($res_si['last_update']) && $res_si['last_update'] != 'unknown')

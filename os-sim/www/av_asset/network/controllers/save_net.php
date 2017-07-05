@@ -169,7 +169,7 @@ if (empty($validation_errors))
 
             if (!empty($net_ids))
             {
-                $validation_errors['cidr'] = sprintf(_("The CIDR %s is not allowed. Please check with your account admin for more information"), $cidr);
+                $validation_errors['cidr'] = sprintf(_("The network  %s  currently defined  it cannot be added"), $cidr);
 
                 break;
             }

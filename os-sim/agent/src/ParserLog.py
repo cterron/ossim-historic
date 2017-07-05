@@ -40,7 +40,7 @@ from threading import Lock
 #
 from Detector import Detector
 from Event import Event,EventIdm
-from Logger import Logger
+from Logger import Logger, Lazyformat
 from TailFollowBookmark import TailFollowBookmark
 import glob
 logger = Logger.logger
@@ -247,12 +247,13 @@ class ParserLog(Detector):
 
         if not os.path.exists(location) and create_file:
             if not os.path.exists(os.path.dirname(location)):
-                logger.warning("Creating directory %s.." % \
-                    (os.path.dirname(location)))
+                self.logwarn(Lazyformat(
+                    "Creating the {} directory...",
+                    os.path.dirname(location)
+                ))
                 os.makedirs(os.path.dirname(location), 0755)
 
-            logger.warning("Can not read from file %s, no such file. " % \
-                (location) + "Creating it..")
+            self.logwarn(Lazyformat("The {} file is missing. Creating a new one...", location))
             fd = open(location, 'w')
             fd.close()
         
@@ -263,11 +264,11 @@ class ParserLog(Detector):
             if os.path.isfile(location):
                 fd = open(location, 'r')
             else:
-                logger.warning("File: %s does not exist!" % location)
+                self.logwarn(Lazyformat("File: {} does not exist!", location))
                 can_read = False
 
         except IOError, e:
-            logger.error("Can not read from file %s: %s" % (location, e))
+            self.logerror(Lazyformat("Failed to read the file {}: {}", location, e))
             can_read = False
             #sys.exit()
         if fd is not None:
@@ -276,14 +277,14 @@ class ParserLog(Detector):
 
 
     def stop(self):
-        logger.debug("Scheduling stop of ParserLog.")
+        self.logdebug("Scheduling plugin stop")
         self.stop_processing = True
         if self.__startNotifier:
             self.__notifier.stop()
         try:
             self.join()
         except RuntimeError:
-            logger.warning("Stopping thread that likely hasn't started.")
+            self.logwarn("Stopping thread that likely hasn't started.")
 
 
     def addTail(self, newlocation):
@@ -314,7 +315,7 @@ class ParserLog(Detector):
         if rlocationvalue != "":
             files = glob.glob(rlocationvalue )
             for f in files:
-                logger.debug("Adding location :%s" % f)
+                self.logdebug(Lazyformat("Adding location: {}", f))
                 locations.append(f)
         else:
             locations = self._plugin.get("config", "location")
@@ -376,7 +377,7 @@ class ParserLog(Detector):
 
                         if rule.match() and not rule_matched:
                             matches += 1
-                            logger.debug('Match rule: [%s] -> %s' % (rule.name, line))
+                            self.logdebug(Lazyformat("Match rule: [{}] -> {}", rule.name, line))
                             event = rule.generate_event()
                             self.resetAllrules()
                             # send the event as appropriate
@@ -391,5 +392,5 @@ class ParserLog(Detector):
 
         for tail in self.__tails:
             tail.close()
-        logger.debug("Processing completed.")
+        self.logdebug("Processing completed.")
 # vim:ts=4 sts=4 tw=79 expandtab:

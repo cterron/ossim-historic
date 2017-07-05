@@ -27,18 +27,22 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-from uuid import UUID
-from binascii import hexlify
-from datetime import datetime
-import pytz
-import socket
+
 import re
 import os
 import pwd
 import grp
 import stat
-import api_log
+import socket
+
+from uuid import UUID
+from binascii import hexlify
+from datetime import datetime
 from subprocess import check_call, CalledProcessError
+
+import pytz
+
+import api_log
 
 valid_ip4_cidr_regex = re.compile('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))?$')
 valid_ossec_agent_id_regex = re.compile('^[0-9]{1,4}$')

@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2016, Emerging Threats
+#  Copyright (c) 2003-2017, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -682,11 +682,11 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Snapshot V
 
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Possible Windows Live Messenger ActiveX Control RichUploadControlContextData Buffer Overflow Function Call Attempt"; flow:to_client,established; file_data; content:"ActiveXObject"; nocase; distance:0; content:"RichUploadLib.UploadControl"; nocase; distance:0; content:"RichUploadControlContextData"; nocase; distance:0; reference:url,www.securityfocus.com/bid/37908/info; reference:url,doc.emergingthreats.net/2010703; classtype:attempted-user; sid:2010703; rev:6;)
 
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX winhlp32 ActiveX control attack, phase 1"; flowbits:noalert; flow: to_client,established; file_data; content:"|3C|OBJECT"; nocase; distance:0; content:"application/x-oleobject"; nocase; within: 64; content:"codebase="; nocase; distance:0; content:"hhctrl.ocx"; nocase; within:15; flowbits:set,winhlp32; reference:url,doc.emergingthreats.net/bin/view/Main/2001622; classtype:web-application-attack; sid:2001622; rev:14;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX winhlp32 ActiveX control attack - phase 1"; flowbits:noalert; flow: to_client,established; file_data; content:"|3C|OBJECT"; nocase; distance:0; content:"application/x-oleobject"; nocase; within: 64; content:"codebase="; nocase; distance:0; content:"hhctrl.ocx"; nocase; within:15; flowbits:set,winhlp32; reference:url,doc.emergingthreats.net/bin/view/Main/2001622; classtype:web-application-attack; sid:2001622; rev:15;)
 
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX winhlp32 ActiveX control attack, phase 2"; flow:to_client,established; flowbits:isset,winhlp32; file_data; content:"|3C|PARAM"; nocase; distance:0; content:"value="; nocase; distance:0; content:"command|3B|"; nocase; distance:0; pcre:"/(javascript|http|ftp|vbscript)/iR"; reference:url,doc.emergingthreats.net/bin/view/Main/2001623; classtype:web-application-attack; sid:2001623; rev:14;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX winhlp32 ActiveX control attack - phase 2"; flow:to_client,established; flowbits:isset,winhlp32; file_data; content:"|3C|PARAM"; nocase; distance:0; content:"value="; nocase; distance:0; content:"command|3B|"; nocase; distance:0; pcre:"/(javascript|http|ftp|vbscript)/iR"; reference:url,doc.emergingthreats.net/bin/view/Main/2001623; classtype:web-application-attack; sid:2001623; rev:15;)
 
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX winhlp32 ActiveX control attack, phase 3"; flow:to_client, established; flowbits:isset,winhlp32; content:".HHClick|2829|"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2001624; classtype:web-application-attack; sid:2001624; rev:12;)
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX winhlp32 ActiveX control attack - phase 3"; flow:to_client, established; flowbits:isset,winhlp32; content:".HHClick|2829|"; nocase; reference:url,doc.emergingthreats.net/bin/view/Main/2001624; classtype:web-application-attack; sid:2001624; rev:13;)
 
 #alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET ACTIVEX Novell ZENWorks for Desktops Remote Heap-Based Buffer Overflow"; flow:to_client,established; file_data; content:"0F517994-A6FA-4F39-BD4B-EC2DF00AEEF1"; nocase; distance:0; content:"CanUninstall"; nocase; distance:0; reference:bugtraq,31435; reference:url,securitytracker.com/alerts/2008/Sep/1020951.html; reference:url,doc.emergingthreats.net/2008619; classtype:web-application-attack; sid:2008619; rev:11;)
 
@@ -753,10 +753,6 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Snapshot V
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Visagesoft eXPert PDF Viewer ActiveX Control Arbitrary File Overwrite"; flow:to_client,established; file_data; content:"CLSID"; nocase; distance:0; content:"BDF3E9D2-5F7A-4F4A-A914-7498C862EA6A"; nocase; distance:0; content:"savePageAsBitmap"; nocase; distance:0; reference:bugtraq,31984; reference:url,milw0rm.com/exploits/6875; reference:url,doc.emergingthreats.net/2008791; classtype:web-application-attack; sid:2008791; rev:4;)
 
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Viscom Movie Player Pro SDK ActiveX DrawText method Buffer Overflow Function Call"; flow:to_client,established; file_data; content:"ActiveXObject"; nocase; distance:0; content:"MOVIEPLAYER.MoviePlayerCtrl.1"; nocase; distance:0; content:"DrawText"; nocase; distance:0; reference:url,www.shinnai.net/exploits/X6hU4E0E7P5H3qH5yXrn.txt; reference:url,secunia.com/advisories/38156/; reference:url,doc.emergingthreats.net/2010944; classtype:attempted-user; sid:2010944; rev:3;)
-
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL ACTIVEX Norton antivirus sysmspam.dll load attempt"; flow:to_client,established; file_data; content:"clsid|3A|"; nocase; distance:0; content:"0534CF61-83C5-4765-B19B-45F7A4E135D0"; nocase; distance:0; reference:bugtraq,9916; reference:cve,2004-0363; classtype:attempted-admin; sid:2102485; rev:12;)
-
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL ACTIVEX winhelp clsid attempt"; flow:from_server,established; file_data; content:"adb880a6-d8ff-11cf-9377-00aa003b7a11"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*adb880a6-d8ff-11cf-9377-00aa003b7a11/si"; reference:bugtraq,4857; reference:cve,2002-0823; reference:url,www.ngssoftware.com/advisories/ms-winhlp.txt; classtype:attempted-user; sid:2103148; rev:7;)
 
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Apple QuickTime _Marshaled_pUnk Backdoor Param Arbitrary Code Execution Attempt"; flow:established,from_server; content:"clsid"; nocase; content:"02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"; nocase; distance:0; content:"_Marshaled_pUnk"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*02BF25D5-8C17-4B23-BC80-D3488ABDDC6B/si"; reference:url,www.exploit-db.com/exploits/14843/; classtype:attempted-user; sid:2011412; rev:1;)
 
@@ -1103,4 +1099,8 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX HP Easy Pr
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Possible Aloaha PDF Crypter activex SaveToFile method arbitrary file overwrite"; flow:to_client,established; file_data; content:"CLSID"; nocase; content:"B1E7505E-BBFD-42BF-98C9-602205A1504C"; nocase; distance:0; content:".SaveToFile"; nocase; distance:0; reference:url,exploit-db.com/exploits/24319/; classtype:attempted-user; sid:2016286; rev:2;)
 
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Possible Ecava IntegraXor save method Remote ActiveX Buffer Overflow"; flow:to_client,established; file_data; content:"CLSID"; nocase; content:"520F4CFD-61C6-4EED-8004-C26D514D3D19"; nocase; distance:0; content:".save"; nocase; distance:0; reference:url,1337day.org/exploit/15398; classtype:attempted-user; sid:2016382; rev:2;)
+
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL ACTIVEX Norton antivirus sysmspam.dll load attempt"; flow:to_client,established; file_data; content:"clsid|3A|"; nocase; distance:0; content:"0534CF61-83C5-4765-B19B-45F7A4E135D0"; nocase; distance:0; reference:bugtraq,9916; reference:cve,2004-0363; classtype:attempted-admin; sid:2102485; rev:12;)
+
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL ACTIVEX winhelp clsid attempt"; flow:from_server,established; file_data; content:"adb880a6-d8ff-11cf-9377-00aa003b7a11"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*adb880a6-d8ff-11cf-9377-00aa003b7a11/si"; reference:bugtraq,4857; reference:cve,2002-0823; reference:url,www.ngssoftware.com/advisories/ms-winhlp.txt; classtype:attempted-user; sid:2103148; rev:7;)
 

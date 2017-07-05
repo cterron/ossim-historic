@@ -564,7 +564,7 @@ if (GET('close') == 'Close selected' || GET('delete') == 'Delete selected')
     }
 }
 
-$rows_per_page   = 50;
+$global_rpp = $rows_per_page   = 50;
 $incident_list   = Incident::search($conn, $criteria, $order_by, $order_mode, $page, $rows_per_page);
 $total_incidents = Incident::search_count($conn);
 ?>
@@ -734,6 +734,7 @@ $total_incidents = Incident::search_count($conn);
 		</tr>
 		<?php
 		}
+		if ($global_rpp < $total_incidents) {
 		?>
 
                         <tr>
@@ -743,7 +744,7 @@ $total_incidents = Incident::search_count($conn);
                                 <a href="#" onclick="$('#allaction').attr('checked','checked'); $('#selectall').hide(); return false;"><?=sprintf(_("Select all %s tickets."),$total_incidents)?></a>
                         </td>
                         </tr>
-
+		<?php } ?>
 
 	</table>
 	

@@ -309,16 +309,14 @@ function Ajax_validator(new_config)
         }
         else
         {
-            return $('#'+config.form.id +' .vfield').serialize();
+            return $('#'+config.form.id +' .vfield,#'+config.form.id +' .cavfield').serialize();
         }
     };
 
     function _validate_all_fields()
     {
         var data = _get_values();
-
         var ret  = false;
-
         $.ajax({
             url: config.form.url,
             global: false,

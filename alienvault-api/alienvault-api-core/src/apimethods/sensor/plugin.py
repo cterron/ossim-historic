@@ -294,7 +294,7 @@ def set_sensor_plugins_enabled_by_asset(sensor_id, assets_info):
         for asset_id, asset_plugins in assets_info.iteritems():
             asset_id = str(uuid.UUID(asset_id))
             asset_ips = get_asset_ip_from_id(asset_id=asset_id)
-            if asset_ips == []:
+            if not asset_ips:
                 api_log.error("Cannot resolve ips for asset '{0}'".format(asset_id))
                 continue
 

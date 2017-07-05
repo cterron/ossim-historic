@@ -32,8 +32,7 @@ from string import strip
 import os
 import codecs
 import re
-import json
-from ConfigParser import ConfigParser
+from ConfigParser import ConfigParser, DEFAULTSECT
 
 from apimethods.apps.plugins.error import ErrorCodes
 from apimethods.apps.plugins.prule import PluginRule
@@ -117,6 +116,7 @@ class PluginFile(ConfigParser):
         ConfigParser.__init__(self)
         # Cannot use super since ConfigParser is an old style class (it doesn't inherit from object)
         # super(PluginFile, self).__init__()
+        self._headers = []
         self.__plugin_file = ""
         self.__plugin_id = 0
         self.__errors = []
@@ -222,6 +222,7 @@ class PluginFile(ConfigParser):
         fp = None
         try:
             fp = codecs.open(plugin_file, 'r', encoding=encoding)
+            self._read_headers(fp)
             self.readfp(fp)
             self.plugin_file = plugin_file
             self.encoding = encoding
@@ -232,6 +233,78 @@ class PluginFile(ConfigParser):
         finally:
             if fp:
                 fp.close()
+
+    def _read_headers(self, fp):
+        """ Reads headers from original config file and stores them
+
+        Args:
+            fp:
+        """
+        try:
+            for line in fp:
+                line = line.strip()
+                if line.startswith('#'):
+                    self._headers.append(line)
+                else:
+                    # stop right after we read the header - no need to parse the rest of comments.
+                    break
+        finally:
+            # Move to the beginning again to process file as usual.
+            fp.seek(0, os.SEEK_SET)
+
+    def _write_headers(self, fp, headers=None):
+        headers = headers or self._headers
+        for header in headers:
+            fp.write("{}\n".format(header))
+        fp.write("\n")
+
+    def write(self, fp):
+        """ Writes plugin content to a file with appropriate formatting (without whitespace surrounding operator).
+
+        Args:
+            fp: (obj) Open file.
+        """
+        if self._defaults:
+            fp.write("[{}]\n".format(DEFAULTSECT))
+            for (key, value) in self._defaults.items():
+                fp.write("{}={}\n".format(key, str(value).replace('\n', '\n\t')))
+            fp.write("\n")
+        for section in self._sections:
+            fp.write("[{}]\n".format(section))
+            for (key, value) in self._sections[section].items():
+                if key == "__name__":
+                    continue
+                if (value is not None) or (self._optcre == self.OPTCRE):
+                    key = "=".join((key, str(value).replace('\n', '\n\t')))
+                fp.write("{}\n".format(key))
+            fp.write("\n")
+
+    def save(self, destination, vendor="", model="", version="-", product_type=None):
+        """ Stores plugin data to destination path file in "INI/CFG" file format.
+
+        Args:
+            destination: (str) cfg destination path.
+            vendor: (str) plugin vendor.
+            model: (str) plugin model.
+            version: (str) plugin version.
+            product_type: (int) product_type ID.
+        """
+        try:
+            # extend headers with the vendor-model-version info just before saving
+            # in order to eliminate possibility to add the same header multiple times.
+            headers_with_extra_data = list()
+            headers_with_extra_data.extend(self._headers)
+            headers_with_extra_data.extend(['# Plugin Selection Info:', '# {}:{}:{}'.format(vendor, model, version)])
+
+            # save .cfg file
+            with open(destination, 'w') as config_file:
+                self._write_headers(config_file, headers=headers_with_extra_data)
+                self.write(config_file)
+        except Exception as err:
+            self.append_error(ErrorCodes.OUTPUT_FILE_WRITE_ERROR, msg=str(err))
+            return False
+
+        return True
 
     def __look_for_translate2_sections(self):
         """Look inside the plugin for translate2 sections"""
@@ -274,6 +347,11 @@ class PluginFile(ConfigParser):
             self.__check_rules()
         self.total_errors += len(self.errors)
         return self.__build_output()
+
+    def get_latest_error_msg(self):
+        """ Returns latest error message.
+        """
+        return str(self.errors[-1]) if len(self.errors) > 0 else ""
 
     def __check_custom_user_functions(self, functions_file):
         """Checks the user custom functions file
